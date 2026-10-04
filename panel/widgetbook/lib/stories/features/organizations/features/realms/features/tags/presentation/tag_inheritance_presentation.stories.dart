@@ -85,36 +85,26 @@ Widget _story({
   double width = 520,
   TextDirection textDirection = TextDirection.ltr,
 }) {
-  final catalog = authoringFixtureCatalog();
-  final presentation =
-      catalog.presentations[authoringFixtureTagPresentationId]!;
-  final inheritance = switch (presentation.root.element) {
-    ColumnElement(:final children) => switch (children.last) {
-      FixedPresentationAxisChild(:final child) => child,
-      _ => throw StateError("The tag inheritance presentation must be fixed"),
-    },
-    _ => throw StateError("The tag presentation must be a column"),
-  };
-  final subject = Tag(
-    tagId: skir.ResourceId(value: "tag:subject"),
-    name: "Subject",
-    color: Colors.blue,
-    parentIds: roots.map(_tagRecordId).toList(),
-    placement: const GraphPlacement(x: 0, y: 0, width: 4, height: 1),
-  );
+  final visible = [
+    ...tags,
+    if (!tags.any((tag) => tag.tagId.value == "tag:subject"))
+      Tag(
+        tagId: skir.ResourceId(value: "tag:subject"),
+        name: "Subject",
+        color: Colors.blue,
+        parentIds: roots.map(_tagRecordId).toList(),
+        placement: const GraphPlacement(x: 0, y: 0, width: 4, height: 1),
+      ),
+  ];
   return FakeApp(
+    overrides: tagsProviderOverrides(tags: visible),
     child: Directionality(
       textDirection: textDirection,
       child: Center(
         child: SizedBox(
           width: width,
-          child: EditorProtocolRenderer(
-            envelope: subject.authoringFixtureContent(authoringFixtureTagType),
-            typeCatalog: catalog.catalog,
-            presentations: catalog.presentations.values.toList(),
-            collections: [authoringFixtureTagCollection(tags)],
-            presentation: inheritance,
-          ),
+          height: 620,
+          child: const InspectorScaffold(child: TagGraph()),
         ),
       ),
     ),

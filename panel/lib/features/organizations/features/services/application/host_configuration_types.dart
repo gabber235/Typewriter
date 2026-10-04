@@ -27,6 +27,9 @@ TypeField _draftField(
   initialValue: _draftVariant(initial),
 );
 
+TypeField _hostConfigurationStringField(String name) =>
+    TypeField(name: name, type: const StringType());
+
 final _hostConfigurationType = RecordType(
   fields: {
     "realm": _draftField("realm", _realmDraft, _realmDisabled),
@@ -51,7 +54,9 @@ final _hostConfigurationDefinitions = [
     id: _realmHosted,
     kind: NominalTypeKind.concrete,
     parents: [_realmDraft],
-    representation: RecordType(fields: {"target": _stringField("target")}),
+    representation: RecordType(
+      fields: {"target": _hostConfigurationStringField("target")},
+    ),
   ),
   TypeDefinition(
     id: _engineEnabled,
@@ -59,9 +64,13 @@ final _hostConfigurationDefinitions = [
     parents: [_engineDraft],
     representation: RecordType(
       fields: {
-        "target": _stringField("target"),
-        "realm": _stringField("realm"),
+        "target": _hostConfigurationStringField("target"),
+        "realm": _hostConfigurationStringField("realm"),
       },
     ),
   ),
 ];
+
+final _hostConfigurationCatalog = panelPresentationTypeCatalog([
+  ..._hostConfigurationDefinitions,
+]);

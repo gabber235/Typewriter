@@ -11,10 +11,8 @@ void _testResourceConnections() {
       final owners = EditorOwnerRegistry(workspace: workspace);
       addTearDown(owners.dispose);
 
-      final model = harness.selectable.buildPresentation(owners);
-      final source =
-          (model.inputs[const BindingId(2)]! as PresentationEditInput).owner
-              as EditorSource;
+      _buildInspection(harness, owners);
+      final source = _identitySource(owners);
       expect(
         source.update(
           DataPath.root.field("name"),

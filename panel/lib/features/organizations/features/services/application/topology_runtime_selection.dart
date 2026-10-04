@@ -28,40 +28,44 @@ class _RealmInstanceSelectable
   String get name => realm.ownerHost.name.formatted;
 
   @override
-  PresentationModel buildPresentation(EditorOwnerScope owners) =>
-      PresentationModel(
-        catalog: _realmInstanceInspectorCatalog,
-        inputs: {
-          const BindingId(0): PresentationInput.value(
-            type: NamedType(_realmInstanceInspectorTypeRef),
-            value: EditorValue.ready(
-              _runtimeValue(
-                ownerHost: realm.ownerHost.name.formatted,
-                target: realm.targetEngine,
-                state: realm.state,
-              ),
-            ),
-          ),
-        },
-        root: _realmInstanceInspectorPresentation.root,
-      );
-
-  @override
   List<SelectionCapability> get capabilities => [
     if (onOpen case final open?)
       OpenSelectionCapability(onOpen: open, allowMultiSelect: false),
   ];
 
   @override
-  InspectionContent buildInspection(EditorOwnerScope owners) =>
-      InspectionContent(
-        model: buildPresentation(owners),
-        header: InspectorHeader(
-          id: realm.realmId.id,
-          name: name,
-          color: realmServiceRoleColor,
+  InspectionContent buildInspection(
+    EditorOwnerScope owners,
+  ) => InspectionContent(
+    host: topologyRuntimePortableHost(
+      rootId: "realmInstance",
+      values: {
+        _RuntimeInspectorFields.ownerHost: skir.DataValue.wrapStringValue(
+          realm.ownerHost.name.formatted,
         ),
-      );
+        _RuntimeInspectorFields.target: skir.DataValue.wrapStringValue(
+          _targetLabel(realm.targetEngine),
+        ),
+        _RuntimeInspectorFields.runtimeStatus: skir.DataValue.wrapStringValue(
+          childRuntimeStatusLabel(realm.state.status),
+        ),
+        _RuntimeInspectorFields.artifactVersion: skir.DataValue.wrapStringValue(
+          realm.state.activeArtifactVersion ?? "None",
+        ),
+        _RuntimeInspectorFields.runtimeMessage: skir.DataValue.wrapStringValue(
+          realm.state.message ?? "None",
+        ),
+        _RuntimeInspectorFields.updatedAt: skir.DataValue.wrapTimestamp(
+          realm.state.updatedAt,
+        ),
+      },
+    ),
+    header: InspectorHeader(
+      id: realm.realmId.id,
+      name: name,
+      color: realmServiceRoleColor,
+    ),
+  );
 }
 
 /// Builds the route to a Realm owned by an organization.
@@ -100,54 +104,42 @@ class _EngineInstanceSelectable
   String get name => "${engine.target.engineId} engine";
 
   @override
-  PresentationModel buildPresentation(EditorOwnerScope owners) =>
-      PresentationModel(
-        catalog: _engineInstanceInspectorCatalog,
-        inputs: {
-          const BindingId(0): PresentationInput.value(
-            type: NamedType(_engineInstanceInspectorTypeRef),
-            value: EditorValue.ready(
-              _runtimeValue(
-                ownerHost: engine.ownerHost.name.formatted,
-                target: engine.target,
-                state: engine.state,
-                assignedRealm: engine.realm.ownerHost.name.formatted,
-              ),
-            ),
-          ),
-        },
-        root: _engineInstanceInspectorPresentation.root,
-      );
-
-  @override
   List<SelectionCapability> get capabilities => [];
 
   @override
-  InspectionContent buildInspection(EditorOwnerScope owners) =>
-      InspectionContent(
-        model: buildPresentation(owners),
-        header: InspectorHeader(
-          id: engine.engineId.id,
-          name: name,
-          color: engineServiceRoleColor,
+  InspectionContent buildInspection(
+    EditorOwnerScope owners,
+  ) => InspectionContent(
+    host: topologyRuntimePortableHost(
+      rootId: "engineInstance",
+      values: {
+        _RuntimeInspectorFields.ownerHost: skir.DataValue.wrapStringValue(
+          engine.ownerHost.name.formatted,
         ),
-      );
+        _RuntimeInspectorFields.assignedRealm: skir.DataValue.wrapStringValue(
+          engine.realm.ownerHost.name.formatted,
+        ),
+        _RuntimeInspectorFields.target: skir.DataValue.wrapStringValue(
+          _targetLabel(engine.target),
+        ),
+        _RuntimeInspectorFields.runtimeStatus: skir.DataValue.wrapStringValue(
+          childRuntimeStatusLabel(engine.state.status),
+        ),
+        _RuntimeInspectorFields.artifactVersion: skir.DataValue.wrapStringValue(
+          engine.state.activeArtifactVersion ?? "None",
+        ),
+        _RuntimeInspectorFields.runtimeMessage: skir.DataValue.wrapStringValue(
+          engine.state.message ?? "None",
+        ),
+        _RuntimeInspectorFields.updatedAt: skir.DataValue.wrapTimestamp(
+          engine.state.updatedAt,
+        ),
+      },
+    ),
+    header: InspectorHeader(
+      id: engine.engineId.id,
+      name: name,
+      color: engineServiceRoleColor,
+    ),
+  );
 }
-
-RecordValue _runtimeValue({
-  required String ownerHost,
-  required TopologyEngineTarget target,
-  required TopologyRuntimeState state,
-  String? assignedRealm,
-}) => RecordValue({
-  _RuntimeInspectorFields.ownerHost: ownerHost.asValue,
-  if (assignedRealm != null)
-    _RuntimeInspectorFields.assignedRealm: assignedRealm.asValue,
-  _RuntimeInspectorFields.target: _targetLabel(target).asValue,
-  _RuntimeInspectorFields.runtimeStatus: childRuntimeStatusLabel(state.status)
-      .asValue,
-  _RuntimeInspectorFields.artifactVersion:
-      (state.activeArtifactVersion ?? "None").asValue,
-  _RuntimeInspectorFields.runtimeMessage: (state.message ?? "None").asValue,
-  _RuntimeInspectorFields.updatedAt: TimestampValue(state.updatedAt),
-});

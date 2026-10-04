@@ -33,9 +33,7 @@ abstract interface class EditableResource {
 ///
 /// Editor owners use a snapshot to keep canonical content, revision metadata,
 /// and resource specific validation aligned while a commit is prepared. The
-/// default mutation validation resolves [DataPath] through the document type
-/// catalog. Resource implementations override validation when their domain
-/// imposes additional rules.
+/// resource implementation supplies the admission policy used for every edit.
 
 abstract class EditorSnapshot {
   const EditorSnapshot();
@@ -44,15 +42,16 @@ abstract class EditorSnapshot {
   EditorDocument get document;
 
   /// Applies resource specific validation to the complete local draft.
-  List<TypeDiagnostic> validateDraft(DataValue value) => const [];
+  List<TypeDiagnostic> validateDraft(DataValue value) {
+    final result = validate(DataPath.root, value);
+    return switch (result) {
+      InvalidEditorMutation(:final diagnostics) => diagnostics,
+      _ => const [],
+    };
+  }
 
   /// Validates one path and value against the snapshot's type context.
-  EditorMutationResult validate(DataPath path, DataValue value) =>
-      document.rootType.validateEditorMutation(
-        path,
-        value,
-        registry: TypeRegistry(document.typeCatalog),
-      );
+  EditorMutationResult validate(DataPath path, DataValue value);
 }
 
 /// Marks a snapshot whose interpretation contract can change independently.
@@ -73,12 +72,4 @@ final class EditorContractUnavailableException implements Exception {
 
   @override
   String toString() => message;
-}
-
-/// Snapshot implementation for resources represented entirely by an [EditorDocument].
-final class DocumentEditorSnapshot extends EditorSnapshot {
-  const DocumentEditorSnapshot(this.document);
-
-  @override
-  final EditorDocument document;
 }

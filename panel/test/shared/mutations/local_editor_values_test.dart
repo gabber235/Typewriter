@@ -27,6 +27,7 @@ ResourceEditorTarget _target() => fakeEditorTarget(
     confirmedValue: _value("Canonical", 1),
     revision: 1,
   ),
+  validation: acceptTestEditorMutation,
   commitPolicy: EditorCommitPolicy.applyResource,
   commit: (_) async => throw StateError("No save expected"),
 );

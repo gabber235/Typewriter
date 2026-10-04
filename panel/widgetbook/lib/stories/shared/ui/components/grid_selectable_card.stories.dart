@@ -4,6 +4,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/support/story_selectable.dart";
 
 @widgetbook.UseCase(name: "Default", type: GridSelectableCard)
 Widget gridSelectableCardDefaultUseCase(BuildContext context) {
@@ -41,7 +42,7 @@ Widget gridSelectableCardDefaultUseCase(BuildContext context) {
     child: Center(
       child: Selector(
         focusNode: FocusNode(),
-        selectableId: TestSelectableIdentifier(
+        selectableId: StorySelectableIdentifier(
           id: "grid_selectable_card",
           color: baseColor,
         ),
@@ -91,7 +92,7 @@ Widget gridSelectableCardGridUseCase(BuildContext context) {
                 final focusNode = useFocusNode();
                 return Selector(
                   focusNode: focusNode,
-                  selectableId: TestSelectableIdentifier(
+                  selectableId: StorySelectableIdentifier(
                     id: "item_$i",
                     color: color,
                   ),

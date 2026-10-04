@@ -2,295 +2,202 @@ package com.typewritermc.realm.search
 
 import com.surrealdb.RecordId
 import com.surrealdb.Transaction
-import com.typewritermc.authoring.AuthoringSearchFacet
-import com.typewritermc.authoring.AuthoringSearchSelector
+import com.typewritermc.authoring.AuthoringRecord
+import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.authoring.SearchSelectorId
-import com.typewritermc.realm.ResourceDefinitionId
-import com.typewritermc.realm.compiler.GraphReadRequirement
-import com.typewritermc.realm.repository.AuthoringGraphResource
+import com.typewritermc.authoring.TypeSelection
+import com.typewritermc.realm.authoring.authoringStorageJson
 import com.typewritermc.realm.repository.AuthoringMutationPlan
-import com.typewritermc.realm.repository.AuthoringWorkingGraph
-import com.typewritermc.realm.repository.PolicyGraphSliceResult
-import com.typewritermc.realm.repository.StoredResourceRelation
-import com.typewritermc.realm.repository.StoredTypedResource
-import com.typewritermc.realm.repository.sliceForPolicy
-import com.typewritermc.realm.repository.utils.StructuredDatabaseCodec
+import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.realm.repository.utils.unifiedSurrealId
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.ResolvedTypeRef
+import com.typewritermc.types.EndpointBindingTemplate
+import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
+import com.typewritermc.types.RelationContract
+import com.typewritermc.types.RelationFamilyId
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeExpression
+import com.typewritermc.types.catalog.CheckedCatalog
+import kotlinx.serialization.encodeToString
 import java.security.MessageDigest
 
-/** One Realm supplied searchable projection for one open resource definition. */
-internal interface AuthoringSearchProjection {
-    val definition: ResourceDefinitionId
-    val graphRequirement: GraphReadRequirement
-        get() = GraphReadRequirement()
-
-    /** Projects the resource and the bounded graph needed by this policy into indexed scalar values. */
-    fun project(
-        resource: AuthoringGraphResource,
-        graph: AuthoringSearchGraph,
-    ): AuthoringSearchDocument
-
-    /** Returns resources whose document can change when this mutation is applied. */
-    fun affectedResources(plan: AuthoringMutationPlan): Set<ResourceId> =
-        buildSet {
-            addAll(plan.changedResources)
-            addAll(
-                plan.changedEdges.flatMap { edgeId ->
-                    listOfNotNull(plan.before.relations[edgeId], plan.proposed.relations[edgeId]).flatMap { relation ->
-                        listOf(relation.source, relation.target)
-                    }
-                },
-            )
-        }
-}
-
-/** The bounded graph view supplied to a search projection. */
-internal data class AuthoringSearchGraph(
-    val resources: Map<ResourceId, AuthoringGraphResource>,
-    val relations: List<StoredResourceRelation>,
-)
-
-/** Canonical values stored in the Realm search index. */
-internal data class AuthoringSearchDocument(
+internal data class IndexedDocument(
     val resource: ResourceId,
     val definition: ResourceDefinitionId,
-    val text: List<String>,
-    val selectors: Map<String, Set<String>>,
-    val ownerPath: List<ResourceId> = emptyList(),
+    val record: AuthoringRecord,
+    val text: String,
+    val selectors: Map<SearchSelectorId, Set<String>>,
+    val ownerPath: List<ResourceId>,
 )
 
-/** Owns selector identity, facet mapping, and the normalization promised by catalog metadata. */
-internal class AuthoringSearchMetadata(
-    selectors: Collection<AuthoringSearchSelector>,
-    facets: Collection<AuthoringSearchFacet>,
-) {
-    private val selectors = selectors.associateBy(AuthoringSearchSelector::id)
-    private val facets = facets.associateBy(AuthoringSearchFacet::id)
-
-    fun normalize(
-        selector: String,
-        value: String,
-    ): String {
-        val definition = requireNotNull(selectors[SearchSelectorId(selector)]) { "Search selector $selector is not registered." }
-        return value.trim().let { if (definition.caseSensitive) it else it.lowercase() }
-    }
-
-    fun selectorForFacet(facet: String): String =
-        requireNotNull(facets[facet]) { "Search facet $facet is not registered." }.selectorId.value
+internal fun interface SearchDocumentProjector {
+    fun project(
+        resource: ResourceId,
+        definition: ResourceDefinitionId,
+        record: AuthoringRecord,
+        ownerPath: List<ResourceId>,
+    ): IndexedDocument
 }
 
-/** Validates the open projection set and resolves a projection without a definition switch. */
-internal class AuthoringSearchProjectionRegistry(
-    projections: Collection<AuthoringSearchProjection>,
-) {
-    private val byDefinition = projections.associateBy(AuthoringSearchProjection::definition)
-
-    init {
-        require(byDefinition.size == projections.size) {
-            "Search projections must have unique resource definitions."
-        }
-    }
-
-    fun forDefinition(definition: ResourceDefinitionId): AuthoringSearchProjection? = byDefinition[definition]
-
-    fun all(): Collection<AuthoringSearchProjection> = byDefinition.values
-
-    fun affectedResources(plan: AuthoringMutationPlan): Set<ResourceId> =
-        byDefinition.values.flatMapTo(linkedSetOf()) { it.affectedResources(plan) }
-}
-
-/** Updates indexed search documents in the same transaction as the graph delta. */
+/** Updates search rows inside the authoring acceptance transaction. */
 internal class AuthoringSearchIndexer(
-    private val projections: AuthoringSearchProjectionRegistry,
-    private val metadata: AuthoringSearchMetadata,
+    private val projector: SearchDocumentProjector = SearchDocumentProjector(::defaultDocument),
 ) {
     fun apply(
         transaction: Transaction,
         plan: AuthoringMutationPlan,
+        resources: Map<ResourceId, AuthoringRecord>,
+        definitions: Map<ResourceId, ResourceDefinitionId>,
+        catalog: CheckedCatalog,
+        contracts: List<RelationContract>,
+        endpointBindings: List<EndpointBindingTemplate>,
+        snapshot: Long,
     ) {
-        val affected = projections.affectedResources(plan)
-        if (affected.isEmpty()) return
-        update(transaction, plan.proposed, affected)
-    }
-
-    fun rebuild(
-        transaction: Transaction,
-        graph: AuthoringWorkingGraph,
-    ) {
-        transaction.query("DELETE authoring_search;").take(0)
-        transaction.query("DELETE authoring_search_selector;").take(0)
-        update(transaction, graph, graph.resources.keys)
-    }
-
-    private fun update(
-        transaction: Transaction,
-        workingGraph: AuthoringWorkingGraph,
-        affected: Set<ResourceId>,
-    ) {
-        val graph = workingGraph.toSearchGraph()
-        affected.sortedBy(ResourceId::value).forEach { id ->
-            val resource = graph.resources[id]
-            val projection = resource?.let { projections.forDefinition(it.definition) }
-            val projectionGraph =
-                projection?.let {
-                    when (val result = workingGraph.sliceForPolicy(setOf(id), it.graphRequirement)) {
-                        is PolicyGraphSliceResult.Success -> {
-                            result.graph.toSearchGraph()
-                        }
-
-                        is PolicyGraphSliceResult.LimitExceeded -> {
-                            error(
-                                "Search projection ${it.definition.value} exceeded its ${result.dimension} " +
-                                    "limit ${result.limit}.",
-                            )
-                        }
-                    }
+        val affected =
+            buildSet {
+                addAll(plan.resources.keys)
+                addAll(plan.removedResources)
+                plan.relations.removed.forEach {
+                    add(it.first)
+                    add(it.second)
                 }
-            val document = resource?.let { projection?.project(it, requireNotNull(projectionGraph)) }
-            if (document == null) {
-                delete(transaction, id)
-            } else {
-                replace(
-                    transaction,
-                    document,
-                    (resource.content.rootType as? TypeExpression.Named)?.reference
-                        ?: error("Searchable resources require a nominal root."),
-                )
+                plan.relations.created.forEach {
+                    add(it.first)
+                    add(it.second)
+                }
+                plan.relations.metadataChanged.forEach {
+                    add(it.first)
+                    add(it.second)
+                }
             }
-        }
-    }
-
-    private fun replace(
-        transaction: Transaction,
-        document: AuthoringSearchDocument,
-        root: ResolvedTypeRef,
-    ) {
-        delete(transaction, document.resource)
-        transaction
-            .query(
-                "UPSERT ONLY \$search CONTENT { resource: \$resource, definition: \$definition, " +
-                    "root: \$root, text: \$text, owner_path: \$owner_path };",
-                mapOf(
-                    "search" to searchId(document.resource),
-                    "resource" to document.resource.unifiedSurrealId(),
-                    "definition" to document.definition.value,
-                    "root" to StructuredDatabaseCodec.encode(ResolvedTypeRef.serializer(), root),
-                    "text" to document.text.joinToString(" "),
-                    "owner_path" to document.ownerPath.map(ResourceId::value),
-                ),
-            ).take(0)
-        document.selectors.forEach { (facet, values) ->
-            values
-                .groupBy { metadata.normalize(facet, it) }
-                .toSortedMap()
-                .forEach { (normalized, displays) ->
+        if (affected.isEmpty()) return
+        val ownerPaths = ownerPaths(resources, contracts, catalog, endpointBindings)
+        affected.sortedBy(ResourceId::value).forEach { resource ->
+            transaction.deleteSearch(resource)
+            val record = resources[resource] ?: return@forEach
+            val definition = requireNotNull(definitions[resource]) { "Resource ${resource.value} is missing its definition identity." }
+            val document = projector.project(resource, definition, record, ownerPaths[resource].orEmpty())
+            transaction
+                .query(
+                    "CREATE ONLY \$search CONTENT { resource: \$resource, definition: \$definition, content: \$content, " +
+                        "text: \$text, owner_path: \$owner_path, snapshot: \$snapshot };",
+                    mapOf(
+                        "search" to RecordId("authoring_search", resource.value),
+                        "resource" to resource.unifiedSurrealId(),
+                        "definition" to document.definition.value,
+                        "content" to authoringStorageJson.encodeToString(AuthoringRecord.serializer(), document.record),
+                        "text" to document.text,
+                        "owner_path" to document.ownerPath.map(ResourceId::value),
+                        "snapshot" to snapshot,
+                    ),
+                ).take(0)
+            document.selectors.forEach { (facet, values) ->
+                values.groupBy(::normalize).forEach { (normalized, displays) ->
                     transaction
                         .query(
-                            "UPSERT ONLY \$selector CONTENT { resource: \$resource, facet: \$facet, " +
+                            "CREATE ONLY \$selector CONTENT { resource: \$resource, facet: \$facet, " +
                                 "normalized: \$normalized, display: \$display };",
                             mapOf(
-                                "selector" to selectorId(document.resource, facet, normalized),
-                                "resource" to document.resource.unifiedSurrealId(),
-                                "facet" to facet,
+                                "selector" to RecordId("authoring_search_selector", selectorId(resource, facet, normalized)),
+                                "resource" to resource.unifiedSurrealId(),
+                                "facet" to facet.value,
                                 "normalized" to normalized,
                                 "display" to displays.sorted().first(),
                             ),
                         ).take(0)
                 }
+            }
         }
-    }
-
-    private fun delete(
-        transaction: Transaction,
-        resource: ResourceId,
-    ) {
-        transaction
-            .query(
-                "DELETE ONLY \$search;",
-                mapOf("search" to searchId(resource)),
-            ).take(0)
-        transaction
-            .query(
-                "DELETE authoring_search_selector WHERE resource = \$resource;",
-                mapOf("resource" to resource.unifiedSurrealId()),
-            ).take(0)
     }
 }
 
-/** Generic projection that indexes the identity and every textual value without knowing the resource family. */
-internal class TextualAuthoringSearchProjection(
-    override val definition: ResourceDefinitionId,
-    override val graphRequirement: GraphReadRequirement = GraphReadRequirement(),
-    private val selectors: (AuthoringGraphResource, AuthoringSearchGraph) -> Map<String, Set<String>> = { _, _ -> emptyMap() },
-    private val ownerPath: (AuthoringGraphResource, AuthoringSearchGraph) -> List<ResourceId> = { _, _ -> emptyList() },
-    private val impact: ((AuthoringMutationPlan) -> Set<ResourceId>)? = null,
-) : AuthoringSearchProjection {
-    override fun affectedResources(plan: AuthoringMutationPlan): Set<ResourceId> = impact?.invoke(plan) ?: super.affectedResources(plan)
+private fun Transaction.deleteSearch(resource: ResourceId) {
+    query("DELETE ONLY \$search;", mapOf("search" to RecordId("authoring_search", resource.value))).take(0)
+    query("DELETE authoring_search_selector WHERE resource = \$resource;", mapOf("resource" to resource.unifiedSurrealId())).take(0)
+}
 
-    override fun project(
-        resource: AuthoringGraphResource,
-        graph: AuthoringSearchGraph,
-    ): AuthoringSearchDocument =
-        AuthoringSearchDocument(
-            resource = resource.id,
-            definition = resource.definition,
-            text =
-                buildList {
-                    add(resource.id.value)
-                    add(resource.definition.value)
-                    resource.content.rootValue.collectText(this)
-                }.distinct(),
-            selectors = selectors(resource, graph),
-            ownerPath = ownerPath(resource, graph),
-        )
+private fun defaultDocument(
+    resource: ResourceId,
+    definition: ResourceDefinitionId,
+    record: AuthoringRecord,
+    ownerPath: List<ResourceId>,
+): IndexedDocument {
+    val terms = mutableListOf(resource.value, definition.value)
+    record.fields.values.forEach { it.collectText(terms) }
+    return IndexedDocument(resource, definition, record, terms.distinct().joinToString(" "), emptyMap(), ownerPath)
 }
 
 private fun DataValue.collectText(target: MutableList<String>) {
     when (this) {
-        is DataValue.StringValue -> target += value
-        is DataValue.Record -> fields.values.forEach { it.collectText(target) }
-        is DataValue.ListValue -> values.forEach { it.collectText(target) }
-        is DataValue.MapValue -> entries.forEach { it.value.collectText(target) }
-        is DataValue.Polymorphic -> value.collectText(target)
-        else -> Unit
+        is DataValue.StringValue -> {
+            target += value
+        }
+
+        is DataValue.EnumCase -> {
+            target += key
+        }
+
+        is DataValue.Named -> {
+            payload.collectText(target)
+        }
+
+        is DataValue.Record -> {
+            fields.values.forEach { it.collectText(target) }
+        }
+
+        is DataValue.ListValue -> {
+            items.forEach { it.value.collectText(target) }
+        }
+
+        is DataValue.SetValue -> {
+            items.forEach { it.value.collectText(target) }
+        }
+
+        is DataValue.MapValue -> {
+            rows.forEach { row ->
+                row.key.collectText(target)
+                row.value.collectText(target)
+            }
+        }
+
+        else -> {
+            Unit
+        }
     }
 }
 
-private fun AuthoringWorkingGraph.toSearchGraph(): AuthoringSearchGraph =
-    AuthoringSearchGraph(
-        resources =
-            resources.mapValues { (id, resource) ->
-                AuthoringGraphResource(
-                    id = id,
-                    definition = resource.definition,
-                    content = resource.toEnvelope(),
-                )
-            },
-        relations = relations.values.toList(),
-    )
-
-private fun StoredTypedResource.toEnvelope(): com.typewritermc.types.TypedValueEnvelope =
-    com.typewritermc.types.TypedValueEnvelope(root.asExpression(), valueWithSlots)
-
-private fun com.typewritermc.types.ResolvedTypeRef.asExpression(): com.typewritermc.types.TypeExpression =
-    com.typewritermc.types.TypeExpression
-        .Named(this)
-
-private fun searchId(resource: ResourceId): RecordId = RecordId("authoring_search", resource.value)
-
-internal fun selectorId(
-    resource: ResourceId,
-    facet: String,
-    normalized: String,
-): RecordId {
-    val digest =
-        MessageDigest
-            .getInstance("SHA-256")
-            .digest(normalized.toByteArray())
-            .joinToString("") { byte -> "%02x".format(byte.toInt() and 0xff) }
-    return RecordId("authoring_search_selector", "${resource.value}_${facet}_$digest")
+private fun ownerPaths(
+    resources: Map<ResourceId, AuthoringRecord>,
+    contracts: List<RelationContract>,
+    catalog: CheckedCatalog,
+    endpointBindings: List<EndpointBindingTemplate>,
+): Map<ResourceId, List<ResourceId>> {
+    val ownership =
+        contracts.filter { RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID) in it.families }.mapTo(hashSetOf()) { it.id }
+    val projections =
+        ResourceValueMapper
+            .project(ResourceValueMapper.discover(resources), resources, contracts, catalog)
+            .projections
+    val parent = projections.filter { it.contract in ownership }.associate { it.second to it.first }
+    return resources.keys.associateWith { resource ->
+        buildList {
+            val visited = linkedSetOf<ResourceId>()
+            var current = parent[resource]
+            while (current != null && visited.add(current)) {
+                add(current)
+                current = parent[current]
+            }
+        }
+    }
 }
+
+private fun normalize(value: String): String = value.trim().lowercase()
+
+private fun selectorId(
+    resource: ResourceId,
+    facet: SearchSelectorId,
+    normalized: String,
+): String =
+    MessageDigest
+        .getInstance("SHA-256")
+        .digest("${resource.value}:${facet.value}:$normalized".toByteArray())
+        .joinToString("") { byte -> "%02x".format(byte.toInt() and 0xff) }

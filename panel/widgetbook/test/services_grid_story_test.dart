@@ -4,6 +4,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:widgetbook_workspace/stories/features/organizations/features/services/presentation/route.stories.dart";
 import "package:widgetbook_workspace/stories/features/organizations/features/services/presentation/topology_scenarios.dart";
 
 void main() {
@@ -53,6 +54,25 @@ void main() {
     );
   });
 
+  testWidgets("service inspector story renders the portable backend host", (
+    tester,
+  ) async {
+    final service = completeTopologyScenario().services.first;
+    await tester.pumpWidget(serviceInspectorStory(service: service));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PortablePresentationRenderer), findsOneWidget);
+    expect(find.text("Name"), findsOneWidget);
+    expect(find.text(service.name), findsOneWidget);
+    expect(find.text("Connection"), findsOneWidget);
+    expect(find.text("Connected"), findsOneWidget);
+    expect(find.text("Version"), findsOneWidget);
+    expect(find.text(service.role.version), findsOneWidget);
+    expect(find.text("Last seen"), findsOneWidget);
+    expect(find.text(service.lastSeen!.toIso8601String()), findsOneWidget);
+    expect(find.text("The presentation value is not text"), findsNothing);
+  });
+
   testWidgets("services story selects a host through the shared inspector", (
     tester,
   ) async {
@@ -89,67 +109,42 @@ void main() {
     await tester.tap(find.text("PAPER HOST").first);
     await tester.pumpAndSettle();
 
-    expect(find.text("Identity and connection"), findsNothing);
-    expect(find.text("CONNECTION"), findsOneWidget);
-    expect(find.text("Capabilities and runtime health"), findsNothing);
-    expect(find.text("CAPABILITIES"), findsOneWidget);
-    expect(find.text("RUNTIME HEALTH"), findsOneWidget);
-    expect(find.text("Configuration"), findsOneWidget);
+    expect(find.byType(PortablePresentationRenderer), findsOneWidget);
+    expect(find.text("Name"), findsOneWidget);
+    expect(find.text("Connection"), findsOneWidget);
+    expect(find.text("Entry point"), findsOneWidget);
+    expect(find.text("Realm hosting"), findsOneWidget);
+    expect(find.text("Runtime health"), findsOneWidget);
     expect(find.text("Host a Realm"), findsOneWidget);
     expect(find.text("Run an execution engine"), findsOneWidget);
     expect(find.text("Apply"), findsNothing);
-    expect(find.byType(EditorCommitControls), findsOneWidget);
-    expect(
-      find.ancestor(
-        of: find.byType(EditorCommitControls),
-        matching: find.byWidgetPredicate(
-          (widget) =>
-              widget is PresentationNodeRenderer &&
-              widget.node.id == "serviceHost.configuration",
-        ),
-      ),
-      findsOneWidget,
-    );
-    expect(
-      tester
-          .widget<EditorCommitControls>(find.byType(EditorCommitControls))
-          .label,
-      isNull,
-    );
+    expect(find.text("Save"), findsOneWidget);
 
     expect(find.byTooltip("Zoom to fit"), findsNothing);
     expect(find.text("Enabled"), findsNothing);
     expect(find.text("Disabled"), findsNothing);
     expect(find.text("Assigned Realm"), findsNothing);
-    final realmCheckbox = find.byType(Checkbox).first;
-    expect(tester.widget<Checkbox>(realmCheckbox).value, isTrue);
-    await tester.ensureVisible(realmCheckbox);
-    await tester.tap(realmCheckbox);
+    final realmSwitch = find.byType(Switch).first;
+    expect(tester.widget<Switch>(realmSwitch).value, isTrue);
+    await tester.ensureVisible(realmSwitch);
+    await tester.tap(realmSwitch);
     await tester.pumpAndSettle();
     expect(find.text("Assigned Realm"), findsOneWidget);
     expect(find.text("Hosted here"), findsNothing);
     expect(find.text("Existing Realm"), findsNothing);
-    await tester.ensureVisible(realmCheckbox);
-    await tester.tap(realmCheckbox);
+    await tester.ensureVisible(realmSwitch);
+    await tester.tap(realmSwitch);
     await tester.pumpAndSettle();
     expect(find.text("Assigned Realm"), findsOneWidget);
-    final engineCheckbox = find.byType(Checkbox).last;
-    final wasEnabled = tester.widget<Checkbox>(engineCheckbox).value!;
-    await tester.ensureVisible(engineCheckbox);
-    await tester.tap(engineCheckbox);
+    final engineSwitch = find.byType(Switch).last;
+    final wasEnabled = tester.widget<Switch>(engineSwitch).value;
+    await tester.ensureVisible(engineSwitch);
+    await tester.tap(engineSwitch);
     await tester.pumpAndSettle();
-    expect(tester.widget<Checkbox>(engineCheckbox).value, !wasEnabled);
+    expect(tester.widget<Switch>(engineSwitch).value, !wasEnabled);
     expect(
       find.text("Engine target"),
       wasEnabled ? findsNothing : findsOneWidget,
-    );
-    await tester.ensureVisible(engineCheckbox);
-    await tester.tap(engineCheckbox);
-    await tester.pumpAndSettle();
-    expect(tester.widget<Checkbox>(engineCheckbox).value, wasEnabled);
-    expect(
-      find.text("Engine target"),
-      wasEnabled ? findsOneWidget : findsNothing,
     );
   });
 }

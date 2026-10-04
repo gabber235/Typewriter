@@ -8,10 +8,9 @@ part "type_constraint_validation_rules.dart";
 /// resolution.
 ///
 /// Constraint validation checks local bounds, nested expressions, parameter
-/// references, and structural recursion. Value validation is separate because
-/// generic and named types need a registry before their concrete values can be
-/// checked. Both operations return all diagnostics they can discover and carry
-/// paths so declaration errors can be located in nested records.
+/// references, and structural recursion. Both operations return all
+/// diagnostics they can discover and carry paths so declaration errors can be
+/// located in nested records.
 extension TypeExpressionConstraintValidation on TypeExpression {
   /// Checks constraints that are meaningful without resolving named types.
   ///
@@ -169,54 +168,6 @@ extension TypeExpressionConstraintValidation on TypeExpression {
       for (final argument in target.arguments) ...argument.parameterUses,
     },
     _ => const {},
-  };
-
-  /// Validates embedded values after named types can be resolved.
-  ///
-  /// Generic and named expressions are traversed, while value checks are
-  /// performed only where the current type supplies enough concrete context.
-  /// The registry is the authority for nominal type meaning and diagnostics
-  /// retain the nested field path for recovery in authoring UIs.
-  List<TypeDiagnostic> validateResolvedValues(
-    TypeRegistry registry, {
-    DataPath path = DataPath.root,
-  }) => switch (this) {
-    EnumType(:final valueType, :final values) => [
-      for (final value in values)
-        ...value.validateAgainst(valueType, path: path, registry: registry),
-      ...valueType.validateResolvedValues(registry, path: path),
-    ],
-    ListType(:final element) => element.validateResolvedValues(
-      registry,
-      path: path,
-    ),
-    MapType(:final key, :final value) => [
-      ...key.validateResolvedValues(registry, path: path),
-      ...value.validateResolvedValues(registry, path: path),
-    ],
-    RecordType(:final fields) => [
-      for (final field in fields.values) ...[
-        if (field.initialValue case final initial?)
-          ...initial.validateAgainst(
-            field.type,
-            registry: registry,
-            path: path.field(field.name),
-          ),
-        ...field.type.validateResolvedValues(
-          registry,
-          path: path.field(field.name),
-        ),
-      ],
-    ],
-    NamedType(:final reference) => [
-      for (final argument in reference.arguments)
-        ...argument.validateResolvedValues(registry, path: path),
-    ],
-    ReferenceType(:final target) => [
-      for (final argument in target.arguments)
-        ...argument.validateResolvedValues(registry, path: path),
-    ],
-    _ => const [],
   };
 }
 

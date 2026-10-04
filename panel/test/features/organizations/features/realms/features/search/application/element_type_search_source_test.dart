@@ -1,61 +1,122 @@
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
+
+final _refProvider = Provider<Ref>((ref) => ref);
 
 void main() {
-  test("definition updates refresh the existing source", () async {
-    final definitions = ValueNotifier<AsyncValue<List<ElementDefinition>>>(
-      const AsyncLoading(),
-    );
-    addTearDown(definitions.dispose);
-    final source = ElementTypeSearchSource(definitions: definitions);
-    final controller = SourceController(
-      source: source,
-      baseSelectors: const [],
-    );
-    addTearDown(controller.dispose);
+  test("Realm results replace the removed local element type index", () async {
+    final fixture = _fixture();
+    addTearDown(fixture.container.dispose);
+    addTearDown(fixture.subscription.close);
+    addTearDown(fixture.controller.dispose);
     await pumpEventQueue();
 
-    expect(controller.snapshot.status, SearchSourceStatus.loading);
-
-    definitions.value = AsyncData([_definition]);
-    await pumpEventQueue();
-
-    expect(controller.snapshot.status, SearchSourceStatus.ready);
-    expect(controller.snapshot.nodes, hasLength(1));
+    expect(fixture.controller.snapshot.status, SearchSourceStatus.ready);
+    expect(fixture.session.requests, hasLength(1));
+    expect(fixture.session.requests.single.query.normalizedQuery, isEmpty);
   });
 
-  test("query updates filter the existing source", () async {
-    final definitions = ValueNotifier<AsyncValue<List<ElementDefinition>>>(
-      AsyncData([_definition]),
-    );
-    addTearDown(definitions.dispose);
-    final controller = SourceController(
-      source: ElementTypeSearchSource(definitions: definitions),
-      baseSelectors: const [],
-    );
-    addTearDown(controller.dispose);
-    await pumpEventQueue();
+  test(
+    "query updates reuse the source and issue a fresh Realm search",
+    () async {
+      final fixture = _fixture();
+      addTearDown(fixture.container.dispose);
+      addTearDown(fixture.subscription.close);
+      addTearDown(fixture.controller.dispose);
+      await pumpEventQueue();
 
-    expect(controller.snapshot.nodes, hasLength(1));
+      fixture.controller.updateQuery("example");
+      fixture.controller.triggerQuery();
+      await pumpEventQueue();
 
-    controller.updateQuery("missing");
-    await pumpEventQueue();
-
-    expect(controller.snapshot.nodes, isEmpty);
-  });
+      expect(fixture.session.requests.length, greaterThanOrEqualTo(2));
+      expect(fixture.session.requests.last.query.normalizedQuery, "example");
+      expect(fixture.controller.snapshot.status, SearchSourceStatus.ready);
+    },
+  );
 }
 
-final _definition = ElementDefinition(
-  rootType: _rootType,
-  name: "Example",
-  description: "Typed entry",
-  color: Colors.blue,
-  icon: const IconValue.iconify("fa-solid:star"),
-);
+({
+  ProviderContainer container,
+  ProviderSubscription<AuthoringSessionState> subscription,
+  _SearchSession session,
+  SourceController controller,
+})
+_fixture() {
+  final organization = recordId("organization:test");
+  final realm = recordId("realm:test");
+  final session = _SearchSession(_state());
+  final container = ProviderContainer.test(
+    overrides: [
+      organizationIdProvider.overrideWithValue(organization),
+      realmIdProvider.overrideWithValue(realm),
+      authoringSessionProvider.overrideWith2((_) => session),
+    ],
+  );
+  final source = RealmAuthoringSearchSource(
+    ref: container.read(_refProvider),
+    organizationId: organization,
+    realmId: realm,
+  );
+  final subscription = container.listen(
+    authoringSessionProvider(organization, realm),
+    (_, _) {},
+  );
+  return (
+    container: container,
+    subscription: subscription,
+    session: session,
+    controller: SourceController(source: source, baseSelectors: const []),
+  );
+}
 
-final _rootType = ResolvedTypeRef(
-  id: DeclaredTypeId("0123456789abcdef0123456789abcdef"),
-  revision: 1,
-);
+final class _SearchSession extends AuthoringSession {
+  _SearchSession(this.initial);
+
+  final AuthoringSessionState initial;
+  final requests = <skir.SearchAuthoringRequest>[];
+
+  @override
+  AuthoringSessionState build(
+    skir.RecordId organizationId,
+    skir.RecordId realmId,
+  ) => initial;
+
+  @override
+  Future<void> refresh({bool catalog = false}) async {}
+
+  @override
+  Future<skir.SearchAuthoringResponse> search(
+    skir.SearchAuthoringRequest request,
+  ) async {
+    requests.add(request);
+    return skir.SearchAuthoringResponse.createSuccess(
+      snapshot: initial.snapshot!.snapshot,
+      generation: initial.snapshot!.generation,
+      hits: const [],
+      facets: const [],
+      diagnostics: const [],
+    );
+  }
+}
+
+AuthoringSessionState _state() {
+  final generation = skir.CatalogGeneration(value: "catalog:test");
+  return AuthoringSessionState(
+    catalog: receivedCheckedEditorCatalog(generation: generation),
+    snapshot: skir.AuthoringSnapshot(
+      snapshot: skir.SnapshotId(value: "snapshot:test"),
+      generation: generation,
+      resources: const [],
+      links: const [],
+      findings: const [],
+      observations: const [],
+      absentInputToken: skir.InputToken(value: "absent"),
+      findingsToken: skir.FindingsToken(value: "findings:test"),
+    ),
+  );
+}

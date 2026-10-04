@@ -3,6 +3,7 @@ package com.typewritermc.realm.compiler
 import com.surrealdb.RecordId
 import com.surrealdb.Surreal
 import com.surrealdb.Transaction
+import com.typewritermc.authoring.PublicationId
 import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.engine.CompileDiagnostic
 import com.typewritermc.engine.CompiledArtifact
@@ -34,6 +35,8 @@ sealed interface RegisteredCompiledState {
 
 /** Persists projection neutral artifacts, manifests, attempts, and activation pointers. */
 interface RegisteredCompiledContentRepository {
+    suspend fun activePublication(): PublicationId?
+
     suspend fun activeManifest(): CompiledArtifactManifest?
 
     suspend fun activeActivation(): CompiledArtifactActivation?
@@ -50,6 +53,7 @@ interface RegisteredCompiledContentRepository {
     ): Boolean
 
     suspend fun publish(
+        publication: PublicationId,
         manifest: CompiledArtifactManifest,
         artifacts: Collection<CompiledArtifact>,
         activation: CompiledArtifactActivation,
@@ -62,6 +66,14 @@ class SurrealRegisteredCompiledContentRepository(
     private val onActivated: suspend (CompiledArtifactActivation) -> Unit = {},
     private val onBlocked: suspend () -> Unit = {},
 ) : RegisteredCompiledContentRepository {
+    override suspend fun activePublication(): PublicationId? =
+        database
+            .query("SELECT VALUE publication FROM ONLY active_compiled_artifact_manifest:current;")
+            .take(0)
+            .takeUnless { it.isNone || it.isNull }
+            ?.getString()
+            ?.let(::PublicationId)
+
     override suspend fun activeManifest(): CompiledArtifactManifest? =
         database
             .query("SELECT VALUE manifest.payload FROM ONLY active_compiled_artifact_manifest:current;")
@@ -153,13 +165,13 @@ class SurrealRegisteredCompiledContentRepository(
     ): Boolean {
         val recorded =
             database.inTransaction { transaction ->
-                val currentSourceRevision =
+                val current =
                     transaction
                         .query("SELECT VALUE revision FROM ONLY authoring_head:current;")
                         .take(0)
-                        .getLong()
-                        .toString()
-                if (currentSourceRevision != sourceRevision) return@inTransaction false
+                if (current.isNone || current.isNull || current.getLong().toString() != sourceRevision) {
+                    return@inTransaction false
+                }
                 transaction.createRegisteredAttempt(sourceRevision, catalogRevision, roots, "blocked", diagnostics, null)
                 true
             }
@@ -170,19 +182,13 @@ class SurrealRegisteredCompiledContentRepository(
     }
 
     override suspend fun publish(
+        publication: PublicationId,
         manifest: CompiledArtifactManifest,
         artifacts: Collection<CompiledArtifact>,
         activation: CompiledArtifactActivation,
     ): Boolean {
         val published =
             database.inTransaction { transaction ->
-                val sourceRevision =
-                    transaction
-                        .query("SELECT VALUE revision FROM ONLY authoring_head:current;")
-                        .take(0)
-                        .getLong()
-                        .toString()
-                if (sourceRevision != manifest.sourceRevision) return@inTransaction false
                 artifacts.forEach { transaction.createImmutableArtifact(it) }
                 transaction.createImmutableArtifactManifest(manifest)
                 val current =
@@ -195,10 +201,11 @@ class SurrealRegisteredCompiledContentRepository(
                 transaction
                     .query(
                         "UPSERT ONLY active_compiled_artifact_manifest:current CONTENT { " +
-                            "manifest: \$manifest, activation_revision: \$activation_revision, " +
+                            "publication: \$publication, manifest: \$manifest, activation_revision: \$activation_revision, " +
                             "activation_payload: \$activation_payload, activated_at: time::now() };",
                         mapOf(
                             "manifest" to manifest.id(),
+                            "publication" to publication.value,
                             "activation_revision" to expectedRevision,
                             "activation_payload" to json.encodeToString(CompiledArtifactActivation.serializer(), activation),
                         ),

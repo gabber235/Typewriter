@@ -11,7 +11,7 @@ const _key = EditorResourceKey(
 final _title = DataPath.root.field("title");
 RecordValue _value(String title) => RecordValue({"title": StringValue(title)});
 EditorSnapshot _snapshot({String title = "Original", int revision = 1}) =>
-    DocumentEditorSnapshot(
+    FakeEditorSnapshot(
       EditorDocument(
         rootType: RecordType(
           fields: const {"title": TypeField(name: "title", type: StringType())},
@@ -20,6 +20,7 @@ EditorSnapshot _snapshot({String title = "Original", int revision = 1}) =>
         confirmedValue: _value(title),
         revision: revision,
       ),
+      validation: acceptTestEditorMutation,
     );
 TransactionalEditorSource _draft(
   LocalWorkSession workspace,

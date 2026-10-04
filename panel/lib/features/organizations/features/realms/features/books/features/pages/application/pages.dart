@@ -1,11 +1,8 @@
-import "package:freezed_annotation/freezed_annotation.dart";
-import "package:riverpod/riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-part "pages.freezed.dart";
 part "pages.g.dart";
 
 /// Immutable page metadata used by library and page editor consumers.
@@ -13,88 +10,55 @@ part "pages.g.dart";
 /// The wire authoring session is canonical. This model is a typed read model;
 /// local editor values are overlaid only by [projected] and never written back
 /// into canonical state by the model itself.
-@freezed
-abstract class Page with _$Page {
-  @Assert("name != \"\"", "Name must not be empty.")
-  const factory Page({
-    required skir.ResourceId pageId,
-    required skir.ResourceId bookId,
-    required String name,
-    required ResolvedTypeRef rootType,
-    required String chapter,
-    required int priority,
-  }) = _Page;
+final class Page {
+  const Page({
+    required this.pageId,
+    required this.bookId,
+    required this.name,
+    required this.configuration,
+    required this.chapter,
+    required this.priority,
+  }) : assert(name != "", "Name must not be empty.");
 
-  const Page._();
-
-  factory Page.fromTyped(TypedAuthoringResource resource) {
-    final value = resource.content.rootValue;
-    if (value is! RecordValue) throw StateError("The Page content is invalid");
-    final book = value.fields["book"];
-    final name = value.fields["name"];
-    final chapter = value.fields["chapter"];
-    final priority = value.fields["priority"];
-    if (book is! ReferenceValue ||
-        name is! StringValue ||
-        chapter is! StringValue ||
-        priority is! IntegerValue ||
-        resource.content.rootType is! NamedType) {
-      throw StateError("The Page content is invalid");
-    }
+  factory Page.fromAuthoring(skir.AuthoringResource resource) {
+    final value = decodeAuthoredPage(resource);
     return Page(
-      pageId: resource.id,
-      bookId: book.id,
-      name: name.value,
-      rootType: (resource.content.rootType as NamedType).reference,
-      chapter: chapter.value,
-      priority: priority.value.toInt(),
+      pageId: value.id,
+      bookId: value.book,
+      name: value.name,
+      configuration: value.configuration,
+      chapter: value.chapter,
+      priority: value.priority,
     );
   }
 
-  TypedValueEnvelope content(ResolvedTypeRef rootType) => TypedValueEnvelope(
-    rootType: rootType,
-    rootValue: RecordValue({
-      "book": ReferenceValue(this.bookId),
-      "name": name.asValue,
-      "chapter": chapter.asValue,
-      "priority": priority.asValue,
-    }),
+  final skir.ResourceId pageId;
+  final skir.ResourceId? bookId;
+  final String name;
+  final skir.TypeSelection configuration;
+  final String chapter;
+  final int priority;
+
+  skir.NamedTypeUse? get rootType => switch (configuration) {
+    skir.TypeSelection_completeWrapper(:final value) => value,
+    _ => null,
+  };
+
+  Page copyWith({
+    skir.ResourceId? pageId,
+    skir.ResourceId? bookId,
+    String? name,
+    skir.TypeSelection? configuration,
+    String? chapter,
+    int? priority,
+  }) => Page(
+    pageId: pageId ?? this.pageId,
+    bookId: bookId ?? this.bookId,
+    name: name ?? this.name,
+    configuration: configuration ?? this.configuration,
+    chapter: chapter ?? this.chapter,
+    priority: priority ?? this.priority,
   );
-
-  /// Encodes editable metadata for the shared transactional editor boundary.
-  RecordValue get editorValue => RecordValue({
-    "name": name.asValue,
-    "chapter": chapter.asValue,
-    "priority": priority.asValue,
-  });
-
-  /// Applies a validated metadata record, or returns null for an invalid shape.
-  ///
-  /// Name, chapter, and priority must be present with their expected value
-  /// types. This keeps malformed local work from replacing a visible page.
-  Page? withEditorValue(DataValue value) {
-    if (value is! RecordValue) return null;
-    final name = value.fields["name"];
-    final chapter = value.fields["chapter"];
-    final priority = value.fields["priority"];
-    if (name is! StringValue ||
-        name.value.trim().isEmpty ||
-        chapter is! StringValue ||
-        priority is! IntegerValue) {
-      return null;
-    }
-    return copyWith(
-      name: name.value,
-      chapter: chapter.value,
-      priority: priority.value.toInt(),
-    );
-  }
-
-  /// Overlays local draft state while retaining this canonical page as fallback.
-  Page projected(LocalEditorValue? local) {
-    if (local == null) return this;
-    return withEditorValue(local.projectOnto(editorValue)) ?? this;
-  }
 }
 
 /// Retains and exposes canonical pages belonging to one book.
@@ -111,34 +75,17 @@ class CanonicalBookPages extends _$CanonicalBookPages {
     if (organizationId == null) throw ApiException.noOrganization();
     if (realmId == null) throw ApiException.badRequest("No realm selected");
     final provider = authoringSessionProvider(organizationId, realmId);
-    final view = await ref.readAuthoringView(
-      organizationId: organizationId,
-      realmId: realmId,
-      request: RealmEditorCatalogRequest(types: {referenceResourceTypes.page}),
-      selections: (_) => [bookId.bookAuthoringSelection],
-    );
-    final catalog = view.catalog;
-    final codec = TypedAuthoringCodec(catalog);
-    List<Page> project(AuthoringSessionState value) {
-      return value.resources.values
-          .map(codec.decodeResourceOrThrow)
-          .where(
-            (resource) =>
-                codec.isResourceType(resource, CoreResourceDefinitionIds.page),
-          )
-          .map(Page.fromTyped)
-          .where((page) => page.bookId == bookId)
-          .toList();
+    var session = ref.watch(provider);
+    if (session.failure case final failure?) {
+      throw StateError("Authoring is unavailable: $failure");
     }
-
-    ref.listen(provider, (_, value) {
-      if (value.sequence != null &&
-          value.generation?.value == catalog.generation.value) {
-        state = AsyncData(project(value));
-      }
-    });
-
-    return project(view.session);
+    if (session.snapshot == null) {
+      await ref.read(provider.notifier).ready;
+      session = ref.read(provider);
+    }
+    return _projectPages(session)
+        .where((page) => page.bookId == bookId)
+        .toList();
   }
 }
 
@@ -156,41 +103,18 @@ class CanonicalPage extends _$CanonicalPage {
     if (organizationId == null) throw ApiException.noOrganization();
     if (realmId == null) throw ApiException.badRequest("No realm selected");
     final provider = authoringSessionProvider(organizationId, realmId);
-    final view = await ref.readAuthoringView(
-      organizationId: organizationId,
-      realmId: realmId,
-      request: RealmEditorCatalogRequest(types: {referenceResourceTypes.page}),
-      selections: (_) => [pageId.pageAuthoringSelection],
-    );
-    final catalog = view.catalog;
-    final codec = TypedAuthoringCodec(catalog);
-    ref.listen(provider, (_, value) {
-      if (value.sequence == null) return;
-      if (value.generation?.value != catalog.generation.value) return;
-      final resource = value.resources[pageId];
-      final decoded = resource == null
-          ? null
-          : codec.decodeResourceOrThrow(resource);
-      final page =
-          decoded == null ||
-              !codec.isResourceType(decoded, CoreResourceDefinitionIds.page)
-          ? null
-          : Page.fromTyped(decoded);
-      state = page == null
-          ? AsyncError(ApiException.notFound("Page"), StackTrace.current)
-          : AsyncData(page);
-    });
-
-    final value = view.session;
-    final resource = value.resources[pageId];
-    final decoded = resource == null
-        ? null
-        : codec.decodeResourceOrThrow(resource);
-    if (decoded == null ||
-        !codec.isResourceType(decoded, CoreResourceDefinitionIds.page)) {
-      throw ApiException.notFound("Page");
+    var session = ref.watch(provider);
+    if (session.failure case final failure?) {
+      throw StateError("Authoring is unavailable: $failure");
     }
-    return Page.fromTyped(decoded);
+    if (session.snapshot == null) {
+      await ref.read(provider.notifier).ready;
+      session = ref.read(provider);
+    }
+    return _projectPages(session)
+            .where((page) => page.pageId == pageId)
+            .firstOrNull ??
+        (throw ApiException.notFound("Page"));
   }
 }
 
@@ -212,26 +136,13 @@ AsyncValue<List<Page>> projectedBookPages(
   if (organizationId == null || realmId == null) {
     return AsyncData(canonical.requireValue);
   }
-  final local = ref.watch(
-    localWorkProvider.select((state) => state.editorValues),
-  );
   final query = search.trim().toLowerCase();
   return AsyncData([
     for (final page in canonical.requireValue)
-      if (page.projected(
-            local[EditorResourceKey(
-              scope: EditorResourceScope(
-                organizationId: organizationId,
-                realmId: realmId,
-              ),
-              identity: page.pageId,
-            )],
-          )
-          case final projected
-          when query.isEmpty ||
-              projected.name.toLowerCase().contains(query) ||
-              projected.chapter.toLowerCase().contains(query))
-        projected,
+      if (query.isEmpty ||
+          page.name.toLowerCase().contains(query) ||
+          page.chapter.toLowerCase().contains(query))
+        page,
   ]);
 }
 
@@ -270,17 +181,7 @@ AsyncValue<Page> projectedPage(Ref ref, skir.ResourceId pageId) {
       StackTrace.current,
     );
   }
-  final key = EditorResourceKey(
-    scope: EditorResourceScope(
-      organizationId: organizationId,
-      realmId: realmId,
-    ),
-    identity: pageId,
-  );
-  final local = ref.watch(
-    localWorkProvider.select((state) => state.editorValues[key]),
-  );
-  return AsyncData(canonical.requireValue.projected(local));
+  return canonical;
 }
 
 /// Resolves the route's string parameter to the typed page record identity.
@@ -290,3 +191,12 @@ skir.ResourceId? pageId(Ref ref) {
   if (id == null) return null;
   return skir.ResourceId(value: id);
 }
+
+List<Page> _projectPages(AuthoringSessionState session) => session
+    .resources
+    .values
+    .where((resource) => resource.definition == _pageDefinition)
+    .map(Page.fromAuthoring)
+    .toList(growable: false);
+
+final _pageDefinition = skir.ResourceDefinitionId(value: "typewriter.page");

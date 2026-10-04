@@ -1,4 +1,6 @@
-import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_panel/shared/graph/domain/graph_edge.dart";
+import "package:typewriter_panel/shared/graph/domain/graph_element.dart";
+import "package:typewriter_panel/shared/graph/domain/graph_identifier.dart";
 
 /// Immutable graph snapshot consumed by layout and interaction code.
 ///

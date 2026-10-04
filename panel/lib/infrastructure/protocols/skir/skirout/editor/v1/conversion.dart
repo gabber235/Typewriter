@@ -14,7 +14,6 @@
 import "dart:core" as _core;
 import "package:skir_client/skir_client.dart" as _skir;
 
-import "./path.dart" as _lib_editor_v1_path;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 
 // -----------------------------------------------------------------------------
@@ -532,8 +531,8 @@ enum _ScalarCastKind_consts implements ScalarCastKind {
 // -----------------------------------------------------------------------------
 
 sealed class RecordProjectionField_orMutable {
-  _lib_editor_v1_path.DataPath_orMutable get source;
-  _lib_editor_v1_path.DataPath_orMutable get target;
+  _lib_editor_v1_type_catalog.ValuePath_orMutable get source;
+  _lib_editor_v1_type_catalog.ValuePath_orMutable get target;
   _lib_editor_v1_type_catalog.ConversionId_orMutable? get conversionId;
 
   RecordProjectionField toFrozen();
@@ -542,16 +541,16 @@ sealed class RecordProjectionField_orMutable {
 /// Deeply immutable.
 final class RecordProjectionField implements RecordProjectionField_orMutable {
   @_core.override
-  final _lib_editor_v1_path.DataPath source;
+  final _lib_editor_v1_type_catalog.ValuePath source;
   @_core.override
-  final _lib_editor_v1_path.DataPath target;
+  final _lib_editor_v1_type_catalog.ValuePath target;
   @_core.override
   final _lib_editor_v1_type_catalog.ConversionId? conversionId;
   _skir.internal__UnrecognizedFields? _u;
 
   factory RecordProjectionField({
-    required _lib_editor_v1_path.DataPath_orMutable source,
-    required _lib_editor_v1_path.DataPath_orMutable target,
+    required _lib_editor_v1_type_catalog.ValuePath_orMutable source,
+    required _lib_editor_v1_type_catalog.ValuePath_orMutable target,
     required _lib_editor_v1_type_catalog.ConversionId_orMutable? conversionId,
   }) => RecordProjectionField._(
     source.toFrozen(),
@@ -567,16 +566,16 @@ final class RecordProjectionField implements RecordProjectionField_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RecordProjectionField._(
-    _lib_editor_v1_path.DataPath.defaultInstance,
-    _lib_editor_v1_path.DataPath.defaultInstance,
+    _lib_editor_v1_type_catalog.ValuePath.defaultInstance,
+    _lib_editor_v1_type_catalog.ValuePath.defaultInstance,
     null,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static RecordProjectionField_mutable mutable() => RecordProjectionField_mutable._(
-    _lib_editor_v1_path.DataPath.defaultInstance,
-    _lib_editor_v1_path.DataPath.defaultInstance,
+    _lib_editor_v1_type_catalog.ValuePath.defaultInstance,
+    _lib_editor_v1_type_catalog.ValuePath.defaultInstance,
     null,
   );
 
@@ -618,7 +617,7 @@ final class RecordProjectionField implements RecordProjectionField_orMutable {
         "source",
         "source",
         0,
-        _lib_editor_v1_path.DataPath.serializer,
+        _lib_editor_v1_type_catalog.ValuePath.serializer,
         "",
         (it) => it.source,
         (it, v) => it.source = v,
@@ -627,7 +626,7 @@ final class RecordProjectionField implements RecordProjectionField_orMutable {
         "target",
         "target",
         1,
-        _lib_editor_v1_path.DataPath.serializer,
+        _lib_editor_v1_type_catalog.ValuePath.serializer,
         "",
         (it) => it.target,
         (it, v) => it.target = v,
@@ -661,8 +660,8 @@ final class RecordProjectionField implements RecordProjectionField_orMutable {
 
 /// Mutable version of [RecordProjectionField].
 final class RecordProjectionField_mutable implements RecordProjectionField_orMutable {
-  _lib_editor_v1_path.DataPath_orMutable source;
-  _lib_editor_v1_path.DataPath_orMutable target;
+  _lib_editor_v1_type_catalog.ValuePath_orMutable source;
+  _lib_editor_v1_type_catalog.ValuePath_orMutable target;
   _lib_editor_v1_type_catalog.ConversionId_orMutable? conversionId;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -674,23 +673,23 @@ final class RecordProjectionField_mutable implements RecordProjectionField_orMut
 
   /// If the value of [source] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
-  _lib_editor_v1_path.DataPath_mutable get mutableSource {
+  _lib_editor_v1_type_catalog.ValuePath_mutable get mutableSource {
     final value = this.source;
-    if (value is _lib_editor_v1_path.DataPath_mutable) {
+    if (value is _lib_editor_v1_type_catalog.ValuePath_mutable) {
       return value;
     } else {
-      return this.source = (value as _lib_editor_v1_path.DataPath).toMutable();
+      return this.source = (value as _lib_editor_v1_type_catalog.ValuePath).toMutable();
     }
   }
 
   /// If the value of [target] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
-  _lib_editor_v1_path.DataPath_mutable get mutableTarget {
+  _lib_editor_v1_type_catalog.ValuePath_mutable get mutableTarget {
     final value = this.target;
-    if (value is _lib_editor_v1_path.DataPath_mutable) {
+    if (value is _lib_editor_v1_type_catalog.ValuePath_mutable) {
       return value;
     } else {
-      return this.target = (value as _lib_editor_v1_path.DataPath).toMutable();
+      return this.target = (value as _lib_editor_v1_type_catalog.ValuePath).toMutable();
     }
   }
 
@@ -830,7 +829,7 @@ final class RecordProjectionRule_mutable implements RecordProjectionRule_orMutab
 
 sealed class RecordConstructionField_orMutable {
   _core.String get targetField;
-  _lib_editor_v1_path.DataPath_orMutable get source;
+  _lib_editor_v1_type_catalog.ValuePath_orMutable get source;
   _lib_editor_v1_type_catalog.ConversionId_orMutable? get conversionId;
 
   RecordConstructionField toFrozen();
@@ -841,14 +840,14 @@ final class RecordConstructionField implements RecordConstructionField_orMutable
   @_core.override
   final _core.String targetField;
   @_core.override
-  final _lib_editor_v1_path.DataPath source;
+  final _lib_editor_v1_type_catalog.ValuePath source;
   @_core.override
   final _lib_editor_v1_type_catalog.ConversionId? conversionId;
   _skir.internal__UnrecognizedFields? _u;
 
   factory RecordConstructionField({
     required _core.String targetField,
-    required _lib_editor_v1_path.DataPath_orMutable source,
+    required _lib_editor_v1_type_catalog.ValuePath_orMutable source,
     required _lib_editor_v1_type_catalog.ConversionId_orMutable? conversionId,
   }) => RecordConstructionField._(
     targetField,
@@ -865,7 +864,7 @@ final class RecordConstructionField implements RecordConstructionField_orMutable
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RecordConstructionField._(
     "",
-    _lib_editor_v1_path.DataPath.defaultInstance,
+    _lib_editor_v1_type_catalog.ValuePath.defaultInstance,
     null,
   );
 
@@ -873,7 +872,7 @@ final class RecordConstructionField implements RecordConstructionField_orMutable
   /// Fields are initialized to their default values.
   static RecordConstructionField_mutable mutable() => RecordConstructionField_mutable._(
     "",
-    _lib_editor_v1_path.DataPath.defaultInstance,
+    _lib_editor_v1_type_catalog.ValuePath.defaultInstance,
     null,
   );
 
@@ -924,7 +923,7 @@ final class RecordConstructionField implements RecordConstructionField_orMutable
         "source",
         "source",
         1,
-        _lib_editor_v1_path.DataPath.serializer,
+        _lib_editor_v1_type_catalog.ValuePath.serializer,
         "",
         (it) => it.source,
         (it, v) => it.source = v,
@@ -959,7 +958,7 @@ final class RecordConstructionField implements RecordConstructionField_orMutable
 /// Mutable version of [RecordConstructionField].
 final class RecordConstructionField_mutable implements RecordConstructionField_orMutable {
   _core.String targetField;
-  _lib_editor_v1_path.DataPath_orMutable source;
+  _lib_editor_v1_type_catalog.ValuePath_orMutable source;
   _lib_editor_v1_type_catalog.ConversionId_orMutable? conversionId;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -971,12 +970,12 @@ final class RecordConstructionField_mutable implements RecordConstructionField_o
 
   /// If the value of [source] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
-  _lib_editor_v1_path.DataPath_mutable get mutableSource {
+  _lib_editor_v1_type_catalog.ValuePath_mutable get mutableSource {
     final value = this.source;
-    if (value is _lib_editor_v1_path.DataPath_mutable) {
+    if (value is _lib_editor_v1_type_catalog.ValuePath_mutable) {
       return value;
     } else {
-      return this.source = (value as _lib_editor_v1_path.DataPath).toMutable();
+      return this.source = (value as _lib_editor_v1_type_catalog.ValuePath).toMutable();
     }
   }
 
@@ -1758,8 +1757,8 @@ final class ConversionRule_realmWrapper extends _ConversionRule_wrapper {
 
 sealed class ConversionDefinition_orMutable {
   _lib_editor_v1_type_catalog.ConversionId_orMutable get conversionId;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable get source;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable get target;
+  _lib_editor_v1_type_catalog.TypeUse get source;
+  _lib_editor_v1_type_catalog.TypeUse get target;
   ConversionSafety get safety;
   ConversionFallibility get fallibility;
   ConversionLocality get locality;
@@ -1774,9 +1773,9 @@ final class ConversionDefinition implements ConversionDefinition_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.ConversionId conversionId;
   @_core.override
-  final _lib_editor_v1_type_catalog.ResolvedTypeRef source;
+  final _lib_editor_v1_type_catalog.TypeUse source;
   @_core.override
-  final _lib_editor_v1_type_catalog.ResolvedTypeRef target;
+  final _lib_editor_v1_type_catalog.TypeUse target;
   @_core.override
   final ConversionSafety safety;
   @_core.override
@@ -1791,8 +1790,8 @@ final class ConversionDefinition implements ConversionDefinition_orMutable {
 
   factory ConversionDefinition({
     required _lib_editor_v1_type_catalog.ConversionId_orMutable conversionId,
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable source,
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable target,
+    required _lib_editor_v1_type_catalog.TypeUse source,
+    required _lib_editor_v1_type_catalog.TypeUse target,
     required ConversionSafety safety,
     required ConversionFallibility fallibility,
     required ConversionLocality locality,
@@ -1800,8 +1799,8 @@ final class ConversionDefinition implements ConversionDefinition_orMutable {
     required ConversionRule rule,
   }) => ConversionDefinition._(
     conversionId.toFrozen(),
-    source.toFrozen(),
-    target.toFrozen(),
+    source,
+    target,
     safety,
     fallibility,
     locality,
@@ -1823,8 +1822,8 @@ final class ConversionDefinition implements ConversionDefinition_orMutable {
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ConversionDefinition._(
     _lib_editor_v1_type_catalog.ConversionId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
     ConversionSafety.unknown,
     ConversionFallibility.unknown,
     ConversionLocality.unknown,
@@ -1836,8 +1835,8 @@ final class ConversionDefinition implements ConversionDefinition_orMutable {
   /// Fields are initialized to their default values.
   static ConversionDefinition_mutable mutable() => ConversionDefinition_mutable._(
     _lib_editor_v1_type_catalog.ConversionId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
     ConversionSafety.unknown,
     ConversionFallibility.unknown,
     ConversionLocality.unknown,
@@ -1902,7 +1901,7 @@ final class ConversionDefinition implements ConversionDefinition_orMutable {
         "source",
         "source",
         1,
-        _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
+        _lib_editor_v1_type_catalog.TypeUse.serializer,
         "",
         (it) => it.source,
         (it, v) => it.source = v,
@@ -1911,7 +1910,7 @@ final class ConversionDefinition implements ConversionDefinition_orMutable {
         "target",
         "target",
         2,
-        _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
+        _lib_editor_v1_type_catalog.TypeUse.serializer,
         "",
         (it) => it.target,
         (it, v) => it.target = v,
@@ -1980,8 +1979,8 @@ final class ConversionDefinition implements ConversionDefinition_orMutable {
 /// Mutable version of [ConversionDefinition].
 final class ConversionDefinition_mutable implements ConversionDefinition_orMutable {
   _lib_editor_v1_type_catalog.ConversionId_orMutable conversionId;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable source;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable target;
+  _lib_editor_v1_type_catalog.TypeUse source;
+  _lib_editor_v1_type_catalog.TypeUse target;
   ConversionSafety safety;
   ConversionFallibility fallibility;
   ConversionLocality locality;
@@ -2008,28 +2007,6 @@ final class ConversionDefinition_mutable implements ConversionDefinition_orMutab
       return value;
     } else {
       return this.conversionId = (value as _lib_editor_v1_type_catalog.ConversionId).toMutable();
-    }
-  }
-
-  /// If the value of [source] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable get mutableSource {
-    final value = this.source;
-    if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
-      return value;
-    } else {
-      return this.source = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
-    }
-  }
-
-  /// If the value of [target] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable get mutableTarget {
-    final value = this.target;
-    if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
-      return value;
-    } else {
-      return this.target = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
     }
   }
 

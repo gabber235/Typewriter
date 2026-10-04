@@ -672,6 +672,7 @@ TransactionalEditorSource _source({
       confirmedValue: _value(title: "Old", color: "Red"),
       revision: 1,
     ),
+    validation: (path, value) => EditorMutationResult.applied(value),
     debounce: debounce,
     commit: commit,
     scheduler: scheduler ?? _ControlledScheduler(),

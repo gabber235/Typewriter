@@ -1,7 +1,6 @@
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
-import "package:riverpod/riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
@@ -30,37 +29,22 @@ class CanonicalBooks extends _$CanonicalBooks {
       return [];
     }
 
-    final view = await ref.readAuthoringView(
-      organizationId: organizationId,
-      realmId: realmId,
-      request: RealmEditorCatalogRequest(types: {referenceResourceTypes.book}),
-      selections: (catalog) => [
-        ...catalog.collectionSelections(catalog.presentations.values),
-        authoringDefinitionSelection(
-          key: "books",
-          definitions: const [CoreResourceDefinitionIds.book],
-        ),
-      ],
-    );
-    final catalog = view.catalog;
-    final codec = TypedAuthoringCodec(catalog);
     final provider = authoringSessionProvider(organizationId, realmId);
-    ref.listen(provider, (_, value) {
-      if (value.sequence != null &&
-          value.generation?.value == catalog.generation.value) {
-        state = AsyncData(_projectBooks(value, codec));
+    var session = ref.watch(provider);
+    if (session.failure case final failure?) {
+      throw StateError("Authoring is unavailable: $failure");
+    }
+    if (session.snapshot == null) {
+      await ref.read(provider.notifier).ready;
+      session = ref.read(provider);
+      if (session.failure case final failure?) {
+        throw StateError("Authoring is unavailable: $failure");
       }
-    });
-    return _projectBooks(view.session, codec);
+    }
+    return _projectBooks(session);
   }
 
-  /// Applies the changed inspector fields of [book] against [expected].
-  ///
-  /// When [expected] is omitted, the current confirmed session value is used.
-  /// The editor owner converts the difference into a conditional patch, so a
-  /// concurrent change is reported instead of being silently overwritten.
-  /// The temporary owner is always disposed after submission.
-  Future<TypedMutationResult> updateBook(Book book, {Book? expected}) async {
+  Future<void> updateBook(Book book, {Book? expected}) async {
     state.ensureReady();
     final before =
         expected ??
@@ -68,43 +52,76 @@ class CanonicalBooks extends _$CanonicalBooks {
           (candidate) => candidate.bookId == book.bookId,
           orElse: () => throw ApiException.notFound("Book"),
         );
-    return ref.updateAuthoringResource(
-      id: book.bookId,
-      expected: before.inspectorValue,
-      proposed: book.inspectorValue,
-      label: "Book",
+    final access = ref.readAuthoringSession();
+    final source = access.state.resources[book.bookId];
+    final baseline = access.state.draft;
+    if (source == null || baseline == null) {
+      throw ApiException.notFound("Book");
+    }
+    if (Book.fromAuthoring(source) != before) {
+      throw ApiException.conflict("The Book changed before this edit");
+    }
+    final draft = baseline.fork();
+    if (book.title != before.title) {
+      setAuthoredFieldPayload(
+        draft: draft,
+        resource: book.bookId,
+        fields: const ["title"],
+        payload: skir.DataValue.wrapStringValue(book.title),
+      );
+    }
+    if (book.icon != before.icon) {
+      final icon = source.content.authoredField("icon");
+      final field = icon?.authoredField("value") != null
+          ? "value"
+          : icon?.authoredField("source") != null
+          ? "source"
+          : null;
+      if (field == null) {
+        throw StateError("The Book icon is unavailable");
+      }
+      setAuthoredFieldPayload(
+        draft: draft,
+        resource: book.bookId,
+        fields: ["icon", field],
+        payload: skir.DataValue.wrapStringValue(book.icon),
+      );
+    }
+    if (book.color != before.color) {
+      setAuthoredFieldPayload(
+        draft: draft,
+        resource: book.bookId,
+        fields: const ["color"],
+        payload: skir.DataValue.wrapInteger(
+          book.color.toARGB32().toUnsigned(32).toString(),
+        ),
+      );
+    }
+    if (!const ListEquality<skir.ResourceId>().equals(
+      book.tagIds,
+      before.tagIds,
+    )) {
+      replacePortableLinkCollection(
+        draft: AuthoredDraftAuthoringDocument(draft),
+        catalog: access.state.catalog!,
+        resource: book.bookId,
+        field: "tags",
+        expected: before.tagIds,
+        proposed: book.tagIds,
+      );
+    }
+    await access.notifier.commitDraft(
+      draft,
+      conflictMessage: "The Book changed before this edit was saved",
     );
   }
 }
 
-List<Book> _projectBooks(
-  AuthoringSessionState value,
-  TypedAuthoringCodec codec,
-) {
+List<Book> _projectBooks(AuthoringSessionState value) {
   return value.resources.values
-      .map(codec.decodeResourceOrThrow)
-      .where(
-        (resource) =>
-            codec.isResourceType(resource, CoreResourceDefinitionIds.book),
-      )
-      .map(Book.fromTyped)
+      .where((resource) => resource.definition == _bookDefinition)
+      .map(Book.fromAuthoring)
       .toList();
 }
 
-/// Reads one confirmed book together with the session sequence that confirms
-/// it. A missing book or uninitialized session produces no editable value.
-extension AuthoringBookValue on AuthoringSessionState {
-  AuthoringValue<Book>? bookEditorValue(
-    skir.ResourceId bookId,
-    TypedAuthoringCodec codec,
-  ) {
-    final value = resources[bookId];
-    final revision = sequence;
-    if (value == null || revision == null) return null;
-    final decoded = codec.decodeResourceOrThrow(value);
-    if (!codec.isResourceType(decoded, CoreResourceDefinitionIds.book)) {
-      return null;
-    }
-    return AuthoringValue(value: Book.fromTyped(decoded), revision: revision);
-  }
-}
+final _bookDefinition = skir.ResourceDefinitionId(value: "typewriter.book");

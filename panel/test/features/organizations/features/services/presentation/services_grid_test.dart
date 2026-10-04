@@ -111,32 +111,32 @@ void main() {
     await tester.tap(find.text("PAPER HOST"));
     await tester.pumpAndSettle();
 
-    expect(find.text("Service"), findsOneWidget);
-    expect(find.text("Identity and connection"), findsNothing);
-    expect(find.text("CONNECTION"), findsOneWidget);
-    expect(find.text("Host"), findsOneWidget);
-    expect(find.text("Capabilities and runtime health"), findsNothing);
-    expect(find.text("CAPABILITIES"), findsOneWidget);
-
-    expect(find.text("RUNTIME HEALTH"), findsOneWidget);
-    expect(find.text("Configuration"), findsOneWidget);
-    expect(find.text("REALM HOSTING"), findsOneWidget);
-    expect(find.text("EXECUTION ENGINE"), findsOneWidget);
+    expect(find.text("Name"), findsOneWidget);
+    expect(find.text("Connection"), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(PortablePresentationRenderer),
+        matching: find.text("Connected"),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text("Version"), findsOneWidget);
+    expect(find.text("Entry point"), findsOneWidget);
+    expect(find.text("Realm hosting"), findsOneWidget);
+    expect(find.text("Supported engines"), findsOneWidget);
+    expect(find.text("Runtime health"), findsOneWidget);
     expect(find.text("Host a Realm"), findsOneWidget);
     expect(find.text("Run an execution engine"), findsOneWidget);
 
     expect(find.text("Assigned Realm"), findsNothing);
     expect(find.text("Hosted Realm"), findsNothing);
-    expect(find.text("Message"), findsNothing);
-    expect(find.byType(ComposedEditor), findsOneWidget);
+    expect(find.text("Message"), findsOneWidget);
+    expect(find.byType(PortablePresentationRenderer), findsOneWidget);
     expect(find.text("Unbind"), findsOneWidget);
-    expect(find.byIcon(Icons.cloud_done_outlined), findsOneWidget);
-
-    expect(find.byIcon(Icons.play_circle_outline), findsWidgets);
 
     await tester.ensureVisible(find.text("Host a Realm"));
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(Checkbox).first);
+    await tester.tap(find.byType(Switch).first);
     await tester.pumpAndSettle();
 
     expect(find.text("Assigned Realm"), findsOneWidget);
@@ -192,17 +192,14 @@ void main() {
     await tester.tap(find.text("ENGINE"));
     await tester.pumpAndSettle();
 
-    expect(find.text("Runtime"), findsOneWidget);
-    expect(find.text("Current deployment health"), findsNothing);
-    expect(find.text("STATUS"), findsOneWidget);
-    expect(find.text("Placement"), findsOneWidget);
-    expect(find.text("Where this runtime executes"), findsNothing);
-    expect(find.text("ASSIGNMENT"), findsOneWidget);
-
+    expect(find.text("Owner host"), findsOneWidget);
+    expect(find.text("Target"), findsOneWidget);
+    expect(find.text("Status"), findsOneWidget);
+    expect(find.text("Artifact version"), findsOneWidget);
     expect(find.text("Assigned Realm"), findsOneWidget);
     expect(find.text("Message"), findsOneWidget);
     expect(find.text("Deployment needs attention"), findsOneWidget);
-    expect(find.byIcon(Icons.play_circle_outline), findsOneWidget);
+    expect(find.byType(PortablePresentationRenderer), findsOneWidget);
   });
 
   testWidgets("offline Realm selection does not expose open", (tester) async {

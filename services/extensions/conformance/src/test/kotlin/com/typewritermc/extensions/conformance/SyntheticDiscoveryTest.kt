@@ -1,434 +1,295 @@
 package com.typewritermc.extensions.conformance
 
-import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.authoring.CompletenessResult
+import com.typewritermc.authoring.complete
 import com.typewritermc.capability.NotificationSeverity
 import com.typewritermc.capability.PanelInstruction
-import com.typewritermc.capability.RealmCapabilityProvider
 import com.typewritermc.capability.RealmCapabilityRegistry
+import com.typewritermc.capability.RealmCapabilityRuntime
 import com.typewritermc.capability.RealmCommandContext
 import com.typewritermc.capability.RealmComputationContext
 import com.typewritermc.capability.RealmSearchContext
 import com.typewritermc.capability.RealmSearchQuery
 import com.typewritermc.capability.RealmSearchUpdate
+import com.typewritermc.checking.CatalogGeneration
+import com.typewritermc.discovery.CapabilityOwnerResolver
 import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.DeploymentFacts
-import com.typewritermc.discovery.DiscoveryDomains
-import com.typewritermc.discovery.KeyedTypeContribution
-import com.typewritermc.discovery.RuntimeRegistrar
-import com.typewritermc.discovery.TypeContributionAssembler
-import com.typewritermc.discovery.TypeDiscoveryContributionCodec
-import com.typewritermc.discovery.runtime.DiscoveryArtifactPackage
-import com.typewritermc.discovery.runtime.DiscoveryModuleLoader
-import com.typewritermc.elements.Element
-import com.typewritermc.elements.ElementRuntimeFacet
-import com.typewritermc.elements.Entry
+import com.typewritermc.discovery.ProviderOrigin
+import com.typewritermc.discovery.RuntimeScope
+import com.typewritermc.discovery.TypewriterRegistrar
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
+import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
-import com.typewritermc.library.Page
-import com.typewritermc.library.PageId
-import com.typewritermc.presentation.PresentationCatalogAssembler
-import com.typewritermc.presentation.PresentationProvider
-import com.typewritermc.types.CatalogAbstractTypePrototype
+import com.typewritermc.presentation.DefaultPresentationRuntime
+import com.typewritermc.presentation.PresentationBuildBinding
+import com.typewritermc.presentation.presentationTemplate
 import com.typewritermc.types.DataValue
+import com.typewritermc.types.DeclarationOwner
 import com.typewritermc.types.DeclaredTypeId
-import com.typewritermc.types.NominalTypeKind
+import com.typewritermc.types.EndpointCardinality
+import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
-import com.typewritermc.types.Ref
 import com.typewritermc.types.RelationFamilyId
-import com.typewritermc.types.RelationId
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.RolePresentationStatus
-import com.typewritermc.types.TypeDecodingContext
-import com.typewritermc.types.TypeEncodingContext
-import com.typewritermc.types.TypeExpression
+import com.typewritermc.types.RepresentationTemplate
+import com.typewritermc.types.TypeDefinition
+import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypePrototypeRegistry
+import com.typewritermc.types.TypeTemplate
+import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.catalog.Resolution
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.ChildrenElement
+import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
+import java.math.BigInteger
 
 val SyntheticDiscoveryTest by testSuite {
-    test("generates one exact type definition and metadata for the entry") {
-        val entry = SyntheticEntryTypewriterPrototype
-        entry.type.id shouldBe TypeId.Declared(DeclaredTypeId.parse("019d1c2a8f7b7cc18c2a4a7b2fd1e281"))
-        val contribution = declaredContribution()
-        contribution.definitions.single { it.id == entry.type }.displayName shouldBe "Synthetic Entry"
-        contribution.metadata
-            .single { it.type == entry.type }
-            .display
-            ?.description shouldBe "Verifies Typewriter discovery"
+    test("generates stable declarations for the entry and polymorphic message family") {
+        SyntheticEntryDefinition.id shouldBe
+            TypeDefinitionId(TypeId.Declared(DeclaredTypeId.parse("019d1c2a8f7b7cc18c2a4a7b2fd1e281")), 1)
+        val entryFields = (SyntheticEntryDefinition.definition.representation as RepresentationTemplate.Record).fields
+        entryFields.map { it.owner.name } shouldContainExactly listOf("name", "placement", "message", "cues")
+
+        (SyntheticMessageDefinition.definition.representation as RepresentationTemplate.Record).abstract shouldBe true
+        LiteralMessageDefinition.definition.parents
+            .single()
+            .definition shouldBe SyntheticMessageDefinition.id
+        RepeatedMessageDefinition.definition.parents
+            .single()
+            .definition shouldBe SyntheticMessageDefinition.id
     }
 
-    test("generates cues and their ownership relations in the same contribution") {
-        val contribution = declaredContribution()
-        listOf(SyntheticSegmentTypewriterPrototype.type, SyntheticKeyframeTypewriterPrototype.type).forEach { type ->
-            contribution.definitions.single { it.id == type }.kind shouldBe NominalTypeKind.CONCRETE
-            contribution.metadata
-                .single { it.type == type }
-                .display
-                ?.icon shouldBe
-                com.typewritermc.types.Icon.parse(
-                    if (type ==
-                        SyntheticSegmentTypewriterPrototype.type
-                    ) {
-                        "material-symbols:timeline"
-                    } else {
-                        "material-symbols:radio-button-checked"
-                    },
-                )
+    test("generates ownership relations and their concrete authored bindings") {
+        SyntheticEntryCues.contract.families shouldBe setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID))
+        SyntheticEntryCues.contract.first.cardinality shouldBe EndpointCardinality.One
+        SyntheticEntryCues.contract.second.cardinality shouldBe EndpointCardinality.Many
+        SyntheticEntryEndpointBindings.bindings.single().let { binding ->
+            binding.valueOwner shouldBe SyntheticEntryDefinition.id
+            binding.target shouldBe TypeTemplate.Named(SyntheticSegmentDefinition.id)
+            binding.containsCollection shouldBe true
         }
-        val relations = contribution.relations.associateBy { it.id }
-        listOf(
-            RelationId("019d3a87003070008000000000000030"),
-            RelationId("019d3a87003170008000000000000031"),
-        ).forEach { relation ->
-            relations.getValue(relation).families.contains(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID)) shouldBe true
-        }
+
+        SyntheticSegmentKeyframes.contract.families shouldBe setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID))
     }
 
-    test("synthesizes an abstract prototype with both stable implementations") {
-        val contribution = declaredContribution()
-        val parent =
-            contribution.definitions.single {
-                it.kind == NominalTypeKind.SEALED_ABSTRACT &&
-                    it.id.id == TypeId.Qualified("com.typewritermc.extensions.conformance", "SyntheticMessage")
-            }
-        val abstractPrototype =
-            CatalogAbstractTypePrototype(
-                runtimeType = SyntheticMessage::class,
-                type = parent.id,
-                definition = parent,
-            )
-        val registry =
-            TypePrototypeRegistry(
-                listOf(LiteralMessageTypewriterPrototype, RepeatedMessageTypewriterPrototype, abstractPrototype),
-            )
+    test("native bindings preserve named identity and serialized field names") {
+        val catalog = messageCatalog()
+        val bindings = messageBindings(catalog)
+        val checked = (catalog.resolve(RepeatedMessageDefinition.use) as Resolution.Ready).value
 
-        with(registry) {
-            abstractPrototype.implementations() shouldHaveSize 2
-        }
-        val value = LiteralMessage("hello")
-        val encoded = with(registry) { with(CodecContext(registry)) { abstractPrototype.encode(value) } }
+        @Suppress("UNCHECKED_CAST")
+        val binding = bindings.bind(checked) as com.typewritermc.types.NativeBinding<RepeatedMessage>
+        val source = RepeatedMessage("hello", 3)
+
+        val encoded = binding.encode(source)
+
         encoded shouldBe
-            DataValue.Polymorphic(
-                LiteralMessageTypewriterPrototype.type,
-                DataValue.Record(mapOf("value" to DataValue.StringValue("hello"))),
-            )
-        with(registry) { with(CodecContext(registry)) { abstractPrototype.decode(encoded) } } shouldBe value
-    }
-
-    test("encodes nested polymorphism through stable concrete identities") {
-        val contribution = declaredContribution()
-        val parent =
-            contribution.definitions.single {
-                it.kind == NominalTypeKind.SEALED_ABSTRACT &&
-                    it.id.id == TypeId.Qualified("com.typewritermc.extensions.conformance", "SyntheticMessage")
-            }
-        val registry =
-            TypePrototypeRegistry(
-                listOf(
-                    SyntheticEntryTypewriterPrototype,
-                    LiteralMessageTypewriterPrototype,
-                    RepeatedMessageTypewriterPrototype,
-                    CatalogAbstractTypePrototype(
-                        runtimeType = SyntheticMessage::class,
-                        type = parent.id,
-                        definition = parent,
+            DataValue.Named(
+                RepeatedMessageDefinition.use,
+                DataValue.Record(
+                    mapOf(
+                        "value" to DataValue.StringValue("hello"),
+                        "repeat_count" to DataValue.Integer(BigInteger.valueOf(3)),
                     ),
                 ),
-                contribution.definitions,
             )
-        val source =
-            SyntheticEntry(
-                "Synthetic Entry",
-                GraphPlacement(0, 0, 4, 1),
-                LiteralMessage("hello"),
-            )
-
-        val encoded = with(CodecContext(registry)) { SyntheticEntryTypewriterPrototype.encode(source) }
-        val message = (encoded as DataValue.Record).fields.getValue("message") as DataValue.Polymorphic
-
-        message.concreteType shouldBe LiteralMessageTypewriterPrototype.type
-        with(CodecContext(registry)) { SyntheticEntryTypewriterPrototype.decode(encoded) } shouldBe source
+        val complete = checked.complete(encoded) as CompletenessResult.Complete
+        binding.decode(complete.value) shouldBe source
     }
 
-    test("encodes exact page references as typed page references") {
-        val definitions = declaredContribution().definitions
-        val entryDefinition =
-            definitions.single {
-                it.id.id == TypeId.Declared(DeclaredTypeId.parse("019d3a87000270008000000000000002"))
-            }
-        val pageType =
-            (entryDefinition.representation as TypeExpression.Record)
+    test("generated page reference bindings retain the exact relation endpoint and target") {
+        val pageField =
+            (SyntheticPageReferenceEntryDefinition.definition.representation as RepresentationTemplate.Record)
                 .fields
-                .single { it.name == "page" }
-                .type as TypeExpression.Reference
-        pageType.target.id shouldBe
-            TypeId.Declared(DeclaredTypeId.parse("019d3a87000170008000000000000001"))
-        val registry =
-            TypePrototypeRegistry(
-                listOf(SyntheticPageReferenceEntryTypewriterPrototype),
-                definitions,
-            )
-        val source =
-            SyntheticPageReferenceEntry(
-                "Synthetic Page Reference",
-                GraphPlacement(0, 0, 4, 1),
-                Ref<SyntheticPage>(PageId("opening").value),
-            )
+                .single { it.owner.name == "page" }
+                .type as TypeTemplate.Named
 
-        val encoded = with(CodecContext(registry)) { SyntheticPageReferenceEntryTypewriterPrototype.encode(source) }
-        val fields = (encoded as DataValue.Record).fields
-
-        fields.getValue("page") shouldBe DataValue.Reference(PageId("opening").value)
-        with(CodecContext(registry)) { SyntheticPageReferenceEntryTypewriterPrototype.decode(encoded) } shouldBe source
+        pageField.definition shouldBe
+            TypeDefinitionId(
+                TypeId.Qualified("relation", "com.typewritermc.extensions.conformance.SyntheticPageReferences.Entry"),
+                1,
+            )
+        SyntheticPageReferenceEntryEndpointBindings.bindings.single().target shouldBe
+            TypeTemplate.Named(SyntheticPageDefinition.id)
+        SyntheticPageReferences.contract.second.resource shouldBe TypeTemplate.Named(com.typewritermc.library.PageDefinition.id)
     }
 
-    test("generates a graph layout on the exact page type") {
-        val page = SyntheticPageTypewriterPrototype.type
-        val contribution = declaredContribution()
-        contribution.definitions.single { it.id == page }.displayName shouldBe "Synthetic"
-        contribution.metadata.single { it.type == page }.editor shouldBe
-            com.typewritermc.discovery.AuthoringEditorLayout
-                .Graph(com.typewritermc.discovery.GraphDirection.LEFT_TO_RIGHT)
-    }
+    test("generated presentation composes concrete polymorphic controls with serialized paths") {
+        val runtime = DefaultPresentationRuntime()
+        val literal =
+            com_typewritermc_extensions_conformance_LiteralMessageEditorPresentation_LiteralMessagePresentationProvider(runtime)
+        val repeated =
+            com_typewritermc_extensions_conformance_RepeatedMessageEditorPresentation_RepeatedMessagePresentationProvider(runtime)
+        val entry =
+            com_typewritermc_extensions_conformance_SyntheticEntryEditorPresentation_SyntheticEntryPresentationProvider(runtime)
+        literal.descriptor(providerOrigin("literal"))
+        repeated.descriptor(providerOrigin("repeated"))
+        entry.descriptor(providerOrigin("entry"))
+        val catalog = presentationCatalog()
+        val checked = (catalog.resolve(SyntheticEntryDefinition.use) as Resolution.Ready).value
 
-    test("loads generated facets and registrars only for execution discovery") {
-        val origin = ArtifactId("typewritermc:conformance")
-        val contributions =
-            listOf("declared.cbor", "registrars.cbor").map { name ->
-                KeyedTypeContribution(
-                    key = ContributionKey(com.typewritermc.imprint.ContributionSourceId("artifact:${origin.value}"), "common", ProducerId("types"), ContributionName(name)),
-                    carriers = setOf(origin),
-                    contribution = typeContribution(name),
-                )
-            }
-        val discovery = TypeContributionAssembler.assemble(contributions + platformTypes())
-        DiscoveryModuleLoader()
-            .load(
-                artifactPackage = DiscoveryArtifactPackage(emptyList(), null, setOf(origin), DeploymentFacts(emptyMap())),
-                domain = DiscoveryDomains.Execution,
-                discovery = discovery,
-            ).use {
-                it.application.koin
-                    .getAll<RuntimeRegistrar>()
-                    .map { registrar -> registrar::class } shouldBe
-                    listOf(SyntheticRuntimeRegistrar::class)
-                it.application.koin
-                    .getAll<ElementRuntimeFacet<*>>()
-                    .map { facet -> facet::class } shouldBe
-                    listOf(SyntheticEntryFacet::class)
-            }
-
-        DiscoveryModuleLoader()
-            .load(
-                artifactPackage = DiscoveryArtifactPackage(emptyList(), null, setOf(origin), DeploymentFacts(emptyMap())),
-                domain = DiscoveryDomains.Realm,
-                discovery = discovery,
-            ).use {
-                it.application.koin.getAll<RuntimeRegistrar>() shouldHaveSize 0
-                it.application.koin.getAll<ElementRuntimeFacet<*>>() shouldHaveSize 0
-            }
-    }
-
-    test("loads and compiles the generated presentation for Realm discovery") {
-        val origin = ArtifactId("typewritermc:conformance")
-        val contributions =
-            listOf("declared.cbor", "presentations.cbor").map { name ->
-                KeyedTypeContribution(
-                    key = ContributionKey(com.typewritermc.imprint.ContributionSourceId("artifact:${origin.value}"), "common", ProducerId("types"), ContributionName(name)),
-                    carriers = setOf(origin),
-                    contribution = typeContribution(name),
-                )
-            }
-        val discovery = TypeContributionAssembler.assemble(contributions + platformTypes())
-        val deployment =
-            DiscoveryModuleLoader().load(
-                artifactPackage = DiscoveryArtifactPackage(emptyList(), null, setOf(origin), DeploymentFacts(emptyMap())),
-                domain = DiscoveryDomains.Realm,
-                discovery = discovery,
-            )
-
-        deployment.use {
-            val providers = it.application.koin.getAll<PresentationProvider>()
-            providers.size shouldBe 2
-            val catalog =
-                PresentationCatalogAssembler.assemble(
-                    providers = providers,
-                    prototypes = it.prototypes,
-                    types = discovery.catalog,
-                )
-            val entry = catalog.types.definitions.single { definition -> definition.id == SyntheticEntryTypewriterPrototype.type }
-            val editor = catalog.definitions.single { definition -> definition.presentationId.name == "editor" }
-            val root = editor.root.element as skirout.editor.v1.presentation.PresentationElement.ChildrenWrapper
-            val section =
-                root.value
-                    .axisNodes()
-                    .single()
-                    .element as skirout.editor.v1.presentation.PresentationElement.SectionWrapper
-            val sectionContent = section.value.child.element as skirout.editor.v1.presentation.PresentationElement.ChildrenWrapper
-            val polymorphic =
-                sectionContent.value
-                    .axisNodes()
-                    .single()
-                    .element as
-                    skirout.editor.v1.presentation.PresentationElement.PolymorphicInputWrapper
-            val repeated = requireNotNull(polymorphic.value.concreteTypes[1].presentation)
-            val repeatedFields = repeated.element as skirout.editor.v1.presentation.PresentationElement.ChildrenWrapper
-            val repetitions =
-                repeatedFields.value.axisNodes()[1].element as
-                    skirout.editor.v1.presentation.PresentationElement.NumericInputWrapper
-            val path =
-                repetitions.value.binding.path.segments.map { segment ->
-                    (segment as skirout.editor.v1.path.DataPathSegment.FieldWrapper).value.fieldName
-                }
-
-            (entry.rolePresentations[PresentationRole.EDITOR] as? RolePresentationStatus.Ready)
-                ?.id
-                ?.name shouldBe "editor"
-            entry.namedPresentations["compact"]?.name shouldBe "compact"
-            path shouldBe listOf("message", "repeat_count")
-            catalog.diagnostics shouldBe emptyList()
+        val root = entry.build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.EDITOR)).layout
+        val children = (root.element as PresentationElement.ChildrenWrapper).value.axisNodes()
+        val polymorphic =
+            children
+                .mapNotNull { it.element as? PresentationElement.PolymorphicInputWrapper }
+                .single()
+        polymorphic.value.concreteTypes shouldHaveSize 2
+        val repeatedPresentation = requireNotNull(polymorphic.value.concreteTypes[1].presentation)
+        (repeatedPresentation.element is PresentationElement.InvocationWrapper) shouldBe true
+        val repeatedChecked = (catalog.resolve(RepeatedMessageDefinition.use) as Resolution.Ready).value
+        val repeatedFields =
+            (
+                repeated.build(PresentationBuildBinding(repeatedChecked.presentationTemplate(), PresentationRole.EDITOR)).layout.element as
+                    PresentationElement.ChildrenWrapper
+            ).value
+                .axisNodes()
+        val repetitions = repeatedFields[1].element as PresentationElement.NumericInputWrapper
+        repetitions.value.binding.path.segments.single().let { segment ->
+            (segment as skirout.editor.v1.type_catalog.PathSegment.FieldWrapper).value.name shouldBe "repeat_count"
         }
     }
 
-    test("generated core presentations bind inherited Page Element and Entry fields") {
-        val core = ArtifactId("typewritermc:core")
-        val conformance = ArtifactId("typewritermc:conformance")
-        val contributions =
-            listOf(
-                core to "declared.cbor",
-                core to "presentations.cbor",
-                conformance to "declared.cbor",
-            ).map { (origin, name) ->
-                KeyedTypeContribution(
-                    key = ContributionKey(com.typewritermc.imprint.ContributionSourceId(if (origin == core) "bundle:platform" else "artifact:${origin.value}"), "common", ProducerId("types"), ContributionName(name)),
-                    carriers = setOf(origin),
-                    contribution =
-                        if (origin == core) coreTypeContribution(name) else typeContribution(name),
-                )
-            }
-        val page = TypeId.Qualified("com.typewritermc.library", "Page")
-        val pageDefinitions =
-            contributions.mapNotNull { keyed ->
-                keyed.contribution.definitions
-                    .firstOrNull { it.id.id == page }
-                    ?.let { keyed.key to it }
-            }
-        pageDefinitions.map { it.second.representation } shouldBe
-            List(pageDefinitions.size) { pageDefinitions.first().second.representation }
-        val discovery = TypeContributionAssembler.assemble(contributions)
-        DiscoveryModuleLoader()
-            .load(
-                artifactPackage = DiscoveryArtifactPackage(emptyList(), null, setOf(core, conformance), DeploymentFacts(emptyMap())),
-                domain = DiscoveryDomains.Realm,
-                discovery = discovery,
-            ).use { deployment ->
-                val providers =
-                    deployment.application.koin
-                        .getAll<PresentationProvider>()
-                        .filter { it.targetType in setOf(Page::class, Element::class, Entry::class) }
-                val catalog = PresentationCatalogAssembler.assemble(providers, deployment.prototypes, discovery.catalog)
-                val byName = catalog.types.definitions.associateBy { it.qualifiedName }
+    test("generated registrar contributes execution scope ownership") {
+        runTest {
+            val scope = RecordingRuntimeScope(this)
 
-                listOf("book", "name", "chapter", "priority", "elements") shouldBe
-                    discovery.catalog.effectiveRecordFields(byName.getValue(Page::class.qualifiedName).id).map { it.name }
-                listOf("name", "placement") shouldBe
-                    discovery.catalog.effectiveRecordFields(byName.getValue(Entry::class.qualifiedName).id).map { it.name }
-                catalog.diagnostics shouldBe emptyList()
-                listOf(
-                    Page::class.qualifiedName to PresentationRole.EDITOR,
-                    Page::class.qualifiedName to PresentationRole.CREATION,
-                    Element::class.qualifiedName to PresentationRole.REFERENCE_SUMMARY,
-                    Element::class.qualifiedName to PresentationRole.AUTHORING_RESULT,
-                    Entry::class.qualifiedName to PresentationRole.GRAPH_NODE,
-                ).forEach { (name, role) ->
-                    (byName.getValue(name).rolePresentations[role] is RolePresentationStatus.Ready) shouldBe true
-                }
+            with(scope) { SyntheticRuntimeRegistrar().register() }
+
+            scope.owned shouldBe 1
+            SyntheticRuntimeRegistrar::class.java.getAnnotation(TypewriterRegistrar::class.java).let { annotation ->
+                annotation.execution shouldBe true
+                annotation.realm shouldBe false
             }
+        }
     }
 
-    test("loads and executes generated Realm capability providers") {
+    test("generated Realm capability providers decode invoke and encode through one catalog") {
         runTest {
-            val origin = ArtifactId("typewritermc:conformance")
-            val contributions =
-                listOf("declared.cbor", "realm_capabilities.cbor").map { name ->
-                    KeyedTypeContribution(
-                        key = ContributionKey(com.typewritermc.imprint.ContributionSourceId("artifact:${origin.value}"), "common", ProducerId("types"), ContributionName(name)),
-                        carriers = setOf(origin),
-                        contribution = typeContribution(name),
-                    )
-                }
-            val discovery = TypeContributionAssembler.assemble(contributions + platformTypes())
-            val deployment =
-                DiscoveryModuleLoader().load(
-                    artifactPackage = DiscoveryArtifactPackage(emptyList(), null, setOf(origin), DeploymentFacts(emptyMap())),
-                    domain = DiscoveryDomains.Realm,
-                    discovery = discovery,
-                )
-
-            deployment.use {
-                val registry =
-                    RealmCapabilityRegistry(
-                        providers = it.application.koin.getAll<RealmCapabilityProvider>(),
-                        prototypes = it.prototypes,
-                    )
-
-                registry.descriptors.map { descriptor -> descriptor.id } shouldBe
-                    listOf(publishMessageCapability.id, repeatMessageCapability.id, searchMessagesCapability.id).sortedBy { id -> id.value }
-
-                val search =
-                    registry.requireSearch(searchMessagesCapability.id).invoke(
-                        context = SyntheticCapabilityContext,
-                        prototypes = it.prototypes,
-                        payload = DataValue.Record(mapOf("value" to DataValue.StringValue("hello"))),
-                        query = RealmSearchQuery("hello"),
-                    )
-                search.updates.toList() shouldBe
+            val owner = SyntheticRealmCapabilities()
+            val resolver = CapabilityOwnerResolver { owner }
+            val registry =
+                RealmCapabilityRegistry(
                     listOf(
-                        RealmSearchUpdate.Partial(
-                            listOf(
+                        SyntheticRealmCapabilitiesPublishMessageGeneratedCapabilityProvider().bind(resolver),
+                        SyntheticRealmCapabilitiesRepeatMessageGeneratedCapabilityProvider().bind(resolver),
+                        SyntheticRealmCapabilitiesSearchMessagesGeneratedCapabilityProvider().bind(resolver),
+                    ),
+                )
+            val catalog = messageCatalog()
+            val runtime = RealmCapabilityRuntime(catalog, messageBindings(catalog))
+
+            registry.descriptors.map { it.id } shouldBe
+                listOf(publishMessageCapability.id, repeatMessageCapability.id, searchMessagesCapability.id)
+                    .sortedBy { it.value }
+            val literal =
+                DataValue.Named(
+                    LiteralMessageDefinition.use,
+                    DataValue.Record(mapOf("value" to DataValue.StringValue("hello"))),
+                )
+            registry
+                .requireSearch(searchMessagesCapability.id)
+                .invoke(SyntheticCapabilityContext, runtime, literal, RealmSearchQuery("hello"))
+                .updates
+                .toList() shouldBe
+                listOf(
+                    RealmSearchUpdate.Partial(
+                        listOf(
+                            DataValue.Named(
+                                RepeatedMessageDefinition.use,
                                 DataValue.Record(
                                     mapOf(
                                         "value" to DataValue.StringValue("hello"),
-                                        "repeat_count" to DataValue.Integer(java.math.BigInteger.ONE),
+                                        "repeat_count" to DataValue.Integer(BigInteger.ONE),
                                     ),
                                 ),
                             ),
                         ),
-                        RealmSearchUpdate.Complete,
-                    )
+                    ),
+                    RealmSearchUpdate.Complete,
+                )
 
-                registry.requireComputation(repeatMessageCapability.id).invoke(
-                    context = SyntheticCapabilityContext,
-                    prototypes = it.prototypes,
-                    payload =
-                        DataValue.Record(
-                            mapOf(
-                                "value" to DataValue.StringValue("go"),
-                                "repeat_count" to DataValue.Integer(java.math.BigInteger.TWO),
-                            ),
+            registry.requireComputation(repeatMessageCapability.id).invoke(
+                SyntheticCapabilityContext,
+                runtime,
+                DataValue.Named(
+                    RepeatedMessageDefinition.use,
+                    DataValue.Record(
+                        mapOf(
+                            "value" to DataValue.StringValue("go"),
+                            "repeat_count" to DataValue.Integer(BigInteger.TWO),
                         ),
-                ) shouldBe DataValue.Record(mapOf("value" to DataValue.StringValue("gogo")))
-
-                registry
-                    .requireCommand(publishMessageCapability.id)
-                    .invoke(
-                        context = SyntheticCapabilityContext,
-                        prototypes = it.prototypes,
-                        payload = DataValue.Record(mapOf("value" to DataValue.StringValue("saved"))),
-                    ).instructions shouldBe
-                    listOf(PanelInstruction.Notify(NotificationSeverity.SUCCESS, "saved"))
-            }
+                    ),
+                ),
+            ) shouldBe
+                DataValue.Named(
+                    LiteralMessageDefinition.use,
+                    DataValue.Record(mapOf("value" to DataValue.StringValue("gogo"))),
+                )
+            registry
+                .requireCommand(publishMessageCapability.id)
+                .invoke(SyntheticCapabilityContext, runtime, literal)
+                .instructions shouldBe
+                listOf(PanelInstruction.Notify(NotificationSeverity.SUCCESS, "hello"))
         }
     }
+}
+
+private fun messageCatalog() =
+    DefaultCheckedCatalog(
+        CatalogGeneration("conformance messages"),
+        listOf(
+            SyntheticMessageDefinition.definition,
+            LiteralMessageDefinition.definition,
+            RepeatedMessageDefinition.definition,
+        ),
+    )
+
+private fun messageBindings(catalog: DefaultCheckedCatalog) =
+    FactoryNativeBindingRegistry(
+        catalog,
+        listOf(LiteralMessageNativeBindingFactory, RepeatedMessageNativeBindingFactory),
+    )
+
+private fun presentationCatalog(): DefaultCheckedCatalog {
+    val messageField =
+        (SyntheticEntryDefinition.definition.representation as RepresentationTemplate.Record)
+            .fields
+            .single { it.owner.name == "message" }
+    val entry =
+        TypeDefinition(
+            id = SyntheticEntryDefinition.id,
+            representation = RepresentationTemplate.Record(listOf(messageField)),
+        )
+    return DefaultCheckedCatalog(
+        CatalogGeneration("conformance presentation"),
+        listOf(
+            entry,
+            SyntheticMessageDefinition.definition,
+            LiteralMessageDefinition.definition,
+            RepeatedMessageDefinition.definition,
+        ),
+    )
+}
+
+private fun providerOrigin(local: String): ProviderOrigin {
+    val source = ContributionSourceId("artifact:typewritermc:conformance")
+    val key = ContributionKey(source, "common", ProducerId("types"), ContributionName(local))
+    return ProviderOrigin(
+        owner = DeclarationOwner(key, local),
+        artifact = ArtifactId("typewritermc:conformance"),
+        sourcePart = "common",
+    )
 }
 
 private fun ChildrenElement.axisNodes(): List<PresentationNode> =
@@ -459,60 +320,22 @@ private fun AxisChild.node(): PresentationNode =
         -> error("Unknown axis child")
     }
 
-private fun declaredContribution() = typeContribution("declared.cbor")
+private class RecordingRuntimeScope(
+    override val coroutineScope: CoroutineScope,
+) : RuntimeScope {
+    override val facts: DeploymentFacts = DeploymentFacts(emptyMap())
+    var owned: Int = 0
+        private set
 
-private fun platformTypes(): KeyedTypeContribution =
-    KeyedTypeContribution(
-        key = ContributionKey(
-            com.typewritermc.imprint.ContributionSourceId("bundle:platform"),
-            "main",
-            ProducerId("types"),
-            ContributionName("declared.cbor"),
-        ),
-        carriers = setOf(ArtifactId("typewritermc:core")),
-        contribution = coreTypeContribution("declared.cbor"),
-    )
+    override fun own(cleanup: suspend () -> Unit) {
+        owned += 1
+    }
 
-private fun typeContribution(name: String) =
-    SyntheticEntry::class.java.classLoader
-        .getResources("META-INF/typewriter/contributions/types/$name")
-        .asSequence()
-        .map { resource -> resource.openStream().use { TypeDiscoveryContributionCodec.decode(it.readAllBytes()) } }
-        .single { contribution ->
-            contribution.prototypeBindings.any { it.runtimeClass.startsWith(CONFORMANCE_PACKAGE) } ||
-                contribution.executableBindings.any { it.moduleProviderClass.startsWith(CONFORMANCE_PACKAGE) }
-        }
-
-private fun coreTypeContribution(name: String) =
-    SyntheticEntry::class.java.classLoader
-        .getResources("META-INF/typewriter/contributions/types/$name")
-        .asSequence()
-        .map { resource -> resource.openStream().use { TypeDiscoveryContributionCodec.decode(it.readAllBytes()) } }
-        .single { contribution ->
-            when (name) {
-                "declared.cbor" -> {
-                    contribution.prototypeBindings.any { it.runtimeClass == "com.typewritermc.library.Book" } &&
-                        contribution.definitions.none { it.qualifiedName?.startsWith(CONFORMANCE_PACKAGE) == true }
-                }
-
-                "presentations.cbor" -> {
-                    contribution.executableBindings.any {
-                        it.moduleProviderClass == "com.typewritermc.library.CorePageEditorPresentationDiscoveryModule"
-                    }
-                }
-
-                else -> {
-                    false
-                }
-            }
-        }
-
-private const val CONFORMANCE_PACKAGE = "com.typewritermc.extensions.conformance."
-
-private class CodecContext(
-    override val prototypes: TypePrototypeRegistry,
-) : TypeEncodingContext,
-    TypeDecodingContext
+    override fun <R : AutoCloseable> own(resource: R): R {
+        owned += 1
+        return resource
+    }
+}
 
 private data object SyntheticCapabilityContext :
     RealmSearchContext,

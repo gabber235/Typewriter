@@ -12,6 +12,7 @@ ResourceEditorTarget _target(String id) => fakeEditorTarget(
     confirmedValue: StringValue("Original"),
     revision: 1,
   ),
+  validation: acceptTestEditorMutation,
   commit: (commit) async =>
       MutationSuccess(revision: 2, value: commit.rootValue),
 );

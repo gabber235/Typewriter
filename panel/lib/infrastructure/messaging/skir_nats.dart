@@ -117,7 +117,9 @@ extension RefNatsExtension on Ref {
   /// Reduction happens at delivery, so each result reaches its listener before
   /// the next reduction. Cancellation unsubscribes even when subscription
   /// setup is still pending, which keeps the Riverpod scope from retaining a
-  /// transport resource after its consumer leaves.
+  /// transport resource after its consumer leaves. A recovered connection
+  /// replaces the owned subscription and loads a fresh authoritative baseline
+  /// before reducing later events.
   Stream<TData> watchRequest<TData, TResponse>({
     required String subject,
     required String listenSubject,
@@ -126,76 +128,126 @@ extension RefNatsExtension on Ref {
     required TData Function(TData?, TResponse) transformer,
   }) {
     final client = watch(natsProvider);
-    final responses = Stream<TResponse>.multi((controller) async {
+    return Stream<TData>.multi((controller) {
       NatsSubscription? subscription;
+      StreamSubscription<NatsConnectionState>? lifecycle;
+      TData? previous;
       var active = true;
-      Future<void>? unsubscribeOperation;
+      var generation = 0;
+      var connected = false;
+      var cleanup = Future<void>.value();
 
-      Future<void> unsubscribe() => unsubscribeOperation ??= () async {
-        active = false;
-        await subscription?.unsubscribe();
-      }();
+      Future<void> closeSubscription() {
+        final current = subscription;
+        subscription = null;
+        if (current != null) {
+          cleanup = cleanup.then((_) => current.unsubscribe());
+        }
+        return cleanup;
+      }
 
-      controller.onCancel = unsubscribe;
-      onDispose(() => unawaited(unsubscribe()));
-
-      try {
-        subscription = await client.subscribe(listenSubject);
-        if (!active) {
-          await subscription.unsubscribe();
+      Future<void> replaceSubscription(int expectedGeneration) async {
+        await closeSubscription();
+        if (!active || !connected || generation != expectedGeneration) {
           return;
         }
-        final telemetry = await read(panelTelemetryProvider.future);
-        final initial = await telemetry.traceNats(
-          subject: subject,
-          payloadSize: requestBytes.length,
-          operationName: "request",
-          operation: (headers) => client.request(
-            subject,
-            requestBytes,
-            headers: headers,
-            timeout: _requestTimeout,
-          ),
+
+        final next = await client.subscribe(listenSubject);
+        if (!active || !connected || generation != expectedGeneration) {
+          await next.unsubscribe();
+          return;
+        }
+        subscription = next;
+
+        NatsMessage initial;
+        try {
+          final telemetry = await read(panelTelemetryProvider.future);
+          initial = await telemetry.traceNats(
+            subject: subject,
+            payloadSize: requestBytes.length,
+            operationName: "request",
+            operation: (headers) => client.request(
+              subject,
+              requestBytes,
+              headers: headers,
+              timeout: _requestTimeout,
+            ),
+          );
+        } on Object {
+          if (identical(subscription, next)) subscription = null;
+          await next.unsubscribe();
+          rethrow;
+        }
+        if (!active || !connected || generation != expectedGeneration) {
+          if (identical(subscription, next)) subscription = null;
+          await next.unsubscribe();
+          return;
+        }
+
+        final baseline = transformer(
+          null,
+          serializer.fromBytes(initial.payload),
         );
-        if (!active) return;
+        previous = baseline;
+        controller.add(baseline);
 
-        controller.add(serializer.fromBytes(initial.payload));
-
-        await for (final message in subscription.messages) {
-          if (!active) return;
-          controller.add(serializer.fromBytes(message.payload));
-        }
-      } on Object catch (error, stackTrace) {
-        if (active) controller.addError(error, stackTrace);
-      } finally {
-        await unsubscribe();
-        if (!controller.isClosed) {
-          await controller.close();
-        }
+        next.messages.listen(
+          (message) {
+            if (active && generation == expectedGeneration) {
+              try {
+                final nextValue = transformer(
+                  previous,
+                  serializer.fromBytes(message.payload),
+                );
+                previous = nextValue;
+                controller.add(nextValue);
+              } on Object catch (error, stackTrace) {
+                controller.addError(error, stackTrace);
+              }
+            }
+          },
+          onError: (Object error, StackTrace stackTrace) {
+            if (active && generation == expectedGeneration) {
+              controller.addError(error, stackTrace);
+            }
+          },
+        );
       }
+
+      void observeLifecycle(NatsConnectionState state) {
+        final nextConnected = state is NatsConnected;
+        if (connected == nextConnected) return;
+        connected = nextConnected;
+        final nextGeneration = ++generation;
+        unawaited(
+          replaceSubscription(nextGeneration)
+              .catchError((Object error, StackTrace stackTrace) {
+                if (active && generation == nextGeneration) {
+                  controller.addError(error, stackTrace);
+                }
+              }),
+        );
+      }
+
+      lifecycle = client.connectionStateChanges.listen(
+        observeLifecycle,
+        onError: (Object error, StackTrace stackTrace) {
+          if (active) controller.addError(error, stackTrace);
+        },
+      );
+      observeLifecycle(client.connectionState);
+
+      Future<void> cancel() async {
+        if (!active) return;
+        active = false;
+        generation++;
+        await lifecycle?.cancel();
+        await closeSubscription();
+      }
+
+      controller.onCancel = cancel;
+      onDispose(() => unawaited(cancel()));
     });
-    return responses.transform(
-      StreamTransformer<TResponse, TData>((stream, cancelOnError) {
-        TData? previous;
-        return stream
-            .transform(
-              StreamTransformer<TResponse, TData>.fromHandlers(
-                handleData: (response, sink) {
-                  try {
-                    final next = transformer(previous, response);
-                    previous = next;
-                    sink.add(next);
-                  } on Object catch (error, stackTrace) {
-                    sink
-                      ..addError(error, stackTrace)
-                      ..close();
-                  }
-                },
-              ),
-            )
-            .listen(null, cancelOnError: cancelOnError);
-      }),
-    );
   }
 
   /// Watches a sequenced snapshot and its ordered event stream.

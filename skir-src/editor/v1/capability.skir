@@ -1,10 +1,10 @@
-import { TypeDiagnostic } from "editor/v1/diagnostic.skir";
+import { Diagnostic } from "editor/v1/diagnostic.skir";
 import {
   CapabilityId,
   CatalogGeneration,
-  ResolvedTypeRef,
-  TypeExpression,
-  TypedValue,
+  DataValue,
+  TypeTemplate,
+  TypeUse,
 } from "editor/v1/type_catalog.skir";
 
 // Capabilities expose typed Realm operations to editor consumers. Definitions
@@ -17,19 +17,19 @@ struct InvocationId(811200001) {
 
 struct SearchCapabilityDefinition(811200002) {
   capability_id: CapabilityId = 0;
-  request_type: ResolvedTypeRef = 1;
-  result_type: ResolvedTypeRef = 2;
+  request_type: TypeUse = 1;
+  result_type: TypeUse = 2;
 }
 
 struct ComputationCapabilityDefinition(811200003) {
   capability_id: CapabilityId = 0;
-  request_type: ResolvedTypeRef = 1;
-  result_type: ResolvedTypeRef = 2;
+  request_type: TypeUse = 1;
+  result_type: TypeUse = 2;
 }
 
 struct CommandCapabilityDefinition(811200004) {
   capability_id: CapabilityId = 0;
-  request_type: ResolvedTypeRef = 1;
+  request_type: TypeUse = 1;
 }
 
 enum CapabilityDefinition(811200005) {
@@ -39,8 +39,8 @@ enum CapabilityDefinition(811200005) {
 }
 
 struct ResourceAddress(811200006) {
-  resource_type: ResolvedTypeRef = 0;
-  identity: TypedValue = 1;
+  resource_type: TypeUse = 0;
+  identity: DataValue = 1;
 }
 
 struct InvalidateResourceInstruction(811200007) {
@@ -73,13 +73,13 @@ struct CapabilityInvocationRequest(811200012) {
   invocation_id: InvocationId = 0;
   generation: CatalogGeneration = 1;
   capability_id: CapabilityId = 2;
-  payload: TypedValue = 3;
-  expected_result_type: TypeExpression? = 4;
+  payload: DataValue = 3;
+  expected_result_type: TypeTemplate? = 4;
 }
 
 struct ComputationSuccess(811200013) {
   invocation_id: InvocationId = 0;
-  value: TypedValue = 1;
+  value: DataValue = 1;
 }
 
 struct CommandSuccess(811200014) {
@@ -99,7 +99,7 @@ struct StaleCatalogGeneration(811200016) {
 
 struct CapabilityFailure(811200017) {
   invocation_id: InvocationId = 0;
-  diagnostics: [TypeDiagnostic] = 1;
+  diagnostics: [Diagnostic] = 1;
 }
 
 enum ComputationResult(811200018) {

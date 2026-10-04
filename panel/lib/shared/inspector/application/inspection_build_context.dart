@@ -11,13 +11,24 @@ final class InspectionBuildContext {
 
   final EditorOwnerRefresh owners;
   final List<MultiEditOwner> _multiEditors = [];
+  final Set<PortablePresentationHost> _hosts = {};
+
+  InspectionContent ownHosts(InspectionContent content) {
+    if (content.host case final host?) _hosts.add(host);
+    _hosts.addAll(content.additionalHosts);
+    return content;
+  }
+
+  void releaseHosts(Iterable<PortablePresentationHost> hosts) {
+    _hosts.removeAll(hosts);
+  }
 
   /// Creates and registers a composite owner for the selected targets.
   ///
   /// The returned owner is valid for this build context only. The individual
   /// target owners remain owned by the editor owner registry.
   MultiEditOwner multiEditorFor(
-    Iterable<EditableSelectable> targets, {
+    Iterable<EditorTarget> targets, {
     required TypeExpression rootType,
     required TypeCatalog typeCatalog,
   }) => multiEditorForOwners(
@@ -42,22 +53,6 @@ final class InspectionBuildContext {
     return editor;
   }
 
-  /// Runs a shared inspection build with rollback on failure.
-  TypeResult<InspectionContent> compose(
-    MultiInspectionDefinition definition,
-    List<EditableSelectable> selection,
-  ) {
-    final checkpoint = _multiEditors.length;
-    try {
-      final result = definition.build(selection, this);
-      if (result is TypeFailure) _rollbackTo(checkpoint);
-      return result;
-    } on Object {
-      _rollbackTo(checkpoint);
-      rethrow;
-    }
-  }
-
   void _rollbackTo(int checkpoint) {
     final abandoned = _multiEditors.sublist(checkpoint);
     _multiEditors.removeRange(checkpoint, _multiEditors.length);
@@ -66,6 +61,12 @@ final class InspectionBuildContext {
     }
   }
 
-  /// Disposes every composite owner created by this context.
-  void dispose() => _rollbackTo(0);
+  /// Disposes every composite owner and portable host created by this context.
+  void dispose() {
+    _rollbackTo(0);
+    for (final host in _hosts) {
+      host.dispose();
+    }
+    _hosts.clear();
+  }
 }

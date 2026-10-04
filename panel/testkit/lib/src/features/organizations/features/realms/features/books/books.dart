@@ -7,7 +7,7 @@ import "package:riverpod/src/framework.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart" hide random;
-import "package:typewriter_testkit/src/features/organizations/features/realms/features/books/features/pages/features/editor/editor.dart";
+import "package:typewriter_testkit/src/features/organizations/features/realms/features/books/features/pages/features/editor/typed_data.dart";
 import "package:typewriter_testkit/src/shared/testing/testing.dart";
 
 export "features/features.dart";
@@ -51,17 +51,12 @@ class BooksMock extends CanonicalBooks {
   }
 
   @override
-  Future<TypedMutationResult> updateBook(Book book, {Book? expected}) async {
+  Future<void> updateBook(Book book, {Book? expected}) async {
     await Future.delayed(500.ms);
-    final canonical = book;
     state = AsyncData(
       (await future)
-          .map((value) => value.bookId == book.bookId ? canonical : value)
+          .map((value) => value.bookId == book.bookId ? book : value)
           .toList(),
-    );
-    return TypedMutationResult.success(
-      revision: 1,
-      value: canonical.inspectorValue,
     );
   }
 }

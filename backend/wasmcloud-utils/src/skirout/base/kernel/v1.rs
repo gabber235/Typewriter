@@ -17,3 +17,4 @@ pub mod record_id;
 pub mod color;
 pub mod duration;
 pub mod icon;
+pub mod bounded_transfer;

@@ -18,10 +18,7 @@ class AppRequiredWidgets extends HookWidget {
   Widget build(BuildContext context) {
     useDisableContextMenu();
     return SelectionOperationsRoot(
-      operations: const [
-        ...coreSelectionOperations,
-        ...entrySelectionOperations,
-      ],
+      operations: const [...coreSelectionOperations],
       child: GlobalCursorController(
         child: GlobalPaneNavigator(
           child: GlobalActionsManager(

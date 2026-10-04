@@ -12,6 +12,14 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 
 final _testRefProvider = Provider<Ref>((ref) => ref);
 
+Future<void> _waitFor(bool Function() condition) async {
+  await Future.doWhile(() async {
+    if (condition()) return false;
+    await Future<void>.delayed(Duration.zero);
+    return true;
+  }).timeout(const Duration(seconds: 2));
+}
+
 final class _PendingSubscribeNatsClient implements NatsClient {
   final Completer<NatsSubscription> _pendingSubscription = Completer();
   final _TrackingNatsSubscription subscription = _TrackingNatsSubscription();
@@ -534,6 +542,111 @@ void main() {
       expect(client.subscription.unsubscribed, isTrue);
       expect(client.requests, isZero);
     });
+
+    test(
+      "reconnect replaces the subscription and reloads its baseline",
+      () async {
+        var snapshot = 1;
+        mockClient.registerHandler(
+          "test.reconnect",
+          (_) => skir.Duration.serializer.toBytes(
+            skir.Duration(milliseconds: snapshot),
+          ),
+        );
+        final values = <int>[];
+        final listener = container
+            .read(_testRefProvider)
+            .watchRequest<int, skir.Duration>(
+              subject: "test.reconnect",
+              listenSubject: "test.reconnect.changed",
+              requestBytes: Uint8List(0),
+              serializer: skir.Duration.serializer,
+              transformer: (previous, response) => response.milliseconds,
+            )
+            .listen(values.add);
+
+        await _waitFor(() => values.length == 1);
+        mockClient.emitMessageOnSubject(
+          "test.reconnect.changed",
+          skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 2)),
+        );
+        await _waitFor(() => values.length == 2);
+
+        mockClient.setConnectionState(
+          const NatsReconnecting(
+            NatsClientException(
+              kind: NatsFailureKind.unavailable,
+              message: "Connection interrupted",
+            ),
+          ),
+        );
+        await _waitFor(() => mockClient.subscriptionSubjects.isEmpty);
+        snapshot = 4;
+        mockClient
+          ..emitMessageOnSubject(
+            "test.reconnect.changed",
+            skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 3)),
+          )
+          ..setConnectionState(const NatsConnected());
+        await _waitFor(() => values.length == 3);
+
+        expect(values, [1, 2, 4]);
+        expect(mockClient.requests, hasLength(2));
+        expect(mockClient.subscriptionSubjects, ["test.reconnect.changed"]);
+        await listener.cancel();
+      },
+    );
+
+    test(
+      "cancellation closes a subscription while its refresh is pending",
+      () async {
+        final refresh = Completer<Uint8List>();
+        var requests = 0;
+        mockClient.registerHandler("test.refresh.cancel", (_) {
+          requests++;
+          if (requests == 1) {
+            return skir.Duration.serializer.toBytes(
+              skir.Duration(milliseconds: 1),
+            );
+          }
+          return refresh.future;
+        });
+        final values = <int>[];
+        final listener = container
+            .read(_testRefProvider)
+            .watchRequest<int, skir.Duration>(
+              subject: "test.refresh.cancel",
+              listenSubject: "test.refresh.cancel.changed",
+              requestBytes: Uint8List(0),
+              serializer: skir.Duration.serializer,
+              transformer: (previous, response) => response.milliseconds,
+            )
+            .listen(values.add);
+        await _waitFor(() => values.isNotEmpty);
+
+        mockClient.setConnectionState(
+          const NatsReconnecting(
+            NatsClientException(
+              kind: NatsFailureKind.unavailable,
+              message: "Connection interrupted",
+            ),
+          ),
+        );
+        await _waitFor(() => mockClient.subscriptionSubjects.isEmpty);
+        mockClient.setConnectionState(const NatsConnected());
+        await _waitFor(() => requests == 2);
+
+        await listener.cancel();
+        expect(mockClient.subscriptionSubjects, isEmpty);
+        refresh.complete(
+          skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 2)),
+        );
+        await pumpEventQueue();
+
+        expect(values, [1]);
+        expect(mockClient.subscriptionSubjects, isEmpty);
+      },
+    );
 
     test("sequenced watch ignores duplicates and refreshes one gap", () async {
       var snapshotSequence = 1;

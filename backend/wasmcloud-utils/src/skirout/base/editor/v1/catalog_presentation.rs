@@ -19,8 +19,8 @@
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CatalogPresentationSubject {
-    pub target: crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef,
-    pub descriptor: crate::skirout::base::editor::v1::typed_value::TypedValueEnvelope,
+    pub target: crate::skirout::base::editor::v1::type_catalog::TypeUse,
+    pub descriptor: crate::skirout::base::editor::v1::typed_value::PortableValue,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CatalogPresentationSubject>>,
 }
@@ -61,8 +61,8 @@ fn initialize_module_serializers() {
         std::sync::LazyLock::new(|| {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<CatalogPresentationSubject> = CatalogPresentationSubject::_adapter() as *const _ as *mut _;
-                (*a).add_field("target", 0, crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer(), "", |x: &CatalogPresentationSubject| &x.target, |x: &mut CatalogPresentationSubject, v| x.target = v);
-                (*a).add_field("descriptor", 1, crate::skirout::base::editor::v1::typed_value::TypedValueEnvelope::serializer(), "", |x: &CatalogPresentationSubject| &x.descriptor, |x: &mut CatalogPresentationSubject, v| x.descriptor = v);
+                (*a).add_field("target", 0, crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(), "", |x: &CatalogPresentationSubject| &x.target, |x: &mut CatalogPresentationSubject, v| x.target = v);
+                (*a).add_field("descriptor", 1, crate::skirout::base::editor::v1::typed_value::PortableValue::serializer(), "", |x: &CatalogPresentationSubject| &x.descriptor, |x: &mut CatalogPresentationSubject, v| x.descriptor = v);
                 (*a).finalize();
             }
         });

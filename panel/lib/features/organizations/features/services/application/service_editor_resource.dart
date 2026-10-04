@@ -4,14 +4,55 @@ part of "services.dart";
 ///
 /// Only the editable name enters the document. Revision remains attached to
 /// the snapshot so the eventual rename cannot silently overwrite newer data.
-EditorSnapshot serviceEditorSnapshot(Service service) => DocumentEditorSnapshot(
-  EditorDocument(
+extension ServiceEditorSnapshotBuilder on Service {
+  EditorSnapshot get editorSnapshot => ServiceEditorSnapshot(this);
+}
+
+final class ServiceEditorSnapshot extends EditorSnapshot {
+  const ServiceEditorSnapshot(this.service);
+
+  final Service service;
+
+  @override
+  EditorDocument get document => EditorDocument(
     rootType: _serviceIdentityType,
-    typeCatalog: _serviceInspectorCatalog,
+    typeCatalog: _serviceIdentityCatalog,
     confirmedValue: service.identityValue,
     revision: service.revision,
-  ),
-);
+  );
+
+  @override
+  EditorMutationResult validate(DataPath path, DataValue value) {
+    if (path == DataPath.root.field("name") && value is StringValue) {
+      return value.value.isValidIdentifier
+          ? EditorMutationResult.applied(value)
+          : EditorMutationResult.invalid([
+              _serviceIdentityDiagnostic(
+                "Use at least three lowercase letters or digits separated by underscores",
+                path,
+              ),
+            ]);
+    }
+    if (path == DataPath.root && value is RecordValue) {
+      final name = value.fields["name"];
+      if (value.fields.length == 1 &&
+          name is StringValue &&
+          name.value.isValidIdentifier) {
+        return EditorMutationResult.applied(value);
+      }
+    }
+    return EditorMutationResult.invalid([
+      _serviceIdentityDiagnostic("The service identity is invalid", path),
+    ]);
+  }
+}
+
+TypeDiagnostic _serviceIdentityDiagnostic(String message, DataPath path) =>
+    TypeDiagnostic(
+      code: TypeDiagnosticCode.invalidValue,
+      message: message,
+      path: path,
+    );
 
 /// Bridges service identity editing to the organization resource session.
 ///
@@ -35,7 +76,7 @@ final class ServiceEditorResource implements EditableResource {
     final service = values.firstWhereOrNull(
       (value) => value.serviceId == serviceId,
     );
-    return service == null ? null : serviceEditorSnapshot(service);
+    return service?.editorSnapshot;
   }
 
   @override

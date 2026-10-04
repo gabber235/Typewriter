@@ -27,13 +27,10 @@ class ChangePagePriorityDialogue extends HookConsumerWidget {
 
     final navigator = Navigator.of(ref.context);
     try {
-      final result = await ref.editPage(
+      await ref.editPage(
         id: pageId,
         priority: newPriority,
         expectedPriority: priority,
-      );
-      result.requireApplied(
-        conflictMessage: "The page priority changed while editing",
       );
     } on Object {
       if (ref.context.mounted) changed.value = false;

@@ -2,14 +2,16 @@ import "dart:async";
 
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
-EditorSnapshot _snapshot() => const DocumentEditorSnapshot(
-  EditorDocument(
+EditorSnapshot _snapshot() => FakeEditorSnapshot(
+  const EditorDocument(
     rootType: StringType(),
     typeCatalog: TypeCatalog([]),
     confirmedValue: StringValue("Original"),
     revision: 1,
   ),
+  validation: acceptTestEditorMutation,
 );
 
 typedef _Operation = (EditorResourceKey, EditorCommit);

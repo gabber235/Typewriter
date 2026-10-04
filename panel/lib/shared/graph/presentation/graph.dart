@@ -1,7 +1,20 @@
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_panel/app/presentation/shortcuts/action_shortcuts.dart";
+import "package:typewriter_panel/shared/graph/application/application.dart";
+import "package:typewriter_panel/shared/graph/domain/domain.dart";
+import "package:typewriter_panel/shared/graph/presentation/graph_drag.dart";
+import "package:typewriter_panel/shared/graph/presentation/graph_drag_target_surface.dart";
+import "package:typewriter_panel/shared/graph/presentation/graph_intents.dart";
+import "package:typewriter_panel/shared/graph/presentation/graph_shortcuts.dart";
+import "package:typewriter_panel/shared/graph/presentation/graph_surface.dart";
+import "package:typewriter_panel/shared/graph/presentation/resizable_element.dart";
+import "package:typewriter_panel/shared/hooks/global_key.dart";
+import "package:typewriter_panel/shared/interaction_mode/application/current_interaction_mode.dart";
+import "package:typewriter_panel/shared/selectables/application/selection.dart";
+import "package:typewriter_panel/shared/selectables/presentation/selector.dart";
+import "package:typewriter_panel/shared/ui/components/surface.dart";
 import "package:vector_math/vector_math_64.dart" hide Colors;
 
 /// Receives an element identifier and its preview dimensions during resizing.

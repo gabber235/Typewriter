@@ -61,7 +61,6 @@ class ValidatedTextField<T> extends HookConsumerWidget {
     this.onInputFocus,
     this.onInputBlur,
     this.onDismiss,
-    this.onCancel,
     this.actions,
     this.textFieldActions,
     this.surroundingActions,
@@ -107,7 +106,6 @@ class ValidatedTextField<T> extends HookConsumerWidget {
   final VoidCallback? onInputFocus;
   final VoidCallback? onInputBlur;
   final VoidCallback? onDismiss;
-  final VoidCallback? onCancel;
 
   /// Actions available while either focus boundary is active.
   final List<ActionShortcut>? actions;
@@ -231,7 +229,6 @@ class ValidatedTextField<T> extends HookConsumerWidget {
           },
           onInputFocus: onInputFocus,
           onDismiss: onDismiss,
-          onCancel: onCancel,
         ),
         _StateText(
           name: name,

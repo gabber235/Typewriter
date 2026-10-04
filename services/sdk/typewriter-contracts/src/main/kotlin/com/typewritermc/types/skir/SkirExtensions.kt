@@ -1,53 +1,42 @@
 package com.typewritermc.types.skir
 
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.ResolvedTypeRef
-import com.typewritermc.types.TypeCatalog
-import com.typewritermc.types.TypeExpression
-import skirout.editor.v1.type_catalog.ResolvedTypeRef as SkirResolvedTypeRef
-import skirout.editor.v1.type_catalog.TypeCatalog as SkirTypeCatalog
-import skirout.editor.v1.type_catalog.TypeExpression as SkirTypeExpression
-import skirout.editor.v1.type_catalog.TypedValue as SkirTypedValue
+import com.typewritermc.types.TypeDefinition
+import com.typewritermc.types.TypeTemplate
+import com.typewritermc.types.TypeUse
+import skirout.editor.v1.type_catalog.DataValue as SkirDataValue
+import skirout.editor.v1.type_catalog.TypeDefinition as SkirTypeDefinition
+import skirout.editor.v1.type_catalog.TypeTemplate as SkirTypeTemplate
+import skirout.editor.v1.type_catalog.TypeUse as SkirTypeUse
 
-/** Converts a Typewriter catalog to the generated Skir catalog model. */
-fun TypeCatalog.toSkir(): SkirConversionResult<SkirTypeCatalog> = SkirTypeCodec.encode(this)
+fun TypeDefinition.toSkir(): SkirConversionResult<SkirTypeDefinition> = SkirTypeCodec.encode(this)
 
-/** Converts a generated Skir catalog to the Typewriter catalog model. */
-fun SkirTypeCatalog.toTypewriter(): SkirConversionResult<TypeCatalog> = SkirTypeCodec.decode(this)
+fun SkirTypeDefinition.toTypewriter(): SkirConversionResult<TypeDefinition> = SkirTypeCodec.decode(this)
 
-/** Converts one Typewriter type expression to its generated Skir representation. */
-fun TypeExpression.toSkir(): SkirConversionResult<SkirTypeExpression> = SkirTypeCodec.encode(this)
+fun TypeTemplate.toSkir(): SkirConversionResult<SkirTypeTemplate> = SkirTypeCodec.encode(this)
 
-/** Converts one generated Skir type expression to the Typewriter representation. */
-fun SkirTypeExpression.toTypewriter(): SkirConversionResult<TypeExpression> = SkirTypeCodec.decode(this)
+fun SkirTypeTemplate.toTypewriter(): SkirConversionResult<TypeTemplate> = SkirTypeCodec.decode(this)
 
-/** Converts a resolved Typewriter reference while preserving identity, revision, and arguments. */
-fun ResolvedTypeRef.toSkir(): SkirConversionResult<SkirResolvedTypeRef> = SkirTypeCodec.encode(this)
+fun TypeUse.toSkir(): SkirConversionResult<SkirTypeUse> = SkirTypeCodec.encode(this)
 
-/** Converts a generated Skir reference while preserving identity, revision, and arguments. */
-fun SkirResolvedTypeRef.toTypewriter(): SkirConversionResult<ResolvedTypeRef> = SkirTypeCodec.decode(this)
+fun SkirTypeUse.toTypewriter(): SkirConversionResult<TypeUse> = SkirTypeCodec.decode(this)
 
-/** Converts a portable Typewriter value tree to a generated Skir typed value. */
-fun DataValue.toSkir(): SkirConversionResult<SkirTypedValue> = SkirDataValueCodec.encode(this)
+fun DataValue.toSkir(): SkirConversionResult<SkirDataValue> = SkirDataValueCodec.encode(this)
 
-/** Converts a generated Skir typed value to a portable Typewriter value tree. */
-fun SkirTypedValue.toTypewriter(): SkirConversionResult<DataValue> = SkirDataValueCodec.decode(this)
+fun SkirDataValue.toTypewriter(): SkirConversionResult<DataValue> = SkirDataValueCodec.decode(this)
 
-/** Returns a successful conversion value and throws one diagnostic exception on failure. */
 fun <Value> SkirConversionResult<Value>.getOrThrow(): Value =
     when (this) {
         is SkirConversionResult.Success -> value
         is SkirConversionResult.Failure -> throw SkirConversionException(diagnostics)
     }
 
-/** Returns a successful conversion value, or null when conversion failed. */
 fun <Value> SkirConversionResult<Value>.getOrNull(): Value? =
     when (this) {
         is SkirConversionResult.Success -> value
         is SkirConversionResult.Failure -> null
     }
 
-/** Reports one or more diagnostics from a failed Skir conversion. */
 class SkirConversionException(
     val diagnostics: List<SkirConversionDiagnostic>,
 ) : IllegalArgumentException(diagnostics.joinToString(separator = "\n"))

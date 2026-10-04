@@ -55,29 +55,3 @@ extension DataValueEditorReading on DataValue {
     };
   }
 }
-
-/// Validates one editor value against the type resolved at its path.
-///
-/// Resolution and value validation stay together so callers receive one typed
-/// result before changing a draft. A registry is required when the expression
-/// contains named types whose definitions are outside the expression itself.
-extension TypeExpressionEditorMutationValidation on TypeExpression {
-  EditorMutationResult validateEditorMutation(
-    DataPath path,
-    DataValue value, {
-    TypeRegistry? registry,
-  }) {
-    final resolved = resolvePath(path, registry: registry);
-    if (resolved case TypeFailure(:final diagnostics)) {
-      return EditorMutationResult.invalid(diagnostics);
-    }
-    final diagnostics = value.validateAgainst(
-      (resolved as TypeSuccess<TypeExpression>).value,
-      path: path,
-      registry: registry,
-    );
-    return diagnostics.isEmpty
-        ? EditorMutationResult.applied(value)
-        : EditorMutationResult.invalid(diagnostics);
-  }
-}

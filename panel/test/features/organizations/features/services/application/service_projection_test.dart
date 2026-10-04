@@ -73,6 +73,7 @@ void main() {
           confirmedValue: first.identityValue,
           revision: first.revision,
         ),
+        validation: acceptTestEditorMutation,
         commitPolicy: EditorCommitPolicy.applyResource,
         commit: (_) async => throw StateError("No save expected"),
       );

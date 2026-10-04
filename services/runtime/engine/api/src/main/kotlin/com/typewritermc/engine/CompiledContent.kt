@@ -1,13 +1,12 @@
 package com.typewritermc.engine
 
+import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.ResourceDefinitionId
-import com.typewritermc.elements.ReferenceSlotId
-import com.typewritermc.types.DataPath
+import com.typewritermc.authoring.ValuePath
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.RelationId
-import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeExpression
+import com.typewritermc.types.TypeUse
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -42,26 +41,20 @@ data class CompiledResourceKey(
 data class CompiledResource(
     val key: CompiledResourceKey,
     val definition: ResourceDefinitionId,
-    val rootType: ResolvedTypeRef,
-    val valueWithSlots: DataValue,
+    val actualType: TypeUse.Named,
+    val bindingProvider: NativeBindingId,
+    val bindingSignature: String,
+    val value: DataValue.Named,
 )
 
 @Serializable
 sealed interface CompiledEdgeOrigin {
     @Serializable
-    @SerialName("declared")
-    data class Declared(
+    @SerialName("relation")
+    data class Relation(
         val relation: RelationId,
-        val sourceIndex: Int? = null,
-        val targetIndex: Int? = null,
-    ) : CompiledEdgeOrigin
-
-    @Serializable
-    @SerialName("reference")
-    data class Reference(
-        val slot: ReferenceSlotId,
-        val path: DataPath,
-        val expectedType: TypeExpression,
+        val firstLocation: ValuePath?,
+        val secondLocation: ValuePath?,
     ) : CompiledEdgeOrigin
 }
 

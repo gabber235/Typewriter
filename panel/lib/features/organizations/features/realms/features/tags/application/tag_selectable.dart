@@ -1,4 +1,4 @@
-import "package:flutter/material.dart";
+import "package:flutter/foundation.dart";
 import "package:riverpod/riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
@@ -39,83 +39,33 @@ class TagIdentifier extends SelectableIdentifier
         StackTrace.current,
       );
     }
-    final session = ref.watch(authoringSessionProvider(organization, realm));
-    final catalogState = ref.watch(
-      realmCatalogProvider(
-        RealmEditorCatalogRequest(types: {referenceResourceTypes.tag}),
-      ),
-    );
-    if (catalogState.isLoading) return const AsyncLoading();
-    if (catalogState.mapUnready<Selectable>() case final pending?) {
-      return pending;
+    final provider = authoringSessionProvider(organization, realm);
+    final state = ref.watch(provider);
+    if (state.failure case final failure?) {
+      return AsyncError(failure, StackTrace.current);
     }
-    final catalog = catalogState.requireValue;
-    if (session.generation?.value != catalog.generation.value) {
-      return const AsyncLoading();
-    }
-    final codec = TypedAuthoringCodec(catalog);
-    final tagValue = session.tagEditorValue(tagId, codec);
-    if (tagValue == null) {
-      if (session.sequence == null) return const AsyncLoading();
+    final resource = state.resources[tagId];
+    if (resource == null) {
+      if (state.snapshot == null) return const AsyncLoading();
       return AsyncError(SelectableNotFoundException(this), StackTrace.current);
     }
-    final tag = tagValue.value;
-    final presentations = catalog.presentations.values.toList(growable: false);
-    if (!ref.retainAuthoringCollections(
-      organizationId: organization,
-      realmId: realm,
-      catalog: catalog,
-      presentations: presentations,
-      session: session,
-    )) {
-      return const AsyncLoading();
-    }
-    final collections = decodeAuthoringCollections(
-      session: session,
-      catalog: catalog,
-      presentations: presentations,
-    );
-    final tags = collections.sources[authoringTagCollectionSourceId];
-    if (tags == null) {
-      return AsyncError(
-        StateError(
-          collections.diagnostics.map((item) => item.message).join("; "),
-        ),
-        StackTrace.current,
-      );
-    }
-    final content = codec.decodeResource(session.resources[tagId]!);
-    if (content.valueOrNull == null) {
-      return AsyncError(
-        StateError(content.diagnostics.map((item) => item.message).join("; ")),
-        StackTrace.current,
-      );
-    }
+    final draft = state.draft;
+    final catalog = state.catalog;
+    if (draft == null || catalog == null) return const AsyncLoading();
+    final tag = Tag.fromAuthoring(resource);
     return AsyncValue.data(
       TagSelectable(
-        resource: TypedAuthoringEditorResource(
-          ref
-              .watch(resourceRepositoriesProvider)
-              .authoring(organization, realm),
-          tagId,
-        ),
         onDelete: () => ref
-            .read(authoringSessionProvider(organization, realm).notifier)
+            .read(provider.notifier)
             .deleteResource(
               tagId,
               conflictMessage: "The tag changed before deletion",
             ),
         id: this,
         tag: tag,
-        snapshot: TypedAuthoringEditorSnapshot(
-          resource: session.resources[tagId]!,
-          content: content.valueOrNull!.content,
-          revision: tagValue.revision,
-          codec: codec,
-        ),
-        catalogPresentations: presentations,
-        tagCollection: tags,
-        presentationDiagnostics: collections.diagnostics,
+        draft: draft,
+        catalog: catalog,
+        session: ref.watch(provider.notifier),
       ),
     );
   }
@@ -139,59 +89,28 @@ class TagIdentifier extends SelectableIdentifier
 /// Its editor resource owns persistence, while the selectable exposes the
 /// presentation, collection, deletion capability, and snapshot needed by
 /// selection consumers.
-class TagSelectable extends EditableSelectable<TagIdentifier>
-    implements RealmAuthoringSelection {
+class TagSelectable extends InspectableSelectable<TagIdentifier> {
   const TagSelectable({
-    required this.resource,
     required this.onDelete,
     required this.id,
     required this.tag,
-    required this.snapshot,
-    required this.catalogPresentations,
-    required this.tagCollection,
-    this.presentationDiagnostics = const [],
+    required this.draft,
+    required this.catalog,
+    required this.session,
   });
 
   @override
   final TagIdentifier id;
 
   final Tag tag;
-  @override
-  final EditorSnapshot snapshot;
-  final PresentationCollectionSource tagCollection;
-  final List<PresentationDefinition> catalogPresentations;
-  @override
-  final List<TypeDiagnostic> presentationDiagnostics;
-
-  @override
-  MultiInspectionDefinition get multiInspection =>
-      const RealmAuthoringMultiInspectionDefinition(
-        CoreResourceDefinitionIds.tag,
-      );
-
-  @override
-  ResourceDefinitionId get resourceDefinition => CoreResourceDefinitionIds.tag;
+  final AuthoredDraft draft;
+  final CheckedEditorCatalog catalog;
+  final AuthoringSession session;
 
   @override
   String get name => tag.name;
 
-  @override
-  final EditableResource resource;
   final Future<void> Function() onDelete;
-
-  @override
-  List<PresentationDefinition> get presentations => catalogPresentations;
-  @override
-  List<PresentationCollectionSource> get collections => [tagCollection];
-
-  @override
-  PresentationModel buildPresentation(EditorOwnerScope owners) =>
-      PresentationModel.editor(
-        owner: owners.editor(this),
-        presentations: presentations,
-        collections: collections,
-        diagnostics: [...document.diagnostics, ...presentationDiagnostics],
-      );
 
   @override
   List<SelectionCapability> get capabilities => [
@@ -199,12 +118,30 @@ class TagSelectable extends EditableSelectable<TagIdentifier>
   ];
 
   @override
-  Widget? buildInspectorHeader(EditOwner owner) => AuthoringSubjectRole(
-    resourceId: tag.tagId,
-    resourceType: rootType,
-    role: PresentationRole.inspectorHeader,
-    historyNamespace: "tag.inspector.header.${tag.tagId.id}",
-  );
+  InspectionContent buildInspection(EditorOwnerScope owners) =>
+      InspectionContent(
+        header: InspectorHeader(
+          id: tag.tagId.value,
+          name: tag.name,
+          color: tag.color,
+        ),
+        body: AuthoredResourceInspection(
+          key: ValueKey((tag.tagId, skir.PresentationRole.inspector)),
+          resource: tag.tagId,
+          draft: draft,
+          catalog: catalog,
+          commands: AuthoredResourceCommands(
+            commit: session.commit,
+            previewTypeArguments: session.previewTypeArguments,
+            commitTypeArguments: session.commitTypeArguments,
+            prepareCreation: session.prepareCreation,
+            invokeCommand: session.invokeCommand,
+            watchSearch: session.watchPresentationSearch,
+            reload: session.refresh,
+            openAutosave: session.openAutosave,
+          ),
+        ),
+      );
 
   @override
   String toString() => "TagSelectable(id: $id, tag: $tag)";

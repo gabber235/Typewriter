@@ -1,20 +1,23 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
+EditorMutationResult acceptTestEditorMutation(DataPath path, DataValue value) =>
+    EditorMutationResult.applied(value);
+
 final class FakeEditorSnapshot extends EditorSnapshot {
   const FakeEditorSnapshot(
     this.document, {
-    this.validation,
+    required this.validation,
     this.draftValidation,
   });
 
   @override
   final EditorDocument document;
-  final EditorMutationValidator? validation;
+  final EditorMutationValidator validation;
   final List<TypeDiagnostic> Function(DataValue)? draftValidation;
 
   @override
   EditorMutationResult validate(DataPath path, DataValue value) =>
-      validation?.call(path, value) ?? super.validate(path, value);
+      validation(path, value);
 
   @override
   List<TypeDiagnostic> validateDraft(DataValue value) =>
@@ -83,11 +86,16 @@ ResourceEditorTarget fakeEditorTarget({
   required String label,
   required EditorDocument document,
   required EditorCommitter commit,
+  required EditorMutationValidator validation,
   Object? scope,
   EditorCommitPolicy commitPolicy = EditorCommitPolicy.autosaveChanges,
   List<TypeDiagnostic> Function(DataValue)? validateDraft,
 }) {
-  final snapshot = FakeEditorSnapshot(document, draftValidation: validateDraft);
+  final snapshot = FakeEditorSnapshot(
+    document,
+    validation: validation,
+    draftValidation: validateDraft,
+  );
   return ResourceEditorTarget(
     targetId: targetId,
     label: label,

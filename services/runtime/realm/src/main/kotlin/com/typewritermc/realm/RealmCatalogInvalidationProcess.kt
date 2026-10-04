@@ -1,5 +1,6 @@
 package com.typewritermc.realm
 
+import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.routes.EditorContracts
 import com.typewritermc.realm.routes.RealmAddress
 import com.typewritermc.realm.routes.requirePublished
@@ -8,6 +9,7 @@ import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.utils.rethrowExceptionalThrowable
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
@@ -16,18 +18,19 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
-import skirout.editor.v1.catalog.CatalogWatchUpdate
+import skirout.editor.v1.catalog.CatalogInvalidated
 import skirout.editor.v1.type_catalog.CatalogGeneration
 
 /**
  * Publishes discovery generation invalidations independently of client request lifetimes. Replacing the
  * communicator cancels and joins the old publisher before subscribing on the new connection. Failed publications
- * retry until successful; a newer generation cancels the older retry loop. Startup waits for the change subscriber
- * so subsequent snapshot updates are observed.
+ * retry until successful. Each communicator receives the installed generation before routes are exposed. A newer
+ * generation cancels the older retry loop.
  */
 class RealmCatalogInvalidationProcess internal constructor(
-    private val snapshots: RealmDiscoverySnapshotStore,
+    private val catalogs: RealmCatalogStore,
     private val scope: CoroutineScope,
     private val telemetry: ServiceTelemetry,
 ) {
@@ -36,8 +39,8 @@ class RealmCatalogInvalidationProcess internal constructor(
     /**
      * Binds catalog invalidation delivery to a new Realm communicator and waits for its subscriber to be installed.
      *
-     * The current snapshot is not replayed as an invalidation. Only later generation changes are published, and each
-     * failed publication retries until the generation is delivered or a newer generation supersedes it.
+     * The installed generation is announced for every communicator. Failed publication retries until the generation
+     * is delivered or a newer generation supersedes it.
      */
     internal suspend fun replaceCommunicator(
         communicator: Communicator,
@@ -45,10 +48,12 @@ class RealmCatalogInvalidationProcess internal constructor(
     ) {
         stop()
         val contract = EditorContracts(address).watchEditorCatalog
-        publisher =
+        val announced = CompletableDeferred<Unit>()
+        val replacement =
             scope.launch(start = CoroutineStart.UNDISPATCHED) {
-                snapshots.changes
-                    .map { it.discovery.generation.value }
+                catalogs.changes
+                    .onStart { emit(catalogs.captureCurrent().use { it.generation }) }
+                    .map { it.value }
                     .distinctUntilChanged()
                     .collectLatest { generation ->
                         while (true) {
@@ -63,10 +68,7 @@ class RealmCatalogInvalidationProcess internal constructor(
                                                 contract = contract,
                                                 address = address,
                                                 update =
-                                                    CatalogWatchUpdate.createInvalidated(
-                                                        generation = CatalogGeneration(value = generation),
-                                                        reason = "Realm discovery snapshot changed",
-                                                    ),
+                                                    CatalogInvalidated(generation = CatalogGeneration(value = generation)),
                                             ).requirePublished()
                                     }
                                 }.fold(
@@ -76,12 +78,19 @@ class RealmCatalogInvalidationProcess internal constructor(
                                         false
                                     },
                                 )
-                            if (published) break
+                            if (published) {
+                                announced.complete(Unit)
+                                break
+                            }
                             delay(INVALIDATION_RETRY_DELAY)
                         }
                     }
             }
-        snapshots.awaitChangeSubscriber()
+        replacement.invokeOnCompletion { failure ->
+            if (failure != null) announced.completeExceptionally(failure)
+        }
+        publisher = replacement
+        announced.await()
     }
 
     /** Cancels and joins the current invalidation publisher before its communicator is discarded. */

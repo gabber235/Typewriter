@@ -1,6 +1,12 @@
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart" hide Title;
 import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
+    as portable_catalog;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
+    as portable_expression;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/presentation.dart"
+    as portable_presentation;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
@@ -75,22 +81,22 @@ class TestSelectableIdentifier extends SelectableIdentifier {
 
   @override
   AsyncValue<Selectable> create(Ref ref) {
-    final initial = NamedType(rootDefinition.id)
-        .createInitialValue(registry: TypeRegistry(typeCatalog))
-        .valueOrNull;
     final data =
         ref.watch(testDataProvider(id)) ??
-        (initial is RecordValue ? initial : RecordValue(const {}))
+        RecordValue(const {})
             .withField("name", id.formatted.asValue)
             .withField("color", color.asValue);
 
-    final snapshot = DocumentEditorSnapshot(
-      EditorDocument(
-        rootType: NamedType(rootDefinition.id),
-        typeCatalog: typeCatalog,
-        confirmedValue: data,
-        revision: 1,
-      ),
+    final document = EditorDocument(
+      rootType: NamedType(rootDefinition.id),
+      typeCatalog: typeCatalog,
+      confirmedValue: data,
+      revision: 1,
+    );
+    final snapshot = FakeEditorSnapshot(
+      document,
+      validation: (path, value) =>
+          _validateTestRecord(representation, path, value),
     );
     final commands = ref.read(testSelectableDataProvider.notifier);
     final resource = FakeEditableResource(
@@ -132,7 +138,8 @@ class TestSelectableIdentifier extends SelectableIdentifier {
   }
 }
 
-class TestSelectable extends EditableSelectable<TestSelectableIdentifier> {
+class TestSelectable extends InspectableSelectable<TestSelectableIdentifier>
+    implements EditorTarget {
   TestSelectable({
     required this.resource,
     required this.id,
@@ -151,7 +158,6 @@ class TestSelectable extends EditableSelectable<TestSelectableIdentifier> {
 
   final TypeDefinition rootDefinition;
 
-  @override
   final TypeCatalog typeCatalog;
 
   final RecordValue data;
@@ -174,6 +180,17 @@ class TestSelectable extends EditableSelectable<TestSelectableIdentifier> {
   ];
 
   @override
+  SelectableIdentifier get targetId => id;
+
+  @override
+  String get label => name;
+
+  @override
+  EditorCommitPolicy get commitPolicy => EditorCommitPolicy.autosaveChanges;
+
+  ResolvedTypeRef get rootType => rootDefinition.id;
+
+  @override
   int get hashCode => Object.hash(id, rootType, data);
 
   @override
@@ -193,18 +210,82 @@ class TestSelectable extends EditableSelectable<TestSelectableIdentifier> {
   }
 
   @override
-  Widget? buildInspectorHeader(EditOwner owner) => ManagedInspectorHeader(
-    id: id.id,
-    owner: owner,
-    fallbackName: name,
-    fallbackColor: color,
-  );
+  InspectionContent buildInspection(EditorOwnerScope owners) {
+    final owner = owners.editor(this);
+    return InspectionContent(
+      host: EditorSourcePresentationHost(
+        catalog: portable_catalog.EditorCatalogWireSnapshot.defaultInstance
+            .asTrustedLocalCatalog(),
+        root: () => portable_presentation.PresentationNode(
+          nodeId: "testSelectable",
+          properties:
+              portable_presentation.PresentationProperties.defaultInstance,
+          element: portable_presentation.PresentationElement.wrapChildren(
+            portable_presentation.ChildrenElement.createColumn(
+              children: const [],
+              layout: portable_presentation.AxisChildrenLayout.defaultInstance,
+            ),
+          ),
+          header: null,
+        ),
+        bindings: const [],
+        budget: portable_expression.EvaluationBudget(
+          maxSteps: 64,
+          maxCollectionItems: 16,
+        ),
+      ),
+      header: ManagedInspectorHeader(
+        id: id.id,
+        owner: owner,
+        fallbackName: name,
+        fallbackColor: color,
+      ),
+    );
+  }
 
   @override
-  EditorSnapshot get snapshot => DocumentEditorSnapshot(document);
+  EditorSnapshot get snapshot =>
+      FakeEditorSnapshot(document, validation: validate);
+
+  @override
+  List<TypeDiagnostic> validateDraft(DataValue value) =>
+      snapshot.validateDraft(value);
+
+  @override
+  EditorValue value(DataPath path) => data.readEditorValue(path);
+
+  @override
+  EditorMutationResult validate(DataPath path, DataValue value) =>
+      _validateTestRecord(rootDefinition.representation, path, value);
 
   @override
   String toString() {
     return "TestSelectable(id: $id, name: $name)";
   }
+}
+
+EditorMutationResult _validateTestRecord(
+  TypeExpression representation,
+  DataPath path,
+  DataValue value,
+) {
+  final expected = switch ((representation, path.segments)) {
+    (final type, []) => type,
+    (RecordType(:final fields), [FieldPathSegment(:final name)]) =>
+      fields[name]?.type,
+    _ => null,
+  };
+  if (expected == null) {
+    return EditorMutationResult.invalid([
+      TypeDiagnostic(
+        code: TypeDiagnosticCode.invalidPath,
+        message: "The test selectable path is unavailable",
+        path: path,
+      ),
+    ]);
+  }
+  final diagnostics = value.validateAgainst(expected, path: path);
+  return diagnostics.isEmpty
+      ? EditorMutationResult.applied(value)
+      : EditorMutationResult.invalid(diagnostics);
 }

@@ -1,0 +1,17 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    val repository = providers.gradleProperty("typewriterRepository").get()
+    versionCatalogs {
+        create("libs") {
+            from(files("$repository/services/libs.versions.toml"))
+        }
+    }
+}
+
+rootProject.name = "typewriter-ksp-compilation-fixture"

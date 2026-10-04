@@ -55,10 +55,8 @@ void _testHostTargetSelection() {
         final owners = EditorOwnerRegistry();
         addTearDown(owners.dispose);
 
-        final model = harness.selectable.buildPresentation(owners);
-        final owner =
-            (model.inputs[const BindingId(1)]! as PresentationEditInput).owner
-                as EditorSource;
+        final host = _buildInspection(harness, owners).host!;
+        final owner = _configurationSource(owners);
         expect(
           owner.update(
             DataPath.root.field("engine"),
@@ -70,12 +68,22 @@ void _testHostTargetSelection() {
           isA<AppliedEditorMutation>(),
         );
         await tester.pumpTestApp(
-          child: SingleChildScrollView(child: ComposedEditor(model: model)),
+          child: SingleChildScrollView(
+            child: PortablePresentationRenderer(host: host),
+          ),
         );
 
         expect(find.text("Assigned Realm"), findsOneWidget);
+        final realmInput = find.byKey(
+          const ValueKey("serviceHost.engine.realm.input"),
+        );
+        await tester.ensureVisible(realmInput);
+        await tester.tap(realmInput);
+        await tester.pumpAndSettle();
         expect(find.text("Compatible Realm"), findsWidgets);
         expect(find.text("Incompatible Realm"), findsNothing);
+        await tester.tap(find.text("Compatible Realm").last);
+        await tester.pumpAndSettle();
         expect(
           owner.value(DataPath.root.field("engine").field("realm")).valueOrNull,
           StringValue(external.realmId.id),

@@ -168,6 +168,39 @@ void main() {
       expect(find.semantics.byLabel("Suffix"), findsOne);
     });
 
+    testWidgets("derives its height inside a column", (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: SingleChildScrollView(
+            child: SizedBox(
+              width: 200,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AdaptiveLeadingLayout(
+                    padding: EdgeInsets.all(8),
+                    leading: SizedBox(width: 36, height: 36),
+                    center: Text("Named tag"),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+      final layoutHeight = tester
+          .getSize(find.byType(AdaptiveLeadingLayout))
+          .height;
+      expect(layoutHeight, greaterThan(0));
+      expect(
+        layoutHeight,
+        lessThan(tester.getSize(find.byType(SingleChildScrollView)).height),
+      );
+      expect(find.text("Named tag"), findsOneWidget);
+    });
+
     testWidgets("rejects an unbounded host", (tester) async {
       await tester.pumpWidget(
         const Directionality(

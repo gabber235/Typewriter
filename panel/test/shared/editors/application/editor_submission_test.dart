@@ -22,6 +22,7 @@ void main() {
       var sends = 0;
       final source = TransactionalEditorSource(
         document: _document("Original", 1),
+        validation: acceptTestEditorMutation,
         debounce: const Duration(days: 1),
         commit: (_) async {
           sends++;
@@ -48,6 +49,7 @@ void main() {
       final captured = <EditorCommit>[];
       final source = TransactionalEditorSource(
         document: _document("Original", 1),
+        validation: acceptTestEditorMutation,
         debounce: const Duration(days: 1),
         commit: (commit) async {
           captured.add(commit);
@@ -84,6 +86,7 @@ void main() {
       var sends = 0;
       final source = TransactionalEditorSource(
         document: _document("Original", 1),
+        validation: acceptTestEditorMutation,
         commitPolicy: EditorCommitPolicy.applyResource,
         validateDraft: (value) => value == _value("")
             ? [
@@ -123,6 +126,7 @@ void main() {
         label: "Resource",
         document: _document("Original", 1),
         commitPolicy: EditorCommitPolicy.applyResource,
+        validation: acceptTestEditorMutation,
         commit: (commit) async =>
             MutationSuccess(revision: 2, value: commit.rootValue),
       );

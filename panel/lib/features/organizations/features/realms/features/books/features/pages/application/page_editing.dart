@@ -3,32 +3,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-typedef PageFieldEdit = ({DataValue? expected, DataValue value});
-
-/// Detects whether a page command still targets the values shown at origin.
-///
-/// The authoritative refresh may have a newer value even when the editor has
-/// no mounted owner. Returning a conflict here prevents command adapters from
-/// replacing a concurrent change that the user never observed.
-MutationConflict? pageEditOriginConflict(
-  EditorDocument document,
-  Map<DataPath, PageFieldEdit> changes,
-) {
-  for (final change in changes.entries) {
-    final actual = change.key.read(document.confirmedValue).valueOrNull;
-    if (change.value.expected == null || actual != change.value.expected) {
-      return TypedMutationResult.conflict(
-        expectedRevision: document.revision,
-        actualRevision: document.revision,
-        actualValue: document.confirmedValue,
-      ) as MutationConflict;
-    }
-  }
-  return null;
-}
-
 extension PageEditingRef on WidgetRef {
-  Future<TypedMutationResult> editPage({
+  Future<void> editPage({
     required skir.ResourceId id,
     String? name,
     String? expectedName,
@@ -36,109 +12,117 @@ extension PageEditingRef on WidgetRef {
     String? expectedChapter,
     int? priority,
     int? expectedPriority,
-  }) => _pageEditing().edit({
-    id: {
-      if (name != null)
-        DataPath.root.field("name"): (
-          expected: expectedName?.asValue,
-          value: name.asValue,
-        ),
-      if (chapter != null)
-        DataPath.root.field("chapter"): (
-          expected: expectedChapter?.asValue,
-          value: chapter.asValue,
-        ),
-      if (priority != null)
-        DataPath.root.field("priority"): (
-          expected: expectedPriority?.asValue,
-          value: priority.asValue,
-        ),
-    },
-  });
+  }) async {
+    final access = readAuthoringSession();
+    final baseline = access.state.draft;
+    if (baseline == null) throw StateError("Authoring is not ready");
+    final draft = baseline.fork();
+    if (name != null) {
+      _setString(draft, id, "name", expected: expectedName, proposed: name);
+    }
+    if (chapter != null) {
+      _setString(
+        draft,
+        id,
+        "chapter",
+        expected: expectedChapter,
+        proposed: chapter,
+      );
+    }
+    if (priority != null) {
+      _setInteger(
+        draft,
+        id,
+        "priority",
+        expected: expectedPriority,
+        proposed: priority,
+      );
+    }
+    await access.notifier.commitDraft(
+      draft,
+      conflictMessage: "The Page changed before this edit was saved",
+    );
+  }
 
-  Future<TypedMutationResult> editPagesChapter(
+  Future<void> editPagesChapter(
     List<Page> pages,
     String oldChapter,
     String newChapter,
-  ) => _pageEditing().edit({
-    for (final page in pages)
-      page.pageId: {
-        DataPath.root.field("chapter"): (
-          expected: page.chapter.asValue,
-          value: replacePageChapter(
-            page.chapter,
-            oldChapter,
-            newChapter,
-          ).asValue,
-        ),
-      },
-  });
-
-  PageEditing _pageEditing() {
-    final session = readAuthoringSession().notifier;
-    return PageEditing(
-      session,
-      read(localWorkControllerProvider),
-      read(resourceRepositoriesProvider)
-          .authoring(session.organizationId, session.realmId),
+  ) async {
+    final access = readAuthoringSession();
+    final baseline = access.state.draft;
+    if (baseline == null) throw StateError("Authoring is not ready");
+    final draft = baseline.fork();
+    for (final page in pages) {
+      _setString(
+        draft,
+        page.pageId,
+        "chapter",
+        expected: page.chapter,
+        proposed: replacePageChapter(page.chapter, oldChapter, newChapter),
+      );
+    }
+    await access.notifier.commitDraft(
+      draft,
+      conflictMessage: "A Page changed before this edit was saved",
     );
   }
 }
 
-final class PageEditing {
-  PageEditing(this.session, this.workspace, this.repository);
-
-  final AuthoringResourceRepository repository;
-  final AuthoringSession session;
-  final LocalWorkCommands workspace;
-
-  Future<TypedMutationResult> edit(
-    Map<skir.ResourceId, Map<DataPath, PageFieldEdit>> changes,
-  ) async {
-    final leases = [
-      for (final id in changes.keys) session.acquire(id.pageAuthoringSelection),
-    ];
-    final owners = EditorOwnerRegistry(workspace: workspace);
-    try {
-      await Future.wait(leases.map((lease) => lease.ready));
-      final edits = <TransactionalEditorSource, Map<DataPath, DataValue>>{};
-      for (final entry in changes.entries) {
-        final resource = TypedAuthoringEditorResource(repository, entry.key);
-        final snapshot = await resource.refresh();
-        if (snapshot == null) {
-          return unavailableMutation(
-            "The page no longer exists",
-            targetDeleted: true,
-          );
-        }
-        final originConflict = pageEditOriginConflict(
-          snapshot.document,
-          entry.value,
-        );
-        if (originConflict != null) return originConflict;
-        final target = ResourceEditorTarget(
-          targetId: entry.key,
-          label: "Page",
-          resource: resource,
-          snapshot: snapshot,
-        );
-        final owner = owners.editor(target) as TransactionalEditorSource;
-        edits[owner] = {
-          for (final change in entry.value.entries)
-            change.key: change.value.value,
-        };
-      }
-      final results = await EditorBatch.submit(changes: edits);
-      return results.values
-              .where((result) => result is! MutationSuccess)
-              .firstOrNull ??
-          results.values.firstOrNull ??
-          invalidMutation("No page edits were supplied");
-    } finally {
-      owners.dispose();
-      for (final lease in leases) {
-        lease.release();
-      }
+void _setString(
+  AuthoredDraft draft,
+  skir.ResourceId resource,
+  String field, {
+  required String? expected,
+  required String proposed,
+}) {
+  final location = _field(resource, field);
+  final current = draft.read(location);
+  if (current case PortablePathValue(:final value)) {
+    if (expected == null || value.authoredString != expected) {
+      throw ApiException.conflict("The Page $field changed");
     }
+  } else {
+    throw StateError("The Page $field is unavailable");
+  }
+  final result = draft.setPayload(
+    location,
+    skir.DataValue.wrapStringValue(proposed),
+  );
+  if (result is PortablePathUnavailable<skir.AuthoringRecord>) {
+    throw StateError(result.message);
   }
 }
+
+void _setInteger(
+  AuthoredDraft draft,
+  skir.ResourceId resource,
+  String field, {
+  required int? expected,
+  required int proposed,
+}) {
+  final location = _field(resource, field);
+  final current = draft.read(location);
+  if (current case PortablePathValue(:final value)) {
+    if (expected == null || value.authoredInteger != BigInt.from(expected)) {
+      throw ApiException.conflict("The Page $field changed");
+    }
+  } else {
+    throw StateError("The Page $field is unavailable");
+  }
+  final result = draft.setPayload(
+    location,
+    skir.DataValue.wrapInteger(proposed.toString()),
+  );
+  if (result is PortablePathUnavailable<skir.AuthoringRecord>) {
+    throw StateError(result.message);
+  }
+}
+
+skir.ValueLocation _field(skir.ResourceId resource, String field) =>
+    skir.ValueLocation(
+      resource: resource,
+      path: skir.ValuePath(
+        segments: [skir.PathSegment.createField(name: field)],
+      ),
+    );

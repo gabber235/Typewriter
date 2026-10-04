@@ -26,6 +26,27 @@ enum RealmConnectionState {
   unavailable,
 }
 
+/// Reloads topology when a previously disconnected service becomes available.
+///
+/// Service heartbeats are independent from topology observations. A recovered
+/// service therefore provides a reliable opportunity to replace any topology
+/// event that core NATS could not deliver while the panel was disconnected.
+@riverpod
+void realmTopologyRecovery(Ref ref) {
+  final organizationId = ref.watch(organizationIdProvider);
+  if (organizationId == null) return;
+
+  ref.listen(serviceConnectionsProvider, (previous, next) {
+    final recovered = next.entries.any(
+      (entry) => entry.value && previous?[entry.key] != true,
+    );
+    if (!recovered) return;
+    ref
+        .read(organizationTopologyControllerProvider(organizationId).notifier)
+        .refresh();
+  });
+}
+
 @freezed
 /// UI policy derived from [RealmConnectionState].
 ///

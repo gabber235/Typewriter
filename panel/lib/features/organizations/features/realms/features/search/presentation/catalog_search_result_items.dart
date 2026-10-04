@@ -1,17 +1,5 @@
 import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-/// Builds the shared element type row used by contextual Page search.
-Widget buildElementTypeSearchResultItem(SearchResultRowContext context) =>
-    ElementTypeSearchResultItem(
-      definition: context.result.payload as ElementDefinition,
-      focused: context.focused,
-      selected: context.selected,
-      loading: context.loading,
-      onTap: context.onTap,
-      shortcutActivator: context.shortcutActivator,
-    );
 
 Widget buildAuthoringCreationSearchResultItem(SearchResultRowContext context) {
   return AuthoringCreationSearchResultItem(
@@ -41,15 +29,34 @@ class AuthoringCreationSearchResultItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.primary;
+    final theme = Theme.of(context);
+    final display = option.display;
+    final color =
+        display?.color.parsedDisplayColor ?? theme.colorScheme.primary;
+    final icon = display?.icon.trim();
+    final description = display?.description.trim();
     return SearchResultCard(
       color: color,
+      prefix: SearchResultIconTile(
+        color: color,
+        onColor: color.on(context),
+        icon: icon == null || icon.isEmpty
+            ? const Icon(Icons.add)
+            : Icones(icon),
+        focused: focused,
+      ),
       selected: selected,
       focused: focused,
       onTap: onTap,
-      content: ListTile(
-        title: Text(option.label),
-        subtitle: Text(option.root.id.toString()),
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        spacing: context.spacing.space1,
+        children: [
+          SearchResultTitle(title: option.label),
+          if (description != null && description.isNotEmpty)
+            SearchResultDescription(description: description),
+        ],
       ),
       suffix: SearchResultSuffix(
         label: "resource",
@@ -60,150 +67,13 @@ class AuthoringCreationSearchResultItem extends StatelessWidget {
   }
 }
 
-class PageTypeSearchResultItem extends ConsumerWidget {
-  const PageTypeSearchResultItem({
-    required this.definition,
-    required this.selected,
-    required this.focused,
-    required this.loading,
-    required this.onTap,
-    required this.shortcutActivator,
-    super.key,
-  });
-
-  final RealmTypeEntry definition;
-  final bool selected;
-  final bool focused;
-  final bool loading;
-  final VoidCallback? onTap;
-  final ShortcutActivator? shortcutActivator;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final presentation = _catalogPresentation(
-      ref,
-      definition.presentationSubject,
-    );
-    final color = Theme.of(context).colorScheme.primary;
-    return SearchResultCard(
-      color: color,
-      prefix: loading
-          ? SearchResultIconTile(
-              color: color,
-              onColor: color.on(context),
-              icon: const SizedBox.shrink(),
-              focused: focused,
-              loading: true,
-            )
-          : null,
-      selected: selected,
-      focused: focused,
-      onTap: onTap,
-      content: IgnorePointer(
-        child: ComposedEditor(
-          model: presentation,
-          readOnly: true,
-          historyNamespace: "catalog.page.${definition.type}",
-        ),
-      ),
-      suffix: SearchResultSuffix(
-        label: "page type",
-        shortcutActivator: shortcutActivator,
-        selected: selected,
-      ),
-    );
-  }
-}
-
-class ElementTypeSearchResultItem extends ConsumerWidget {
-  const ElementTypeSearchResultItem({
-    required this.definition,
-    required this.selected,
-    required this.focused,
-    required this.loading,
-    required this.onTap,
-    required this.shortcutActivator,
-    super.key,
-  });
-
-  final ElementDefinition definition;
-  final bool selected;
-  final bool focused;
-  final bool loading;
-  final VoidCallback? onTap;
-  final ShortcutActivator? shortcutActivator;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final presentation = _catalogPresentation(
-      ref,
-      ref
-          .watch(realmEditorCatalogProvider)
-          .value
-          ?.types[definition.rootType]
-          ?.presentationSubject,
-    );
-    final color = Theme.of(context).colorScheme.primary;
-    return SearchResultCard(
-      color: color,
-      prefix: loading
-          ? SearchResultIconTile(
-              color: color,
-              onColor: color.on(context),
-              icon: const SizedBox.shrink(),
-              focused: focused,
-              loading: true,
-            )
-          : null,
-      selected: selected,
-      focused: focused,
-      onTap: onTap,
-      content: IgnorePointer(
-        child: ComposedEditor(
-          model: presentation,
-          readOnly: true,
-          historyNamespace: "catalog.element.${definition.typeId.uuid}",
-        ),
-      ),
-      suffix: SearchResultSuffix(
-        label: "element type",
-        shortcutActivator: shortcutActivator,
-        selected: selected,
-      ),
-    );
-  }
-}
-
-PresentationModel _catalogPresentation(
-  WidgetRef ref,
-  TypedCatalogPresentationSubject? subject,
-) {
-  final snapshot = ref.watch(realmEditorCatalogProvider).value;
-  if (snapshot != null && subject != null) {
-    final result = TypedAuthoringCodec(snapshot).catalogPresentation(subject);
-    if (result.valueOrNull case final presentation?) {
-      return presentation.model;
+extension on String {
+  Color? get parsedDisplayColor {
+    if (trim().isEmpty) return null;
+    try {
+      return parseColorHex(this, includeAlpha: true);
+    } on FormatException {
+      return null;
     }
-    return _catalogDiagnosticModel(snapshot.catalog, result.diagnostics);
   }
-  return _catalogDiagnosticModel(const TypeCatalog([]), const [
-    TypeDiagnostic(
-      code: TypeDiagnosticCode.invalidPresentation,
-      message: "Catalog presentation is unavailable",
-      pathPresent: false,
-    ),
-  ]);
 }
-
-PresentationModel _catalogDiagnosticModel(
-  TypeCatalog catalog,
-  List<TypeDiagnostic> diagnostics,
-) => PresentationModel(
-  catalog: catalog,
-  inputs: const {},
-  root: PresentationNode(
-    id: "catalog.option.diagnostic",
-    element: DiagnosticElement(diagnostics),
-  ),
-  diagnostics: diagnostics,
-);

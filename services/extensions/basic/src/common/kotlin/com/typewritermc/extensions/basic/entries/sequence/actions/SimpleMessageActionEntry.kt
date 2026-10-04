@@ -2,6 +2,7 @@ package com.typewritermc.extensions.basic.entries.sequence.actions
 
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.engine.pages.SequenceEntry
+import com.typewritermc.extensions.basic.entries.sequence.SequenceTriggers
 import com.typewritermc.types.Color
 import com.typewritermc.types.Ref
 import com.typewritermc.types.TypewriterDisplay
@@ -17,6 +18,6 @@ import com.typewritermc.types.TypewriterType
 class SimpleMessageActionEntry(
     override val name: String,
     override val placement: GraphPlacement,
-    val triggers: Set<Ref<SequenceEntry>>,
+    val triggers: Set<Ref<SequenceTriggers.Entry, SequenceEntry>>,
     val message: String,
 ) : SequenceEntry

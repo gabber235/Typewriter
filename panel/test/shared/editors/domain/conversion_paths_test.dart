@@ -79,38 +79,6 @@ void main() {
       expect(result.valueOrNull, isEmpty);
     });
 
-    test("inheritance upcasts are zero cost lossless conversions", () {
-      final parent = _revision("conversion_parent");
-      final child = _revision("conversion_child");
-      final registry = TypeRegistry(
-        TypeCatalog([
-          TypeDefinition(
-            id: parent,
-            kind: NominalTypeKind.concrete,
-            representation: RecordType(fields: {}),
-          ),
-          TypeDefinition(
-            id: child,
-            kind: NominalTypeKind.concrete,
-            representation: RecordType(fields: {}),
-            parents: [parent],
-          ),
-        ]),
-      );
-      final source = child;
-      final target = parent;
-
-      final graph = ConversionGraph.withInheritance(
-        registry: registry,
-        applications: [source],
-      ).valueOrNull!;
-      final path = graph.automaticPath(source, target).valueOrNull!;
-
-      expect(path, hasLength(1));
-      expect(path.single.cost, 0);
-      expect(path.single.safety, ConversionSafety.lossless);
-    });
-
     test("zero cost cycles do not make path search diverge", () {
       final source = _reference("cycle_source");
       final middle = _reference("cycle_middle");

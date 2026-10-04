@@ -20,10 +20,8 @@ void _testHostApply() {
 
       final owners = EditorOwnerRegistry();
       addTearDown(owners.dispose);
-      final model = harness.selectable.buildPresentation(owners);
-      final owner =
-          (model.inputs[const BindingId(1)]! as PresentationEditInput).owner
-              as EditorSource;
+      _buildInspection(harness, owners);
+      final owner = _configurationSource(owners);
       final path = DataPath.root.field("realm");
       final interaction = owner.beginInteraction(path);
 
@@ -117,15 +115,12 @@ void _testHostApply() {
     final workspace = harness.container.read(localWorkControllerProvider);
     final view = EditorOwnerRegistry(workspace: workspace);
 
-    final owner =
-        ((harness.selectable.buildPresentation(view).inputs[const BindingId(1)]!
-                      as PresentationEditInput)
-                  .owner
-              as EditorSource)
-          ..update(
-            DataPath.root.field("realm"),
-            _mode("RealmHosted", {"target": StringValue("paper@*")}),
-          );
+    _buildInspection(harness, view);
+    final owner = _configurationSource(view)
+      ..update(
+        DataPath.root.field("realm"),
+        _mode("RealmHosted", {"target": StringValue("paper@*")}),
+      );
     view.dispose();
     harness.servicesSubscription.close();
     harness.topologySubscription.close();
@@ -165,13 +160,8 @@ void _testHostApply() {
       addTearDown(harness.dispose);
       final owners = EditorOwnerRegistry();
       addTearDown(owners.dispose);
-      final owner =
-          (harness.selectable.buildPresentation(owners).inputs[const BindingId(
-                        1,
-                      )]!
-                      as PresentationEditInput)
-                  .owner
-              as EditorSource;
+      _buildInspection(harness, owners);
+      final owner = _configurationSource(owners);
       expect(
         owner.update(
           DataPath.root.field("engine"),

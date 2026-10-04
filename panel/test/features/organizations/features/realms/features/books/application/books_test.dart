@@ -17,31 +17,6 @@ class _MockBooks extends CanonicalBooks {
   Future<List<Book>> build() async => _books;
 }
 
-class _DelayedCatalog extends RealmCatalog {
-  _DelayedCatalog(this.snapshot);
-
-  final Future<RealmEditorCatalogSnapshot> snapshot;
-
-  @override
-  Future<RealmEditorCatalogSnapshot> build(RealmEditorCatalogRequest request) =>
-      snapshot;
-}
-
-class _MutableCatalog extends RealmCatalog {
-  _MutableCatalog(this.snapshot);
-
-  final RealmEditorCatalogSnapshot snapshot;
-
-  @override
-  Future<RealmEditorCatalogSnapshot> build(
-    RealmEditorCatalogRequest request,
-  ) async => snapshot;
-
-  void beginRefresh() => state = const AsyncLoading();
-
-  void finishRefresh() => state = AsyncData(snapshot);
-}
-
 skir.ResourceId _rid(String id) => skir.ResourceId(value: id.split(":").last);
 
 Book _book(String id, String title, {List<skir.ResourceId> tagIds = const []}) {
@@ -65,78 +40,42 @@ Tag _tag(String id) {
 }
 
 void main() {
-  test(
-    "canonical books remain loading until the catalog and graph are ready",
-    () async {
-      final pending = Completer<RealmEditorCatalogSnapshot>();
-      final book = _book("book1", "Quest for Glory");
-      final container = ProviderContainer.test(
-        overrides: [
-          organizationIdProvider.overrideWithValue(
-            recordId("organization:test"),
-          ),
-          realmIdProvider.overrideWithValue(recordId("realm_instance:test")),
-          ...authoringSessionMockOverrides(
-            books: [book],
-            includeCatalog: false,
-          ),
-          realmCatalogProvider.overrideWith2(
-            (request) => _DelayedCatalog(pending.future),
-          ),
-        ],
-      );
-      final subscription = container.listen(canonicalBooksProvider, (_, _) {});
-      addTearDown(subscription.close);
+  test("canonical books project the coherent authoring snapshot", () async {
+    final book = _book("book1", "Quest for Glory");
+    final container = ProviderContainer.test(
+      overrides: [
+        organizationIdProvider.overrideWithValue(recordId("organization:test")),
+        realmIdProvider.overrideWithValue(recordId("realm_instance:test")),
+        ...authoringSessionMockOverrides(books: [book]),
+      ],
+    );
+    final subscription = container.listen(canonicalBooksProvider, (_, _) {});
+    addTearDown(subscription.close);
+    addTearDown(container.dispose);
 
-      expect(
-        container.read(canonicalBooksProvider),
-        isA<AsyncLoading<List<Book>>>(),
-      );
-      pending.complete(authoringFixtureCatalog());
-      final books = await container.read(canonicalBooksProvider.future);
-      expect(books.single.bookId, book.bookId);
-    },
-  );
+    final books = await container.read(canonicalBooksProvider.future);
+    expect(books.single.bookId, book.bookId);
+  });
 
-  test(
-    "canonical books stop exposing editable data during catalog refresh",
-    () async {
-      final book = _book("book1", "Quest for Glory");
-      final catalog = authoringFixtureCatalog();
-      late _MutableCatalog notifier;
-      final container = ProviderContainer.test(
-        overrides: [
-          organizationIdProvider.overrideWithValue(
-            recordId("organization:test"),
+  test("canonical books expose an authoring session failure", () async {
+    final container = ProviderContainer.test(
+      overrides: [
+        organizationIdProvider.overrideWithValue(recordId("organization:test")),
+        realmIdProvider.overrideWithValue(recordId("realm_instance:test")),
+        ...authoringSessionMockOverrides(
+          initial: AuthoringSessionState(
+            failure: StateError("Authoring unavailable"),
           ),
-          realmIdProvider.overrideWithValue(recordId("realm_instance:test")),
-          ...authoringSessionMockOverrides(
-            books: [book],
-            includeCatalog: false,
-          ),
-          realmCatalogProvider.overrideWith2(
-            (request) => notifier = _MutableCatalog(catalog),
-          ),
-        ],
-      );
-      final subscription = container.listen(canonicalBooksProvider, (_, _) {});
-      addTearDown(subscription.close);
-      expect(
-        (await container.read(canonicalBooksProvider.future)).single.bookId,
-        book.bookId,
-      );
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
 
-      notifier.beginRefresh();
-      await pumpEventQueue();
-      expect(container.read(canonicalBooksProvider).isLoading, isTrue);
-
-      notifier.finishRefresh();
-      expect(
-        (await container.read(canonicalBooksProvider.future)).single.bookId,
-        book.bookId,
-      );
-    },
-  );
+    await expectLater(
+      container.read(canonicalBooksProvider.future),
+      throwsA(isA<StateError>()),
+    );
+  });
 
   group("filteredBooks", () {
     final testBooks = [

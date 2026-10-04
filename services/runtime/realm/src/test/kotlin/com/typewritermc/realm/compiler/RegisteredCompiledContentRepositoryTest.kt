@@ -1,6 +1,7 @@
 package com.typewritermc.realm.compiler
 
 import com.surrealdb.Surreal
+import com.typewritermc.authoring.PublicationId
 import com.typewritermc.engine.CompilationProjectionId
 import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.engine.CompileDiagnostic
@@ -37,6 +38,7 @@ val RegisteredCompiledContentRepositoryTest by testSuite {
             val firstManifest = 'c'.manifest("1", listOf(preserved))
 
             repository.publish(
+                PublicationId("first"),
                 firstManifest,
                 listOf(preserved),
                 firstManifest.activation(1, preserved),
@@ -47,6 +49,7 @@ val RegisteredCompiledContentRepositoryTest by testSuite {
             val secondManifest = 'd'.manifest("2", listOf(preserved, replacement))
 
             repository.publish(
+                PublicationId("second"),
                 secondManifest,
                 listOf(replacement),
                 secondManifest.activation(2, preserved, replacement),
@@ -77,6 +80,9 @@ val RegisteredCompiledContentRepositoryTest by testSuite {
                 DEFINE FIELD compiler_format ON compile_attempt TYPE int;
                 DEFINE FIELD status ON compile_attempt TYPE string;
                 DEFINE FIELD diagnostics ON compile_attempt TYPE string;
+                DEFINE FIELD artifact_manifest ON compile_attempt TYPE option<record>;
+                DEFINE FIELD started_at ON compile_attempt TYPE datetime DEFAULT time::now();
+                DEFINE FIELD completed_at ON compile_attempt TYPE datetime DEFAULT time::now();
                 DEFINE TABLE compile_attempt_root SCHEMAFULL TYPE RELATION IN compile_attempt OUT resource;
                 DEFINE FIELD projection ON compile_attempt_root TYPE string;
                 """.trimIndent(),
@@ -132,6 +138,8 @@ private fun Char.manifest(
     digest = ContentDigest(toString().repeat(64)),
     sourceRevision = sourceRevision,
     catalogRevision = "catalog",
+    implementationToken = "implementation",
+    runtimeSignatures = emptySet(),
     artifacts =
         artifacts.map { artifact ->
             com.typewritermc.engine.CompiledArtifactReference(

@@ -339,6 +339,35 @@ class Communicator(
         }.responseResult()
     }
 
+    /** Publishes an update to the concrete subject resolved for one watch request. */
+    suspend fun <Address : Any, Request : Any, Initial : Any, Update : Any> publishUpdate(
+        contract: WatchContract<Address, Request, Initial, Update>,
+        address: Address,
+        request: Request,
+        update: Update,
+        headers: MessageHeaders = MessageHeaders.Empty,
+    ): CommunicationResult<Unit> {
+        val destination = contract.updateDestination(address, request)
+        return operation(
+            contract.name.value,
+            "publish",
+            contract.failureSlug,
+            SpanKind.PRODUCER,
+            contract.updateAddress.template,
+        ) { annotate ->
+            val classification = contract.updateClassifier.classify(update)
+            publishResponse(
+                destination,
+                update,
+                contract.updateCodec,
+                classification,
+                contract.failureSlug,
+                headers,
+                annotate,
+            )
+        }.responseResult()
+    }
+
     internal suspend fun <Response : Any> sendResponse(
         name: String,
         template: String?,
@@ -386,7 +415,7 @@ class Communicator(
         headers: MessageHeaders = MessageHeaders.Empty,
     ): Flow<CommunicationResult<WatchMessage<Initial, Update>>> =
         flow {
-            val updateAddress = contract.updateAddress.render(address)
+            val updateAddress = contract.updateDestination(address, request)
             val subscriptionResult =
                 operation(
                     contract.name.value,

@@ -8,9 +8,8 @@ import com.typewritermc.library.BookPages
 import com.typewritermc.library.ChapterPath
 import com.typewritermc.library.Page
 import com.typewritermc.library.PageElements
-import com.typewritermc.pages.TypewriterPage
-import com.typewritermc.types.ToMany
-import com.typewritermc.types.ToOne
+import com.typewritermc.types.PresentationRole
+import com.typewritermc.types.Ref
 import com.typewritermc.types.TypewriterDisplay
 import com.typewritermc.types.TypewriterType
 
@@ -27,11 +26,18 @@ interface CapabilityElement : Element {
 /** Concrete Page accepting the capability supplied element role. */
 @TypewriterType(id = "019d3a87002070008000000000000020")
 @TypewriterDisplay(name = "Capability", icon = "material-symbols:extension", color = "#607D8B")
-@TypewriterPage.Graph(GraphDirection.LEFT_TO_RIGHT)
 data class CapabilityPage(
-    override val book: ToOne<BookPages, Book>,
+    override val book: Ref<BookPages.Page, Book>,
     override val name: String = "",
     override val chapter: ChapterPath = ChapterPath.Root,
     override val priority: Int = 0,
-    override val elements: ToMany<PageElements, CapabilityElement> = ToMany.empty(),
+    override val elements: List<Ref<PageElements.Page, CapabilityElement>> = emptyList(),
 ) : Page
+
+object CapabilityPageEditor : CapabilityPagePresentation {
+    override val roles = setOf(PresentationRole.EDITOR)
+
+    override fun CapabilityPagePresentationScope.present() {
+        elements { graphPage(GraphDirection.LEFT_TO_RIGHT) }
+    }
+}

@@ -936,8 +936,8 @@ sealed class RealmPresentationSearchRequest_orMutable {
   _core.String get subscriptionId;
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
   _lib_editor_v1_type_catalog.CapabilityId_orMutable get capabilityId;
-  _lib_editor_v1_type_catalog.TypedValue get payload;
-  _lib_editor_v1_type_catalog.TypeExpression get resultType;
+  _lib_editor_v1_type_catalog.DataValue get payload;
+  _lib_editor_v1_type_catalog.TypeTemplate get resultType;
   RealmSearchQuery_orMutable get query;
 
   RealmPresentationSearchRequest toFrozen();
@@ -952,9 +952,9 @@ final class RealmPresentationSearchRequest implements RealmPresentationSearchReq
   @_core.override
   final _lib_editor_v1_type_catalog.CapabilityId capabilityId;
   @_core.override
-  final _lib_editor_v1_type_catalog.TypedValue payload;
+  final _lib_editor_v1_type_catalog.DataValue payload;
   @_core.override
-  final _lib_editor_v1_type_catalog.TypeExpression resultType;
+  final _lib_editor_v1_type_catalog.TypeTemplate resultType;
   @_core.override
   final RealmSearchQuery query;
   _skir.internal__UnrecognizedFields? _u;
@@ -963,8 +963,8 @@ final class RealmPresentationSearchRequest implements RealmPresentationSearchReq
     required _core.String subscriptionId,
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
     required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
-    required _lib_editor_v1_type_catalog.TypedValue payload,
-    required _lib_editor_v1_type_catalog.TypeExpression resultType,
+    required _lib_editor_v1_type_catalog.DataValue payload,
+    required _lib_editor_v1_type_catalog.TypeTemplate resultType,
     required RealmSearchQuery_orMutable query,
   }) => RealmPresentationSearchRequest._(
     subscriptionId,
@@ -989,8 +989,8 @@ final class RealmPresentationSearchRequest implements RealmPresentationSearchReq
     "",
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
     _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
-    _lib_editor_v1_type_catalog.TypedValue.unknown,
-    _lib_editor_v1_type_catalog.TypeExpression.unknown,
+    _lib_editor_v1_type_catalog.DataValue.unknown,
+    _lib_editor_v1_type_catalog.TypeTemplate.unknown,
     RealmSearchQuery.defaultInstance,
   );
 
@@ -1000,8 +1000,8 @@ final class RealmPresentationSearchRequest implements RealmPresentationSearchReq
     "",
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
     _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
-    _lib_editor_v1_type_catalog.TypedValue.unknown,
-    _lib_editor_v1_type_catalog.TypeExpression.unknown,
+    _lib_editor_v1_type_catalog.DataValue.unknown,
+    _lib_editor_v1_type_catalog.TypeTemplate.unknown,
     RealmSearchQuery.defaultInstance,
   );
 
@@ -1057,7 +1057,7 @@ final class RealmPresentationSearchRequest implements RealmPresentationSearchReq
       _serializerBuilder.addField(
         "generation",
         "generation",
-        5,
+        1,
         _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
         "",
         (it) => it.generation,
@@ -1066,7 +1066,7 @@ final class RealmPresentationSearchRequest implements RealmPresentationSearchReq
       _serializerBuilder.addField(
         "capability_id",
         "capabilityId",
-        1,
+        2,
         _lib_editor_v1_type_catalog.CapabilityId.serializer,
         "",
         (it) => it.capabilityId,
@@ -1075,8 +1075,8 @@ final class RealmPresentationSearchRequest implements RealmPresentationSearchReq
       _serializerBuilder.addField(
         "payload",
         "payload",
-        2,
-        _lib_editor_v1_type_catalog.TypedValue.serializer,
+        3,
+        _lib_editor_v1_type_catalog.DataValue.serializer,
         "",
         (it) => it.payload,
         (it, v) => it.payload = v,
@@ -1084,8 +1084,8 @@ final class RealmPresentationSearchRequest implements RealmPresentationSearchReq
       _serializerBuilder.addField(
         "result_type",
         "resultType",
-        3,
-        _lib_editor_v1_type_catalog.TypeExpression.serializer,
+        4,
+        _lib_editor_v1_type_catalog.TypeTemplate.serializer,
         "",
         (it) => it.resultType,
         (it, v) => it.resultType = v,
@@ -1093,7 +1093,7 @@ final class RealmPresentationSearchRequest implements RealmPresentationSearchReq
       _serializerBuilder.addField(
         "query",
         "query",
-        4,
+        5,
         RealmSearchQuery.serializer,
         "",
         (it) => it.query,
@@ -1120,8 +1120,8 @@ final class RealmPresentationSearchRequest_mutable implements RealmPresentationS
   _core.String subscriptionId;
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation;
   _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId;
-  _lib_editor_v1_type_catalog.TypedValue payload;
-  _lib_editor_v1_type_catalog.TypeExpression resultType;
+  _lib_editor_v1_type_catalog.DataValue payload;
+  _lib_editor_v1_type_catalog.TypeTemplate resultType;
   RealmSearchQuery_orMutable query;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -1297,9 +1297,9 @@ enum _RealmPresentationSearchStatus_consts implements RealmPresentationSearchSta
 sealed class RealmPresentationSearchSnapshot_orMutable {
   _core.String get subscriptionId;
   RealmPresentationSearchStatus get status;
-  _core.Iterable<_lib_editor_v1_type_catalog.TypedValue> get values;
+  _core.Iterable<_lib_editor_v1_type_catalog.DataValue> get values;
   _core.Iterable<_core.String> get guidance;
-  _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> get diagnostics;
+  _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable> get diagnostics;
 
   RealmPresentationSearchSnapshot toFrozen();
 }
@@ -1311,19 +1311,19 @@ final class RealmPresentationSearchSnapshot implements RealmPresentationSearchSn
   @_core.override
   final RealmPresentationSearchStatus status;
   @_core.override
-  final _core.Iterable<_lib_editor_v1_type_catalog.TypedValue> values;
+  final _core.Iterable<_lib_editor_v1_type_catalog.DataValue> values;
   @_core.override
   final _core.Iterable<_core.String> guidance;
   @_core.override
-  final _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic> diagnostics;
+  final _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic> diagnostics;
   _skir.internal__UnrecognizedFields? _u;
 
   factory RealmPresentationSearchSnapshot({
     required _core.String subscriptionId,
     required RealmPresentationSearchStatus status,
-    required _core.Iterable<_lib_editor_v1_type_catalog.TypedValue> values,
+    required _core.Iterable<_lib_editor_v1_type_catalog.DataValue> values,
     required _core.Iterable<_core.String> guidance,
-    required _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics,
+    required _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable> diagnostics,
   }) => RealmPresentationSearchSnapshot._(
     subscriptionId,
     status,
@@ -1420,7 +1420,7 @@ final class RealmPresentationSearchSnapshot implements RealmPresentationSearchSn
         "values",
         2,
         _skir.Serializers.iterable(
-          _lib_editor_v1_type_catalog.TypedValue.serializer,
+          _lib_editor_v1_type_catalog.DataValue.serializer,
         ),
         "",
         (it) => it.values,
@@ -1442,7 +1442,7 @@ final class RealmPresentationSearchSnapshot implements RealmPresentationSearchSn
         "diagnostics",
         4,
         _skir.Serializers.iterable(
-          _lib_editor_v1_diagnostic.TypeDiagnostic.serializer,
+          _lib_editor_v1_diagnostic.Diagnostic.serializer,
         ),
         "",
         (it) => it.diagnostics,
@@ -1468,9 +1468,9 @@ final class RealmPresentationSearchSnapshot implements RealmPresentationSearchSn
 final class RealmPresentationSearchSnapshot_mutable implements RealmPresentationSearchSnapshot_orMutable {
   _core.String subscriptionId;
   RealmPresentationSearchStatus status;
-  _core.Iterable<_lib_editor_v1_type_catalog.TypedValue> values;
+  _core.Iterable<_lib_editor_v1_type_catalog.DataValue> values;
   _core.Iterable<_core.String> guidance;
-  _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics;
+  _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable> diagnostics;
   _skir.internal__UnrecognizedFields? _u;
 
   RealmPresentationSearchSnapshot_mutable._(
@@ -1483,9 +1483,9 @@ final class RealmPresentationSearchSnapshot_mutable implements RealmPresentation
 
   /// If the value of [values] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [values] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.TypedValue> get mutableValues {
+  _core.List<_lib_editor_v1_type_catalog.DataValue> get mutableValues {
     final value = this.values;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.TypedValue>) {
+    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.DataValue>) {
       return value;
     } else {
       return this.values = _skir.internal__MutableList([...value]);
@@ -1505,9 +1505,9 @@ final class RealmPresentationSearchSnapshot_mutable implements RealmPresentation
 
   /// If the value of [diagnostics] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [diagnostics] and returns it.
-  _core.List<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> get mutableDiagnostics {
+  _core.List<_lib_editor_v1_diagnostic.Diagnostic_orMutable> get mutableDiagnostics {
     final value = this.diagnostics;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable>) {
+    if (value is _skir.internal__MutableList<_lib_editor_v1_diagnostic.Diagnostic_orMutable>) {
       return value;
     } else {
       return this.diagnostics = _skir.internal__MutableList([...value]);
@@ -1531,7 +1531,7 @@ final class RealmPresentationSearchSnapshot_mutable implements RealmPresentation
 
 sealed class RealmPresentationSearchUnavailable_orMutable {
   _core.String get subscriptionId;
-  _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> get diagnostics;
+  _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable> get diagnostics;
 
   RealmPresentationSearchUnavailable toFrozen();
 }
@@ -1541,12 +1541,12 @@ final class RealmPresentationSearchUnavailable implements RealmPresentationSearc
   @_core.override
   final _core.String subscriptionId;
   @_core.override
-  final _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic> diagnostics;
+  final _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic> diagnostics;
   _skir.internal__UnrecognizedFields? _u;
 
   factory RealmPresentationSearchUnavailable({
     required _core.String subscriptionId,
-    required _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics,
+    required _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable> diagnostics,
   }) => RealmPresentationSearchUnavailable._(
     subscriptionId,
     _skir.internal__frozenMappedCopy(diagnostics, (it) => it.toFrozen()),
@@ -1616,7 +1616,7 @@ final class RealmPresentationSearchUnavailable implements RealmPresentationSearc
         "diagnostics",
         1,
         _skir.Serializers.iterable(
-          _lib_editor_v1_diagnostic.TypeDiagnostic.serializer,
+          _lib_editor_v1_diagnostic.Diagnostic.serializer,
         ),
         "",
         (it) => it.diagnostics,
@@ -1641,7 +1641,7 @@ final class RealmPresentationSearchUnavailable implements RealmPresentationSearc
 /// Mutable version of [RealmPresentationSearchUnavailable].
 final class RealmPresentationSearchUnavailable_mutable implements RealmPresentationSearchUnavailable_orMutable {
   _core.String subscriptionId;
-  _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics;
+  _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable> diagnostics;
   _skir.internal__UnrecognizedFields? _u;
 
   RealmPresentationSearchUnavailable_mutable._(
@@ -1651,9 +1651,9 @@ final class RealmPresentationSearchUnavailable_mutable implements RealmPresentat
 
   /// If the value of [diagnostics] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [diagnostics] and returns it.
-  _core.List<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> get mutableDiagnostics {
+  _core.List<_lib_editor_v1_diagnostic.Diagnostic_orMutable> get mutableDiagnostics {
     final value = this.diagnostics;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable>) {
+    if (value is _skir.internal__MutableList<_lib_editor_v1_diagnostic.Diagnostic_orMutable>) {
       return value;
     } else {
       return this.diagnostics = _skir.internal__MutableList([...value]);
@@ -1696,9 +1696,9 @@ sealed class RealmPresentationSearchUpdate {
   factory RealmPresentationSearchUpdate.createSnapshot({
     required _core.String subscriptionId,
     required RealmPresentationSearchStatus status,
-    required _core.Iterable<_lib_editor_v1_type_catalog.TypedValue> values,
+    required _core.Iterable<_lib_editor_v1_type_catalog.DataValue> values,
     required _core.Iterable<_core.String> guidance,
-    required _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics,
+    required _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable> diagnostics,
   }) => RealmPresentationSearchUpdate.wrapSnapshot(
     RealmPresentationSearchSnapshot(
       subscriptionId: subscriptionId,
@@ -1717,7 +1717,7 @@ sealed class RealmPresentationSearchUpdate {
   /// Same as `wrapUnavailable(RealmPresentationSearchUnavailable(...))`.
   factory RealmPresentationSearchUpdate.createUnavailable({
     required _core.String subscriptionId,
-    required _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics,
+    required _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable> diagnostics,
   }) => RealmPresentationSearchUpdate.wrapUnavailable(
     RealmPresentationSearchUnavailable(
       subscriptionId: subscriptionId,

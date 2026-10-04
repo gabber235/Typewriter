@@ -35,6 +35,7 @@ void main() {
             confirmedValue: StringValue("original"),
             revision: 1,
           ),
+          validation: acceptTestEditorMutation,
           commitPolicy: EditorCommitPolicy.applyResource,
           commit: (change) async =>
               MutationSuccess(revision: 2, value: change.rootValue),

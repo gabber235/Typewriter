@@ -48,12 +48,6 @@ typedef EditorMutationValidator = EditorMutationResult Function(
   DataValue value,
 );
 
-/// Executes a realm action independently of editor persistence.
-typedef EditorRealmActionExecutor = Future<RealmCommandResult> Function(
-  RealmAction action,
-  ExpressionContext context,
-);
-
 /// Owns the editable projection of one resource and its save lifecycle.
 ///
 /// Canonical state lives in [document]. Local edits live in the private draft
@@ -83,7 +77,7 @@ final class TransactionalEditorSource extends ChangeNotifier
     this._resource,
     this.workspace,
     this._snapshot,
-    this._validate,
+    this._validation,
     this._validateDraft,
     this.commitPolicy = EditorCommitPolicy.autosaveChanges,
     this._scheduler = const TimerEditorDelayScheduler(),
@@ -107,7 +101,7 @@ final class TransactionalEditorSource extends ChangeNotifier
   bool _contractUnavailable = false;
   bool get contractUnavailable => _contractUnavailable;
   int get localRevision => _localRevision;
-  final EditorMutationValidator? _validate;
+  final EditorMutationValidator? _validation;
   final List<TypeDiagnostic> Function(DataValue)? _validateDraft;
 
   @override
@@ -221,12 +215,10 @@ final class TransactionalEditorSource extends ChangeNotifier
       ]);
     }
     return _snapshot?.validate(path, value) ??
-        _validate?.call(path, value) ??
-        _document.rootType.validateEditorMutation(
-          path,
-          value,
-          registry: TypeRegistry(_document.typeCatalog),
-        );
+        _validation?.call(path, value) ??
+        EditorMutationResult.invalid([
+          _diagnostic("No editor admission policy is installed", path),
+        ]);
   }
 
   @override

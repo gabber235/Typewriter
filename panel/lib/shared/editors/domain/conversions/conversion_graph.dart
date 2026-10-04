@@ -10,59 +10,10 @@ part "conversion_graph.freezed.dart";
 /// uses total cost and rejects ties for the cheapest path, while automatic
 /// lookup additionally permits only local, lossless, infallible edges. Realm
 /// edges can be selected explicitly but remain unavailable to local [apply].
-/// Inheritance edges are added by [withInheritance] from the registry's direct
-/// parent relationships.
 final class ConversionGraph {
   /// Captures the supplied conversion definitions for later path operations.
   ConversionGraph(Iterable<ConversionDefinition> conversions)
     : _conversions = List.unmodifiable(conversions);
-
-  /// Builds a graph and adds zero cost upcast edges for [applications].
-  ///
-  /// Each application is resolved through [registry], so unknown or invalid
-  /// types prevent a graph from being returned. Only discovered direct parent
-  /// edges are added, and the traversal continues through those parents.
-  static TypeResult<ConversionGraph> withInheritance({
-    required TypeRegistry registry,
-    required Iterable<ResolvedTypeRef> applications,
-    Iterable<ConversionDefinition> conversions = const [],
-  }) {
-    final edges = List<ConversionDefinition>.of(conversions);
-    final diagnostics = <TypeDiagnostic>[];
-    final pending = applications.toList();
-    final resolvedApplications = <ResolvedTypeRef>{};
-
-    final inheritanceEdges = <(ResolvedTypeRef, ResolvedTypeRef)>{};
-    while (pending.isNotEmpty) {
-      final source = pending.removeLast();
-      if (!resolvedApplications.add(source)) continue;
-      final resolved = registry.resolveExact(source);
-      diagnostics.addAll(resolved.diagnostics);
-
-      final value = resolved.valueOrNull;
-
-      if (value == null) continue;
-      for (final target in value.directParents) {
-        pending.add(target);
-        if (!inheritanceEdges.add((source, target))) continue;
-        edges.add(
-          ConversionDefinition(
-            id: ConversionId(
-              namespace: "typewriter/inheritance",
-              name: "$source:$target",
-            ),
-            source: source,
-            target: target,
-            rule: const InheritanceUpcastRule(),
-            cost: 0,
-          ),
-        );
-      }
-    }
-    return diagnostics.isEmpty
-        ? TypeResult.success(ConversionGraph(edges))
-        : TypeResult.failure(diagnostics);
-  }
 
   final List<ConversionDefinition> _conversions;
 

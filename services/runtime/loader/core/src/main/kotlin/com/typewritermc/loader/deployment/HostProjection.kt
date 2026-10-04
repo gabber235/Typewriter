@@ -7,6 +7,8 @@ import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.EngineManifest
 import com.typewritermc.imprint.ExtensionManifest
 import com.typewritermc.imprint.ImprintManifest
+import com.typewritermc.loader.api.EngineImplementationArtifact
+import com.typewritermc.loader.api.EngineImplementationTarget
 import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.api.SourcePartDisposition
 import com.typewritermc.loader.artifact.DeploymentArtifact
@@ -46,6 +48,7 @@ data class RealmTopology(
 data class ProjectedRuntime(
     val placement: RuntimePlacement,
     val artifact: DeploymentArtifact,
+    val implementation: EngineImplementationTarget? = null,
 ) {
     companion object {
         fun realm(artifact: DeploymentArtifact) = ProjectedRuntime(RuntimePlacement.REALM, artifact)
@@ -83,6 +86,7 @@ data class HostDeploymentProjection(
     val serviceId: ServiceId,
     val runtimes: List<ProjectedRuntime>,
     val extensions: List<ProjectedExtension>,
+    val publicationTarget: EngineImplementationTarget,
     val facts: Map<String, String>,
 ) {
     fun canonical(): HostDeploymentProjection =
@@ -94,6 +98,7 @@ data class HostDeploymentProjection(
                     .map { extension ->
                         extension.copy(sourceParts = extension.sourceParts.sortedBy(ProjectedSourcePart::name))
                     },
+            publicationTarget = publicationTarget,
             facts = facts.toSortedMap(),
         )
 }
@@ -125,17 +130,78 @@ fun DeploymentSnapshot.projectFor(
     manifests: Map<ArtifactId, ImprintManifest>,
 ): HostDeploymentProjection {
     require(serviceId in topology.assignedServices()) { "Cannot project a deployment for an unassigned service." }
-    val runtimes = projectedRuntimes(topology, serviceId)
-    val extensions = projectedExtensions(runtimes, manifests)
+    val projected = projectedRuntimes(topology, serviceId)
+    val extensions = projectedExtensions(projected, manifests)
+    val publicationTarget = primaryEngineImplementation(manifests)
+    val runtimes =
+        projected.map { runtime ->
+            when (runtime.placement) {
+                RuntimePlacement.REALM -> runtime
+                RuntimePlacement.PRIMARY_ENGINE -> runtime.copy(implementation = publicationTarget)
+                RuntimePlacement.PANEL_ENGINE -> runtime.copy(implementation = runtime.implementation(extensions))
+            }
+        }
     return HostDeploymentProjection(
         realmId = realmId,
         generation = generation,
         serviceId = serviceId,
         runtimes = runtimes,
         extensions = extensions,
+        publicationTarget = publicationTarget,
         facts = topology.factsFor(serviceId),
     ).canonical()
 }
+
+private fun ProjectedRuntime.implementation(extensions: List<ProjectedExtension>): EngineImplementationTarget =
+    EngineImplementationTarget(
+        placement = placement,
+        engine = artifact.toImplementationArtifact(emptyList()),
+        extensions =
+            extensions
+                .mapNotNull { extension ->
+                    extension.sourceParts
+                        .filter { part ->
+                            val eligible = part.disposition as? SourcePartDisposition.Eligible
+                            eligible != null && placement in eligible.placements
+                        }.map(ProjectedSourcePart::name)
+                        .sorted()
+                        .takeIf(List<String>::isNotEmpty)
+                        ?.let(extension.artifact::toImplementationArtifact)
+                }.sortedBy { it.id.value },
+    )
+
+private fun DeploymentSnapshot.primaryEngineImplementation(manifests: Map<ArtifactId, ImprintManifest>): EngineImplementationTarget {
+    val engineArtifact = content.primaryEngine
+    val engineManifest = manifests[engineArtifact.coordinate.id] as? EngineManifest
+    requireNotNull(engineManifest) { "Primary engine ${engineArtifact.coordinate.id} is missing its engine manifest." }
+    val extensionManifests = manifests.values.filterIsInstance<ExtensionManifest>()
+    val selectedExtensions = content.extensions.mapTo(linkedSetOf()) { it.coordinate.id }
+    val eligibleParts =
+        SourcePartEligibilityResolver
+            .resolve(DeploymentSelection(engineManifest, selectedExtensions), extensionManifests)
+            .filter { it.eligibility is Eligibility.Eligible }
+            .groupBy({ it.artifact }, { it.sourcePart })
+    return EngineImplementationTarget(
+        placement = RuntimePlacement.PRIMARY_ENGINE,
+        engine = engineArtifact.toImplementationArtifact(emptyList()),
+        extensions =
+            content.extensions
+                .mapNotNull { artifact ->
+                    eligibleParts[artifact.coordinate.id]
+                        ?.sorted()
+                        ?.takeIf(List<String>::isNotEmpty)
+                        ?.let(artifact::toImplementationArtifact)
+                }.sortedBy { it.id.value },
+    )
+}
+
+private fun DeploymentArtifact.toImplementationArtifact(sourceParts: List<String>) =
+    EngineImplementationArtifact(
+        id = coordinate.id,
+        version = coordinate.version,
+        digest = digest,
+        sourceParts = sourceParts,
+    )
 
 private fun DeploymentSnapshot.projectedRuntimes(
     topology: RealmTopology,

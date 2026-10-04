@@ -6,24 +6,26 @@
 library;
 
 export "converters.dart";
-export "editor_codec.dart";
 export "skirout/access/v1/permission.dart";
 export "skirout/access/v1/sentinel.dart";
 export "skirout/editor/v1/action.dart";
-export "skirout/editor/v1/authoring.dart";
+export "skirout/editor/v1/authoring.dart"
+    hide ArgumentLocation, ArgumentLocation_mutable, ArgumentLocation_orMutable;
 export "skirout/editor/v1/binding.dart";
 export "skirout/editor/v1/capability.dart";
 export "skirout/editor/v1/catalog.dart";
 export "skirout/editor/v1/catalog_presentation.dart";
+export "skirout/editor/v1/checking.dart";
 export "skirout/editor/v1/compiled_content.dart";
 export "skirout/editor/v1/conversion.dart";
 export "skirout/editor/v1/diagnostic.dart";
 export "skirout/editor/v1/expression.dart";
-export "skirout/editor/v1/path.dart";
 export "skirout/editor/v1/presentation.dart";
+export "skirout/editor/v1/publication.dart";
 export "skirout/editor/v1/search.dart";
 export "skirout/editor/v1/type_catalog.dart";
 export "skirout/editor/v1/typed_value.dart";
+export "skirout/kernel/v1/bounded_transfer.dart";
 export "skirout/kernel/v1/color.dart";
 export "skirout/kernel/v1/duration.dart";
 export "skirout/kernel/v1/errors.dart";

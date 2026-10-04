@@ -1,193 +1,229 @@
-import "package:flutter/foundation.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+final _refProvider = Provider<Ref>((ref) => ref);
+
 void main() {
-  test("creation option identity includes concrete type arguments", () {
+  test("creation option identity includes unfinished type arguments", () {
+    final definition = skir.ResourceDefinitionId(value: "test.book");
+    final type = _definition("Book");
     final first = AuthoringCreationOption(
-      definition: CoreResourceDefinitionIds.book,
-      root: _book.copyWith(arguments: const [StringType()]),
+      definition: definition,
+      configuration: skir.TypeSelection.createPending(
+        definition: type,
+        arguments: [
+          skir.ArgumentSelection.wrapChosen(
+            skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+          ),
+        ],
+      ),
       label: "Book",
     );
     final second = AuthoringCreationOption(
-      definition: CoreResourceDefinitionIds.book,
-      root: _book.copyWith(arguments: const [BooleanType()]),
+      definition: definition,
+      configuration: skir.TypeSelection.createPending(
+        definition: type,
+        arguments: [
+          skir.ArgumentSelection.wrapChosen(
+            skir.TypeUse.wrapScalar(skir.ScalarKind.boolean),
+          ),
+        ],
+      ),
       label: "Book",
     );
+
     expect(first.id, isNot(second.id));
   });
 
   test(
-    "creation search distinguishes loading, failure, and a real empty catalog",
+    "creation search excludes resources owned by another resource",
     () async {
-      final catalog = ValueNotifier<AsyncValue<RealmEditorCatalogSnapshot>>(
-        const AsyncLoading(),
-      );
-      addTearDown(catalog.dispose);
-      final controller = SourceController(
-        source: AuthoringCreationSearchSource(catalog),
-        baseSelectors: const [],
-      );
-      addTearDown(controller.dispose);
-      await pumpEventQueue();
-      expect(controller.snapshot.status, SearchSourceStatus.loading);
-
-      catalog.value = AsyncError(
-        StateError("fetch failed"),
-        StackTrace.current,
-      );
-      await pumpEventQueue();
-      expect(controller.snapshot.status, SearchSourceStatus.error);
-
-      catalog.value = const AsyncData(
-        RealmEditorCatalogSnapshot(
-          catalog: TypeCatalog([]),
-          generation: CatalogGeneration("1"),
-        ),
-      );
-      await pumpEventQueue();
-      expect(controller.snapshot.status, SearchSourceStatus.ready);
-      expect(controller.snapshot.nodes, isEmpty);
-    },
-  );
-
-  test(
-    "standalone search excludes a resource with an ownership parent",
-    () async {
-      final catalog = ValueNotifier<AsyncValue<RealmEditorCatalogSnapshot>>(
-        AsyncData(
-          RealmEditorCatalogSnapshot(
-            catalog: TypeCatalog([
-              TypeDefinition(id: _book, kind: NominalTypeKind.concrete),
-              TypeDefinition(id: _entry, kind: NominalTypeKind.concrete),
-            ]),
-            generation: const CatalogGeneration("1"),
-            types: {_book: _knownType(_book), _entry: _knownType(_entry)},
-            resourceDefinitions: {
-              CoreResourceDefinitionIds.book: RealmResourceDefinition(
-                id: CoreResourceDefinitionIds.book,
-                acceptedRoot: NamedType(_book),
-              ),
-              CoreResourceDefinitionIds.element: RealmResourceDefinition(
-                id: CoreResourceDefinitionIds.element,
-                acceptedRoot: NamedType(_entry),
-              ),
-            },
-            relations: {
-              "book.entries": RealmRelationDefinition(
-                id: "book.entries",
-                source: _book,
-                target: _entry,
-                onSourceDelete: RealmRelationDeletePolicy.cascade,
-                onTargetDelete: RealmRelationDeletePolicy.clear,
-                sourceEndpoint: null,
-                targetEndpoint: null,
-                families: const {"resource.ownership"},
-              ),
-            },
-          ),
-        ),
-      );
-      addTearDown(catalog.dispose);
-      final controller = SourceController(
-        source: AuthoringCreationSearchSource(catalog),
-        baseSelectors: const [],
-      );
-      addTearDown(controller.dispose);
+      final fixture = _fixture();
+      addTearDown(fixture.container.dispose);
+      addTearDown(fixture.subscription.close);
+      addTearDown(fixture.controller.dispose);
       await pumpEventQueue();
 
-      final section = controller.snapshot.nodes.single as SearchSectionNode;
-      final result = (section.children.single as SearchResultNode).result;
-      final option = result.payload as AuthoringCreationOption;
-      expect(option.definition, CoreResourceDefinitionIds.book);
-      expect(option.root, _book);
-
-      controller.updateQuery("missing");
-      await pumpEventQueue();
-      expect(controller.snapshot.nodes, isEmpty);
-    },
-  );
-
-  test(
-    "relation search offers the concrete type accepted by its field",
-    () async {
-      final snapshot = RealmEditorCatalogSnapshot(
-        catalog: TypeCatalog([
-          TypeDefinition(
-            id: _book,
-            kind: NominalTypeKind.concrete,
-            representation: RecordType(
-              fields: {
-                "entries": TypeField(
-                  name: "entries",
-                  type: ListType(element: ReferenceType(target: _entry)),
-                ),
-              },
-            ),
-          ),
-          TypeDefinition(id: _entry, kind: NominalTypeKind.concrete),
-        ]),
-        generation: const CatalogGeneration("1"),
-        types: {_book: _knownType(_book), _entry: _knownType(_entry)},
-        resourceDefinitions: {
-          CoreResourceDefinitionIds.element: RealmResourceDefinition(
-            id: CoreResourceDefinitionIds.element,
-            acceptedRoot: NamedType(_entry),
-          ),
-        },
-        relations: {
-          "book.entries": RealmRelationDefinition(
-            id: "book.entries",
-            source: _book,
-            target: _entry,
-            onSourceDelete: RealmRelationDeletePolicy.cascade,
-            onTargetDelete: RealmRelationDeletePolicy.clear,
-            sourceEndpoint: RealmRelationEndpointDefinition(
-              owner: _book,
-              path: DataPath.root.field("entries"),
-              side: RealmRelationEndpointSide.source,
-              cardinality: RealmRelationCardinality.many,
-            ),
-            targetEndpoint: null,
-            families: const {"resource.ownership"},
-          ),
-        },
-      );
-      final catalog = ValueNotifier<AsyncValue<RealmEditorCatalogSnapshot>>(
-        AsyncData(snapshot),
-      );
-      final field = ValueNotifier<AsyncValue<RealmRelationField>>(
-        AsyncData(
-          snapshot.relationField(_book, DataPath.root.field("entries"))!,
-        ),
-      );
-      addTearDown(catalog.dispose);
-      addTearDown(field.dispose);
-      final controller = SourceController(
-        source: AuthoringCreationSearchSource(catalog, field: field),
-        baseSelectors: const [],
-      );
-      addTearDown(controller.dispose);
-      await pumpEventQueue();
-
-      final section = controller.snapshot.nodes.single as SearchSectionNode;
+      expect(fixture.controller.snapshot.status, SearchSourceStatus.ready);
+      final section =
+          fixture.controller.snapshot.nodes.single as SearchSectionNode;
       final option =
           (section.children.single as SearchResultNode).result.payload
               as AuthoringCreationOption;
-      expect(option.root, _entry);
+      expect(option.definition, skir.ResourceDefinitionId(value: "test.book"));
+      expect(option.label, "Quest Book");
+      expect(option.display?.description, "A reusable quest collection");
+      expect(option.display?.icon, "material-symbols:book");
+      expect(option.display?.color, "#3F51B5");
+      expect(
+        option.configuration,
+        skir.TypeSelection.createComplete(
+          definition: _definition("Book"),
+          arguments: const [],
+        ),
+      );
     },
+  );
+
+  test("creation search filters by the resource label", () async {
+    final fixture = _fixture();
+    addTearDown(fixture.container.dispose);
+    addTearDown(fixture.subscription.close);
+    addTearDown(fixture.controller.dispose);
+    await pumpEventQueue();
+
+    fixture.controller.updateQuery("missing");
+    await pumpEventQueue();
+
+    expect(fixture.controller.snapshot.nodes, isEmpty);
+  });
+}
+
+({
+  ProviderContainer container,
+  ProviderSubscription<AuthoringSessionState> subscription,
+  SourceController controller,
+})
+_fixture() {
+  final organization = skir.RecordId(
+    table: "organization",
+    key: skir.RecordIdKey.wrapString("test"),
+  );
+  final realm = skir.RecordId(
+    table: "realm",
+    key: skir.RecordIdKey.wrapString("test"),
+  );
+  final container = ProviderContainer.test(
+    overrides: [
+      organizationIdProvider.overrideWithValue(organization),
+      realmIdProvider.overrideWithValue(realm),
+      authoringSessionProvider.overrideWith2(
+        (_) => _CreationSession(_catalog()),
+      ),
+    ],
+  );
+  final subscription = container.listen(
+    authoringSessionProvider(organization, realm),
+    (_, _) {},
+  );
+  final controller = SourceController(
+    source: AuthoringCreationSearchSource(container.read(_refProvider)),
+    baseSelectors: const [],
+  )..triggerQuery();
+  return (
+    container: container,
+    subscription: subscription,
+    controller: controller,
   );
 }
 
-ResolvedTypeRef _type(String name) => ResolvedTypeRef(
-  id: QualifiedTypeId(namespace: "test", name: name),
-  revision: 1,
-);
-final _book = _type("Book");
-final _entry = _type("Entry");
+final class _CreationSession extends AuthoringSession {
+  _CreationSession(this.catalog);
 
-RealmTypeEntry _knownType(ResolvedTypeRef type) => RealmTypeEntry(
-  definition: TypeDefinition(id: type, kind: NominalTypeKind.concrete),
-  eligible: true,
+  final CheckedEditorCatalog catalog;
+
+  @override
+  AuthoringSessionState build(
+    skir.RecordId organizationId,
+    skir.RecordId realmId,
+  ) => AuthoringSessionState(catalog: catalog);
+
+  @override
+  Future<void> refresh({bool catalog = false}) async {}
+}
+
+CheckedEditorCatalog _catalog() {
+  final book = _definition("Book");
+  final entry = _definition("Entry");
+  return CheckedEditorCatalog(
+    skir.EditorCatalogWireSnapshot(
+      generation: skir.CatalogGeneration(value: "catalog:test"),
+      types: [
+        _published(
+          book,
+          display: skir.TypeDisplay(
+            name: "Quest Book",
+            description: "A reusable quest collection",
+            icon: "material-symbols:book",
+            color: "#3F51B5",
+          ),
+        ),
+        _published(entry),
+      ],
+      relations: [
+        skir.RelationContract(
+          id: skir.RelationId(value: "book.entries"),
+          first: skir.EndpointDefinition(
+            id: skir.EndpointId(value: "book.entries.book"),
+            slot: skir.EndpointSlot.first,
+            resource: skir.NamedTypeTemplate(
+              definition: book,
+              arguments: const [],
+            ),
+            cardinality: skir.EndpointCardinality.one,
+            onDelete: skir.RelationDeletePolicy.clear,
+          ),
+          second: skir.EndpointDefinition(
+            id: skir.EndpointId(value: "book.entries.entry"),
+            slot: skir.EndpointSlot.second,
+            resource: skir.NamedTypeTemplate(
+              definition: entry,
+              arguments: const [],
+            ),
+            cardinality: skir.EndpointCardinality.many,
+            onDelete: skir.RelationDeletePolicy.cascade,
+          ),
+          families: [skir.RelationFamilyId(value: "resource.ownership")],
+        ),
+      ],
+      resourceDefinitions: [
+        skir.AuthoringResourceDefinition(
+          id: skir.ResourceDefinitionId(value: "test.book"),
+          root: book,
+          navigationHandler: "",
+        ),
+        skir.AuthoringResourceDefinition(
+          id: skir.ResourceDefinitionId(value: "test.entry"),
+          root: entry,
+          navigationHandler: "",
+        ),
+      ],
+      presentations: const [],
+      presentationMaterials: const [],
+      configuration: const [],
+      diagnostics: const [],
+      initialization: const [],
+      endpointBindings: const [],
+      capabilities: const [],
+      recommendations: const [],
+      roleFallbacks: const [],
+    ),
+  );
+}
+
+skir.PublishedType _published(
+  skir.TypeDefinitionId id, {
+  skir.TypeDisplay? display,
+}) => skir.PublishedType(
+  definition: skir.TypeDefinition(
+    id: id,
+    parameters: const [],
+    representation: skir.RepresentationTemplate.createRecord(
+      fields: const [],
+      abstract_: false,
+    ),
+    parents: const [],
+  ),
+  status: skir.DeclarationStatus.ready,
+  effectiveFields: const [],
+  ancestorTemplates: const [],
+  display: display,
+);
+
+skir.TypeDefinitionId _definition(String name) => skir.TypeDefinitionId(
+  typeId: skir.TypeId.createQualified(namespace: "test", name: name),
+  revision: 1,
 );

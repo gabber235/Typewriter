@@ -21,8 +21,8 @@ import build.skir.internal.UnrecognizedFields as _UnrecognizedFields;
 import build.skir.internal.UnrecognizedVariant as _UnrecognizedVariant;
 
 sealed interface CatalogPresentationSubject_OrMutable {
-    val target: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable;
-    val descriptor: skirout.editor.v1.typed_value.TypedValueEnvelope_OrMutable;
+    val target: skirout.editor.v1.type_catalog.TypeUse;
+    val descriptor: skirout.editor.v1.typed_value.PortableValue_OrMutable;
 
     fun toFrozen(): skirout.editor.v1.catalog_presentation.CatalogPresentationSubject;
 }
@@ -30,20 +30,20 @@ sealed interface CatalogPresentationSubject_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class CatalogPresentationSubject private constructor(
-    override val target: skirout.editor.v1.type_catalog.ResolvedTypeRef,
-    override val descriptor: skirout.editor.v1.typed_value.TypedValueEnvelope,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog_presentation.CatalogPresentationSubject>? =
+    override val target: skirout.editor.v1.type_catalog.TypeUse,
+    override val descriptor: skirout.editor.v1.typed_value.PortableValue,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog_presentation.CatalogPresentationSubject>? =
         null,
 ): skirout.editor.v1.catalog_presentation.CatalogPresentationSubject_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        target: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable,
-        descriptor: skirout.editor.v1.typed_value.TypedValueEnvelope_OrMutable,
+        target: skirout.editor.v1.type_catalog.TypeUse,
+        descriptor: skirout.editor.v1.typed_value.PortableValue_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog_presentation.CatalogPresentationSubject>? =
             null,
     ): this(
-        target.toFrozen(),
+        target,
         descriptor.toFrozen(),
         _unrecognizedFields,
     ) {}
@@ -61,12 +61,12 @@ class CatalogPresentationSubject private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        target: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
+        target: skirout.editor.v1.type_catalog.TypeUse =
             this.target,
-        descriptor: skirout.editor.v1.typed_value.TypedValueEnvelope_OrMutable =
+        descriptor: skirout.editor.v1.typed_value.PortableValue_OrMutable =
             this.descriptor,
     ) = skirout.editor.v1.catalog_presentation.CatalogPresentationSubject(
-        target.toFrozen(),
+        target,
         descriptor.toFrozen(),
         this._unrecognizedFields,
     );
@@ -85,7 +85,7 @@ class CatalogPresentationSubject private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.catalog_presentation.CatalogPresentationSubject.serializerImpl,
+            _SerializerRegistry.CatalogPresentationSubjectSerializerImpl,
         )
     }
 
@@ -93,10 +93,10 @@ class CatalogPresentationSubject private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var target: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
-            skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
-        override var descriptor: skirout.editor.v1.typed_value.TypedValueEnvelope_OrMutable =
-            skirout.editor.v1.typed_value.TypedValueEnvelope.partial(),
+        override var target: skirout.editor.v1.type_catalog.TypeUse =
+            skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
+        override var descriptor: skirout.editor.v1.typed_value.PortableValue_OrMutable =
+            skirout.editor.v1.typed_value.PortableValue.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog_presentation.CatalogPresentationSubject>? =
             null,
     ): skirout.editor.v1.catalog_presentation.CatalogPresentationSubject_OrMutable {
@@ -108,34 +108,18 @@ class CatalogPresentationSubject private constructor(
         );
 
         /**
-         * If the value of [target] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
-         */
-        val mutableTarget: skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable get() {
-            var value = this.target;
-            return when (value) {
-                is skirout.editor.v1.type_catalog.ResolvedTypeRef -> {
-                    value = value.toMutable();
-                    this.target = value;
-                    return value;
-                }
-                is skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable -> value;
-            }
-        }
-
-        /**
          * If the value of [descriptor] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [descriptor] and returns it.
          */
-        val mutableDescriptor: skirout.editor.v1.typed_value.TypedValueEnvelope.Mutable get() {
+        val mutableDescriptor: skirout.editor.v1.typed_value.PortableValue.Mutable get() {
             var value = this.descriptor;
             return when (value) {
-                is skirout.editor.v1.typed_value.TypedValueEnvelope -> {
+                is skirout.editor.v1.typed_value.PortableValue -> {
                     value = value.toMutable();
                     this.descriptor = value;
                     return value;
                 }
-                is skirout.editor.v1.typed_value.TypedValueEnvelope.Mutable -> value;
+                is skirout.editor.v1.typed_value.PortableValue.Mutable -> value;
             }
         }
     }
@@ -143,8 +127,8 @@ class CatalogPresentationSubject private constructor(
     companion object {
         private val default =
             skirout.editor.v1.catalog_presentation.CatalogPresentationSubject(
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
-                skirout.editor.v1.typed_value.TypedValueEnvelope.partial(),
+                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
+                skirout.editor.v1.typed_value.PortableValue.partial(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -158,52 +142,56 @@ class CatalogPresentationSubject private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            target: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
-            descriptor: skirout.editor.v1.typed_value.TypedValueEnvelope_OrMutable =
-                skirout.editor.v1.typed_value.TypedValueEnvelope.partial(),
+            target: skirout.editor.v1.type_catalog.TypeUse =
+                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
+            descriptor: skirout.editor.v1.typed_value.PortableValue_OrMutable =
+                skirout.editor.v1.typed_value.PortableValue.partial(),
         ) = skirout.editor.v1.catalog_presentation.CatalogPresentationSubject(
             target = target,
             descriptor = descriptor,
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/catalog_presentation.skir:CatalogPresentationSubject",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [CatalogPresentationSubject] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.CatalogPresentationSubjectSerializer;
 
         /** Describes the [CatalogPresentationSubject] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
+        val typeDescriptor get() = _SerializerRegistry.CatalogPresentationSubjectSerializerImpl.typeDescriptor;
+    }
+}
 
-        init {
-            serializerImpl.addField(
-                "target",
-                "target",
-                0,
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.serializer,
-                "",
-                { it.target },
-                { mut, v -> mut.target = v },
-            );
-            serializerImpl.addField(
-                "descriptor",
-                "descriptor",
-                1,
-                skirout.editor.v1.typed_value.TypedValueEnvelope.serializer,
-                "",
-                { it.descriptor },
-                { mut, v -> mut.descriptor = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+private object _SerializerRegistry {
+    val CatalogPresentationSubjectSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/catalog_presentation.skir:CatalogPresentationSubject",
+        doc = "",
+        defaultInstance = skirout.editor.v1.catalog_presentation.CatalogPresentationSubject.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.catalog_presentation.CatalogPresentationSubject.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val CatalogPresentationSubjectSerializer = build.skir.internal.makeSerializer(CatalogPresentationSubjectSerializerImpl);
+
+    init {
+        CatalogPresentationSubjectSerializerImpl.addField(
+            "target",
+            "target",
+            0,
+            skirout.editor.v1.type_catalog.TypeUse.serializer,
+            "",
+            { it.target },
+            { mut, v -> mut.target = v },
+        );
+        CatalogPresentationSubjectSerializerImpl.addField(
+            "descriptor",
+            "descriptor",
+            1,
+            skirout.editor.v1.typed_value.PortableValue.serializer,
+            "",
+            { it.descriptor },
+            { mut, v -> mut.descriptor = v },
+        );
+        CatalogPresentationSubjectSerializerImpl.finalizeStruct();
     }
 }

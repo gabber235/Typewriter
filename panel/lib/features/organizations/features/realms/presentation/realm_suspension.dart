@@ -176,7 +176,9 @@ class _ConnectionCard extends StatelessWidget {
                           textColor: theme.colorScheme.onSurfaceVariant,
                         ),
                       ],
-                      if (connectionState == RealmConnectionState.unavailable &&
+                      if ((connectionState == RealmConnectionState.offline ||
+                              connectionState ==
+                                  RealmConnectionState.unavailable) &&
                           onRetry != null) ...[
                         SizedBox(height: context.spacing.space4),
                         OutlinedButton.icon(

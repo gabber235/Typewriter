@@ -36,35 +36,25 @@ class InspectorSize extends _$InspectorSize {
 
 /// Places the inspector beside or below [child] according to available width.
 ///
-/// The scaffold creates the inspector's provider scope, including the optional
-/// realm runtime used by editor capabilities. It does not own selection or
-/// focus.
+/// The scaffold does not own selection or focus.
 class InspectorScaffold extends HookConsumerWidget {
   const InspectorScaffold({
     required this.child,
     this.margin = const EdgeInsets.only(top: 8, bottom: 8, right: 8),
-    this.realmRuntime,
     super.key,
   });
 
   final EdgeInsets margin;
 
   final Widget child;
-  final EditorRealmRuntime? realmRuntime;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return ProviderScope(
-      overrides: [editorRealmRuntimeProvider.overrideWithValue(realmRuntime)],
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return constraints.maxWidth < 3 * kInspectorMinSize
-              ? MobileInspector(child: child)
-              : DesktopInspector(margin: margin, child: child);
-        },
-      ),
-    );
-  }
+  Widget build(BuildContext context, WidgetRef ref) => LayoutBuilder(
+    builder: (context, constraints) =>
+        constraints.maxWidth < 3 * kInspectorMinSize
+        ? MobileInspector(child: child)
+        : DesktopInspector(margin: margin, child: child),
+  );
 }
 
 /// Renders the inspector as a draggable bottom sheet on narrow layouts.
@@ -394,30 +384,28 @@ class _InspectorContent extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // TODO: Add shimmer when loading.
     final session = ref.watch(inspectionSessionProvider);
-    final runtime = ref.watch(editorRealmRuntimeProvider);
-    final bindingFocusController = ref.watch(
-      renderedBindingFocusControllerProvider,
-    );
-    ref.listen(selectionProvider, (_, _) {
-      bindingFocusController.cancelPendingFocus();
-    });
 
     return ListenableBuilder(
       listenable: session,
       builder: (context, _) {
-        final model = session.model;
+        final hosts = session.hosts;
+        final body = session.body;
+        final bodyOwnsHeader = switch (body) {
+          InspectorBodyOwnsHeader(:final ownsInspectorHeader) =>
+            ownsInspectorHeader,
+          _ => false,
+        };
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           spacing: context.spacing.space3,
           children: [
-            ?session.header,
-            if (model != null)
-              ComposedEditor(
-                key: ValueKey(ref.watch(selectionProvider)),
-                model: model,
-                host: runtime?.host() ?? const EditorHostCapabilities(),
-                bindingFocusController: bindingFocusController,
+            if (!bodyOwnsHeader) ?session.header,
+            ?body,
+            for (var index = 0; index < hosts.length; index++)
+              PortablePresentationRenderer(
+                key: ValueKey((ref.watch(selectionProvider), index)),
+                host: hosts[index],
               ),
             const SizedBox(height: 5),
             InspectorOperations(),
@@ -427,6 +415,11 @@ class _InspectorContent extends HookConsumerWidget {
       },
     );
   }
+}
+
+/// Marks inspector content that renders its own catalog supplied header.
+abstract interface class InspectorBodyOwnsHeader {
+  bool get ownsInspectorHeader;
 }
 
 /// Shows operations available for every currently inspected selectable.

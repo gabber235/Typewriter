@@ -5,14 +5,15 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Hosts tag creation and the projected inheritance graph.
 ///
-/// Creation starts from a validated identifier dialog, submits through
-/// [CanonicalTags], then selects the returned resource only after persistence
-/// succeeds. Existing tags are rendered by [TagGraph], which handles placement
-/// gestures through the same provider.
+/// Creation prepares authored defaults, commits the unfinished resource, then
+/// opens its normal inspector. Existing tags are rendered by [TagGraph], which
+/// handles placement gestures through the same authoring session.
 @RoutePage()
 class TagsPage extends HookConsumerWidget {
   const TagsPage({super.key});
@@ -21,37 +22,38 @@ class TagsPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tagsAsync = ref.watch(projectedTagsProvider);
     final viewportCenter = useRef<Offset?>(null);
-    final catalogRequest = RealmEditorCatalogRequest(
-      types: {referenceResourceTypes.tag},
-    );
-    final catalogState = ref.watch(realmCatalogProvider(catalogRequest));
+    final organizationId = ref.watch(organizationIdProvider);
+    final realmId = ref.watch(realmIdProvider);
+    final session = organizationId == null || realmId == null
+        ? null
+        : ref.watch(authoringSessionProvider(organizationId, realmId));
+    final definitionId = coreTagResourceDefinition;
+    final definition = session?.catalog?.snapshot.resourceDefinitions
+        .where((candidate) => candidate.id == definitionId)
+        .firstOrNull;
+    final selection = definition == null
+        ? null
+        : session?.catalog?.beginSelection(definition.root);
     final canCreate =
-        catalogState.currentCatalog
-            ?.creatableRoots(CoreResourceDefinitionIds.tag)
-            .singleOrNull !=
-        null;
+        selection != null && selection != skir.TypeSelection.unknown;
 
     Future<void> handleCreateTag() async {
-      final tags = tagsAsync.value ?? const <Tag>[];
-      final catalog = ref
-          .read(realmCatalogProvider(catalogRequest))
-          .requireCurrentCatalog();
-      final root = catalog
-          .creatableRoots(CoreResourceDefinitionIds.tag)
-          .singleOrNull;
-      if (root == null) throw StateError("Tag creation is unavailable");
+      final current = definition == null
+          ? null
+          : ref
+                .read(authoringSessionProvider(organizationId!, realmId!))
+                .catalog
+                ?.beginSelection(definition.root);
+      if (current == null || current == skir.TypeSelection.unknown) {
+        throw StateError("Tag creation is unavailable");
+      }
       final created = await ref
           .read(resourceCreationProvider)
           .create(
             context: context,
             request: ResourceCreationRequest(
-              definition: CoreResourceDefinitionIds.tag,
-              title: "Create Tag",
-              concreteRoot: root,
-              partial: tagCreationPartial(
-                tags,
-                preferredGraphAnchor: viewportCenter.value,
-              ),
+              definition: definitionId,
+              configuration: current,
             ),
           );
       if (created == null) return;

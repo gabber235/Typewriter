@@ -1,282 +1,650 @@
 package com.typewritermc.realm.repository
 
-import com.typewritermc.elements.ReferenceAssembler
-import com.typewritermc.elements.ReferenceDecomposer
-import com.typewritermc.elements.ReferenceSlotId
-import com.typewritermc.elements.StoredElementValue
-import com.typewritermc.elements.StoredReference
-import com.typewritermc.realm.ResourceDefinitionId
-import com.typewritermc.types.DataPath
-import com.typewritermc.types.DataPathSegment
+import com.typewritermc.authoring.AuthoringRecord
+import com.typewritermc.authoring.LinkOccurrence
+import com.typewritermc.authoring.LinkOccurrenceId
+import com.typewritermc.authoring.LinkProjection
+import com.typewritermc.authoring.PathSegment
+import com.typewritermc.authoring.ValueLocation
+import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.ValueProblem
 import com.typewritermc.types.DataValue
-import com.typewritermc.types.RelationCardinality
-import com.typewritermc.types.RelationDefinition
-import com.typewritermc.types.RelationEndpointDefinition
-import com.typewritermc.types.RelationEndpointSide
+import com.typewritermc.types.EndpointCardinality
+import com.typewritermc.types.EndpointSlot
+import com.typewritermc.types.LinkTarget
+import com.typewritermc.types.RelationContract
 import com.typewritermc.types.RelationId
-import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeExpression
-import com.typewritermc.types.TypePrototypeRegistry
-import com.typewritermc.types.TypedValueEnvelope
-import com.typewritermc.types.TypeCatalog
-import com.typewritermc.types.effectiveRelationField
-import java.security.MessageDigest
+import com.typewritermc.types.TypeTemplate
+import com.typewritermc.types.TypeUse
+import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.types.catalog.Resolution
+import java.util.concurrent.ConcurrentHashMap
 
-/** Canonical scalar state stored on one resource row. */
-@kotlinx.serialization.Serializable
-data class StoredTypedResource(
-    val id: ResourceId,
-    val definition: ResourceDefinitionId,
-    val root: ResolvedTypeRef,
-    val valueWithSlots: DataValue,
-)
-
-/** One normalized edge stored independently from resource scalar state. */
-@kotlinx.serialization.Serializable
-data class StoredResourceRelation(
-    val id: String,
+internal data class StoredDeclaredEdge(
+    val physicalId: String,
+    val relation: RelationId,
     val source: ResourceId,
     val target: ResourceId,
-    val origin: ResourceRelationOrigin,
+    val sourceLocation: ValuePath?,
+    val targetLocation: ValuePath?,
 )
 
-@kotlinx.serialization.Serializable
-sealed interface ResourceRelationOrigin {
-    @kotlinx.serialization.Serializable
-    data class Reference(
-        val slot: ReferenceSlotId,
-        val sourcePath: DataPath,
-        val expectedTarget: TypeExpression,
-    ) : ResourceRelationOrigin
-
-    @kotlinx.serialization.Serializable
-    data class Declared(
-        val relationId: RelationId,
-        val sourceIndex: Int? = null,
-        val targetIndex: Int? = null,
-    ) : ResourceRelationOrigin
-}
-
-internal data class DecomposedResourceValue(
-    val resource: StoredTypedResource,
-    val relations: List<StoredResourceRelation>,
+internal data class ProjectionResult(
+    val projections: List<LinkProjection>,
+    val problems: List<ValueProblem>,
 )
 
-/**
- * Converts hydrated typed values to canonical resource rows plus normalized edges and back.
- *
- * Declared relation endpoints are removed as complete fields before ordinary reference projection. They therefore
- * need no occurrence slots. Ordinary nested references retain slots and structured source paths.
- */
-internal class ResourceValueMapper(
-    private val prototypes: TypePrototypeRegistry,
-    relationDefinitions: Collection<RelationDefinition>,
-    private val decomposer: ReferenceDecomposer = ReferenceDecomposer(),
-    private val assembler: ReferenceAssembler = ReferenceAssembler(),
+internal data class DeclaredLinkEvidence(
+    val values: List<ValueLocation>,
+    val memberships: List<ValueLocation>,
+    val forms: List<ValueLocation>,
+)
+
+internal class LinkSchemaCapabilities(
+    private val catalog: CheckedCatalog,
 ) {
-    fun declaredRelation(
-        relation: RelationId,
-        source: ResourceId,
-        target: ResourceId,
-    ): StoredResourceRelation =
-        StoredResourceRelation(
-            id = edgeId(source, target, "declared:${relation.value}"),
-            source = source,
-            target = target,
-            origin = ResourceRelationOrigin.Declared(relation),
-        )
+    private val cache = ConcurrentHashMap<Pair<TypeUse, com.typewritermc.types.EndpointId>, Boolean>()
 
-    private val relations = relationDefinitions.associateBy(RelationDefinition::id)
+    fun contains(
+        use: TypeUse,
+        endpoint: com.typewritermc.types.EndpointId,
+    ): Boolean = cache.computeIfAbsent(use to endpoint) { contains(it.first, it.second, emptySet(), 0) }
 
-    fun graph(root: TypeExpression): com.typewritermc.types.TypeGraph = prototypes.graph(root)
-
-    fun validate(value: TypedValueEnvelope) {
-        prototypes.decode(value)
-    }
-
-    fun ownedRelationEndpoints(root: ResolvedTypeRef): List<Pair<RelationId, RelationEndpointSide>> =
-        endpoints(root).map { (definition, endpoint) -> definition.id to endpoint.side }
-
-    fun decompose(
-        id: ResourceId,
-        definition: ResourceDefinitionId,
-        value: TypedValueEnvelope,
-    ): DecomposedResourceValue {
-        val root = value.requireNamedRoot()
-        val graph = prototypes.graph(root)
-        val endpoints = endpoints(root)
-        val declared = endpoints.flatMap { (definition, endpoint) -> declaredEdges(id, value.rootValue, definition, endpoint) }
-        val overrides = endpoints.associate { (_, endpoint) -> endpoint.path to endpoint.placeholder() }
-        val stored = decomposer.decompose(graph, value.rootValue, overrides)
-        val ordinary =
-            stored.references.map { reference ->
-                StoredResourceRelation(
-                    id = edgeId(id, reference.target, "reference:${reference.slot.value}"),
-                    source = id,
-                    target = reference.target,
-                    origin =
-                        ResourceRelationOrigin.Reference(
-                            reference.slot,
-                            reference.sourcePath,
-                            reference.expectedType,
-                        ),
-                )
-            }
-        return DecomposedResourceValue(
-            StoredTypedResource(id, definition, root, stored.valueWithSlots),
-            (declared + ordinary).sortedBy(StoredResourceRelation::id),
-        )
-    }
-
-    fun hydrate(
-        resource: StoredTypedResource,
-        allRelations: Collection<StoredResourceRelation>,
-    ): TypedValueEnvelope {
-        val endpoints = endpoints(resource.root)
-        val overrides =
-            endpoints.associate { (definition, endpoint) ->
-                endpoint.path to hydratedEndpoint(resource.id, definition, endpoint, allRelations)
-            }
-        val ordinary =
-            allRelations.mapNotNull { relation ->
-                val origin = relation.origin as? ResourceRelationOrigin.Reference ?: return@mapNotNull null
-                if (relation.source != resource.id) return@mapNotNull null
-                StoredReference(origin.slot, relation.target, origin.expectedTarget, origin.sourcePath)
-            }
-        val assembled =
-            assembler.assemble(
-                prototypes.graph(resource.root),
-                StoredElementValue(resource.valueWithSlots, ordinary),
-                overrides,
-            )
-        require(assembled is com.typewritermc.elements.ReferenceAssemblyResult.Success) {
-            "Resource ${resource.id} contains inconsistent normalized reference state."
-        }
-        return TypedValueEnvelope(TypeExpression.Named(resource.root), assembled.value)
-    }
-
-    private fun endpoints(root: ResolvedTypeRef): List<Pair<RelationDefinition, RelationEndpointDefinition>> {
-        val catalog = TypeCatalog(prototypes.graph(TypeExpression.Named(root)).definitions)
-        return relations.values
-            .flatMap { definition ->
-                listOfNotNull(
-                    definition.sourceEndpoint?.takeIf {
-                        catalog.effectiveRelationField(root, definition, RelationEndpointSide.SOURCE) != null
-                    }?.let { definition to it },
-                    definition.targetEndpoint?.takeIf {
-                        catalog.effectiveRelationField(root, definition, RelationEndpointSide.TARGET) != null
-                    }?.let { definition to it },
-                )
-            }.sortedBy { (_, endpoint) -> endpoint.path.toString() }
-    }
-
-    private fun declaredEdges(
-        owner: ResourceId,
-        value: DataValue,
-        definition: RelationDefinition,
-        endpoint: RelationEndpointDefinition,
-    ): List<StoredResourceRelation> {
-        val references = value.at(endpoint.path).references(endpoint.cardinality)
-        return references.mapIndexed { index, target ->
-            val sourceId = if (endpoint.side == RelationEndpointSide.SOURCE) owner else target
-            val targetId = if (endpoint.side == RelationEndpointSide.SOURCE) target else owner
-            StoredResourceRelation(
-                id = edgeId(sourceId, targetId, "declared:${definition.id.value}"),
-                source = sourceId,
-                target = targetId,
-                origin =
-                    ResourceRelationOrigin.Declared(
-                        definition.id,
-                        sourceIndex = index.takeIf { endpoint.side == RelationEndpointSide.SOURCE && endpoint.cardinality == RelationCardinality.MANY },
-                        targetIndex = index.takeIf { endpoint.side == RelationEndpointSide.TARGET && endpoint.cardinality == RelationCardinality.MANY },
-                    ),
-            )
-        }
-    }
-
-    private fun hydratedEndpoint(
-        owner: ResourceId,
-        definition: RelationDefinition,
-        endpoint: RelationEndpointDefinition,
-        allRelations: Collection<StoredResourceRelation>,
-    ): DataValue {
-        val targets =
-            allRelations
-                .asSequence()
-                .filter { (it.origin as? ResourceRelationOrigin.Declared)?.relationId == definition.id }
-                .mapNotNull { relation ->
-                    val target =
-                        when (endpoint.side) {
-                            RelationEndpointSide.SOURCE -> relation.target.takeIf { relation.source == owner }
-                            RelationEndpointSide.TARGET -> relation.source.takeIf { relation.target == owner }
-                        } ?: return@mapNotNull null
-                    val origin = relation.origin as ResourceRelationOrigin.Declared
-                    val index = when (endpoint.side) {
-                        RelationEndpointSide.SOURCE -> origin.sourceIndex
-                        RelationEndpointSide.TARGET -> origin.targetIndex
-                    }
-                    target to index
-                }.distinctBy { it.first }
-                .sortedWith(compareBy<Pair<ResourceId, Int?>>({ it.second ?: Int.MAX_VALUE }, { it.first.value }))
-                .map { it.first }
-                .toList()
-        return when (endpoint.cardinality) {
-            RelationCardinality.ONE -> {
-                require(targets.size == 1) { "Relation ${definition.id.value} requires exactly one endpoint for $owner." }
-                DataValue.Reference(targets.single())
+    private fun contains(
+        use: TypeUse,
+        endpoint: com.typewritermc.types.EndpointId,
+        visited: Set<TypeUse>,
+        depth: Int,
+    ): Boolean {
+        if (depth >= MAX_SCHEMA_CAPABILITY_DEPTH) return true
+        val nonNull = if (use is TypeUse.Nullable) use.value else use
+        if (nonNull in visited) return false
+        val resolved = catalog.resolve(nonNull) as? Resolution.Ready ?: return true
+        val nextVisited = visited + nonNull
+        return when (val representation = resolved.value.schema.representation) {
+            is com.typewritermc.types.catalog.ResolvedRepresentation.Link -> {
+                representation.endpoint == endpoint
             }
 
-            RelationCardinality.MANY -> {
-                DataValue.ListValue(targets.map(DataValue::Reference))
+            is com.typewritermc.types.catalog.ResolvedRepresentation.Record -> {
+                representation.abstract ||
+                    representation.fields.any { contains(it.type, endpoint, nextVisited, depth + 1) }
+            }
+
+            is com.typewritermc.types.catalog.ResolvedRepresentation.Sequence -> {
+                contains(representation.item, endpoint, nextVisited, depth + 1)
+            }
+
+            is com.typewritermc.types.catalog.ResolvedRepresentation.Mapping -> {
+                contains(representation.key, endpoint, nextVisited, depth + 1) ||
+                    contains(representation.value, endpoint, nextVisited, depth + 1)
+            }
+
+            else -> {
+                false
             }
         }
     }
 }
 
-private fun TypedValueEnvelope.requireNamedRoot(): ResolvedTypeRef =
-    (rootType as? TypeExpression.Named)?.reference
-        ?: error("Stored authored resources require named root types.")
+internal sealed interface CounterpartBinding {
+    data class Scalar(
+        val location: ValueLocation,
+    ) : CounterpartBinding
 
-private fun RelationEndpointDefinition.placeholder(): DataValue =
-    when (cardinality) {
-        RelationCardinality.ONE -> DataValue.Unit
-        RelationCardinality.MANY -> DataValue.ListValue(emptyList())
+    data class Collection(
+        val location: ValueLocation,
+    ) : CounterpartBinding
+
+    data object ExplicitChoice : CounterpartBinding
+
+    data object Missing : CounterpartBinding
+}
+
+/** Derives exact authored occurrences and rebuildable declared graph projections. */
+internal object ResourceValueMapper {
+    fun discover(resources: Map<ResourceId, AuthoringRecord>): List<LinkOccurrence> =
+        buildList {
+            resources.forEach { (resource, record) ->
+                record.fields.forEach { (name, value) ->
+                    collect(resource, value, ValueLocation(resource, ValuePath(listOf(PathSegment.Field(name)))), this)
+                }
+            }
+        }
+
+    fun project(
+        occurrences: Collection<LinkOccurrence>,
+        resources: Map<ResourceId, AuthoringRecord>,
+        contracts: List<RelationContract>,
+        catalog: CheckedCatalog? = null,
+    ): ProjectionResult {
+        val problems = mutableListOf<ValueProblem>()
+        val byEndpoint =
+            contracts
+                .flatMap { contract ->
+                    listOf(contract.first.id to (contract to contract.first.slot), contract.second.id to (contract to contract.second.slot))
+                }.groupBy({ it.first }, { it.second })
+        val byLocation = occurrences.associateBy { it.id.location }
+        val projected = linkedSetOf<LinkProjection>()
+
+        occurrences.sortedBy { occurrenceKey(it) }.forEach { occurrence ->
+            val candidates = byEndpoint[occurrence.id.endpoint].orEmpty()
+            if (candidates.size != 1) {
+                problems += ValueProblem(occurrence.id.location, if (candidates.isEmpty()) "unknown_endpoint" else "ambiguous_endpoint")
+                return@forEach
+            }
+            if (occurrence.target.resource !in resources) {
+                problems += ValueProblem(occurrence.id.location, "target_resource_missing")
+                return@forEach
+            }
+            val (contract, slot) = candidates.single()
+            if (catalog != null) {
+                val sourceEndpoint = if (slot == EndpointSlot.First) contract.first else contract.second
+                val targetEndpoint = if (slot == EndpointSlot.First) contract.second else contract.first
+                if (!resources.getValue(occurrence.source).matches(sourceEndpoint.resource, catalog)) {
+                    problems += ValueProblem(occurrence.id.location, "source_resource_type_mismatch")
+                    return@forEach
+                }
+                if (!resources.getValue(occurrence.target.resource).matches(targetEndpoint.resource, catalog)) {
+                    problems += ValueProblem(occurrence.id.location, "target_resource_type_mismatch")
+                    return@forEach
+                }
+                val sourceRecord = resources.getValue(occurrence.source)
+                val declared = sourceRecord.linkSlots(catalog).singleOrNull { it.location == occurrence.id.location.path }
+                if (declared == null || declared.endpoint != occurrence.id.endpoint) {
+                    problems += ValueProblem(occurrence.id.location, "endpoint_location_not_declared")
+                    return@forEach
+                }
+                val expectsCollection = targetEndpoint.cardinality == EndpointCardinality.Many
+                if (declared.containsCollection != expectsCollection) {
+                    problems += ValueProblem(occurrence.id.location, "endpoint_binding_cardinality_mismatch")
+                    return@forEach
+                }
+                if (!resources.getValue(occurrence.target.resource).matches(declared.target, catalog)) {
+                    problems += ValueProblem(occurrence.id.location, "binding_target_type_mismatch")
+                    return@forEach
+                }
+            }
+            val oppositeLocation = occurrence.target.opposite?.let { ValueLocation(occurrence.target.resource, it) }
+            val opposite = oppositeLocation?.let(byLocation::get)
+            if (oppositeLocation != null) {
+                val expected = if (slot == EndpointSlot.First) contract.second.id else contract.first.id
+                if (
+                    opposite == null ||
+                    opposite.id.endpoint != expected ||
+                    opposite.target.resource != occurrence.source ||
+                    opposite.target.opposite != occurrence.id.location.path
+                ) {
+                    problems += ValueProblem(occurrence.id.location, "opposite_occurrence_mismatch")
+                    return@forEach
+                }
+            }
+            val projection =
+                if (slot == EndpointSlot.First) {
+                    LinkProjection(
+                        contract = contract.id,
+                        first = occurrence.source,
+                        second = occurrence.target.resource,
+                        firstLocation = occurrence.id.location.path,
+                        secondLocation = opposite?.id?.location?.path,
+                    )
+                } else {
+                    LinkProjection(
+                        contract = contract.id,
+                        first = occurrence.target.resource,
+                        second = occurrence.source,
+                        firstLocation = opposite?.id?.location?.path,
+                        secondLocation = occurrence.id.location.path,
+                    )
+                }
+            projected += projection
+        }
+        return ProjectionResult(projected.sortedBy(::projectionKey), problems.distinct())
     }
 
-private fun DataValue.references(cardinality: RelationCardinality): List<ResourceId> =
-    when (cardinality) {
-        RelationCardinality.ONE -> listOf((this as DataValue.Reference).id)
-        RelationCardinality.MANY -> {
-            val ids = (this as DataValue.ListValue).values.map { (it as DataValue.Reference).id }
-            require(ids.distinct().size == ids.size) { "A ToMany field cannot repeat a target resource." }
-            ids
+    fun declaredLocations(
+        endpoint: com.typewritermc.types.EndpointId,
+        resource: ResourceId,
+        record: AuthoringRecord,
+        catalog: CheckedCatalog,
+    ): List<ValueLocation> = declaredEvidence(endpoint, resource, record, catalog).values
+
+    fun declaredEvidence(
+        endpoint: com.typewritermc.types.EndpointId,
+        resource: ResourceId,
+        record: AuthoringRecord,
+        catalog: CheckedCatalog,
+        capabilities: LinkSchemaCapabilities = LinkSchemaCapabilities(catalog),
+    ): DeclaredLinkEvidence {
+        val values = linkedSetOf<ValuePath>()
+        val memberships = linkedSetOf<ValuePath>()
+        val forms = linkedSetOf<ValuePath>()
+        val fields = record.resolvedFields(catalog)
+        fields.forEach { field ->
+            collectLinkEvidence(
+                declared = field.type,
+                value = record.fields[field.key] ?: DataValue.Unfilled,
+                path = ValuePath(listOf(PathSegment.Field(field.key))),
+                endpoint = endpoint,
+                catalog = catalog,
+                capabilities = capabilities,
+                values = values,
+                memberships = memberships,
+                forms = forms,
+            )
+        }
+        return DeclaredLinkEvidence(
+            values = values.sortedBy { it.toString() }.map { ValueLocation(resource, it) },
+            memberships = memberships.sortedBy { it.toString() }.map { ValueLocation(resource, it) },
+            forms = forms.sortedBy { it.toString() }.map { ValueLocation(resource, it) },
+        )
+    }
+
+    fun counterpartBinding(
+        endpoint: com.typewritermc.types.EndpointId,
+        resource: ResourceId,
+        record: AuthoringRecord,
+        catalog: CheckedCatalog,
+    ): CounterpartBinding {
+        val slots = record.linkSlots(catalog).filter { it.endpoint == endpoint }
+        val directCollections = slots.mapNotNull(LinkSchemaSlot::directCollection).distinct()
+        val scalarLocations = slots.filterNot(LinkSchemaSlot::containsCollection).mapNotNull(LinkSchemaSlot::location).distinct()
+        val choices =
+            buildList {
+                directCollections.forEach { add(CounterpartBinding.Collection(ValueLocation(resource, it))) }
+                scalarLocations.forEach { add(CounterpartBinding.Scalar(ValueLocation(resource, it))) }
+            }.distinct()
+        return when (choices.size) {
+            0 -> if (slots.isEmpty()) CounterpartBinding.Missing else CounterpartBinding.ExplicitChoice
+            1 -> choices.single()
+            else -> CounterpartBinding.ExplicitChoice
         }
     }
 
-private fun DataValue.at(path: DataPath): DataValue =
-    path.segments.fold(this) { value, segment ->
-        when (segment) {
-            is DataPathSegment.Field -> {
-                (value as DataValue.Record).fields.getValue(segment.name)
+    fun expectedTarget(
+        occurrence: LinkOccurrence,
+        record: AuthoringRecord,
+        catalog: CheckedCatalog,
+    ): TypeUse? =
+        record
+            .linkSlots(catalog)
+            .singleOrNull { it.location == occurrence.id.location.path && it.endpoint == occurrence.id.endpoint }
+            ?.target
+
+    private fun collect(
+        source: ResourceId,
+        value: DataValue,
+        location: ValueLocation,
+        target: MutableList<LinkOccurrence>,
+    ) {
+        when (value) {
+            is DataValue.Link -> {
+                val id = LinkOccurrenceId(value.endpoint, location)
+                target += LinkOccurrence(id, source, LinkTarget(value.target.resource, value.target.opposite))
             }
 
-            is DataPathSegment.Index -> {
-                (value as DataValue.ListValue).values[segment.index]
+            is DataValue.Named -> {
+                collect(source, value.payload, location, target)
             }
 
-            is DataPathSegment.MapKey -> {
-                (value as DataValue.MapValue).entries.single { it.key == segment.key }.value
+            is DataValue.Record -> {
+                value.fields.forEach { (name, field) -> collect(source, field, location.field(name), target) }
+            }
+
+            is DataValue.ListValue -> {
+                value.items.forEach { collect(source, it.value, location.item(it.id), target) }
+            }
+
+            is DataValue.SetValue -> {
+                value.items.forEach { collect(source, it.value, location.item(it.id), target) }
+            }
+
+            is DataValue.MapValue -> {
+                value.rows.forEach { row ->
+                    collect(source, row.key, location.item(row.id).mapKey(), target)
+                    collect(source, row.value, location.item(row.id).mapValue(), target)
+                }
+            }
+
+            else -> {
             }
         }
     }
+}
 
-private fun edgeId(
-    source: ResourceId,
-    target: ResourceId,
-    origin: String,
-): String =
-    MessageDigest
-        .getInstance("SHA-256")
-        .digest("${source.value}\u0000${target.value}\u0000$origin".toByteArray())
-        .joinToString("") { byte -> "%02x".format(byte) }
+private data class LinkSchemaSlot(
+    val endpoint: com.typewritermc.types.EndpointId,
+    val target: TypeUse,
+    val location: ValuePath?,
+    val containsCollection: Boolean,
+    val directCollection: ValuePath?,
+)
+
+private fun AuthoringRecord.linkSlots(catalog: CheckedCatalog): List<LinkSchemaSlot> {
+    val slots = mutableListOf<LinkSchemaSlot>()
+    resolvedFields(catalog).forEach { field ->
+        collectLinkSlots(
+            declared = field.type,
+            value = fields[field.key] ?: DataValue.Unfilled,
+            path = ValuePath(listOf(PathSegment.Field(field.key))),
+            catalog = catalog,
+            containsCollection = false,
+            directCollection = null,
+            slots = slots,
+        )
+    }
+    return slots.distinct()
+}
+
+private fun AuthoringRecord.resolvedFields(catalog: CheckedCatalog) =
+    when (val selected = configuration) {
+        is com.typewritermc.authoring.TypeSelection.Complete -> {
+            val resolved = catalog.resolve(selected.use) as? Resolution.Ready
+            val record =
+                resolved?.value?.schema?.representation as? com.typewritermc.types.catalog.ResolvedRepresentation.Record
+            record?.fields.orEmpty()
+        }
+
+        is com.typewritermc.authoring.TypeSelection.Pending -> {
+            val partial = catalog.resolvePartial(selected) as? Resolution.Ready
+            partial?.value?.knownFields.orEmpty()
+        }
+    }
+
+private fun collectLinkEvidence(
+    declared: TypeUse,
+    value: DataValue,
+    path: ValuePath,
+    endpoint: com.typewritermc.types.EndpointId,
+    catalog: CheckedCatalog,
+    capabilities: LinkSchemaCapabilities,
+    values: MutableSet<ValuePath>,
+    memberships: MutableSet<ValuePath>,
+    forms: MutableSet<ValuePath>,
+) {
+    val nonNull = if (declared is TypeUse.Nullable) declared.value else declared
+    if (declared is TypeUse.Nullable && value == DataValue.Null) {
+        if (capabilities.contains(nonNull, endpoint)) forms += path
+        return
+    }
+    val named = value as? DataValue.Named
+    val effective = named?.actualType ?: nonNull
+    if (named != null && !catalog.isReadableAs(named.actualType, nonNull)) {
+        if (capabilities.contains(nonNull, endpoint)) forms += path
+        return
+    }
+    val resolved = catalog.resolve(effective) as? Resolution.Ready ?: return
+    val payload = named?.payload ?: value
+    when (val representation = resolved.value.schema.representation) {
+        is com.typewritermc.types.catalog.ResolvedRepresentation.Link -> {
+            if (representation.endpoint == endpoint) values += path
+        }
+
+        is com.typewritermc.types.catalog.ResolvedRepresentation.Record -> {
+            if (!capabilities.contains(effective, endpoint)) return
+            forms += path
+            val record = payload as? DataValue.Record ?: return
+            representation.fields.forEach { field ->
+                collectLinkEvidence(
+                    field.type,
+                    record.fields[field.key] ?: DataValue.Unfilled,
+                    path.field(field.key),
+                    endpoint,
+                    catalog,
+                    capabilities,
+                    values,
+                    memberships,
+                    forms,
+                )
+            }
+        }
+
+        is com.typewritermc.types.catalog.ResolvedRepresentation.Sequence -> {
+            if (!capabilities.contains(representation.item, endpoint)) return
+            forms += path
+            memberships += path
+            val items =
+                when (payload) {
+                    is DataValue.ListValue -> payload.items
+                    is DataValue.SetValue -> payload.items
+                    else -> emptyList()
+                }
+            items.forEach { item ->
+                collectLinkEvidence(
+                    representation.item,
+                    item.value,
+                    path.item(item.id),
+                    endpoint,
+                    catalog,
+                    capabilities,
+                    values,
+                    memberships,
+                    forms,
+                )
+            }
+        }
+
+        is com.typewritermc.types.catalog.ResolvedRepresentation.Mapping -> {
+            val keyContains = capabilities.contains(representation.key, endpoint)
+            val valueContains = capabilities.contains(representation.value, endpoint)
+            if (!keyContains && !valueContains) return
+            forms += path
+            memberships += path
+            val mapping = payload as? DataValue.MapValue ?: return
+            mapping.rows.forEach { row ->
+                if (keyContains) {
+                    collectLinkEvidence(
+                        representation.key,
+                        row.key,
+                        path.item(row.id).mapKey(),
+                        endpoint,
+                        catalog,
+                        capabilities,
+                        values,
+                        memberships,
+                        forms,
+                    )
+                }
+                if (valueContains) {
+                    collectLinkEvidence(
+                        representation.value,
+                        row.value,
+                        path.item(row.id).mapValue(),
+                        endpoint,
+                        catalog,
+                        capabilities,
+                        values,
+                        memberships,
+                        forms,
+                    )
+                }
+            }
+        }
+
+        else -> {}
+    }
+}
+
+private const val MAX_SCHEMA_CAPABILITY_DEPTH = 64
+
+private fun collectLinkSlots(
+    declared: TypeUse,
+    value: DataValue,
+    path: ValuePath,
+    catalog: CheckedCatalog,
+    containsCollection: Boolean,
+    directCollection: ValuePath?,
+    slots: MutableList<LinkSchemaSlot>,
+) {
+    val nonNull = if (declared is TypeUse.Nullable) declared.value else declared
+    if (value == DataValue.Null) return
+    val named = value as? DataValue.Named
+    val effective =
+        if (named == null) {
+            nonNull
+        } else {
+            if (!catalog.isReadableAs(named.actualType, nonNull)) return
+            named.actualType
+        }
+    val resolved = catalog.resolve(effective) as? Resolution.Ready ?: return
+    val payload = named?.payload ?: value
+    when (val representation = resolved.value.schema.representation) {
+        is com.typewritermc.types.catalog.ResolvedRepresentation.Link -> {
+            slots +=
+                LinkSchemaSlot(
+                    endpoint = representation.endpoint,
+                    target = representation.target,
+                    location = path,
+                    containsCollection = containsCollection,
+                    directCollection = directCollection,
+                )
+        }
+
+        is com.typewritermc.types.catalog.ResolvedRepresentation.Record -> {
+            val record = payload as? DataValue.Record ?: return
+            representation.fields.forEach { field ->
+                val child = record.fields[field.key] ?: DataValue.Unfilled
+                collectLinkSlots(
+                    field.type,
+                    child,
+                    path.field(field.key),
+                    catalog,
+                    containsCollection,
+                    directCollection,
+                    slots,
+                )
+            }
+        }
+
+        is com.typewritermc.types.catalog.ResolvedRepresentation.Sequence -> {
+            val items =
+                when (payload) {
+                    is DataValue.ListValue -> payload.items
+                    is DataValue.SetValue -> payload.items
+                    else -> emptyList()
+                }
+            val itemRepresentation = catalog.resolve(representation.item) as? Resolution.Ready
+            val directLink =
+                itemRepresentation?.value?.schema?.representation
+                    as? com.typewritermc.types.catalog.ResolvedRepresentation.Link
+            if (directLink != null) {
+                val link = directLink
+                slots += LinkSchemaSlot(link.endpoint, link.target, null, true, path)
+            }
+            items.forEach { item ->
+                collectLinkSlots(
+                    representation.item,
+                    item.value,
+                    path.item(item.id),
+                    catalog,
+                    containsCollection = true,
+                    directCollection = path.takeIf { directLink != null },
+                    slots = slots,
+                )
+            }
+        }
+
+        is com.typewritermc.types.catalog.ResolvedRepresentation.Mapping -> {
+            val mapping = payload as? DataValue.MapValue ?: return
+            mapping.rows.forEach { row ->
+                collectLinkSlots(
+                    representation.key,
+                    row.key,
+                    path.item(row.id).mapKey(),
+                    catalog,
+                    containsCollection = true,
+                    directCollection = null,
+                    slots = slots,
+                )
+                collectLinkSlots(
+                    representation.value,
+                    row.value,
+                    path.item(row.id).mapValue(),
+                    catalog,
+                    containsCollection = true,
+                    directCollection = null,
+                    slots = slots,
+                )
+            }
+        }
+
+        else -> {
+        }
+    }
+}
+
+private fun AuthoringRecord.matches(
+    expected: TypeUse,
+    catalog: CheckedCatalog,
+): Boolean =
+    when (val selected = configuration) {
+        is com.typewritermc.authoring.TypeSelection.Complete -> {
+            catalog.isReadableAs(selected.use, expected)
+        }
+
+        is com.typewritermc.authoring.TypeSelection.Pending -> {
+            catalog.knownApplications(selected).any { application -> catalog.isReadableAs(application, expected) }
+        }
+    }
+
+private fun AuthoringRecord.matches(
+    expected: TypeTemplate.Named,
+    catalog: CheckedCatalog,
+): Boolean {
+    val expectedUse = expected.toUseOrNull()
+    return when (val selected = configuration) {
+        is com.typewritermc.authoring.TypeSelection.Complete -> {
+            expectedUse?.let { catalog.isReadableAs(selected.use, it) }
+                ?: catalog.isNominalSubtype(selected.use.definition, expected.definition)
+        }
+
+        is com.typewritermc.authoring.TypeSelection.Pending -> {
+            expectedUse?.let { concrete ->
+                catalog.knownApplications(selected).any { application -> catalog.isReadableAs(application, concrete) }
+            } ?: catalog.isNominalSubtype(selected.definition, expected.definition)
+        }
+    }
+}
+
+private fun TypeTemplate.toUseOrNull(): TypeUse? =
+    when (this) {
+        is TypeTemplate.Parameter -> {
+            null
+        }
+
+        is TypeTemplate.Named -> {
+            val applied = arguments.map { it.toUseOrNull() ?: return null }
+            TypeUse.Named(definition, applied)
+        }
+
+        is TypeTemplate.Nullable -> {
+            value.toUseOrNull()?.let(TypeUse::Nullable)
+        }
+
+        is TypeTemplate.Scalar -> {
+            TypeUse.Scalar(kind)
+        }
+    }
+
+private fun occurrenceKey(value: LinkOccurrence): String =
+    "${value.id.endpoint.value}:${value.source.value}:${value.id.location.path}:${value.target.resource.value}"
+
+private fun projectionKey(value: LinkProjection): String =
+    "${value.contract.value}:${value.first.value}:${value.second.value}:${value.firstLocation}:${value.secondLocation}"
+
+private fun ValueLocation.field(name: String) = copy(path = ValuePath(path.segments + PathSegment.Field(name)))
+
+private fun ValueLocation.item(id: com.typewritermc.authoring.ItemId) = copy(path = ValuePath(path.segments + PathSegment.Item(id)))
+
+private fun ValueLocation.mapKey() = copy(path = ValuePath(path.segments + PathSegment.MapKey))
+
+private fun ValueLocation.mapValue() = copy(path = ValuePath(path.segments + PathSegment.MapValue))
+
+private fun ValuePath.field(name: String) = ValuePath(segments + PathSegment.Field(name))
+
+private fun ValuePath.item(id: com.typewritermc.authoring.ItemId) = ValuePath(segments + PathSegment.Item(id))
+
+private fun ValuePath.mapKey() = ValuePath(segments + PathSegment.MapKey)
+
+private fun ValuePath.mapValue() = ValuePath(segments + PathSegment.MapValue)

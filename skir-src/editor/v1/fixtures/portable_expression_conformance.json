@@ -1,0 +1,1015 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "integer_addition",
+      "expression": {
+        "call": "typewriter.number.add",
+        "arguments": [
+          {
+            "integer": "7"
+          },
+          {
+            "integer": "5"
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "integer": "12"
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "regex_capture",
+      "expression": {
+        "call": "typewriter.regex.capture",
+        "arguments": [
+          {
+            "read": "subject",
+            "path": [
+              "text"
+            ]
+          },
+          {
+            "string": "Q(\\d+)"
+          },
+          {
+            "integer": "1"
+          }
+        ]
+      },
+      "reads": {
+        "subject:text": {
+          "string": "Q42"
+        }
+      },
+      "expected": {
+        "available": {
+          "string": "42"
+        },
+        "evaluatedReads": [
+          "subject:text"
+        ]
+      }
+    },
+    {
+      "id": "regex_replace",
+      "expression": {
+        "call": "typewriter.regex.replace",
+        "arguments": [
+          {
+            "string": "quest 42"
+          },
+          {
+            "string": "\\d+"
+          },
+          {
+            "string": "ready"
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "string": "quest ready"
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "invalid_regex_replacement_capture",
+      "expression": {
+        "call": "typewriter.regex.replace",
+        "arguments": [
+          {
+            "string": "Q42"
+          },
+          {
+            "string": "Q(\\d+)"
+          },
+          {
+            "string": "$99"
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "failed": {
+          "code": "invalid_regex_replacement",
+          "locations": []
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "escaped_regex_replacement",
+      "expression": {
+        "call": "typewriter.regex.replace",
+        "arguments": [
+          {
+            "string": "Q42"
+          },
+          {
+            "string": "Q(\\d+)"
+          },
+          {
+            "string": "\\$99"
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "string": "$99"
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "color_alpha",
+      "expression": {
+        "call": "typewriter.color.with_alpha",
+        "arguments": [
+          {
+            "integer": "1122867"
+          },
+          {
+            "integer": "128"
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "integer": "2148606515"
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "boolean_short_circuit",
+      "expression": {
+        "and": [
+          {
+            "boolean": false
+          },
+          {
+            "read": "subject",
+            "path": [
+              "missing"
+            ]
+          }
+        ]
+      },
+      "reads": {
+        "subject:missing": {
+          "unavailable": true
+        }
+      },
+      "expected": {
+        "available": {
+          "boolean": false
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "fallback_on_missing",
+      "expression": {
+        "orElse": [
+          {
+            "read": "subject",
+            "path": [
+              "optional"
+            ]
+          },
+          {
+            "string": "fallback"
+          }
+        ]
+      },
+      "reads": {
+        "subject:optional": {
+          "unavailable": true
+        }
+      },
+      "expected": {
+        "available": {
+          "string": "fallback"
+        },
+        "evaluatedReads": [
+          "subject:optional"
+        ]
+      }
+    },
+    {
+      "id": "invalid_regex",
+      "expression": {
+        "call": "typewriter.regex.matches",
+        "arguments": [
+          {
+            "read": "subject",
+            "path": [
+              "text"
+            ]
+          },
+          {
+            "string": "["
+          }
+        ]
+      },
+      "reads": {
+        "subject:text": {
+          "string": "value"
+        }
+      },
+      "expected": {
+        "failed": {
+          "code": "invalid_regex",
+          "locations": [
+            "subject:text"
+          ]
+        },
+        "evaluatedReads": [
+          "subject:text"
+        ]
+      }
+    },
+    {
+      "id": "unicode_code_point_length",
+      "expression": {
+        "call": "typewriter.text.length",
+        "arguments": [
+          {
+            "string": "A😀B"
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "integer": "3"
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "unicode_code_point_substring",
+      "expression": {
+        "call": "typewriter.text.substring",
+        "arguments": [
+          {
+            "string": "A😀B"
+          },
+          {
+            "integer": "1"
+          },
+          {
+            "integer": "2"
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "string": "😀"
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "mixed_newline_count",
+      "expression": {
+        "call": "typewriter.rule.maximumLines",
+        "arguments": [
+          {
+            "string": "first\r\nsecond\nthird"
+          },
+          {
+            "integer": "3"
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "boolean": true
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "regex_search_match",
+      "expression": {
+        "call": "typewriter.regex.matches",
+        "arguments": [
+          {
+            "string": "before Q42 after"
+          },
+          {
+            "string": "Q\\d+"
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "boolean": true
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "regex_rule_full_match",
+      "expression": {
+        "call": "typewriter.rule.regex",
+        "arguments": [
+          {
+            "string": "before Q42 after"
+          },
+          {
+            "string": "Q\\d+"
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "boolean": false
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "exact_large_integer_addition",
+      "expression": {
+        "call": "typewriter.number.add",
+        "arguments": [
+          {
+            "integer": "18446744073709551616"
+          },
+          {
+            "integer": "999999999999999999999999999999"
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "integer": "1000000000018446744073709551615"
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "canonical_decimal_addition",
+      "expression": {
+        "call": "typewriter.number.add",
+        "arguments": [
+          {
+            "decimal": "1.200"
+          },
+          {
+            "decimal": "2.30"
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "decimal": "3.5"
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "canonical_decimal_equality",
+      "expression": {
+        "call": "typewriter.value.eq",
+        "arguments": [
+          {
+            "decimal": "1.2300"
+          },
+          {
+            "decimal": "1.23"
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "boolean": true
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "named_scalar_equality",
+      "expression": {
+        "call": "typewriter.value.eq",
+        "arguments": [
+          {
+            "named": {
+              "namespace": "test",
+              "name": "QuestCode",
+              "revision": 1,
+              "payload": {
+                "string": "Q42"
+              }
+            }
+          },
+          {
+            "named": {
+              "namespace": "test",
+              "name": "QuestCode",
+              "revision": 1,
+              "payload": {
+                "string": "Q42"
+              }
+            }
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "boolean": true
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "record_field_order_equality",
+      "expression": {
+        "call": "typewriter.value.eq",
+        "arguments": [
+          {
+            "record": {
+              "first": {
+                "string": "A"
+              },
+              "second": {
+                "integer": "2"
+              }
+            }
+          },
+          {
+            "record": {
+              "second": {
+                "integer": "2"
+              },
+              "first": {
+                "string": "A"
+              }
+            }
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "boolean": true
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "list_item_identity_equality",
+      "expression": {
+        "call": "typewriter.value.eq",
+        "arguments": [
+          {
+            "list": [
+              {
+                "id": "left.one",
+                "value": {
+                  "string": "A"
+                }
+              },
+              {
+                "id": "left.two",
+                "value": {
+                  "string": "B"
+                }
+              }
+            ]
+          },
+          {
+            "list": [
+              {
+                "id": "right.one",
+                "value": {
+                  "string": "A"
+                }
+              },
+              {
+                "id": "right.two",
+                "value": {
+                  "string": "B"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "boolean": true
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "set_item_identity_and_order_equality",
+      "expression": {
+        "call": "typewriter.value.eq",
+        "arguments": [
+          {
+            "set": [
+              {
+                "id": "left.one",
+                "value": {
+                  "string": "A"
+                }
+              },
+              {
+                "id": "left.two",
+                "value": {
+                  "string": "B"
+                }
+              }
+            ]
+          },
+          {
+            "set": [
+              {
+                "id": "right.two",
+                "value": {
+                  "string": "B"
+                }
+              },
+              {
+                "id": "right.one",
+                "value": {
+                  "string": "A"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "boolean": true
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "map_row_identity_and_order_equality",
+      "expression": {
+        "call": "typewriter.value.eq",
+        "arguments": [
+          {
+            "map": [
+              {
+                "id": "left.one",
+                "key": {
+                  "string": "A"
+                },
+                "value": {
+                  "integer": "1"
+                }
+              },
+              {
+                "id": "left.two",
+                "key": {
+                  "string": "B"
+                },
+                "value": {
+                  "integer": "2"
+                }
+              }
+            ]
+          },
+          {
+            "map": [
+              {
+                "id": "right.two",
+                "key": {
+                  "string": "B"
+                },
+                "value": {
+                  "integer": "2"
+                }
+              },
+              {
+                "id": "right.one",
+                "key": {
+                  "string": "A"
+                },
+                "value": {
+                  "integer": "1"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "boolean": true
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "portable_whitespace_bom_and_nel",
+      "expression": {
+        "call": "typewriter.rule.nonBlank",
+        "arguments": [
+          {
+            "string": "﻿"
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "boolean": false
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "portable_whitespace_excludes_information_separator",
+      "expression": {
+        "call": "typewriter.rule.nonBlank",
+        "arguments": [
+          {
+            "string": "\u001c"
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "boolean": true
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "portable_whitespace_trim",
+      "expression": {
+        "call": "typewriter.text.trim",
+        "arguments": [
+          {
+            "string": "﻿ value "
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "string": "value"
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "decimal_division_precision",
+      "expression": {
+        "call": "typewriter.number.divide",
+        "arguments": [
+          {
+            "decimal": "10"
+          },
+          {
+            "decimal": "3"
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "decimal": "3.333333333333333333333333333333333"
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "negative_decimal_division_precision",
+      "expression": {
+        "call": "typewriter.number.divide",
+        "arguments": [
+          {
+            "decimal": "-10"
+          },
+          {
+            "decimal": "3"
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "decimal": "-3.333333333333333333333333333333333"
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "collection_size_with_unfinished_member",
+      "expression": {
+        "call": "typewriter.collection.size",
+        "arguments": [
+          {
+            "list": [
+              {
+                "id": "unfinished",
+                "value": {
+                  "unfilled": true
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "integer": "1"
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "collection_known_duplicate_with_unfinished_member",
+      "expression": {
+        "call": "typewriter.rule.unique",
+        "arguments": [
+          {
+            "list": [
+              {
+                "id": "first",
+                "value": {
+                  "string": "same"
+                }
+              },
+              {
+                "id": "second",
+                "value": {
+                  "string": "same"
+                }
+              },
+              {
+                "id": "unfinished",
+                "value": {
+                  "unfilled": true
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "boolean": false
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "collection_unknown_uniqueness",
+      "expression": {
+        "call": "typewriter.rule.unique",
+        "arguments": [
+          {
+            "list": [
+              {
+                "id": "known",
+                "value": {
+                  "string": "known"
+                }
+              },
+              {
+                "id": "unfinished",
+                "value": {
+                  "unfilled": true
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "unavailable": {
+          "locations": []
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "unsupported_host_regex",
+      "expression": {
+        "call": "typewriter.rule.regex",
+        "arguments": [
+          {
+            "string": "literal"
+          },
+          {
+            "string": "\\Qliteral\\E"
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "failed": {
+          "code": "unsupported_regex_pattern",
+          "locations": []
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "text_empty_replace_uses_code_points",
+      "expression": {
+        "call": "typewriter.text.replace",
+        "arguments": [
+          {
+            "string": "😀"
+          },
+          {
+            "string": ""
+          },
+          {
+            "string": "_"
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "string": "_😀_"
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "text_empty_split_uses_code_points",
+      "expression": {
+        "call": "typewriter.text.split",
+        "arguments": [
+          {
+            "string": "😀x"
+          },
+          {
+            "string": ""
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "list": [
+            {
+              "id": "split.0",
+              "value": {
+                "string": "😀"
+              }
+            },
+            {
+              "id": "split.1",
+              "value": {
+                "string": "x"
+              }
+            }
+          ]
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "regex_exact_end_anchor",
+      "expression": {
+        "call": "typewriter.rule.regex",
+        "arguments": [
+          {
+            "string": "a\n"
+          },
+          {
+            "string": "a$"
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "boolean": false
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "regex_empty_match_replacement_uses_code_points",
+      "expression": {
+        "call": "typewriter.regex.replace",
+        "arguments": [
+          {
+            "string": "😀x"
+          },
+          {
+            "string": ""
+          },
+          {
+            "string": "_"
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "string": "_😀_x_"
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "regex_emoji_capture",
+      "expression": {
+        "call": "typewriter.regex.capture",
+        "arguments": [
+          {
+            "string": "A😀B"
+          },
+          {
+            "string": ".(😀)"
+          },
+          {
+            "integer": "1"
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "string": "😀"
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "regex_quantified_anchor_rejected",
+      "expression": {
+        "call": "typewriter.rule.regex",
+        "arguments": [
+          {
+            "string": "a"
+          },
+          {
+            "string": "a$*"
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "failed": {
+          "code": "invalid_regex",
+          "locations": []
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "regex_pathological_work_is_bounded",
+      "expression": {
+        "call": "typewriter.regex.matches",
+        "arguments": [
+          {
+            "string": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaX"
+          },
+          {
+            "string": "a*aa*aa*aa*aa*$"
+          }
+        ]
+      },
+      "reads": {},
+      "expected": {
+        "failed": {
+          "code": "expression_step_limit",
+          "locations": []
+        },
+        "evaluatedReads": []
+      }
+    }
+  ]
+}

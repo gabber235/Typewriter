@@ -22,11 +22,7 @@ Future<void> _changePagesChapter(
       )
       .toList();
   if (changed.isEmpty || !ref.context.mounted) return;
-  final result = await ref.editPagesChapter(changed, chapter, newChapter);
-
-  result.requireApplied(
-    conflictMessage: "A page changed while chapters were moving",
-  );
+  await ref.editPagesChapter(changed, chapter, newChapter);
 }
 
 class _AddPageButton extends HookConsumerWidget {
@@ -66,7 +62,7 @@ class _AddPageButton extends HookConsumerWidget {
         padding: EdgeInsets.zero,
       ),
       child: TextButton(
-        onPressed: () => promptAndCreatePage(context: context, ref: ref),
+        onPressed: () => createPage(context: context, ref: ref),
         onFocusChange: (focus) => isFocused.value = focus,
         onHover: (hover) => isHovered.value = hover,
         style: TextButton.styleFrom(

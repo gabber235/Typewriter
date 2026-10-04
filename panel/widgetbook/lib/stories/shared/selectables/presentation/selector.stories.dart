@@ -5,6 +5,7 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart" hide random;
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
+import "package:widgetbook_workspace/support/story_selectable.dart";
 
 @widgetbook.UseCase(name: "Interactive grid", type: Selector)
 Widget selectableUseCase(BuildContext context) {
@@ -14,7 +15,7 @@ Widget selectableUseCase(BuildContext context) {
 class _SelectableCard extends HookConsumerWidget {
   const _SelectableCard({required this.selectable});
 
-  final TestSelectableIdentifier selectable;
+  final StorySelectableIdentifier selectable;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -83,31 +84,13 @@ class _SelectorStory extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectables = useState(<TestSelectableIdentifier>[]);
+    final selectables = useState(<StorySelectableIdentifier>[]);
 
-    TestSelectableIdentifier generate() {
+    StorySelectableIdentifier generate() {
       final id = faker.person.name().snakeCase();
-      final rootType = RecordType(
-        fields: {
-          "name": TypeField(
-            name: "name",
-            type: StringType(patterns: [r"^[a-z0-9_]+$"]),
-          ),
-          "count": TypeField(
-            name: "count",
-            type: IntegerType(width: IntegerWidth.signed32),
-          ),
-        },
-      );
-      return TestSelectableIdentifier(
+      return StorySelectableIdentifier(
         id: id,
-        rootType: rootType,
         color: safeColors.randomOrNull()!,
-        onDelete: () {
-          selectables.value = selectables.value
-              .where((s) => s.id != id)
-              .toList();
-        },
       );
     }
 

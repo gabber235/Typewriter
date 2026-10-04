@@ -1,6 +1,2 @@
-com.typewritermc.discovery.codegen.TypewriterRegistrarProcessorProvider
 com.typewritermc.types.codegen.TypewriterTypeProcessorProvider
-com.typewritermc.presentation.codegen.TypewriterPresentationProcessorProvider
-com.typewritermc.presentation.codegen.TypewriterCollectionProjectionProcessorProvider
-com.typewritermc.capability.codegen.TypewriterCapabilityProcessorProvider
 com.typewritermc.imprint.codegen.ImprintRuntimeEntrypointProcessorProvider

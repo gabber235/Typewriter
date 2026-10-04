@@ -134,16 +134,7 @@ extension _EditorPersistence on TransactionalEditorSource {
   }
 
   List<TypeDiagnostic> _saveDiagnostics() {
-    final diagnostics = [...draftDiagnostics];
-    final validation = document.rootType.validateEditorMutation(
-      DataPath.root,
-      _draft,
-      registry: TypeRegistry(document.typeCatalog),
-    );
-    if (validation is InvalidEditorMutation) {
-      diagnostics.addAll(validation.diagnostics);
-    }
-    return diagnostics;
+    return draftDiagnostics;
   }
 
   /// Converts transport exceptions into an uncertain typed outcome.

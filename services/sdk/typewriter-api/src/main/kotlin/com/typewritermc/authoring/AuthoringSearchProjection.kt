@@ -2,7 +2,6 @@ package com.typewritermc.authoring
 
 import com.typewritermc.types.ResourceId
 
-/** Stable open identifier for an indexed search selector. */
 @JvmInline
 value class SearchSelectorId(
     val value: String,
@@ -12,7 +11,6 @@ value class SearchSelectorId(
     }
 }
 
-/** One indexed search document produced by a Realm policy. */
 data class AuthoringSearchDocument(
     val resource: ResourceId,
     val definition: ResourceDefinitionId,
@@ -25,19 +23,6 @@ data class AuthoringSearchDocument(
     }
 }
 
-/** Projects one resource and its declared graph dependencies into indexed search state. */
-interface AuthoringSearchProjection {
-    val resourceDefinition: ResourceDefinitionId
-    val graphRequirement: GraphReadRequirement
-
-    fun project(
-        resource: AuthoringGraphResource,
-        graph: AuthoringWorkingGraph,
-    ): AuthoringSearchDocument
-
-    fun affectedResources(
-        change: AuthoringChangeSummary,
-        before: AuthoringWorkingGraph,
-        proposed: AuthoringWorkingGraph,
-    ): Set<ResourceId> = change.changedResources
+fun interface AuthoringSearchProjection {
+    fun project(subject: AuthoringPresentationSubject): AuthoringSearchDocument
 }

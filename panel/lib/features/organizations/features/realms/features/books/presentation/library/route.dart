@@ -4,6 +4,8 @@ import "package:flutter/services.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:responsive_framework/responsive_framework.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Book library route.
@@ -21,33 +23,38 @@ class LibraryPage extends HookConsumerWidget {
     final searchController = useTextEditingController();
     final searchQuery = useState("");
     final filteredBooks = ref.watch(filteredBooksProvider(searchQuery.value));
-    final catalogRequest = RealmEditorCatalogRequest(
-      types: {referenceResourceTypes.book},
-    );
-    final catalogState = ref.watch(realmCatalogProvider(catalogRequest));
+    final organizationId = ref.watch(organizationIdProvider);
+    final realmId = ref.watch(realmIdProvider);
+    final session = organizationId == null || realmId == null
+        ? null
+        : ref.watch(authoringSessionProvider(organizationId, realmId));
+    final definitionId = coreBookResourceDefinition;
+    final definition = session?.catalog?.snapshot.resourceDefinitions
+        .where((candidate) => candidate.id == definitionId)
+        .firstOrNull;
+    final selection = definition == null
+        ? null
+        : session?.catalog?.beginSelection(definition.root);
     final canCreate =
-        catalogState.currentCatalog
-            ?.creatableRoots(CoreResourceDefinitionIds.book)
-            .singleOrNull !=
-        null;
+        selection != null && selection != skir.TypeSelection.unknown;
 
     Future<void> handleCreateBook() async {
-      final catalog = ref
-          .read(realmCatalogProvider(catalogRequest))
-          .requireCurrentCatalog();
-      final root = catalog
-          .creatableRoots(CoreResourceDefinitionIds.book)
-          .singleOrNull;
-      if (root == null) throw StateError("Book creation is unavailable");
+      final current = definition == null
+          ? null
+          : ref
+                .read(authoringSessionProvider(organizationId!, realmId!))
+                .catalog
+                ?.beginSelection(definition.root);
+      if (current == null || current == skir.TypeSelection.unknown) {
+        throw StateError("Book creation is unavailable");
+      }
       final created = await ref
           .read(resourceCreationProvider)
           .create(
             context: context,
             request: ResourceCreationRequest(
-              definition: CoreResourceDefinitionIds.book,
-              title: "Create Book",
-              concreteRoot: root,
-              partial: RecordValue({}),
+              definition: definitionId,
+              configuration: current,
             ),
           );
       if (created == null) return;

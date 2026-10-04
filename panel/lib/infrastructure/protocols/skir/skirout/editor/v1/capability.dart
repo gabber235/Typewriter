@@ -131,8 +131,8 @@ final class InvocationId_mutable implements InvocationId_orMutable {
 
 sealed class SearchCapabilityDefinition_orMutable {
   _lib_editor_v1_type_catalog.CapabilityId_orMutable get capabilityId;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable get requestType;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable get resultType;
+  _lib_editor_v1_type_catalog.TypeUse get requestType;
+  _lib_editor_v1_type_catalog.TypeUse get resultType;
 
   SearchCapabilityDefinition toFrozen();
 }
@@ -142,19 +142,19 @@ final class SearchCapabilityDefinition implements SearchCapabilityDefinition_orM
   @_core.override
   final _lib_editor_v1_type_catalog.CapabilityId capabilityId;
   @_core.override
-  final _lib_editor_v1_type_catalog.ResolvedTypeRef requestType;
+  final _lib_editor_v1_type_catalog.TypeUse requestType;
   @_core.override
-  final _lib_editor_v1_type_catalog.ResolvedTypeRef resultType;
+  final _lib_editor_v1_type_catalog.TypeUse resultType;
   _skir.internal__UnrecognizedFields? _u;
 
   factory SearchCapabilityDefinition({
     required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable requestType,
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable resultType,
+    required _lib_editor_v1_type_catalog.TypeUse requestType,
+    required _lib_editor_v1_type_catalog.TypeUse resultType,
   }) => SearchCapabilityDefinition._(
     capabilityId.toFrozen(),
-    requestType.toFrozen(),
-    resultType.toFrozen(),
+    requestType,
+    resultType,
   );
 
   SearchCapabilityDefinition._(
@@ -166,16 +166,16 @@ final class SearchCapabilityDefinition implements SearchCapabilityDefinition_orM
   /// Default instance with all fields set to their default values.
   static final defaultInstance = SearchCapabilityDefinition._(
     _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static SearchCapabilityDefinition_mutable mutable() => SearchCapabilityDefinition_mutable._(
     _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
   );
 
   /// Returns this instance (no-op).
@@ -225,7 +225,7 @@ final class SearchCapabilityDefinition implements SearchCapabilityDefinition_orM
         "request_type",
         "requestType",
         1,
-        _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
+        _lib_editor_v1_type_catalog.TypeUse.serializer,
         "",
         (it) => it.requestType,
         (it, v) => it.requestType = v,
@@ -234,7 +234,7 @@ final class SearchCapabilityDefinition implements SearchCapabilityDefinition_orM
         "result_type",
         "resultType",
         2,
-        _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
+        _lib_editor_v1_type_catalog.TypeUse.serializer,
         "",
         (it) => it.resultType,
         (it, v) => it.resultType = v,
@@ -258,8 +258,8 @@ final class SearchCapabilityDefinition implements SearchCapabilityDefinition_orM
 /// Mutable version of [SearchCapabilityDefinition].
 final class SearchCapabilityDefinition_mutable implements SearchCapabilityDefinition_orMutable {
   _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable requestType;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable resultType;
+  _lib_editor_v1_type_catalog.TypeUse requestType;
+  _lib_editor_v1_type_catalog.TypeUse resultType;
   _skir.internal__UnrecognizedFields? _u;
 
   SearchCapabilityDefinition_mutable._(
@@ -279,28 +279,6 @@ final class SearchCapabilityDefinition_mutable implements SearchCapabilityDefini
     }
   }
 
-  /// If the value of [requestType] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [requestType] and returns it.
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable get mutableRequestType {
-    final value = this.requestType;
-    if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
-      return value;
-    } else {
-      return this.requestType = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
-    }
-  }
-
-  /// If the value of [resultType] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [resultType] and returns it.
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable get mutableResultType {
-    final value = this.resultType;
-    if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
-      return value;
-    } else {
-      return this.resultType = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
-    }
-  }
-
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   SearchCapabilityDefinition toFrozen() => SearchCapabilityDefinition(
@@ -316,8 +294,8 @@ final class SearchCapabilityDefinition_mutable implements SearchCapabilityDefini
 
 sealed class ComputationCapabilityDefinition_orMutable {
   _lib_editor_v1_type_catalog.CapabilityId_orMutable get capabilityId;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable get requestType;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable get resultType;
+  _lib_editor_v1_type_catalog.TypeUse get requestType;
+  _lib_editor_v1_type_catalog.TypeUse get resultType;
 
   ComputationCapabilityDefinition toFrozen();
 }
@@ -327,19 +305,19 @@ final class ComputationCapabilityDefinition implements ComputationCapabilityDefi
   @_core.override
   final _lib_editor_v1_type_catalog.CapabilityId capabilityId;
   @_core.override
-  final _lib_editor_v1_type_catalog.ResolvedTypeRef requestType;
+  final _lib_editor_v1_type_catalog.TypeUse requestType;
   @_core.override
-  final _lib_editor_v1_type_catalog.ResolvedTypeRef resultType;
+  final _lib_editor_v1_type_catalog.TypeUse resultType;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ComputationCapabilityDefinition({
     required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable requestType,
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable resultType,
+    required _lib_editor_v1_type_catalog.TypeUse requestType,
+    required _lib_editor_v1_type_catalog.TypeUse resultType,
   }) => ComputationCapabilityDefinition._(
     capabilityId.toFrozen(),
-    requestType.toFrozen(),
-    resultType.toFrozen(),
+    requestType,
+    resultType,
   );
 
   ComputationCapabilityDefinition._(
@@ -351,16 +329,16 @@ final class ComputationCapabilityDefinition implements ComputationCapabilityDefi
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ComputationCapabilityDefinition._(
     _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static ComputationCapabilityDefinition_mutable mutable() => ComputationCapabilityDefinition_mutable._(
     _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
   );
 
   /// Returns this instance (no-op).
@@ -410,7 +388,7 @@ final class ComputationCapabilityDefinition implements ComputationCapabilityDefi
         "request_type",
         "requestType",
         1,
-        _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
+        _lib_editor_v1_type_catalog.TypeUse.serializer,
         "",
         (it) => it.requestType,
         (it, v) => it.requestType = v,
@@ -419,7 +397,7 @@ final class ComputationCapabilityDefinition implements ComputationCapabilityDefi
         "result_type",
         "resultType",
         2,
-        _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
+        _lib_editor_v1_type_catalog.TypeUse.serializer,
         "",
         (it) => it.resultType,
         (it, v) => it.resultType = v,
@@ -443,8 +421,8 @@ final class ComputationCapabilityDefinition implements ComputationCapabilityDefi
 /// Mutable version of [ComputationCapabilityDefinition].
 final class ComputationCapabilityDefinition_mutable implements ComputationCapabilityDefinition_orMutable {
   _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable requestType;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable resultType;
+  _lib_editor_v1_type_catalog.TypeUse requestType;
+  _lib_editor_v1_type_catalog.TypeUse resultType;
   _skir.internal__UnrecognizedFields? _u;
 
   ComputationCapabilityDefinition_mutable._(
@@ -464,28 +442,6 @@ final class ComputationCapabilityDefinition_mutable implements ComputationCapabi
     }
   }
 
-  /// If the value of [requestType] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [requestType] and returns it.
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable get mutableRequestType {
-    final value = this.requestType;
-    if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
-      return value;
-    } else {
-      return this.requestType = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
-    }
-  }
-
-  /// If the value of [resultType] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [resultType] and returns it.
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable get mutableResultType {
-    final value = this.resultType;
-    if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
-      return value;
-    } else {
-      return this.resultType = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
-    }
-  }
-
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   ComputationCapabilityDefinition toFrozen() => ComputationCapabilityDefinition(
@@ -501,7 +457,7 @@ final class ComputationCapabilityDefinition_mutable implements ComputationCapabi
 
 sealed class CommandCapabilityDefinition_orMutable {
   _lib_editor_v1_type_catalog.CapabilityId_orMutable get capabilityId;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable get requestType;
+  _lib_editor_v1_type_catalog.TypeUse get requestType;
 
   CommandCapabilityDefinition toFrozen();
 }
@@ -511,15 +467,15 @@ final class CommandCapabilityDefinition implements CommandCapabilityDefinition_o
   @_core.override
   final _lib_editor_v1_type_catalog.CapabilityId capabilityId;
   @_core.override
-  final _lib_editor_v1_type_catalog.ResolvedTypeRef requestType;
+  final _lib_editor_v1_type_catalog.TypeUse requestType;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CommandCapabilityDefinition({
     required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable requestType,
+    required _lib_editor_v1_type_catalog.TypeUse requestType,
   }) => CommandCapabilityDefinition._(
     capabilityId.toFrozen(),
-    requestType.toFrozen(),
+    requestType,
   );
 
   CommandCapabilityDefinition._(
@@ -530,14 +486,14 @@ final class CommandCapabilityDefinition implements CommandCapabilityDefinition_o
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CommandCapabilityDefinition._(
     _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static CommandCapabilityDefinition_mutable mutable() => CommandCapabilityDefinition_mutable._(
     _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
   );
 
   /// Returns this instance (no-op).
@@ -585,7 +541,7 @@ final class CommandCapabilityDefinition implements CommandCapabilityDefinition_o
         "request_type",
         "requestType",
         1,
-        _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
+        _lib_editor_v1_type_catalog.TypeUse.serializer,
         "",
         (it) => it.requestType,
         (it, v) => it.requestType = v,
@@ -609,7 +565,7 @@ final class CommandCapabilityDefinition implements CommandCapabilityDefinition_o
 /// Mutable version of [CommandCapabilityDefinition].
 final class CommandCapabilityDefinition_mutable implements CommandCapabilityDefinition_orMutable {
   _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable requestType;
+  _lib_editor_v1_type_catalog.TypeUse requestType;
   _skir.internal__UnrecognizedFields? _u;
 
   CommandCapabilityDefinition_mutable._(
@@ -625,17 +581,6 @@ final class CommandCapabilityDefinition_mutable implements CommandCapabilityDefi
       return value;
     } else {
       return this.capabilityId = (value as _lib_editor_v1_type_catalog.CapabilityId).toMutable();
-    }
-  }
-
-  /// If the value of [requestType] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [requestType] and returns it.
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable get mutableRequestType {
-    final value = this.requestType;
-    if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
-      return value;
-    } else {
-      return this.requestType = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
     }
   }
 
@@ -675,8 +620,8 @@ sealed class CapabilityDefinition {
   /// Same as `wrapSearch(SearchCapabilityDefinition(...))`.
   factory CapabilityDefinition.createSearch({
     required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable requestType,
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable resultType,
+    required _lib_editor_v1_type_catalog.TypeUse requestType,
+    required _lib_editor_v1_type_catalog.TypeUse resultType,
   }) => CapabilityDefinition.wrapSearch(
     SearchCapabilityDefinition(
       capabilityId: capabilityId,
@@ -693,8 +638,8 @@ sealed class CapabilityDefinition {
   /// Same as `wrapComputation(ComputationCapabilityDefinition(...))`.
   factory CapabilityDefinition.createComputation({
     required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable requestType,
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable resultType,
+    required _lib_editor_v1_type_catalog.TypeUse requestType,
+    required _lib_editor_v1_type_catalog.TypeUse resultType,
   }) => CapabilityDefinition.wrapComputation(
     ComputationCapabilityDefinition(
       capabilityId: capabilityId,
@@ -711,7 +656,7 @@ sealed class CapabilityDefinition {
   /// Same as `wrapCommand(CommandCapabilityDefinition(...))`.
   factory CapabilityDefinition.createCommand({
     required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable requestType,
+    required _lib_editor_v1_type_catalog.TypeUse requestType,
   }) => CapabilityDefinition.wrapCommand(
     CommandCapabilityDefinition(
       capabilityId: capabilityId,
@@ -849,8 +794,8 @@ final class CapabilityDefinition_commandWrapper extends _CapabilityDefinition_wr
 // -----------------------------------------------------------------------------
 
 sealed class ResourceAddress_orMutable {
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable get resourceType;
-  _lib_editor_v1_type_catalog.TypedValue get identity;
+  _lib_editor_v1_type_catalog.TypeUse get resourceType;
+  _lib_editor_v1_type_catalog.DataValue get identity;
 
   ResourceAddress toFrozen();
 }
@@ -858,16 +803,16 @@ sealed class ResourceAddress_orMutable {
 /// Deeply immutable.
 final class ResourceAddress implements ResourceAddress_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.ResolvedTypeRef resourceType;
+  final _lib_editor_v1_type_catalog.TypeUse resourceType;
   @_core.override
-  final _lib_editor_v1_type_catalog.TypedValue identity;
+  final _lib_editor_v1_type_catalog.DataValue identity;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ResourceAddress({
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable resourceType,
-    required _lib_editor_v1_type_catalog.TypedValue identity,
+    required _lib_editor_v1_type_catalog.TypeUse resourceType,
+    required _lib_editor_v1_type_catalog.DataValue identity,
   }) => ResourceAddress._(
-    resourceType.toFrozen(),
+    resourceType,
     identity,
   );
 
@@ -878,15 +823,15 @@ final class ResourceAddress implements ResourceAddress_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ResourceAddress._(
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    _lib_editor_v1_type_catalog.TypedValue.unknown,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
+    _lib_editor_v1_type_catalog.DataValue.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static ResourceAddress_mutable mutable() => ResourceAddress_mutable._(
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    _lib_editor_v1_type_catalog.TypedValue.unknown,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
+    _lib_editor_v1_type_catalog.DataValue.unknown,
   );
 
   /// Returns this instance (no-op).
@@ -925,7 +870,7 @@ final class ResourceAddress implements ResourceAddress_orMutable {
         "resource_type",
         "resourceType",
         0,
-        _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
+        _lib_editor_v1_type_catalog.TypeUse.serializer,
         "",
         (it) => it.resourceType,
         (it, v) => it.resourceType = v,
@@ -934,7 +879,7 @@ final class ResourceAddress implements ResourceAddress_orMutable {
         "identity",
         "identity",
         1,
-        _lib_editor_v1_type_catalog.TypedValue.serializer,
+        _lib_editor_v1_type_catalog.DataValue.serializer,
         "",
         (it) => it.identity,
         (it, v) => it.identity = v,
@@ -957,25 +902,14 @@ final class ResourceAddress implements ResourceAddress_orMutable {
 
 /// Mutable version of [ResourceAddress].
 final class ResourceAddress_mutable implements ResourceAddress_orMutable {
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable resourceType;
-  _lib_editor_v1_type_catalog.TypedValue identity;
+  _lib_editor_v1_type_catalog.TypeUse resourceType;
+  _lib_editor_v1_type_catalog.DataValue identity;
   _skir.internal__UnrecognizedFields? _u;
 
   ResourceAddress_mutable._(
     this.resourceType,
     this.identity,
   );
-
-  /// If the value of [resourceType] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [resourceType] and returns it.
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable get mutableResourceType {
-    final value = this.resourceType;
-    if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
-      return value;
-    } else {
-      return this.resourceType = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -1672,8 +1606,8 @@ sealed class CapabilityInvocationRequest_orMutable {
   InvocationId_orMutable get invocationId;
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
   _lib_editor_v1_type_catalog.CapabilityId_orMutable get capabilityId;
-  _lib_editor_v1_type_catalog.TypedValue get payload;
-  _lib_editor_v1_type_catalog.TypeExpression? get expectedResultType;
+  _lib_editor_v1_type_catalog.DataValue get payload;
+  _lib_editor_v1_type_catalog.TypeTemplate? get expectedResultType;
 
   CapabilityInvocationRequest toFrozen();
 }
@@ -1687,17 +1621,17 @@ final class CapabilityInvocationRequest implements CapabilityInvocationRequest_o
   @_core.override
   final _lib_editor_v1_type_catalog.CapabilityId capabilityId;
   @_core.override
-  final _lib_editor_v1_type_catalog.TypedValue payload;
+  final _lib_editor_v1_type_catalog.DataValue payload;
   @_core.override
-  final _lib_editor_v1_type_catalog.TypeExpression? expectedResultType;
+  final _lib_editor_v1_type_catalog.TypeTemplate? expectedResultType;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CapabilityInvocationRequest({
     required InvocationId_orMutable invocationId,
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
     required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
-    required _lib_editor_v1_type_catalog.TypedValue payload,
-    required _lib_editor_v1_type_catalog.TypeExpression? expectedResultType,
+    required _lib_editor_v1_type_catalog.DataValue payload,
+    required _lib_editor_v1_type_catalog.TypeTemplate? expectedResultType,
   }) => CapabilityInvocationRequest._(
     invocationId.toFrozen(),
     generation.toFrozen(),
@@ -1719,7 +1653,7 @@ final class CapabilityInvocationRequest implements CapabilityInvocationRequest_o
     InvocationId.defaultInstance,
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
     _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
-    _lib_editor_v1_type_catalog.TypedValue.unknown,
+    _lib_editor_v1_type_catalog.DataValue.unknown,
     null,
   );
 
@@ -1729,7 +1663,7 @@ final class CapabilityInvocationRequest implements CapabilityInvocationRequest_o
     InvocationId.defaultInstance,
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
     _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
-    _lib_editor_v1_type_catalog.TypedValue.unknown,
+    _lib_editor_v1_type_catalog.DataValue.unknown,
     null,
   );
 
@@ -1802,7 +1736,7 @@ final class CapabilityInvocationRequest implements CapabilityInvocationRequest_o
         "payload",
         "payload",
         3,
-        _lib_editor_v1_type_catalog.TypedValue.serializer,
+        _lib_editor_v1_type_catalog.DataValue.serializer,
         "",
         (it) => it.payload,
         (it, v) => it.payload = v,
@@ -1812,7 +1746,7 @@ final class CapabilityInvocationRequest implements CapabilityInvocationRequest_o
         "expectedResultType",
         4,
         _skir.Serializers.optional(
-          _lib_editor_v1_type_catalog.TypeExpression.serializer,
+          _lib_editor_v1_type_catalog.TypeTemplate.serializer,
         ),
         "",
         (it) => it.expectedResultType,
@@ -1839,8 +1773,8 @@ final class CapabilityInvocationRequest_mutable implements CapabilityInvocationR
   InvocationId_orMutable invocationId;
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation;
   _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId;
-  _lib_editor_v1_type_catalog.TypedValue payload;
-  _lib_editor_v1_type_catalog.TypeExpression? expectedResultType;
+  _lib_editor_v1_type_catalog.DataValue payload;
+  _lib_editor_v1_type_catalog.TypeTemplate? expectedResultType;
   _skir.internal__UnrecognizedFields? _u;
 
   CapabilityInvocationRequest_mutable._(
@@ -1901,7 +1835,7 @@ final class CapabilityInvocationRequest_mutable implements CapabilityInvocationR
 
 sealed class ComputationSuccess_orMutable {
   InvocationId_orMutable get invocationId;
-  _lib_editor_v1_type_catalog.TypedValue get value;
+  _lib_editor_v1_type_catalog.DataValue get value;
 
   ComputationSuccess toFrozen();
 }
@@ -1911,12 +1845,12 @@ final class ComputationSuccess implements ComputationSuccess_orMutable {
   @_core.override
   final InvocationId invocationId;
   @_core.override
-  final _lib_editor_v1_type_catalog.TypedValue value;
+  final _lib_editor_v1_type_catalog.DataValue value;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ComputationSuccess({
     required InvocationId_orMutable invocationId,
-    required _lib_editor_v1_type_catalog.TypedValue value,
+    required _lib_editor_v1_type_catalog.DataValue value,
   }) => ComputationSuccess._(
     invocationId.toFrozen(),
     value,
@@ -1930,14 +1864,14 @@ final class ComputationSuccess implements ComputationSuccess_orMutable {
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ComputationSuccess._(
     InvocationId.defaultInstance,
-    _lib_editor_v1_type_catalog.TypedValue.unknown,
+    _lib_editor_v1_type_catalog.DataValue.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static ComputationSuccess_mutable mutable() => ComputationSuccess_mutable._(
     InvocationId.defaultInstance,
-    _lib_editor_v1_type_catalog.TypedValue.unknown,
+    _lib_editor_v1_type_catalog.DataValue.unknown,
   );
 
   /// Returns this instance (no-op).
@@ -1985,7 +1919,7 @@ final class ComputationSuccess implements ComputationSuccess_orMutable {
         "value",
         "value",
         1,
-        _lib_editor_v1_type_catalog.TypedValue.serializer,
+        _lib_editor_v1_type_catalog.DataValue.serializer,
         "",
         (it) => it.value,
         (it, v) => it.value = v,
@@ -2009,7 +1943,7 @@ final class ComputationSuccess implements ComputationSuccess_orMutable {
 /// Mutable version of [ComputationSuccess].
 final class ComputationSuccess_mutable implements ComputationSuccess_orMutable {
   InvocationId_orMutable invocationId;
-  _lib_editor_v1_type_catalog.TypedValue value;
+  _lib_editor_v1_type_catalog.DataValue value;
   _skir.internal__UnrecognizedFields? _u;
 
   ComputationSuccess_mutable._(
@@ -2489,7 +2423,7 @@ final class StaleCatalogGeneration_mutable implements StaleCatalogGeneration_orM
 
 sealed class CapabilityFailure_orMutable {
   InvocationId_orMutable get invocationId;
-  _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> get diagnostics;
+  _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable> get diagnostics;
 
   CapabilityFailure toFrozen();
 }
@@ -2499,12 +2433,12 @@ final class CapabilityFailure implements CapabilityFailure_orMutable {
   @_core.override
   final InvocationId invocationId;
   @_core.override
-  final _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic> diagnostics;
+  final _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic> diagnostics;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CapabilityFailure({
     required InvocationId_orMutable invocationId,
-    required _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics,
+    required _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable> diagnostics,
   }) => CapabilityFailure._(
     invocationId.toFrozen(),
     _skir.internal__frozenMappedCopy(diagnostics, (it) => it.toFrozen()),
@@ -2574,7 +2508,7 @@ final class CapabilityFailure implements CapabilityFailure_orMutable {
         "diagnostics",
         1,
         _skir.Serializers.iterable(
-          _lib_editor_v1_diagnostic.TypeDiagnostic.serializer,
+          _lib_editor_v1_diagnostic.Diagnostic.serializer,
         ),
         "",
         (it) => it.diagnostics,
@@ -2599,7 +2533,7 @@ final class CapabilityFailure implements CapabilityFailure_orMutable {
 /// Mutable version of [CapabilityFailure].
 final class CapabilityFailure_mutable implements CapabilityFailure_orMutable {
   InvocationId_orMutable invocationId;
-  _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics;
+  _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable> diagnostics;
   _skir.internal__UnrecognizedFields? _u;
 
   CapabilityFailure_mutable._(
@@ -2620,9 +2554,9 @@ final class CapabilityFailure_mutable implements CapabilityFailure_orMutable {
 
   /// If the value of [diagnostics] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [diagnostics] and returns it.
-  _core.List<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> get mutableDiagnostics {
+  _core.List<_lib_editor_v1_diagnostic.Diagnostic_orMutable> get mutableDiagnostics {
     final value = this.diagnostics;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable>) {
+    if (value is _skir.internal__MutableList<_lib_editor_v1_diagnostic.Diagnostic_orMutable>) {
       return value;
     } else {
       return this.diagnostics = _skir.internal__MutableList([...value]);
@@ -2667,7 +2601,7 @@ sealed class ComputationResult {
   /// Same as `wrapSuccess(ComputationSuccess(...))`.
   factory ComputationResult.createSuccess({
     required InvocationId_orMutable invocationId,
-    required _lib_editor_v1_type_catalog.TypedValue value,
+    required _lib_editor_v1_type_catalog.DataValue value,
   }) => ComputationResult.wrapSuccess(
     ComputationSuccess(
       invocationId: invocationId,
@@ -2683,7 +2617,7 @@ sealed class ComputationResult {
   /// Same as `wrapInvalid(CapabilityFailure(...))`.
   factory ComputationResult.createInvalid({
     required InvocationId_orMutable invocationId,
-    required _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics,
+    required _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable> diagnostics,
   }) => ComputationResult.wrapInvalid(
     CapabilityFailure(
       invocationId: invocationId,
@@ -2699,7 +2633,7 @@ sealed class ComputationResult {
   /// Same as `wrapUnavailable(CapabilityFailure(...))`.
   factory ComputationResult.createUnavailable({
     required InvocationId_orMutable invocationId,
-    required _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics,
+    required _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable> diagnostics,
   }) => ComputationResult.wrapUnavailable(
     CapabilityFailure(
       invocationId: invocationId,
@@ -2950,7 +2884,7 @@ sealed class CommandResult {
   /// Same as `wrapInvalid(CapabilityFailure(...))`.
   factory CommandResult.createInvalid({
     required InvocationId_orMutable invocationId,
-    required _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics,
+    required _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable> diagnostics,
   }) => CommandResult.wrapInvalid(
     CapabilityFailure(
       invocationId: invocationId,
@@ -2966,7 +2900,7 @@ sealed class CommandResult {
   /// Same as `wrapUnavailable(CapabilityFailure(...))`.
   factory CommandResult.createUnavailable({
     required InvocationId_orMutable invocationId,
-    required _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics,
+    required _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable> diagnostics,
   }) => CommandResult.wrapUnavailable(
     CapabilityFailure(
       invocationId: invocationId,

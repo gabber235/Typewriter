@@ -207,8 +207,8 @@ impl ScalarCastKind {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct RecordProjectionField {
-    pub source: crate::skirout::base::editor::v1::path::DataPath,
-    pub target: crate::skirout::base::editor::v1::path::DataPath,
+    pub source: crate::skirout::base::editor::v1::type_catalog::ValuePath,
+    pub target: crate::skirout::base::editor::v1::type_catalog::ValuePath,
     pub conversion_id: Option<crate::skirout::base::editor::v1::type_catalog::ConversionId>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RecordProjectionField>>,
@@ -286,7 +286,7 @@ impl RecordProjectionRule {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct RecordConstructionField {
     pub target_field: String,
-    pub source: crate::skirout::base::editor::v1::path::DataPath,
+    pub source: crate::skirout::base::editor::v1::type_catalog::ValuePath,
     pub conversion_id: Option<crate::skirout::base::editor::v1::type_catalog::ConversionId>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RecordConstructionField>>,
@@ -550,8 +550,8 @@ impl ConversionRule {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ConversionDefinition {
     pub conversion_id: crate::skirout::base::editor::v1::type_catalog::ConversionId,
-    pub source: crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef,
-    pub target: crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef,
+    pub source: crate::skirout::base::editor::v1::type_catalog::TypeUse,
+    pub target: crate::skirout::base::editor::v1::type_catalog::TypeUse,
     pub safety: ConversionSafety,
     pub fallibility: ConversionFallibility,
     pub locality: ConversionLocality,
@@ -631,8 +631,8 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<RecordProjectionField> = RecordProjectionField::_adapter() as *const _ as *mut _;
-                (*a).add_field("source", 0, crate::skirout::base::editor::v1::path::DataPath::serializer(), "", |x: &RecordProjectionField| &x.source, |x: &mut RecordProjectionField, v| x.source = v);
-                (*a).add_field("target", 1, crate::skirout::base::editor::v1::path::DataPath::serializer(), "", |x: &RecordProjectionField| &x.target, |x: &mut RecordProjectionField, v| x.target = v);
+                (*a).add_field("source", 0, crate::skirout::base::editor::v1::type_catalog::ValuePath::serializer(), "", |x: &RecordProjectionField| &x.source, |x: &mut RecordProjectionField, v| x.source = v);
+                (*a).add_field("target", 1, crate::skirout::base::editor::v1::type_catalog::ValuePath::serializer(), "", |x: &RecordProjectionField| &x.target, |x: &mut RecordProjectionField, v| x.target = v);
                 (*a).add_field("conversion_id", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::type_catalog::ConversionId::serializer()), "", |x: &RecordProjectionField| &x.conversion_id, |x: &mut RecordProjectionField, v| x.conversion_id = v);
                 (*a).finalize();
             }
@@ -644,7 +644,7 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<RecordConstructionField> = RecordConstructionField::_adapter() as *const _ as *mut _;
                 (*a).add_field("target_field", 0, crate::skir_client::Serializer::string(), "", |x: &RecordConstructionField| &x.target_field, |x: &mut RecordConstructionField, v| x.target_field = v);
-                (*a).add_field("source", 1, crate::skirout::base::editor::v1::path::DataPath::serializer(), "", |x: &RecordConstructionField| &x.source, |x: &mut RecordConstructionField, v| x.source = v);
+                (*a).add_field("source", 1, crate::skirout::base::editor::v1::type_catalog::ValuePath::serializer(), "", |x: &RecordConstructionField| &x.source, |x: &mut RecordConstructionField, v| x.source = v);
                 (*a).add_field("conversion_id", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::type_catalog::ConversionId::serializer()), "", |x: &RecordConstructionField| &x.conversion_id, |x: &mut RecordConstructionField, v| x.conversion_id = v);
                 (*a).finalize();
             }
@@ -683,8 +683,8 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ConversionDefinition> = ConversionDefinition::_adapter() as *const _ as *mut _;
                 (*a).add_field("conversion_id", 0, crate::skirout::base::editor::v1::type_catalog::ConversionId::serializer(), "", |x: &ConversionDefinition| &x.conversion_id, |x: &mut ConversionDefinition, v| x.conversion_id = v);
-                (*a).add_field("source", 1, crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer(), "", |x: &ConversionDefinition| &x.source, |x: &mut ConversionDefinition, v| x.source = v);
-                (*a).add_field("target", 2, crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer(), "", |x: &ConversionDefinition| &x.target, |x: &mut ConversionDefinition, v| x.target = v);
+                (*a).add_field("source", 1, crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(), "", |x: &ConversionDefinition| &x.source, |x: &mut ConversionDefinition, v| x.source = v);
+                (*a).add_field("target", 2, crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(), "", |x: &ConversionDefinition| &x.target, |x: &mut ConversionDefinition, v| x.target = v);
                 (*a).add_field("safety", 3, crate::skir_client::internal::enum_serializer_from_static(ConversionSafety::_adapter()), "", |x: &ConversionDefinition| &x.safety, |x: &mut ConversionDefinition, v| x.safety = v);
                 (*a).add_field("fallibility", 4, crate::skir_client::internal::enum_serializer_from_static(ConversionFallibility::_adapter()), "", |x: &ConversionDefinition| &x.fallibility, |x: &mut ConversionDefinition, v| x.fallibility = v);
                 (*a).add_field("locality", 5, crate::skir_client::internal::enum_serializer_from_static(ConversionLocality::_adapter()), "", |x: &ConversionDefinition| &x.locality, |x: &mut ConversionDefinition, v| x.locality = v);

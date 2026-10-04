@@ -52,6 +52,7 @@ class ServiceHostIdentifier extends SelectableIdentifier {
         : ref.watch(
             canonicalOrganizationServicesProvider(organization).notifier,
           );
+    final configurationSnapshot = HostEditorSnapshot(host, topology);
 
     return AsyncData(
       _ServiceHostSelectable(
@@ -64,8 +65,20 @@ class ServiceHostIdentifier extends SelectableIdentifier {
           targetId: this,
           label: "${service?.displayName ?? host.hostId.id}: configuration",
           resource: HostEditorResource(repository, hostId),
-          snapshot: HostEditorSnapshot(host, topology),
+          snapshot: configurationSnapshot,
           commitPolicy: EditorCommitPolicy.applyResource,
+          portablePresentation: (source) => topologyHostPortableHost(
+            host: host,
+            service: service,
+            connected: connections[host.serviceId] ?? false,
+            configurationOwner: source,
+            identityOwner: null,
+            realmTargets: configurationSnapshot._realmTargets,
+            engineTargets: configurationSnapshot._engineTargets,
+            realms: topology.realmInstances
+                .where((realm) => realm.ownerHost.id != host.hostId)
+                .toList(),
+          ),
         ),
         onUnbind: canonicalService == null
             ? null
@@ -75,6 +88,7 @@ class ServiceHostIdentifier extends SelectableIdentifier {
             : serviceIdentityTarget(
                 id: ServiceIdentifier(service.serviceId),
                 service: canonicalService,
+                connected: connections[host.serviceId] ?? false,
                 repository: repository,
               ),
       ),

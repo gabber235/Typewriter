@@ -10,8 +10,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// The parent owns [value] and receives valid updates through [onChanged].
 /// This field owns picker visibility and delegates interaction boundaries to
 /// the surrounding editor. Opening starts an interaction, ordinary dismissal
-/// commits it, and cancellation is reported without fabricating a replacement
-/// for a mixed value. The picker uses the current value, or a stable day seed,
+/// commits it. The picker uses the current value, or a stable day seed,
 /// while [replacing] communicates that the first selection replaces several
 /// differing values.
 class DateTimePickerField extends HookConsumerWidget {
@@ -22,7 +21,6 @@ class DateTimePickerField extends HookConsumerWidget {
     required this.onChanged,
     this.onInteractionStart,
     this.onInteractionCommit,
-    this.onInteractionCancel,
     this.enabled = true,
     this.readOnly = false,
     super.key,
@@ -34,7 +32,6 @@ class DateTimePickerField extends HookConsumerWidget {
     required this.onChanged,
     this.onInteractionStart,
     this.onInteractionCommit,
-    this.onInteractionCancel,
     this.enabled = true,
     this.readOnly = false,
     super.key,
@@ -46,7 +43,6 @@ class DateTimePickerField extends HookConsumerWidget {
   final ValueChanged<DateTime> onChanged;
   final VoidCallback? onInteractionStart;
   final VoidCallback? onInteractionCommit;
-  final VoidCallback? onInteractionCancel;
   final bool enabled;
   final bool readOnly;
 
@@ -76,14 +72,10 @@ class DateTimePickerField extends HookConsumerWidget {
       includeTime: includeTime,
     );
 
-    void close({bool cancel = false}) {
+    void close() {
       if (!open.value) return;
       open.value = false;
-      if (cancel) {
-        onInteractionCancel?.call();
-      } else {
-        onInteractionCommit?.call();
-      }
+      onInteractionCommit?.call();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (pickerFocus.canRequestFocus) pickerFocus.requestFocus();
       });
@@ -136,7 +128,7 @@ class DateTimePickerField extends HookConsumerWidget {
               ),
               CancelIntent: CallbackAction<CancelIntent>(
                 onInvoke: (intent) {
-                  close(cancel: true);
+                  close();
                   return null;
                 },
               ),
@@ -193,7 +185,6 @@ class DateTimePickerField extends HookConsumerWidget {
           onChanged: onChanged,
           onInputFocus: onInteractionStart,
           onInputBlur: onInteractionCommit,
-          onCancel: onInteractionCancel,
           surroundingActions: [
             if (enabled && currentValue != null)
               ActionShortcut(

@@ -1,22 +1,22 @@
 package com.typewritermc.engine.runtime
 
+import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.DeploymentFacts
-import com.typewritermc.discovery.DiscoveryDomains
+import com.typewritermc.discovery.GeneratedProviderDeployment
+import com.typewritermc.discovery.GeneratedProviderLoader
 import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.RuntimeScope
-import com.typewritermc.discovery.runtime.DiscoveryDeployment
 import com.typewritermc.engine.CompiledArtifactManifest
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.engine.LoadedCompiledContent
-import com.typewritermc.types.TypePrototypeRegistry
+import com.typewritermc.types.FactoryNativeBindingRegistry
+import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
-import org.koin.dsl.koinApplication
-import java.net.URLClassLoader
 
 val DiscoveryEngineRuntimeTest by testSuite {
     test("registers discovered behavior and closes owned resources in reverse order") {
@@ -70,7 +70,13 @@ val DiscoveryEngineRuntimeTest by testSuite {
         runTest {
             val gateway =
                 AssemblingEngineContentGateway(
-                    listOf(PageCompiledArtifactConsumer(TypePrototypeRegistry(emptyList()), emptyList())),
+                    listOf(
+                        PageCompiledArtifactConsumer(
+                            catalog = EMPTY_CATALOG,
+                            bindings = FactoryNativeBindingRegistry(EMPTY_CATALOG, emptyList()),
+                            relations = emptyList(),
+                        ),
+                    ),
                 )
             val active = content(1, '4')
             gateway.apply(active)
@@ -88,7 +94,39 @@ val DiscoveryEngineRuntimeTest by testSuite {
         }
     }
 
-    test("stopping closes the isolated discovery deployment") {
+    test("incompatible implementation leaves the active engine content unchanged") {
+        runTest {
+            val revisions = mutableListOf<Long>()
+            val fixture = runtime(emptyList(), revisions)
+            fixture.runtime.activate()
+            fixture.runtime.applyContent(content(1, '6'))
+
+            shouldThrow<IllegalArgumentException> {
+                fixture.runtime.applyContent(content(2, '7', implementationToken = "replacement"))
+            }
+
+            revisions shouldContainExactly listOf(1L)
+            fixture.runtime.applyContent(content(2, '8')) shouldBe
+                ContentApplicationResult.Applied(2, ContentDigest("8".repeat(64)))
+            revisions shouldContainExactly listOf(1L, 2L)
+            fixture.runtime.stop()
+        }
+    }
+
+    test("panel preview accepts primary content without claiming implementation compatibility") {
+        runTest {
+            val revisions = mutableListOf<Long>()
+            val fixture = runtime(emptyList(), revisions, enforceImplementationCompatibility = false)
+            fixture.runtime.activate()
+
+            fixture.runtime.applyContent(content(1, '9', implementationToken = "primary implementation")) shouldBe
+                ContentApplicationResult.Applied(1, ContentDigest("9".repeat(64)))
+            revisions shouldContainExactly listOf(1L)
+            fixture.runtime.stop()
+        }
+    }
+
+    test("stopping closes the generated provider deployment") {
         runTest {
             val fixture = runtime(emptyList())
             fixture.runtime.activate()
@@ -96,7 +134,7 @@ val DiscoveryEngineRuntimeTest by testSuite {
             fixture.runtime.stop()
 
             fixture.runtime.ownsDeployment() shouldBe false
-            fixture.classLoader.closed shouldBe true
+            shouldThrow<IllegalStateException> { fixture.deployment.retain() }
         }
     }
 }
@@ -104,42 +142,48 @@ val DiscoveryEngineRuntimeTest by testSuite {
 private fun TestScope.runtime(
     registrars: List<RuntimeRegistrar>,
     revisions: MutableList<Long>? = null,
+    enforceImplementationCompatibility: Boolean = true,
 ): RuntimeFixture {
-    val classLoader = TrackingClassLoader()
-    val deployment =
-        DiscoveryDeployment(
-            domain = DiscoveryDomains.Execution,
-            application = koinApplication {},
-            prototypes = TypePrototypeRegistry(emptyList()),
-            facts = DeploymentFacts(emptyMap()),
-            classLoader = classLoader,
-        )
+    val deployment = GeneratedProviderLoader().load(emptyList(), DeploymentFacts(emptyMap()))
     return RuntimeFixture(
         ReloadableEngineRuntime(
             deployment = deployment,
             registrars = registrars,
             parentScope = this,
+            implementationToken = "implementation",
+            enforceImplementationCompatibility = enforceImplementationCompatibility,
+            runtimeSignatures = emptySet(),
             contentGateway = revisions?.let { values -> EngineContentGateway { values += it.activationRevision } },
         ),
-        classLoader,
+        deployment,
     )
 }
 
 private fun content(
     revision: Long,
     digestCharacter: Char,
+    implementationToken: String = "implementation",
 ): LoadedCompiledContent {
     val digest = ContentDigest(digestCharacter.toString().repeat(64))
     return LoadedCompiledContent(
         activationRevision = revision,
-        manifest = CompiledArtifactManifest(2, digest, "realm:$revision", "catalog:1", emptyList()),
+        manifest =
+            CompiledArtifactManifest(
+                formatRevision = 2,
+                digest = digest,
+                sourceRevision = "realm:$revision",
+                catalogRevision = "catalog:1",
+                implementationToken = implementationToken,
+                runtimeSignatures = emptySet(),
+                artifacts = emptyList(),
+            ),
         artifacts = emptyList(),
     )
 }
 
 private data class RuntimeFixture(
     val runtime: ReloadableEngineRuntime,
-    val classLoader: TrackingClassLoader,
+    val deployment: GeneratedProviderDeployment,
 )
 
 private class RecordingRegistrar(
@@ -155,11 +199,4 @@ private class RecordingRegistrar(
     }
 }
 
-private class TrackingClassLoader : URLClassLoader(emptyArray()) {
-    var closed = false
-
-    override fun close() {
-        closed = true
-        super.close()
-    }
-}
+private val EMPTY_CATALOG = DefaultCheckedCatalog(CatalogGeneration("engine runtime test"), emptyList())

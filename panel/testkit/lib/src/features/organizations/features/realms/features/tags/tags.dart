@@ -104,17 +104,13 @@ class TagsMock extends CanonicalTags {
   }
 
   @override
-  Future<TypedMutationResult> updateTag(Tag tag, {Tag? expected}) async {
+  Future<void> updateTag(Tag tag, {Tag? expected}) async {
     final tags = await future;
     final canonical = tag;
     state = AsyncData(
       tags
           .map((value) => value.tagId == tag.tagId ? canonical : value)
           .toList(),
-    );
-    return TypedMutationResult.success(
-      revision: 1,
-      value: canonical.inspectorValue,
     );
   }
 }

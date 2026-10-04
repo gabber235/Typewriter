@@ -47,6 +47,9 @@ class OrganizationTopologyController extends _$OrganizationTopologyController {
     );
   }
 
+  /// Reloads the authoritative snapshot and replaces the owned subscription.
+  void refresh() => ref.invalidateSelf();
+
   /// Applies one complete host execution configuration with optimistic
   /// concurrency.
   ///

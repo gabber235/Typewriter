@@ -1,8 +1,8 @@
 import "dart:async";
 
-import "package:flutter/foundation.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:rxdart/rxdart.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 const authoringCreationSearchResultType = SearchResultType(
@@ -18,65 +18,28 @@ const createAuthoringResourceCommandId = SearchCommandId(
 final class AuthoringCreationOption {
   const AuthoringCreationOption({
     required this.definition,
-    required this.root,
+    required this.configuration,
     required this.label,
+    this.display,
   });
 
-  final ResourceDefinitionId definition;
-  final ResolvedTypeRef root;
+  final skir.ResourceDefinitionId definition;
+  final skir.TypeSelection configuration;
   final String label;
+  final skir.TypeDisplay? display;
 
-  String get id => "${definition.value}:$root";
+  String get id => "${definition.value}:$configuration";
 }
 
-/// Lists resource types that do not require an ownership attachment.
 final class AuthoringCreationSearchSource implements SearchSource {
-  AuthoringCreationSearchSource(this.catalog, {this.field});
+  AuthoringCreationSearchSource(this.ref);
 
-  final ValueListenable<AsyncValue<RealmEditorCatalogSnapshot>> catalog;
-  final ValueListenable<AsyncValue<RealmRelationField>>? field;
-  final _snapshots = BehaviorSubject<SearchSourceSnapshot>.seeded(.loading());
-  late final _refresher = SearchRefresher(
-    [catalog, ?field],
-    search,
-    onChange: _publish,
+  final Ref ref;
+  final _snapshots = StreamController<SearchSourceSnapshot>.broadcast(
+    sync: true,
   );
   SearchQueryContext _query = SearchQueryContext.empty;
   var _disposed = false;
-
-  List<AuthoringCreationOption> get _options {
-    if (catalog.value.isLoading ||
-        catalog.value.hasError ||
-        field?.value.isLoading == true ||
-        field?.value.hasError == true) {
-      return const [];
-    }
-    final snapshot = catalog.value.value;
-    if (snapshot == null) return const [];
-    final selectedField = field?.value.value;
-    if (field != null && selectedField == null) return const [];
-    final registry = TypeRegistry(snapshot.catalog);
-    return [
-      for (final type in snapshot.creatableTypes(field: selectedField))
-        if (snapshot.resourceDefinitionFor(type.type) case final definition?)
-          if (selectedField != null &&
-                  selectedField.accepts(type.type, registry) ||
-              selectedField == null &&
-                  !snapshot.relations.values.any(
-                    (relation) =>
-                        relation.families.contains("resource.ownership") &&
-                        NamedType(type.type).isStructurallyAssignableTo(
-                          NamedType(relation.target),
-                          registry,
-                        ),
-                  ))
-            AuthoringCreationOption(
-              definition: definition.id,
-              root: type.type,
-              label: type.name,
-            ),
-    ];
-  }
 
   @override
   Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
@@ -85,66 +48,67 @@ final class AuthoringCreationSearchSource implements SearchSource {
   List<QuerySelectorDefinition> get selectors => const [];
 
   @override
-  void initialize(SearchQueryContext context) {
-    _refresher.initialize(context);
-    search(context);
-  }
+  void initialize(SearchQueryContext context) => search(context);
 
   @override
   void search(SearchQueryContext context) {
     _query = context;
-    _refresher.search(context);
     _publish();
   }
 
   void _publish() {
     if (_disposed) return;
+    final catalog = ref.readAuthoringSession().state.catalog;
+    if (catalog == null) {
+      _snapshots.add(SearchSourceSnapshot.loading());
+      return;
+    }
+    final ownershipTargets = {
+      for (final relation in catalog.snapshot.relations)
+        if (relation.families.any(
+          (family) => family.value == "resource.ownership",
+        ))
+          relation.second.resource.definition,
+    };
     final term = _query.normalizedQuery.trim().toLowerCase();
-    final options = _options
-        .where(
-          (option) => term.isEmpty || option.label.toLowerCase().contains(term),
-        )
-        .take(20)
-        .toList(growable: false);
-    final error = catalog.value.error ?? field?.value.error;
+    final options = <AuthoringCreationOption>[];
+    for (final definition in catalog.snapshot.resourceDefinitions) {
+      final configuration = catalog.beginSelection(definition.root);
+      if (configuration == skir.TypeSelection.unknown) continue;
+      final applications = catalog.nominalDefinitions(configuration);
+      if (applications.any(ownershipTargets.contains)) continue;
+      final label = catalog.typeSelectionName(configuration);
+      if (term.isNotEmpty && !label.toLowerCase().contains(term)) continue;
+      options.add(
+        AuthoringCreationOption(
+          definition: definition.id,
+          configuration: configuration,
+          label: label,
+          display: catalog.selectionDisplay(configuration),
+        ),
+      );
+    }
+    options.sort((left, right) => left.label.compareTo(right.label));
     _snapshots.add(
-      SearchSourceSnapshot(
-        status: catalog.value.isLoading || field?.value.isLoading == true
-            ? SearchSourceStatus.loading
-            : error != null
-            ? SearchSourceStatus.error
-            : SearchSourceStatus.ready,
-        nodes: options.isEmpty
-            ? const []
-            : [
-                SearchNode.section(
-                  id: "authoring.creation",
-                  title: "Create Resource",
-                  children: [
-                    for (final option in options)
-                      SearchNode.result(
-                        result: SearchResult(
-                          id: option.id,
-                          type: authoringCreationSearchResultType,
-                          payload: option,
-                          title: option.label,
-                          subtitle: option.root.id.toString(),
-                          isStale: catalog.value.isLoading,
-                        ),
-                      ),
-                  ],
-                ),
+      SearchSourceSnapshot.ready(
+        nodes: [
+          if (options.isNotEmpty)
+            SearchNode.section(
+              id: "authoring.creation",
+              title: "Create Resource",
+              children: [
+                for (final option in options.take(20))
+                  SearchNode.result(
+                    result: SearchResult(
+                      id: option.id,
+                      type: authoringCreationSearchResultType,
+                      payload: option,
+                      title: option.label,
+                    ),
+                  ),
               ],
-        errorSummaries: error == null
-            ? const []
-            : [
-                SearchErrorSummary(
-                  id: "authoring.creation.catalog",
-                  message: error.toString(),
-                  severity: SearchErrorSeverity.error,
-                  sourceLabel: "Realm",
-                ),
-              ],
+            ),
+        ],
       ),
     );
   }
@@ -160,7 +124,6 @@ final class AuthoringCreationSearchSource implements SearchSource {
   void dispose() {
     if (_disposed) return;
     _disposed = true;
-    _refresher.dispose();
     unawaited(_snapshots.close());
   }
 }
@@ -178,8 +141,7 @@ SearchCommand createAuthoringResourceCommand({required Ref ref}) =>
                 context: context,
                 request: ResourceCreationRequest(
                   definition: option.definition,
-                  title: "Create ${option.label}",
-                  concreteRoot: option.root,
+                  configuration: option.configuration,
                 ),
               ),
         );
@@ -188,9 +150,14 @@ SearchCommand createAuthoringResourceCommand({required Ref ref}) =>
         final realmId = ref.read(realmIdProvider);
         if (organizationId == null || realmId == null) {
           return const SearchCommandResult.failed(
-            message: "The selected realm changed while creating the resource",
+            message: "The selected Realm changed while creating the resource",
           );
         }
+        final catalog = ref.readAuthoringSession().state.catalog;
+        final navigationHandler = catalog?.snapshot.resourceDefinitions
+            .where((definition) => definition.id == created.definition)
+            .map((definition) => definition.navigationHandler)
+            .firstOrNull;
         return SearchCommandResult.completed(
           hostEffects: [
             OpenAuthoringResourceEffect(
@@ -198,8 +165,8 @@ SearchCommand createAuthoringResourceCommand({required Ref ref}) =>
               realmId: realmId,
               resourceId: created.id,
               definition: created.definition,
-              ownerPath: const [],
-              rootType: option.root,
+              configuration: created.content.configuration,
+              navigationHandler: navigationHandler,
             ),
           ],
         );

@@ -16,6 +16,9 @@ class _ActivityDetails extends StatelessWidget {
   ) async {
     final source = controller.source(resource.key);
     if (source == null) return;
+    final host = controller.resources[resource.key]
+        ?.buildPortablePresentationHost();
+    if (host == null) return;
     controller.retain(resource.key);
     try {
       await showAdvancedDialog<void>(
@@ -25,9 +28,7 @@ class _ActivityDetails extends StatelessWidget {
           content: SizedBox(
             width: 560,
             child: SingleChildScrollView(
-              child: ComposedEditor(
-                model: PresentationModel.editor(owner: source),
-              ),
+              child: PortablePresentationRenderer(host: host),
             ),
           ),
           actions: [
@@ -39,6 +40,7 @@ class _ActivityDetails extends StatelessWidget {
         ),
       );
     } finally {
+      host.dispose();
       controller.release(resource.key);
     }
   }

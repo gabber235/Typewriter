@@ -4,9 +4,8 @@ part of "books.dart";
 ///
 /// A book owns presentation metadata and direct tag references. [bookId] is
 /// the stable authoring identity. The wire conversion preserves that identity,
-/// while color conversion stays at this panel boundary. The title and icon
-/// assertions protect values created inside the panel; wire input is still
-/// decoded through [fromWire] and can be rejected later by editor decoding.
+/// while color conversion stays at this panel boundary. Unfinished authored
+/// fields receive display values here without changing the authoring record.
 @freezed
 abstract class Book with _$Book {
   @Assert("title != \"\"", "Title must not be empty.")
@@ -21,17 +20,14 @@ abstract class Book with _$Book {
 
   const Book._();
 
-  factory Book.fromTyped(TypedAuthoringResource resource) {
-    final value = resource.content.rootValue;
-    final provisional = Book(
-      bookId: resource.id,
-      title: "_",
-      icon: "_",
-      color: Colors.black,
-      tagIds: const [],
+  factory Book.fromAuthoring(skir.AuthoringResource resource) {
+    final value = decodeAuthoredBook(resource);
+    return Book(
+      bookId: value.id,
+      title: value.title,
+      icon: value.icon,
+      color: Color(value.argb),
+      tagIds: value.tags,
     );
-    final decoded = provisional.withInspectorValue(value);
-    if (decoded == null) throw StateError("The Book content is invalid");
-    return decoded;
   }
 }

@@ -1,5 +1,6 @@
 package com.typewritermc.engine
 
+import com.typewritermc.scripting.RuntimeMemberSignature
 import com.typewritermc.types.ResourceId
 import kotlinx.serialization.Serializable
 
@@ -53,6 +54,8 @@ data class CompiledArtifactManifest(
     val digest: ContentDigest,
     val sourceRevision: String,
     val catalogRevision: String,
+    val implementationToken: String,
+    val runtimeSignatures: Set<RuntimeMemberSignature>,
     val artifacts: List<CompiledArtifactReference>,
 ) {
     init {

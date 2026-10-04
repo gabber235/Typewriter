@@ -290,7 +290,7 @@ enum _CrossAxisAlignment_consts implements CrossAxisAlignment {
 // -----------------------------------------------------------------------------
 
 sealed class PresentationProperties_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable? get enabledIf;
+  _lib_editor_v1_expression.ExpressionNode? get enabledIf;
   _core.bool get readOnly;
 
   PresentationProperties toFrozen();
@@ -299,16 +299,16 @@ sealed class PresentationProperties_orMutable {
 /// Deeply immutable.
 final class PresentationProperties implements PresentationProperties_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? enabledIf;
+  final _lib_editor_v1_expression.ExpressionNode? enabledIf;
   @_core.override
   final _core.bool readOnly;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PresentationProperties({
-    required _lib_editor_v1_expression.TypedExpression_orMutable? enabledIf,
+    required _lib_editor_v1_expression.ExpressionNode? enabledIf,
     required _core.bool readOnly,
   }) => PresentationProperties._(
-    (enabledIf != null) ? enabledIf.toFrozen() : null,
+    enabledIf,
     readOnly,
   );
 
@@ -367,7 +367,7 @@ final class PresentationProperties implements PresentationProperties_orMutable {
         "enabledIf",
         0,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.enabledIf,
@@ -400,7 +400,7 @@ final class PresentationProperties implements PresentationProperties_orMutable {
 
 /// Mutable version of [PresentationProperties].
 final class PresentationProperties_mutable implements PresentationProperties_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable? enabledIf;
+  _lib_editor_v1_expression.ExpressionNode? enabledIf;
   _core.bool readOnly;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -763,9 +763,9 @@ enum _HeaderActionPlacement_consts implements HeaderActionPlacement {
 // -----------------------------------------------------------------------------
 
 sealed class HeaderActionConfirmation_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable get title;
-  _lib_editor_v1_expression.TypedExpression_orMutable get message;
-  _lib_editor_v1_expression.TypedExpression_orMutable get confirmationLabel;
+  _lib_editor_v1_expression.ExpressionNode get title;
+  _lib_editor_v1_expression.ExpressionNode get message;
+  _lib_editor_v1_expression.ExpressionNode get confirmationLabel;
 
   HeaderActionConfirmation toFrozen();
 }
@@ -773,21 +773,21 @@ sealed class HeaderActionConfirmation_orMutable {
 /// Deeply immutable.
 final class HeaderActionConfirmation implements HeaderActionConfirmation_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression title;
+  final _lib_editor_v1_expression.ExpressionNode title;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression message;
+  final _lib_editor_v1_expression.ExpressionNode message;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression confirmationLabel;
+  final _lib_editor_v1_expression.ExpressionNode confirmationLabel;
   _skir.internal__UnrecognizedFields? _u;
 
   factory HeaderActionConfirmation({
-    required _lib_editor_v1_expression.TypedExpression_orMutable title,
-    required _lib_editor_v1_expression.TypedExpression_orMutable message,
-    required _lib_editor_v1_expression.TypedExpression_orMutable confirmationLabel,
+    required _lib_editor_v1_expression.ExpressionNode title,
+    required _lib_editor_v1_expression.ExpressionNode message,
+    required _lib_editor_v1_expression.ExpressionNode confirmationLabel,
   }) => HeaderActionConfirmation._(
-    title.toFrozen(),
-    message.toFrozen(),
-    confirmationLabel.toFrozen(),
+    title,
+    message,
+    confirmationLabel,
   );
 
   HeaderActionConfirmation._(
@@ -798,17 +798,17 @@ final class HeaderActionConfirmation implements HeaderActionConfirmation_orMutab
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = HeaderActionConfirmation._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static HeaderActionConfirmation_mutable mutable() => HeaderActionConfirmation_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
   );
 
   /// Returns this instance (no-op).
@@ -849,7 +849,7 @@ final class HeaderActionConfirmation implements HeaderActionConfirmation_orMutab
         "title",
         "title",
         0,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.title,
         (it, v) => it.title = v,
@@ -858,7 +858,7 @@ final class HeaderActionConfirmation implements HeaderActionConfirmation_orMutab
         "message",
         "message",
         1,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.message,
         (it, v) => it.message = v,
@@ -867,7 +867,7 @@ final class HeaderActionConfirmation implements HeaderActionConfirmation_orMutab
         "confirmation_label",
         "confirmationLabel",
         2,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.confirmationLabel,
         (it, v) => it.confirmationLabel = v,
@@ -890,9 +890,9 @@ final class HeaderActionConfirmation implements HeaderActionConfirmation_orMutab
 
 /// Mutable version of [HeaderActionConfirmation].
 final class HeaderActionConfirmation_mutable implements HeaderActionConfirmation_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable title;
-  _lib_editor_v1_expression.TypedExpression_orMutable message;
-  _lib_editor_v1_expression.TypedExpression_orMutable confirmationLabel;
+  _lib_editor_v1_expression.ExpressionNode title;
+  _lib_editor_v1_expression.ExpressionNode message;
+  _lib_editor_v1_expression.ExpressionNode confirmationLabel;
   _skir.internal__UnrecognizedFields? _u;
 
   HeaderActionConfirmation_mutable._(
@@ -900,39 +900,6 @@ final class HeaderActionConfirmation_mutable implements HeaderActionConfirmation
     this.message,
     this.confirmationLabel,
   );
-
-  /// If the value of [title] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [title] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableTitle {
-    final value = this.title;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.title = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
-
-  /// If the value of [message] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [message] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableMessage {
-    final value = this.message;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.message = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
-
-  /// If the value of [confirmationLabel] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [confirmationLabel] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableConfirmationLabel {
-    final value = this.confirmationLabel;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.confirmationLabel = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -949,13 +916,13 @@ final class HeaderActionConfirmation_mutable implements HeaderActionConfirmation
 
 sealed class HeaderButtonItem_orMutable {
   HeaderItemId_orMutable get itemId;
-  _lib_editor_v1_expression.TypedExpression_orMutable get icon;
-  _lib_editor_v1_expression.TypedExpression_orMutable get label;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get tooltip;
+  _lib_editor_v1_expression.ExpressionNode get icon;
+  _lib_editor_v1_expression.ExpressionNode get label;
+  _lib_editor_v1_expression.ExpressionNode? get tooltip;
   _lib_editor_v1_action.EditorAction get action;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get priority;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get visibleIf;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get enabledIf;
+  _lib_editor_v1_expression.ExpressionNode? get priority;
+  _lib_editor_v1_expression.ExpressionNode? get visibleIf;
+  _lib_editor_v1_expression.ExpressionNode? get enabledIf;
   HeaderActionTone get tone;
   HeaderActionConfirmation_orMutable? get confirmation;
   HeaderActionPlacement get placement;
@@ -968,19 +935,19 @@ final class HeaderButtonItem implements HeaderButtonItem_orMutable {
   @_core.override
   final HeaderItemId itemId;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression icon;
+  final _lib_editor_v1_expression.ExpressionNode icon;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression label;
+  final _lib_editor_v1_expression.ExpressionNode label;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? tooltip;
+  final _lib_editor_v1_expression.ExpressionNode? tooltip;
   @_core.override
   final _lib_editor_v1_action.EditorAction action;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? priority;
+  final _lib_editor_v1_expression.ExpressionNode? priority;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? visibleIf;
+  final _lib_editor_v1_expression.ExpressionNode? visibleIf;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? enabledIf;
+  final _lib_editor_v1_expression.ExpressionNode? enabledIf;
   @_core.override
   final HeaderActionTone tone;
   @_core.override
@@ -991,25 +958,25 @@ final class HeaderButtonItem implements HeaderButtonItem_orMutable {
 
   factory HeaderButtonItem({
     required HeaderItemId_orMutable itemId,
-    required _lib_editor_v1_expression.TypedExpression_orMutable icon,
-    required _lib_editor_v1_expression.TypedExpression_orMutable label,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? tooltip,
+    required _lib_editor_v1_expression.ExpressionNode icon,
+    required _lib_editor_v1_expression.ExpressionNode label,
+    required _lib_editor_v1_expression.ExpressionNode? tooltip,
     required _lib_editor_v1_action.EditorAction action,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? priority,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? visibleIf,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? enabledIf,
+    required _lib_editor_v1_expression.ExpressionNode? priority,
+    required _lib_editor_v1_expression.ExpressionNode? visibleIf,
+    required _lib_editor_v1_expression.ExpressionNode? enabledIf,
     required HeaderActionTone tone,
     required HeaderActionConfirmation_orMutable? confirmation,
     required HeaderActionPlacement placement,
   }) => HeaderButtonItem._(
     itemId.toFrozen(),
-    icon.toFrozen(),
-    label.toFrozen(),
-    (tooltip != null) ? tooltip.toFrozen() : null,
+    icon,
+    label,
+    tooltip,
     action,
-    (priority != null) ? priority.toFrozen() : null,
-    (visibleIf != null) ? visibleIf.toFrozen() : null,
-    (enabledIf != null) ? enabledIf.toFrozen() : null,
+    priority,
+    visibleIf,
+    enabledIf,
     tone,
     (confirmation != null) ? confirmation.toFrozen() : null,
     placement,
@@ -1032,8 +999,8 @@ final class HeaderButtonItem implements HeaderButtonItem_orMutable {
   /// Default instance with all fields set to their default values.
   static final defaultInstance = HeaderButtonItem._(
     HeaderItemId.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     null,
     _lib_editor_v1_action.EditorAction.unknown,
     null,
@@ -1048,8 +1015,8 @@ final class HeaderButtonItem implements HeaderButtonItem_orMutable {
   /// Fields are initialized to their default values.
   static HeaderButtonItem_mutable mutable() => HeaderButtonItem_mutable._(
     HeaderItemId.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     null,
     _lib_editor_v1_action.EditorAction.unknown,
     null,
@@ -1123,7 +1090,7 @@ final class HeaderButtonItem implements HeaderButtonItem_orMutable {
         "icon",
         "icon",
         1,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.icon,
         (it, v) => it.icon = v,
@@ -1132,7 +1099,7 @@ final class HeaderButtonItem implements HeaderButtonItem_orMutable {
         "label",
         "label",
         2,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.label,
         (it, v) => it.label = v,
@@ -1142,7 +1109,7 @@ final class HeaderButtonItem implements HeaderButtonItem_orMutable {
         "tooltip",
         3,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.tooltip,
@@ -1162,7 +1129,7 @@ final class HeaderButtonItem implements HeaderButtonItem_orMutable {
         "priority",
         5,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.priority,
@@ -1173,7 +1140,7 @@ final class HeaderButtonItem implements HeaderButtonItem_orMutable {
         "visibleIf",
         6,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.visibleIf,
@@ -1184,7 +1151,7 @@ final class HeaderButtonItem implements HeaderButtonItem_orMutable {
         "enabledIf",
         7,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.enabledIf,
@@ -1238,13 +1205,13 @@ final class HeaderButtonItem implements HeaderButtonItem_orMutable {
 /// Mutable version of [HeaderButtonItem].
 final class HeaderButtonItem_mutable implements HeaderButtonItem_orMutable {
   HeaderItemId_orMutable itemId;
-  _lib_editor_v1_expression.TypedExpression_orMutable icon;
-  _lib_editor_v1_expression.TypedExpression_orMutable label;
-  _lib_editor_v1_expression.TypedExpression_orMutable? tooltip;
+  _lib_editor_v1_expression.ExpressionNode icon;
+  _lib_editor_v1_expression.ExpressionNode label;
+  _lib_editor_v1_expression.ExpressionNode? tooltip;
   _lib_editor_v1_action.EditorAction action;
-  _lib_editor_v1_expression.TypedExpression_orMutable? priority;
-  _lib_editor_v1_expression.TypedExpression_orMutable? visibleIf;
-  _lib_editor_v1_expression.TypedExpression_orMutable? enabledIf;
+  _lib_editor_v1_expression.ExpressionNode? priority;
+  _lib_editor_v1_expression.ExpressionNode? visibleIf;
+  _lib_editor_v1_expression.ExpressionNode? enabledIf;
   HeaderActionTone tone;
   HeaderActionConfirmation_orMutable? confirmation;
   HeaderActionPlacement placement;
@@ -1275,28 +1242,6 @@ final class HeaderButtonItem_mutable implements HeaderButtonItem_orMutable {
     }
   }
 
-  /// If the value of [icon] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [icon] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableIcon {
-    final value = this.icon;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.icon = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
-
-  /// If the value of [label] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [label] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableLabel {
-    final value = this.label;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.label = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
-
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   HeaderButtonItem toFrozen() => HeaderButtonItem(
@@ -1320,13 +1265,13 @@ final class HeaderButtonItem_mutable implements HeaderButtonItem_orMutable {
 
 sealed class HeaderBooleanToggleItem_orMutable {
   HeaderItemId_orMutable get itemId;
-  _lib_editor_v1_expression.TypedExpression_orMutable get label;
-  _lib_editor_v1_expression.TypedExpression_orMutable get checked;
+  _lib_editor_v1_expression.ExpressionNode get label;
+  _lib_editor_v1_expression.ExpressionNode get checked;
   _lib_editor_v1_action.EditorAction get action;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get tooltip;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get priority;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get visibleIf;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get enabledIf;
+  _lib_editor_v1_expression.ExpressionNode? get tooltip;
+  _lib_editor_v1_expression.ExpressionNode? get priority;
+  _lib_editor_v1_expression.ExpressionNode? get visibleIf;
+  _lib_editor_v1_expression.ExpressionNode? get enabledIf;
   HeaderActionConfirmation_orMutable? get confirmation;
   HeaderActionPlacement get placement;
 
@@ -1338,19 +1283,19 @@ final class HeaderBooleanToggleItem implements HeaderBooleanToggleItem_orMutable
   @_core.override
   final HeaderItemId itemId;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression label;
+  final _lib_editor_v1_expression.ExpressionNode label;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression checked;
+  final _lib_editor_v1_expression.ExpressionNode checked;
   @_core.override
   final _lib_editor_v1_action.EditorAction action;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? tooltip;
+  final _lib_editor_v1_expression.ExpressionNode? tooltip;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? priority;
+  final _lib_editor_v1_expression.ExpressionNode? priority;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? visibleIf;
+  final _lib_editor_v1_expression.ExpressionNode? visibleIf;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? enabledIf;
+  final _lib_editor_v1_expression.ExpressionNode? enabledIf;
   @_core.override
   final HeaderActionConfirmation? confirmation;
   @_core.override
@@ -1359,24 +1304,24 @@ final class HeaderBooleanToggleItem implements HeaderBooleanToggleItem_orMutable
 
   factory HeaderBooleanToggleItem({
     required HeaderItemId_orMutable itemId,
-    required _lib_editor_v1_expression.TypedExpression_orMutable label,
-    required _lib_editor_v1_expression.TypedExpression_orMutable checked,
+    required _lib_editor_v1_expression.ExpressionNode label,
+    required _lib_editor_v1_expression.ExpressionNode checked,
     required _lib_editor_v1_action.EditorAction action,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? tooltip,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? priority,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? visibleIf,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? enabledIf,
+    required _lib_editor_v1_expression.ExpressionNode? tooltip,
+    required _lib_editor_v1_expression.ExpressionNode? priority,
+    required _lib_editor_v1_expression.ExpressionNode? visibleIf,
+    required _lib_editor_v1_expression.ExpressionNode? enabledIf,
     required HeaderActionConfirmation_orMutable? confirmation,
     required HeaderActionPlacement placement,
   }) => HeaderBooleanToggleItem._(
     itemId.toFrozen(),
-    label.toFrozen(),
-    checked.toFrozen(),
+    label,
+    checked,
     action,
-    (tooltip != null) ? tooltip.toFrozen() : null,
-    (priority != null) ? priority.toFrozen() : null,
-    (visibleIf != null) ? visibleIf.toFrozen() : null,
-    (enabledIf != null) ? enabledIf.toFrozen() : null,
+    tooltip,
+    priority,
+    visibleIf,
+    enabledIf,
     (confirmation != null) ? confirmation.toFrozen() : null,
     placement,
   );
@@ -1397,8 +1342,8 @@ final class HeaderBooleanToggleItem implements HeaderBooleanToggleItem_orMutable
   /// Default instance with all fields set to their default values.
   static final defaultInstance = HeaderBooleanToggleItem._(
     HeaderItemId.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     _lib_editor_v1_action.EditorAction.unknown,
     null,
     null,
@@ -1412,8 +1357,8 @@ final class HeaderBooleanToggleItem implements HeaderBooleanToggleItem_orMutable
   /// Fields are initialized to their default values.
   static HeaderBooleanToggleItem_mutable mutable() => HeaderBooleanToggleItem_mutable._(
     HeaderItemId.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     _lib_editor_v1_action.EditorAction.unknown,
     null,
     null,
@@ -1484,7 +1429,7 @@ final class HeaderBooleanToggleItem implements HeaderBooleanToggleItem_orMutable
         "label",
         "label",
         1,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.label,
         (it, v) => it.label = v,
@@ -1493,7 +1438,7 @@ final class HeaderBooleanToggleItem implements HeaderBooleanToggleItem_orMutable
         "checked",
         "checked",
         2,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.checked,
         (it, v) => it.checked = v,
@@ -1512,7 +1457,7 @@ final class HeaderBooleanToggleItem implements HeaderBooleanToggleItem_orMutable
         "tooltip",
         4,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.tooltip,
@@ -1523,7 +1468,7 @@ final class HeaderBooleanToggleItem implements HeaderBooleanToggleItem_orMutable
         "priority",
         5,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.priority,
@@ -1534,7 +1479,7 @@ final class HeaderBooleanToggleItem implements HeaderBooleanToggleItem_orMutable
         "visibleIf",
         6,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.visibleIf,
@@ -1545,7 +1490,7 @@ final class HeaderBooleanToggleItem implements HeaderBooleanToggleItem_orMutable
         "enabledIf",
         7,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.enabledIf,
@@ -1590,13 +1535,13 @@ final class HeaderBooleanToggleItem implements HeaderBooleanToggleItem_orMutable
 /// Mutable version of [HeaderBooleanToggleItem].
 final class HeaderBooleanToggleItem_mutable implements HeaderBooleanToggleItem_orMutable {
   HeaderItemId_orMutable itemId;
-  _lib_editor_v1_expression.TypedExpression_orMutable label;
-  _lib_editor_v1_expression.TypedExpression_orMutable checked;
+  _lib_editor_v1_expression.ExpressionNode label;
+  _lib_editor_v1_expression.ExpressionNode checked;
   _lib_editor_v1_action.EditorAction action;
-  _lib_editor_v1_expression.TypedExpression_orMutable? tooltip;
-  _lib_editor_v1_expression.TypedExpression_orMutable? priority;
-  _lib_editor_v1_expression.TypedExpression_orMutable? visibleIf;
-  _lib_editor_v1_expression.TypedExpression_orMutable? enabledIf;
+  _lib_editor_v1_expression.ExpressionNode? tooltip;
+  _lib_editor_v1_expression.ExpressionNode? priority;
+  _lib_editor_v1_expression.ExpressionNode? visibleIf;
+  _lib_editor_v1_expression.ExpressionNode? enabledIf;
   HeaderActionConfirmation_orMutable? confirmation;
   HeaderActionPlacement placement;
   _skir.internal__UnrecognizedFields? _u;
@@ -1625,28 +1570,6 @@ final class HeaderBooleanToggleItem_mutable implements HeaderBooleanToggleItem_o
     }
   }
 
-  /// If the value of [label] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [label] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableLabel {
-    final value = this.label;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.label = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
-
-  /// If the value of [checked] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [checked] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableChecked {
-    final value = this.checked;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.checked = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
-
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   HeaderBooleanToggleItem toFrozen() => HeaderBooleanToggleItem(
@@ -1669,11 +1592,11 @@ final class HeaderBooleanToggleItem_mutable implements HeaderBooleanToggleItem_o
 
 sealed class HeaderReorderHandleItem_orMutable {
   HeaderItemId_orMutable get itemId;
-  _lib_editor_v1_expression.TypedExpression_orMutable get label;
+  _lib_editor_v1_expression.ExpressionNode get label;
   _lib_editor_v1_binding.BindingRef_orMutable get source;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get tooltip;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get visibleIf;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get enabledIf;
+  _lib_editor_v1_expression.ExpressionNode? get tooltip;
+  _lib_editor_v1_expression.ExpressionNode? get visibleIf;
+  _lib_editor_v1_expression.ExpressionNode? get enabledIf;
 
   HeaderReorderHandleItem toFrozen();
 }
@@ -1683,31 +1606,31 @@ final class HeaderReorderHandleItem implements HeaderReorderHandleItem_orMutable
   @_core.override
   final HeaderItemId itemId;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression label;
+  final _lib_editor_v1_expression.ExpressionNode label;
   @_core.override
   final _lib_editor_v1_binding.BindingRef source;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? tooltip;
+  final _lib_editor_v1_expression.ExpressionNode? tooltip;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? visibleIf;
+  final _lib_editor_v1_expression.ExpressionNode? visibleIf;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? enabledIf;
+  final _lib_editor_v1_expression.ExpressionNode? enabledIf;
   _skir.internal__UnrecognizedFields? _u;
 
   factory HeaderReorderHandleItem({
     required HeaderItemId_orMutable itemId,
-    required _lib_editor_v1_expression.TypedExpression_orMutable label,
+    required _lib_editor_v1_expression.ExpressionNode label,
     required _lib_editor_v1_binding.BindingRef_orMutable source,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? tooltip,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? visibleIf,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? enabledIf,
+    required _lib_editor_v1_expression.ExpressionNode? tooltip,
+    required _lib_editor_v1_expression.ExpressionNode? visibleIf,
+    required _lib_editor_v1_expression.ExpressionNode? enabledIf,
   }) => HeaderReorderHandleItem._(
     itemId.toFrozen(),
-    label.toFrozen(),
+    label,
     source.toFrozen(),
-    (tooltip != null) ? tooltip.toFrozen() : null,
-    (visibleIf != null) ? visibleIf.toFrozen() : null,
-    (enabledIf != null) ? enabledIf.toFrozen() : null,
+    tooltip,
+    visibleIf,
+    enabledIf,
   );
 
   HeaderReorderHandleItem._(
@@ -1722,7 +1645,7 @@ final class HeaderReorderHandleItem implements HeaderReorderHandleItem_orMutable
   /// Default instance with all fields set to their default values.
   static final defaultInstance = HeaderReorderHandleItem._(
     HeaderItemId.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     _lib_editor_v1_binding.BindingRef.defaultInstance,
     null,
     null,
@@ -1733,7 +1656,7 @@ final class HeaderReorderHandleItem implements HeaderReorderHandleItem_orMutable
   /// Fields are initialized to their default values.
   static HeaderReorderHandleItem_mutable mutable() => HeaderReorderHandleItem_mutable._(
     HeaderItemId.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     _lib_editor_v1_binding.BindingRef.defaultInstance,
     null,
     null,
@@ -1793,7 +1716,7 @@ final class HeaderReorderHandleItem implements HeaderReorderHandleItem_orMutable
         "label",
         "label",
         1,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.label,
         (it, v) => it.label = v,
@@ -1812,7 +1735,7 @@ final class HeaderReorderHandleItem implements HeaderReorderHandleItem_orMutable
         "tooltip",
         3,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.tooltip,
@@ -1823,7 +1746,7 @@ final class HeaderReorderHandleItem implements HeaderReorderHandleItem_orMutable
         "visibleIf",
         4,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.visibleIf,
@@ -1834,7 +1757,7 @@ final class HeaderReorderHandleItem implements HeaderReorderHandleItem_orMutable
         "enabledIf",
         5,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.enabledIf,
@@ -1859,11 +1782,11 @@ final class HeaderReorderHandleItem implements HeaderReorderHandleItem_orMutable
 /// Mutable version of [HeaderReorderHandleItem].
 final class HeaderReorderHandleItem_mutable implements HeaderReorderHandleItem_orMutable {
   HeaderItemId_orMutable itemId;
-  _lib_editor_v1_expression.TypedExpression_orMutable label;
+  _lib_editor_v1_expression.ExpressionNode label;
   _lib_editor_v1_binding.BindingRef_orMutable source;
-  _lib_editor_v1_expression.TypedExpression_orMutable? tooltip;
-  _lib_editor_v1_expression.TypedExpression_orMutable? visibleIf;
-  _lib_editor_v1_expression.TypedExpression_orMutable? enabledIf;
+  _lib_editor_v1_expression.ExpressionNode? tooltip;
+  _lib_editor_v1_expression.ExpressionNode? visibleIf;
+  _lib_editor_v1_expression.ExpressionNode? enabledIf;
   _skir.internal__UnrecognizedFields? _u;
 
   HeaderReorderHandleItem_mutable._(
@@ -1883,17 +1806,6 @@ final class HeaderReorderHandleItem_mutable implements HeaderReorderHandleItem_o
       return value;
     } else {
       return this.itemId = (value as HeaderItemId).toMutable();
-    }
-  }
-
-  /// If the value of [label] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [label] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableLabel {
-    final value = this.label;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.label = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
     }
   }
 
@@ -1948,13 +1860,13 @@ sealed class HeaderItem {
   /// Same as `wrapButton(HeaderButtonItem(...))`.
   factory HeaderItem.createButton({
     required HeaderItemId_orMutable itemId,
-    required _lib_editor_v1_expression.TypedExpression_orMutable icon,
-    required _lib_editor_v1_expression.TypedExpression_orMutable label,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? tooltip,
+    required _lib_editor_v1_expression.ExpressionNode icon,
+    required _lib_editor_v1_expression.ExpressionNode label,
+    required _lib_editor_v1_expression.ExpressionNode? tooltip,
     required _lib_editor_v1_action.EditorAction action,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? priority,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? visibleIf,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? enabledIf,
+    required _lib_editor_v1_expression.ExpressionNode? priority,
+    required _lib_editor_v1_expression.ExpressionNode? visibleIf,
+    required _lib_editor_v1_expression.ExpressionNode? enabledIf,
     required HeaderActionTone tone,
     required HeaderActionConfirmation_orMutable? confirmation,
     required HeaderActionPlacement placement,
@@ -1982,13 +1894,13 @@ sealed class HeaderItem {
   /// Same as `wrapBooleanToggle(HeaderBooleanToggleItem(...))`.
   factory HeaderItem.createBooleanToggle({
     required HeaderItemId_orMutable itemId,
-    required _lib_editor_v1_expression.TypedExpression_orMutable label,
-    required _lib_editor_v1_expression.TypedExpression_orMutable checked,
+    required _lib_editor_v1_expression.ExpressionNode label,
+    required _lib_editor_v1_expression.ExpressionNode checked,
     required _lib_editor_v1_action.EditorAction action,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? tooltip,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? priority,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? visibleIf,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? enabledIf,
+    required _lib_editor_v1_expression.ExpressionNode? tooltip,
+    required _lib_editor_v1_expression.ExpressionNode? priority,
+    required _lib_editor_v1_expression.ExpressionNode? visibleIf,
+    required _lib_editor_v1_expression.ExpressionNode? enabledIf,
     required HeaderActionConfirmation_orMutable? confirmation,
     required HeaderActionPlacement placement,
   }) => HeaderItem.wrapBooleanToggle(
@@ -2014,11 +1926,11 @@ sealed class HeaderItem {
   /// Same as `wrapReorderHandle(HeaderReorderHandleItem(...))`.
   factory HeaderItem.createReorderHandle({
     required HeaderItemId_orMutable itemId,
-    required _lib_editor_v1_expression.TypedExpression_orMutable label,
+    required _lib_editor_v1_expression.ExpressionNode label,
     required _lib_editor_v1_binding.BindingRef_orMutable source,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? tooltip,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? visibleIf,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? enabledIf,
+    required _lib_editor_v1_expression.ExpressionNode? tooltip,
+    required _lib_editor_v1_expression.ExpressionNode? visibleIf,
+    required _lib_editor_v1_expression.ExpressionNode? enabledIf,
   }) => HeaderItem.wrapReorderHandle(
     HeaderReorderHandleItem(
       itemId: itemId,
@@ -2176,19 +2088,8 @@ sealed class PresentationHeaderTitle {
 
   /// Create a 'text' variant wrapping around the given value.
   factory PresentationHeaderTitle.wrapText(
-    _lib_editor_v1_expression.TypedExpression value
+    _lib_editor_v1_expression.ExpressionNode value
   ) => PresentationHeaderTitle_textWrapper._(value);
-
-  /// Same as `wrapText(_lib_editor_v1_expression.TypedExpression(...))`.
-  factory PresentationHeaderTitle.createText({
-    required _lib_editor_v1_type_catalog.TypeExpression resultType,
-    required _lib_editor_v1_expression.Expression? expression,
-  }) => PresentationHeaderTitle.wrapText(
-    _lib_editor_v1_expression.TypedExpression(
-      resultType: resultType,
-      expression: expression,
-    )
-  );
 
   /// Create a 'presentation' variant wrapping around the given value.
   factory PresentationHeaderTitle.wrapPresentation(
@@ -2220,7 +2121,7 @@ sealed class PresentationHeaderTitle {
         1,
         "text",
         "wrapText",
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         PresentationHeaderTitle_textWrapper._,
         (it) => it.value,
@@ -2298,7 +2199,7 @@ sealed class _PresentationHeaderTitle_wrapper implements PresentationHeaderTitle
 }
 
 final class PresentationHeaderTitle_textWrapper extends _PresentationHeaderTitle_wrapper {
-  final _lib_editor_v1_expression.TypedExpression value;
+  final _lib_editor_v1_expression.ExpressionNode value;
 
   PresentationHeaderTitle_textWrapper._(this.value);
 
@@ -2812,7 +2713,7 @@ final class PresentationInsets_onlyWrapper extends _PresentationInsets_wrapper {
 sealed class PresentationHeader_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable? get binding;
   PresentationHeaderTitle? get title;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get description;
+  _lib_editor_v1_expression.ExpressionNode? get description;
   _core.bool? get initiallyExpanded;
   _core.Iterable<HeaderItem> get items;
   PresentationInsets? get headerPadding;
@@ -2828,7 +2729,7 @@ final class PresentationHeader implements PresentationHeader_orMutable {
   @_core.override
   final PresentationHeaderTitle? title;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? description;
+  final _lib_editor_v1_expression.ExpressionNode? description;
   @_core.override
   final _core.bool? initiallyExpanded;
   @_core.override
@@ -2842,7 +2743,7 @@ final class PresentationHeader implements PresentationHeader_orMutable {
   factory PresentationHeader({
     required _lib_editor_v1_binding.BindingRef_orMutable? binding,
     required PresentationHeaderTitle? title,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? description,
+    required _lib_editor_v1_expression.ExpressionNode? description,
     required _core.bool? initiallyExpanded,
     required _core.Iterable<HeaderItem> items,
     required PresentationInsets? headerPadding,
@@ -2850,7 +2751,7 @@ final class PresentationHeader implements PresentationHeader_orMutable {
   }) => PresentationHeader._(
     (binding != null) ? binding.toFrozen() : null,
     title,
-    (description != null) ? description.toFrozen() : null,
+    description,
     initiallyExpanded,
     _skir.internal__frozenCopy(items),
     headerPadding,
@@ -2959,7 +2860,7 @@ final class PresentationHeader implements PresentationHeader_orMutable {
         "description",
         2,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.description,
@@ -3029,7 +2930,7 @@ final class PresentationHeader implements PresentationHeader_orMutable {
 final class PresentationHeader_mutable implements PresentationHeader_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable? binding;
   PresentationHeaderTitle? title;
-  _lib_editor_v1_expression.TypedExpression_orMutable? description;
+  _lib_editor_v1_expression.ExpressionNode? description;
   _core.bool? initiallyExpanded;
   _core.Iterable<HeaderItem> items;
   PresentationInsets? headerPadding;
@@ -5223,7 +5124,7 @@ final class ChildrenElement_stackWrapper extends _ChildrenElement_wrapper {
 // -----------------------------------------------------------------------------
 
 sealed class PresentationBorderSide_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable? get color;
+  _lib_editor_v1_expression.ExpressionNode? get color;
   _core.double get width;
 
   PresentationBorderSide toFrozen();
@@ -5232,16 +5133,16 @@ sealed class PresentationBorderSide_orMutable {
 /// Deeply immutable.
 final class PresentationBorderSide implements PresentationBorderSide_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? color;
+  final _lib_editor_v1_expression.ExpressionNode? color;
   @_core.override
   final _core.double width;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PresentationBorderSide({
-    required _lib_editor_v1_expression.TypedExpression_orMutable? color,
+    required _lib_editor_v1_expression.ExpressionNode? color,
     required _core.double width,
   }) => PresentationBorderSide._(
-    (color != null) ? color.toFrozen() : null,
+    color,
     width,
   );
 
@@ -5300,7 +5201,7 @@ final class PresentationBorderSide implements PresentationBorderSide_orMutable {
         "color",
         0,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.color,
@@ -5333,7 +5234,7 @@ final class PresentationBorderSide implements PresentationBorderSide_orMutable {
 
 /// Mutable version of [PresentationBorderSide].
 final class PresentationBorderSide_mutable implements PresentationBorderSide_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable? color;
+  _lib_editor_v1_expression.ExpressionNode? color;
   _core.double width;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -5558,7 +5459,7 @@ sealed class PresentationBorder {
 
   /// Same as `wrapAll(PresentationBorderSide(...))`.
   factory PresentationBorder.createAll({
-    required _lib_editor_v1_expression.TypedExpression_orMutable? color,
+    required _lib_editor_v1_expression.ExpressionNode? color,
     required _core.double width,
   }) => PresentationBorder.wrapAll(
     PresentationBorderSide(
@@ -6134,7 +6035,7 @@ final class PresentationSlotElement_mutable implements PresentationSlotElement_o
 
 sealed class TabItem_orMutable {
   _core.String get tabId;
-  _lib_editor_v1_expression.TypedExpression_orMutable get label;
+  _lib_editor_v1_expression.ExpressionNode get label;
   PresentationNode_orMutable get child;
 
   TabItem toFrozen();
@@ -6145,18 +6046,18 @@ final class TabItem implements TabItem_orMutable {
   @_core.override
   final _core.String tabId;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression label;
+  final _lib_editor_v1_expression.ExpressionNode label;
   @_core.override
   final PresentationNode child;
   _skir.internal__UnrecognizedFields? _u;
 
   factory TabItem({
     required _core.String tabId,
-    required _lib_editor_v1_expression.TypedExpression_orMutable label,
+    required _lib_editor_v1_expression.ExpressionNode label,
     required PresentationNode_orMutable child,
   }) => TabItem._(
     tabId,
-    label.toFrozen(),
+    label,
     child.toFrozen(),
   );
 
@@ -6169,7 +6070,7 @@ final class TabItem implements TabItem_orMutable {
   /// Default instance with all fields set to their default values.
   static final defaultInstance = TabItem._(
     "",
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     PresentationNode.defaultInstance,
   );
 
@@ -6177,7 +6078,7 @@ final class TabItem implements TabItem_orMutable {
   /// Fields are initialized to their default values.
   static TabItem_mutable mutable() => TabItem_mutable._(
     "",
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     PresentationNode.defaultInstance,
   );
 
@@ -6228,7 +6129,7 @@ final class TabItem implements TabItem_orMutable {
         "label",
         "label",
         1,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.label,
         (it, v) => it.label = v,
@@ -6261,7 +6162,7 @@ final class TabItem implements TabItem_orMutable {
 /// Mutable version of [TabItem].
 final class TabItem_mutable implements TabItem_orMutable {
   _core.String tabId;
-  _lib_editor_v1_expression.TypedExpression_orMutable label;
+  _lib_editor_v1_expression.ExpressionNode label;
   PresentationNode_orMutable child;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -6270,17 +6171,6 @@ final class TabItem_mutable implements TabItem_orMutable {
     this.label,
     this.child,
   );
-
-  /// If the value of [label] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [label] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableLabel {
-    final value = this.label;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.label = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -6432,8 +6322,8 @@ final class TabsLayout_mutable implements TabsLayout_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class SpacerLayout_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable? get width;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get height;
+  _lib_editor_v1_expression.ExpressionNode? get width;
+  _lib_editor_v1_expression.ExpressionNode? get height;
 
   SpacerLayout toFrozen();
 }
@@ -6441,17 +6331,17 @@ sealed class SpacerLayout_orMutable {
 /// Deeply immutable.
 final class SpacerLayout implements SpacerLayout_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? width;
+  final _lib_editor_v1_expression.ExpressionNode? width;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? height;
+  final _lib_editor_v1_expression.ExpressionNode? height;
   _skir.internal__UnrecognizedFields? _u;
 
   factory SpacerLayout({
-    required _lib_editor_v1_expression.TypedExpression_orMutable? width,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? height,
+    required _lib_editor_v1_expression.ExpressionNode? width,
+    required _lib_editor_v1_expression.ExpressionNode? height,
   }) => SpacerLayout._(
-    (width != null) ? width.toFrozen() : null,
-    (height != null) ? height.toFrozen() : null,
+    width,
+    height,
   );
 
   SpacerLayout._(
@@ -6509,7 +6399,7 @@ final class SpacerLayout implements SpacerLayout_orMutable {
         "width",
         0,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.width,
@@ -6520,7 +6410,7 @@ final class SpacerLayout implements SpacerLayout_orMutable {
         "height",
         1,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.height,
@@ -6544,8 +6434,8 @@ final class SpacerLayout implements SpacerLayout_orMutable {
 
 /// Mutable version of [SpacerLayout].
 final class SpacerLayout_mutable implements SpacerLayout_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable? width;
-  _lib_editor_v1_expression.TypedExpression_orMutable? height;
+  _lib_editor_v1_expression.ExpressionNode? width;
+  _lib_editor_v1_expression.ExpressionNode? height;
   _skir.internal__UnrecognizedFields? _u;
 
   SpacerLayout_mutable._(
@@ -6566,19 +6456,19 @@ final class SpacerLayout_mutable implements SpacerLayout_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class TextContent_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable get value;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get color;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get fontSize;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get fontWeight;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get fontItalic;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get fontOpticalSize;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get fontSlant;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get fontWidth;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get textAlignment;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get lineHeight;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get letterSpacing;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get decoration;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get semanticLabel;
+  _lib_editor_v1_expression.ExpressionNode get value;
+  _lib_editor_v1_expression.ExpressionNode? get color;
+  _lib_editor_v1_expression.ExpressionNode? get fontSize;
+  _lib_editor_v1_expression.ExpressionNode? get fontWeight;
+  _lib_editor_v1_expression.ExpressionNode? get fontItalic;
+  _lib_editor_v1_expression.ExpressionNode? get fontOpticalSize;
+  _lib_editor_v1_expression.ExpressionNode? get fontSlant;
+  _lib_editor_v1_expression.ExpressionNode? get fontWidth;
+  _lib_editor_v1_expression.ExpressionNode? get textAlignment;
+  _lib_editor_v1_expression.ExpressionNode? get lineHeight;
+  _lib_editor_v1_expression.ExpressionNode? get letterSpacing;
+  _lib_editor_v1_expression.ExpressionNode? get decoration;
+  _lib_editor_v1_expression.ExpressionNode? get semanticLabel;
   TextParagraph_orMutable get paragraph;
 
   TextContent toFrozen();
@@ -6587,64 +6477,64 @@ sealed class TextContent_orMutable {
 /// Deeply immutable.
 final class TextContent implements TextContent_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression value;
+  final _lib_editor_v1_expression.ExpressionNode value;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? color;
+  final _lib_editor_v1_expression.ExpressionNode? color;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? fontSize;
+  final _lib_editor_v1_expression.ExpressionNode? fontSize;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? fontWeight;
+  final _lib_editor_v1_expression.ExpressionNode? fontWeight;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? fontItalic;
+  final _lib_editor_v1_expression.ExpressionNode? fontItalic;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? fontOpticalSize;
+  final _lib_editor_v1_expression.ExpressionNode? fontOpticalSize;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? fontSlant;
+  final _lib_editor_v1_expression.ExpressionNode? fontSlant;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? fontWidth;
+  final _lib_editor_v1_expression.ExpressionNode? fontWidth;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? textAlignment;
+  final _lib_editor_v1_expression.ExpressionNode? textAlignment;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? lineHeight;
+  final _lib_editor_v1_expression.ExpressionNode? lineHeight;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? letterSpacing;
+  final _lib_editor_v1_expression.ExpressionNode? letterSpacing;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? decoration;
+  final _lib_editor_v1_expression.ExpressionNode? decoration;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? semanticLabel;
+  final _lib_editor_v1_expression.ExpressionNode? semanticLabel;
   @_core.override
   final TextParagraph paragraph;
   _skir.internal__UnrecognizedFields? _u;
 
   factory TextContent({
-    required _lib_editor_v1_expression.TypedExpression_orMutable value,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? color,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? fontSize,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? fontWeight,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? fontItalic,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? fontOpticalSize,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? fontSlant,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? fontWidth,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? textAlignment,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? lineHeight,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? letterSpacing,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? decoration,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? semanticLabel,
+    required _lib_editor_v1_expression.ExpressionNode value,
+    required _lib_editor_v1_expression.ExpressionNode? color,
+    required _lib_editor_v1_expression.ExpressionNode? fontSize,
+    required _lib_editor_v1_expression.ExpressionNode? fontWeight,
+    required _lib_editor_v1_expression.ExpressionNode? fontItalic,
+    required _lib_editor_v1_expression.ExpressionNode? fontOpticalSize,
+    required _lib_editor_v1_expression.ExpressionNode? fontSlant,
+    required _lib_editor_v1_expression.ExpressionNode? fontWidth,
+    required _lib_editor_v1_expression.ExpressionNode? textAlignment,
+    required _lib_editor_v1_expression.ExpressionNode? lineHeight,
+    required _lib_editor_v1_expression.ExpressionNode? letterSpacing,
+    required _lib_editor_v1_expression.ExpressionNode? decoration,
+    required _lib_editor_v1_expression.ExpressionNode? semanticLabel,
     required TextParagraph_orMutable paragraph,
   }) => TextContent._(
-    value.toFrozen(),
-    (color != null) ? color.toFrozen() : null,
-    (fontSize != null) ? fontSize.toFrozen() : null,
-    (fontWeight != null) ? fontWeight.toFrozen() : null,
-    (fontItalic != null) ? fontItalic.toFrozen() : null,
-    (fontOpticalSize != null) ? fontOpticalSize.toFrozen() : null,
-    (fontSlant != null) ? fontSlant.toFrozen() : null,
-    (fontWidth != null) ? fontWidth.toFrozen() : null,
-    (textAlignment != null) ? textAlignment.toFrozen() : null,
-    (lineHeight != null) ? lineHeight.toFrozen() : null,
-    (letterSpacing != null) ? letterSpacing.toFrozen() : null,
-    (decoration != null) ? decoration.toFrozen() : null,
-    (semanticLabel != null) ? semanticLabel.toFrozen() : null,
+    value,
+    color,
+    fontSize,
+    fontWeight,
+    fontItalic,
+    fontOpticalSize,
+    fontSlant,
+    fontWidth,
+    textAlignment,
+    lineHeight,
+    letterSpacing,
+    decoration,
+    semanticLabel,
     paragraph.toFrozen(),
   );
 
@@ -6667,7 +6557,7 @@ final class TextContent implements TextContent_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = TextContent._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     null,
     null,
     null,
@@ -6686,7 +6576,7 @@ final class TextContent implements TextContent_orMutable {
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static TextContent_mutable mutable() => TextContent_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     null,
     null,
     null,
@@ -6762,7 +6652,7 @@ final class TextContent implements TextContent_orMutable {
         "value",
         "value",
         0,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.value,
         (it, v) => it.value = v,
@@ -6772,7 +6662,7 @@ final class TextContent implements TextContent_orMutable {
         "color",
         1,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.color,
@@ -6783,7 +6673,7 @@ final class TextContent implements TextContent_orMutable {
         "fontSize",
         2,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.fontSize,
@@ -6794,7 +6684,7 @@ final class TextContent implements TextContent_orMutable {
         "fontWeight",
         3,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.fontWeight,
@@ -6805,7 +6695,7 @@ final class TextContent implements TextContent_orMutable {
         "fontItalic",
         4,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.fontItalic,
@@ -6816,7 +6706,7 @@ final class TextContent implements TextContent_orMutable {
         "fontOpticalSize",
         5,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.fontOpticalSize,
@@ -6827,7 +6717,7 @@ final class TextContent implements TextContent_orMutable {
         "fontSlant",
         6,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.fontSlant,
@@ -6838,7 +6728,7 @@ final class TextContent implements TextContent_orMutable {
         "fontWidth",
         7,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.fontWidth,
@@ -6849,7 +6739,7 @@ final class TextContent implements TextContent_orMutable {
         "textAlignment",
         8,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.textAlignment,
@@ -6860,7 +6750,7 @@ final class TextContent implements TextContent_orMutable {
         "lineHeight",
         9,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.lineHeight,
@@ -6871,7 +6761,7 @@ final class TextContent implements TextContent_orMutable {
         "letterSpacing",
         10,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.letterSpacing,
@@ -6882,7 +6772,7 @@ final class TextContent implements TextContent_orMutable {
         "decoration",
         11,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.decoration,
@@ -6893,7 +6783,7 @@ final class TextContent implements TextContent_orMutable {
         "semanticLabel",
         12,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.semanticLabel,
@@ -6926,19 +6816,19 @@ final class TextContent implements TextContent_orMutable {
 
 /// Mutable version of [TextContent].
 final class TextContent_mutable implements TextContent_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable value;
-  _lib_editor_v1_expression.TypedExpression_orMutable? color;
-  _lib_editor_v1_expression.TypedExpression_orMutable? fontSize;
-  _lib_editor_v1_expression.TypedExpression_orMutable? fontWeight;
-  _lib_editor_v1_expression.TypedExpression_orMutable? fontItalic;
-  _lib_editor_v1_expression.TypedExpression_orMutable? fontOpticalSize;
-  _lib_editor_v1_expression.TypedExpression_orMutable? fontSlant;
-  _lib_editor_v1_expression.TypedExpression_orMutable? fontWidth;
-  _lib_editor_v1_expression.TypedExpression_orMutable? textAlignment;
-  _lib_editor_v1_expression.TypedExpression_orMutable? lineHeight;
-  _lib_editor_v1_expression.TypedExpression_orMutable? letterSpacing;
-  _lib_editor_v1_expression.TypedExpression_orMutable? decoration;
-  _lib_editor_v1_expression.TypedExpression_orMutable? semanticLabel;
+  _lib_editor_v1_expression.ExpressionNode value;
+  _lib_editor_v1_expression.ExpressionNode? color;
+  _lib_editor_v1_expression.ExpressionNode? fontSize;
+  _lib_editor_v1_expression.ExpressionNode? fontWeight;
+  _lib_editor_v1_expression.ExpressionNode? fontItalic;
+  _lib_editor_v1_expression.ExpressionNode? fontOpticalSize;
+  _lib_editor_v1_expression.ExpressionNode? fontSlant;
+  _lib_editor_v1_expression.ExpressionNode? fontWidth;
+  _lib_editor_v1_expression.ExpressionNode? textAlignment;
+  _lib_editor_v1_expression.ExpressionNode? lineHeight;
+  _lib_editor_v1_expression.ExpressionNode? letterSpacing;
+  _lib_editor_v1_expression.ExpressionNode? decoration;
+  _lib_editor_v1_expression.ExpressionNode? semanticLabel;
   TextParagraph_orMutable paragraph;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -6958,17 +6848,6 @@ final class TextContent_mutable implements TextContent_orMutable {
     this.semanticLabel,
     this.paragraph,
   );
-
-  /// If the value of [value] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableValue {
-    final value = this.value;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.value = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// If the value of [paragraph] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [paragraph] and returns it.
@@ -7404,10 +7283,10 @@ final class TextParagraph_mutable implements TextParagraph_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class TextStyleOverride_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable? get color;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get fontWeight;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get fontItalic;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get decoration;
+  _lib_editor_v1_expression.ExpressionNode? get color;
+  _lib_editor_v1_expression.ExpressionNode? get fontWeight;
+  _lib_editor_v1_expression.ExpressionNode? get fontItalic;
+  _lib_editor_v1_expression.ExpressionNode? get decoration;
 
   TextStyleOverride toFrozen();
 }
@@ -7415,25 +7294,25 @@ sealed class TextStyleOverride_orMutable {
 /// Deeply immutable.
 final class TextStyleOverride implements TextStyleOverride_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? color;
+  final _lib_editor_v1_expression.ExpressionNode? color;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? fontWeight;
+  final _lib_editor_v1_expression.ExpressionNode? fontWeight;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? fontItalic;
+  final _lib_editor_v1_expression.ExpressionNode? fontItalic;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? decoration;
+  final _lib_editor_v1_expression.ExpressionNode? decoration;
   _skir.internal__UnrecognizedFields? _u;
 
   factory TextStyleOverride({
-    required _lib_editor_v1_expression.TypedExpression_orMutable? color,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? fontWeight,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? fontItalic,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? decoration,
+    required _lib_editor_v1_expression.ExpressionNode? color,
+    required _lib_editor_v1_expression.ExpressionNode? fontWeight,
+    required _lib_editor_v1_expression.ExpressionNode? fontItalic,
+    required _lib_editor_v1_expression.ExpressionNode? decoration,
   }) => TextStyleOverride._(
-    (color != null) ? color.toFrozen() : null,
-    (fontWeight != null) ? fontWeight.toFrozen() : null,
-    (fontItalic != null) ? fontItalic.toFrozen() : null,
-    (decoration != null) ? decoration.toFrozen() : null,
+    color,
+    fontWeight,
+    fontItalic,
+    decoration,
   );
 
   TextStyleOverride._(
@@ -7501,7 +7380,7 @@ final class TextStyleOverride implements TextStyleOverride_orMutable {
         "color",
         0,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.color,
@@ -7512,7 +7391,7 @@ final class TextStyleOverride implements TextStyleOverride_orMutable {
         "fontWeight",
         1,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.fontWeight,
@@ -7523,7 +7402,7 @@ final class TextStyleOverride implements TextStyleOverride_orMutable {
         "fontItalic",
         2,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.fontItalic,
@@ -7534,7 +7413,7 @@ final class TextStyleOverride implements TextStyleOverride_orMutable {
         "decoration",
         3,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.decoration,
@@ -7558,10 +7437,10 @@ final class TextStyleOverride implements TextStyleOverride_orMutable {
 
 /// Mutable version of [TextStyleOverride].
 final class TextStyleOverride_mutable implements TextStyleOverride_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable? color;
-  _lib_editor_v1_expression.TypedExpression_orMutable? fontWeight;
-  _lib_editor_v1_expression.TypedExpression_orMutable? fontItalic;
-  _lib_editor_v1_expression.TypedExpression_orMutable? decoration;
+  _lib_editor_v1_expression.ExpressionNode? color;
+  _lib_editor_v1_expression.ExpressionNode? fontWeight;
+  _lib_editor_v1_expression.ExpressionNode? fontItalic;
+  _lib_editor_v1_expression.ExpressionNode? decoration;
   _skir.internal__UnrecognizedFields? _u;
 
   TextStyleOverride_mutable._(
@@ -7586,7 +7465,7 @@ final class TextStyleOverride_mutable implements TextStyleOverride_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class TextRun_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable get text;
+  _lib_editor_v1_expression.ExpressionNode get text;
   TextStyleOverride_orMutable? get style;
 
   TextRun toFrozen();
@@ -7595,16 +7474,16 @@ sealed class TextRun_orMutable {
 /// Deeply immutable.
 final class TextRun implements TextRun_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression text;
+  final _lib_editor_v1_expression.ExpressionNode text;
   @_core.override
   final TextStyleOverride? style;
   _skir.internal__UnrecognizedFields? _u;
 
   factory TextRun({
-    required _lib_editor_v1_expression.TypedExpression_orMutable text,
+    required _lib_editor_v1_expression.ExpressionNode text,
     required TextStyleOverride_orMutable? style,
   }) => TextRun._(
-    text.toFrozen(),
+    text,
     (style != null) ? style.toFrozen() : null,
   );
 
@@ -7615,14 +7494,14 @@ final class TextRun implements TextRun_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = TextRun._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     null,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static TextRun_mutable mutable() => TextRun_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     null,
   );
 
@@ -7662,7 +7541,7 @@ final class TextRun implements TextRun_orMutable {
         "text",
         "text",
         0,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.text,
         (it, v) => it.text = v,
@@ -7696,7 +7575,7 @@ final class TextRun implements TextRun_orMutable {
 
 /// Mutable version of [TextRun].
 final class TextRun_mutable implements TextRun_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable text;
+  _lib_editor_v1_expression.ExpressionNode text;
   TextStyleOverride_orMutable? style;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -7704,17 +7583,6 @@ final class TextRun_mutable implements TextRun_orMutable {
     this.text,
     this.style,
   );
-
-  /// If the value of [text] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [text] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableText {
-    final value = this.text;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.text = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -8151,10 +8019,10 @@ final class AdaptiveLeadingElement_mutable implements AdaptiveLeadingElement_orM
 // -----------------------------------------------------------------------------
 
 sealed class IconContent_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable get name;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get semanticLabel;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get color;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get size;
+  _lib_editor_v1_expression.ExpressionNode get name;
+  _lib_editor_v1_expression.ExpressionNode? get semanticLabel;
+  _lib_editor_v1_expression.ExpressionNode? get color;
+  _lib_editor_v1_expression.ExpressionNode? get size;
 
   IconContent toFrozen();
 }
@@ -8162,25 +8030,25 @@ sealed class IconContent_orMutable {
 /// Deeply immutable.
 final class IconContent implements IconContent_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression name;
+  final _lib_editor_v1_expression.ExpressionNode name;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? semanticLabel;
+  final _lib_editor_v1_expression.ExpressionNode? semanticLabel;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? color;
+  final _lib_editor_v1_expression.ExpressionNode? color;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? size;
+  final _lib_editor_v1_expression.ExpressionNode? size;
   _skir.internal__UnrecognizedFields? _u;
 
   factory IconContent({
-    required _lib_editor_v1_expression.TypedExpression_orMutable name,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? semanticLabel,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? color,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? size,
+    required _lib_editor_v1_expression.ExpressionNode name,
+    required _lib_editor_v1_expression.ExpressionNode? semanticLabel,
+    required _lib_editor_v1_expression.ExpressionNode? color,
+    required _lib_editor_v1_expression.ExpressionNode? size,
   }) => IconContent._(
-    name.toFrozen(),
-    (semanticLabel != null) ? semanticLabel.toFrozen() : null,
-    (color != null) ? color.toFrozen() : null,
-    (size != null) ? size.toFrozen() : null,
+    name,
+    semanticLabel,
+    color,
+    size,
   );
 
   IconContent._(
@@ -8192,7 +8060,7 @@ final class IconContent implements IconContent_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = IconContent._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     null,
     null,
     null,
@@ -8201,7 +8069,7 @@ final class IconContent implements IconContent_orMutable {
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static IconContent_mutable mutable() => IconContent_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     null,
     null,
     null,
@@ -8247,7 +8115,7 @@ final class IconContent implements IconContent_orMutable {
         "name",
         "name",
         0,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.name,
         (it, v) => it.name = v,
@@ -8257,7 +8125,7 @@ final class IconContent implements IconContent_orMutable {
         "semanticLabel",
         1,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.semanticLabel,
@@ -8268,7 +8136,7 @@ final class IconContent implements IconContent_orMutable {
         "color",
         2,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.color,
@@ -8279,7 +8147,7 @@ final class IconContent implements IconContent_orMutable {
         "size",
         3,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.size,
@@ -8303,10 +8171,10 @@ final class IconContent implements IconContent_orMutable {
 
 /// Mutable version of [IconContent].
 final class IconContent_mutable implements IconContent_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable name;
-  _lib_editor_v1_expression.TypedExpression_orMutable? semanticLabel;
-  _lib_editor_v1_expression.TypedExpression_orMutable? color;
-  _lib_editor_v1_expression.TypedExpression_orMutable? size;
+  _lib_editor_v1_expression.ExpressionNode name;
+  _lib_editor_v1_expression.ExpressionNode? semanticLabel;
+  _lib_editor_v1_expression.ExpressionNode? color;
+  _lib_editor_v1_expression.ExpressionNode? size;
   _skir.internal__UnrecognizedFields? _u;
 
   IconContent_mutable._(
@@ -8315,17 +8183,6 @@ final class IconContent_mutable implements IconContent_orMutable {
     this.color,
     this.size,
   );
-
-  /// If the value of [name] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [name] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableName {
-    final value = this.name;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.name = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -8342,8 +8199,8 @@ final class IconContent_mutable implements IconContent_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class ImageContent_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable get source;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get semanticLabel;
+  _lib_editor_v1_expression.ExpressionNode get source;
+  _lib_editor_v1_expression.ExpressionNode? get semanticLabel;
 
   ImageContent toFrozen();
 }
@@ -8351,17 +8208,17 @@ sealed class ImageContent_orMutable {
 /// Deeply immutable.
 final class ImageContent implements ImageContent_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression source;
+  final _lib_editor_v1_expression.ExpressionNode source;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? semanticLabel;
+  final _lib_editor_v1_expression.ExpressionNode? semanticLabel;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ImageContent({
-    required _lib_editor_v1_expression.TypedExpression_orMutable source,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? semanticLabel,
+    required _lib_editor_v1_expression.ExpressionNode source,
+    required _lib_editor_v1_expression.ExpressionNode? semanticLabel,
   }) => ImageContent._(
-    source.toFrozen(),
-    (semanticLabel != null) ? semanticLabel.toFrozen() : null,
+    source,
+    semanticLabel,
   );
 
   ImageContent._(
@@ -8371,14 +8228,14 @@ final class ImageContent implements ImageContent_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ImageContent._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     null,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static ImageContent_mutable mutable() => ImageContent_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     null,
   );
 
@@ -8418,7 +8275,7 @@ final class ImageContent implements ImageContent_orMutable {
         "source",
         "source",
         0,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.source,
         (it, v) => it.source = v,
@@ -8428,7 +8285,7 @@ final class ImageContent implements ImageContent_orMutable {
         "semanticLabel",
         1,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.semanticLabel,
@@ -8452,25 +8309,14 @@ final class ImageContent implements ImageContent_orMutable {
 
 /// Mutable version of [ImageContent].
 final class ImageContent_mutable implements ImageContent_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable source;
-  _lib_editor_v1_expression.TypedExpression_orMutable? semanticLabel;
+  _lib_editor_v1_expression.ExpressionNode source;
+  _lib_editor_v1_expression.ExpressionNode? semanticLabel;
   _skir.internal__UnrecognizedFields? _u;
 
   ImageContent_mutable._(
     this.source,
     this.semanticLabel,
   );
-
-  /// If the value of [source] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableSource {
-    final value = this.source;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.source = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -8485,7 +8331,7 @@ final class ImageContent_mutable implements ImageContent_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class BadgeContent_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable get label;
+  _lib_editor_v1_expression.ExpressionNode get label;
   _core.String get tone;
 
   BadgeContent toFrozen();
@@ -8494,16 +8340,16 @@ sealed class BadgeContent_orMutable {
 /// Deeply immutable.
 final class BadgeContent implements BadgeContent_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression label;
+  final _lib_editor_v1_expression.ExpressionNode label;
   @_core.override
   final _core.String tone;
   _skir.internal__UnrecognizedFields? _u;
 
   factory BadgeContent({
-    required _lib_editor_v1_expression.TypedExpression_orMutable label,
+    required _lib_editor_v1_expression.ExpressionNode label,
     required _core.String tone,
   }) => BadgeContent._(
-    label.toFrozen(),
+    label,
     tone,
   );
 
@@ -8514,14 +8360,14 @@ final class BadgeContent implements BadgeContent_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = BadgeContent._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     "",
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static BadgeContent_mutable mutable() => BadgeContent_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     "",
   );
 
@@ -8561,7 +8407,7 @@ final class BadgeContent implements BadgeContent_orMutable {
         "label",
         "label",
         0,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.label,
         (it, v) => it.label = v,
@@ -8593,7 +8439,7 @@ final class BadgeContent implements BadgeContent_orMutable {
 
 /// Mutable version of [BadgeContent].
 final class BadgeContent_mutable implements BadgeContent_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable label;
+  _lib_editor_v1_expression.ExpressionNode label;
   _core.String tone;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -8601,17 +8447,6 @@ final class BadgeContent_mutable implements BadgeContent_orMutable {
     this.label,
     this.tone,
   );
-
-  /// If the value of [label] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [label] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableLabel {
-    final value = this.label;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.label = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -8626,8 +8461,8 @@ final class BadgeContent_mutable implements BadgeContent_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class ChipContent_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable get label;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get color;
+  _lib_editor_v1_expression.ExpressionNode get label;
+  _lib_editor_v1_expression.ExpressionNode? get color;
 
   ChipContent toFrozen();
 }
@@ -8635,17 +8470,17 @@ sealed class ChipContent_orMutable {
 /// Deeply immutable.
 final class ChipContent implements ChipContent_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression label;
+  final _lib_editor_v1_expression.ExpressionNode label;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? color;
+  final _lib_editor_v1_expression.ExpressionNode? color;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ChipContent({
-    required _lib_editor_v1_expression.TypedExpression_orMutable label,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? color,
+    required _lib_editor_v1_expression.ExpressionNode label,
+    required _lib_editor_v1_expression.ExpressionNode? color,
   }) => ChipContent._(
-    label.toFrozen(),
-    (color != null) ? color.toFrozen() : null,
+    label,
+    color,
   );
 
   ChipContent._(
@@ -8655,14 +8490,14 @@ final class ChipContent implements ChipContent_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ChipContent._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     null,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static ChipContent_mutable mutable() => ChipContent_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     null,
   );
 
@@ -8702,7 +8537,7 @@ final class ChipContent implements ChipContent_orMutable {
         "label",
         "label",
         0,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.label,
         (it, v) => it.label = v,
@@ -8712,7 +8547,7 @@ final class ChipContent implements ChipContent_orMutable {
         "color",
         1,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.color,
@@ -8736,25 +8571,14 @@ final class ChipContent implements ChipContent_orMutable {
 
 /// Mutable version of [ChipContent].
 final class ChipContent_mutable implements ChipContent_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable label;
-  _lib_editor_v1_expression.TypedExpression_orMutable? color;
+  _lib_editor_v1_expression.ExpressionNode label;
+  _lib_editor_v1_expression.ExpressionNode? color;
   _skir.internal__UnrecognizedFields? _u;
 
   ChipContent_mutable._(
     this.label,
     this.color,
   );
-
-  /// If the value of [label] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [label] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableLabel {
-    final value = this.label;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.label = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -8769,9 +8593,9 @@ final class ChipContent_mutable implements ChipContent_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class ProgressContent_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable get value;
-  _lib_editor_v1_expression.TypedExpression_orMutable get maximum;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get label;
+  _lib_editor_v1_expression.ExpressionNode get value;
+  _lib_editor_v1_expression.ExpressionNode get maximum;
+  _lib_editor_v1_expression.ExpressionNode? get label;
 
   ProgressContent toFrozen();
 }
@@ -8779,21 +8603,21 @@ sealed class ProgressContent_orMutable {
 /// Deeply immutable.
 final class ProgressContent implements ProgressContent_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression value;
+  final _lib_editor_v1_expression.ExpressionNode value;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression maximum;
+  final _lib_editor_v1_expression.ExpressionNode maximum;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? label;
+  final _lib_editor_v1_expression.ExpressionNode? label;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ProgressContent({
-    required _lib_editor_v1_expression.TypedExpression_orMutable value,
-    required _lib_editor_v1_expression.TypedExpression_orMutable maximum,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? label,
+    required _lib_editor_v1_expression.ExpressionNode value,
+    required _lib_editor_v1_expression.ExpressionNode maximum,
+    required _lib_editor_v1_expression.ExpressionNode? label,
   }) => ProgressContent._(
-    value.toFrozen(),
-    maximum.toFrozen(),
-    (label != null) ? label.toFrozen() : null,
+    value,
+    maximum,
+    label,
   );
 
   ProgressContent._(
@@ -8804,16 +8628,16 @@ final class ProgressContent implements ProgressContent_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ProgressContent._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     null,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static ProgressContent_mutable mutable() => ProgressContent_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     null,
   );
 
@@ -8855,7 +8679,7 @@ final class ProgressContent implements ProgressContent_orMutable {
         "value",
         "value",
         0,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.value,
         (it, v) => it.value = v,
@@ -8864,7 +8688,7 @@ final class ProgressContent implements ProgressContent_orMutable {
         "maximum",
         "maximum",
         1,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.maximum,
         (it, v) => it.maximum = v,
@@ -8874,7 +8698,7 @@ final class ProgressContent implements ProgressContent_orMutable {
         "label",
         2,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.label,
@@ -8898,9 +8722,9 @@ final class ProgressContent implements ProgressContent_orMutable {
 
 /// Mutable version of [ProgressContent].
 final class ProgressContent_mutable implements ProgressContent_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable value;
-  _lib_editor_v1_expression.TypedExpression_orMutable maximum;
-  _lib_editor_v1_expression.TypedExpression_orMutable? label;
+  _lib_editor_v1_expression.ExpressionNode value;
+  _lib_editor_v1_expression.ExpressionNode maximum;
+  _lib_editor_v1_expression.ExpressionNode? label;
   _skir.internal__UnrecognizedFields? _u;
 
   ProgressContent_mutable._(
@@ -8908,28 +8732,6 @@ final class ProgressContent_mutable implements ProgressContent_orMutable {
     this.maximum,
     this.label,
   );
-
-  /// If the value of [value] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableValue {
-    final value = this.value;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.value = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
-
-  /// If the value of [maximum] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [maximum] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableMaximum {
-    final value = this.maximum;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.maximum = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -9167,7 +8969,7 @@ enum _StatusTone_consts implements StatusTone {
 
 sealed class StatusAppearance_orMutable {
   StatusTone get tone;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get label;
+  _lib_editor_v1_expression.ExpressionNode? get label;
 
   StatusAppearance toFrozen();
 }
@@ -9177,15 +8979,15 @@ final class StatusAppearance implements StatusAppearance_orMutable {
   @_core.override
   final StatusTone tone;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? label;
+  final _lib_editor_v1_expression.ExpressionNode? label;
   _skir.internal__UnrecognizedFields? _u;
 
   factory StatusAppearance({
     required StatusTone tone,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? label,
+    required _lib_editor_v1_expression.ExpressionNode? label,
   }) => StatusAppearance._(
     tone,
-    (label != null) ? label.toFrozen() : null,
+    label,
   );
 
   StatusAppearance._(
@@ -9252,7 +9054,7 @@ final class StatusAppearance implements StatusAppearance_orMutable {
         "label",
         1,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.label,
@@ -9277,7 +9079,7 @@ final class StatusAppearance implements StatusAppearance_orMutable {
 /// Mutable version of [StatusAppearance].
 final class StatusAppearance_mutable implements StatusAppearance_orMutable {
   StatusTone tone;
-  _lib_editor_v1_expression.TypedExpression_orMutable? label;
+  _lib_editor_v1_expression.ExpressionNode? label;
   _skir.internal__UnrecognizedFields? _u;
 
   StatusAppearance_mutable._(
@@ -9298,7 +9100,7 @@ final class StatusAppearance_mutable implements StatusAppearance_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class StatusCase_orMutable {
-  _lib_editor_v1_type_catalog.TypedValue get match;
+  _lib_editor_v1_type_catalog.DataValue get match;
   StatusAppearance_orMutable get appearance;
 
   StatusCase toFrozen();
@@ -9307,13 +9109,13 @@ sealed class StatusCase_orMutable {
 /// Deeply immutable.
 final class StatusCase implements StatusCase_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.TypedValue match;
+  final _lib_editor_v1_type_catalog.DataValue match;
   @_core.override
   final StatusAppearance appearance;
   _skir.internal__UnrecognizedFields? _u;
 
   factory StatusCase({
-    required _lib_editor_v1_type_catalog.TypedValue match,
+    required _lib_editor_v1_type_catalog.DataValue match,
     required StatusAppearance_orMutable appearance,
   }) => StatusCase._(
     match,
@@ -9327,14 +9129,14 @@ final class StatusCase implements StatusCase_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = StatusCase._(
-    _lib_editor_v1_type_catalog.TypedValue.unknown,
+    _lib_editor_v1_type_catalog.DataValue.unknown,
     StatusAppearance.defaultInstance,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static StatusCase_mutable mutable() => StatusCase_mutable._(
-    _lib_editor_v1_type_catalog.TypedValue.unknown,
+    _lib_editor_v1_type_catalog.DataValue.unknown,
     StatusAppearance.defaultInstance,
   );
 
@@ -9374,7 +9176,7 @@ final class StatusCase implements StatusCase_orMutable {
         "match",
         "match",
         0,
-        _lib_editor_v1_type_catalog.TypedValue.serializer,
+        _lib_editor_v1_type_catalog.DataValue.serializer,
         "",
         (it) => it.match,
         (it, v) => it.match = v,
@@ -9406,7 +9208,7 @@ final class StatusCase implements StatusCase_orMutable {
 
 /// Mutable version of [StatusCase].
 final class StatusCase_mutable implements StatusCase_orMutable {
-  _lib_editor_v1_type_catalog.TypedValue match;
+  _lib_editor_v1_type_catalog.DataValue match;
   StatusAppearance_orMutable appearance;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -9439,7 +9241,7 @@ final class StatusCase_mutable implements StatusCase_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class StatusContent_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable get value;
+  _lib_editor_v1_expression.ExpressionNode get value;
   _core.Iterable<StatusCase_orMutable> get cases;
   StatusAppearance_orMutable? get fallback;
 
@@ -9449,7 +9251,7 @@ sealed class StatusContent_orMutable {
 /// Deeply immutable.
 final class StatusContent implements StatusContent_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression value;
+  final _lib_editor_v1_expression.ExpressionNode value;
   @_core.override
   final _core.Iterable<StatusCase> cases;
   @_core.override
@@ -9457,11 +9259,11 @@ final class StatusContent implements StatusContent_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory StatusContent({
-    required _lib_editor_v1_expression.TypedExpression_orMutable value,
+    required _lib_editor_v1_expression.ExpressionNode value,
     required _core.Iterable<StatusCase_orMutable> cases,
     required StatusAppearance_orMutable? fallback,
   }) => StatusContent._(
-    value.toFrozen(),
+    value,
     _skir.internal__frozenMappedCopy(cases, (it) => it.toFrozen()),
     (fallback != null) ? fallback.toFrozen() : null,
   );
@@ -9474,7 +9276,7 @@ final class StatusContent implements StatusContent_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = StatusContent._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     _skir.KeyedIterable.empty,
     null,
   );
@@ -9482,7 +9284,7 @@ final class StatusContent implements StatusContent_orMutable {
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static StatusContent_mutable mutable() => StatusContent_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     _skir.KeyedIterable.empty,
     null,
   );
@@ -9525,7 +9327,7 @@ final class StatusContent implements StatusContent_orMutable {
         "value",
         "value",
         0,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.value,
         (it, v) => it.value = v,
@@ -9570,7 +9372,7 @@ final class StatusContent implements StatusContent_orMutable {
 
 /// Mutable version of [StatusContent].
 final class StatusContent_mutable implements StatusContent_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable value;
+  _lib_editor_v1_expression.ExpressionNode value;
   _core.Iterable<StatusCase_orMutable> cases;
   StatusAppearance_orMutable? fallback;
   _skir.internal__UnrecognizedFields? _u;
@@ -9580,17 +9382,6 @@ final class StatusContent_mutable implements StatusContent_orMutable {
     this.cases,
     this.fallback,
   );
-
-  /// If the value of [value] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableValue {
-    final value = this.value;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.value = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// If the value of [cases] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [cases] and returns it.
@@ -9717,8 +9508,8 @@ enum _DateTimeZone_consts implements DateTimeZone {
 // -----------------------------------------------------------------------------
 
 sealed class DateTimeContent_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable get value;
-  _lib_editor_v1_expression.TypedExpression_orMutable get format;
+  _lib_editor_v1_expression.ExpressionNode get value;
+  _lib_editor_v1_expression.ExpressionNode get format;
   DateTimeZone get timeZone;
 
   DateTimeContent toFrozen();
@@ -9727,20 +9518,20 @@ sealed class DateTimeContent_orMutable {
 /// Deeply immutable.
 final class DateTimeContent implements DateTimeContent_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression value;
+  final _lib_editor_v1_expression.ExpressionNode value;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression format;
+  final _lib_editor_v1_expression.ExpressionNode format;
   @_core.override
   final DateTimeZone timeZone;
   _skir.internal__UnrecognizedFields? _u;
 
   factory DateTimeContent({
-    required _lib_editor_v1_expression.TypedExpression_orMutable value,
-    required _lib_editor_v1_expression.TypedExpression_orMutable format,
+    required _lib_editor_v1_expression.ExpressionNode value,
+    required _lib_editor_v1_expression.ExpressionNode format,
     required DateTimeZone timeZone,
   }) => DateTimeContent._(
-    value.toFrozen(),
-    format.toFrozen(),
+    value,
+    format,
     timeZone,
   );
 
@@ -9752,16 +9543,16 @@ final class DateTimeContent implements DateTimeContent_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = DateTimeContent._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     DateTimeZone.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static DateTimeContent_mutable mutable() => DateTimeContent_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     DateTimeZone.unknown,
   );
 
@@ -9803,7 +9594,7 @@ final class DateTimeContent implements DateTimeContent_orMutable {
         "value",
         "value",
         0,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.value,
         (it, v) => it.value = v,
@@ -9812,7 +9603,7 @@ final class DateTimeContent implements DateTimeContent_orMutable {
         "format",
         "format",
         1,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.format,
         (it, v) => it.format = v,
@@ -9844,8 +9635,8 @@ final class DateTimeContent implements DateTimeContent_orMutable {
 
 /// Mutable version of [DateTimeContent].
 final class DateTimeContent_mutable implements DateTimeContent_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable value;
-  _lib_editor_v1_expression.TypedExpression_orMutable format;
+  _lib_editor_v1_expression.ExpressionNode value;
+  _lib_editor_v1_expression.ExpressionNode format;
   DateTimeZone timeZone;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -9854,28 +9645,6 @@ final class DateTimeContent_mutable implements DateTimeContent_orMutable {
     this.format,
     this.timeZone,
   );
-
-  /// If the value of [value] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableValue {
-    final value = this.value;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.value = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
-
-  /// If the value of [format] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [format] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableFormat {
-    final value = this.format;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.format = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -9991,7 +9760,7 @@ enum _RelativeTimeStyle_consts implements RelativeTimeStyle {
 // -----------------------------------------------------------------------------
 
 sealed class RelativeTimeContent_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable get value;
+  _lib_editor_v1_expression.ExpressionNode get value;
   RelativeTimeStyle get style;
   DateTimeZone get timeZone;
 
@@ -10001,7 +9770,7 @@ sealed class RelativeTimeContent_orMutable {
 /// Deeply immutable.
 final class RelativeTimeContent implements RelativeTimeContent_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression value;
+  final _lib_editor_v1_expression.ExpressionNode value;
   @_core.override
   final RelativeTimeStyle style;
   @_core.override
@@ -10009,11 +9778,11 @@ final class RelativeTimeContent implements RelativeTimeContent_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory RelativeTimeContent({
-    required _lib_editor_v1_expression.TypedExpression_orMutable value,
+    required _lib_editor_v1_expression.ExpressionNode value,
     required RelativeTimeStyle style,
     required DateTimeZone timeZone,
   }) => RelativeTimeContent._(
-    value.toFrozen(),
+    value,
     style,
     timeZone,
   );
@@ -10026,7 +9795,7 @@ final class RelativeTimeContent implements RelativeTimeContent_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RelativeTimeContent._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     RelativeTimeStyle.unknown,
     DateTimeZone.unknown,
   );
@@ -10034,7 +9803,7 @@ final class RelativeTimeContent implements RelativeTimeContent_orMutable {
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static RelativeTimeContent_mutable mutable() => RelativeTimeContent_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     RelativeTimeStyle.unknown,
     DateTimeZone.unknown,
   );
@@ -10077,7 +9846,7 @@ final class RelativeTimeContent implements RelativeTimeContent_orMutable {
         "value",
         "value",
         0,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.value,
         (it, v) => it.value = v,
@@ -10118,7 +9887,7 @@ final class RelativeTimeContent implements RelativeTimeContent_orMutable {
 
 /// Mutable version of [RelativeTimeContent].
 final class RelativeTimeContent_mutable implements RelativeTimeContent_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable value;
+  _lib_editor_v1_expression.ExpressionNode value;
   RelativeTimeStyle style;
   DateTimeZone timeZone;
   _skir.internal__UnrecognizedFields? _u;
@@ -10128,17 +9897,6 @@ final class RelativeTimeContent_mutable implements RelativeTimeContent_orMutable
     this.style,
     this.timeZone,
   );
-
-  /// If the value of [value] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableValue {
-    final value = this.value;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.value = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -10155,7 +9913,7 @@ final class RelativeTimeContent_mutable implements RelativeTimeContent_orMutable
 
 sealed class TypedFieldElement_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable get binding;
-  _lib_editor_v1_type_catalog.TypeExpression get expectedType;
+  _lib_editor_v1_type_catalog.TypeTemplate get expectedType;
   PresentationNode_orMutable? get presentation;
 
   TypedFieldElement toFrozen();
@@ -10166,14 +9924,14 @@ final class TypedFieldElement implements TypedFieldElement_orMutable {
   @_core.override
   final _lib_editor_v1_binding.BindingRef binding;
   @_core.override
-  final _lib_editor_v1_type_catalog.TypeExpression expectedType;
+  final _lib_editor_v1_type_catalog.TypeTemplate expectedType;
   @_core.override
   final PresentationNode? presentation;
   _skir.internal__UnrecognizedFields? _u;
 
   factory TypedFieldElement({
     required _lib_editor_v1_binding.BindingRef_orMutable binding,
-    required _lib_editor_v1_type_catalog.TypeExpression expectedType,
+    required _lib_editor_v1_type_catalog.TypeTemplate expectedType,
     required PresentationNode_orMutable? presentation,
   }) => TypedFieldElement._(
     binding.toFrozen(),
@@ -10190,7 +9948,7 @@ final class TypedFieldElement implements TypedFieldElement_orMutable {
   /// Default instance with all fields set to their default values.
   static final defaultInstance = TypedFieldElement._(
     _lib_editor_v1_binding.BindingRef.defaultInstance,
-    _lib_editor_v1_type_catalog.TypeExpression.unknown,
+    _lib_editor_v1_type_catalog.TypeTemplate.unknown,
     null,
   );
 
@@ -10198,7 +9956,7 @@ final class TypedFieldElement implements TypedFieldElement_orMutable {
   /// Fields are initialized to their default values.
   static TypedFieldElement_mutable mutable() => TypedFieldElement_mutable._(
     _lib_editor_v1_binding.BindingRef.defaultInstance,
-    _lib_editor_v1_type_catalog.TypeExpression.unknown,
+    _lib_editor_v1_type_catalog.TypeTemplate.unknown,
     null,
   );
 
@@ -10249,7 +10007,7 @@ final class TypedFieldElement implements TypedFieldElement_orMutable {
         "expected_type",
         "expectedType",
         1,
-        _lib_editor_v1_type_catalog.TypeExpression.serializer,
+        _lib_editor_v1_type_catalog.TypeTemplate.serializer,
         "",
         (it) => it.expectedType,
         (it, v) => it.expectedType = v,
@@ -10284,7 +10042,7 @@ final class TypedFieldElement implements TypedFieldElement_orMutable {
 /// Mutable version of [TypedFieldElement].
 final class TypedFieldElement_mutable implements TypedFieldElement_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable binding;
-  _lib_editor_v1_type_catalog.TypeExpression expectedType;
+  _lib_editor_v1_type_catalog.TypeTemplate expectedType;
   PresentationNode_orMutable? presentation;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -10319,7 +10077,7 @@ final class TypedFieldElement_mutable implements TypedFieldElement_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class ConditionalElement_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable get condition;
+  _lib_editor_v1_expression.ExpressionNode get condition;
   PresentationNode_orMutable get whenTrue;
   PresentationNode_orMutable? get whenFalse;
 
@@ -10329,7 +10087,7 @@ sealed class ConditionalElement_orMutable {
 /// Deeply immutable.
 final class ConditionalElement implements ConditionalElement_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression condition;
+  final _lib_editor_v1_expression.ExpressionNode condition;
   @_core.override
   final PresentationNode whenTrue;
   @_core.override
@@ -10337,11 +10095,11 @@ final class ConditionalElement implements ConditionalElement_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory ConditionalElement({
-    required _lib_editor_v1_expression.TypedExpression_orMutable condition,
+    required _lib_editor_v1_expression.ExpressionNode condition,
     required PresentationNode_orMutable whenTrue,
     required PresentationNode_orMutable? whenFalse,
   }) => ConditionalElement._(
-    condition.toFrozen(),
+    condition,
     whenTrue.toFrozen(),
     (whenFalse != null) ? whenFalse.toFrozen() : null,
   );
@@ -10354,7 +10112,7 @@ final class ConditionalElement implements ConditionalElement_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ConditionalElement._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     PresentationNode.defaultInstance,
     null,
   );
@@ -10362,7 +10120,7 @@ final class ConditionalElement implements ConditionalElement_orMutable {
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static ConditionalElement_mutable mutable() => ConditionalElement_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     PresentationNode.defaultInstance,
     null,
   );
@@ -10405,7 +10163,7 @@ final class ConditionalElement implements ConditionalElement_orMutable {
         "condition",
         "condition",
         0,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.condition,
         (it, v) => it.condition = v,
@@ -10448,7 +10206,7 @@ final class ConditionalElement implements ConditionalElement_orMutable {
 
 /// Mutable version of [ConditionalElement].
 final class ConditionalElement_mutable implements ConditionalElement_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable condition;
+  _lib_editor_v1_expression.ExpressionNode condition;
   PresentationNode_orMutable whenTrue;
   PresentationNode_orMutable? whenFalse;
   _skir.internal__UnrecognizedFields? _u;
@@ -10458,17 +10216,6 @@ final class ConditionalElement_mutable implements ConditionalElement_orMutable {
     this.whenTrue,
     this.whenFalse,
   );
-
-  /// If the value of [condition] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [condition] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableCondition {
-    final value = this.condition;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.condition = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -10662,8 +10409,8 @@ final class SequencePresentation_mutable implements SequencePresentation_orMutab
 // -----------------------------------------------------------------------------
 
 sealed class RepeatedElement_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable get source;
-  _lib_editor_v1_binding.BindingId_orMutable get itemBindingId;
+  _lib_editor_v1_expression.ExpressionNode get source;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get itemBindingId;
   SequencePresentation_orMutable get presentation;
 
   RepeatedElement toFrozen();
@@ -10672,19 +10419,19 @@ sealed class RepeatedElement_orMutable {
 /// Deeply immutable.
 final class RepeatedElement implements RepeatedElement_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression source;
+  final _lib_editor_v1_expression.ExpressionNode source;
   @_core.override
-  final _lib_editor_v1_binding.BindingId itemBindingId;
+  final _lib_editor_v1_type_catalog.ExpressionBindingId itemBindingId;
   @_core.override
   final SequencePresentation presentation;
   _skir.internal__UnrecognizedFields? _u;
 
   factory RepeatedElement({
-    required _lib_editor_v1_expression.TypedExpression_orMutable source,
-    required _lib_editor_v1_binding.BindingId_orMutable itemBindingId,
+    required _lib_editor_v1_expression.ExpressionNode source,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable itemBindingId,
     required SequencePresentation_orMutable presentation,
   }) => RepeatedElement._(
-    source.toFrozen(),
+    source,
     itemBindingId.toFrozen(),
     presentation.toFrozen(),
   );
@@ -10697,16 +10444,16 @@ final class RepeatedElement implements RepeatedElement_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RepeatedElement._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
     SequencePresentation.defaultInstance,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static RepeatedElement_mutable mutable() => RepeatedElement_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
     SequencePresentation.defaultInstance,
   );
 
@@ -10748,7 +10495,7 @@ final class RepeatedElement implements RepeatedElement_orMutable {
         "source",
         "source",
         0,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.source,
         (it, v) => it.source = v,
@@ -10757,7 +10504,7 @@ final class RepeatedElement implements RepeatedElement_orMutable {
         "item_binding_id",
         "itemBindingId",
         1,
-        _lib_editor_v1_binding.BindingId.serializer,
+        _lib_editor_v1_type_catalog.ExpressionBindingId.serializer,
         "",
         (it) => it.itemBindingId,
         (it, v) => it.itemBindingId = v,
@@ -10789,8 +10536,8 @@ final class RepeatedElement implements RepeatedElement_orMutable {
 
 /// Mutable version of [RepeatedElement].
 final class RepeatedElement_mutable implements RepeatedElement_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable source;
-  _lib_editor_v1_binding.BindingId_orMutable itemBindingId;
+  _lib_editor_v1_expression.ExpressionNode source;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable itemBindingId;
   SequencePresentation_orMutable presentation;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -10800,25 +10547,14 @@ final class RepeatedElement_mutable implements RepeatedElement_orMutable {
     this.presentation,
   );
 
-  /// If the value of [source] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableSource {
-    final value = this.source;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.source = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
-
   /// If the value of [itemBindingId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [itemBindingId] and returns it.
-  _lib_editor_v1_binding.BindingId_mutable get mutableItemBindingId {
+  _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableItemBindingId {
     final value = this.itemBindingId;
-    if (value is _lib_editor_v1_binding.BindingId_mutable) {
+    if (value is _lib_editor_v1_type_catalog.ExpressionBindingId_mutable) {
       return value;
     } else {
-      return this.itemBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.itemBindingId = (value as _lib_editor_v1_type_catalog.ExpressionBindingId).toMutable();
     }
   }
 
@@ -10837,7 +10573,7 @@ final class RepeatedElement_mutable implements RepeatedElement_orMutable {
 
 sealed class ScopedBindingElement_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable get binding;
-  _lib_editor_v1_binding.BindingId_orMutable get scopeBindingId;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get scopeBindingId;
   PresentationNode_orMutable get child;
 
   ScopedBindingElement toFrozen();
@@ -10848,14 +10584,14 @@ final class ScopedBindingElement implements ScopedBindingElement_orMutable {
   @_core.override
   final _lib_editor_v1_binding.BindingRef binding;
   @_core.override
-  final _lib_editor_v1_binding.BindingId scopeBindingId;
+  final _lib_editor_v1_type_catalog.ExpressionBindingId scopeBindingId;
   @_core.override
   final PresentationNode child;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ScopedBindingElement({
     required _lib_editor_v1_binding.BindingRef_orMutable binding,
-    required _lib_editor_v1_binding.BindingId_orMutable scopeBindingId,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable scopeBindingId,
     required PresentationNode_orMutable child,
   }) => ScopedBindingElement._(
     binding.toFrozen(),
@@ -10872,7 +10608,7 @@ final class ScopedBindingElement implements ScopedBindingElement_orMutable {
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ScopedBindingElement._(
     _lib_editor_v1_binding.BindingRef.defaultInstance,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
     PresentationNode.defaultInstance,
   );
 
@@ -10880,7 +10616,7 @@ final class ScopedBindingElement implements ScopedBindingElement_orMutable {
   /// Fields are initialized to their default values.
   static ScopedBindingElement_mutable mutable() => ScopedBindingElement_mutable._(
     _lib_editor_v1_binding.BindingRef.defaultInstance,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
     PresentationNode.defaultInstance,
   );
 
@@ -10931,7 +10667,7 @@ final class ScopedBindingElement implements ScopedBindingElement_orMutable {
         "scope_binding_id",
         "scopeBindingId",
         1,
-        _lib_editor_v1_binding.BindingId.serializer,
+        _lib_editor_v1_type_catalog.ExpressionBindingId.serializer,
         "",
         (it) => it.scopeBindingId,
         (it, v) => it.scopeBindingId = v,
@@ -10964,7 +10700,7 @@ final class ScopedBindingElement implements ScopedBindingElement_orMutable {
 /// Mutable version of [ScopedBindingElement].
 final class ScopedBindingElement_mutable implements ScopedBindingElement_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable binding;
-  _lib_editor_v1_binding.BindingId_orMutable scopeBindingId;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable scopeBindingId;
   PresentationNode_orMutable child;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -10987,12 +10723,12 @@ final class ScopedBindingElement_mutable implements ScopedBindingElement_orMutab
 
   /// If the value of [scopeBindingId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [scopeBindingId] and returns it.
-  _lib_editor_v1_binding.BindingId_mutable get mutableScopeBindingId {
+  _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableScopeBindingId {
     final value = this.scopeBindingId;
-    if (value is _lib_editor_v1_binding.BindingId_mutable) {
+    if (value is _lib_editor_v1_type_catalog.ExpressionBindingId_mutable) {
       return value;
     } else {
-      return this.scopeBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.scopeBindingId = (value as _lib_editor_v1_type_catalog.ExpressionBindingId).toMutable();
     }
   }
 
@@ -11320,14 +11056,14 @@ final class CollectionLookupElement_mutable implements CollectionLookupElement_o
 
 sealed class CollectionGraphElement_orMutable {
   _core.String get sourceId;
-  _lib_editor_v1_binding.BindingRef_orMutable get roots;
+  _lib_editor_v1_expression.ExpressionNode get roots;
   SequencePresentation_orMutable get rootSequence;
   _core.String get relationId;
   CollectionGraphDirection get direction;
   _core.int? get maximumDepth;
   PresentationNode_orMutable get node;
-  _lib_editor_v1_binding.BindingId_orMutable get childrenBindingId;
-  _lib_editor_v1_binding.BindingId_orMutable get childBindingId;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get childrenBindingId;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get childBindingId;
   SequencePresentation_orMutable get children;
 
   CollectionGraphElement toFrozen();
@@ -11338,7 +11074,7 @@ final class CollectionGraphElement implements CollectionGraphElement_orMutable {
   @_core.override
   final _core.String sourceId;
   @_core.override
-  final _lib_editor_v1_binding.BindingRef roots;
+  final _lib_editor_v1_expression.ExpressionNode roots;
   @_core.override
   final SequencePresentation rootSequence;
   @_core.override
@@ -11350,27 +11086,27 @@ final class CollectionGraphElement implements CollectionGraphElement_orMutable {
   @_core.override
   final PresentationNode node;
   @_core.override
-  final _lib_editor_v1_binding.BindingId childrenBindingId;
+  final _lib_editor_v1_type_catalog.ExpressionBindingId childrenBindingId;
   @_core.override
-  final _lib_editor_v1_binding.BindingId childBindingId;
+  final _lib_editor_v1_type_catalog.ExpressionBindingId childBindingId;
   @_core.override
   final SequencePresentation children;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CollectionGraphElement({
     required _core.String sourceId,
-    required _lib_editor_v1_binding.BindingRef_orMutable roots,
+    required _lib_editor_v1_expression.ExpressionNode roots,
     required SequencePresentation_orMutable rootSequence,
     required _core.String relationId,
     required CollectionGraphDirection direction,
     required _core.int? maximumDepth,
     required PresentationNode_orMutable node,
-    required _lib_editor_v1_binding.BindingId_orMutable childrenBindingId,
-    required _lib_editor_v1_binding.BindingId_orMutable childBindingId,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable childrenBindingId,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable childBindingId,
     required SequencePresentation_orMutable children,
   }) => CollectionGraphElement._(
     sourceId,
-    roots.toFrozen(),
+    roots,
     rootSequence.toFrozen(),
     relationId,
     direction,
@@ -11397,14 +11133,14 @@ final class CollectionGraphElement implements CollectionGraphElement_orMutable {
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CollectionGraphElement._(
     "",
-    _lib_editor_v1_binding.BindingRef.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     SequencePresentation.defaultInstance,
     "",
     CollectionGraphDirection.unknown,
     null,
     PresentationNode.defaultInstance,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
     SequencePresentation.defaultInstance,
   );
 
@@ -11412,14 +11148,14 @@ final class CollectionGraphElement implements CollectionGraphElement_orMutable {
   /// Fields are initialized to their default values.
   static CollectionGraphElement_mutable mutable() => CollectionGraphElement_mutable._(
     "",
-    _lib_editor_v1_binding.BindingRef.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     SequencePresentation.defaultInstance,
     "",
     CollectionGraphDirection.unknown,
     null,
     PresentationNode.defaultInstance,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
     SequencePresentation.defaultInstance,
   );
 
@@ -11484,7 +11220,7 @@ final class CollectionGraphElement implements CollectionGraphElement_orMutable {
         "roots",
         "roots",
         1,
-        _lib_editor_v1_binding.BindingRef.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.roots,
         (it, v) => it.roots = v,
@@ -11540,7 +11276,7 @@ final class CollectionGraphElement implements CollectionGraphElement_orMutable {
         "children_binding_id",
         "childrenBindingId",
         7,
-        _lib_editor_v1_binding.BindingId.serializer,
+        _lib_editor_v1_type_catalog.ExpressionBindingId.serializer,
         "",
         (it) => it.childrenBindingId,
         (it, v) => it.childrenBindingId = v,
@@ -11549,7 +11285,7 @@ final class CollectionGraphElement implements CollectionGraphElement_orMutable {
         "child_binding_id",
         "childBindingId",
         8,
-        _lib_editor_v1_binding.BindingId.serializer,
+        _lib_editor_v1_type_catalog.ExpressionBindingId.serializer,
         "",
         (it) => it.childBindingId,
         (it, v) => it.childBindingId = v,
@@ -11582,14 +11318,14 @@ final class CollectionGraphElement implements CollectionGraphElement_orMutable {
 /// Mutable version of [CollectionGraphElement].
 final class CollectionGraphElement_mutable implements CollectionGraphElement_orMutable {
   _core.String sourceId;
-  _lib_editor_v1_binding.BindingRef_orMutable roots;
+  _lib_editor_v1_expression.ExpressionNode roots;
   SequencePresentation_orMutable rootSequence;
   _core.String relationId;
   CollectionGraphDirection direction;
   _core.int? maximumDepth;
   PresentationNode_orMutable node;
-  _lib_editor_v1_binding.BindingId_orMutable childrenBindingId;
-  _lib_editor_v1_binding.BindingId_orMutable childBindingId;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable childrenBindingId;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable childBindingId;
   SequencePresentation_orMutable children;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -11606,36 +11342,25 @@ final class CollectionGraphElement_mutable implements CollectionGraphElement_orM
     this.children,
   );
 
-  /// If the value of [roots] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [roots] and returns it.
-  _lib_editor_v1_binding.BindingRef_mutable get mutableRoots {
-    final value = this.roots;
-    if (value is _lib_editor_v1_binding.BindingRef_mutable) {
-      return value;
-    } else {
-      return this.roots = (value as _lib_editor_v1_binding.BindingRef).toMutable();
-    }
-  }
-
   /// If the value of [childrenBindingId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [childrenBindingId] and returns it.
-  _lib_editor_v1_binding.BindingId_mutable get mutableChildrenBindingId {
+  _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableChildrenBindingId {
     final value = this.childrenBindingId;
-    if (value is _lib_editor_v1_binding.BindingId_mutable) {
+    if (value is _lib_editor_v1_type_catalog.ExpressionBindingId_mutable) {
       return value;
     } else {
-      return this.childrenBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.childrenBindingId = (value as _lib_editor_v1_type_catalog.ExpressionBindingId).toMutable();
     }
   }
 
   /// If the value of [childBindingId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [childBindingId] and returns it.
-  _lib_editor_v1_binding.BindingId_mutable get mutableChildBindingId {
+  _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableChildBindingId {
     final value = this.childBindingId;
-    if (value is _lib_editor_v1_binding.BindingId_mutable) {
+    if (value is _lib_editor_v1_type_catalog.ExpressionBindingId_mutable) {
       return value;
     } else {
-      return this.childBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.childBindingId = (value as _lib_editor_v1_type_catalog.ExpressionBindingId).toMutable();
     }
   }
 
@@ -11684,19 +11409,8 @@ sealed class PresentationRadius {
 
   /// Create a 'custom' variant wrapping around the given value.
   factory PresentationRadius.wrapCustom(
-    _lib_editor_v1_expression.TypedExpression value
+    _lib_editor_v1_expression.ExpressionNode value
   ) => PresentationRadius_customWrapper._(value);
-
-  /// Same as `wrapCustom(_lib_editor_v1_expression.TypedExpression(...))`.
-  factory PresentationRadius.createCustom({
-    required _lib_editor_v1_type_catalog.TypeExpression resultType,
-    required _lib_editor_v1_expression.Expression? expression,
-  }) => PresentationRadius.wrapCustom(
-    _lib_editor_v1_expression.TypedExpression(
-      resultType: resultType,
-      expression: expression,
-    )
-  );
 
   /// Returns the kind of variant held by this PresentationRadius.
   PresentationRadius_kind get kind;
@@ -11736,7 +11450,7 @@ sealed class PresentationRadius {
         5,
         "custom",
         "wrapCustom",
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         PresentationRadius_customWrapper._,
         (it) => it.value,
@@ -11822,7 +11536,7 @@ sealed class _PresentationRadius_wrapper implements PresentationRadius {
 }
 
 final class PresentationRadius_customWrapper extends _PresentationRadius_wrapper {
-  final _lib_editor_v1_expression.TypedExpression value;
+  final _lib_editor_v1_expression.ExpressionNode value;
 
   PresentationRadius_customWrapper._(this.value);
 
@@ -11837,7 +11551,7 @@ final class PresentationRadius_customWrapper extends _PresentationRadius_wrapper
 sealed class ContainerLayout_orMutable {
   PresentationNode_orMutable get child;
   PresentationBorder? get border;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get backgroundColor;
+  _lib_editor_v1_expression.ExpressionNode? get backgroundColor;
   PresentationRadius get radius;
 
   ContainerLayout toFrozen();
@@ -11850,7 +11564,7 @@ final class ContainerLayout implements ContainerLayout_orMutable {
   @_core.override
   final PresentationBorder? border;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? backgroundColor;
+  final _lib_editor_v1_expression.ExpressionNode? backgroundColor;
   @_core.override
   final PresentationRadius radius;
   _skir.internal__UnrecognizedFields? _u;
@@ -11858,12 +11572,12 @@ final class ContainerLayout implements ContainerLayout_orMutable {
   factory ContainerLayout({
     required PresentationNode_orMutable child,
     required PresentationBorder? border,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? backgroundColor,
+    required _lib_editor_v1_expression.ExpressionNode? backgroundColor,
     required PresentationRadius radius,
   }) => ContainerLayout._(
     child.toFrozen(),
     border,
-    (backgroundColor != null) ? backgroundColor.toFrozen() : null,
+    backgroundColor,
     radius,
   );
 
@@ -11952,7 +11666,7 @@ final class ContainerLayout implements ContainerLayout_orMutable {
         "backgroundColor",
         2,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.backgroundColor,
@@ -11987,7 +11701,7 @@ final class ContainerLayout implements ContainerLayout_orMutable {
 final class ContainerLayout_mutable implements ContainerLayout_orMutable {
   PresentationNode_orMutable child;
   PresentationBorder? border;
-  _lib_editor_v1_expression.TypedExpression_orMutable? backgroundColor;
+  _lib_editor_v1_expression.ExpressionNode? backgroundColor;
   PresentationRadius radius;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -12190,8 +11904,8 @@ enum _PresentationAnchorAlignment_consts implements PresentationAnchorAlignment 
 // -----------------------------------------------------------------------------
 
 sealed class PresentationOffset_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable get x;
-  _lib_editor_v1_expression.TypedExpression_orMutable get y;
+  _lib_editor_v1_expression.ExpressionNode get x;
+  _lib_editor_v1_expression.ExpressionNode get y;
 
   PresentationOffset toFrozen();
 }
@@ -12199,17 +11913,17 @@ sealed class PresentationOffset_orMutable {
 /// Deeply immutable.
 final class PresentationOffset implements PresentationOffset_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression x;
+  final _lib_editor_v1_expression.ExpressionNode x;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression y;
+  final _lib_editor_v1_expression.ExpressionNode y;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PresentationOffset({
-    required _lib_editor_v1_expression.TypedExpression_orMutable x,
-    required _lib_editor_v1_expression.TypedExpression_orMutable y,
+    required _lib_editor_v1_expression.ExpressionNode x,
+    required _lib_editor_v1_expression.ExpressionNode y,
   }) => PresentationOffset._(
-    x.toFrozen(),
-    y.toFrozen(),
+    x,
+    y,
   );
 
   PresentationOffset._(
@@ -12219,15 +11933,15 @@ final class PresentationOffset implements PresentationOffset_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PresentationOffset._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static PresentationOffset_mutable mutable() => PresentationOffset_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
   );
 
   /// Returns this instance (no-op).
@@ -12266,7 +11980,7 @@ final class PresentationOffset implements PresentationOffset_orMutable {
         "x",
         "x",
         0,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.x,
         (it, v) => it.x = v,
@@ -12275,7 +11989,7 @@ final class PresentationOffset implements PresentationOffset_orMutable {
         "y",
         "y",
         1,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.y,
         (it, v) => it.y = v,
@@ -12298,36 +12012,14 @@ final class PresentationOffset implements PresentationOffset_orMutable {
 
 /// Mutable version of [PresentationOffset].
 final class PresentationOffset_mutable implements PresentationOffset_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable x;
-  _lib_editor_v1_expression.TypedExpression_orMutable y;
+  _lib_editor_v1_expression.ExpressionNode x;
+  _lib_editor_v1_expression.ExpressionNode y;
   _skir.internal__UnrecognizedFields? _u;
 
   PresentationOffset_mutable._(
     this.x,
     this.y,
   );
-
-  /// If the value of [x] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [x] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableX {
-    final value = this.x;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.x = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
-
-  /// If the value of [y] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [y] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableY {
-    final value = this.y;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.y = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -12346,7 +12038,7 @@ sealed class PresentationAnchorPoint_orMutable {
   _core.Iterable<_core.String> get groupIds;
   PresentationAnchorAlignment get alignment;
   PresentationOffset_orMutable? get offset;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get visibleIf;
+  _lib_editor_v1_expression.ExpressionNode? get visibleIf;
   _core.bool get exportToParent;
 
   PresentationAnchorPoint toFrozen();
@@ -12363,7 +12055,7 @@ final class PresentationAnchorPoint implements PresentationAnchorPoint_orMutable
   @_core.override
   final PresentationOffset? offset;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? visibleIf;
+  final _lib_editor_v1_expression.ExpressionNode? visibleIf;
   @_core.override
   final _core.bool exportToParent;
   _skir.internal__UnrecognizedFields? _u;
@@ -12373,14 +12065,14 @@ final class PresentationAnchorPoint implements PresentationAnchorPoint_orMutable
     required _core.Iterable<_core.String> groupIds,
     required PresentationAnchorAlignment alignment,
     required PresentationOffset_orMutable? offset,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? visibleIf,
+    required _lib_editor_v1_expression.ExpressionNode? visibleIf,
     required _core.bool exportToParent,
   }) => PresentationAnchorPoint._(
     anchorId,
     _skir.internal__frozenCopy(groupIds),
     alignment,
     (offset != null) ? offset.toFrozen() : null,
-    (visibleIf != null) ? visibleIf.toFrozen() : null,
+    visibleIf,
     exportToParent,
   );
 
@@ -12499,7 +12191,7 @@ final class PresentationAnchorPoint implements PresentationAnchorPoint_orMutable
         "visibleIf",
         4,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.visibleIf,
@@ -12536,7 +12228,7 @@ final class PresentationAnchorPoint_mutable implements PresentationAnchorPoint_o
   _core.Iterable<_core.String> groupIds;
   PresentationAnchorAlignment alignment;
   PresentationOffset_orMutable? offset;
-  _lib_editor_v1_expression.TypedExpression_orMutable? visibleIf;
+  _lib_editor_v1_expression.ExpressionNode? visibleIf;
   _core.bool exportToParent;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -12967,8 +12659,8 @@ enum _ConnectionExpressionScope_consts implements ConnectionExpressionScope {
 // -----------------------------------------------------------------------------
 
 sealed class ConnectorStroke_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable get color;
-  _lib_editor_v1_expression.TypedExpression_orMutable get width;
+  _lib_editor_v1_expression.ExpressionNode get color;
+  _lib_editor_v1_expression.ExpressionNode get width;
 
   ConnectorStroke toFrozen();
 }
@@ -12976,17 +12668,17 @@ sealed class ConnectorStroke_orMutable {
 /// Deeply immutable.
 final class ConnectorStroke implements ConnectorStroke_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression color;
+  final _lib_editor_v1_expression.ExpressionNode color;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression width;
+  final _lib_editor_v1_expression.ExpressionNode width;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ConnectorStroke({
-    required _lib_editor_v1_expression.TypedExpression_orMutable color,
-    required _lib_editor_v1_expression.TypedExpression_orMutable width,
+    required _lib_editor_v1_expression.ExpressionNode color,
+    required _lib_editor_v1_expression.ExpressionNode width,
   }) => ConnectorStroke._(
-    color.toFrozen(),
-    width.toFrozen(),
+    color,
+    width,
   );
 
   ConnectorStroke._(
@@ -12996,15 +12688,15 @@ final class ConnectorStroke implements ConnectorStroke_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ConnectorStroke._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static ConnectorStroke_mutable mutable() => ConnectorStroke_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
   );
 
   /// Returns this instance (no-op).
@@ -13043,7 +12735,7 @@ final class ConnectorStroke implements ConnectorStroke_orMutable {
         "color",
         "color",
         0,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.color,
         (it, v) => it.color = v,
@@ -13052,7 +12744,7 @@ final class ConnectorStroke implements ConnectorStroke_orMutable {
         "width",
         "width",
         1,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.width,
         (it, v) => it.width = v,
@@ -13075,36 +12767,14 @@ final class ConnectorStroke implements ConnectorStroke_orMutable {
 
 /// Mutable version of [ConnectorStroke].
 final class ConnectorStroke_mutable implements ConnectorStroke_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable color;
-  _lib_editor_v1_expression.TypedExpression_orMutable width;
+  _lib_editor_v1_expression.ExpressionNode color;
+  _lib_editor_v1_expression.ExpressionNode width;
   _skir.internal__UnrecognizedFields? _u;
 
   ConnectorStroke_mutable._(
     this.color,
     this.width,
   );
-
-  /// If the value of [color] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [color] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableColor {
-    final value = this.color;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.color = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
-
-  /// If the value of [width] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [width] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableWidth {
-    final value = this.width;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.width = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -13120,8 +12790,8 @@ final class ConnectorStroke_mutable implements ConnectorStroke_orMutable {
 
 sealed class ConnectionMarker_orMutable {
   PresentationNode_orMutable get node;
-  _lib_editor_v1_expression.TypedExpression_orMutable get position;
-  _lib_editor_v1_expression.TypedExpression_orMutable get alignToPath;
+  _lib_editor_v1_expression.ExpressionNode get position;
+  _lib_editor_v1_expression.ExpressionNode get alignToPath;
   ConnectionExpressionScope get scope;
 
   ConnectionMarker toFrozen();
@@ -13132,22 +12802,22 @@ final class ConnectionMarker implements ConnectionMarker_orMutable {
   @_core.override
   final PresentationNode node;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression position;
+  final _lib_editor_v1_expression.ExpressionNode position;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression alignToPath;
+  final _lib_editor_v1_expression.ExpressionNode alignToPath;
   @_core.override
   final ConnectionExpressionScope scope;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ConnectionMarker({
     required PresentationNode_orMutable node,
-    required _lib_editor_v1_expression.TypedExpression_orMutable position,
-    required _lib_editor_v1_expression.TypedExpression_orMutable alignToPath,
+    required _lib_editor_v1_expression.ExpressionNode position,
+    required _lib_editor_v1_expression.ExpressionNode alignToPath,
     required ConnectionExpressionScope scope,
   }) => ConnectionMarker._(
     node.toFrozen(),
-    position.toFrozen(),
-    alignToPath.toFrozen(),
+    position,
+    alignToPath,
     scope,
   );
 
@@ -13161,8 +12831,8 @@ final class ConnectionMarker implements ConnectionMarker_orMutable {
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ConnectionMarker._(
     PresentationNode.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     ConnectionExpressionScope.unknown,
   );
 
@@ -13170,8 +12840,8 @@ final class ConnectionMarker implements ConnectionMarker_orMutable {
   /// Fields are initialized to their default values.
   static ConnectionMarker_mutable mutable() => ConnectionMarker_mutable._(
     PresentationNode.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     ConnectionExpressionScope.unknown,
   );
 
@@ -13224,7 +12894,7 @@ final class ConnectionMarker implements ConnectionMarker_orMutable {
         "position",
         "position",
         1,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.position,
         (it, v) => it.position = v,
@@ -13233,7 +12903,7 @@ final class ConnectionMarker implements ConnectionMarker_orMutable {
         "align_to_path",
         "alignToPath",
         2,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.alignToPath,
         (it, v) => it.alignToPath = v,
@@ -13266,8 +12936,8 @@ final class ConnectionMarker implements ConnectionMarker_orMutable {
 /// Mutable version of [ConnectionMarker].
 final class ConnectionMarker_mutable implements ConnectionMarker_orMutable {
   PresentationNode_orMutable node;
-  _lib_editor_v1_expression.TypedExpression_orMutable position;
-  _lib_editor_v1_expression.TypedExpression_orMutable alignToPath;
+  _lib_editor_v1_expression.ExpressionNode position;
+  _lib_editor_v1_expression.ExpressionNode alignToPath;
   ConnectionExpressionScope scope;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -13277,28 +12947,6 @@ final class ConnectionMarker_mutable implements ConnectionMarker_orMutable {
     this.alignToPath,
     this.scope,
   );
-
-  /// If the value of [position] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [position] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutablePosition {
-    final value = this.position;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.position = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
-
-  /// If the value of [alignToPath] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [alignToPath] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableAlignToPath {
-    final value = this.alignToPath;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.alignToPath = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -13315,7 +12963,7 @@ final class ConnectionMarker_mutable implements ConnectionMarker_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class OrthogonalConnectionPath_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable get bendPosition;
+  _lib_editor_v1_expression.ExpressionNode get bendPosition;
 
   OrthogonalConnectionPath toFrozen();
 }
@@ -13323,13 +12971,13 @@ sealed class OrthogonalConnectionPath_orMutable {
 /// Deeply immutable.
 final class OrthogonalConnectionPath implements OrthogonalConnectionPath_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression bendPosition;
+  final _lib_editor_v1_expression.ExpressionNode bendPosition;
   _skir.internal__UnrecognizedFields? _u;
 
   factory OrthogonalConnectionPath({
-    required _lib_editor_v1_expression.TypedExpression_orMutable bendPosition,
+    required _lib_editor_v1_expression.ExpressionNode bendPosition,
   }) => OrthogonalConnectionPath._(
-    bendPosition.toFrozen(),
+    bendPosition,
   );
 
   OrthogonalConnectionPath._(
@@ -13338,13 +12986,13 @@ final class OrthogonalConnectionPath implements OrthogonalConnectionPath_orMutab
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = OrthogonalConnectionPath._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static OrthogonalConnectionPath_mutable mutable() => OrthogonalConnectionPath_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
   );
 
   /// Returns this instance (no-op).
@@ -13381,7 +13029,7 @@ final class OrthogonalConnectionPath implements OrthogonalConnectionPath_orMutab
         "bend_position",
         "bendPosition",
         0,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.bendPosition,
         (it, v) => it.bendPosition = v,
@@ -13404,23 +13052,12 @@ final class OrthogonalConnectionPath implements OrthogonalConnectionPath_orMutab
 
 /// Mutable version of [OrthogonalConnectionPath].
 final class OrthogonalConnectionPath_mutable implements OrthogonalConnectionPath_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable bendPosition;
+  _lib_editor_v1_expression.ExpressionNode bendPosition;
   _skir.internal__UnrecognizedFields? _u;
 
   OrthogonalConnectionPath_mutable._(
     this.bendPosition,
   );
-
-  /// If the value of [bendPosition] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [bendPosition] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableBendPosition {
-    final value = this.bendPosition;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.bendPosition = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -13610,7 +13247,7 @@ sealed class ConnectionPath {
 
   /// Same as `wrapOrthogonal(OrthogonalConnectionPath(...))`.
   factory ConnectionPath.createOrthogonal({
-    required _lib_editor_v1_expression.TypedExpression_orMutable bendPosition,
+    required _lib_editor_v1_expression.ExpressionNode bendPosition,
   }) => ConnectionPath.wrapOrthogonal(
     OrthogonalConnectionPath(
       bendPosition: bendPosition,
@@ -13864,7 +13501,7 @@ enum _ConnectionAxis_consts implements ConnectionAxis {
 
 sealed class OrthogonalConnectionBundlePath_orMutable {
   ConnectionAxis get axis;
-  _lib_editor_v1_expression.TypedExpression_orMutable get bendPosition;
+  _lib_editor_v1_expression.ExpressionNode get bendPosition;
 
   OrthogonalConnectionBundlePath toFrozen();
 }
@@ -13874,15 +13511,15 @@ final class OrthogonalConnectionBundlePath implements OrthogonalConnectionBundle
   @_core.override
   final ConnectionAxis axis;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression bendPosition;
+  final _lib_editor_v1_expression.ExpressionNode bendPosition;
   _skir.internal__UnrecognizedFields? _u;
 
   factory OrthogonalConnectionBundlePath({
     required ConnectionAxis axis,
-    required _lib_editor_v1_expression.TypedExpression_orMutable bendPosition,
+    required _lib_editor_v1_expression.ExpressionNode bendPosition,
   }) => OrthogonalConnectionBundlePath._(
     axis,
-    bendPosition.toFrozen(),
+    bendPosition,
   );
 
   OrthogonalConnectionBundlePath._(
@@ -13893,14 +13530,14 @@ final class OrthogonalConnectionBundlePath implements OrthogonalConnectionBundle
   /// Default instance with all fields set to their default values.
   static final defaultInstance = OrthogonalConnectionBundlePath._(
     ConnectionAxis.unknown,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static OrthogonalConnectionBundlePath_mutable mutable() => OrthogonalConnectionBundlePath_mutable._(
     ConnectionAxis.unknown,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
   );
 
   /// Returns this instance (no-op).
@@ -13948,7 +13585,7 @@ final class OrthogonalConnectionBundlePath implements OrthogonalConnectionBundle
         "bend_position",
         "bendPosition",
         1,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.bendPosition,
         (it, v) => it.bendPosition = v,
@@ -13972,24 +13609,13 @@ final class OrthogonalConnectionBundlePath implements OrthogonalConnectionBundle
 /// Mutable version of [OrthogonalConnectionBundlePath].
 final class OrthogonalConnectionBundlePath_mutable implements OrthogonalConnectionBundlePath_orMutable {
   ConnectionAxis axis;
-  _lib_editor_v1_expression.TypedExpression_orMutable bendPosition;
+  _lib_editor_v1_expression.ExpressionNode bendPosition;
   _skir.internal__UnrecognizedFields? _u;
 
   OrthogonalConnectionBundlePath_mutable._(
     this.axis,
     this.bendPosition,
   );
-
-  /// If the value of [bendPosition] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [bendPosition] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableBendPosition {
-    final value = this.bendPosition;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.bendPosition = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -14028,7 +13654,7 @@ sealed class ConnectionBundlePath {
   /// Same as `wrapOrthogonal(OrthogonalConnectionBundlePath(...))`.
   factory ConnectionBundlePath.createOrthogonal({
     required ConnectionAxis axis,
-    required _lib_editor_v1_expression.TypedExpression_orMutable bendPosition,
+    required _lib_editor_v1_expression.ExpressionNode bendPosition,
   }) => ConnectionBundlePath.wrapOrthogonal(
     OrthogonalConnectionBundlePath(
       axis: axis,
@@ -14151,7 +13777,7 @@ sealed class AnchoredConnection_orMutable {
   ConnectionPath get path;
   ConnectorStyle_orMutable get style;
   _core.Iterable<ConnectionMarker_orMutable> get markers;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get visibleIf;
+  _lib_editor_v1_expression.ExpressionNode? get visibleIf;
 
   AnchoredConnection toFrozen();
 }
@@ -14169,7 +13795,7 @@ final class AnchoredConnection implements AnchoredConnection_orMutable {
   @_core.override
   final _core.Iterable<ConnectionMarker> markers;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? visibleIf;
+  final _lib_editor_v1_expression.ExpressionNode? visibleIf;
   _skir.internal__UnrecognizedFields? _u;
 
   factory AnchoredConnection({
@@ -14178,14 +13804,14 @@ final class AnchoredConnection implements AnchoredConnection_orMutable {
     required ConnectionPath path,
     required ConnectorStyle_orMutable style,
     required _core.Iterable<ConnectionMarker_orMutable> markers,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? visibleIf,
+    required _lib_editor_v1_expression.ExpressionNode? visibleIf,
   }) => AnchoredConnection._(
     source,
     target,
     path,
     style.toFrozen(),
     _skir.internal__frozenMappedCopy(markers, (it) => it.toFrozen()),
-    (visibleIf != null) ? visibleIf.toFrozen() : null,
+    visibleIf,
   );
 
   AnchoredConnection._(
@@ -14310,7 +13936,7 @@ final class AnchoredConnection implements AnchoredConnection_orMutable {
         "visibleIf",
         5,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.visibleIf,
@@ -14339,7 +13965,7 @@ final class AnchoredConnection_mutable implements AnchoredConnection_orMutable {
   ConnectionPath path;
   ConnectorStyle_orMutable style;
   _core.Iterable<ConnectionMarker_orMutable> markers;
-  _lib_editor_v1_expression.TypedExpression_orMutable? visibleIf;
+  _lib_editor_v1_expression.ExpressionNode? visibleIf;
   _skir.internal__UnrecognizedFields? _u;
 
   AnchoredConnection_mutable._(
@@ -14386,7 +14012,7 @@ sealed class AnchoredConnectionBundle_orMutable {
   ConnectorStyle_orMutable get branchStyle;
   _core.Iterable<ConnectionMarker_orMutable> get trunkMarkers;
   _core.Iterable<ConnectionMarker_orMutable> get branchMarkers;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get visibleIf;
+  _lib_editor_v1_expression.ExpressionNode? get visibleIf;
 
   AnchoredConnectionBundle toFrozen();
 }
@@ -14408,7 +14034,7 @@ final class AnchoredConnectionBundle implements AnchoredConnectionBundle_orMutab
   @_core.override
   final _core.Iterable<ConnectionMarker> branchMarkers;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? visibleIf;
+  final _lib_editor_v1_expression.ExpressionNode? visibleIf;
   _skir.internal__UnrecognizedFields? _u;
 
   factory AnchoredConnectionBundle({
@@ -14419,7 +14045,7 @@ final class AnchoredConnectionBundle implements AnchoredConnectionBundle_orMutab
     required ConnectorStyle_orMutable branchStyle,
     required _core.Iterable<ConnectionMarker_orMutable> trunkMarkers,
     required _core.Iterable<ConnectionMarker_orMutable> branchMarkers,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? visibleIf,
+    required _lib_editor_v1_expression.ExpressionNode? visibleIf,
   }) => AnchoredConnectionBundle._(
     source,
     targets,
@@ -14428,7 +14054,7 @@ final class AnchoredConnectionBundle implements AnchoredConnectionBundle_orMutab
     branchStyle.toFrozen(),
     _skir.internal__frozenMappedCopy(trunkMarkers, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(branchMarkers, (it) => it.toFrozen()),
-    (visibleIf != null) ? visibleIf.toFrozen() : null,
+    visibleIf,
   );
 
   AnchoredConnectionBundle._(
@@ -14583,7 +14209,7 @@ final class AnchoredConnectionBundle implements AnchoredConnectionBundle_orMutab
         "visibleIf",
         7,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.visibleIf,
@@ -14614,7 +14240,7 @@ final class AnchoredConnectionBundle_mutable implements AnchoredConnectionBundle
   ConnectorStyle_orMutable branchStyle;
   _core.Iterable<ConnectionMarker_orMutable> trunkMarkers;
   _core.Iterable<ConnectionMarker_orMutable> branchMarkers;
-  _lib_editor_v1_expression.TypedExpression_orMutable? visibleIf;
+  _lib_editor_v1_expression.ExpressionNode? visibleIf;
   _skir.internal__UnrecognizedFields? _u;
 
   AnchoredConnectionBundle_mutable._(
@@ -14695,7 +14321,7 @@ sealed class PresentationConnection {
     required ConnectionPath path,
     required ConnectorStyle_orMutable style,
     required _core.Iterable<ConnectionMarker_orMutable> markers,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? visibleIf,
+    required _lib_editor_v1_expression.ExpressionNode? visibleIf,
   }) => PresentationConnection.wrapConnection(
     AnchoredConnection(
       source: source,
@@ -14721,7 +14347,7 @@ sealed class PresentationConnection {
     required ConnectorStyle_orMutable branchStyle,
     required _core.Iterable<ConnectionMarker_orMutable> trunkMarkers,
     required _core.Iterable<ConnectionMarker_orMutable> branchMarkers,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? visibleIf,
+    required _lib_editor_v1_expression.ExpressionNode? visibleIf,
   }) => PresentationConnection.wrapBundle(
     AnchoredConnectionBundle(
       source: source,
@@ -14977,7 +14603,7 @@ final class ConnectionLayerLayout_mutable implements ConnectionLayerLayout_orMut
 // -----------------------------------------------------------------------------
 
 sealed class ArrowConnectorMarker_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable get size;
+  _lib_editor_v1_expression.ExpressionNode get size;
 
   ArrowConnectorMarker toFrozen();
 }
@@ -14985,13 +14611,13 @@ sealed class ArrowConnectorMarker_orMutable {
 /// Deeply immutable.
 final class ArrowConnectorMarker implements ArrowConnectorMarker_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression size;
+  final _lib_editor_v1_expression.ExpressionNode size;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ArrowConnectorMarker({
-    required _lib_editor_v1_expression.TypedExpression_orMutable size,
+    required _lib_editor_v1_expression.ExpressionNode size,
   }) => ArrowConnectorMarker._(
-    size.toFrozen(),
+    size,
   );
 
   ArrowConnectorMarker._(
@@ -15000,13 +14626,13 @@ final class ArrowConnectorMarker implements ArrowConnectorMarker_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ArrowConnectorMarker._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static ArrowConnectorMarker_mutable mutable() => ArrowConnectorMarker_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
   );
 
   /// Returns this instance (no-op).
@@ -15043,7 +14669,7 @@ final class ArrowConnectorMarker implements ArrowConnectorMarker_orMutable {
         "size",
         "size",
         0,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.size,
         (it, v) => it.size = v,
@@ -15066,23 +14692,12 @@ final class ArrowConnectorMarker implements ArrowConnectorMarker_orMutable {
 
 /// Mutable version of [ArrowConnectorMarker].
 final class ArrowConnectorMarker_mutable implements ArrowConnectorMarker_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable size;
+  _lib_editor_v1_expression.ExpressionNode size;
   _skir.internal__UnrecognizedFields? _u;
 
   ArrowConnectorMarker_mutable._(
     this.size,
   );
-
-  /// If the value of [size] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [size] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableSize {
-    final value = this.size;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.size = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -15096,7 +14711,7 @@ final class ArrowConnectorMarker_mutable implements ArrowConnectorMarker_orMutab
 // -----------------------------------------------------------------------------
 
 sealed class CircleConnectorMarker_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable get diameter;
+  _lib_editor_v1_expression.ExpressionNode get diameter;
 
   CircleConnectorMarker toFrozen();
 }
@@ -15104,13 +14719,13 @@ sealed class CircleConnectorMarker_orMutable {
 /// Deeply immutable.
 final class CircleConnectorMarker implements CircleConnectorMarker_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression diameter;
+  final _lib_editor_v1_expression.ExpressionNode diameter;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CircleConnectorMarker({
-    required _lib_editor_v1_expression.TypedExpression_orMutable diameter,
+    required _lib_editor_v1_expression.ExpressionNode diameter,
   }) => CircleConnectorMarker._(
-    diameter.toFrozen(),
+    diameter,
   );
 
   CircleConnectorMarker._(
@@ -15119,13 +14734,13 @@ final class CircleConnectorMarker implements CircleConnectorMarker_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CircleConnectorMarker._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static CircleConnectorMarker_mutable mutable() => CircleConnectorMarker_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
   );
 
   /// Returns this instance (no-op).
@@ -15162,7 +14777,7 @@ final class CircleConnectorMarker implements CircleConnectorMarker_orMutable {
         "diameter",
         "diameter",
         0,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.diameter,
         (it, v) => it.diameter = v,
@@ -15185,23 +14800,12 @@ final class CircleConnectorMarker implements CircleConnectorMarker_orMutable {
 
 /// Mutable version of [CircleConnectorMarker].
 final class CircleConnectorMarker_mutable implements CircleConnectorMarker_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable diameter;
+  _lib_editor_v1_expression.ExpressionNode diameter;
   _skir.internal__UnrecognizedFields? _u;
 
   CircleConnectorMarker_mutable._(
     this.diameter,
   );
-
-  /// If the value of [diameter] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [diameter] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableDiameter {
-    final value = this.diameter;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.diameter = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -15236,7 +14840,7 @@ sealed class ConnectorEndpointMarker {
 
   /// Same as `wrapArrow(ArrowConnectorMarker(...))`.
   factory ConnectorEndpointMarker.createArrow({
-    required _lib_editor_v1_expression.TypedExpression_orMutable size,
+    required _lib_editor_v1_expression.ExpressionNode size,
   }) => ConnectorEndpointMarker.wrapArrow(
     ArrowConnectorMarker(
       size: size,
@@ -15250,7 +14854,7 @@ sealed class ConnectorEndpointMarker {
 
   /// Same as `wrapCircle(CircleConnectorMarker(...))`.
   factory ConnectorEndpointMarker.createCircle({
-    required _lib_editor_v1_expression.TypedExpression_orMutable diameter,
+    required _lib_editor_v1_expression.ExpressionNode diameter,
   }) => ConnectorEndpointMarker.wrapCircle(
     CircleConnectorMarker(
       diameter: diameter,
@@ -15368,7 +14972,7 @@ final class ConnectorEndpointMarker_circleWrapper extends _ConnectorEndpointMark
 
 sealed class ConnectorStyle_orMutable {
   ConnectorStroke_orMutable get stroke;
-  _lib_editor_v1_expression.TypedExpression_orMutable get cornerRadius;
+  _lib_editor_v1_expression.ExpressionNode get cornerRadius;
   ConnectorEndpointMarker? get startMarker;
   ConnectorEndpointMarker? get endMarker;
 
@@ -15380,7 +14984,7 @@ final class ConnectorStyle implements ConnectorStyle_orMutable {
   @_core.override
   final ConnectorStroke stroke;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression cornerRadius;
+  final _lib_editor_v1_expression.ExpressionNode cornerRadius;
   @_core.override
   final ConnectorEndpointMarker? startMarker;
   @_core.override
@@ -15389,12 +14993,12 @@ final class ConnectorStyle implements ConnectorStyle_orMutable {
 
   factory ConnectorStyle({
     required ConnectorStroke_orMutable stroke,
-    required _lib_editor_v1_expression.TypedExpression_orMutable cornerRadius,
+    required _lib_editor_v1_expression.ExpressionNode cornerRadius,
     required ConnectorEndpointMarker? startMarker,
     required ConnectorEndpointMarker? endMarker,
   }) => ConnectorStyle._(
     stroke.toFrozen(),
-    cornerRadius.toFrozen(),
+    cornerRadius,
     startMarker,
     endMarker,
   );
@@ -15409,7 +15013,7 @@ final class ConnectorStyle implements ConnectorStyle_orMutable {
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ConnectorStyle._(
     ConnectorStroke.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     null,
     null,
   );
@@ -15418,7 +15022,7 @@ final class ConnectorStyle implements ConnectorStyle_orMutable {
   /// Fields are initialized to their default values.
   static ConnectorStyle_mutable mutable() => ConnectorStyle_mutable._(
     ConnectorStroke.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     null,
     null,
   );
@@ -15472,7 +15076,7 @@ final class ConnectorStyle implements ConnectorStyle_orMutable {
         "corner_radius",
         "cornerRadius",
         1,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.cornerRadius,
         (it, v) => it.cornerRadius = v,
@@ -15518,7 +15122,7 @@ final class ConnectorStyle implements ConnectorStyle_orMutable {
 /// Mutable version of [ConnectorStyle].
 final class ConnectorStyle_mutable implements ConnectorStyle_orMutable {
   ConnectorStroke_orMutable stroke;
-  _lib_editor_v1_expression.TypedExpression_orMutable cornerRadius;
+  _lib_editor_v1_expression.ExpressionNode cornerRadius;
   ConnectorEndpointMarker? startMarker;
   ConnectorEndpointMarker? endMarker;
   _skir.internal__UnrecognizedFields? _u;
@@ -15538,17 +15142,6 @@ final class ConnectorStyle_mutable implements ConnectorStyle_orMutable {
       return value;
     } else {
       return this.stroke = (value as ConnectorStroke).toMutable();
-    }
-  }
-
-  /// If the value of [cornerRadius] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [cornerRadius] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableCornerRadius {
-    final value = this.cornerRadius;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.cornerRadius = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
     }
   }
 
@@ -15587,19 +15180,8 @@ sealed class ConnectorAnchor {
 
   /// Create a 'offset' variant wrapping around the given value.
   factory ConnectorAnchor.wrapOffset(
-    _lib_editor_v1_expression.TypedExpression value
+    _lib_editor_v1_expression.ExpressionNode value
   ) => ConnectorAnchor_offsetWrapper._(value);
-
-  /// Same as `wrapOffset(_lib_editor_v1_expression.TypedExpression(...))`.
-  factory ConnectorAnchor.createOffset({
-    required _lib_editor_v1_type_catalog.TypeExpression resultType,
-    required _lib_editor_v1_expression.Expression? expression,
-  }) => ConnectorAnchor.wrapOffset(
-    _lib_editor_v1_expression.TypedExpression(
-      resultType: resultType,
-      expression: expression,
-    )
-  );
 
   /// Returns the kind of variant held by this ConnectorAnchor.
   ConnectorAnchor_kind get kind;
@@ -15625,7 +15207,7 @@ sealed class ConnectorAnchor {
         3,
         "offset",
         "wrapOffset",
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         ConnectorAnchor_offsetWrapper._,
         (it) => it.value,
@@ -15707,7 +15289,7 @@ sealed class _ConnectorAnchor_wrapper implements ConnectorAnchor {
 }
 
 final class ConnectorAnchor_offsetWrapper extends _ConnectorAnchor_wrapper {
-  final _lib_editor_v1_expression.TypedExpression value;
+  final _lib_editor_v1_expression.ExpressionNode value;
 
   ConnectorAnchor_offsetWrapper._(this.value);
 
@@ -15723,11 +15305,11 @@ sealed class HierarchySequenceLayout_orMutable {
   ConnectorStyle_orMutable get unaryConnector;
   ConnectorStyle_orMutable get trunkConnector;
   ConnectorStyle_orMutable get branchConnector;
-  _lib_editor_v1_expression.TypedExpression_orMutable get itemSpacing;
-  _lib_editor_v1_expression.TypedExpression_orMutable get indentation;
-  _lib_editor_v1_expression.TypedExpression_orMutable get leadingSpacing;
+  _lib_editor_v1_expression.ExpressionNode get itemSpacing;
+  _lib_editor_v1_expression.ExpressionNode get indentation;
+  _lib_editor_v1_expression.ExpressionNode get leadingSpacing;
   ConnectorAnchor get itemAnchor;
-  _lib_editor_v1_expression.TypedExpression_orMutable get flattenSingleItem;
+  _lib_editor_v1_expression.ExpressionNode get flattenSingleItem;
   CrossAxisAlignment get crossAxisAlignment;
 
   HierarchySequenceLayout toFrozen();
@@ -15742,15 +15324,15 @@ final class HierarchySequenceLayout implements HierarchySequenceLayout_orMutable
   @_core.override
   final ConnectorStyle branchConnector;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression itemSpacing;
+  final _lib_editor_v1_expression.ExpressionNode itemSpacing;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression indentation;
+  final _lib_editor_v1_expression.ExpressionNode indentation;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression leadingSpacing;
+  final _lib_editor_v1_expression.ExpressionNode leadingSpacing;
   @_core.override
   final ConnectorAnchor itemAnchor;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression flattenSingleItem;
+  final _lib_editor_v1_expression.ExpressionNode flattenSingleItem;
   @_core.override
   final CrossAxisAlignment crossAxisAlignment;
   _skir.internal__UnrecognizedFields? _u;
@@ -15759,21 +15341,21 @@ final class HierarchySequenceLayout implements HierarchySequenceLayout_orMutable
     required ConnectorStyle_orMutable unaryConnector,
     required ConnectorStyle_orMutable trunkConnector,
     required ConnectorStyle_orMutable branchConnector,
-    required _lib_editor_v1_expression.TypedExpression_orMutable itemSpacing,
-    required _lib_editor_v1_expression.TypedExpression_orMutable indentation,
-    required _lib_editor_v1_expression.TypedExpression_orMutable leadingSpacing,
+    required _lib_editor_v1_expression.ExpressionNode itemSpacing,
+    required _lib_editor_v1_expression.ExpressionNode indentation,
+    required _lib_editor_v1_expression.ExpressionNode leadingSpacing,
     required ConnectorAnchor itemAnchor,
-    required _lib_editor_v1_expression.TypedExpression_orMutable flattenSingleItem,
+    required _lib_editor_v1_expression.ExpressionNode flattenSingleItem,
     required CrossAxisAlignment crossAxisAlignment,
   }) => HierarchySequenceLayout._(
     unaryConnector.toFrozen(),
     trunkConnector.toFrozen(),
     branchConnector.toFrozen(),
-    itemSpacing.toFrozen(),
-    indentation.toFrozen(),
-    leadingSpacing.toFrozen(),
+    itemSpacing,
+    indentation,
+    leadingSpacing,
     itemAnchor,
-    flattenSingleItem.toFrozen(),
+    flattenSingleItem,
     crossAxisAlignment,
   );
 
@@ -15794,11 +15376,11 @@ final class HierarchySequenceLayout implements HierarchySequenceLayout_orMutable
     ConnectorStyle.defaultInstance,
     ConnectorStyle.defaultInstance,
     ConnectorStyle.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     ConnectorAnchor.unknown,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     CrossAxisAlignment.unknown,
   );
 
@@ -15808,11 +15390,11 @@ final class HierarchySequenceLayout implements HierarchySequenceLayout_orMutable
     ConnectorStyle.defaultInstance,
     ConnectorStyle.defaultInstance,
     ConnectorStyle.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     ConnectorAnchor.unknown,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     CrossAxisAlignment.unknown,
   );
 
@@ -15893,7 +15475,7 @@ final class HierarchySequenceLayout implements HierarchySequenceLayout_orMutable
         "item_spacing",
         "itemSpacing",
         3,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.itemSpacing,
         (it, v) => it.itemSpacing = v,
@@ -15902,7 +15484,7 @@ final class HierarchySequenceLayout implements HierarchySequenceLayout_orMutable
         "indentation",
         "indentation",
         4,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.indentation,
         (it, v) => it.indentation = v,
@@ -15911,7 +15493,7 @@ final class HierarchySequenceLayout implements HierarchySequenceLayout_orMutable
         "leading_spacing",
         "leadingSpacing",
         5,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.leadingSpacing,
         (it, v) => it.leadingSpacing = v,
@@ -15929,7 +15511,7 @@ final class HierarchySequenceLayout implements HierarchySequenceLayout_orMutable
         "flatten_single_item",
         "flattenSingleItem",
         7,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.flattenSingleItem,
         (it, v) => it.flattenSingleItem = v,
@@ -15964,11 +15546,11 @@ final class HierarchySequenceLayout_mutable implements HierarchySequenceLayout_o
   ConnectorStyle_orMutable unaryConnector;
   ConnectorStyle_orMutable trunkConnector;
   ConnectorStyle_orMutable branchConnector;
-  _lib_editor_v1_expression.TypedExpression_orMutable itemSpacing;
-  _lib_editor_v1_expression.TypedExpression_orMutable indentation;
-  _lib_editor_v1_expression.TypedExpression_orMutable leadingSpacing;
+  _lib_editor_v1_expression.ExpressionNode itemSpacing;
+  _lib_editor_v1_expression.ExpressionNode indentation;
+  _lib_editor_v1_expression.ExpressionNode leadingSpacing;
   ConnectorAnchor itemAnchor;
-  _lib_editor_v1_expression.TypedExpression_orMutable flattenSingleItem;
+  _lib_editor_v1_expression.ExpressionNode flattenSingleItem;
   CrossAxisAlignment crossAxisAlignment;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -16014,50 +15596,6 @@ final class HierarchySequenceLayout_mutable implements HierarchySequenceLayout_o
       return value;
     } else {
       return this.branchConnector = (value as ConnectorStyle).toMutable();
-    }
-  }
-
-  /// If the value of [itemSpacing] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [itemSpacing] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableItemSpacing {
-    final value = this.itemSpacing;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.itemSpacing = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
-
-  /// If the value of [indentation] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [indentation] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableIndentation {
-    final value = this.indentation;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.indentation = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
-
-  /// If the value of [leadingSpacing] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [leadingSpacing] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableLeadingSpacing {
-    final value = this.leadingSpacing;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.leadingSpacing = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
-
-  /// If the value of [flattenSingleItem] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [flattenSingleItem] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableFlattenSingleItem {
-    final value = this.flattenSingleItem;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.flattenSingleItem = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
     }
   }
 
@@ -16110,11 +15648,11 @@ sealed class SequenceLayout {
     required ConnectorStyle_orMutable unaryConnector,
     required ConnectorStyle_orMutable trunkConnector,
     required ConnectorStyle_orMutable branchConnector,
-    required _lib_editor_v1_expression.TypedExpression_orMutable itemSpacing,
-    required _lib_editor_v1_expression.TypedExpression_orMutable indentation,
-    required _lib_editor_v1_expression.TypedExpression_orMutable leadingSpacing,
+    required _lib_editor_v1_expression.ExpressionNode itemSpacing,
+    required _lib_editor_v1_expression.ExpressionNode indentation,
+    required _lib_editor_v1_expression.ExpressionNode leadingSpacing,
     required ConnectorAnchor itemAnchor,
-    required _lib_editor_v1_expression.TypedExpression_orMutable flattenSingleItem,
+    required _lib_editor_v1_expression.ExpressionNode flattenSingleItem,
     required CrossAxisAlignment crossAxisAlignment,
   }) => SequenceLayout.wrapHierarchy(
     HierarchySequenceLayout(
@@ -16241,10 +15779,10 @@ final class SequenceLayout_hierarchyWrapper extends _SequenceLayout_wrapper {
 
 sealed class BoundControl_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable get binding;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get label;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get description;
+  _lib_editor_v1_expression.ExpressionNode? get label;
+  _lib_editor_v1_expression.ExpressionNode? get description;
   PresentationNode_orMutable? get prefix;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get semanticLabel;
+  _lib_editor_v1_expression.ExpressionNode? get semanticLabel;
 
   BoundControl toFrozen();
 }
@@ -16254,27 +15792,27 @@ final class BoundControl implements BoundControl_orMutable {
   @_core.override
   final _lib_editor_v1_binding.BindingRef binding;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? label;
+  final _lib_editor_v1_expression.ExpressionNode? label;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? description;
+  final _lib_editor_v1_expression.ExpressionNode? description;
   @_core.override
   final PresentationNode? prefix;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? semanticLabel;
+  final _lib_editor_v1_expression.ExpressionNode? semanticLabel;
   _skir.internal__UnrecognizedFields? _u;
 
   factory BoundControl({
     required _lib_editor_v1_binding.BindingRef_orMutable binding,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? label,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? description,
+    required _lib_editor_v1_expression.ExpressionNode? label,
+    required _lib_editor_v1_expression.ExpressionNode? description,
     required PresentationNode_orMutable? prefix,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? semanticLabel,
+    required _lib_editor_v1_expression.ExpressionNode? semanticLabel,
   }) => BoundControl._(
     binding.toFrozen(),
-    (label != null) ? label.toFrozen() : null,
-    (description != null) ? description.toFrozen() : null,
+    label,
+    description,
     (prefix != null) ? prefix.toFrozen() : null,
-    (semanticLabel != null) ? semanticLabel.toFrozen() : null,
+    semanticLabel,
   );
 
   BoundControl._(
@@ -16356,7 +15894,7 @@ final class BoundControl implements BoundControl_orMutable {
         "label",
         1,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.label,
@@ -16367,7 +15905,7 @@ final class BoundControl implements BoundControl_orMutable {
         "description",
         2,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.description,
@@ -16389,7 +15927,7 @@ final class BoundControl implements BoundControl_orMutable {
         "semanticLabel",
         4,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.semanticLabel,
@@ -16414,10 +15952,10 @@ final class BoundControl implements BoundControl_orMutable {
 /// Mutable version of [BoundControl].
 final class BoundControl_mutable implements BoundControl_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable binding;
-  _lib_editor_v1_expression.TypedExpression_orMutable? label;
-  _lib_editor_v1_expression.TypedExpression_orMutable? description;
+  _lib_editor_v1_expression.ExpressionNode? label;
+  _lib_editor_v1_expression.ExpressionNode? description;
   PresentationNode_orMutable? prefix;
-  _lib_editor_v1_expression.TypedExpression_orMutable? semanticLabel;
+  _lib_editor_v1_expression.ExpressionNode? semanticLabel;
   _skir.internal__UnrecognizedFields? _u;
 
   BoundControl_mutable._(
@@ -16792,7 +16330,7 @@ final class TextInputFormat_denyWrapper extends _TextInputFormat_wrapper {
 sealed class TextControl_orMutable {
   BoundControl_orMutable get control;
   _core.bool? get multiline;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get placeholder;
+  _lib_editor_v1_expression.ExpressionNode? get placeholder;
   _core.Iterable<TextInputFormat> get inputFormatters;
 
   TextControl toFrozen();
@@ -16805,7 +16343,7 @@ final class TextControl implements TextControl_orMutable {
   @_core.override
   final _core.bool? multiline;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? placeholder;
+  final _lib_editor_v1_expression.ExpressionNode? placeholder;
   @_core.override
   final _core.Iterable<TextInputFormat> inputFormatters;
   _skir.internal__UnrecognizedFields? _u;
@@ -16813,12 +16351,12 @@ final class TextControl implements TextControl_orMutable {
   factory TextControl({
     required BoundControl_orMutable control,
     required _core.bool? multiline,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? placeholder,
+    required _lib_editor_v1_expression.ExpressionNode? placeholder,
     required _core.Iterable<TextInputFormat> inputFormatters,
   }) => TextControl._(
     control.toFrozen(),
     multiline,
-    (placeholder != null) ? placeholder.toFrozen() : null,
+    placeholder,
     _skir.internal__frozenCopy(inputFormatters),
   );
 
@@ -16907,7 +16445,7 @@ final class TextControl implements TextControl_orMutable {
         "placeholder",
         2,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.placeholder,
@@ -16944,7 +16482,7 @@ final class TextControl implements TextControl_orMutable {
 final class TextControl_mutable implements TextControl_orMutable {
   BoundControl_orMutable control;
   _core.bool? multiline;
-  _lib_editor_v1_expression.TypedExpression_orMutable? placeholder;
+  _lib_editor_v1_expression.ExpressionNode? placeholder;
   _core.Iterable<TextInputFormat> inputFormatters;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -17268,8 +16806,8 @@ final class DateTimeControl_mutable implements DateTimeControl_orMutable {
 
 sealed class SelectOption_orMutable {
   _core.String get optionId;
-  _lib_editor_v1_expression.TypedExpression_orMutable get label;
-  _lib_editor_v1_expression.TypedExpression_orMutable get value;
+  _lib_editor_v1_expression.ExpressionNode get label;
+  _lib_editor_v1_expression.ExpressionNode get value;
 
   SelectOption toFrozen();
 }
@@ -17279,19 +16817,19 @@ final class SelectOption implements SelectOption_orMutable {
   @_core.override
   final _core.String optionId;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression label;
+  final _lib_editor_v1_expression.ExpressionNode label;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression value;
+  final _lib_editor_v1_expression.ExpressionNode value;
   _skir.internal__UnrecognizedFields? _u;
 
   factory SelectOption({
     required _core.String optionId,
-    required _lib_editor_v1_expression.TypedExpression_orMutable label,
-    required _lib_editor_v1_expression.TypedExpression_orMutable value,
+    required _lib_editor_v1_expression.ExpressionNode label,
+    required _lib_editor_v1_expression.ExpressionNode value,
   }) => SelectOption._(
     optionId,
-    label.toFrozen(),
-    value.toFrozen(),
+    label,
+    value,
   );
 
   SelectOption._(
@@ -17303,16 +16841,16 @@ final class SelectOption implements SelectOption_orMutable {
   /// Default instance with all fields set to their default values.
   static final defaultInstance = SelectOption._(
     "",
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static SelectOption_mutable mutable() => SelectOption_mutable._(
     "",
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
   );
 
   /// Returns this instance (no-op).
@@ -17362,7 +16900,7 @@ final class SelectOption implements SelectOption_orMutable {
         "label",
         "label",
         1,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.label,
         (it, v) => it.label = v,
@@ -17371,7 +16909,7 @@ final class SelectOption implements SelectOption_orMutable {
         "value",
         "value",
         2,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.value,
         (it, v) => it.value = v,
@@ -17395,8 +16933,8 @@ final class SelectOption implements SelectOption_orMutable {
 /// Mutable version of [SelectOption].
 final class SelectOption_mutable implements SelectOption_orMutable {
   _core.String optionId;
-  _lib_editor_v1_expression.TypedExpression_orMutable label;
-  _lib_editor_v1_expression.TypedExpression_orMutable value;
+  _lib_editor_v1_expression.ExpressionNode label;
+  _lib_editor_v1_expression.ExpressionNode value;
   _skir.internal__UnrecognizedFields? _u;
 
   SelectOption_mutable._(
@@ -17404,28 +16942,6 @@ final class SelectOption_mutable implements SelectOption_orMutable {
     this.label,
     this.value,
   );
-
-  /// If the value of [label] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [label] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableLabel {
-    final value = this.label;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.label = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
-
-  /// If the value of [value] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableValue {
-    final value = this.value;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.value = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -17444,7 +16960,6 @@ sealed class SelectControl_orMutable {
   BoundControl_orMutable get control;
   _core.Iterable<SelectOption_orMutable> get options;
   _core.bool get allowCustomValue;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get defaultValue;
 
   SelectControl toFrozen();
 }
@@ -17457,27 +16972,22 @@ final class SelectControl implements SelectControl_orMutable {
   final _skir.KeyedIterable<SelectOption, _core.String> options;
   @_core.override
   final _core.bool allowCustomValue;
-  @_core.override
-  final _lib_editor_v1_expression.TypedExpression? defaultValue;
   _skir.internal__UnrecognizedFields? _u;
 
   factory SelectControl({
     required BoundControl_orMutable control,
     required _core.Iterable<SelectOption_orMutable> options,
     required _core.bool allowCustomValue,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? defaultValue,
   }) => SelectControl._(
     control.toFrozen(),
     _skir.internal__keyedMappedCopy(options, "optionId", (it) => it.optionId, (it) => it.toFrozen()),
     allowCustomValue,
-    (defaultValue != null) ? defaultValue.toFrozen() : null,
   );
 
   SelectControl._(
     this.control,
     this.options,
     this.allowCustomValue,
-    this.defaultValue,
   );
 
   /// Default instance with all fields set to their default values.
@@ -17485,7 +16995,6 @@ final class SelectControl implements SelectControl_orMutable {
     BoundControl.defaultInstance,
     _skir.KeyedIterable.empty,
     false,
-    null,
   );
 
   /// Returns a new mutable instance.
@@ -17494,7 +17003,6 @@ final class SelectControl implements SelectControl_orMutable {
     BoundControl.defaultInstance,
     _skir.KeyedIterable.empty,
     false,
-    null,
   );
 
   /// Returns this instance (no-op).
@@ -17507,7 +17015,6 @@ final class SelectControl implements SelectControl_orMutable {
     this.control,
     this.options,
     this.allowCustomValue,
-    this.defaultValue,
   );
 
   @_core.override
@@ -17524,7 +17031,6 @@ final class SelectControl implements SelectControl_orMutable {
     this.control,
     this.options,
     this.allowCustomValue,
-    this.defaultValue,
   ];
 
   @_core.override
@@ -17564,17 +17070,6 @@ final class SelectControl implements SelectControl_orMutable {
         (it) => it.allowCustomValue,
         (it, v) => it.allowCustomValue = v,
       );
-      _serializerBuilder.addField(
-        "default_value",
-        "defaultValue",
-        3,
-        _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
-        ),
-        "",
-        (it) => it.defaultValue,
-        (it, v) => it.defaultValue = v,
-      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -17596,14 +17091,12 @@ final class SelectControl_mutable implements SelectControl_orMutable {
   BoundControl_orMutable control;
   _core.Iterable<SelectOption_orMutable> options;
   _core.bool allowCustomValue;
-  _lib_editor_v1_expression.TypedExpression_orMutable? defaultValue;
   _skir.internal__UnrecognizedFields? _u;
 
   SelectControl_mutable._(
     this.control,
     this.options,
     this.allowCustomValue,
-    this.defaultValue,
   );
 
   /// If the value of [options] is already mutable, returns it as-is.
@@ -17623,7 +17116,6 @@ final class SelectControl_mutable implements SelectControl_orMutable {
     control: this.control,
     options: this.options,
     allowCustomValue: this.allowCustomValue,
-    defaultValue: this.defaultValue,
   ).._u = this._u;
 }
 
@@ -17633,9 +17125,9 @@ final class SelectControl_mutable implements SelectControl_orMutable {
 
 sealed class SliderControl_orMutable {
   BoundControl_orMutable get control;
-  _lib_editor_v1_expression.TypedExpression_orMutable get minimum;
-  _lib_editor_v1_expression.TypedExpression_orMutable get maximum;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get divisions;
+  _lib_editor_v1_expression.ExpressionNode get minimum;
+  _lib_editor_v1_expression.ExpressionNode get maximum;
+  _lib_editor_v1_expression.ExpressionNode? get divisions;
 
   SliderControl toFrozen();
 }
@@ -17645,23 +17137,23 @@ final class SliderControl implements SliderControl_orMutable {
   @_core.override
   final BoundControl control;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression minimum;
+  final _lib_editor_v1_expression.ExpressionNode minimum;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression maximum;
+  final _lib_editor_v1_expression.ExpressionNode maximum;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? divisions;
+  final _lib_editor_v1_expression.ExpressionNode? divisions;
   _skir.internal__UnrecognizedFields? _u;
 
   factory SliderControl({
     required BoundControl_orMutable control,
-    required _lib_editor_v1_expression.TypedExpression_orMutable minimum,
-    required _lib_editor_v1_expression.TypedExpression_orMutable maximum,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? divisions,
+    required _lib_editor_v1_expression.ExpressionNode minimum,
+    required _lib_editor_v1_expression.ExpressionNode maximum,
+    required _lib_editor_v1_expression.ExpressionNode? divisions,
   }) => SliderControl._(
     control.toFrozen(),
-    minimum.toFrozen(),
-    maximum.toFrozen(),
-    (divisions != null) ? divisions.toFrozen() : null,
+    minimum,
+    maximum,
+    divisions,
   );
 
   SliderControl._(
@@ -17674,8 +17166,8 @@ final class SliderControl implements SliderControl_orMutable {
   /// Default instance with all fields set to their default values.
   static final defaultInstance = SliderControl._(
     BoundControl.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     null,
   );
 
@@ -17683,8 +17175,8 @@ final class SliderControl implements SliderControl_orMutable {
   /// Fields are initialized to their default values.
   static SliderControl_mutable mutable() => SliderControl_mutable._(
     BoundControl.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     null,
   );
 
@@ -17737,7 +17229,7 @@ final class SliderControl implements SliderControl_orMutable {
         "minimum",
         "minimum",
         1,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.minimum,
         (it, v) => it.minimum = v,
@@ -17746,7 +17238,7 @@ final class SliderControl implements SliderControl_orMutable {
         "maximum",
         "maximum",
         2,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.maximum,
         (it, v) => it.maximum = v,
@@ -17756,7 +17248,7 @@ final class SliderControl implements SliderControl_orMutable {
         "divisions",
         3,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.divisions,
@@ -17781,9 +17273,9 @@ final class SliderControl implements SliderControl_orMutable {
 /// Mutable version of [SliderControl].
 final class SliderControl_mutable implements SliderControl_orMutable {
   BoundControl_orMutable control;
-  _lib_editor_v1_expression.TypedExpression_orMutable minimum;
-  _lib_editor_v1_expression.TypedExpression_orMutable maximum;
-  _lib_editor_v1_expression.TypedExpression_orMutable? divisions;
+  _lib_editor_v1_expression.ExpressionNode minimum;
+  _lib_editor_v1_expression.ExpressionNode maximum;
+  _lib_editor_v1_expression.ExpressionNode? divisions;
   _skir.internal__UnrecognizedFields? _u;
 
   SliderControl_mutable._(
@@ -17792,28 +17284,6 @@ final class SliderControl_mutable implements SliderControl_orMutable {
     this.maximum,
     this.divisions,
   );
-
-  /// If the value of [minimum] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [minimum] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableMinimum {
-    final value = this.minimum;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.minimum = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
-
-  /// If the value of [maximum] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [maximum] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableMaximum {
-    final value = this.maximum;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.maximum = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -17835,8 +17305,8 @@ sealed class ListControl_orMutable {
   _core.bool get allowAdd;
   _core.bool get allowRemove;
   _core.bool get allowReorder;
-  _lib_editor_v1_binding.BindingId_orMutable get itemBindingId;
-  _lib_editor_v1_binding.BindingId_orMutable get indexBindingId;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get itemBindingId;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get indexBindingId;
 
   ListControl toFrozen();
 }
@@ -17854,9 +17324,9 @@ final class ListControl implements ListControl_orMutable {
   @_core.override
   final _core.bool allowReorder;
   @_core.override
-  final _lib_editor_v1_binding.BindingId itemBindingId;
+  final _lib_editor_v1_type_catalog.ExpressionBindingId itemBindingId;
   @_core.override
-  final _lib_editor_v1_binding.BindingId indexBindingId;
+  final _lib_editor_v1_type_catalog.ExpressionBindingId indexBindingId;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ListControl({
@@ -17865,8 +17335,8 @@ final class ListControl implements ListControl_orMutable {
     required _core.bool allowAdd,
     required _core.bool allowRemove,
     required _core.bool allowReorder,
-    required _lib_editor_v1_binding.BindingId_orMutable itemBindingId,
-    required _lib_editor_v1_binding.BindingId_orMutable indexBindingId,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable itemBindingId,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable indexBindingId,
   }) => ListControl._(
     control.toFrozen(),
     (itemPresentation != null) ? itemPresentation.toFrozen() : null,
@@ -17894,8 +17364,8 @@ final class ListControl implements ListControl_orMutable {
     false,
     false,
     false,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
   );
 
   /// Returns a new mutable instance.
@@ -17906,8 +17376,8 @@ final class ListControl implements ListControl_orMutable {
     false,
     false,
     false,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
   );
 
   /// Returns this instance (no-op).
@@ -18003,7 +17473,7 @@ final class ListControl implements ListControl_orMutable {
         "item_binding_id",
         "itemBindingId",
         5,
-        _lib_editor_v1_binding.BindingId.serializer,
+        _lib_editor_v1_type_catalog.ExpressionBindingId.serializer,
         "",
         (it) => it.itemBindingId,
         (it, v) => it.itemBindingId = v,
@@ -18012,7 +17482,7 @@ final class ListControl implements ListControl_orMutable {
         "index_binding_id",
         "indexBindingId",
         6,
-        _lib_editor_v1_binding.BindingId.serializer,
+        _lib_editor_v1_type_catalog.ExpressionBindingId.serializer,
         "",
         (it) => it.indexBindingId,
         (it, v) => it.indexBindingId = v,
@@ -18040,8 +17510,8 @@ final class ListControl_mutable implements ListControl_orMutable {
   _core.bool allowAdd;
   _core.bool allowRemove;
   _core.bool allowReorder;
-  _lib_editor_v1_binding.BindingId_orMutable itemBindingId;
-  _lib_editor_v1_binding.BindingId_orMutable indexBindingId;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable itemBindingId;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable indexBindingId;
   _skir.internal__UnrecognizedFields? _u;
 
   ListControl_mutable._(
@@ -18056,23 +17526,23 @@ final class ListControl_mutable implements ListControl_orMutable {
 
   /// If the value of [itemBindingId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [itemBindingId] and returns it.
-  _lib_editor_v1_binding.BindingId_mutable get mutableItemBindingId {
+  _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableItemBindingId {
     final value = this.itemBindingId;
-    if (value is _lib_editor_v1_binding.BindingId_mutable) {
+    if (value is _lib_editor_v1_type_catalog.ExpressionBindingId_mutable) {
       return value;
     } else {
-      return this.itemBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.itemBindingId = (value as _lib_editor_v1_type_catalog.ExpressionBindingId).toMutable();
     }
   }
 
   /// If the value of [indexBindingId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [indexBindingId] and returns it.
-  _lib_editor_v1_binding.BindingId_mutable get mutableIndexBindingId {
+  _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableIndexBindingId {
     final value = this.indexBindingId;
-    if (value is _lib_editor_v1_binding.BindingId_mutable) {
+    if (value is _lib_editor_v1_type_catalog.ExpressionBindingId_mutable) {
       return value;
     } else {
-      return this.indexBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.indexBindingId = (value as _lib_editor_v1_type_catalog.ExpressionBindingId).toMutable();
     }
   }
 
@@ -18099,8 +17569,8 @@ sealed class MapControl_orMutable {
   PresentationNode_orMutable? get valuePresentation;
   _core.bool get allowAdd;
   _core.bool get allowRemove;
-  _lib_editor_v1_binding.BindingId_orMutable get keyBindingId;
-  _lib_editor_v1_binding.BindingId_orMutable get valueBindingId;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get keyBindingId;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get valueBindingId;
 
   MapControl toFrozen();
 }
@@ -18118,9 +17588,9 @@ final class MapControl implements MapControl_orMutable {
   @_core.override
   final _core.bool allowRemove;
   @_core.override
-  final _lib_editor_v1_binding.BindingId keyBindingId;
+  final _lib_editor_v1_type_catalog.ExpressionBindingId keyBindingId;
   @_core.override
-  final _lib_editor_v1_binding.BindingId valueBindingId;
+  final _lib_editor_v1_type_catalog.ExpressionBindingId valueBindingId;
   _skir.internal__UnrecognizedFields? _u;
 
   factory MapControl({
@@ -18129,8 +17599,8 @@ final class MapControl implements MapControl_orMutable {
     required PresentationNode_orMutable? valuePresentation,
     required _core.bool allowAdd,
     required _core.bool allowRemove,
-    required _lib_editor_v1_binding.BindingId_orMutable keyBindingId,
-    required _lib_editor_v1_binding.BindingId_orMutable valueBindingId,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable keyBindingId,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable valueBindingId,
   }) => MapControl._(
     control.toFrozen(),
     (keyPresentation != null) ? keyPresentation.toFrozen() : null,
@@ -18158,8 +17628,8 @@ final class MapControl implements MapControl_orMutable {
     null,
     false,
     false,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
   );
 
   /// Returns a new mutable instance.
@@ -18170,8 +17640,8 @@ final class MapControl implements MapControl_orMutable {
     null,
     false,
     false,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
   );
 
   /// Returns this instance (no-op).
@@ -18269,7 +17739,7 @@ final class MapControl implements MapControl_orMutable {
         "key_binding_id",
         "keyBindingId",
         5,
-        _lib_editor_v1_binding.BindingId.serializer,
+        _lib_editor_v1_type_catalog.ExpressionBindingId.serializer,
         "",
         (it) => it.keyBindingId,
         (it, v) => it.keyBindingId = v,
@@ -18278,7 +17748,7 @@ final class MapControl implements MapControl_orMutable {
         "value_binding_id",
         "valueBindingId",
         6,
-        _lib_editor_v1_binding.BindingId.serializer,
+        _lib_editor_v1_type_catalog.ExpressionBindingId.serializer,
         "",
         (it) => it.valueBindingId,
         (it, v) => it.valueBindingId = v,
@@ -18306,8 +17776,8 @@ final class MapControl_mutable implements MapControl_orMutable {
   PresentationNode_orMutable? valuePresentation;
   _core.bool allowAdd;
   _core.bool allowRemove;
-  _lib_editor_v1_binding.BindingId_orMutable keyBindingId;
-  _lib_editor_v1_binding.BindingId_orMutable valueBindingId;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable keyBindingId;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable valueBindingId;
   _skir.internal__UnrecognizedFields? _u;
 
   MapControl_mutable._(
@@ -18322,23 +17792,23 @@ final class MapControl_mutable implements MapControl_orMutable {
 
   /// If the value of [keyBindingId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [keyBindingId] and returns it.
-  _lib_editor_v1_binding.BindingId_mutable get mutableKeyBindingId {
+  _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableKeyBindingId {
     final value = this.keyBindingId;
-    if (value is _lib_editor_v1_binding.BindingId_mutable) {
+    if (value is _lib_editor_v1_type_catalog.ExpressionBindingId_mutable) {
       return value;
     } else {
-      return this.keyBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.keyBindingId = (value as _lib_editor_v1_type_catalog.ExpressionBindingId).toMutable();
     }
   }
 
   /// If the value of [valueBindingId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [valueBindingId] and returns it.
-  _lib_editor_v1_binding.BindingId_mutable get mutableValueBindingId {
+  _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableValueBindingId {
     final value = this.valueBindingId;
-    if (value is _lib_editor_v1_binding.BindingId_mutable) {
+    if (value is _lib_editor_v1_type_catalog.ExpressionBindingId_mutable) {
       return value;
     } else {
-      return this.valueBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.valueBindingId = (value as _lib_editor_v1_type_catalog.ExpressionBindingId).toMutable();
     }
   }
 
@@ -18492,8 +17962,8 @@ final class RecordControl_mutable implements RecordControl_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class ConcreteTypePresentation_orMutable {
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable get concreteType;
-  _lib_editor_v1_expression.TypedExpression_orMutable get label;
+  _lib_editor_v1_type_catalog.TypeUse get concreteType;
+  _lib_editor_v1_expression.ExpressionNode get label;
   PresentationNode_orMutable? get presentation;
 
   ConcreteTypePresentation toFrozen();
@@ -18502,20 +17972,20 @@ sealed class ConcreteTypePresentation_orMutable {
 /// Deeply immutable.
 final class ConcreteTypePresentation implements ConcreteTypePresentation_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.ResolvedTypeRef concreteType;
+  final _lib_editor_v1_type_catalog.TypeUse concreteType;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression label;
+  final _lib_editor_v1_expression.ExpressionNode label;
   @_core.override
   final PresentationNode? presentation;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ConcreteTypePresentation({
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable concreteType,
-    required _lib_editor_v1_expression.TypedExpression_orMutable label,
+    required _lib_editor_v1_type_catalog.TypeUse concreteType,
+    required _lib_editor_v1_expression.ExpressionNode label,
     required PresentationNode_orMutable? presentation,
   }) => ConcreteTypePresentation._(
-    concreteType.toFrozen(),
-    label.toFrozen(),
+    concreteType,
+    label,
     (presentation != null) ? presentation.toFrozen() : null,
   );
 
@@ -18527,16 +17997,16 @@ final class ConcreteTypePresentation implements ConcreteTypePresentation_orMutab
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ConcreteTypePresentation._(
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     null,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static ConcreteTypePresentation_mutable mutable() => ConcreteTypePresentation_mutable._(
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     null,
   );
 
@@ -18578,7 +18048,7 @@ final class ConcreteTypePresentation implements ConcreteTypePresentation_orMutab
         "concrete_type",
         "concreteType",
         0,
-        _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
+        _lib_editor_v1_type_catalog.TypeUse.serializer,
         "",
         (it) => it.concreteType,
         (it, v) => it.concreteType = v,
@@ -18587,7 +18057,7 @@ final class ConcreteTypePresentation implements ConcreteTypePresentation_orMutab
         "label",
         "label",
         1,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.label,
         (it, v) => it.label = v,
@@ -18621,8 +18091,8 @@ final class ConcreteTypePresentation implements ConcreteTypePresentation_orMutab
 
 /// Mutable version of [ConcreteTypePresentation].
 final class ConcreteTypePresentation_mutable implements ConcreteTypePresentation_orMutable {
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable concreteType;
-  _lib_editor_v1_expression.TypedExpression_orMutable label;
+  _lib_editor_v1_type_catalog.TypeUse concreteType;
+  _lib_editor_v1_expression.ExpressionNode label;
   PresentationNode_orMutable? presentation;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -18631,28 +18101,6 @@ final class ConcreteTypePresentation_mutable implements ConcreteTypePresentation
     this.label,
     this.presentation,
   );
-
-  /// If the value of [concreteType] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [concreteType] and returns it.
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable get mutableConcreteType {
-    final value = this.concreteType;
-    if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
-      return value;
-    } else {
-      return this.concreteType = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
-    }
-  }
-
-  /// If the value of [label] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [label] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableLabel {
-    final value = this.label;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.label = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -18796,11 +18244,143 @@ final class PolymorphicControl_mutable implements PolymorphicControl_orMutable {
 }
 
 // -----------------------------------------------------------------------------
+// struct NamedControl
+// -----------------------------------------------------------------------------
+
+sealed class NamedControl_orMutable {
+  BoundControl_orMutable get control;
+  PresentationNode_orMutable? get payloadPresentation;
+
+  NamedControl toFrozen();
+}
+
+/// Deeply immutable.
+final class NamedControl implements NamedControl_orMutable {
+  @_core.override
+  final BoundControl control;
+  @_core.override
+  final PresentationNode? payloadPresentation;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory NamedControl({
+    required BoundControl_orMutable control,
+    required PresentationNode_orMutable? payloadPresentation,
+  }) => NamedControl._(
+    control.toFrozen(),
+    (payloadPresentation != null) ? payloadPresentation.toFrozen() : null,
+  );
+
+  NamedControl._(
+    this.control,
+    this.payloadPresentation,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = NamedControl._(
+    BoundControl.defaultInstance,
+    null,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static NamedControl_mutable mutable() => NamedControl_mutable._(
+    BoundControl.defaultInstance,
+    null,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  NamedControl toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  NamedControl_mutable toMutable() => NamedControl_mutable._(
+    this.control,
+    this.payloadPresentation,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! NamedControl) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.control,
+    this.payloadPresentation,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `NamedControl` instances.
+  static _skir.StructSerializer<NamedControl, NamedControl_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "control",
+        "control",
+        0,
+        BoundControl.serializer,
+        "",
+        (it) => it.control,
+        (it, v) => it.control = v,
+      );
+      _serializerBuilder.addField(
+        "payload_presentation",
+        "payloadPresentation",
+        1,
+        _skir.Serializers.optional(
+          PresentationNode.serializer,
+        ),
+        "",
+        (it) => it.payloadPresentation,
+        (it, v) => it.payloadPresentation = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:NamedControl",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (NamedControl_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [NamedControl].
+final class NamedControl_mutable implements NamedControl_orMutable {
+  BoundControl_orMutable control;
+  PresentationNode_orMutable? payloadPresentation;
+  _skir.internal__UnrecognizedFields? _u;
+
+  NamedControl_mutable._(
+    this.control,
+    this.payloadPresentation,
+  );
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  NamedControl toFrozen() => NamedControl(
+    control: this.control,
+    payloadPresentation: this.payloadPresentation,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
 // struct PolymorphicMatchCase
 // -----------------------------------------------------------------------------
 
 sealed class PolymorphicMatchCase_orMutable {
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable get concreteType;
+  _lib_editor_v1_type_catalog.TypeUse get concreteType;
   PresentationNode_orMutable get child;
 
   PolymorphicMatchCase toFrozen();
@@ -18809,16 +18389,16 @@ sealed class PolymorphicMatchCase_orMutable {
 /// Deeply immutable.
 final class PolymorphicMatchCase implements PolymorphicMatchCase_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.ResolvedTypeRef concreteType;
+  final _lib_editor_v1_type_catalog.TypeUse concreteType;
   @_core.override
   final PresentationNode child;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PolymorphicMatchCase({
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable concreteType,
+    required _lib_editor_v1_type_catalog.TypeUse concreteType,
     required PresentationNode_orMutable child,
   }) => PolymorphicMatchCase._(
-    concreteType.toFrozen(),
+    concreteType,
     child.toFrozen(),
   );
 
@@ -18829,14 +18409,14 @@ final class PolymorphicMatchCase implements PolymorphicMatchCase_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PolymorphicMatchCase._(
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
     PresentationNode.defaultInstance,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static PolymorphicMatchCase_mutable mutable() => PolymorphicMatchCase_mutable._(
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
     PresentationNode.defaultInstance,
   );
 
@@ -18876,7 +18456,7 @@ final class PolymorphicMatchCase implements PolymorphicMatchCase_orMutable {
         "concrete_type",
         "concreteType",
         0,
-        _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
+        _lib_editor_v1_type_catalog.TypeUse.serializer,
         "",
         (it) => it.concreteType,
         (it, v) => it.concreteType = v,
@@ -18908,7 +18488,7 @@ final class PolymorphicMatchCase implements PolymorphicMatchCase_orMutable {
 
 /// Mutable version of [PolymorphicMatchCase].
 final class PolymorphicMatchCase_mutable implements PolymorphicMatchCase_orMutable {
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable concreteType;
+  _lib_editor_v1_type_catalog.TypeUse concreteType;
   PresentationNode_orMutable child;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -18916,17 +18496,6 @@ final class PolymorphicMatchCase_mutable implements PolymorphicMatchCase_orMutab
     this.concreteType,
     this.child,
   );
-
-  /// If the value of [concreteType] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [concreteType] and returns it.
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable get mutableConcreteType {
-    final value = this.concreteType;
-    if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
-      return value;
-    } else {
-      return this.concreteType = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -18942,7 +18511,7 @@ final class PolymorphicMatchCase_mutable implements PolymorphicMatchCase_orMutab
 
 sealed class PolymorphicMatchElement_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable get binding;
-  _lib_editor_v1_binding.BindingId_orMutable get scopeBindingId;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get scopeBindingId;
   _core.Iterable<PolymorphicMatchCase_orMutable> get cases;
   PresentationNode_orMutable? get fallback;
 
@@ -18954,7 +18523,7 @@ final class PolymorphicMatchElement implements PolymorphicMatchElement_orMutable
   @_core.override
   final _lib_editor_v1_binding.BindingRef binding;
   @_core.override
-  final _lib_editor_v1_binding.BindingId scopeBindingId;
+  final _lib_editor_v1_type_catalog.ExpressionBindingId scopeBindingId;
   @_core.override
   final _core.Iterable<PolymorphicMatchCase> cases;
   @_core.override
@@ -18963,7 +18532,7 @@ final class PolymorphicMatchElement implements PolymorphicMatchElement_orMutable
 
   factory PolymorphicMatchElement({
     required _lib_editor_v1_binding.BindingRef_orMutable binding,
-    required _lib_editor_v1_binding.BindingId_orMutable scopeBindingId,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable scopeBindingId,
     required _core.Iterable<PolymorphicMatchCase_orMutable> cases,
     required PresentationNode_orMutable? fallback,
   }) => PolymorphicMatchElement._(
@@ -18983,7 +18552,7 @@ final class PolymorphicMatchElement implements PolymorphicMatchElement_orMutable
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PolymorphicMatchElement._(
     _lib_editor_v1_binding.BindingRef.defaultInstance,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
     _skir.KeyedIterable.empty,
     null,
   );
@@ -18992,7 +18561,7 @@ final class PolymorphicMatchElement implements PolymorphicMatchElement_orMutable
   /// Fields are initialized to their default values.
   static PolymorphicMatchElement_mutable mutable() => PolymorphicMatchElement_mutable._(
     _lib_editor_v1_binding.BindingRef.defaultInstance,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
     _skir.KeyedIterable.empty,
     null,
   );
@@ -19046,7 +18615,7 @@ final class PolymorphicMatchElement implements PolymorphicMatchElement_orMutable
         "scope_binding_id",
         "scopeBindingId",
         1,
-        _lib_editor_v1_binding.BindingId.serializer,
+        _lib_editor_v1_type_catalog.ExpressionBindingId.serializer,
         "",
         (it) => it.scopeBindingId,
         (it, v) => it.scopeBindingId = v,
@@ -19092,7 +18661,7 @@ final class PolymorphicMatchElement implements PolymorphicMatchElement_orMutable
 /// Mutable version of [PolymorphicMatchElement].
 final class PolymorphicMatchElement_mutable implements PolymorphicMatchElement_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable binding;
-  _lib_editor_v1_binding.BindingId_orMutable scopeBindingId;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable scopeBindingId;
   _core.Iterable<PolymorphicMatchCase_orMutable> cases;
   PresentationNode_orMutable? fallback;
   _skir.internal__UnrecognizedFields? _u;
@@ -19117,12 +18686,12 @@ final class PolymorphicMatchElement_mutable implements PolymorphicMatchElement_o
 
   /// If the value of [scopeBindingId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [scopeBindingId] and returns it.
-  _lib_editor_v1_binding.BindingId_mutable get mutableScopeBindingId {
+  _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableScopeBindingId {
     final value = this.scopeBindingId;
-    if (value is _lib_editor_v1_binding.BindingId_mutable) {
+    if (value is _lib_editor_v1_type_catalog.ExpressionBindingId_mutable) {
       return value;
     } else {
-      return this.scopeBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.scopeBindingId = (value as _lib_editor_v1_type_catalog.ExpressionBindingId).toMutable();
     }
   }
 
@@ -19604,7 +19173,7 @@ final class SearchSelectorValues_enumerationWrapper extends _SearchSelectorValue
 sealed class SearchSelectorDefinition_orMutable {
   _core.String get selectorId;
   _core.String get key;
-  _lib_editor_v1_binding.BindingId_orMutable get valueBindingId;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get valueBindingId;
   SearchSelectorValues get values;
   _core.bool get caseSensitive;
   SearchSelectorMultiplicity get multiplicity;
@@ -19620,7 +19189,7 @@ final class SearchSelectorDefinition implements SearchSelectorDefinition_orMutab
   @_core.override
   final _core.String key;
   @_core.override
-  final _lib_editor_v1_binding.BindingId valueBindingId;
+  final _lib_editor_v1_type_catalog.ExpressionBindingId valueBindingId;
   @_core.override
   final SearchSelectorValues values;
   @_core.override
@@ -19634,7 +19203,7 @@ final class SearchSelectorDefinition implements SearchSelectorDefinition_orMutab
   factory SearchSelectorDefinition({
     required _core.String selectorId,
     required _core.String key,
-    required _lib_editor_v1_binding.BindingId_orMutable valueBindingId,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable valueBindingId,
     required SearchSelectorValues values,
     required _core.bool caseSensitive,
     required SearchSelectorMultiplicity multiplicity,
@@ -19663,7 +19232,7 @@ final class SearchSelectorDefinition implements SearchSelectorDefinition_orMutab
   static final defaultInstance = SearchSelectorDefinition._(
     "",
     "",
-    _lib_editor_v1_binding.BindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
     SearchSelectorValues.unknown,
     false,
     SearchSelectorMultiplicity.unknown,
@@ -19675,7 +19244,7 @@ final class SearchSelectorDefinition implements SearchSelectorDefinition_orMutab
   static SearchSelectorDefinition_mutable mutable() => SearchSelectorDefinition_mutable._(
     "",
     "",
-    _lib_editor_v1_binding.BindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
     SearchSelectorValues.unknown,
     false,
     SearchSelectorMultiplicity.unknown,
@@ -19746,7 +19315,7 @@ final class SearchSelectorDefinition implements SearchSelectorDefinition_orMutab
         "value_binding_id",
         "valueBindingId",
         2,
-        _lib_editor_v1_binding.BindingId.serializer,
+        _lib_editor_v1_type_catalog.ExpressionBindingId.serializer,
         "",
         (it) => it.valueBindingId,
         (it, v) => it.valueBindingId = v,
@@ -19809,7 +19378,7 @@ final class SearchSelectorDefinition implements SearchSelectorDefinition_orMutab
 final class SearchSelectorDefinition_mutable implements SearchSelectorDefinition_orMutable {
   _core.String selectorId;
   _core.String key;
-  _lib_editor_v1_binding.BindingId_orMutable valueBindingId;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable valueBindingId;
   SearchSelectorValues values;
   _core.bool caseSensitive;
   SearchSelectorMultiplicity multiplicity;
@@ -19828,12 +19397,12 @@ final class SearchSelectorDefinition_mutable implements SearchSelectorDefinition
 
   /// If the value of [valueBindingId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [valueBindingId] and returns it.
-  _lib_editor_v1_binding.BindingId_mutable get mutableValueBindingId {
+  _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableValueBindingId {
     final value = this.valueBindingId;
-    if (value is _lib_editor_v1_binding.BindingId_mutable) {
+    if (value is _lib_editor_v1_type_catalog.ExpressionBindingId_mutable) {
       return value;
     } else {
-      return this.valueBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.valueBindingId = (value as _lib_editor_v1_type_catalog.ExpressionBindingId).toMutable();
     }
   }
 
@@ -19855,11 +19424,11 @@ final class SearchSelectorDefinition_mutable implements SearchSelectorDefinition
 // -----------------------------------------------------------------------------
 
 sealed class SearchResultMapping_orMutable {
-  _lib_editor_v1_binding.BindingId_orMutable get bindingId;
-  _lib_editor_v1_expression.TypedExpression_orMutable get key;
-  _lib_editor_v1_expression.TypedExpression_orMutable get selectedValue;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get bindingId;
+  _lib_editor_v1_expression.ExpressionNode get key;
+  _lib_editor_v1_expression.ExpressionNode get selectedValue;
   PresentationNode_orMutable get presentation;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get label;
+  _lib_editor_v1_expression.ExpressionNode? get label;
 
   SearchResultMapping toFrozen();
 }
@@ -19867,29 +19436,29 @@ sealed class SearchResultMapping_orMutable {
 /// Deeply immutable.
 final class SearchResultMapping implements SearchResultMapping_orMutable {
   @_core.override
-  final _lib_editor_v1_binding.BindingId bindingId;
+  final _lib_editor_v1_type_catalog.ExpressionBindingId bindingId;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression key;
+  final _lib_editor_v1_expression.ExpressionNode key;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression selectedValue;
+  final _lib_editor_v1_expression.ExpressionNode selectedValue;
   @_core.override
   final PresentationNode presentation;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? label;
+  final _lib_editor_v1_expression.ExpressionNode? label;
   _skir.internal__UnrecognizedFields? _u;
 
   factory SearchResultMapping({
-    required _lib_editor_v1_binding.BindingId_orMutable bindingId,
-    required _lib_editor_v1_expression.TypedExpression_orMutable key,
-    required _lib_editor_v1_expression.TypedExpression_orMutable selectedValue,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable bindingId,
+    required _lib_editor_v1_expression.ExpressionNode key,
+    required _lib_editor_v1_expression.ExpressionNode selectedValue,
     required PresentationNode_orMutable presentation,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? label,
+    required _lib_editor_v1_expression.ExpressionNode? label,
   }) => SearchResultMapping._(
     bindingId.toFrozen(),
-    key.toFrozen(),
-    selectedValue.toFrozen(),
+    key,
+    selectedValue,
     presentation.toFrozen(),
-    (label != null) ? label.toFrozen() : null,
+    label,
   );
 
   SearchResultMapping._(
@@ -19902,9 +19471,9 @@ final class SearchResultMapping implements SearchResultMapping_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = SearchResultMapping._(
-    _lib_editor_v1_binding.BindingId.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     PresentationNode.defaultInstance,
     null,
   );
@@ -19912,9 +19481,9 @@ final class SearchResultMapping implements SearchResultMapping_orMutable {
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static SearchResultMapping_mutable mutable() => SearchResultMapping_mutable._(
-    _lib_editor_v1_binding.BindingId.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     PresentationNode.defaultInstance,
     null,
   );
@@ -19961,7 +19530,7 @@ final class SearchResultMapping implements SearchResultMapping_orMutable {
         "binding_id",
         "bindingId",
         0,
-        _lib_editor_v1_binding.BindingId.serializer,
+        _lib_editor_v1_type_catalog.ExpressionBindingId.serializer,
         "",
         (it) => it.bindingId,
         (it, v) => it.bindingId = v,
@@ -19970,7 +19539,7 @@ final class SearchResultMapping implements SearchResultMapping_orMutable {
         "key",
         "key",
         1,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.key,
         (it, v) => it.key = v,
@@ -19979,7 +19548,7 @@ final class SearchResultMapping implements SearchResultMapping_orMutable {
         "selected_value",
         "selectedValue",
         2,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.selectedValue,
         (it, v) => it.selectedValue = v,
@@ -19998,7 +19567,7 @@ final class SearchResultMapping implements SearchResultMapping_orMutable {
         "label",
         4,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.label,
@@ -20022,11 +19591,11 @@ final class SearchResultMapping implements SearchResultMapping_orMutable {
 
 /// Mutable version of [SearchResultMapping].
 final class SearchResultMapping_mutable implements SearchResultMapping_orMutable {
-  _lib_editor_v1_binding.BindingId_orMutable bindingId;
-  _lib_editor_v1_expression.TypedExpression_orMutable key;
-  _lib_editor_v1_expression.TypedExpression_orMutable selectedValue;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable bindingId;
+  _lib_editor_v1_expression.ExpressionNode key;
+  _lib_editor_v1_expression.ExpressionNode selectedValue;
   PresentationNode_orMutable presentation;
-  _lib_editor_v1_expression.TypedExpression_orMutable? label;
+  _lib_editor_v1_expression.ExpressionNode? label;
   _skir.internal__UnrecognizedFields? _u;
 
   SearchResultMapping_mutable._(
@@ -20039,34 +19608,12 @@ final class SearchResultMapping_mutable implements SearchResultMapping_orMutable
 
   /// If the value of [bindingId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [bindingId] and returns it.
-  _lib_editor_v1_binding.BindingId_mutable get mutableBindingId {
+  _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableBindingId {
     final value = this.bindingId;
-    if (value is _lib_editor_v1_binding.BindingId_mutable) {
+    if (value is _lib_editor_v1_type_catalog.ExpressionBindingId_mutable) {
       return value;
     } else {
-      return this.bindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
-    }
-  }
-
-  /// If the value of [key] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [key] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableKey {
-    final value = this.key;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.key = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
-
-  /// If the value of [selectedValue] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [selectedValue] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableSelectedValue {
-    final value = this.selectedValue;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.selectedValue = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.bindingId = (value as _lib_editor_v1_type_catalog.ExpressionBindingId).toMutable();
     }
   }
 
@@ -20087,7 +19634,7 @@ final class SearchResultMapping_mutable implements SearchResultMapping_orMutable
 
 sealed class HttpQueryParameter_orMutable {
   _core.String get name;
-  _lib_editor_v1_expression.TypedExpression_orMutable get value;
+  _lib_editor_v1_expression.ExpressionNode get value;
   _core.bool get omitIfEmpty;
 
   HttpQueryParameter toFrozen();
@@ -20098,18 +19645,18 @@ final class HttpQueryParameter implements HttpQueryParameter_orMutable {
   @_core.override
   final _core.String name;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression value;
+  final _lib_editor_v1_expression.ExpressionNode value;
   @_core.override
   final _core.bool omitIfEmpty;
   _skir.internal__UnrecognizedFields? _u;
 
   factory HttpQueryParameter({
     required _core.String name,
-    required _lib_editor_v1_expression.TypedExpression_orMutable value,
+    required _lib_editor_v1_expression.ExpressionNode value,
     required _core.bool omitIfEmpty,
   }) => HttpQueryParameter._(
     name,
-    value.toFrozen(),
+    value,
     omitIfEmpty,
   );
 
@@ -20122,7 +19669,7 @@ final class HttpQueryParameter implements HttpQueryParameter_orMutable {
   /// Default instance with all fields set to their default values.
   static final defaultInstance = HttpQueryParameter._(
     "",
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     false,
   );
 
@@ -20130,7 +19677,7 @@ final class HttpQueryParameter implements HttpQueryParameter_orMutable {
   /// Fields are initialized to their default values.
   static HttpQueryParameter_mutable mutable() => HttpQueryParameter_mutable._(
     "",
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     false,
   );
 
@@ -20181,7 +19728,7 @@ final class HttpQueryParameter implements HttpQueryParameter_orMutable {
         "value",
         "value",
         1,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.value,
         (it, v) => it.value = v,
@@ -20214,7 +19761,7 @@ final class HttpQueryParameter implements HttpQueryParameter_orMutable {
 /// Mutable version of [HttpQueryParameter].
 final class HttpQueryParameter_mutable implements HttpQueryParameter_orMutable {
   _core.String name;
-  _lib_editor_v1_expression.TypedExpression_orMutable value;
+  _lib_editor_v1_expression.ExpressionNode value;
   _core.bool omitIfEmpty;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -20223,17 +19770,6 @@ final class HttpQueryParameter_mutable implements HttpQueryParameter_orMutable {
     this.value,
     this.omitIfEmpty,
   );
-
-  /// If the value of [value] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableValue {
-    final value = this.value;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.value = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -20249,9 +19785,9 @@ final class HttpQueryParameter_mutable implements HttpQueryParameter_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class HttpJsonContextBinding_orMutable {
-  _lib_editor_v1_binding.BindingId_orMutable get bindingId;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get bindingId;
   _core.String get path;
-  _lib_editor_v1_type_catalog.TypeExpression get valueType;
+  _lib_editor_v1_type_catalog.TypeTemplate get valueType;
 
   HttpJsonContextBinding toFrozen();
 }
@@ -20259,17 +19795,17 @@ sealed class HttpJsonContextBinding_orMutable {
 /// Deeply immutable.
 final class HttpJsonContextBinding implements HttpJsonContextBinding_orMutable {
   @_core.override
-  final _lib_editor_v1_binding.BindingId bindingId;
+  final _lib_editor_v1_type_catalog.ExpressionBindingId bindingId;
   @_core.override
   final _core.String path;
   @_core.override
-  final _lib_editor_v1_type_catalog.TypeExpression valueType;
+  final _lib_editor_v1_type_catalog.TypeTemplate valueType;
   _skir.internal__UnrecognizedFields? _u;
 
   factory HttpJsonContextBinding({
-    required _lib_editor_v1_binding.BindingId_orMutable bindingId,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable bindingId,
     required _core.String path,
-    required _lib_editor_v1_type_catalog.TypeExpression valueType,
+    required _lib_editor_v1_type_catalog.TypeTemplate valueType,
   }) => HttpJsonContextBinding._(
     bindingId.toFrozen(),
     path,
@@ -20284,17 +19820,17 @@ final class HttpJsonContextBinding implements HttpJsonContextBinding_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = HttpJsonContextBinding._(
-    _lib_editor_v1_binding.BindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
     "",
-    _lib_editor_v1_type_catalog.TypeExpression.unknown,
+    _lib_editor_v1_type_catalog.TypeTemplate.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static HttpJsonContextBinding_mutable mutable() => HttpJsonContextBinding_mutable._(
-    _lib_editor_v1_binding.BindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
     "",
-    _lib_editor_v1_type_catalog.TypeExpression.unknown,
+    _lib_editor_v1_type_catalog.TypeTemplate.unknown,
   );
 
   /// Returns this instance (no-op).
@@ -20335,7 +19871,7 @@ final class HttpJsonContextBinding implements HttpJsonContextBinding_orMutable {
         "binding_id",
         "bindingId",
         0,
-        _lib_editor_v1_binding.BindingId.serializer,
+        _lib_editor_v1_type_catalog.ExpressionBindingId.serializer,
         "",
         (it) => it.bindingId,
         (it, v) => it.bindingId = v,
@@ -20353,7 +19889,7 @@ final class HttpJsonContextBinding implements HttpJsonContextBinding_orMutable {
         "value_type",
         "valueType",
         2,
-        _lib_editor_v1_type_catalog.TypeExpression.serializer,
+        _lib_editor_v1_type_catalog.TypeTemplate.serializer,
         "",
         (it) => it.valueType,
         (it, v) => it.valueType = v,
@@ -20376,9 +19912,9 @@ final class HttpJsonContextBinding implements HttpJsonContextBinding_orMutable {
 
 /// Mutable version of [HttpJsonContextBinding].
 final class HttpJsonContextBinding_mutable implements HttpJsonContextBinding_orMutable {
-  _lib_editor_v1_binding.BindingId_orMutable bindingId;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable bindingId;
   _core.String path;
-  _lib_editor_v1_type_catalog.TypeExpression valueType;
+  _lib_editor_v1_type_catalog.TypeTemplate valueType;
   _skir.internal__UnrecognizedFields? _u;
 
   HttpJsonContextBinding_mutable._(
@@ -20389,12 +19925,12 @@ final class HttpJsonContextBinding_mutable implements HttpJsonContextBinding_orM
 
   /// If the value of [bindingId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [bindingId] and returns it.
-  _lib_editor_v1_binding.BindingId_mutable get mutableBindingId {
+  _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableBindingId {
     final value = this.bindingId;
-    if (value is _lib_editor_v1_binding.BindingId_mutable) {
+    if (value is _lib_editor_v1_type_catalog.ExpressionBindingId_mutable) {
       return value;
     } else {
-      return this.bindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.bindingId = (value as _lib_editor_v1_type_catalog.ExpressionBindingId).toMutable();
     }
   }
 
@@ -20412,7 +19948,7 @@ final class HttpJsonContextBinding_mutable implements HttpJsonContextBinding_orM
 // -----------------------------------------------------------------------------
 
 sealed class StaticSearchProvider_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable get values;
+  _lib_editor_v1_expression.ExpressionNode get values;
   SearchResultMapping_orMutable get result;
   _core.Iterable<SearchSelectorDefinition_orMutable> get selectors;
 
@@ -20422,7 +19958,7 @@ sealed class StaticSearchProvider_orMutable {
 /// Deeply immutable.
 final class StaticSearchProvider implements StaticSearchProvider_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression values;
+  final _lib_editor_v1_expression.ExpressionNode values;
   @_core.override
   final SearchResultMapping result;
   @_core.override
@@ -20430,11 +19966,11 @@ final class StaticSearchProvider implements StaticSearchProvider_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory StaticSearchProvider({
-    required _lib_editor_v1_expression.TypedExpression_orMutable values,
+    required _lib_editor_v1_expression.ExpressionNode values,
     required SearchResultMapping_orMutable result,
     required _core.Iterable<SearchSelectorDefinition_orMutable> selectors,
   }) => StaticSearchProvider._(
-    values.toFrozen(),
+    values,
     result.toFrozen(),
     _skir.internal__keyedMappedCopy(selectors, "selectorId", (it) => it.selectorId, (it) => it.toFrozen()),
   );
@@ -20447,7 +19983,7 @@ final class StaticSearchProvider implements StaticSearchProvider_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = StaticSearchProvider._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     SearchResultMapping.defaultInstance,
     _skir.KeyedIterable.empty,
   );
@@ -20455,7 +19991,7 @@ final class StaticSearchProvider implements StaticSearchProvider_orMutable {
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static StaticSearchProvider_mutable mutable() => StaticSearchProvider_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     SearchResultMapping.defaultInstance,
     _skir.KeyedIterable.empty,
   );
@@ -20498,7 +20034,7 @@ final class StaticSearchProvider implements StaticSearchProvider_orMutable {
         "values",
         "values",
         0,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.values,
         (it, v) => it.values = v,
@@ -20543,7 +20079,7 @@ final class StaticSearchProvider implements StaticSearchProvider_orMutable {
 
 /// Mutable version of [StaticSearchProvider].
 final class StaticSearchProvider_mutable implements StaticSearchProvider_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable values;
+  _lib_editor_v1_expression.ExpressionNode values;
   SearchResultMapping_orMutable result;
   _core.Iterable<SearchSelectorDefinition_orMutable> selectors;
   _skir.internal__UnrecognizedFields? _u;
@@ -20553,17 +20089,6 @@ final class StaticSearchProvider_mutable implements StaticSearchProvider_orMutab
     this.result,
     this.selectors,
   );
-
-  /// If the value of [values] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [values] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableValues {
-    final value = this.values;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.values = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// If the value of [selectors] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [selectors] and returns it.
@@ -20592,7 +20117,7 @@ final class StaticSearchProvider_mutable implements StaticSearchProvider_orMutab
 sealed class CollectionSearchProvider_orMutable {
   _core.String get sourceId;
   SearchResultMapping_orMutable get result;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get where;
+  _lib_editor_v1_expression.ExpressionNode? get where;
   _core.Iterable<SearchSelectorDefinition_orMutable> get selectors;
 
   CollectionSearchProvider toFrozen();
@@ -20605,7 +20130,7 @@ final class CollectionSearchProvider implements CollectionSearchProvider_orMutab
   @_core.override
   final SearchResultMapping result;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? where;
+  final _lib_editor_v1_expression.ExpressionNode? where;
   @_core.override
   final _skir.KeyedIterable<SearchSelectorDefinition, _core.String> selectors;
   _skir.internal__UnrecognizedFields? _u;
@@ -20613,12 +20138,12 @@ final class CollectionSearchProvider implements CollectionSearchProvider_orMutab
   factory CollectionSearchProvider({
     required _core.String sourceId,
     required SearchResultMapping_orMutable result,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? where,
+    required _lib_editor_v1_expression.ExpressionNode? where,
     required _core.Iterable<SearchSelectorDefinition_orMutable> selectors,
   }) => CollectionSearchProvider._(
     sourceId,
     result.toFrozen(),
-    (where != null) ? where.toFrozen() : null,
+    where,
     _skir.internal__keyedMappedCopy(selectors, "selectorId", (it) => it.selectorId, (it) => it.toFrozen()),
   );
 
@@ -20705,7 +20230,7 @@ final class CollectionSearchProvider implements CollectionSearchProvider_orMutab
         "where",
         2,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.where,
@@ -20744,7 +20269,7 @@ final class CollectionSearchProvider implements CollectionSearchProvider_orMutab
 final class CollectionSearchProvider_mutable implements CollectionSearchProvider_orMutable {
   _core.String sourceId;
   SearchResultMapping_orMutable result;
-  _lib_editor_v1_expression.TypedExpression_orMutable? where;
+  _lib_editor_v1_expression.ExpressionNode? where;
   _core.Iterable<SearchSelectorDefinition_orMutable> selectors;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -20781,10 +20306,10 @@ final class CollectionSearchProvider_mutable implements CollectionSearchProvider
 // -----------------------------------------------------------------------------
 
 sealed class HttpJsonSearchProvider_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable get uri;
+  _lib_editor_v1_expression.ExpressionNode get uri;
   _core.Iterable<HttpQueryParameter_orMutable> get parameters;
   _core.String get resultPath;
-  _lib_editor_v1_type_catalog.TypeExpression get resultType;
+  _lib_editor_v1_type_catalog.TypeTemplate get resultType;
   SearchResultMapping_orMutable get result;
   _core.Iterable<HttpJsonContextBinding_orMutable> get contextBindings;
   _core.Iterable<SearchSelectorDefinition_orMutable> get selectors;
@@ -20796,13 +20321,13 @@ sealed class HttpJsonSearchProvider_orMutable {
 /// Deeply immutable.
 final class HttpJsonSearchProvider implements HttpJsonSearchProvider_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression uri;
+  final _lib_editor_v1_expression.ExpressionNode uri;
   @_core.override
   final _skir.KeyedIterable<HttpQueryParameter, _core.String> parameters;
   @_core.override
   final _core.String resultPath;
   @_core.override
-  final _lib_editor_v1_type_catalog.TypeExpression resultType;
+  final _lib_editor_v1_type_catalog.TypeTemplate resultType;
   @_core.override
   final SearchResultMapping result;
   @_core.override
@@ -20814,16 +20339,16 @@ final class HttpJsonSearchProvider implements HttpJsonSearchProvider_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory HttpJsonSearchProvider({
-    required _lib_editor_v1_expression.TypedExpression_orMutable uri,
+    required _lib_editor_v1_expression.ExpressionNode uri,
     required _core.Iterable<HttpQueryParameter_orMutable> parameters,
     required _core.String resultPath,
-    required _lib_editor_v1_type_catalog.TypeExpression resultType,
+    required _lib_editor_v1_type_catalog.TypeTemplate resultType,
     required SearchResultMapping_orMutable result,
     required _core.Iterable<HttpJsonContextBinding_orMutable> contextBindings,
     required _core.Iterable<SearchSelectorDefinition_orMutable> selectors,
     required _core.int timeoutMilliseconds,
   }) => HttpJsonSearchProvider._(
-    uri.toFrozen(),
+    uri,
     _skir.internal__keyedMappedCopy(parameters, "name", (it) => it.name, (it) => it.toFrozen()),
     resultPath,
     resultType,
@@ -20846,10 +20371,10 @@ final class HttpJsonSearchProvider implements HttpJsonSearchProvider_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = HttpJsonSearchProvider._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     _skir.KeyedIterable.empty,
     "",
-    _lib_editor_v1_type_catalog.TypeExpression.unknown,
+    _lib_editor_v1_type_catalog.TypeTemplate.unknown,
     SearchResultMapping.defaultInstance,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
@@ -20859,10 +20384,10 @@ final class HttpJsonSearchProvider implements HttpJsonSearchProvider_orMutable {
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static HttpJsonSearchProvider_mutable mutable() => HttpJsonSearchProvider_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     _skir.KeyedIterable.empty,
     "",
-    _lib_editor_v1_type_catalog.TypeExpression.unknown,
+    _lib_editor_v1_type_catalog.TypeTemplate.unknown,
     SearchResultMapping.defaultInstance,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
@@ -20917,7 +20442,7 @@ final class HttpJsonSearchProvider implements HttpJsonSearchProvider_orMutable {
         "uri",
         "uri",
         0,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.uri,
         (it, v) => it.uri = v,
@@ -20948,7 +20473,7 @@ final class HttpJsonSearchProvider implements HttpJsonSearchProvider_orMutable {
         "result_type",
         "resultType",
         3,
-        _lib_editor_v1_type_catalog.TypeExpression.serializer,
+        _lib_editor_v1_type_catalog.TypeTemplate.serializer,
         "",
         (it) => it.resultType,
         (it, v) => it.resultType = v,
@@ -21013,10 +20538,10 @@ final class HttpJsonSearchProvider implements HttpJsonSearchProvider_orMutable {
 
 /// Mutable version of [HttpJsonSearchProvider].
 final class HttpJsonSearchProvider_mutable implements HttpJsonSearchProvider_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable uri;
+  _lib_editor_v1_expression.ExpressionNode uri;
   _core.Iterable<HttpQueryParameter_orMutable> parameters;
   _core.String resultPath;
-  _lib_editor_v1_type_catalog.TypeExpression resultType;
+  _lib_editor_v1_type_catalog.TypeTemplate resultType;
   SearchResultMapping_orMutable result;
   _core.Iterable<HttpJsonContextBinding_orMutable> contextBindings;
   _core.Iterable<SearchSelectorDefinition_orMutable> selectors;
@@ -21033,17 +20558,6 @@ final class HttpJsonSearchProvider_mutable implements HttpJsonSearchProvider_orM
     this.selectors,
     this.timeoutMilliseconds,
   );
-
-  /// If the value of [uri] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [uri] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableUri {
-    final value = this.uri;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.uri = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// If the value of [parameters] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [parameters] and returns it.
@@ -21098,7 +20612,7 @@ final class HttpJsonSearchProvider_mutable implements HttpJsonSearchProvider_orM
 
 sealed class RealmCallbackSearchProvider_orMutable {
   _lib_editor_v1_type_catalog.CapabilityId_orMutable get capabilityId;
-  _lib_editor_v1_expression.TypedExpression_orMutable get payload;
+  _lib_editor_v1_expression.ExpressionNode get payload;
   SearchResultMapping_orMutable get result;
   _core.Iterable<SearchSelectorDefinition_orMutable> get selectors;
 
@@ -21110,7 +20624,7 @@ final class RealmCallbackSearchProvider implements RealmCallbackSearchProvider_o
   @_core.override
   final _lib_editor_v1_type_catalog.CapabilityId capabilityId;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression payload;
+  final _lib_editor_v1_expression.ExpressionNode payload;
   @_core.override
   final SearchResultMapping result;
   @_core.override
@@ -21119,12 +20633,12 @@ final class RealmCallbackSearchProvider implements RealmCallbackSearchProvider_o
 
   factory RealmCallbackSearchProvider({
     required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
-    required _lib_editor_v1_expression.TypedExpression_orMutable payload,
+    required _lib_editor_v1_expression.ExpressionNode payload,
     required SearchResultMapping_orMutable result,
     required _core.Iterable<SearchSelectorDefinition_orMutable> selectors,
   }) => RealmCallbackSearchProvider._(
     capabilityId.toFrozen(),
-    payload.toFrozen(),
+    payload,
     result.toFrozen(),
     _skir.internal__keyedMappedCopy(selectors, "selectorId", (it) => it.selectorId, (it) => it.toFrozen()),
   );
@@ -21139,7 +20653,7 @@ final class RealmCallbackSearchProvider implements RealmCallbackSearchProvider_o
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RealmCallbackSearchProvider._(
     _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     SearchResultMapping.defaultInstance,
     _skir.KeyedIterable.empty,
   );
@@ -21148,7 +20662,7 @@ final class RealmCallbackSearchProvider implements RealmCallbackSearchProvider_o
   /// Fields are initialized to their default values.
   static RealmCallbackSearchProvider_mutable mutable() => RealmCallbackSearchProvider_mutable._(
     _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     SearchResultMapping.defaultInstance,
     _skir.KeyedIterable.empty,
   );
@@ -21202,7 +20716,7 @@ final class RealmCallbackSearchProvider implements RealmCallbackSearchProvider_o
         "payload",
         "payload",
         1,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.payload,
         (it, v) => it.payload = v,
@@ -21248,7 +20762,7 @@ final class RealmCallbackSearchProvider implements RealmCallbackSearchProvider_o
 /// Mutable version of [RealmCallbackSearchProvider].
 final class RealmCallbackSearchProvider_mutable implements RealmCallbackSearchProvider_orMutable {
   _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId;
-  _lib_editor_v1_expression.TypedExpression_orMutable payload;
+  _lib_editor_v1_expression.ExpressionNode payload;
   SearchResultMapping_orMutable result;
   _core.Iterable<SearchSelectorDefinition_orMutable> selectors;
   _skir.internal__UnrecognizedFields? _u;
@@ -21268,17 +20782,6 @@ final class RealmCallbackSearchProvider_mutable implements RealmCallbackSearchPr
       return value;
     } else {
       return this.capabilityId = (value as _lib_editor_v1_type_catalog.CapabilityId).toMutable();
-    }
-  }
-
-  /// If the value of [payload] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [payload] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutablePayload {
-    final value = this.payload;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.payload = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
     }
   }
 
@@ -21308,8 +20811,8 @@ final class RealmCallbackSearchProvider_mutable implements RealmCallbackSearchPr
 // -----------------------------------------------------------------------------
 
 sealed class GatedSearchProvider_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable get condition;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get guidance;
+  _lib_editor_v1_expression.ExpressionNode get condition;
+  _lib_editor_v1_expression.ExpressionNode? get guidance;
   SearchProvider get child;
 
   GatedSearchProvider toFrozen();
@@ -21318,20 +20821,20 @@ sealed class GatedSearchProvider_orMutable {
 /// Deeply immutable.
 final class GatedSearchProvider implements GatedSearchProvider_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression condition;
+  final _lib_editor_v1_expression.ExpressionNode condition;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? guidance;
+  final _lib_editor_v1_expression.ExpressionNode? guidance;
   @_core.override
   final SearchProvider child;
   _skir.internal__UnrecognizedFields? _u;
 
   factory GatedSearchProvider({
-    required _lib_editor_v1_expression.TypedExpression_orMutable condition,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? guidance,
+    required _lib_editor_v1_expression.ExpressionNode condition,
+    required _lib_editor_v1_expression.ExpressionNode? guidance,
     required SearchProvider child,
   }) => GatedSearchProvider._(
-    condition.toFrozen(),
-    (guidance != null) ? guidance.toFrozen() : null,
+    condition,
+    guidance,
     child,
   );
 
@@ -21343,7 +20846,7 @@ final class GatedSearchProvider implements GatedSearchProvider_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = GatedSearchProvider._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     null,
     SearchProvider.unknown,
   );
@@ -21351,7 +20854,7 @@ final class GatedSearchProvider implements GatedSearchProvider_orMutable {
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static GatedSearchProvider_mutable mutable() => GatedSearchProvider_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     null,
     SearchProvider.unknown,
   );
@@ -21394,7 +20897,7 @@ final class GatedSearchProvider implements GatedSearchProvider_orMutable {
         "condition",
         "condition",
         0,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.condition,
         (it, v) => it.condition = v,
@@ -21404,7 +20907,7 @@ final class GatedSearchProvider implements GatedSearchProvider_orMutable {
         "guidance",
         1,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.guidance,
@@ -21437,8 +20940,8 @@ final class GatedSearchProvider implements GatedSearchProvider_orMutable {
 
 /// Mutable version of [GatedSearchProvider].
 final class GatedSearchProvider_mutable implements GatedSearchProvider_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable condition;
-  _lib_editor_v1_expression.TypedExpression_orMutable? guidance;
+  _lib_editor_v1_expression.ExpressionNode condition;
+  _lib_editor_v1_expression.ExpressionNode? guidance;
   SearchProvider child;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -21447,17 +20950,6 @@ final class GatedSearchProvider_mutable implements GatedSearchProvider_orMutable
     this.guidance,
     this.child,
   );
-
-  /// If the value of [condition] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [condition] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableCondition {
-    final value = this.condition;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.condition = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -21755,7 +21247,7 @@ final class CachedSearchProvider_mutable implements CachedSearchProvider_orMutab
 // -----------------------------------------------------------------------------
 
 sealed class SearchRankingField_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable get expression;
+  _lib_editor_v1_expression.ExpressionNode get expression;
   _core.int get weight;
 
   SearchRankingField toFrozen();
@@ -21764,16 +21256,16 @@ sealed class SearchRankingField_orMutable {
 /// Deeply immutable.
 final class SearchRankingField implements SearchRankingField_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression expression;
+  final _lib_editor_v1_expression.ExpressionNode expression;
   @_core.override
   final _core.int weight;
   _skir.internal__UnrecognizedFields? _u;
 
   factory SearchRankingField({
-    required _lib_editor_v1_expression.TypedExpression_orMutable expression,
+    required _lib_editor_v1_expression.ExpressionNode expression,
     required _core.int weight,
   }) => SearchRankingField._(
-    expression.toFrozen(),
+    expression,
     weight,
   );
 
@@ -21784,14 +21276,14 @@ final class SearchRankingField implements SearchRankingField_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = SearchRankingField._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     0,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static SearchRankingField_mutable mutable() => SearchRankingField_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     0,
   );
 
@@ -21831,7 +21323,7 @@ final class SearchRankingField implements SearchRankingField_orMutable {
         "expression",
         "expression",
         0,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.expression,
         (it, v) => it.expression = v,
@@ -21863,7 +21355,7 @@ final class SearchRankingField implements SearchRankingField_orMutable {
 
 /// Mutable version of [SearchRankingField].
 final class SearchRankingField_mutable implements SearchRankingField_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable expression;
+  _lib_editor_v1_expression.ExpressionNode expression;
   _core.int weight;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -21871,17 +21363,6 @@ final class SearchRankingField_mutable implements SearchRankingField_orMutable {
     this.expression,
     this.weight,
   );
-
-  /// If the value of [expression] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [expression] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableExpression {
-    final value = this.expression;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.expression = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -22039,7 +21520,7 @@ final class RankedSearchProvider_mutable implements RankedSearchProvider_orMutab
 // -----------------------------------------------------------------------------
 
 sealed class LimitedSearchProvider_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable get maximum;
+  _lib_editor_v1_expression.ExpressionNode get maximum;
   SearchProvider get child;
 
   LimitedSearchProvider toFrozen();
@@ -22048,16 +21529,16 @@ sealed class LimitedSearchProvider_orMutable {
 /// Deeply immutable.
 final class LimitedSearchProvider implements LimitedSearchProvider_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression maximum;
+  final _lib_editor_v1_expression.ExpressionNode maximum;
   @_core.override
   final SearchProvider child;
   _skir.internal__UnrecognizedFields? _u;
 
   factory LimitedSearchProvider({
-    required _lib_editor_v1_expression.TypedExpression_orMutable maximum,
+    required _lib_editor_v1_expression.ExpressionNode maximum,
     required SearchProvider child,
   }) => LimitedSearchProvider._(
-    maximum.toFrozen(),
+    maximum,
     child,
   );
 
@@ -22068,14 +21549,14 @@ final class LimitedSearchProvider implements LimitedSearchProvider_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = LimitedSearchProvider._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     SearchProvider.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static LimitedSearchProvider_mutable mutable() => LimitedSearchProvider_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     SearchProvider.unknown,
   );
 
@@ -22115,7 +21596,7 @@ final class LimitedSearchProvider implements LimitedSearchProvider_orMutable {
         "maximum",
         "maximum",
         0,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.maximum,
         (it, v) => it.maximum = v,
@@ -22147,7 +21628,7 @@ final class LimitedSearchProvider implements LimitedSearchProvider_orMutable {
 
 /// Mutable version of [LimitedSearchProvider].
 final class LimitedSearchProvider_mutable implements LimitedSearchProvider_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable maximum;
+  _lib_editor_v1_expression.ExpressionNode maximum;
   SearchProvider child;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -22155,17 +21636,6 @@ final class LimitedSearchProvider_mutable implements LimitedSearchProvider_orMut
     this.maximum,
     this.child,
   );
-
-  /// If the value of [maximum] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [maximum] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableMaximum {
-    final value = this.maximum;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.maximum = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -22289,7 +21759,7 @@ final class DistinctSearchProvider_mutable implements DistinctSearchProvider_orM
 
 sealed class HistoricalSearchProvider_orMutable {
   _core.String get historyKey;
-  _lib_editor_v1_expression.TypedExpression_orMutable get label;
+  _lib_editor_v1_expression.ExpressionNode get label;
   _core.int get capacity;
   SearchProvider get child;
 
@@ -22301,7 +21771,7 @@ final class HistoricalSearchProvider implements HistoricalSearchProvider_orMutab
   @_core.override
   final _core.String historyKey;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression label;
+  final _lib_editor_v1_expression.ExpressionNode label;
   @_core.override
   final _core.int capacity;
   @_core.override
@@ -22310,12 +21780,12 @@ final class HistoricalSearchProvider implements HistoricalSearchProvider_orMutab
 
   factory HistoricalSearchProvider({
     required _core.String historyKey,
-    required _lib_editor_v1_expression.TypedExpression_orMutable label,
+    required _lib_editor_v1_expression.ExpressionNode label,
     required _core.int capacity,
     required SearchProvider child,
   }) => HistoricalSearchProvider._(
     historyKey,
-    label.toFrozen(),
+    label,
     capacity,
     child,
   );
@@ -22330,7 +21800,7 @@ final class HistoricalSearchProvider implements HistoricalSearchProvider_orMutab
   /// Default instance with all fields set to their default values.
   static final defaultInstance = HistoricalSearchProvider._(
     "",
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     0,
     SearchProvider.unknown,
   );
@@ -22339,7 +21809,7 @@ final class HistoricalSearchProvider implements HistoricalSearchProvider_orMutab
   /// Fields are initialized to their default values.
   static HistoricalSearchProvider_mutable mutable() => HistoricalSearchProvider_mutable._(
     "",
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     0,
     SearchProvider.unknown,
   );
@@ -22393,7 +21863,7 @@ final class HistoricalSearchProvider implements HistoricalSearchProvider_orMutab
         "label",
         "label",
         1,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.label,
         (it, v) => it.label = v,
@@ -22435,7 +21905,7 @@ final class HistoricalSearchProvider implements HistoricalSearchProvider_orMutab
 /// Mutable version of [HistoricalSearchProvider].
 final class HistoricalSearchProvider_mutable implements HistoricalSearchProvider_orMutable {
   _core.String historyKey;
-  _lib_editor_v1_expression.TypedExpression_orMutable label;
+  _lib_editor_v1_expression.ExpressionNode label;
   _core.int capacity;
   SearchProvider child;
   _skir.internal__UnrecognizedFields? _u;
@@ -22446,17 +21916,6 @@ final class HistoricalSearchProvider_mutable implements HistoricalSearchProvider
     this.capacity,
     this.child,
   );
-
-  /// If the value of [label] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [label] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableLabel {
-    final value = this.label;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.label = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -22474,7 +21933,7 @@ final class HistoricalSearchProvider_mutable implements HistoricalSearchProvider
 
 sealed class SectionSearchProvider_orMutable {
   _core.String get sectionId;
-  _lib_editor_v1_expression.TypedExpression_orMutable get label;
+  _lib_editor_v1_expression.ExpressionNode get label;
   SearchProvider get child;
 
   SectionSearchProvider toFrozen();
@@ -22485,18 +21944,18 @@ final class SectionSearchProvider implements SectionSearchProvider_orMutable {
   @_core.override
   final _core.String sectionId;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression label;
+  final _lib_editor_v1_expression.ExpressionNode label;
   @_core.override
   final SearchProvider child;
   _skir.internal__UnrecognizedFields? _u;
 
   factory SectionSearchProvider({
     required _core.String sectionId,
-    required _lib_editor_v1_expression.TypedExpression_orMutable label,
+    required _lib_editor_v1_expression.ExpressionNode label,
     required SearchProvider child,
   }) => SectionSearchProvider._(
     sectionId,
-    label.toFrozen(),
+    label,
     child,
   );
 
@@ -22509,7 +21968,7 @@ final class SectionSearchProvider implements SectionSearchProvider_orMutable {
   /// Default instance with all fields set to their default values.
   static final defaultInstance = SectionSearchProvider._(
     "",
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     SearchProvider.unknown,
   );
 
@@ -22517,7 +21976,7 @@ final class SectionSearchProvider implements SectionSearchProvider_orMutable {
   /// Fields are initialized to their default values.
   static SectionSearchProvider_mutable mutable() => SectionSearchProvider_mutable._(
     "",
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     SearchProvider.unknown,
   );
 
@@ -22568,7 +22027,7 @@ final class SectionSearchProvider implements SectionSearchProvider_orMutable {
         "label",
         "label",
         1,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.label,
         (it, v) => it.label = v,
@@ -22601,7 +22060,7 @@ final class SectionSearchProvider implements SectionSearchProvider_orMutable {
 /// Mutable version of [SectionSearchProvider].
 final class SectionSearchProvider_mutable implements SectionSearchProvider_orMutable {
   _core.String sectionId;
-  _lib_editor_v1_expression.TypedExpression_orMutable label;
+  _lib_editor_v1_expression.ExpressionNode label;
   SearchProvider child;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -22610,17 +22069,6 @@ final class SectionSearchProvider_mutable implements SectionSearchProvider_orMut
     this.label,
     this.child,
   );
-
-  /// If the value of [label] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [label] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableLabel {
-    final value = this.label;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.label = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -22778,7 +22226,7 @@ sealed class SearchProvider {
 
   /// Same as `wrapStaticValues(StaticSearchProvider(...))`.
   factory SearchProvider.createStaticValues({
-    required _lib_editor_v1_expression.TypedExpression_orMutable values,
+    required _lib_editor_v1_expression.ExpressionNode values,
     required SearchResultMapping_orMutable result,
     required _core.Iterable<SearchSelectorDefinition_orMutable> selectors,
   }) => SearchProvider.wrapStaticValues(
@@ -22796,10 +22244,10 @@ sealed class SearchProvider {
 
   /// Same as `wrapHttpJson(HttpJsonSearchProvider(...))`.
   factory SearchProvider.createHttpJson({
-    required _lib_editor_v1_expression.TypedExpression_orMutable uri,
+    required _lib_editor_v1_expression.ExpressionNode uri,
     required _core.Iterable<HttpQueryParameter_orMutable> parameters,
     required _core.String resultPath,
-    required _lib_editor_v1_type_catalog.TypeExpression resultType,
+    required _lib_editor_v1_type_catalog.TypeTemplate resultType,
     required SearchResultMapping_orMutable result,
     required _core.Iterable<HttpJsonContextBinding_orMutable> contextBindings,
     required _core.Iterable<SearchSelectorDefinition_orMutable> selectors,
@@ -22825,7 +22273,7 @@ sealed class SearchProvider {
   /// Same as `wrapRealmCallback(RealmCallbackSearchProvider(...))`.
   factory SearchProvider.createRealmCallback({
     required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
-    required _lib_editor_v1_expression.TypedExpression_orMutable payload,
+    required _lib_editor_v1_expression.ExpressionNode payload,
     required SearchResultMapping_orMutable result,
     required _core.Iterable<SearchSelectorDefinition_orMutable> selectors,
   }) => SearchProvider.wrapRealmCallback(
@@ -22844,8 +22292,8 @@ sealed class SearchProvider {
 
   /// Same as `wrapGate(GatedSearchProvider(...))`.
   factory SearchProvider.createGate({
-    required _lib_editor_v1_expression.TypedExpression_orMutable condition,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? guidance,
+    required _lib_editor_v1_expression.ExpressionNode condition,
+    required _lib_editor_v1_expression.ExpressionNode? guidance,
     required SearchProvider child,
   }) => SearchProvider.wrapGate(
     GatedSearchProvider(
@@ -22912,7 +22360,7 @@ sealed class SearchProvider {
 
   /// Same as `wrapLimit(LimitedSearchProvider(...))`.
   factory SearchProvider.createLimit({
-    required _lib_editor_v1_expression.TypedExpression_orMutable maximum,
+    required _lib_editor_v1_expression.ExpressionNode maximum,
     required SearchProvider child,
   }) => SearchProvider.wrapLimit(
     LimitedSearchProvider(
@@ -22943,7 +22391,7 @@ sealed class SearchProvider {
   /// Same as `wrapHistory(HistoricalSearchProvider(...))`.
   factory SearchProvider.createHistory({
     required _core.String historyKey,
-    required _lib_editor_v1_expression.TypedExpression_orMutable label,
+    required _lib_editor_v1_expression.ExpressionNode label,
     required _core.int capacity,
     required SearchProvider child,
   }) => SearchProvider.wrapHistory(
@@ -22963,7 +22411,7 @@ sealed class SearchProvider {
   /// Same as `wrapSection(SectionSearchProvider(...))`.
   factory SearchProvider.createSection({
     required _core.String sectionId,
-    required _lib_editor_v1_expression.TypedExpression_orMutable label,
+    required _lib_editor_v1_expression.ExpressionNode label,
     required SearchProvider child,
   }) => SearchProvider.wrapSection(
     SectionSearchProvider(
@@ -22996,7 +22444,7 @@ sealed class SearchProvider {
   factory SearchProvider.createCollection({
     required _core.String sourceId,
     required SearchResultMapping_orMutable result,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? where,
+    required _lib_editor_v1_expression.ExpressionNode? where,
     required _core.Iterable<SearchSelectorDefinition_orMutable> selectors,
   }) => SearchProvider.wrapCollection(
     CollectionSearchProvider(
@@ -23339,14 +22787,14 @@ final class SearchProvider_collectionWrapper extends _SearchProvider_wrapper {
 sealed class SearchControl_orMutable {
   BoundControl_orMutable get control;
   SearchSelectionMode get selectionMode;
-  _lib_editor_v1_binding.BindingId_orMutable get queryBindingId;
-  _lib_editor_v1_binding.BindingId_orMutable get summaryBindingId;
-  _lib_editor_v1_expression.TypedExpression_orMutable get maximumExtent;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get queryBindingId;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get summaryBindingId;
+  _lib_editor_v1_expression.ExpressionNode get maximumExtent;
   SearchProvider get provider;
   PresentationNode_orMutable? get summary;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get placeholder;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get customValue;
-  _lib_editor_v1_expression.TypedExpression_orMutable? get initialQuery;
+  _lib_editor_v1_expression.ExpressionNode? get placeholder;
+  _lib_editor_v1_expression.ExpressionNode? get customValue;
+  _lib_editor_v1_expression.ExpressionNode? get initialQuery;
 
   SearchControl toFrozen();
 }
@@ -23358,45 +22806,45 @@ final class SearchControl implements SearchControl_orMutable {
   @_core.override
   final SearchSelectionMode selectionMode;
   @_core.override
-  final _lib_editor_v1_binding.BindingId queryBindingId;
+  final _lib_editor_v1_type_catalog.ExpressionBindingId queryBindingId;
   @_core.override
-  final _lib_editor_v1_binding.BindingId summaryBindingId;
+  final _lib_editor_v1_type_catalog.ExpressionBindingId summaryBindingId;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression maximumExtent;
+  final _lib_editor_v1_expression.ExpressionNode maximumExtent;
   @_core.override
   final SearchProvider provider;
   @_core.override
   final PresentationNode? summary;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? placeholder;
+  final _lib_editor_v1_expression.ExpressionNode? placeholder;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? customValue;
+  final _lib_editor_v1_expression.ExpressionNode? customValue;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? initialQuery;
+  final _lib_editor_v1_expression.ExpressionNode? initialQuery;
   _skir.internal__UnrecognizedFields? _u;
 
   factory SearchControl({
     required BoundControl_orMutable control,
     required SearchSelectionMode selectionMode,
-    required _lib_editor_v1_binding.BindingId_orMutable queryBindingId,
-    required _lib_editor_v1_binding.BindingId_orMutable summaryBindingId,
-    required _lib_editor_v1_expression.TypedExpression_orMutable maximumExtent,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable queryBindingId,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable summaryBindingId,
+    required _lib_editor_v1_expression.ExpressionNode maximumExtent,
     required SearchProvider provider,
     required PresentationNode_orMutable? summary,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? placeholder,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? customValue,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? initialQuery,
+    required _lib_editor_v1_expression.ExpressionNode? placeholder,
+    required _lib_editor_v1_expression.ExpressionNode? customValue,
+    required _lib_editor_v1_expression.ExpressionNode? initialQuery,
   }) => SearchControl._(
     control.toFrozen(),
     selectionMode,
     queryBindingId.toFrozen(),
     summaryBindingId.toFrozen(),
-    maximumExtent.toFrozen(),
+    maximumExtent,
     provider,
     (summary != null) ? summary.toFrozen() : null,
-    (placeholder != null) ? placeholder.toFrozen() : null,
-    (customValue != null) ? customValue.toFrozen() : null,
-    (initialQuery != null) ? initialQuery.toFrozen() : null,
+    placeholder,
+    customValue,
+    initialQuery,
   );
 
   SearchControl._(
@@ -23416,9 +22864,9 @@ final class SearchControl implements SearchControl_orMutable {
   static final defaultInstance = SearchControl._(
     BoundControl.defaultInstance,
     SearchSelectionMode.unknown,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     SearchProvider.unknown,
     null,
     null,
@@ -23431,9 +22879,9 @@ final class SearchControl implements SearchControl_orMutable {
   static SearchControl_mutable mutable() => SearchControl_mutable._(
     BoundControl.defaultInstance,
     SearchSelectionMode.unknown,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     SearchProvider.unknown,
     null,
     null,
@@ -23511,7 +22959,7 @@ final class SearchControl implements SearchControl_orMutable {
         "query_binding_id",
         "queryBindingId",
         2,
-        _lib_editor_v1_binding.BindingId.serializer,
+        _lib_editor_v1_type_catalog.ExpressionBindingId.serializer,
         "",
         (it) => it.queryBindingId,
         (it, v) => it.queryBindingId = v,
@@ -23520,7 +22968,7 @@ final class SearchControl implements SearchControl_orMutable {
         "summary_binding_id",
         "summaryBindingId",
         3,
-        _lib_editor_v1_binding.BindingId.serializer,
+        _lib_editor_v1_type_catalog.ExpressionBindingId.serializer,
         "",
         (it) => it.summaryBindingId,
         (it, v) => it.summaryBindingId = v,
@@ -23529,7 +22977,7 @@ final class SearchControl implements SearchControl_orMutable {
         "maximum_extent",
         "maximumExtent",
         4,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.maximumExtent,
         (it, v) => it.maximumExtent = v,
@@ -23559,7 +23007,7 @@ final class SearchControl implements SearchControl_orMutable {
         "placeholder",
         7,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.placeholder,
@@ -23570,7 +23018,7 @@ final class SearchControl implements SearchControl_orMutable {
         "customValue",
         8,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.customValue,
@@ -23581,7 +23029,7 @@ final class SearchControl implements SearchControl_orMutable {
         "initialQuery",
         9,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.initialQuery,
@@ -23607,14 +23055,14 @@ final class SearchControl implements SearchControl_orMutable {
 final class SearchControl_mutable implements SearchControl_orMutable {
   BoundControl_orMutable control;
   SearchSelectionMode selectionMode;
-  _lib_editor_v1_binding.BindingId_orMutable queryBindingId;
-  _lib_editor_v1_binding.BindingId_orMutable summaryBindingId;
-  _lib_editor_v1_expression.TypedExpression_orMutable maximumExtent;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable queryBindingId;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable summaryBindingId;
+  _lib_editor_v1_expression.ExpressionNode maximumExtent;
   SearchProvider provider;
   PresentationNode_orMutable? summary;
-  _lib_editor_v1_expression.TypedExpression_orMutable? placeholder;
-  _lib_editor_v1_expression.TypedExpression_orMutable? customValue;
-  _lib_editor_v1_expression.TypedExpression_orMutable? initialQuery;
+  _lib_editor_v1_expression.ExpressionNode? placeholder;
+  _lib_editor_v1_expression.ExpressionNode? customValue;
+  _lib_editor_v1_expression.ExpressionNode? initialQuery;
   _skir.internal__UnrecognizedFields? _u;
 
   SearchControl_mutable._(
@@ -23632,34 +23080,23 @@ final class SearchControl_mutable implements SearchControl_orMutable {
 
   /// If the value of [queryBindingId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [queryBindingId] and returns it.
-  _lib_editor_v1_binding.BindingId_mutable get mutableQueryBindingId {
+  _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableQueryBindingId {
     final value = this.queryBindingId;
-    if (value is _lib_editor_v1_binding.BindingId_mutable) {
+    if (value is _lib_editor_v1_type_catalog.ExpressionBindingId_mutable) {
       return value;
     } else {
-      return this.queryBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.queryBindingId = (value as _lib_editor_v1_type_catalog.ExpressionBindingId).toMutable();
     }
   }
 
   /// If the value of [summaryBindingId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [summaryBindingId] and returns it.
-  _lib_editor_v1_binding.BindingId_mutable get mutableSummaryBindingId {
+  _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableSummaryBindingId {
     final value = this.summaryBindingId;
-    if (value is _lib_editor_v1_binding.BindingId_mutable) {
+    if (value is _lib_editor_v1_type_catalog.ExpressionBindingId_mutable) {
       return value;
     } else {
-      return this.summaryBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
-    }
-  }
-
-  /// If the value of [maximumExtent] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [maximumExtent] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableMaximumExtent {
-    final value = this.maximumExtent;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.maximumExtent = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.summaryBindingId = (value as _lib_editor_v1_type_catalog.ExpressionBindingId).toMutable();
     }
   }
 
@@ -23946,7 +23383,7 @@ final class CommitControlsElement_mutable implements CommitControlsElement_orMut
 // -----------------------------------------------------------------------------
 
 sealed class ButtonElement_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable get label;
+  _lib_editor_v1_expression.ExpressionNode get label;
   _lib_editor_v1_action.EditorAction get action;
 
   ButtonElement toFrozen();
@@ -23955,16 +23392,16 @@ sealed class ButtonElement_orMutable {
 /// Deeply immutable.
 final class ButtonElement implements ButtonElement_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression label;
+  final _lib_editor_v1_expression.ExpressionNode label;
   @_core.override
   final _lib_editor_v1_action.EditorAction action;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ButtonElement({
-    required _lib_editor_v1_expression.TypedExpression_orMutable label,
+    required _lib_editor_v1_expression.ExpressionNode label,
     required _lib_editor_v1_action.EditorAction action,
   }) => ButtonElement._(
-    label.toFrozen(),
+    label,
     action,
   );
 
@@ -23975,14 +23412,14 @@ final class ButtonElement implements ButtonElement_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ButtonElement._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     _lib_editor_v1_action.EditorAction.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static ButtonElement_mutable mutable() => ButtonElement_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     _lib_editor_v1_action.EditorAction.unknown,
   );
 
@@ -24022,7 +23459,7 @@ final class ButtonElement implements ButtonElement_orMutable {
         "label",
         "label",
         0,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.label,
         (it, v) => it.label = v,
@@ -24054,7 +23491,7 @@ final class ButtonElement implements ButtonElement_orMutable {
 
 /// Mutable version of [ButtonElement].
 final class ButtonElement_mutable implements ButtonElement_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable label;
+  _lib_editor_v1_expression.ExpressionNode label;
   _lib_editor_v1_action.EditorAction action;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -24062,17 +23499,6 @@ final class ButtonElement_mutable implements ButtonElement_orMutable {
     this.label,
     this.action,
   );
-
-  /// If the value of [label] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [label] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableLabel {
-    final value = this.label;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.label = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -24087,8 +23513,8 @@ final class ButtonElement_mutable implements ButtonElement_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class IconButtonElement_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable get icon;
-  _lib_editor_v1_expression.TypedExpression_orMutable get semanticLabel;
+  _lib_editor_v1_expression.ExpressionNode get icon;
+  _lib_editor_v1_expression.ExpressionNode get semanticLabel;
   _lib_editor_v1_action.EditorAction get action;
 
   IconButtonElement toFrozen();
@@ -24097,20 +23523,20 @@ sealed class IconButtonElement_orMutable {
 /// Deeply immutable.
 final class IconButtonElement implements IconButtonElement_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression icon;
+  final _lib_editor_v1_expression.ExpressionNode icon;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression semanticLabel;
+  final _lib_editor_v1_expression.ExpressionNode semanticLabel;
   @_core.override
   final _lib_editor_v1_action.EditorAction action;
   _skir.internal__UnrecognizedFields? _u;
 
   factory IconButtonElement({
-    required _lib_editor_v1_expression.TypedExpression_orMutable icon,
-    required _lib_editor_v1_expression.TypedExpression_orMutable semanticLabel,
+    required _lib_editor_v1_expression.ExpressionNode icon,
+    required _lib_editor_v1_expression.ExpressionNode semanticLabel,
     required _lib_editor_v1_action.EditorAction action,
   }) => IconButtonElement._(
-    icon.toFrozen(),
-    semanticLabel.toFrozen(),
+    icon,
+    semanticLabel,
     action,
   );
 
@@ -24122,16 +23548,16 @@ final class IconButtonElement implements IconButtonElement_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = IconButtonElement._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     _lib_editor_v1_action.EditorAction.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static IconButtonElement_mutable mutable() => IconButtonElement_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     _lib_editor_v1_action.EditorAction.unknown,
   );
 
@@ -24173,7 +23599,7 @@ final class IconButtonElement implements IconButtonElement_orMutable {
         "icon",
         "icon",
         0,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.icon,
         (it, v) => it.icon = v,
@@ -24182,7 +23608,7 @@ final class IconButtonElement implements IconButtonElement_orMutable {
         "semantic_label",
         "semanticLabel",
         1,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.semanticLabel,
         (it, v) => it.semanticLabel = v,
@@ -24214,8 +23640,8 @@ final class IconButtonElement implements IconButtonElement_orMutable {
 
 /// Mutable version of [IconButtonElement].
 final class IconButtonElement_mutable implements IconButtonElement_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable icon;
-  _lib_editor_v1_expression.TypedExpression_orMutable semanticLabel;
+  _lib_editor_v1_expression.ExpressionNode icon;
+  _lib_editor_v1_expression.ExpressionNode semanticLabel;
   _lib_editor_v1_action.EditorAction action;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -24224,28 +23650,6 @@ final class IconButtonElement_mutable implements IconButtonElement_orMutable {
     this.semanticLabel,
     this.action,
   );
-
-  /// If the value of [icon] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [icon] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableIcon {
-    final value = this.icon;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.icon = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
-
-  /// If the value of [semanticLabel] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [semanticLabel] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableSemanticLabel {
-    final value = this.semanticLabel;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.semanticLabel = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -24262,7 +23666,7 @@ final class IconButtonElement_mutable implements IconButtonElement_orMutable {
 
 sealed class MenuItem_orMutable {
   _core.String get itemId;
-  _lib_editor_v1_expression.TypedExpression_orMutable get label;
+  _lib_editor_v1_expression.ExpressionNode get label;
   _lib_editor_v1_action.EditorAction get action;
 
   MenuItem toFrozen();
@@ -24273,18 +23677,18 @@ final class MenuItem implements MenuItem_orMutable {
   @_core.override
   final _core.String itemId;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression label;
+  final _lib_editor_v1_expression.ExpressionNode label;
   @_core.override
   final _lib_editor_v1_action.EditorAction action;
   _skir.internal__UnrecognizedFields? _u;
 
   factory MenuItem({
     required _core.String itemId,
-    required _lib_editor_v1_expression.TypedExpression_orMutable label,
+    required _lib_editor_v1_expression.ExpressionNode label,
     required _lib_editor_v1_action.EditorAction action,
   }) => MenuItem._(
     itemId,
-    label.toFrozen(),
+    label,
     action,
   );
 
@@ -24297,7 +23701,7 @@ final class MenuItem implements MenuItem_orMutable {
   /// Default instance with all fields set to their default values.
   static final defaultInstance = MenuItem._(
     "",
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     _lib_editor_v1_action.EditorAction.unknown,
   );
 
@@ -24305,7 +23709,7 @@ final class MenuItem implements MenuItem_orMutable {
   /// Fields are initialized to their default values.
   static MenuItem_mutable mutable() => MenuItem_mutable._(
     "",
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     _lib_editor_v1_action.EditorAction.unknown,
   );
 
@@ -24356,7 +23760,7 @@ final class MenuItem implements MenuItem_orMutable {
         "label",
         "label",
         1,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.label,
         (it, v) => it.label = v,
@@ -24389,7 +23793,7 @@ final class MenuItem implements MenuItem_orMutable {
 /// Mutable version of [MenuItem].
 final class MenuItem_mutable implements MenuItem_orMutable {
   _core.String itemId;
-  _lib_editor_v1_expression.TypedExpression_orMutable label;
+  _lib_editor_v1_expression.ExpressionNode label;
   _lib_editor_v1_action.EditorAction action;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -24398,17 +23802,6 @@ final class MenuItem_mutable implements MenuItem_orMutable {
     this.label,
     this.action,
   );
-
-  /// If the value of [label] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [label] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableLabel {
-    final value = this.label;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.label = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -24424,7 +23817,7 @@ final class MenuItem_mutable implements MenuItem_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class MenuElement_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable? get label;
+  _lib_editor_v1_expression.ExpressionNode? get label;
   _core.Iterable<MenuItem_orMutable> get items;
 
   MenuElement toFrozen();
@@ -24433,16 +23826,16 @@ sealed class MenuElement_orMutable {
 /// Deeply immutable.
 final class MenuElement implements MenuElement_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression? label;
+  final _lib_editor_v1_expression.ExpressionNode? label;
   @_core.override
   final _skir.KeyedIterable<MenuItem, _core.String> items;
   _skir.internal__UnrecognizedFields? _u;
 
   factory MenuElement({
-    required _lib_editor_v1_expression.TypedExpression_orMutable? label,
+    required _lib_editor_v1_expression.ExpressionNode? label,
     required _core.Iterable<MenuItem_orMutable> items,
   }) => MenuElement._(
-    (label != null) ? label.toFrozen() : null,
+    label,
     _skir.internal__keyedMappedCopy(items, "itemId", (it) => it.itemId, (it) => it.toFrozen()),
   );
 
@@ -24501,7 +23894,7 @@ final class MenuElement implements MenuElement_orMutable {
         "label",
         0,
         _skir.Serializers.optional(
-          _lib_editor_v1_expression.TypedExpression.serializer,
+          _lib_editor_v1_expression.ExpressionNode.serializer,
         ),
         "",
         (it) => it.label,
@@ -24538,7 +23931,7 @@ final class MenuElement implements MenuElement_orMutable {
 
 /// Mutable version of [MenuElement].
 final class MenuElement_mutable implements MenuElement_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable? label;
+  _lib_editor_v1_expression.ExpressionNode? label;
   _core.Iterable<MenuItem_orMutable> items;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -24571,7 +23964,7 @@ final class MenuElement_mutable implements MenuElement_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class TooltipElement_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable get message;
+  _lib_editor_v1_expression.ExpressionNode get message;
   PresentationNode_orMutable get child;
 
   TooltipElement toFrozen();
@@ -24580,16 +23973,16 @@ sealed class TooltipElement_orMutable {
 /// Deeply immutable.
 final class TooltipElement implements TooltipElement_orMutable {
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression message;
+  final _lib_editor_v1_expression.ExpressionNode message;
   @_core.override
   final PresentationNode child;
   _skir.internal__UnrecognizedFields? _u;
 
   factory TooltipElement({
-    required _lib_editor_v1_expression.TypedExpression_orMutable message,
+    required _lib_editor_v1_expression.ExpressionNode message,
     required PresentationNode_orMutable child,
   }) => TooltipElement._(
-    message.toFrozen(),
+    message,
     child.toFrozen(),
   );
 
@@ -24600,14 +23993,14 @@ final class TooltipElement implements TooltipElement_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = TooltipElement._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     PresentationNode.defaultInstance,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static TooltipElement_mutable mutable() => TooltipElement_mutable._(
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     PresentationNode.defaultInstance,
   );
 
@@ -24647,7 +24040,7 @@ final class TooltipElement implements TooltipElement_orMutable {
         "message",
         "message",
         0,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.message,
         (it, v) => it.message = v,
@@ -24679,7 +24072,7 @@ final class TooltipElement implements TooltipElement_orMutable {
 
 /// Mutable version of [TooltipElement].
 final class TooltipElement_mutable implements TooltipElement_orMutable {
-  _lib_editor_v1_expression.TypedExpression_orMutable message;
+  _lib_editor_v1_expression.ExpressionNode message;
   PresentationNode_orMutable child;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -24687,17 +24080,6 @@ final class TooltipElement_mutable implements TooltipElement_orMutable {
     this.message,
     this.child,
   );
-
-  /// If the value of [message] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [message] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableMessage {
-    final value = this.message;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.message = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -24765,9 +24147,14 @@ final class TooltipElement_mutable implements TooltipElement_orMutable {
 ///     case PresentationElement_connectionLayer(:var value): { ... }
 ///     case PresentationElement_polymorphicMatch(:var value): { ... }
 ///     case PresentationElement_invocation(:var value): { ... }
-///     case PresentationElement_referenceInput(:var value): { ... }
+///     case PresentationElement_linkInput(:var value): { ... }
 ///     case PresentationElement_richText(:var value): { ... }
 ///     case PresentationElement_adaptiveLeading(:var value): { ... }
+///     case PresentationElement_remainingFields(:var value): { ... }
+///     case PresentationElement_nullableInput(:var value): { ... }
+///     case PresentationElement_setInput(:var value): { ... }
+///     case PresentationElement_pageGraph(:var value): { ... }
+///     case PresentationElement_pageTimeline(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -24859,8 +24246,8 @@ sealed class PresentationElement {
 
   /// Same as `wrapSpacer(SpacerLayout(...))`.
   factory PresentationElement.createSpacer({
-    required _lib_editor_v1_expression.TypedExpression_orMutable? width,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? height,
+    required _lib_editor_v1_expression.ExpressionNode? width,
+    required _lib_editor_v1_expression.ExpressionNode? height,
   }) => PresentationElement.wrapSpacer(
     SpacerLayout(
       width: width,
@@ -24875,19 +24262,19 @@ sealed class PresentationElement {
 
   /// Same as `wrapText(TextContent(...))`.
   factory PresentationElement.createText({
-    required _lib_editor_v1_expression.TypedExpression_orMutable value,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? color,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? fontSize,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? fontWeight,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? fontItalic,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? fontOpticalSize,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? fontSlant,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? fontWidth,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? textAlignment,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? lineHeight,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? letterSpacing,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? decoration,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? semanticLabel,
+    required _lib_editor_v1_expression.ExpressionNode value,
+    required _lib_editor_v1_expression.ExpressionNode? color,
+    required _lib_editor_v1_expression.ExpressionNode? fontSize,
+    required _lib_editor_v1_expression.ExpressionNode? fontWeight,
+    required _lib_editor_v1_expression.ExpressionNode? fontItalic,
+    required _lib_editor_v1_expression.ExpressionNode? fontOpticalSize,
+    required _lib_editor_v1_expression.ExpressionNode? fontSlant,
+    required _lib_editor_v1_expression.ExpressionNode? fontWidth,
+    required _lib_editor_v1_expression.ExpressionNode? textAlignment,
+    required _lib_editor_v1_expression.ExpressionNode? lineHeight,
+    required _lib_editor_v1_expression.ExpressionNode? letterSpacing,
+    required _lib_editor_v1_expression.ExpressionNode? decoration,
+    required _lib_editor_v1_expression.ExpressionNode? semanticLabel,
     required TextParagraph_orMutable paragraph,
   }) => PresentationElement.wrapText(
     TextContent(
@@ -24915,19 +24302,19 @@ sealed class PresentationElement {
 
   /// Same as `wrapMarkdown(TextContent(...))`.
   factory PresentationElement.createMarkdown({
-    required _lib_editor_v1_expression.TypedExpression_orMutable value,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? color,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? fontSize,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? fontWeight,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? fontItalic,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? fontOpticalSize,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? fontSlant,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? fontWidth,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? textAlignment,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? lineHeight,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? letterSpacing,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? decoration,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? semanticLabel,
+    required _lib_editor_v1_expression.ExpressionNode value,
+    required _lib_editor_v1_expression.ExpressionNode? color,
+    required _lib_editor_v1_expression.ExpressionNode? fontSize,
+    required _lib_editor_v1_expression.ExpressionNode? fontWeight,
+    required _lib_editor_v1_expression.ExpressionNode? fontItalic,
+    required _lib_editor_v1_expression.ExpressionNode? fontOpticalSize,
+    required _lib_editor_v1_expression.ExpressionNode? fontSlant,
+    required _lib_editor_v1_expression.ExpressionNode? fontWidth,
+    required _lib_editor_v1_expression.ExpressionNode? textAlignment,
+    required _lib_editor_v1_expression.ExpressionNode? lineHeight,
+    required _lib_editor_v1_expression.ExpressionNode? letterSpacing,
+    required _lib_editor_v1_expression.ExpressionNode? decoration,
+    required _lib_editor_v1_expression.ExpressionNode? semanticLabel,
     required TextParagraph_orMutable paragraph,
   }) => PresentationElement.wrapMarkdown(
     TextContent(
@@ -24955,10 +24342,10 @@ sealed class PresentationElement {
 
   /// Same as `wrapIcon(IconContent(...))`.
   factory PresentationElement.createIcon({
-    required _lib_editor_v1_expression.TypedExpression_orMutable name,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? semanticLabel,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? color,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? size,
+    required _lib_editor_v1_expression.ExpressionNode name,
+    required _lib_editor_v1_expression.ExpressionNode? semanticLabel,
+    required _lib_editor_v1_expression.ExpressionNode? color,
+    required _lib_editor_v1_expression.ExpressionNode? size,
   }) => PresentationElement.wrapIcon(
     IconContent(
       name: name,
@@ -24975,8 +24362,8 @@ sealed class PresentationElement {
 
   /// Same as `wrapImage(ImageContent(...))`.
   factory PresentationElement.createImage({
-    required _lib_editor_v1_expression.TypedExpression_orMutable source,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? semanticLabel,
+    required _lib_editor_v1_expression.ExpressionNode source,
+    required _lib_editor_v1_expression.ExpressionNode? semanticLabel,
   }) => PresentationElement.wrapImage(
     ImageContent(
       source: source,
@@ -24991,7 +24378,7 @@ sealed class PresentationElement {
 
   /// Same as `wrapBadge(BadgeContent(...))`.
   factory PresentationElement.createBadge({
-    required _lib_editor_v1_expression.TypedExpression_orMutable label,
+    required _lib_editor_v1_expression.ExpressionNode label,
     required _core.String tone,
   }) => PresentationElement.wrapBadge(
     BadgeContent(
@@ -25007,8 +24394,8 @@ sealed class PresentationElement {
 
   /// Same as `wrapChip(ChipContent(...))`.
   factory PresentationElement.createChip({
-    required _lib_editor_v1_expression.TypedExpression_orMutable label,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? color,
+    required _lib_editor_v1_expression.ExpressionNode label,
+    required _lib_editor_v1_expression.ExpressionNode? color,
   }) => PresentationElement.wrapChip(
     ChipContent(
       label: label,
@@ -25023,9 +24410,9 @@ sealed class PresentationElement {
 
   /// Same as `wrapProgress(ProgressContent(...))`.
   factory PresentationElement.createProgress({
-    required _lib_editor_v1_expression.TypedExpression_orMutable value,
-    required _lib_editor_v1_expression.TypedExpression_orMutable maximum,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? label,
+    required _lib_editor_v1_expression.ExpressionNode value,
+    required _lib_editor_v1_expression.ExpressionNode maximum,
+    required _lib_editor_v1_expression.ExpressionNode? label,
   }) => PresentationElement.wrapProgress(
     ProgressContent(
       value: value,
@@ -25041,7 +24428,7 @@ sealed class PresentationElement {
 
   /// Same as `wrapStatus(StatusContent(...))`.
   factory PresentationElement.createStatus({
-    required _lib_editor_v1_expression.TypedExpression_orMutable value,
+    required _lib_editor_v1_expression.ExpressionNode value,
     required _core.Iterable<StatusCase_orMutable> cases,
     required StatusAppearance_orMutable? fallback,
   }) => PresentationElement.wrapStatus(
@@ -25059,8 +24446,8 @@ sealed class PresentationElement {
 
   /// Same as `wrapDateTime(DateTimeContent(...))`.
   factory PresentationElement.createDateTime({
-    required _lib_editor_v1_expression.TypedExpression_orMutable value,
-    required _lib_editor_v1_expression.TypedExpression_orMutable format,
+    required _lib_editor_v1_expression.ExpressionNode value,
+    required _lib_editor_v1_expression.ExpressionNode format,
     required DateTimeZone timeZone,
   }) => PresentationElement.wrapDateTime(
     DateTimeContent(
@@ -25077,7 +24464,7 @@ sealed class PresentationElement {
 
   /// Same as `wrapRelativeTime(RelativeTimeContent(...))`.
   factory PresentationElement.createRelativeTime({
-    required _lib_editor_v1_expression.TypedExpression_orMutable value,
+    required _lib_editor_v1_expression.ExpressionNode value,
     required RelativeTimeStyle style,
     required DateTimeZone timeZone,
   }) => PresentationElement.wrapRelativeTime(
@@ -25096,7 +24483,7 @@ sealed class PresentationElement {
   /// Same as `wrapTypedField(TypedFieldElement(...))`.
   factory PresentationElement.createTypedField({
     required _lib_editor_v1_binding.BindingRef_orMutable binding,
-    required _lib_editor_v1_type_catalog.TypeExpression expectedType,
+    required _lib_editor_v1_type_catalog.TypeTemplate expectedType,
     required PresentationNode_orMutable? presentation,
   }) => PresentationElement.wrapTypedField(
     TypedFieldElement(
@@ -25113,7 +24500,7 @@ sealed class PresentationElement {
 
   /// Same as `wrapConditional(ConditionalElement(...))`.
   factory PresentationElement.createConditional({
-    required _lib_editor_v1_expression.TypedExpression_orMutable condition,
+    required _lib_editor_v1_expression.ExpressionNode condition,
     required PresentationNode_orMutable whenTrue,
     required PresentationNode_orMutable? whenFalse,
   }) => PresentationElement.wrapConditional(
@@ -25131,8 +24518,8 @@ sealed class PresentationElement {
 
   /// Same as `wrapRepeated(RepeatedElement(...))`.
   factory PresentationElement.createRepeated({
-    required _lib_editor_v1_expression.TypedExpression_orMutable source,
-    required _lib_editor_v1_binding.BindingId_orMutable itemBindingId,
+    required _lib_editor_v1_expression.ExpressionNode source,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable itemBindingId,
     required SequencePresentation_orMutable presentation,
   }) => PresentationElement.wrapRepeated(
     RepeatedElement(
@@ -25150,7 +24537,7 @@ sealed class PresentationElement {
   /// Same as `wrapScopedBinding(ScopedBindingElement(...))`.
   factory PresentationElement.createScopedBinding({
     required _lib_editor_v1_binding.BindingRef_orMutable binding,
-    required _lib_editor_v1_binding.BindingId_orMutable scopeBindingId,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable scopeBindingId,
     required PresentationNode_orMutable child,
   }) => PresentationElement.wrapScopedBinding(
     ScopedBindingElement(
@@ -25169,7 +24556,7 @@ sealed class PresentationElement {
   factory PresentationElement.createTextInput({
     required BoundControl_orMutable control,
     required _core.bool? multiline,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? placeholder,
+    required _lib_editor_v1_expression.ExpressionNode? placeholder,
     required _core.Iterable<TextInputFormat> inputFormatters,
   }) => PresentationElement.wrapTextInput(
     TextControl(
@@ -25188,10 +24575,10 @@ sealed class PresentationElement {
   /// Same as `wrapNumericInput(BoundControl(...))`.
   factory PresentationElement.createNumericInput({
     required _lib_editor_v1_binding.BindingRef_orMutable binding,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? label,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? description,
+    required _lib_editor_v1_expression.ExpressionNode? label,
+    required _lib_editor_v1_expression.ExpressionNode? description,
     required PresentationNode_orMutable? prefix,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? semanticLabel,
+    required _lib_editor_v1_expression.ExpressionNode? semanticLabel,
   }) => PresentationElement.wrapNumericInput(
     BoundControl(
       binding: binding,
@@ -25210,10 +24597,10 @@ sealed class PresentationElement {
   /// Same as `wrapToggleInput(BoundControl(...))`.
   factory PresentationElement.createToggleInput({
     required _lib_editor_v1_binding.BindingRef_orMutable binding,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? label,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? description,
+    required _lib_editor_v1_expression.ExpressionNode? label,
+    required _lib_editor_v1_expression.ExpressionNode? description,
     required PresentationNode_orMutable? prefix,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? semanticLabel,
+    required _lib_editor_v1_expression.ExpressionNode? semanticLabel,
   }) => PresentationElement.wrapToggleInput(
     BoundControl(
       binding: binding,
@@ -25234,13 +24621,11 @@ sealed class PresentationElement {
     required BoundControl_orMutable control,
     required _core.Iterable<SelectOption_orMutable> options,
     required _core.bool allowCustomValue,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? defaultValue,
   }) => PresentationElement.wrapSelectInput(
     SelectControl(
       control: control,
       options: options,
       allowCustomValue: allowCustomValue,
-      defaultValue: defaultValue,
     )
   );
 
@@ -25252,9 +24637,9 @@ sealed class PresentationElement {
   /// Same as `wrapSliderInput(SliderControl(...))`.
   factory PresentationElement.createSliderInput({
     required BoundControl_orMutable control,
-    required _lib_editor_v1_expression.TypedExpression_orMutable minimum,
-    required _lib_editor_v1_expression.TypedExpression_orMutable maximum,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? divisions,
+    required _lib_editor_v1_expression.ExpressionNode minimum,
+    required _lib_editor_v1_expression.ExpressionNode maximum,
+    required _lib_editor_v1_expression.ExpressionNode? divisions,
   }) => PresentationElement.wrapSliderInput(
     SliderControl(
       control: control,
@@ -25290,10 +24675,10 @@ sealed class PresentationElement {
   /// Same as `wrapDurationInput(BoundControl(...))`.
   factory PresentationElement.createDurationInput({
     required _lib_editor_v1_binding.BindingRef_orMutable binding,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? label,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? description,
+    required _lib_editor_v1_expression.ExpressionNode? label,
+    required _lib_editor_v1_expression.ExpressionNode? description,
     required PresentationNode_orMutable? prefix,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? semanticLabel,
+    required _lib_editor_v1_expression.ExpressionNode? semanticLabel,
   }) => PresentationElement.wrapDurationInput(
     BoundControl(
       binding: binding,
@@ -25328,10 +24713,10 @@ sealed class PresentationElement {
   /// Same as `wrapBytesInput(BoundControl(...))`.
   factory PresentationElement.createBytesInput({
     required _lib_editor_v1_binding.BindingRef_orMutable binding,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? label,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? description,
+    required _lib_editor_v1_expression.ExpressionNode? label,
+    required _lib_editor_v1_expression.ExpressionNode? description,
     required PresentationNode_orMutable? prefix,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? semanticLabel,
+    required _lib_editor_v1_expression.ExpressionNode? semanticLabel,
   }) => PresentationElement.wrapBytesInput(
     BoundControl(
       binding: binding,
@@ -25344,23 +24729,17 @@ sealed class PresentationElement {
 
   /// Create a 'named_input' variant wrapping around the given value.
   factory PresentationElement.wrapNamedInput(
-    BoundControl value
+    NamedControl value
   ) => PresentationElement_namedInputWrapper._(value);
 
-  /// Same as `wrapNamedInput(BoundControl(...))`.
+  /// Same as `wrapNamedInput(NamedControl(...))`.
   factory PresentationElement.createNamedInput({
-    required _lib_editor_v1_binding.BindingRef_orMutable binding,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? label,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? description,
-    required PresentationNode_orMutable? prefix,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? semanticLabel,
+    required BoundControl_orMutable control,
+    required PresentationNode_orMutable? payloadPresentation,
   }) => PresentationElement.wrapNamedInput(
-    BoundControl(
-      binding: binding,
-      label: label,
-      description: description,
-      prefix: prefix,
-      semanticLabel: semanticLabel,
+    NamedControl(
+      control: control,
+      payloadPresentation: payloadPresentation,
     )
   );
 
@@ -25385,7 +24764,7 @@ sealed class PresentationElement {
 
   /// Same as `wrapButton(ButtonElement(...))`.
   factory PresentationElement.createButton({
-    required _lib_editor_v1_expression.TypedExpression_orMutable label,
+    required _lib_editor_v1_expression.ExpressionNode label,
     required _lib_editor_v1_action.EditorAction action,
   }) => PresentationElement.wrapButton(
     ButtonElement(
@@ -25401,8 +24780,8 @@ sealed class PresentationElement {
 
   /// Same as `wrapIconButton(IconButtonElement(...))`.
   factory PresentationElement.createIconButton({
-    required _lib_editor_v1_expression.TypedExpression_orMutable icon,
-    required _lib_editor_v1_expression.TypedExpression_orMutable semanticLabel,
+    required _lib_editor_v1_expression.ExpressionNode icon,
+    required _lib_editor_v1_expression.ExpressionNode semanticLabel,
     required _lib_editor_v1_action.EditorAction action,
   }) => PresentationElement.wrapIconButton(
     IconButtonElement(
@@ -25419,7 +24798,7 @@ sealed class PresentationElement {
 
   /// Same as `wrapMenu(MenuElement(...))`.
   factory PresentationElement.createMenu({
-    required _lib_editor_v1_expression.TypedExpression_orMutable? label,
+    required _lib_editor_v1_expression.ExpressionNode? label,
     required _core.Iterable<MenuItem_orMutable> items,
   }) => PresentationElement.wrapMenu(
     MenuElement(
@@ -25435,7 +24814,7 @@ sealed class PresentationElement {
 
   /// Same as `wrapTooltip(TooltipElement(...))`.
   factory PresentationElement.createTooltip({
-    required _lib_editor_v1_expression.TypedExpression_orMutable message,
+    required _lib_editor_v1_expression.ExpressionNode message,
     required PresentationNode_orMutable child,
   }) => PresentationElement.wrapTooltip(
     TooltipElement(
@@ -25456,8 +24835,8 @@ sealed class PresentationElement {
     required _core.bool allowAdd,
     required _core.bool allowRemove,
     required _core.bool allowReorder,
-    required _lib_editor_v1_binding.BindingId_orMutable itemBindingId,
-    required _lib_editor_v1_binding.BindingId_orMutable indexBindingId,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable itemBindingId,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable indexBindingId,
   }) => PresentationElement.wrapListInput(
     ListControl(
       control: control,
@@ -25482,8 +24861,8 @@ sealed class PresentationElement {
     required PresentationNode_orMutable? valuePresentation,
     required _core.bool allowAdd,
     required _core.bool allowRemove,
-    required _lib_editor_v1_binding.BindingId_orMutable keyBindingId,
-    required _lib_editor_v1_binding.BindingId_orMutable valueBindingId,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable keyBindingId,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable valueBindingId,
   }) => PresentationElement.wrapMapInput(
     MapControl(
       control: control,
@@ -25520,10 +24899,10 @@ sealed class PresentationElement {
   /// Same as `wrapEnumInput(BoundControl(...))`.
   factory PresentationElement.createEnumInput({
     required _lib_editor_v1_binding.BindingRef_orMutable binding,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? label,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? description,
+    required _lib_editor_v1_expression.ExpressionNode? label,
+    required _lib_editor_v1_expression.ExpressionNode? description,
     required PresentationNode_orMutable? prefix,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? semanticLabel,
+    required _lib_editor_v1_expression.ExpressionNode? semanticLabel,
   }) => PresentationElement.wrapEnumInput(
     BoundControl(
       binding: binding,
@@ -25575,14 +24954,14 @@ sealed class PresentationElement {
   factory PresentationElement.createSearchInput({
     required BoundControl_orMutable control,
     required SearchSelectionMode selectionMode,
-    required _lib_editor_v1_binding.BindingId_orMutable queryBindingId,
-    required _lib_editor_v1_binding.BindingId_orMutable summaryBindingId,
-    required _lib_editor_v1_expression.TypedExpression_orMutable maximumExtent,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable queryBindingId,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable summaryBindingId,
+    required _lib_editor_v1_expression.ExpressionNode maximumExtent,
     required SearchProvider provider,
     required PresentationNode_orMutable? summary,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? placeholder,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? customValue,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? initialQuery,
+    required _lib_editor_v1_expression.ExpressionNode? placeholder,
+    required _lib_editor_v1_expression.ExpressionNode? customValue,
+    required _lib_editor_v1_expression.ExpressionNode? initialQuery,
   }) => PresentationElement.wrapSearchInput(
     SearchControl(
       control: control,
@@ -25628,14 +25007,14 @@ sealed class PresentationElement {
   /// Same as `wrapCollectionGraph(CollectionGraphElement(...))`.
   factory PresentationElement.createCollectionGraph({
     required _core.String sourceId,
-    required _lib_editor_v1_binding.BindingRef_orMutable roots,
+    required _lib_editor_v1_expression.ExpressionNode roots,
     required SequencePresentation_orMutable rootSequence,
     required _core.String relationId,
     required CollectionGraphDirection direction,
     required _core.int? maximumDepth,
     required PresentationNode_orMutable node,
-    required _lib_editor_v1_binding.BindingId_orMutable childrenBindingId,
-    required _lib_editor_v1_binding.BindingId_orMutable childBindingId,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable childrenBindingId,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable childBindingId,
     required SequencePresentation_orMutable children,
   }) => PresentationElement.wrapCollectionGraph(
     CollectionGraphElement(
@@ -25661,7 +25040,7 @@ sealed class PresentationElement {
   factory PresentationElement.createContainer({
     required PresentationNode_orMutable child,
     required PresentationBorder? border,
-    required _lib_editor_v1_expression.TypedExpression_orMutable? backgroundColor,
+    required _lib_editor_v1_expression.ExpressionNode? backgroundColor,
     required PresentationRadius radius,
   }) => PresentationElement.wrapContainer(
     ContainerLayout(
@@ -25712,7 +25091,7 @@ sealed class PresentationElement {
   /// Same as `wrapPolymorphicMatch(PolymorphicMatchElement(...))`.
   factory PresentationElement.createPolymorphicMatch({
     required _lib_editor_v1_binding.BindingRef_orMutable binding,
-    required _lib_editor_v1_binding.BindingId_orMutable scopeBindingId,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable scopeBindingId,
     required _core.Iterable<PolymorphicMatchCase_orMutable> cases,
     required PresentationNode_orMutable? fallback,
   }) => PresentationElement.wrapPolymorphicMatch(
@@ -25740,23 +25119,25 @@ sealed class PresentationElement {
     )
   );
 
-  /// Create a 'reference_input' variant wrapping around the given value.
-  factory PresentationElement.wrapReferenceInput(
-    ReferenceControl value
-  ) => PresentationElement_referenceInputWrapper._(value);
+  /// Create a 'link_input' variant wrapping around the given value.
+  factory PresentationElement.wrapLinkInput(
+    LinkControl value
+  ) => PresentationElement_linkInputWrapper._(value);
 
-  /// Same as `wrapReferenceInput(ReferenceControl(...))`.
-  factory PresentationElement.createReferenceInput({
+  /// Same as `wrapLinkInput(LinkControl(...))`.
+  factory PresentationElement.createLinkInput({
     required BoundControl_orMutable control,
     required _core.bool allowReorder,
-    required ReferencePolicyId_orMutable? candidatePolicy,
-    required ReferenceRejectionDisplay rejectionDisplay,
-  }) => PresentationElement.wrapReferenceInput(
-    ReferenceControl(
+    required LinkCandidatePolicyId_orMutable? candidatePolicy,
+    required LinkRejectionDisplay rejectionDisplay,
+    required _core.String? sourceId,
+  }) => PresentationElement.wrapLinkInput(
+    LinkControl(
       control: control,
       allowReorder: allowReorder,
       candidatePolicy: candidatePolicy,
       rejectionDisplay: rejectionDisplay,
+      sourceId: sourceId,
     )
   );
 
@@ -25801,6 +25182,88 @@ sealed class PresentationElement {
       compactPadding: compactPadding,
       gap: gap,
       minimumCenterWidth: minimumCenterWidth,
+    )
+  );
+
+  /// Create a 'remaining_fields' variant wrapping around the given value.
+  factory PresentationElement.wrapRemainingFields(
+    RemainingFieldsElement value
+  ) => PresentationElement_remainingFieldsWrapper._(value);
+
+  /// Same as `wrapRemainingFields(RemainingFieldsElement(...))`.
+  factory PresentationElement.createRemainingFields({
+    required _core.Iterable<_lib_editor_v1_type_catalog.RelativeFieldPattern_orMutable> excluded,
+  }) => PresentationElement.wrapRemainingFields(
+    RemainingFieldsElement(
+      excluded: excluded,
+    )
+  );
+
+  /// Create a 'nullable_input' variant wrapping around the given value.
+  factory PresentationElement.wrapNullableInput(
+    NullableControl value
+  ) => PresentationElement_nullableInputWrapper._(value);
+
+  /// Same as `wrapNullableInput(NullableControl(...))`.
+  factory PresentationElement.createNullableInput({
+    required BoundControl_orMutable control,
+    required PresentationNode_orMutable? valuePresentation,
+  }) => PresentationElement.wrapNullableInput(
+    NullableControl(
+      control: control,
+      valuePresentation: valuePresentation,
+    )
+  );
+
+  /// Create a 'set_input' variant wrapping around the given value.
+  factory PresentationElement.wrapSetInput(
+    SetControl value
+  ) => PresentationElement_setInputWrapper._(value);
+
+  /// Same as `wrapSetInput(SetControl(...))`.
+  factory PresentationElement.createSetInput({
+    required BoundControl_orMutable control,
+    required PresentationNode_orMutable? itemPresentation,
+    required _core.bool allowAdd,
+    required _core.bool allowRemove,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable itemBindingId,
+  }) => PresentationElement.wrapSetInput(
+    SetControl(
+      control: control,
+      itemPresentation: itemPresentation,
+      allowAdd: allowAdd,
+      allowRemove: allowRemove,
+      itemBindingId: itemBindingId,
+    )
+  );
+
+  /// Create a 'page_graph' variant wrapping around the given value.
+  factory PresentationElement.wrapPageGraph(
+    PageGraphElement value
+  ) => PresentationElement_pageGraphWrapper._(value);
+
+  /// Same as `wrapPageGraph(PageGraphElement(...))`.
+  factory PresentationElement.createPageGraph({
+    required BoundControl_orMutable control,
+    required PageGraphDirection direction,
+  }) => PresentationElement.wrapPageGraph(
+    PageGraphElement(
+      control: control,
+      direction: direction,
+    )
+  );
+
+  /// Create a 'page_timeline' variant wrapping around the given value.
+  factory PresentationElement.wrapPageTimeline(
+    PageTimelineElement value
+  ) => PresentationElement_pageTimelineWrapper._(value);
+
+  /// Same as `wrapPageTimeline(PageTimelineElement(...))`.
+  factory PresentationElement.createPageTimeline({
+    required BoundControl_orMutable control,
+  }) => PresentationElement.wrapPageTimeline(
+    PageTimelineElement(
+      control: control,
     )
   );
 
@@ -26111,7 +25574,7 @@ sealed class PresentationElement {
         31,
         "named_input",
         "wrapNamedInput",
-        BoundControl.serializer,
+        NamedControl.serializer,
         "",
         PresentationElement_namedInputWrapper._,
         (it) => it.value,
@@ -26309,13 +25772,13 @@ sealed class PresentationElement {
       );
       _serializerBuilder.addWrapperVariant(
         51,
-        "reference_input",
-        "wrapReferenceInput",
-        ReferenceControl.serializer,
+        "link_input",
+        "wrapLinkInput",
+        LinkControl.serializer,
         "",
-        PresentationElement_referenceInputWrapper._,
+        PresentationElement_linkInputWrapper._,
         (it) => it.value,
-        ordinal: PresentationElement_kind.referenceInputWrapper._ordinal,
+        ordinal: PresentationElement_kind.linkInputWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         52,
@@ -26336,6 +25799,56 @@ sealed class PresentationElement {
         PresentationElement_adaptiveLeadingWrapper._,
         (it) => it.value,
         ordinal: PresentationElement_kind.adaptiveLeadingWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        54,
+        "remaining_fields",
+        "wrapRemainingFields",
+        RemainingFieldsElement.serializer,
+        "",
+        PresentationElement_remainingFieldsWrapper._,
+        (it) => it.value,
+        ordinal: PresentationElement_kind.remainingFieldsWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        55,
+        "nullable_input",
+        "wrapNullableInput",
+        NullableControl.serializer,
+        "",
+        PresentationElement_nullableInputWrapper._,
+        (it) => it.value,
+        ordinal: PresentationElement_kind.nullableInputWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        56,
+        "set_input",
+        "wrapSetInput",
+        SetControl.serializer,
+        "",
+        PresentationElement_setInputWrapper._,
+        (it) => it.value,
+        ordinal: PresentationElement_kind.setInputWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        57,
+        "page_graph",
+        "wrapPageGraph",
+        PageGraphElement.serializer,
+        "",
+        PresentationElement_pageGraphWrapper._,
+        (it) => it.value,
+        ordinal: PresentationElement_kind.pageGraphWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        58,
+        "page_timeline",
+        "wrapPageTimeline",
+        PageTimelineElement.serializer,
+        "",
+        PresentationElement_pageTimelineWrapper._,
+        (it) => it.value,
+        ordinal: PresentationElement_kind.pageTimelineWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -26406,9 +25919,14 @@ enum PresentationElement_kind {
   connectionLayerWrapper(48),
   polymorphicMatchWrapper(49),
   invocationWrapper(50),
-  referenceInputWrapper(51),
+  linkInputWrapper(51),
   richTextWrapper(52),
-  adaptiveLeadingWrapper(53);
+  adaptiveLeadingWrapper(53),
+  remainingFieldsWrapper(54),
+  nullableInputWrapper(55),
+  setInputWrapper(56),
+  pageGraphWrapper(57),
+  pageTimelineWrapper(58);
 
   final _core.int _ordinal;
 
@@ -26723,7 +26241,7 @@ final class PresentationElement_bytesInputWrapper extends _PresentationElement_w
 }
 
 final class PresentationElement_namedInputWrapper extends _PresentationElement_wrapper {
-  final BoundControl value;
+  final NamedControl value;
 
   PresentationElement_namedInputWrapper._(this.value);
 
@@ -26902,13 +26420,13 @@ final class PresentationElement_invocationWrapper extends _PresentationElement_w
   PresentationElement_kind get kind => PresentationElement_kind.invocationWrapper;
 }
 
-final class PresentationElement_referenceInputWrapper extends _PresentationElement_wrapper {
-  final ReferenceControl value;
+final class PresentationElement_linkInputWrapper extends _PresentationElement_wrapper {
+  final LinkControl value;
 
-  PresentationElement_referenceInputWrapper._(this.value);
+  PresentationElement_linkInputWrapper._(this.value);
 
   @_core.override
-  PresentationElement_kind get kind => PresentationElement_kind.referenceInputWrapper;
+  PresentationElement_kind get kind => PresentationElement_kind.linkInputWrapper;
 }
 
 final class PresentationElement_richTextWrapper extends _PresentationElement_wrapper {
@@ -26929,6 +26447,51 @@ final class PresentationElement_adaptiveLeadingWrapper extends _PresentationElem
   PresentationElement_kind get kind => PresentationElement_kind.adaptiveLeadingWrapper;
 }
 
+final class PresentationElement_remainingFieldsWrapper extends _PresentationElement_wrapper {
+  final RemainingFieldsElement value;
+
+  PresentationElement_remainingFieldsWrapper._(this.value);
+
+  @_core.override
+  PresentationElement_kind get kind => PresentationElement_kind.remainingFieldsWrapper;
+}
+
+final class PresentationElement_nullableInputWrapper extends _PresentationElement_wrapper {
+  final NullableControl value;
+
+  PresentationElement_nullableInputWrapper._(this.value);
+
+  @_core.override
+  PresentationElement_kind get kind => PresentationElement_kind.nullableInputWrapper;
+}
+
+final class PresentationElement_setInputWrapper extends _PresentationElement_wrapper {
+  final SetControl value;
+
+  PresentationElement_setInputWrapper._(this.value);
+
+  @_core.override
+  PresentationElement_kind get kind => PresentationElement_kind.setInputWrapper;
+}
+
+final class PresentationElement_pageGraphWrapper extends _PresentationElement_wrapper {
+  final PageGraphElement value;
+
+  PresentationElement_pageGraphWrapper._(this.value);
+
+  @_core.override
+  PresentationElement_kind get kind => PresentationElement_kind.pageGraphWrapper;
+}
+
+final class PresentationElement_pageTimelineWrapper extends _PresentationElement_wrapper {
+  final PageTimelineElement value;
+
+  PresentationElement_pageTimelineWrapper._(this.value);
+
+  @_core.override
+  PresentationElement_kind get kind => PresentationElement_kind.pageTimelineWrapper;
+}
+
 // -----------------------------------------------------------------------------
 // struct PresentationDefinition
 // -----------------------------------------------------------------------------
@@ -26938,7 +26501,7 @@ sealed class PresentationDefinition_orMutable {
   _core.Iterable<PresentationInput_orMutable> get inputs;
   PresentationNode_orMutable get root;
   PresentationDependencies_orMutable get dependencies;
-  _lib_editor_v1_binding.BindingId_orMutable? get primaryInput;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable? get primaryInput;
 
   PresentationDefinition toFrozen();
 }
@@ -26954,7 +26517,7 @@ final class PresentationDefinition implements PresentationDefinition_orMutable {
   @_core.override
   final PresentationDependencies dependencies;
   @_core.override
-  final _lib_editor_v1_binding.BindingId? primaryInput;
+  final _lib_editor_v1_type_catalog.ExpressionBindingId? primaryInput;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PresentationDefinition({
@@ -26962,7 +26525,7 @@ final class PresentationDefinition implements PresentationDefinition_orMutable {
     required _core.Iterable<PresentationInput_orMutable> inputs,
     required PresentationNode_orMutable root,
     required PresentationDependencies_orMutable dependencies,
-    required _lib_editor_v1_binding.BindingId_orMutable? primaryInput,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable? primaryInput,
   }) => PresentationDefinition._(
     presentationId.toFrozen(),
     _skir.internal__frozenMappedCopy(inputs, (it) => it.toFrozen()),
@@ -27079,7 +26642,7 @@ final class PresentationDefinition implements PresentationDefinition_orMutable {
         "primaryInput",
         4,
         _skir.Serializers.optional(
-          _lib_editor_v1_binding.BindingId.serializer,
+          _lib_editor_v1_type_catalog.ExpressionBindingId.serializer,
         ),
         "",
         (it) => it.primaryInput,
@@ -27107,7 +26670,7 @@ final class PresentationDefinition_mutable implements PresentationDefinition_orM
   _core.Iterable<PresentationInput_orMutable> inputs;
   PresentationNode_orMutable root;
   PresentationDependencies_orMutable dependencies;
-  _lib_editor_v1_binding.BindingId_orMutable? primaryInput;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable? primaryInput;
   _skir.internal__UnrecognizedFields? _u;
 
   PresentationDefinition_mutable._(
@@ -27178,7 +26741,7 @@ final class PresentationDefinition_mutable implements PresentationDefinition_orM
 // -----------------------------------------------------------------------------
 
 sealed class PresentationDependencies_orMutable {
-  _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable> get types;
+  _core.Iterable<_lib_editor_v1_type_catalog.TypeUse> get types;
   _core.Iterable<_lib_editor_v1_type_catalog.PresentationId_orMutable> get presentations;
   _core.Iterable<_lib_editor_v1_type_catalog.ConversionId_orMutable> get conversions;
   _core.Iterable<_lib_editor_v1_type_catalog.CapabilityId_orMutable> get capabilities;
@@ -27190,7 +26753,7 @@ sealed class PresentationDependencies_orMutable {
 /// Deeply immutable.
 final class PresentationDependencies implements PresentationDependencies_orMutable {
   @_core.override
-  final _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef> types;
+  final _core.Iterable<_lib_editor_v1_type_catalog.TypeUse> types;
   @_core.override
   final _core.Iterable<_lib_editor_v1_type_catalog.PresentationId> presentations;
   @_core.override
@@ -27202,13 +26765,13 @@ final class PresentationDependencies implements PresentationDependencies_orMutab
   _skir.internal__UnrecognizedFields? _u;
 
   factory PresentationDependencies({
-    required _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable> types,
+    required _core.Iterable<_lib_editor_v1_type_catalog.TypeUse> types,
     required _core.Iterable<_lib_editor_v1_type_catalog.PresentationId_orMutable> presentations,
     required _core.Iterable<_lib_editor_v1_type_catalog.ConversionId_orMutable> conversions,
     required _core.Iterable<_lib_editor_v1_type_catalog.CapabilityId_orMutable> capabilities,
     required _core.Iterable<PresentationCollectionDefinition_orMutable> collections,
   }) => PresentationDependencies._(
-    _skir.internal__frozenMappedCopy(types, (it) => it.toFrozen()),
+    _skir.internal__frozenCopy(types),
     _skir.internal__frozenMappedCopy(presentations, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(conversions, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(capabilities, (it) => it.toFrozen()),
@@ -27285,7 +26848,7 @@ final class PresentationDependencies implements PresentationDependencies_orMutab
         "types",
         0,
         _skir.Serializers.iterable(
-          _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
+          _lib_editor_v1_type_catalog.TypeUse.serializer,
         ),
         "",
         (it) => it.types,
@@ -27355,7 +26918,7 @@ final class PresentationDependencies implements PresentationDependencies_orMutab
 
 /// Mutable version of [PresentationDependencies].
 final class PresentationDependencies_mutable implements PresentationDependencies_orMutable {
-  _core.Iterable<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable> types;
+  _core.Iterable<_lib_editor_v1_type_catalog.TypeUse> types;
   _core.Iterable<_lib_editor_v1_type_catalog.PresentationId_orMutable> presentations;
   _core.Iterable<_lib_editor_v1_type_catalog.ConversionId_orMutable> conversions;
   _core.Iterable<_lib_editor_v1_type_catalog.CapabilityId_orMutable> capabilities;
@@ -27372,9 +26935,9 @@ final class PresentationDependencies_mutable implements PresentationDependencies
 
   /// If the value of [types] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [types] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable> get mutableTypes {
+  _core.List<_lib_editor_v1_type_catalog.TypeUse> get mutableTypes {
     final value = this.types;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable>) {
+    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.TypeUse>) {
       return value;
     } else {
       return this.types = _skir.internal__MutableList([...value]);
@@ -27442,7 +27005,7 @@ final class PresentationDependencies_mutable implements PresentationDependencies
 
 sealed class PresentationCollectionRelationDefinition_orMutable {
   _core.String get relationId;
-  _lib_editor_v1_expression.TypedExpression_orMutable get targets;
+  _lib_editor_v1_expression.ExpressionNode get targets;
 
   PresentationCollectionRelationDefinition toFrozen();
 }
@@ -27452,15 +27015,15 @@ final class PresentationCollectionRelationDefinition implements PresentationColl
   @_core.override
   final _core.String relationId;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression targets;
+  final _lib_editor_v1_expression.ExpressionNode targets;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PresentationCollectionRelationDefinition({
     required _core.String relationId,
-    required _lib_editor_v1_expression.TypedExpression_orMutable targets,
+    required _lib_editor_v1_expression.ExpressionNode targets,
   }) => PresentationCollectionRelationDefinition._(
     relationId,
-    targets.toFrozen(),
+    targets,
   );
 
   PresentationCollectionRelationDefinition._(
@@ -27471,14 +27034,14 @@ final class PresentationCollectionRelationDefinition implements PresentationColl
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PresentationCollectionRelationDefinition._(
     "",
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static PresentationCollectionRelationDefinition_mutable mutable() => PresentationCollectionRelationDefinition_mutable._(
     "",
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
   );
 
   /// Returns this instance (no-op).
@@ -27526,7 +27089,7 @@ final class PresentationCollectionRelationDefinition implements PresentationColl
         "targets",
         "targets",
         1,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.targets,
         (it, v) => it.targets = v,
@@ -27550,24 +27113,13 @@ final class PresentationCollectionRelationDefinition implements PresentationColl
 /// Mutable version of [PresentationCollectionRelationDefinition].
 final class PresentationCollectionRelationDefinition_mutable implements PresentationCollectionRelationDefinition_orMutable {
   _core.String relationId;
-  _lib_editor_v1_expression.TypedExpression_orMutable targets;
+  _lib_editor_v1_expression.ExpressionNode targets;
   _skir.internal__UnrecognizedFields? _u;
 
   PresentationCollectionRelationDefinition_mutable._(
     this.relationId,
     this.targets,
   );
-
-  /// If the value of [targets] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [targets] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableTargets {
-    final value = this.targets;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.targets = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
@@ -27583,11 +27135,13 @@ final class PresentationCollectionRelationDefinition_mutable implements Presenta
 
 sealed class PresentationCollectionDefinition_orMutable {
   _core.String get sourceId;
-  _lib_editor_v1_type_catalog.TypeExpression get rowType;
-  _lib_editor_v1_binding.BindingId_orMutable get rowBindingId;
-  _lib_editor_v1_expression.TypedExpression_orMutable get key;
-  _lib_editor_v1_expression.TypedExpression_orMutable get selectability;
+  _lib_editor_v1_type_catalog.TypeTemplate get rowType;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get rowBindingId;
+  _lib_editor_v1_expression.ExpressionNode get key;
+  _lib_editor_v1_expression.ExpressionNode get selectability;
   _core.Iterable<PresentationCollectionRelationDefinition_orMutable> get relations;
+  PresentationCollectionProjection_orMutable? get projection;
+  PresentationResourceCollection_orMutable? get resources;
 
   PresentationCollectionDefinition toFrozen();
 }
@@ -27600,31 +27154,39 @@ final class PresentationCollectionDefinition implements PresentationCollectionDe
   @_core.override
   final _core.String sourceId;
   @_core.override
-  final _lib_editor_v1_type_catalog.TypeExpression rowType;
+  final _lib_editor_v1_type_catalog.TypeTemplate rowType;
   @_core.override
-  final _lib_editor_v1_binding.BindingId rowBindingId;
+  final _lib_editor_v1_type_catalog.ExpressionBindingId rowBindingId;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression key;
+  final _lib_editor_v1_expression.ExpressionNode key;
   @_core.override
-  final _lib_editor_v1_expression.TypedExpression selectability;
+  final _lib_editor_v1_expression.ExpressionNode selectability;
   @_core.override
   final _skir.KeyedIterable<PresentationCollectionRelationDefinition, _core.String> relations;
+  @_core.override
+  final PresentationCollectionProjection? projection;
+  @_core.override
+  final PresentationResourceCollection? resources;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PresentationCollectionDefinition({
     required _core.String sourceId,
-    required _lib_editor_v1_type_catalog.TypeExpression rowType,
-    required _lib_editor_v1_binding.BindingId_orMutable rowBindingId,
-    required _lib_editor_v1_expression.TypedExpression_orMutable key,
-    required _lib_editor_v1_expression.TypedExpression_orMutable selectability,
+    required _lib_editor_v1_type_catalog.TypeTemplate rowType,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable rowBindingId,
+    required _lib_editor_v1_expression.ExpressionNode key,
+    required _lib_editor_v1_expression.ExpressionNode selectability,
     required _core.Iterable<PresentationCollectionRelationDefinition_orMutable> relations,
+    required PresentationCollectionProjection_orMutable? projection,
+    required PresentationResourceCollection_orMutable? resources,
   }) => PresentationCollectionDefinition._(
     sourceId,
     rowType,
     rowBindingId.toFrozen(),
-    key.toFrozen(),
-    selectability.toFrozen(),
+    key,
+    selectability,
     _skir.internal__keyedMappedCopy(relations, "relationId", (it) => it.relationId, (it) => it.toFrozen()),
+    (projection != null) ? projection.toFrozen() : null,
+    (resources != null) ? resources.toFrozen() : null,
   );
 
   PresentationCollectionDefinition._(
@@ -27634,27 +27196,33 @@ final class PresentationCollectionDefinition implements PresentationCollectionDe
     this.key,
     this.selectability,
     this.relations,
+    this.projection,
+    this.resources,
   );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PresentationCollectionDefinition._(
     "",
-    _lib_editor_v1_type_catalog.TypeExpression.unknown,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_type_catalog.TypeTemplate.unknown,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     _skir.KeyedIterable.empty,
+    null,
+    null,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static PresentationCollectionDefinition_mutable mutable() => PresentationCollectionDefinition_mutable._(
     "",
-    _lib_editor_v1_type_catalog.TypeExpression.unknown,
-    _lib_editor_v1_binding.BindingId.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
-    _lib_editor_v1_expression.TypedExpression.defaultInstance,
+    _lib_editor_v1_type_catalog.TypeTemplate.unknown,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
     _skir.KeyedIterable.empty,
+    null,
+    null,
   );
 
   /// Returns this instance (no-op).
@@ -27670,6 +27238,8 @@ final class PresentationCollectionDefinition implements PresentationCollectionDe
     this.key,
     this.selectability,
     this.relations,
+    this.projection,
+    this.resources,
   );
 
   @_core.override
@@ -27689,6 +27259,8 @@ final class PresentationCollectionDefinition implements PresentationCollectionDe
     this.key,
     this.selectability,
     this.relations,
+    this.projection,
+    this.resources,
   ];
 
   @_core.override
@@ -27710,7 +27282,7 @@ final class PresentationCollectionDefinition implements PresentationCollectionDe
         "row_type",
         "rowType",
         1,
-        _lib_editor_v1_type_catalog.TypeExpression.serializer,
+        _lib_editor_v1_type_catalog.TypeTemplate.serializer,
         "",
         (it) => it.rowType,
         (it, v) => it.rowType = v,
@@ -27719,7 +27291,7 @@ final class PresentationCollectionDefinition implements PresentationCollectionDe
         "row_binding_id",
         "rowBindingId",
         2,
-        _lib_editor_v1_binding.BindingId.serializer,
+        _lib_editor_v1_type_catalog.ExpressionBindingId.serializer,
         "",
         (it) => it.rowBindingId,
         (it, v) => it.rowBindingId = v,
@@ -27728,7 +27300,7 @@ final class PresentationCollectionDefinition implements PresentationCollectionDe
         "key",
         "key",
         3,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.key,
         (it, v) => it.key = v,
@@ -27737,7 +27309,7 @@ final class PresentationCollectionDefinition implements PresentationCollectionDe
         "selectability",
         "selectability",
         4,
-        _lib_editor_v1_expression.TypedExpression.serializer,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
         "",
         (it) => it.selectability,
         (it, v) => it.selectability = v,
@@ -27754,6 +27326,28 @@ final class PresentationCollectionDefinition implements PresentationCollectionDe
         "",
         (it) => it.relations,
         (it, v) => it.relations = v,
+      );
+      _serializerBuilder.addField(
+        "projection",
+        "projection",
+        6,
+        _skir.Serializers.optional(
+          PresentationCollectionProjection.serializer,
+        ),
+        "",
+        (it) => it.projection,
+        (it, v) => it.projection = v,
+      );
+      _serializerBuilder.addField(
+        "resources",
+        "resources",
+        7,
+        _skir.Serializers.optional(
+          PresentationResourceCollection.serializer,
+        ),
+        "",
+        (it) => it.resources,
+        (it, v) => it.resources = v,
       );
       _serializerBuilder.finalize();
     }
@@ -27774,11 +27368,13 @@ final class PresentationCollectionDefinition implements PresentationCollectionDe
 /// Mutable version of [PresentationCollectionDefinition].
 final class PresentationCollectionDefinition_mutable implements PresentationCollectionDefinition_orMutable {
   _core.String sourceId;
-  _lib_editor_v1_type_catalog.TypeExpression rowType;
-  _lib_editor_v1_binding.BindingId_orMutable rowBindingId;
-  _lib_editor_v1_expression.TypedExpression_orMutable key;
-  _lib_editor_v1_expression.TypedExpression_orMutable selectability;
+  _lib_editor_v1_type_catalog.TypeTemplate rowType;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable rowBindingId;
+  _lib_editor_v1_expression.ExpressionNode key;
+  _lib_editor_v1_expression.ExpressionNode selectability;
   _core.Iterable<PresentationCollectionRelationDefinition_orMutable> relations;
+  PresentationCollectionProjection_orMutable? projection;
+  PresentationResourceCollection_orMutable? resources;
   _skir.internal__UnrecognizedFields? _u;
 
   PresentationCollectionDefinition_mutable._(
@@ -27788,38 +27384,18 @@ final class PresentationCollectionDefinition_mutable implements PresentationColl
     this.key,
     this.selectability,
     this.relations,
+    this.projection,
+    this.resources,
   );
 
   /// If the value of [rowBindingId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [rowBindingId] and returns it.
-  _lib_editor_v1_binding.BindingId_mutable get mutableRowBindingId {
+  _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableRowBindingId {
     final value = this.rowBindingId;
-    if (value is _lib_editor_v1_binding.BindingId_mutable) {
+    if (value is _lib_editor_v1_type_catalog.ExpressionBindingId_mutable) {
       return value;
     } else {
-      return this.rowBindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
-    }
-  }
-
-  /// If the value of [key] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [key] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableKey {
-    final value = this.key;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.key = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
-    }
-  }
-
-  /// If the value of [selectability] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [selectability] and returns it.
-  _lib_editor_v1_expression.TypedExpression_mutable get mutableSelectability {
-    final value = this.selectability;
-    if (value is _lib_editor_v1_expression.TypedExpression_mutable) {
-      return value;
-    } else {
-      return this.selectability = (value as _lib_editor_v1_expression.TypedExpression).toMutable();
+      return this.rowBindingId = (value as _lib_editor_v1_type_catalog.ExpressionBindingId).toMutable();
     }
   }
 
@@ -27843,6 +27419,655 @@ final class PresentationCollectionDefinition_mutable implements PresentationColl
     key: this.key,
     selectability: this.selectability,
     relations: this.relations,
+    projection: this.projection,
+    resources: this.resources,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum PresentationCollectionProjectionValue
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case PresentationCollectionProjectionValue_unknown(): { ... }
+///     case PresentationCollectionProjectionValue_content(:var value): { ... }
+///     case PresentationCollectionProjectionValue_literal(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class PresentationCollectionProjectionValue {
+  /// Constant indicating an unknown `PresentationCollectionProjectionValue`.
+  /// Default value for fields of type `PresentationCollectionProjectionValue`.
+  static const PresentationCollectionProjectionValue unknown = PresentationCollectionProjectionValue_unknown._instance;
+
+  /// Create a 'content' variant wrapping around the given value.
+  factory PresentationCollectionProjectionValue.wrapContent(
+    _lib_editor_v1_type_catalog.ValuePath value
+  ) => PresentationCollectionProjectionValue_contentWrapper._(value);
+
+  /// Same as `wrapContent(_lib_editor_v1_type_catalog.ValuePath(...))`.
+  factory PresentationCollectionProjectionValue.createContent({
+    required _core.Iterable<_lib_editor_v1_type_catalog.PathSegment> segments,
+  }) => PresentationCollectionProjectionValue.wrapContent(
+    _lib_editor_v1_type_catalog.ValuePath(
+      segments: segments,
+    )
+  );
+
+  /// Create a 'literal' variant wrapping around the given value.
+  factory PresentationCollectionProjectionValue.wrapLiteral(
+    _lib_editor_v1_type_catalog.DataValue value
+  ) => PresentationCollectionProjectionValue_literalWrapper._(value);
+
+  /// Returns the kind of variant held by this PresentationCollectionProjectionValue.
+  PresentationCollectionProjectionValue_kind get kind;
+
+  /// Serializer for `PresentationCollectionProjectionValue` instances.
+  static _skir.EnumSerializer<PresentationCollectionProjectionValue> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "content",
+        "wrapContent",
+        _lib_editor_v1_type_catalog.ValuePath.serializer,
+        "",
+        PresentationCollectionProjectionValue_contentWrapper._,
+        (it) => it.value,
+        ordinal: PresentationCollectionProjectionValue_kind.contentWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "literal",
+        "wrapLiteral",
+        _lib_editor_v1_type_catalog.DataValue.serializer,
+        "",
+        PresentationCollectionProjectionValue_literalWrapper._,
+        (it) => it.value,
+        ordinal: PresentationCollectionProjectionValue_kind.literalWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/presentation.skir:PresentationCollectionProjectionValue",
+    doc: "",
+    unknownInstance: PresentationCollectionProjectionValue_unknown._instance,
+    enumInstance: PresentationCollectionProjectionValue.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: PresentationCollectionProjectionValue_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
+}
+
+/// The kind of variant held by a `PresentationCollectionProjectionValue`.
+enum PresentationCollectionProjectionValue_kind {
+  unknown(0),
+  contentWrapper(1),
+  literalWrapper(2);
+
+  final _core.int _ordinal;
+
+  const PresentationCollectionProjectionValue_kind(this._ordinal);
+}
+
+final class PresentationCollectionProjectionValue_unknown implements PresentationCollectionProjectionValue {
+  static const _instance = PresentationCollectionProjectionValue_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const PresentationCollectionProjectionValue_unknown._() : _u = null;
+  PresentationCollectionProjectionValue_unknown._unrecognized(this._u);
+
+  @_core.override
+  PresentationCollectionProjectionValue_kind get kind => PresentationCollectionProjectionValue_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is PresentationCollectionProjectionValue_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, PresentationCollectionProjectionValue.serializer);
+}
+
+sealed class _PresentationCollectionProjectionValue_wrapper implements PresentationCollectionProjectionValue {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _PresentationCollectionProjectionValue_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, PresentationCollectionProjectionValue.serializer);
+}
+
+final class PresentationCollectionProjectionValue_contentWrapper extends _PresentationCollectionProjectionValue_wrapper {
+  final _lib_editor_v1_type_catalog.ValuePath value;
+
+  PresentationCollectionProjectionValue_contentWrapper._(this.value);
+
+  @_core.override
+  PresentationCollectionProjectionValue_kind get kind => PresentationCollectionProjectionValue_kind.contentWrapper;
+}
+
+final class PresentationCollectionProjectionValue_literalWrapper extends _PresentationCollectionProjectionValue_wrapper {
+  final _lib_editor_v1_type_catalog.DataValue value;
+
+  PresentationCollectionProjectionValue_literalWrapper._(this.value);
+
+  @_core.override
+  PresentationCollectionProjectionValue_kind get kind => PresentationCollectionProjectionValue_kind.literalWrapper;
+}
+
+// -----------------------------------------------------------------------------
+// struct PresentationCollectionProjectionField
+// -----------------------------------------------------------------------------
+
+sealed class PresentationCollectionProjectionField_orMutable {
+  _lib_editor_v1_type_catalog.ValuePath_orMutable get target;
+  PresentationCollectionProjectionValue get source;
+
+  PresentationCollectionProjectionField toFrozen();
+}
+
+/// Deeply immutable.
+final class PresentationCollectionProjectionField implements PresentationCollectionProjectionField_orMutable {
+  @_core.override
+  final _lib_editor_v1_type_catalog.ValuePath target;
+  @_core.override
+  final PresentationCollectionProjectionValue source;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PresentationCollectionProjectionField({
+    required _lib_editor_v1_type_catalog.ValuePath_orMutable target,
+    required PresentationCollectionProjectionValue source,
+  }) => PresentationCollectionProjectionField._(
+    target.toFrozen(),
+    source,
+  );
+
+  PresentationCollectionProjectionField._(
+    this.target,
+    this.source,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PresentationCollectionProjectionField._(
+    _lib_editor_v1_type_catalog.ValuePath.defaultInstance,
+    PresentationCollectionProjectionValue.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PresentationCollectionProjectionField_mutable mutable() => PresentationCollectionProjectionField_mutable._(
+    _lib_editor_v1_type_catalog.ValuePath.defaultInstance,
+    PresentationCollectionProjectionValue.unknown,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PresentationCollectionProjectionField toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PresentationCollectionProjectionField_mutable toMutable() => PresentationCollectionProjectionField_mutable._(
+    this.target,
+    this.source,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PresentationCollectionProjectionField) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.target,
+    this.source,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PresentationCollectionProjectionField` instances.
+  static _skir.StructSerializer<PresentationCollectionProjectionField, PresentationCollectionProjectionField_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "target",
+        "target",
+        0,
+        _lib_editor_v1_type_catalog.ValuePath.serializer,
+        "",
+        (it) => it.target,
+        (it, v) => it.target = v,
+      );
+      _serializerBuilder.addField(
+        "source",
+        "source",
+        1,
+        PresentationCollectionProjectionValue.serializer,
+        "",
+        (it) => it.source,
+        (it, v) => it.source = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:PresentationCollectionProjectionField",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PresentationCollectionProjectionField_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PresentationCollectionProjectionField].
+final class PresentationCollectionProjectionField_mutable implements PresentationCollectionProjectionField_orMutable {
+  _lib_editor_v1_type_catalog.ValuePath_orMutable target;
+  PresentationCollectionProjectionValue source;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PresentationCollectionProjectionField_mutable._(
+    this.target,
+    this.source,
+  );
+
+  /// If the value of [target] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
+  _lib_editor_v1_type_catalog.ValuePath_mutable get mutableTarget {
+    final value = this.target;
+    if (value is _lib_editor_v1_type_catalog.ValuePath_mutable) {
+      return value;
+    } else {
+      return this.target = (value as _lib_editor_v1_type_catalog.ValuePath).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PresentationCollectionProjectionField toFrozen() => PresentationCollectionProjectionField(
+    target: this.target,
+    source: this.source,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct PresentationCollectionProjection
+// -----------------------------------------------------------------------------
+
+sealed class PresentationCollectionProjection_orMutable {
+  _lib_editor_v1_type_catalog.NamedTypeTemplate_orMutable get root;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get resourceBindingId;
+  _core.Iterable<PresentationCollectionProjectionField_orMutable> get fields;
+
+  PresentationCollectionProjection toFrozen();
+}
+
+/// Deeply immutable.
+final class PresentationCollectionProjection implements PresentationCollectionProjection_orMutable {
+  @_core.override
+  final _lib_editor_v1_type_catalog.NamedTypeTemplate root;
+  @_core.override
+  final _lib_editor_v1_type_catalog.ExpressionBindingId resourceBindingId;
+  @_core.override
+  final _core.Iterable<PresentationCollectionProjectionField> fields;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PresentationCollectionProjection({
+    required _lib_editor_v1_type_catalog.NamedTypeTemplate_orMutable root,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable resourceBindingId,
+    required _core.Iterable<PresentationCollectionProjectionField_orMutable> fields,
+  }) => PresentationCollectionProjection._(
+    root.toFrozen(),
+    resourceBindingId.toFrozen(),
+    _skir.internal__frozenMappedCopy(fields, (it) => it.toFrozen()),
+  );
+
+  PresentationCollectionProjection._(
+    this.root,
+    this.resourceBindingId,
+    this.fields,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PresentationCollectionProjection._(
+    _lib_editor_v1_type_catalog.NamedTypeTemplate.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PresentationCollectionProjection_mutable mutable() => PresentationCollectionProjection_mutable._(
+    _lib_editor_v1_type_catalog.NamedTypeTemplate.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PresentationCollectionProjection toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PresentationCollectionProjection_mutable toMutable() => PresentationCollectionProjection_mutable._(
+    this.root,
+    this.resourceBindingId,
+    this.fields,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PresentationCollectionProjection) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.root,
+    this.resourceBindingId,
+    this.fields,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PresentationCollectionProjection` instances.
+  static _skir.StructSerializer<PresentationCollectionProjection, PresentationCollectionProjection_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "root",
+        "root",
+        0,
+        _lib_editor_v1_type_catalog.NamedTypeTemplate.serializer,
+        "",
+        (it) => it.root,
+        (it, v) => it.root = v,
+      );
+      _serializerBuilder.addField(
+        "resource_binding_id",
+        "resourceBindingId",
+        1,
+        _lib_editor_v1_type_catalog.ExpressionBindingId.serializer,
+        "",
+        (it) => it.resourceBindingId,
+        (it, v) => it.resourceBindingId = v,
+      );
+      _serializerBuilder.addField(
+        "fields",
+        "fields",
+        2,
+        _skir.Serializers.iterable(
+          PresentationCollectionProjectionField.serializer,
+        ),
+        "",
+        (it) => it.fields,
+        (it, v) => it.fields = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:PresentationCollectionProjection",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PresentationCollectionProjection_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PresentationCollectionProjection].
+final class PresentationCollectionProjection_mutable implements PresentationCollectionProjection_orMutable {
+  _lib_editor_v1_type_catalog.NamedTypeTemplate_orMutable root;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable resourceBindingId;
+  _core.Iterable<PresentationCollectionProjectionField_orMutable> fields;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PresentationCollectionProjection_mutable._(
+    this.root,
+    this.resourceBindingId,
+    this.fields,
+  );
+
+  /// If the value of [root] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [root] and returns it.
+  _lib_editor_v1_type_catalog.NamedTypeTemplate_mutable get mutableRoot {
+    final value = this.root;
+    if (value is _lib_editor_v1_type_catalog.NamedTypeTemplate_mutable) {
+      return value;
+    } else {
+      return this.root = (value as _lib_editor_v1_type_catalog.NamedTypeTemplate).toMutable();
+    }
+  }
+
+  /// If the value of [resourceBindingId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [resourceBindingId] and returns it.
+  _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableResourceBindingId {
+    final value = this.resourceBindingId;
+    if (value is _lib_editor_v1_type_catalog.ExpressionBindingId_mutable) {
+      return value;
+    } else {
+      return this.resourceBindingId = (value as _lib_editor_v1_type_catalog.ExpressionBindingId).toMutable();
+    }
+  }
+
+  /// If the value of [fields] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [fields] and returns it.
+  _core.List<PresentationCollectionProjectionField_orMutable> get mutableFields {
+    final value = this.fields;
+    if (value is _skir.internal__MutableList<PresentationCollectionProjectionField_orMutable>) {
+      return value;
+    } else {
+      return this.fields = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PresentationCollectionProjection toFrozen() => PresentationCollectionProjection(
+    root: this.root,
+    resourceBindingId: this.resourceBindingId,
+    fields: this.fields,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct PresentationResourceCollection
+// -----------------------------------------------------------------------------
+
+sealed class PresentationResourceCollection_orMutable {
+  _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable get root;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get resourceBindingId;
+  _lib_editor_v1_type_catalog.PresentationId_orMutable? get appearance;
+
+  PresentationResourceCollection toFrozen();
+}
+
+/// Deeply immutable.
+final class PresentationResourceCollection implements PresentationResourceCollection_orMutable {
+  @_core.override
+  final _lib_editor_v1_type_catalog.TypeDefinitionId root;
+  @_core.override
+  final _lib_editor_v1_type_catalog.ExpressionBindingId resourceBindingId;
+  @_core.override
+  final _lib_editor_v1_type_catalog.PresentationId? appearance;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PresentationResourceCollection({
+    required _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable root,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable resourceBindingId,
+    required _lib_editor_v1_type_catalog.PresentationId_orMutable? appearance,
+  }) => PresentationResourceCollection._(
+    root.toFrozen(),
+    resourceBindingId.toFrozen(),
+    (appearance != null) ? appearance.toFrozen() : null,
+  );
+
+  PresentationResourceCollection._(
+    this.root,
+    this.resourceBindingId,
+    this.appearance,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PresentationResourceCollection._(
+    _lib_editor_v1_type_catalog.TypeDefinitionId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
+    null,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PresentationResourceCollection_mutable mutable() => PresentationResourceCollection_mutable._(
+    _lib_editor_v1_type_catalog.TypeDefinitionId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
+    null,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PresentationResourceCollection toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PresentationResourceCollection_mutable toMutable() => PresentationResourceCollection_mutable._(
+    this.root,
+    this.resourceBindingId,
+    this.appearance,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PresentationResourceCollection) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.root,
+    this.resourceBindingId,
+    this.appearance,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PresentationResourceCollection` instances.
+  static _skir.StructSerializer<PresentationResourceCollection, PresentationResourceCollection_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "root",
+        "root",
+        0,
+        _lib_editor_v1_type_catalog.TypeDefinitionId.serializer,
+        "",
+        (it) => it.root,
+        (it, v) => it.root = v,
+      );
+      _serializerBuilder.addField(
+        "resource_binding_id",
+        "resourceBindingId",
+        1,
+        _lib_editor_v1_type_catalog.ExpressionBindingId.serializer,
+        "",
+        (it) => it.resourceBindingId,
+        (it, v) => it.resourceBindingId = v,
+      );
+      _serializerBuilder.addField(
+        "appearance",
+        "appearance",
+        2,
+        _skir.Serializers.optional(
+          _lib_editor_v1_type_catalog.PresentationId.serializer,
+        ),
+        "",
+        (it) => it.appearance,
+        (it, v) => it.appearance = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:PresentationResourceCollection",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PresentationResourceCollection_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PresentationResourceCollection].
+final class PresentationResourceCollection_mutable implements PresentationResourceCollection_orMutable {
+  _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable root;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable resourceBindingId;
+  _lib_editor_v1_type_catalog.PresentationId_orMutable? appearance;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PresentationResourceCollection_mutable._(
+    this.root,
+    this.resourceBindingId,
+    this.appearance,
+  );
+
+  /// If the value of [root] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [root] and returns it.
+  _lib_editor_v1_type_catalog.TypeDefinitionId_mutable get mutableRoot {
+    final value = this.root;
+    if (value is _lib_editor_v1_type_catalog.TypeDefinitionId_mutable) {
+      return value;
+    } else {
+      return this.root = (value as _lib_editor_v1_type_catalog.TypeDefinitionId).toMutable();
+    }
+  }
+
+  /// If the value of [resourceBindingId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [resourceBindingId] and returns it.
+  _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableResourceBindingId {
+    final value = this.resourceBindingId;
+    if (value is _lib_editor_v1_type_catalog.ExpressionBindingId_mutable) {
+      return value;
+    } else {
+      return this.resourceBindingId = (value as _lib_editor_v1_type_catalog.ExpressionBindingId).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PresentationResourceCollection toFrozen() => PresentationResourceCollection(
+    root: this.root,
+    resourceBindingId: this.resourceBindingId,
+    appearance: this.appearance,
   ).._u = this._u;
 }
 
@@ -27951,9 +28176,9 @@ enum _PresentationInputAccess_consts implements PresentationInputAccess {
 // -----------------------------------------------------------------------------
 
 sealed class PresentationInput_orMutable {
-  _lib_editor_v1_binding.BindingId_orMutable get bindingId;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get bindingId;
   _core.String get name;
-  _lib_editor_v1_type_catalog.TypeExpression get valueType;
+  _lib_editor_v1_type_catalog.TypeTemplate get valueType;
   PresentationInputAccess get access;
 
   PresentationInput toFrozen();
@@ -27962,19 +28187,19 @@ sealed class PresentationInput_orMutable {
 /// Deeply immutable.
 final class PresentationInput implements PresentationInput_orMutable {
   @_core.override
-  final _lib_editor_v1_binding.BindingId bindingId;
+  final _lib_editor_v1_type_catalog.ExpressionBindingId bindingId;
   @_core.override
   final _core.String name;
   @_core.override
-  final _lib_editor_v1_type_catalog.TypeExpression valueType;
+  final _lib_editor_v1_type_catalog.TypeTemplate valueType;
   @_core.override
   final PresentationInputAccess access;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PresentationInput({
-    required _lib_editor_v1_binding.BindingId_orMutable bindingId,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable bindingId,
     required _core.String name,
-    required _lib_editor_v1_type_catalog.TypeExpression valueType,
+    required _lib_editor_v1_type_catalog.TypeTemplate valueType,
     required PresentationInputAccess access,
   }) => PresentationInput._(
     bindingId.toFrozen(),
@@ -27992,18 +28217,18 @@ final class PresentationInput implements PresentationInput_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PresentationInput._(
-    _lib_editor_v1_binding.BindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
     "",
-    _lib_editor_v1_type_catalog.TypeExpression.unknown,
+    _lib_editor_v1_type_catalog.TypeTemplate.unknown,
     PresentationInputAccess.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static PresentationInput_mutable mutable() => PresentationInput_mutable._(
-    _lib_editor_v1_binding.BindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
     "",
-    _lib_editor_v1_type_catalog.TypeExpression.unknown,
+    _lib_editor_v1_type_catalog.TypeTemplate.unknown,
     PresentationInputAccess.unknown,
   );
 
@@ -28047,7 +28272,7 @@ final class PresentationInput implements PresentationInput_orMutable {
         "binding_id",
         "bindingId",
         0,
-        _lib_editor_v1_binding.BindingId.serializer,
+        _lib_editor_v1_type_catalog.ExpressionBindingId.serializer,
         "",
         (it) => it.bindingId,
         (it, v) => it.bindingId = v,
@@ -28065,7 +28290,7 @@ final class PresentationInput implements PresentationInput_orMutable {
         "value_type",
         "valueType",
         2,
-        _lib_editor_v1_type_catalog.TypeExpression.serializer,
+        _lib_editor_v1_type_catalog.TypeTemplate.serializer,
         "",
         (it) => it.valueType,
         (it, v) => it.valueType = v,
@@ -28097,9 +28322,9 @@ final class PresentationInput implements PresentationInput_orMutable {
 
 /// Mutable version of [PresentationInput].
 final class PresentationInput_mutable implements PresentationInput_orMutable {
-  _lib_editor_v1_binding.BindingId_orMutable bindingId;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable bindingId;
   _core.String name;
-  _lib_editor_v1_type_catalog.TypeExpression valueType;
+  _lib_editor_v1_type_catalog.TypeTemplate valueType;
   PresentationInputAccess access;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -28112,12 +28337,12 @@ final class PresentationInput_mutable implements PresentationInput_orMutable {
 
   /// If the value of [bindingId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [bindingId] and returns it.
-  _lib_editor_v1_binding.BindingId_mutable get mutableBindingId {
+  _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableBindingId {
     final value = this.bindingId;
-    if (value is _lib_editor_v1_binding.BindingId_mutable) {
+    if (value is _lib_editor_v1_type_catalog.ExpressionBindingId_mutable) {
       return value;
     } else {
-      return this.bindingId = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.bindingId = (value as _lib_editor_v1_type_catalog.ExpressionBindingId).toMutable();
     }
   }
 
@@ -28136,7 +28361,7 @@ final class PresentationInput_mutable implements PresentationInput_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class PresentationArgument_orMutable {
-  _lib_editor_v1_binding.BindingId_orMutable get input;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get input;
   _lib_editor_v1_binding.BindingRef_orMutable get binding;
 
   PresentationArgument toFrozen();
@@ -28145,13 +28370,13 @@ sealed class PresentationArgument_orMutable {
 /// Deeply immutable.
 final class PresentationArgument implements PresentationArgument_orMutable {
   @_core.override
-  final _lib_editor_v1_binding.BindingId input;
+  final _lib_editor_v1_type_catalog.ExpressionBindingId input;
   @_core.override
   final _lib_editor_v1_binding.BindingRef binding;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PresentationArgument({
-    required _lib_editor_v1_binding.BindingId_orMutable input,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable input,
     required _lib_editor_v1_binding.BindingRef_orMutable binding,
   }) => PresentationArgument._(
     input.toFrozen(),
@@ -28165,14 +28390,14 @@ final class PresentationArgument implements PresentationArgument_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PresentationArgument._(
-    _lib_editor_v1_binding.BindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
     _lib_editor_v1_binding.BindingRef.defaultInstance,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static PresentationArgument_mutable mutable() => PresentationArgument_mutable._(
-    _lib_editor_v1_binding.BindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
     _lib_editor_v1_binding.BindingRef.defaultInstance,
   );
 
@@ -28212,7 +28437,7 @@ final class PresentationArgument implements PresentationArgument_orMutable {
         "input",
         "input",
         0,
-        _lib_editor_v1_binding.BindingId.serializer,
+        _lib_editor_v1_type_catalog.ExpressionBindingId.serializer,
         "",
         (it) => it.input,
         (it, v) => it.input = v,
@@ -28244,7 +28469,7 @@ final class PresentationArgument implements PresentationArgument_orMutable {
 
 /// Mutable version of [PresentationArgument].
 final class PresentationArgument_mutable implements PresentationArgument_orMutable {
-  _lib_editor_v1_binding.BindingId_orMutable input;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable input;
   _lib_editor_v1_binding.BindingRef_orMutable binding;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -28255,12 +28480,12 @@ final class PresentationArgument_mutable implements PresentationArgument_orMutab
 
   /// If the value of [input] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [input] and returns it.
-  _lib_editor_v1_binding.BindingId_mutable get mutableInput {
+  _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableInput {
     final value = this.input;
-    if (value is _lib_editor_v1_binding.BindingId_mutable) {
+    if (value is _lib_editor_v1_type_catalog.ExpressionBindingId_mutable) {
       return value;
     } else {
-      return this.input = (value as _lib_editor_v1_binding.BindingId).toMutable();
+      return this.input = (value as _lib_editor_v1_type_catalog.ExpressionBindingId).toMutable();
     }
   }
 
@@ -28438,83 +28663,92 @@ final class PresentationInvocation_mutable implements PresentationInvocation_orM
 }
 
 // -----------------------------------------------------------------------------
-// struct ReferenceControl
+// struct LinkControl
 // -----------------------------------------------------------------------------
 
-sealed class ReferenceControl_orMutable {
+sealed class LinkControl_orMutable {
   BoundControl_orMutable get control;
   _core.bool get allowReorder;
-  ReferencePolicyId_orMutable? get candidatePolicy;
-  ReferenceRejectionDisplay get rejectionDisplay;
+  LinkCandidatePolicyId_orMutable? get candidatePolicy;
+  LinkRejectionDisplay get rejectionDisplay;
+  _core.String? get sourceId;
 
-  ReferenceControl toFrozen();
+  LinkControl toFrozen();
 }
 
 /// Deeply immutable.
-final class ReferenceControl implements ReferenceControl_orMutable {
+final class LinkControl implements LinkControl_orMutable {
   @_core.override
   final BoundControl control;
   @_core.override
   final _core.bool allowReorder;
   @_core.override
-  final ReferencePolicyId? candidatePolicy;
+  final LinkCandidatePolicyId? candidatePolicy;
   @_core.override
-  final ReferenceRejectionDisplay rejectionDisplay;
+  final LinkRejectionDisplay rejectionDisplay;
+  @_core.override
+  final _core.String? sourceId;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory ReferenceControl({
+  factory LinkControl({
     required BoundControl_orMutable control,
     required _core.bool allowReorder,
-    required ReferencePolicyId_orMutable? candidatePolicy,
-    required ReferenceRejectionDisplay rejectionDisplay,
-  }) => ReferenceControl._(
+    required LinkCandidatePolicyId_orMutable? candidatePolicy,
+    required LinkRejectionDisplay rejectionDisplay,
+    required _core.String? sourceId,
+  }) => LinkControl._(
     control.toFrozen(),
     allowReorder,
     (candidatePolicy != null) ? candidatePolicy.toFrozen() : null,
     rejectionDisplay,
+    sourceId,
   );
 
-  ReferenceControl._(
+  LinkControl._(
     this.control,
     this.allowReorder,
     this.candidatePolicy,
     this.rejectionDisplay,
+    this.sourceId,
   );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ReferenceControl._(
+  static final defaultInstance = LinkControl._(
     BoundControl.defaultInstance,
     false,
     null,
-    ReferenceRejectionDisplay.unknown,
+    LinkRejectionDisplay.unknown,
+    null,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ReferenceControl_mutable mutable() => ReferenceControl_mutable._(
+  static LinkControl_mutable mutable() => LinkControl_mutable._(
     BoundControl.defaultInstance,
     false,
     null,
-    ReferenceRejectionDisplay.unknown,
+    LinkRejectionDisplay.unknown,
+    null,
   );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  ReferenceControl toFrozen() => this;
+  LinkControl toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ReferenceControl_mutable toMutable() => ReferenceControl_mutable._(
+  LinkControl_mutable toMutable() => LinkControl_mutable._(
     this.control,
     this.allowReorder,
     this.candidatePolicy,
     this.rejectionDisplay,
+    this.sourceId,
   );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! ReferenceControl) return false;
+    if (other is! LinkControl) return false;
     return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
@@ -28526,13 +28760,14 @@ final class ReferenceControl implements ReferenceControl_orMutable {
     this.allowReorder,
     this.candidatePolicy,
     this.rejectionDisplay,
+    this.sourceId,
   ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `ReferenceControl` instances.
-  static _skir.StructSerializer<ReferenceControl, ReferenceControl_mutable> get serializer {
+  /// Serializer for `LinkControl` instances.
+  static _skir.StructSerializer<LinkControl, LinkControl_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "control",
@@ -28557,7 +28792,7 @@ final class ReferenceControl implements ReferenceControl_orMutable {
         "candidatePolicy",
         2,
         _skir.Serializers.optional(
-          ReferencePolicyId.serializer,
+          LinkCandidatePolicyId.serializer,
         ),
         "",
         (it) => it.candidatePolicy,
@@ -28567,10 +28802,21 @@ final class ReferenceControl implements ReferenceControl_orMutable {
         "rejection_display",
         "rejectionDisplay",
         3,
-        ReferenceRejectionDisplay.serializer,
+        LinkRejectionDisplay.serializer,
         "",
         (it) => it.rejectionDisplay,
         (it, v) => it.rejectionDisplay = v,
+      );
+      _serializerBuilder.addField(
+        "source_id",
+        "sourceId",
+        4,
+        _skir.Serializers.optional(
+          _skir.Serializers.string,
+        ),
+        "",
+        (it) => it.sourceId,
+        (it, v) => it.sourceId = v,
       );
       _serializerBuilder.finalize();
     }
@@ -28578,92 +28824,95 @@ final class ReferenceControl implements ReferenceControl_orMutable {
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/presentation.skir:ReferenceControl",
+    recordId: "editor/v1/presentation.skir:LinkControl",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ReferenceControl_mutable it) => it.toFrozen(),
+    toFrozen: (LinkControl_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [ReferenceControl].
-final class ReferenceControl_mutable implements ReferenceControl_orMutable {
+/// Mutable version of [LinkControl].
+final class LinkControl_mutable implements LinkControl_orMutable {
   BoundControl_orMutable control;
   _core.bool allowReorder;
-  ReferencePolicyId_orMutable? candidatePolicy;
-  ReferenceRejectionDisplay rejectionDisplay;
+  LinkCandidatePolicyId_orMutable? candidatePolicy;
+  LinkRejectionDisplay rejectionDisplay;
+  _core.String? sourceId;
   _skir.internal__UnrecognizedFields? _u;
 
-  ReferenceControl_mutable._(
+  LinkControl_mutable._(
     this.control,
     this.allowReorder,
     this.candidatePolicy,
     this.rejectionDisplay,
+    this.sourceId,
   );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ReferenceControl toFrozen() => ReferenceControl(
+  LinkControl toFrozen() => LinkControl(
     control: this.control,
     allowReorder: this.allowReorder,
     candidatePolicy: this.candidatePolicy,
     rejectionDisplay: this.rejectionDisplay,
+    sourceId: this.sourceId,
   ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
-// struct ReferencePolicyId
+// struct LinkCandidatePolicyId
 // -----------------------------------------------------------------------------
 
-sealed class ReferencePolicyId_orMutable {
+sealed class LinkCandidatePolicyId_orMutable {
   _core.String get value;
 
-  ReferencePolicyId toFrozen();
+  LinkCandidatePolicyId toFrozen();
 }
 
 /// Deeply immutable.
-final class ReferencePolicyId implements ReferencePolicyId_orMutable {
+final class LinkCandidatePolicyId implements LinkCandidatePolicyId_orMutable {
   @_core.override
   final _core.String value;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory ReferencePolicyId({
+  factory LinkCandidatePolicyId({
     required _core.String value,
-  }) => ReferencePolicyId._(
+  }) => LinkCandidatePolicyId._(
     value,
   );
 
-  ReferencePolicyId._(
+  LinkCandidatePolicyId._(
     this.value,
   );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = ReferencePolicyId._(
+  static final defaultInstance = LinkCandidatePolicyId._(
     "",
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ReferencePolicyId_mutable mutable() => ReferencePolicyId_mutable._(
+  static LinkCandidatePolicyId_mutable mutable() => LinkCandidatePolicyId_mutable._(
     "",
   );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  ReferencePolicyId toFrozen() => this;
+  LinkCandidatePolicyId toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ReferencePolicyId_mutable toMutable() => ReferencePolicyId_mutable._(
+  LinkCandidatePolicyId_mutable toMutable() => LinkCandidatePolicyId_mutable._(
     this.value,
   );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! ReferencePolicyId) return false;
+    if (other is! LinkCandidatePolicyId) return false;
     return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
@@ -28677,8 +28926,8 @@ final class ReferencePolicyId implements ReferencePolicyId_orMutable {
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `ReferencePolicyId` instances.
-  static _skir.StructSerializer<ReferencePolicyId, ReferencePolicyId_mutable> get serializer {
+  /// Serializer for `LinkCandidatePolicyId` instances.
+  static _skir.StructSerializer<LinkCandidatePolicyId, LinkCandidatePolicyId_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "value",
@@ -28695,59 +28944,59 @@ final class ReferencePolicyId implements ReferencePolicyId_orMutable {
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/presentation.skir:ReferencePolicyId",
+    recordId: "editor/v1/presentation.skir:LinkCandidatePolicyId",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (ReferencePolicyId_mutable it) => it.toFrozen(),
+    toFrozen: (LinkCandidatePolicyId_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [ReferencePolicyId].
-final class ReferencePolicyId_mutable implements ReferencePolicyId_orMutable {
+/// Mutable version of [LinkCandidatePolicyId].
+final class LinkCandidatePolicyId_mutable implements LinkCandidatePolicyId_orMutable {
   _core.String value;
   _skir.internal__UnrecognizedFields? _u;
 
-  ReferencePolicyId_mutable._(
+  LinkCandidatePolicyId_mutable._(
     this.value,
   );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ReferencePolicyId toFrozen() => ReferencePolicyId(
+  LinkCandidatePolicyId toFrozen() => LinkCandidatePolicyId(
     value: this.value,
   ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
-// enum ReferenceRejectionDisplay
+// enum LinkRejectionDisplay
 // -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
-///     case ReferenceRejectionDisplay_unknown(): { ... }
-///     case ReferenceRejectionDisplay.hidden: { ... }
-///     case ReferenceRejectionDisplay.disabled: { ... }
+///     case LinkRejectionDisplay_unknown(): { ... }
+///     case LinkRejectionDisplay.hidden: { ... }
+///     case LinkRejectionDisplay.disabled: { ... }
 ///   }
 ///   ```
 ///
 /// Deeply immutable.
-sealed class ReferenceRejectionDisplay {
-  /// Constant indicating an unknown `ReferenceRejectionDisplay`.
-  /// Default value for fields of type `ReferenceRejectionDisplay`.
-  static const ReferenceRejectionDisplay unknown = ReferenceRejectionDisplay_unknown._instance;
+sealed class LinkRejectionDisplay {
+  /// Constant indicating an unknown `LinkRejectionDisplay`.
+  /// Default value for fields of type `LinkRejectionDisplay`.
+  static const LinkRejectionDisplay unknown = LinkRejectionDisplay_unknown._instance;
 
-  static const hidden = _ReferenceRejectionDisplay_consts.hiddenConst;
-  static const disabled = _ReferenceRejectionDisplay_consts.disabledConst;
+  static const hidden = _LinkRejectionDisplay_consts.hiddenConst;
+  static const disabled = _LinkRejectionDisplay_consts.disabledConst;
 
-  /// Returns the kind of variant held by this ReferenceRejectionDisplay.
-  ReferenceRejectionDisplay_kind get kind;
+  /// Returns the kind of variant held by this LinkRejectionDisplay.
+  LinkRejectionDisplay_kind get kind;
 
-  /// Serializer for `ReferenceRejectionDisplay` instances.
-  static _skir.EnumSerializer<ReferenceRejectionDisplay> get serializer {
+  /// Serializer for `LinkRejectionDisplay` instances.
+  static _skir.EnumSerializer<LinkRejectionDisplay> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addConstantVariant(
         1,
@@ -28769,54 +29018,876 @@ sealed class ReferenceRejectionDisplay {
   }
 
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/presentation.skir:ReferenceRejectionDisplay",
+    recordId: "editor/v1/presentation.skir:LinkRejectionDisplay",
     doc: "",
-    unknownInstance: ReferenceRejectionDisplay_unknown._instance,
-    enumInstance: ReferenceRejectionDisplay.unknown,
+    unknownInstance: LinkRejectionDisplay_unknown._instance,
+    enumInstance: LinkRejectionDisplay.unknown,
     getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: ReferenceRejectionDisplay_unknown._unrecognized,
+    wrapUnrecognized: LinkRejectionDisplay_unknown._unrecognized,
     getUnrecognized: (it) => it._u,
   );
 }
 
-/// The kind of variant held by a `ReferenceRejectionDisplay`.
-enum ReferenceRejectionDisplay_kind {
+/// The kind of variant held by a `LinkRejectionDisplay`.
+enum LinkRejectionDisplay_kind {
   unknown(0),
   hiddenConst(1),
   disabledConst(2);
 
   final _core.int _ordinal;
 
-  const ReferenceRejectionDisplay_kind(this._ordinal);
+  const LinkRejectionDisplay_kind(this._ordinal);
 }
 
-final class ReferenceRejectionDisplay_unknown implements ReferenceRejectionDisplay {
-  static const _instance = ReferenceRejectionDisplay_unknown._();
+final class LinkRejectionDisplay_unknown implements LinkRejectionDisplay {
+  static const _instance = LinkRejectionDisplay_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
 
-  const ReferenceRejectionDisplay_unknown._() : _u = null;
-  ReferenceRejectionDisplay_unknown._unrecognized(this._u);
+  const LinkRejectionDisplay_unknown._() : _u = null;
+  LinkRejectionDisplay_unknown._unrecognized(this._u);
 
   @_core.override
-  ReferenceRejectionDisplay_kind get kind => ReferenceRejectionDisplay_kind.unknown;
+  LinkRejectionDisplay_kind get kind => LinkRejectionDisplay_kind.unknown;
   @_core.override
-  _core.bool operator ==(other) => other is ReferenceRejectionDisplay_unknown;
+  _core.bool operator ==(other) => other is LinkRejectionDisplay_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ReferenceRejectionDisplay.serializer);
+  _core.String toString() => _skir.internal__stringify(this, LinkRejectionDisplay.serializer);
 }
 
-enum _ReferenceRejectionDisplay_consts implements ReferenceRejectionDisplay {
-  hiddenConst(ReferenceRejectionDisplay_kind.hiddenConst),
-  disabledConst(ReferenceRejectionDisplay_kind.disabledConst);
+enum _LinkRejectionDisplay_consts implements LinkRejectionDisplay {
+  hiddenConst(LinkRejectionDisplay_kind.hiddenConst),
+  disabledConst(LinkRejectionDisplay_kind.disabledConst);
 
   @_core.override
-  final ReferenceRejectionDisplay_kind kind;
+  final LinkRejectionDisplay_kind kind;
 
-  const _ReferenceRejectionDisplay_consts(this.kind);
+  const _LinkRejectionDisplay_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ReferenceRejectionDisplay.serializer);
+  _core.String toString() => _skir.internal__stringify(this, LinkRejectionDisplay.serializer);
+}
+
+// -----------------------------------------------------------------------------
+// struct RemainingFieldsElement
+// -----------------------------------------------------------------------------
+
+sealed class RemainingFieldsElement_orMutable {
+  _core.Iterable<_lib_editor_v1_type_catalog.RelativeFieldPattern_orMutable> get excluded;
+
+  RemainingFieldsElement toFrozen();
+}
+
+/// Deeply immutable.
+final class RemainingFieldsElement implements RemainingFieldsElement_orMutable {
+  @_core.override
+  final _core.Iterable<_lib_editor_v1_type_catalog.RelativeFieldPattern> excluded;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory RemainingFieldsElement({
+    required _core.Iterable<_lib_editor_v1_type_catalog.RelativeFieldPattern_orMutable> excluded,
+  }) => RemainingFieldsElement._(
+    _skir.internal__frozenMappedCopy(excluded, (it) => it.toFrozen()),
+  );
+
+  RemainingFieldsElement._(
+    this.excluded,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = RemainingFieldsElement._(
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static RemainingFieldsElement_mutable mutable() => RemainingFieldsElement_mutable._(
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  RemainingFieldsElement toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  RemainingFieldsElement_mutable toMutable() => RemainingFieldsElement_mutable._(
+    this.excluded,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! RemainingFieldsElement) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.excluded,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `RemainingFieldsElement` instances.
+  static _skir.StructSerializer<RemainingFieldsElement, RemainingFieldsElement_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "excluded",
+        "excluded",
+        0,
+        _skir.Serializers.iterable(
+          _lib_editor_v1_type_catalog.RelativeFieldPattern.serializer,
+        ),
+        "",
+        (it) => it.excluded,
+        (it, v) => it.excluded = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:RemainingFieldsElement",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (RemainingFieldsElement_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [RemainingFieldsElement].
+final class RemainingFieldsElement_mutable implements RemainingFieldsElement_orMutable {
+  _core.Iterable<_lib_editor_v1_type_catalog.RelativeFieldPattern_orMutable> excluded;
+  _skir.internal__UnrecognizedFields? _u;
+
+  RemainingFieldsElement_mutable._(
+    this.excluded,
+  );
+
+  /// If the value of [excluded] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [excluded] and returns it.
+  _core.List<_lib_editor_v1_type_catalog.RelativeFieldPattern_orMutable> get mutableExcluded {
+    final value = this.excluded;
+    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.RelativeFieldPattern_orMutable>) {
+      return value;
+    } else {
+      return this.excluded = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  RemainingFieldsElement toFrozen() => RemainingFieldsElement(
+    excluded: this.excluded,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct NullableControl
+// -----------------------------------------------------------------------------
+
+sealed class NullableControl_orMutable {
+  BoundControl_orMutable get control;
+  PresentationNode_orMutable? get valuePresentation;
+
+  NullableControl toFrozen();
+}
+
+/// Deeply immutable.
+final class NullableControl implements NullableControl_orMutable {
+  @_core.override
+  final BoundControl control;
+  @_core.override
+  final PresentationNode? valuePresentation;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory NullableControl({
+    required BoundControl_orMutable control,
+    required PresentationNode_orMutable? valuePresentation,
+  }) => NullableControl._(
+    control.toFrozen(),
+    (valuePresentation != null) ? valuePresentation.toFrozen() : null,
+  );
+
+  NullableControl._(
+    this.control,
+    this.valuePresentation,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = NullableControl._(
+    BoundControl.defaultInstance,
+    null,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static NullableControl_mutable mutable() => NullableControl_mutable._(
+    BoundControl.defaultInstance,
+    null,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  NullableControl toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  NullableControl_mutable toMutable() => NullableControl_mutable._(
+    this.control,
+    this.valuePresentation,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! NullableControl) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.control,
+    this.valuePresentation,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `NullableControl` instances.
+  static _skir.StructSerializer<NullableControl, NullableControl_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "control",
+        "control",
+        0,
+        BoundControl.serializer,
+        "",
+        (it) => it.control,
+        (it, v) => it.control = v,
+      );
+      _serializerBuilder.addField(
+        "value_presentation",
+        "valuePresentation",
+        1,
+        _skir.Serializers.optional(
+          PresentationNode.serializer,
+        ),
+        "",
+        (it) => it.valuePresentation,
+        (it, v) => it.valuePresentation = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:NullableControl",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (NullableControl_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [NullableControl].
+final class NullableControl_mutable implements NullableControl_orMutable {
+  BoundControl_orMutable control;
+  PresentationNode_orMutable? valuePresentation;
+  _skir.internal__UnrecognizedFields? _u;
+
+  NullableControl_mutable._(
+    this.control,
+    this.valuePresentation,
+  );
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  NullableControl toFrozen() => NullableControl(
+    control: this.control,
+    valuePresentation: this.valuePresentation,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct SetControl
+// -----------------------------------------------------------------------------
+
+sealed class SetControl_orMutable {
+  BoundControl_orMutable get control;
+  PresentationNode_orMutable? get itemPresentation;
+  _core.bool get allowAdd;
+  _core.bool get allowRemove;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get itemBindingId;
+
+  SetControl toFrozen();
+}
+
+/// Deeply immutable.
+final class SetControl implements SetControl_orMutable {
+  @_core.override
+  final BoundControl control;
+  @_core.override
+  final PresentationNode? itemPresentation;
+  @_core.override
+  final _core.bool allowAdd;
+  @_core.override
+  final _core.bool allowRemove;
+  @_core.override
+  final _lib_editor_v1_type_catalog.ExpressionBindingId itemBindingId;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory SetControl({
+    required BoundControl_orMutable control,
+    required PresentationNode_orMutable? itemPresentation,
+    required _core.bool allowAdd,
+    required _core.bool allowRemove,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable itemBindingId,
+  }) => SetControl._(
+    control.toFrozen(),
+    (itemPresentation != null) ? itemPresentation.toFrozen() : null,
+    allowAdd,
+    allowRemove,
+    itemBindingId.toFrozen(),
+  );
+
+  SetControl._(
+    this.control,
+    this.itemPresentation,
+    this.allowAdd,
+    this.allowRemove,
+    this.itemBindingId,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = SetControl._(
+    BoundControl.defaultInstance,
+    null,
+    false,
+    false,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static SetControl_mutable mutable() => SetControl_mutable._(
+    BoundControl.defaultInstance,
+    null,
+    false,
+    false,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  SetControl toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  SetControl_mutable toMutable() => SetControl_mutable._(
+    this.control,
+    this.itemPresentation,
+    this.allowAdd,
+    this.allowRemove,
+    this.itemBindingId,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! SetControl) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.control,
+    this.itemPresentation,
+    this.allowAdd,
+    this.allowRemove,
+    this.itemBindingId,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `SetControl` instances.
+  static _skir.StructSerializer<SetControl, SetControl_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "control",
+        "control",
+        0,
+        BoundControl.serializer,
+        "",
+        (it) => it.control,
+        (it, v) => it.control = v,
+      );
+      _serializerBuilder.addField(
+        "item_presentation",
+        "itemPresentation",
+        1,
+        _skir.Serializers.optional(
+          PresentationNode.serializer,
+        ),
+        "",
+        (it) => it.itemPresentation,
+        (it, v) => it.itemPresentation = v,
+      );
+      _serializerBuilder.addField(
+        "allow_add",
+        "allowAdd",
+        2,
+        _skir.Serializers.bool,
+        "",
+        (it) => it.allowAdd,
+        (it, v) => it.allowAdd = v,
+      );
+      _serializerBuilder.addField(
+        "allow_remove",
+        "allowRemove",
+        3,
+        _skir.Serializers.bool,
+        "",
+        (it) => it.allowRemove,
+        (it, v) => it.allowRemove = v,
+      );
+      _serializerBuilder.addField(
+        "item_binding_id",
+        "itemBindingId",
+        4,
+        _lib_editor_v1_type_catalog.ExpressionBindingId.serializer,
+        "",
+        (it) => it.itemBindingId,
+        (it, v) => it.itemBindingId = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:SetControl",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (SetControl_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [SetControl].
+final class SetControl_mutable implements SetControl_orMutable {
+  BoundControl_orMutable control;
+  PresentationNode_orMutable? itemPresentation;
+  _core.bool allowAdd;
+  _core.bool allowRemove;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable itemBindingId;
+  _skir.internal__UnrecognizedFields? _u;
+
+  SetControl_mutable._(
+    this.control,
+    this.itemPresentation,
+    this.allowAdd,
+    this.allowRemove,
+    this.itemBindingId,
+  );
+
+  /// If the value of [itemBindingId] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [itemBindingId] and returns it.
+  _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableItemBindingId {
+    final value = this.itemBindingId;
+    if (value is _lib_editor_v1_type_catalog.ExpressionBindingId_mutable) {
+      return value;
+    } else {
+      return this.itemBindingId = (value as _lib_editor_v1_type_catalog.ExpressionBindingId).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  SetControl toFrozen() => SetControl(
+    control: this.control,
+    itemPresentation: this.itemPresentation,
+    allowAdd: this.allowAdd,
+    allowRemove: this.allowRemove,
+    itemBindingId: this.itemBindingId,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum PageGraphDirection
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case PageGraphDirection_unknown(): { ... }
+///     case PageGraphDirection.leftToRight: { ... }
+///     case PageGraphDirection.rightToLeft: { ... }
+///     case PageGraphDirection.topToBottom: { ... }
+///     case PageGraphDirection.bottomToTop: { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class PageGraphDirection {
+  /// Constant indicating an unknown `PageGraphDirection`.
+  /// Default value for fields of type `PageGraphDirection`.
+  static const PageGraphDirection unknown = PageGraphDirection_unknown._instance;
+
+  static const leftToRight = _PageGraphDirection_consts.leftToRightConst;
+  static const rightToLeft = _PageGraphDirection_consts.rightToLeftConst;
+  static const topToBottom = _PageGraphDirection_consts.topToBottomConst;
+  static const bottomToTop = _PageGraphDirection_consts.bottomToTopConst;
+
+  /// Returns the kind of variant held by this PageGraphDirection.
+  PageGraphDirection_kind get kind;
+
+  /// Serializer for `PageGraphDirection` instances.
+  static _skir.EnumSerializer<PageGraphDirection> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(
+        1,
+        "left_to_right",
+        "leftToRight",
+        "",
+        leftToRight,
+      );
+      _serializerBuilder.addConstantVariant(
+        2,
+        "right_to_left",
+        "rightToLeft",
+        "",
+        rightToLeft,
+      );
+      _serializerBuilder.addConstantVariant(
+        3,
+        "top_to_bottom",
+        "topToBottom",
+        "",
+        topToBottom,
+      );
+      _serializerBuilder.addConstantVariant(
+        4,
+        "bottom_to_top",
+        "bottomToTop",
+        "",
+        bottomToTop,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
+    recordId: "editor/v1/presentation.skir:PageGraphDirection",
+    doc: "",
+    unknownInstance: PageGraphDirection_unknown._instance,
+    enumInstance: PageGraphDirection.unknown,
+    getOrdinal: (it) => it.kind._ordinal,
+    wrapUnrecognized: PageGraphDirection_unknown._unrecognized,
+    getUnrecognized: (it) => it._u,
+  );
+}
+
+/// The kind of variant held by a `PageGraphDirection`.
+enum PageGraphDirection_kind {
+  unknown(0),
+  leftToRightConst(1),
+  rightToLeftConst(2),
+  topToBottomConst(3),
+  bottomToTopConst(4);
+
+  final _core.int _ordinal;
+
+  const PageGraphDirection_kind(this._ordinal);
+}
+
+final class PageGraphDirection_unknown implements PageGraphDirection {
+  static const _instance = PageGraphDirection_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const PageGraphDirection_unknown._() : _u = null;
+  PageGraphDirection_unknown._unrecognized(this._u);
+
+  @_core.override
+  PageGraphDirection_kind get kind => PageGraphDirection_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is PageGraphDirection_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, PageGraphDirection.serializer);
+}
+
+enum _PageGraphDirection_consts implements PageGraphDirection {
+  leftToRightConst(PageGraphDirection_kind.leftToRightConst),
+  rightToLeftConst(PageGraphDirection_kind.rightToLeftConst),
+  topToBottomConst(PageGraphDirection_kind.topToBottomConst),
+  bottomToTopConst(PageGraphDirection_kind.bottomToTopConst);
+
+  @_core.override
+  final PageGraphDirection_kind kind;
+
+  const _PageGraphDirection_consts(this.kind);
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, PageGraphDirection.serializer);
+}
+
+// -----------------------------------------------------------------------------
+// struct PageGraphElement
+// -----------------------------------------------------------------------------
+
+sealed class PageGraphElement_orMutable {
+  BoundControl_orMutable get control;
+  PageGraphDirection get direction;
+
+  PageGraphElement toFrozen();
+}
+
+/// Deeply immutable.
+final class PageGraphElement implements PageGraphElement_orMutable {
+  @_core.override
+  final BoundControl control;
+  @_core.override
+  final PageGraphDirection direction;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PageGraphElement({
+    required BoundControl_orMutable control,
+    required PageGraphDirection direction,
+  }) => PageGraphElement._(
+    control.toFrozen(),
+    direction,
+  );
+
+  PageGraphElement._(
+    this.control,
+    this.direction,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PageGraphElement._(
+    BoundControl.defaultInstance,
+    PageGraphDirection.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PageGraphElement_mutable mutable() => PageGraphElement_mutable._(
+    BoundControl.defaultInstance,
+    PageGraphDirection.unknown,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PageGraphElement toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PageGraphElement_mutable toMutable() => PageGraphElement_mutable._(
+    this.control,
+    this.direction,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PageGraphElement) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.control,
+    this.direction,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PageGraphElement` instances.
+  static _skir.StructSerializer<PageGraphElement, PageGraphElement_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "control",
+        "control",
+        0,
+        BoundControl.serializer,
+        "",
+        (it) => it.control,
+        (it, v) => it.control = v,
+      );
+      _serializerBuilder.addField(
+        "direction",
+        "direction",
+        1,
+        PageGraphDirection.serializer,
+        "",
+        (it) => it.direction,
+        (it, v) => it.direction = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:PageGraphElement",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PageGraphElement_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PageGraphElement].
+final class PageGraphElement_mutable implements PageGraphElement_orMutable {
+  BoundControl_orMutable control;
+  PageGraphDirection direction;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PageGraphElement_mutable._(
+    this.control,
+    this.direction,
+  );
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PageGraphElement toFrozen() => PageGraphElement(
+    control: this.control,
+    direction: this.direction,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct PageTimelineElement
+// -----------------------------------------------------------------------------
+
+sealed class PageTimelineElement_orMutable {
+  BoundControl_orMutable get control;
+
+  PageTimelineElement toFrozen();
+}
+
+/// Deeply immutable.
+final class PageTimelineElement implements PageTimelineElement_orMutable {
+  @_core.override
+  final BoundControl control;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PageTimelineElement({
+    required BoundControl_orMutable control,
+  }) => PageTimelineElement._(
+    control.toFrozen(),
+  );
+
+  PageTimelineElement._(
+    this.control,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PageTimelineElement._(
+    BoundControl.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PageTimelineElement_mutable mutable() => PageTimelineElement_mutable._(
+    BoundControl.defaultInstance,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PageTimelineElement toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PageTimelineElement_mutable toMutable() => PageTimelineElement_mutable._(
+    this.control,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PageTimelineElement) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.control,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PageTimelineElement` instances.
+  static _skir.StructSerializer<PageTimelineElement, PageTimelineElement_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "control",
+        "control",
+        0,
+        BoundControl.serializer,
+        "",
+        (it) => it.control,
+        (it, v) => it.control = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:PageTimelineElement",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PageTimelineElement_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PageTimelineElement].
+final class PageTimelineElement_mutable implements PageTimelineElement_orMutable {
+  BoundControl_orMutable control;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PageTimelineElement_mutable._(
+    this.control,
+  );
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PageTimelineElement toFrozen() => PageTimelineElement(
+    control: this.control,
+  ).._u = this._u;
 }

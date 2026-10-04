@@ -81,9 +81,8 @@ SearchContribution<void> _builder(Ref ref, BuildContext context) {
     );
 
     if (realmId != null) {
-      final catalog = ref.valued(realmEditorCatalogProvider);
       sources.addAll([
-        AuthoringCreationSearchSource(catalog),
+        AuthoringCreationSearchSource(ref),
         RealmAuthoringSearchSource(
           ref: ref,
           organizationId: organizationId,
@@ -142,16 +141,11 @@ List<SearchHostEffectExecutor<SearchHostEffect>> _buildHostEffectExecutors(
         .navigate(realmNavigationRoute(effect.organizationId, effect.realmId));
   }),
   SearchHostEffectExecutor<OpenAuthoringResourceEffect>((effect) async {
-    final navigationHandler = ref
-        .read(realmEditorCatalogProvider)
-        .currentCatalog
-        ?.resourceDefinitions[effect.definition]
-        ?.navigationHandler;
     final registry = AuthoringResourceNavigationRegistry(const [
       BookAuthoringNavigationAdapter(),
       TagAuthoringNavigationAdapter(),
     ]);
-    if (await registry.open(ref, navigationHandler, effect)) return;
+    if (await registry.open(ref, effect.navigationHandler, effect)) return;
     await ref
         .read(appRouterProvider)
         .navigate(realmNavigationRoute(effect.organizationId, effect.realmId));

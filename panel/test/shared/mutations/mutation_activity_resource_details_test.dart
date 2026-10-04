@@ -72,6 +72,7 @@ void main() {
             scope: key.scope,
             label: "Paper Host configuration",
             document: document,
+            validation: acceptTestEditorMutation,
             commitPolicy: EditorCommitPolicy.applyResource,
             commit: (_) async => MutationInvalid([diagnostic]),
           ),
@@ -143,6 +144,7 @@ void main() {
           scope: key.scope,
           label: "Paper Host configuration",
           document: document,
+          validation: acceptTestEditorMutation,
           commitPolicy: EditorCommitPolicy.applyResource,
           commit: (_) async => MutationInvalid([diagnostic]),
         ),
@@ -224,6 +226,7 @@ void main() {
         scope: key.scope,
         label: "Contended configuration",
         document: document,
+        validation: acceptTestEditorMutation,
         commit: (commit) async => MutationConflict(
           expectedRevision: commit.expectedRevision,
           actualRevision: commit.expectedRevision + 1,
@@ -273,6 +276,7 @@ void main() {
         scope: key.scope,
         label: "Draft configuration",
         document: document,
+        validation: acceptTestEditorMutation,
         commitPolicy: EditorCommitPolicy.applyResource,
         commit: (_) async =>
             MutationSuccess(revision: 2, value: document.confirmedValue),

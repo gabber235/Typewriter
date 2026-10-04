@@ -3,25 +3,20 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "type_special_value_validation.dart";
 
-/// Validates a value against a structural or nominal editor type.
+/// Validates a value against a structural editor type.
 ///
 /// The returned list contains every discovered issue, with paths extended into
-/// nested collections and records. Nominal values require a registry so their
-/// declaration, concrete representation, and polymorphic tag can be checked.
+/// nested collections and records. Named values require explicit backend
+/// admission because this structural layer has no catalog authority.
 extension DataValueValidation on DataValue {
   List<TypeDiagnostic> validateAgainst(
     TypeExpression type, {
     DataPath path = DataPath.root,
-    TypeRegistry? registry,
   }) {
     final value = this;
     if (type is AnyType) return const [];
     if (type is EnumType) {
-      final diagnostics = validateAgainst(
-        type.valueType,
-        path: path,
-        registry: registry,
-      );
+      final diagnostics = validateAgainst(type.valueType, path: path);
       if (diagnostics.isNotEmpty) return diagnostics;
       if (!type.values.contains(value)) {
         return [_invalid(path, "Value is not a member of the enum")];
@@ -29,7 +24,9 @@ extension DataValueValidation on DataValue {
       return const [];
     }
     if (type is NamedType) {
-      return _validateNamed(type, path, registry);
+      return [
+        _invalid(path, "Named value validation requires backend admission"),
+      ];
     }
 
     if (value is UnitValue && type is UnitType ||
@@ -77,15 +74,15 @@ extension DataValueValidation on DataValue {
     }
 
     if (value is ListValue && type is ListType) {
-      return value._validateAgainst(type, path, registry);
+      return value._validateAgainst(type, path);
     }
 
     if (value is MapValue && type is MapType) {
-      return value._validateAgainst(type, path, registry);
+      return value._validateAgainst(type, path);
     }
 
     if (value is RecordValue && type is RecordType) {
-      return value._validateAgainst(type, path, registry);
+      return value._validateAgainst(type, path);
     }
 
     return [
@@ -124,11 +121,7 @@ extension on IntegerValue {
 }
 
 extension on ListValue {
-  List<TypeDiagnostic> _validateAgainst(
-    ListType type,
-    DataPath path,
-    TypeRegistry? registry,
-  ) {
+  List<TypeDiagnostic> _validateAgainst(ListType type, DataPath path) {
     final value = this;
     final diagnostics = _validateLength(
       value.values.length,
@@ -141,11 +134,7 @@ extension on ListValue {
     }
     for (final entry in value.values.indexed) {
       diagnostics.addAll(
-        entry.$2.validateAgainst(
-          type.element,
-          path: path.index(entry.$1),
-          registry: registry,
-        ),
+        entry.$2.validateAgainst(type.element, path: path.index(entry.$1)),
       );
     }
     return diagnostics;
@@ -153,11 +142,7 @@ extension on ListValue {
 }
 
 extension on MapValue {
-  List<TypeDiagnostic> _validateAgainst(
-    MapType type,
-    DataPath path,
-    TypeRegistry? registry,
-  ) {
+  List<TypeDiagnostic> _validateAgainst(MapType type, DataPath path) {
     final value = this;
     final diagnostics = _validateLength(
       value.entries.length,
@@ -172,18 +157,10 @@ extension on MapValue {
       }
       diagnostics
         ..addAll(
-          entry.key.validateAgainst(
-            type.key,
-            path: path.mapKey(entry.key),
-            registry: registry,
-          ),
+          entry.key.validateAgainst(type.key, path: path.mapKey(entry.key)),
         )
         ..addAll(
-          entry.value.validateAgainst(
-            type.value,
-            path: path.mapKey(entry.key),
-            registry: registry,
-          ),
+          entry.value.validateAgainst(type.value, path: path.mapKey(entry.key)),
         );
     }
     return diagnostics;
@@ -191,11 +168,7 @@ extension on MapValue {
 }
 
 extension on RecordValue {
-  List<TypeDiagnostic> _validateAgainst(
-    RecordType type,
-    DataPath path,
-    TypeRegistry? registry,
-  ) {
+  List<TypeDiagnostic> _validateAgainst(RecordType type, DataPath path) {
     final value = this;
     final diagnostics = <TypeDiagnostic>[];
     for (final field in type.fields.values) {
@@ -211,11 +184,7 @@ extension on RecordValue {
         continue;
       }
       diagnostics.addAll(
-        fieldValue.validateAgainst(
-          field.type,
-          path: path.field(field.name),
-          registry: registry,
-        ),
+        fieldValue.validateAgainst(field.type, path: path.field(field.name)),
       );
     }
     if (!type.closed) return diagnostics;

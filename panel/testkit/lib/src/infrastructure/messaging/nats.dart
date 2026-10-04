@@ -1,7 +1,7 @@
 import "dart:async";
 import "dart:typed_data";
 
-import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_panel/infrastructure/messaging/nats_client.dart";
 
 final class FakeNatsRequest {
   FakeNatsRequest({

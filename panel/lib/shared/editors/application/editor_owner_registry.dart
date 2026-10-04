@@ -186,13 +186,15 @@ final class EditorOwnerRefresh implements EditorOwnerScope {
 }
 
 /// Binds immutable presentation metadata to an explicitly scoped resource.
-final class ResourceEditorTarget implements EditorTarget {
+final class ResourceEditorTarget
+    implements EditorTarget, PortablePresentationTarget {
   const ResourceEditorTarget({
     required this.targetId,
     required this.label,
     required this.resource,
     required this.snapshot,
     this.commitPolicy = EditorCommitPolicy.autosaveChanges,
+    this.portablePresentation,
   });
 
   @override
@@ -209,6 +211,13 @@ final class ResourceEditorTarget implements EditorTarget {
 
   @override
   final EditorCommitPolicy commitPolicy;
+
+  final PortablePresentationHostBuilder? portablePresentation;
+
+  @override
+  PortablePresentationHost? buildPortablePresentationHost(
+    EditorSource source,
+  ) => portablePresentation?.call(source);
 
   @override
   EditorDocument get document => snapshot.document;

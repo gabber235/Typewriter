@@ -117,22 +117,23 @@ class _RenderAdaptiveLeadingLayout extends RenderBox
 
   @override
   void performLayout() {
-    if (!constraints.hasBoundedWidth || !constraints.hasBoundedHeight) {
+    if (!constraints.hasBoundedWidth) {
       final zero = BoxConstraints.tight(Size.zero);
       for (final slot in _ElementSlot.values) {
         childForSlot(slot)?.layout(zero);
       }
       size = constraints.constrain(Size.zero);
       throw FlutterError(
-        "AdaptiveLeadingLayout requires finite maximum width and height.",
+        "AdaptiveLeadingLayout requires finite maximum width.",
       );
     }
     final leadingChild = childForSlot(_ElementSlot.leading);
     final centerChild = childForSlot(_ElementSlot.center);
     final suffixChild = childForSlot(_ElementSlot.suffix);
 
-    final looseConstraints = BoxConstraints.loose(
-      Size(constraints.maxWidth, constraints.maxHeight),
+    final looseConstraints = BoxConstraints(
+      maxWidth: constraints.maxWidth,
+      maxHeight: constraints.maxHeight,
     );
 
     final leadingSize = leadingChild != null
@@ -188,7 +189,15 @@ class _RenderAdaptiveLeadingLayout extends RenderBox
       markNeedsSemanticsUpdate();
     }
 
-    size = constraints.constrain(Size(availableWidth, constraints.maxHeight));
+    final visibleHeight = [
+      leadingSize.height,
+      if (_showCenter) centerSize.height,
+      if (_showSuffix) suffixSize.height,
+    ].fold(0.0, (height, candidate) => candidate > height ? candidate : height);
+    final resolvedHeight = constraints.hasTightHeight
+        ? constraints.maxHeight
+        : visibleHeight + activePadding.vertical;
+    size = constraints.constrain(Size(availableWidth, resolvedHeight));
 
     final contentWidth = size.width - activePadding.horizontal;
     final verticalCenter = size.height / 2;

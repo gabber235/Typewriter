@@ -404,6 +404,8 @@ class HostRolloutParticipant(
                         identity = HostedRuntimeIdentity(serviceId.value, realmId.value, runtime.placement),
                         directories = HostedRuntimeDirectories(stateDirectory, deploymentDirectory),
                         artifacts = artifactPackage,
+                        publicationTarget = projection.publicationTarget,
+                        engineImplementation = runtime.implementation,
                         facts = projection.facts,
                         host = host,
                     )

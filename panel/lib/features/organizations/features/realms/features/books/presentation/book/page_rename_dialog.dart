@@ -18,14 +18,7 @@ class RenamePageDialogue extends HookConsumerWidget {
 
   Future<void> _renamePage(WidgetRef ref, String newName) async {
     final router = ref.read(appRouterProvider);
-    final result = await ref.editPage(
-      id: pageId,
-      name: newName,
-      expectedName: oldName,
-    );
-    result.requireApplied(
-      conflictMessage: "The page name changed while editing",
-    );
+    await ref.editPage(id: pageId, name: newName, expectedName: oldName);
     if (ref.read(pageIdProvider) == pageId) return;
     unawaited(router.push(RouteRoute(pageId: pageId.id)));
   }
@@ -61,7 +54,7 @@ class RenamePageDialogue extends HookConsumerWidget {
           return validation;
         },
         inputFormatters: [
-          ...identifierInputFormats.toTextInputFormatters(),
+          ...identifierInputFormatters,
           FilteringTextInputFormatter.singleLineFormatter,
         ],
         onChanged: (value) => name.value = value,

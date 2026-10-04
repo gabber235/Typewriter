@@ -6,11 +6,16 @@ import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ArtifactKind
 import com.typewritermc.imprint.ArtifactRequirement
 import com.typewritermc.imprint.ArtifactVersion
+import com.typewritermc.imprint.CommonExtensionSourcePart
+import com.typewritermc.imprint.EngineExtensionSourcePart
 import com.typewritermc.imprint.EngineManifest
+import com.typewritermc.imprint.ExtensionManifest
 import com.typewritermc.imprint.IMPRINT_MANIFEST_PATH
 import com.typewritermc.imprint.ImprintManifestCodec
 import com.typewritermc.imprint.RealmManifest
+import com.typewritermc.imprint.ResolvedArtifact
 import com.typewritermc.imprint.VersionConstraint
+import com.typewritermc.loader.api.EngineImplementationArtifact
 import com.typewritermc.loader.api.RealmServiceAddress
 import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.api.artifact.ArtifactDigest
@@ -64,6 +69,7 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.advanceTimeBy
@@ -207,6 +213,136 @@ val ArtifactDistributionTest by testSuite {
                 RuntimePlacement.PRIMARY_ENGINE,
                 RuntimePlacement.REALM,
             )
+        projection.publicationTarget.engine.id shouldBe primary.coordinate.id
+        projection.publicationTarget.engine.digest shouldBe primary.digest
+    }
+
+    test("Realm and remote primary engine receive one exact implementation target") {
+        val realm = artifact("typewritermc:realm", ArtifactKind.REALM, "realm")
+        val panel = artifact("typewritermc:panel", ArtifactKind.ENGINE, "panel")
+        val primary = artifact("typewritermc:paper", ArtifactKind.ENGINE, "paper")
+        val content = DeploymentContent(realm = realm, primaryEngine = primary, panelEngine = panel, extensions = emptyList())
+        val snapshot = DeploymentSnapshot(DeploymentGeneration(1), DeploymentContentCodec.digest(content), content)
+        val realmHost = ServiceId("realm")
+        val engineHost = ServiceId("engine")
+        val topology =
+            RealmTopology(
+                realmService = realmHost,
+                primaryEngineServices = setOf(engineHost),
+                serviceApis =
+                    mapOf(
+                        realmHost to ArtifactVersion("1.0.0"),
+                        engineHost to ArtifactVersion("1.0.0"),
+                    ),
+            )
+        val manifests =
+            mapOf(
+                realm.coordinate.id to
+                    RealmManifest(
+                        id = realm.coordinate.id,
+                        version = realm.coordinate.version,
+                        hostApi = VersionConstraint("^1"),
+                        runtimeEntrypointClass = "fixture.Runtime",
+                        contributions = emptyList(),
+                    ),
+                panel.coordinate.id to engineManifest(panel),
+                primary.coordinate.id to engineManifest(primary),
+            )
+
+        val realmProjection = snapshot.projectFor("realm", topology, realmHost, manifests)
+        val engineProjection = snapshot.projectFor("realm", topology, engineHost, manifests)
+
+        realmProjection.publicationTarget shouldBe engineProjection.publicationTarget
+        realmProjection.publicationTarget.fingerprint() shouldBe engineProjection.publicationTarget.fingerprint()
+        realmProjection.publicationTarget.engine.id shouldBe primary.coordinate.id
+        engineProjection.runtimes.single().implementation shouldBe engineProjection.publicationTarget
+        val panelImplementation =
+            requireNotNull(realmProjection.runtimes.single { it.placement == RuntimePlacement.PANEL_ENGINE }.implementation)
+        panelImplementation.engine.id shouldBe panel.coordinate.id
+        panelImplementation.fingerprint() shouldNotBe realmProjection.publicationTarget.fingerprint()
+        realmProjection.runtimes.single { it.placement == RuntimePlacement.REALM }.implementation shouldBe null
+
+        val changedPrimary = artifact("typewritermc:paper", ArtifactKind.ENGINE, "changed paper")
+        val changedContent = content.copy(primaryEngine = changedPrimary)
+        val changed = DeploymentSnapshot(DeploymentGeneration(2), DeploymentContentCodec.digest(changedContent), changedContent)
+        changed.projectFor("realm", topology, realmHost, manifests).publicationTarget.fingerprint() shouldNotBe
+            realmProjection.publicationTarget.fingerprint()
+    }
+
+    test("publication fingerprint includes only source parts eligible for the primary engine") {
+        val realm = artifact("typewritermc:realm", ArtifactKind.REALM, "realm")
+        val panel = artifact("typewritermc:panel", ArtifactKind.ENGINE, "panel")
+        val primary = artifact("typewritermc:paper", ArtifactKind.ENGINE, "paper")
+        val extension = artifact("typewritermc:extension", ArtifactKind.EXTENSION, "extension")
+        val content =
+            DeploymentContent(
+                realm = realm,
+                primaryEngine = primary,
+                panelEngine = panel,
+                extensions = listOf(extension),
+            )
+        val snapshot = DeploymentSnapshot(DeploymentGeneration(1), DeploymentContentCodec.digest(content), content)
+        val realmHost = ServiceId("realm")
+        val topology =
+            RealmTopology(
+                realmService = realmHost,
+                primaryEngineServices = emptySet(),
+                serviceApis = mapOf(realmHost to ArtifactVersion("1.0.0")),
+            )
+        val manifests =
+            mapOf(
+                realm.coordinate.id to
+                    RealmManifest(
+                        id = realm.coordinate.id,
+                        version = realm.coordinate.version,
+                        hostApi = VersionConstraint("^1"),
+                        runtimeEntrypointClass = "fixture.Runtime",
+                        contributions = emptyList(),
+                    ),
+                panel.coordinate.id to engineManifest(panel),
+                primary.coordinate.id to engineManifest(primary),
+                extension.coordinate.id to
+                    ExtensionManifest(
+                        id = extension.coordinate.id,
+                        version = extension.coordinate.version,
+                        sourceParts =
+                            listOf(
+                                CommonExtensionSourcePart,
+                                EngineExtensionSourcePart(
+                                    name = "paper",
+                                    requirement = ArtifactRequirement(primary.coordinate.id, VersionConstraint("^1")),
+                                    resolved =
+                                        ResolvedArtifact(
+                                            primary.coordinate.id,
+                                            primary.coordinate.version,
+                                            ArtifactKind.ENGINE,
+                                        ),
+                                ),
+                            ),
+                        buildProvenance = emptyList(),
+                        contributions = emptyList(),
+                    ),
+            )
+
+        val projection = snapshot.projectFor("realm", topology, realmHost, manifests)
+        val included = projection.publicationTarget.extensions.single()
+        included.sourceParts shouldContainExactly listOf("common", "paper")
+        val changedParts =
+            projection.publicationTarget.copy(
+                extensions =
+                    listOf(
+                        EngineImplementationArtifact(
+                            included.id,
+                            included.version,
+                            included.digest,
+                            listOf("common", "panel"),
+                        ),
+                    ),
+            )
+        changedParts.fingerprint() shouldNotBe projection.publicationTarget.fingerprint()
+        val panelImplementation =
+            requireNotNull(projection.runtimes.single { it.placement == RuntimePlacement.PANEL_ENGINE }.implementation)
+        panelImplementation.extensions.single().sourceParts shouldContainExactly listOf("common")
     }
 
     test("blob completion verifies bytes and supports ranged reads") {

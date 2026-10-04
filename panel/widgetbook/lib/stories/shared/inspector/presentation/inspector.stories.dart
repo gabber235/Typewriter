@@ -84,8 +84,7 @@ class _HeterogeneousBooks extends CanonicalBooks {
   Future<List<Book>> build() async => [book];
 
   @override
-  Future<TypedMutationResult> updateBook(Book book, {Book? expected}) async {
+  Future<void> updateBook(Book book, {Book? expected}) async {
     state = AsyncData([book]);
-    return TypedMutationResult.success(revision: 1, value: book.inspectorValue);
   }
 }

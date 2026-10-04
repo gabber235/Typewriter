@@ -527,6 +527,101 @@ val CommunicatorTest by testSuite {
         }
     }
 
+    test("scoped watches isolate simultaneous buffered responses") {
+        runTest {
+            fixture(deliveryBufferCapacity = 0).use { (client, fake, _) ->
+                val scoped =
+                    WatchContract(
+                        watch.name,
+                        watch.requestAddress,
+                        watch.updateAddress,
+                        watch.requestCodec,
+                        watch.initialCodec,
+                        watch.updateCodec,
+                        watch.initialPolicy,
+                        watch.updateClassifier,
+                        watch.timeout,
+                        watch.failureSlug,
+                        updateAddressResolver = { address, request ->
+                            require(request.matches(Regex("[A-Za-z0-9_-]{1,64}")))
+                            MessageAddress.of("${watch.updateAddress.render(address).value}.$request")
+                        },
+                    )
+                fake.respondWith { message, _ ->
+                    fake.deliver(
+                        TransportDelivery.Message(
+                            InboundMessage(
+                                MessageAddress.of("service.a.updates.first"),
+                                "terminal-first".encodeToByteArray(),
+                            ),
+                        ),
+                    )
+                    TransportResult.Success(InboundMessage(message.address, "initial-first".encodeToByteArray()))
+                }
+                fake.respondWith { message, _ ->
+                    fake.deliver(
+                        TransportDelivery.Message(
+                            InboundMessage(
+                                MessageAddress.of("service.a.updates.second"),
+                                "chunk-second".encodeToByteArray(),
+                            ),
+                        ),
+                    )
+                    TransportResult.Success(InboundMessage(message.address, "initial-second".encodeToByteArray()))
+                }
+
+                val first = async { client.watch(scoped, Target("a"), "first").take(2).toList() }
+                val second = async { client.watch(scoped, Target("a"), "second").take(2).toList() }
+                runCurrent()
+
+                fake.actions
+                    .filterIsInstance<FakeMessageTransport.Action.Subscribe>()
+                    .map { it.pattern.value }
+                    .toSet() shouldBe
+                    setOf("service.a.updates.first", "service.a.updates.second")
+                first.await() shouldBe
+                    listOf(
+                        CommunicationResult.Success(WatchMessage.Initial("initial-first")),
+                        CommunicationResult.Success(WatchMessage.Update("terminal-first")),
+                    )
+                second.await() shouldBe
+                    listOf(
+                        CommunicationResult.Success(WatchMessage.Initial("initial-second")),
+                        CommunicationResult.Success(WatchMessage.Update("chunk-second")),
+                    )
+                fake.activeSubscriptionCount shouldBe 0
+            }
+        }
+    }
+
+    test("scoped watch rejects an unsafe request token before subscribing") {
+        runTest {
+            fixture().use { (client, fake, _) ->
+                val scoped =
+                    WatchContract(
+                        watch.name,
+                        watch.requestAddress,
+                        watch.updateAddress,
+                        watch.requestCodec,
+                        watch.initialCodec,
+                        watch.updateCodec,
+                        watch.initialPolicy,
+                        watch.updateClassifier,
+                        watch.timeout,
+                        watch.failureSlug,
+                        updateAddressResolver = { address, request ->
+                            MessageAddress.of("${watch.updateAddress.render(address).value}.$request")
+                        },
+                    )
+
+                shouldThrow<IllegalArgumentException> {
+                    client.watch(scoped, Target("a"), "unsafe.token").toList()
+                }
+                fake.actions shouldBe emptyList()
+            }
+        }
+    }
+
     test("watch update filter isolates resource updates") {
         runTest {
             fixture().use { (client, fake, _) ->

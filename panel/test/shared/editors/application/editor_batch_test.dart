@@ -24,6 +24,7 @@ TransactionalEditorSource _source() => TransactionalEditorSource(
     confirmedValue: _value("Original", 0),
     revision: 1,
   ),
+  validation: (path, value) => EditorMutationResult.applied(value),
   debounce: const Duration(days: 1),
   commit: (commit) async =>
       MutationSuccess(revision: 3, value: commit.rootValue),

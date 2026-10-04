@@ -6,9 +6,8 @@ part of "route.dart";
 /// movement, and entry drops. It renders projected page metadata but sends all
 /// edits through the authoring commands.
 class _PageTile extends HookConsumerWidget {
-  const _PageTile({required this.page, required this.subjects});
+  const _PageTile({required this.page});
   final Page page;
-  final AsyncValue<AuthoringSubjectProjection>? subjects;
 
   skir.ResourceId get pageId => page.pageId;
   String get name => page.name;
@@ -32,12 +31,11 @@ class _PageTile extends HookConsumerWidget {
           title: "Change chapter of $name",
           chapter: chapter,
           onChapterChanged: (newChapter) async {
-            final result = await ref.editPage(
+            await ref.editPage(
               id: pageId,
               chapter: newChapter,
               expectedChapter: chapter,
             );
-            result.requireApplied(conflictMessage: "The page chapter changed");
           },
         ),
       ),
@@ -87,12 +85,11 @@ class _PageTile extends HookConsumerWidget {
           title: "Change chapter of $name",
           chapter: chapter,
           onChapterChanged: (newChapter) async {
-            final result = await ref.editPage(
+            await ref.editPage(
               id: pageId,
               chapter: newChapter,
               expectedChapter: chapter,
             );
-            result.requireApplied(conflictMessage: "The page chapter changed");
           },
         ),
       ),
@@ -126,9 +123,6 @@ class _PageTile extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isSelected = ref.watch(pageIdProvider.select((e) => e == pageId));
 
-    final field = ref.watch(pageElementsFieldProvider(page.rootType)).value;
-    final catalog = ref.watch(realmEditorCatalogProvider).currentCatalog;
-
     final backgroundColor = isSelected
         ? context.theme.colorScheme.primaryContainer
         : Surface.colorOf(context);
@@ -142,9 +136,7 @@ class _PageTile extends HookConsumerWidget {
       child: Row(
         children: [
           SizedBox(width: context.spacing.space1),
-          Expanded(
-            child: _PageRoleTile(pageId: pageId, subjects: subjects),
-          ),
+          Expanded(child: _PageRoleTile(pageId: pageId)),
           SizedBox(width: context.spacing.space2),
           Icon(Icons.chevron_right, size: 16, color: foregroundColor),
         ],
@@ -153,137 +145,101 @@ class _PageTile extends HookConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        return DragTarget<EntryDragPayload>(
-          onWillAcceptWithDetails: (details) {
-            return field != null &&
-                catalog != null &&
-                details.data.entries.every((entry) {
-                  final elementType = entry.elementType;
-                  return elementType != null &&
-                      field.accepts(elementType, TypeRegistry(catalog.catalog));
-                });
-          },
+        return DragTarget<PageDrag>(
+          onWillAcceptWithDetails: (details) => details.data.pageId != pageId,
           onAcceptWithDetails: (details) async {
-            final payload = details.data;
-            final sourcePageId = payload.primary.pageId;
-            if (sourcePageId == null || sourcePageId == pageId.id) return;
-            await ref.withReadyPageElements(sourcePageId, (elements) {
-              return elements.moveEntriesToPage(
-                payload.entries
-                    .map((entry) => entry.id)
-                    .toList(growable: false),
-                pageId.id,
-              );
-            });
+            await ref.editPage(
+              id: details.data.pageId,
+              chapter: chapter,
+              expectedChapter: details.data.chapter,
+            );
           },
-          builder: (context, entryCandidateData, entryRejectedData) {
-            return DragTarget<PageDrag>(
-              onWillAcceptWithDetails: (details) =>
-                  details.data.pageId != pageId,
-              onAcceptWithDetails: (details) async {
-                final result = await ref.editPage(
-                  id: details.data.pageId,
-                  chapter: chapter,
-                  expectedChapter: details.data.chapter,
-                );
-                result.requireApplied(
-                  conflictMessage: "The page chapter changed",
-                );
-              },
-              builder: (context, pageCandidateData, rejectedData) {
-                final isAccepting =
-                    entryCandidateData.isNotEmpty ||
-                    pageCandidateData.isNotEmpty;
-                final isRejecting =
-                    entryRejectedData.isNotEmpty || rejectedData.isNotEmpty;
+          builder: (context, pageCandidateData, rejectedData) {
+            final isAccepting = pageCandidateData.isNotEmpty;
+            final isRejecting = rejectedData.isNotEmpty;
 
-                return ManagedActionSet(
-                  shortcuts: _shortcuts(ref),
-                  child: ContextMenuRegion(
-                    items: _contextMenuItems(ref),
-                    child: AnimatedSize(
-                      duration: 150.ms,
-                      curve: Curves.easeOutCubic,
-                      child: Draggable<PageDrag>(
-                        data: PageDrag(pageId: pageId, chapter: chapter),
-                        feedback: Surface(
-                          color: backgroundColor,
-                          child: Material(
-                            color: backgroundColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: context.shapes.mediumBorderRadius,
-                            ),
-                            child: ConstrainedBox(
-                              constraints: constraints,
-                              child: child,
-                            ),
-                          ),
+            return ManagedActionSet(
+              shortcuts: _shortcuts(ref),
+              child: ContextMenuRegion(
+                items: _contextMenuItems(ref),
+                child: AnimatedSize(
+                  duration: 150.ms,
+                  curve: Curves.easeOutCubic,
+                  child: Draggable<PageDrag>(
+                    data: PageDrag(pageId: pageId, chapter: chapter),
+                    feedback: Surface(
+                      color: backgroundColor,
+                      child: Material(
+                        color: backgroundColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: context.shapes.mediumBorderRadius,
                         ),
-                        childWhenDragging: Opacity(
-                          opacity: 0.5,
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(
-                              vertical: context.spacing.space1,
-                            ),
-                            child: DottedBorder(
-                              options: RoundedRectDottedBorderOptions(
-                                radius: context.shapes.mediumRadius,
-                                color: isRejecting
-                                    ? context.theme.colorScheme.error
-                                    : foregroundColor,
-                                strokeWidth: 2,
-                                dashPattern: [8, 6],
-                                padding: EdgeInsets.zero,
-                              ),
-                              childOnTop: false,
-                              child: Surface(
-                                color: backgroundColor,
-                                child: Material(
-                                  color: backgroundColor.withValues(alpha: 0.5),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius:
-                                        context.shapes.mediumBorderRadius,
-                                  ),
-                                  child: child,
-                                ),
-                              ),
-                            ),
-                          ),
+                        child: ConstrainedBox(
+                          constraints: constraints,
+                          child: child,
                         ),
-                        child: Surface(
-                          color: backgroundColor,
-                          child: Material(
+                      ),
+                    ),
+                    childWhenDragging: Opacity(
+                      opacity: 0.5,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          vertical: context.spacing.space1,
+                        ),
+                        child: DottedBorder(
+                          options: RoundedRectDottedBorderOptions(
+                            radius: context.shapes.mediumRadius,
+                            color: isRejecting
+                                ? context.theme.colorScheme.error
+                                : foregroundColor,
+                            strokeWidth: 2,
+                            dashPattern: [8, 6],
+                            padding: EdgeInsets.zero,
+                          ),
+                          childOnTop: false,
+                          child: Surface(
                             color: backgroundColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: context.shapes.mediumBorderRadius,
-                              side: isAccepting || isRejecting
-                                  ? BorderSide(
-                                      color: isAccepting
-                                          ? Theme.of(context)
-                                                .colorScheme
-                                                .primary
-                                          : Theme.of(context).colorScheme.error,
-                                      width: 2,
-                                    )
-                                  : BorderSide.none,
-                            ),
-                            child: InkWell(
-                              onTap: () {
-                                if (isSelected) return;
-                                ref
-                                    .read(appRouterProvider)
-                                    .push(RouteRoute(pageId: pageId.id));
-                              },
-                              borderRadius: context.shapes.mediumBorderRadius,
+                            child: Material(
+                              color: backgroundColor.withValues(alpha: 0.5),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: context.shapes.mediumBorderRadius,
+                              ),
                               child: child,
                             ),
                           ),
                         ),
                       ),
                     ),
+                    child: Surface(
+                      color: backgroundColor,
+                      child: Material(
+                        color: backgroundColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: context.shapes.mediumBorderRadius,
+                          side: isAccepting || isRejecting
+                              ? BorderSide(
+                                  color: isAccepting
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Theme.of(context).colorScheme.error,
+                                  width: 2,
+                                )
+                              : BorderSide.none,
+                        ),
+                        child: InkWell(
+                          onTap: () {
+                            if (isSelected) return;
+                            ref
+                                .read(appRouterProvider)
+                                .push(RouteRoute(pageId: pageId.id));
+                          },
+                          borderRadius: context.shapes.mediumBorderRadius,
+                          child: child,
+                        ),
+                      ),
+                    ),
                   ),
-                );
-              },
+                ),
+              ),
             );
           },
         );
@@ -297,10 +253,9 @@ class _PageTile extends HookConsumerWidget {
 /// Selection remains read from the route provider, while page kind metadata is
 /// resolved from the active realm catalog.
 class _SmallPageTile extends HookConsumerWidget {
-  const _SmallPageTile({required this.page, required this.subjects});
+  const _SmallPageTile({required this.page});
 
   final Page page;
-  final AsyncValue<AuthoringSubjectProjection>? subjects;
 
   skir.ResourceId get pageId => page.pageId;
 
@@ -317,9 +272,7 @@ class _SmallPageTile extends HookConsumerWidget {
         padding: EdgeInsets.all(context.spacing.space2),
         child: SizedBox.square(
           dimension: 20,
-          child: ClipRect(
-            child: _PageRoleTile(pageId: pageId, subjects: subjects),
-          ),
+          child: ClipRect(child: _PageRoleTile(pageId: pageId)),
         ),
       ),
     );
@@ -327,67 +280,13 @@ class _SmallPageTile extends HookConsumerWidget {
 }
 
 class _PageRoleTile extends StatelessWidget {
-  const _PageRoleTile({required this.pageId, required this.subjects});
+  const _PageRoleTile({required this.pageId});
 
   final skir.ResourceId pageId;
-  final AsyncValue<AuthoringSubjectProjection>? subjects;
 
   @override
-  Widget build(BuildContext context) {
-    final projection = switch (subjects) {
-      AsyncData(:final value) => value,
-      _ => null,
-    };
-    if (projection == null) {
-      if (subjects?.hasError ?? subjects == null) {
-        return const Tooltip(
-          message: "Page presentation is unavailable",
-          child: Icon(Icons.warning_rounded, size: 14),
-        );
-      }
-      return ShimmerBox.rectangle(width: double.infinity, height: 20);
-    }
-    final subject = projection.subjects[pageId];
-    if (subject == null) {
-      return ComposedEditor(
-        model: _pageTileDiagnostic(
-          projection.catalog.catalog,
-          projection.diagnostics.isEmpty
-              ? const [
-                  TypeDiagnostic(
-                    code: TypeDiagnosticCode.invalidPresentation,
-                    message: "Page presentation subject is unavailable",
-                    pathPresent: false,
-                  ),
-                ]
-              : projection.diagnostics,
-        ),
-        readOnly: true,
-      );
-    }
-    final result = TypedAuthoringCodec(projection.catalog).subjectPresentation(
-      subject,
-      PresentationRole.pageTile,
-      collections: projection.collections,
-    );
-    return ComposedEditor(
-      model:
-          result.valueOrNull?.model ??
-          _pageTileDiagnostic(projection.catalog.catalog, result.diagnostics),
-      readOnly: true,
-    );
-  }
+  Widget build(BuildContext context) => AuthoringSubjectRole(
+    resourceId: pageId,
+    role: skir.PresentationRole.pageTile,
+  );
 }
-
-PresentationModel _pageTileDiagnostic(
-  TypeCatalog catalog,
-  List<TypeDiagnostic> diagnostics,
-) => PresentationModel(
-  catalog: catalog,
-  inputs: const {},
-  root: PresentationNode(
-    id: "page.tile.diagnostic",
-    element: DiagnosticElement(diagnostics),
-  ),
-  diagnostics: diagnostics,
-);

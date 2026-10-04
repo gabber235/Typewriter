@@ -1,0 +1,8 @@
+struct BoundedTransferChunk {
+  transfer_id: string = 0;
+  index: int32 = 1;
+  chunk_count: int32 = 2;
+  encoded_size: int64 = 3;
+  sha256: string = 4;
+  payload: bytes = 5;
+}

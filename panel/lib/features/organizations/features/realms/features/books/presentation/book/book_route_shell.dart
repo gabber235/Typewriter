@@ -2,8 +2,8 @@ part of "route.dart";
 
 /// Empty state shown when a book route has no selected page.
 ///
-/// Adding a page uses the same dialog as the sidebar, so creation and initial
-/// navigation follow one command path.
+/// Adding a page prepares and commits its authored draft, then opens the normal
+/// page workspace through the same command path as the sidebar.
 class EmptyBookPage extends ConsumerWidget {
   const EmptyBookPage({super.key});
 
@@ -23,7 +23,7 @@ class EmptyBookPage extends ConsumerWidget {
         child: EmptyScreen(
           title: "Select a page to edit or",
           buttonText: "Add Page",
-          onPressed: () => promptAndCreatePage(context: context, ref: ref),
+          onPressed: () => createPage(context: context, ref: ref),
         ),
       ),
     );
@@ -47,8 +47,12 @@ class BookScaffold extends HookConsumerWidget {
     final interaction = ref.watch(realmInteractionProvider);
     final selectedRealm = ref.watch(selectedRealmProvider).value;
 
-    void retryConnection() =>
-        ref.invalidate(organizationTopologyStreamProvider);
+    void retryConnection() {
+      if (organizationId == null) return;
+      ref
+          .read(organizationTopologyControllerProvider(organizationId).notifier)
+          .refresh();
+    }
 
     return PrimarySearchShortcut(
       child: SimpleScaffold(
@@ -95,9 +99,6 @@ class BookScaffold extends HookConsumerWidget {
                   children: [
                     Expanded(
                       child: InspectorScaffold(
-                        realmRuntime: ref.watch(
-                          activeRealmEditorRuntimeProvider,
-                        ),
                         margin: EdgeInsets.only(
                           top: context.spacing.space2,
                           right: context.spacing.space2,

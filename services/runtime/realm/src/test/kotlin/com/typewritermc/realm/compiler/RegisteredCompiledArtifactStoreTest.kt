@@ -51,6 +51,8 @@ private fun Char.compiledManifest(
     digest = ContentDigest(toString().repeat(64)),
     sourceRevision = sourceRevision,
     catalogRevision = "catalog",
+    implementationToken = "implementation",
+    runtimeSignatures = emptySet(),
     artifacts =
         artifacts.map { artifact ->
             CompiledArtifactReference(
@@ -62,7 +64,7 @@ private fun Char.compiledManifest(
         },
 )
 
-private class InMemoryBlobEndpoint : BlobEndpoint {
+internal class InMemoryBlobEndpoint : BlobEndpoint {
     private data class PendingWrite(
         val expected: BlobMetadata,
         var bytes: ByteArray = byteArrayOf(),

@@ -1,8 +1,8 @@
-import { ResolvedTypeRef } from "editor/v1/type_catalog.skir";
-import { TypedValueEnvelope } from "editor/v1/typed_value.skir";
+import { TypeUse } from "editor/v1/type_catalog.skir";
+import { PortableValue } from "editor/v1/typed_value.skir";
 
 // Typed presentation inputs for one catalog type choice. Catalog choices have no resource content or resource ID.
 struct CatalogPresentationSubject(811400001) {
-  target: ResolvedTypeRef = 0;
-  descriptor: TypedValueEnvelope = 1;
+  target: TypeUse = 0;
+  descriptor: PortableValue = 1;
 }

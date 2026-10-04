@@ -1,29 +1,38 @@
 package com.typewritermc.realm
 
 import com.surrealdb.Surreal
+import com.typewritermc.authoring.CommitResult
+import com.typewritermc.discovery.DeploymentFacts
+import com.typewritermc.discovery.RuntimeRegistrar
+import com.typewritermc.discovery.RuntimeScope
 import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.loader.api.HostedRuntimeHost
-import com.typewritermc.realm.compiler.GraphReadRequirement
+import com.typewritermc.realm.authoring.AuthoringSnapshotStore
+import com.typewritermc.realm.authoring.CreationCoordinator
+import com.typewritermc.realm.authoring.CreationEvaluator
+import com.typewritermc.realm.authoring.InMemoryAuthoringSnapshotStore
+import com.typewritermc.realm.authoring.SnapshotCatalogLease
+import com.typewritermc.realm.authoring.SurrealCreationReceiptStore
+import com.typewritermc.realm.catalog.RealmCatalogStore
+import com.typewritermc.realm.checking.RealmCheckRuntime
+import com.typewritermc.realm.compiler.AuthoringAcceptance
+import com.typewritermc.realm.compiler.EngineImplementationSource
+import com.typewritermc.realm.compiler.RealmPublicationCoordinator
 import com.typewritermc.realm.compiler.RegisteredCompiledArtifactStore
-import com.typewritermc.realm.compiler.RegisteredRealmCompileCoordinator
-import com.typewritermc.realm.compiler.RegisteredRealmCompiler
+import com.typewritermc.realm.compiler.SurrealPublicationAttemptStore
 import com.typewritermc.realm.compiler.SurrealRegisteredCompiledContentRepository
-import com.typewritermc.realm.repository.AuthoringWorkingGraph
-import com.typewritermc.realm.repository.ResourceValueMapper
-import com.typewritermc.realm.repository.SurrealAuthoringGraphRepository
+import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.realm.repository.SurrealAuthoringRepository
-import com.typewritermc.realm.repository.utils.inTransaction
-import com.typewritermc.realm.routes.AuthoringPresentationProjector
+import com.typewritermc.realm.repository.SurrealAuthoringSeedLoader
+import com.typewritermc.realm.routes.CapabilityRealmPresentationSearchSource
+import com.typewritermc.realm.routes.EditorCheckEvents
 import com.typewritermc.realm.routes.EditorCompiledContentEvents
 import com.typewritermc.realm.routes.RealmAddress
 import com.typewritermc.realm.routes.RealmCapabilityInvocationSource
-import com.typewritermc.realm.routes.RealmEditorCatalogSource
-import com.typewritermc.realm.routes.RealmPresentationSearchSource
 import com.typewritermc.realm.routes.RealmRouteFactory
-import com.typewritermc.realm.routes.registeredAuthoringPresentationMaterializer
+import com.typewritermc.realm.routes.SnapshotRealmEditorCatalogSource
 import com.typewritermc.realm.schema.RealmDatabaseProvider
 import com.typewritermc.realm.search.AuthoringSearchIndexer
-import com.typewritermc.realm.search.AuthoringSearchMetadata
 import com.typewritermc.realm.search.SurrealAuthoringSearchRepository
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
 import com.typewritermc.services.libs.communicator.router.RouterResult
@@ -31,14 +40,11 @@ import com.typewritermc.services.libs.communicator.router.RouterState
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
-import com.typewritermc.services.libs.telemetry.SpanPresentation
 import com.typewritermc.services.libs.telemetry.childSpan
 import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.utils.DelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
 import com.typewritermc.services.libs.utils.rethrowExceptionalThrowable
-import com.typewritermc.types.TypeCatalog
-import com.typewritermc.types.TypePrototypeRegistry
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -46,60 +52,66 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import java.security.MessageDigest
+import java.util.concurrent.atomic.AtomicBoolean
 
-/**
- * Owns database access, authoring compilation, and application routes for one hosted Realm.
- *
- * Startup initializes storage and waits for routes on a usable host messaging session. Session replacement
- * rebuilds the router without recreating authored state. Compiler and catalog invalidation workers belong to this
- * lifecycle; shutdown must finish before the host closes deployment resources.
- */
 internal class Realm(
     private val databaseProvider: RealmDatabaseProvider,
-    private val editorCatalog: RealmEditorCatalogSource,
-    private val presentationSearch: RealmPresentationSearchSource,
+    private val catalogs: RealmCatalogStore,
     private val scope: CoroutineScope,
     private val telemetry: ServiceTelemetry,
     private val retryPolicy: RetryPolicy,
     private val delayScheduler: DelayScheduler,
-    private val catalogInvalidations: RealmCatalogInvalidationProcess,
-    private val discoverySnapshots: RealmDiscoverySnapshotStore,
-    private val prototypes: TypePrototypeRegistry,
     private val host: HostedRuntimeHost,
-    private val capabilityInvocations: RealmCapabilityInvocationSource? = null,
-    private val authoringPolicies: RealmAuthoringPolicyCatalog,
+    private val registrars: List<RuntimeRegistrar>,
+    private val facts: DeploymentFacts,
+    private val creationEvaluator: CreationEvaluator,
+    private val engine: EngineImplementationSource,
+    private val catalogActivator: RealmCatalogActivator = DurableRealmCatalogActivator,
 ) {
     private val lifecycle = Mutex()
+    private val catalogInvalidations = RealmCatalogInvalidationProcess(catalogs, scope, telemetry)
     private var database: Surreal? = null
+    private var snapshots: AuthoringSnapshotStore? = null
+    private var checks: RealmCheckRuntime? = null
+    private var checkEvents: EditorCheckEvents? = null
+    private var registrarScope: RealmRuntimeScope? = null
     private var routeFactory: RealmRouteFactory? = null
     private var router: CommunicatorRouter? = null
     private var routerSession: Long? = null
     private var serviceMonitor: Job? = null
-    private var compileCoordinator: RegisteredRealmCompileCoordinator? = null
-    private var compileCatalogMonitor: Job? = null
 
-    /**
-     * Opens Realm storage, starts compilation, and waits until the first usable messaging session has routes.
-     *
-     * Authored and compiled state is created once per staged runtime. A later host session replaces only the router,
-     * so reconnects preserve database state and compiler ownership. Failure rolls back every resource initialized by
-     * this call and leaves the instance available for a fresh start attempt.
-     */
     context(main: MainSpanScope)
     suspend fun start(realmId: String) {
         check(database == null) { "Realm is already started" }
         val connected = childSpan("realm.database.initialize") { databaseProvider.connect() }
         try {
             database = connected
+            val catalog = catalogs.captureCurrent()
+            val seed = requireNotNull(SurrealAuthoringSeedLoader(connected).loadFor(catalog))
+            val snapshotStore = InMemoryAuthoringSnapshotStore(catalog, seed)
+            snapshots = snapshotStore
+            val searchIndexer = AuthoringSearchIndexer()
+            val authoring =
+                SurrealAuthoringRepository(
+                    database = connected,
+                    snapshots = snapshotStore,
+                    catalog = catalogs::captureCurrent,
+                    searchIndexer = searchIndexer,
+                )
+            catalogs.captureCurrent().use { next ->
+                catalogActivator.activate(authoring, next)
+            }
+            val checkEvents = EditorCheckEvents(snapshotStore, authoring, scope)
+            this.checkEvents = checkEvents
+            val checkRuntime = RealmCheckRuntime(snapshotStore, onFindingsChanged = checkEvents::publishChanged)
+            checks = checkRuntime
+            checkRuntime.reloadCatalog()
+            val routedAuthoring = CheckingAuthoringRepository(authoring, checkRuntime, checkEvents)
             val compiledContentEvents = EditorCompiledContentEvents()
             val compiledContent =
                 SurrealRegisteredCompiledContentRepository(
@@ -107,144 +119,46 @@ internal class Realm(
                     compiledContentEvents::publishActivated,
                     compiledContentEvents::publishBlocked,
                 )
-            val typeCatalog = { discoverySnapshots.current()?.discovery?.types ?: TypeCatalog(emptyList()) }
-            val compilationProjections = authoringPolicies.compilation
-            val searchMetadata = AuthoringSearchMetadata(authoringPolicies.searchSelectors, authoringPolicies.searchFacets)
-            val searchIndexer =
-                AuthoringSearchIndexer(
-                    authoringPolicies.search,
-                    searchMetadata,
+            val publisher =
+                RealmPublicationCoordinator(
+                    acceptance = AuthoringAcceptance(snapshotStore, checkRuntime),
+                    attempts = SurrealPublicationAttemptStore(connected),
+                    content = compiledContent,
+                    artifacts = RegisteredCompiledArtifactStore(host.sharedArtifacts),
+                    engine = engine,
                 )
-            val authoring =
-                SurrealAuthoringRepository(
-                    database = connected,
-                    prototypes = prototypes,
-                    catalogGeneration = {
-                        requireNotNull(discoverySnapshots.current()).discovery.generation.value
-                    },
-                    resourceDefinitions = { requireNotNull(discoverySnapshots.current()).resourceDefinitions },
-                    relations = { requireNotNull(discoverySnapshots.current()).relations },
-                    resolvedTypes = { requireNotNull(discoverySnapshots.current()).types },
-                    validationRules = { authoringPolicies.validations },
-                    compilationProjections = { compilationProjections },
-                    searchIndexer = { searchIndexer },
-                    presentationMaterializer = {
-                        registeredAuthoringPresentationMaterializer(
-                            prototypes = prototypes,
-                            relations = { requireNotNull(discoverySnapshots.current()).relations },
-                            projector =
-                                AuthoringPresentationProjector(
-                                    prototypes,
-                                    authoringPolicies.presentations,
-                                ),
-                        )
-                    },
+            publisher.recoverInterrupted()
+            val creation =
+                CreationCoordinator(
+                    catalog = catalogs::captureCurrent,
+                    receipts = SurrealCreationReceiptStore(connected),
+                    evaluator = creationEvaluator,
                 )
-            val authoringGraph =
-                SurrealAuthoringGraphRepository(
-                    database = connected,
-                    mapper = {
-                        ResourceValueMapper(
-                            prototypes,
-                            requireNotNull(discoverySnapshots.current()).relations,
-                        )
-                    },
-                    catalog = typeCatalog,
-                    generation = {
-                        requireNotNull(discoverySnapshots.current()).discovery.generation.value
-                    },
-                )
-
-            suspend fun rebuildSearchIndex() {
-                val projections = authoringPolicies.search.all()
-                val graph =
-                    if (projections.isEmpty()) {
-                        AuthoringWorkingGraph(emptyMap(), emptyMap())
-                    } else {
-                        val requirement =
-                            projections
-                                .map { projection ->
-                                    projection.graphRequirement.copy(
-                                        definitions = projection.graphRequirement.definitions + projection.definition,
-                                    )
-                                }.reduce(GraphReadRequirement::plus)
-                        authoringGraph.workingGraph(requirement, null)
-                    }
-                connected.inTransaction { transaction -> searchIndexer.rebuild(transaction, graph) }
+            val activeRegistrarScope = RealmRuntimeScope(scope, facts)
+            registrarScope = activeRegistrarScope
+            with(activeRegistrarScope) {
+                registrars.forEach { registrar -> registrar.register() }
             }
-            childSpan("realm.authoring.search.rebuild") { rebuildSearchIndex() }
-            val compiler =
-                RegisteredRealmCompileCoordinator(
-                    projections = compilationProjections,
-                    compiler =
-                        RegisteredRealmCompiler(
-                            projections = compilationProjections,
-                            content = compiledContent,
-                            artifacts = RegisteredCompiledArtifactStore(host.sharedArtifacts),
-                            onStatesChanged = { sourceSequence, states ->
-                                compiledContentEvents.publishStates(
-                                    sourceSequence = sourceSequence,
-                                    generation = requireNotNull(discoverySnapshots.current()).discovery.generation.value,
-                                    states = states,
-                                )
-                            },
-                        ),
-                    graph = { projection, root ->
-                        authoringGraph.workingGraph(projection.graphRequirement, root)
-                    },
-                    sourceRevision = {
-                        connected
-                            .query("SELECT VALUE revision FROM ONLY authoring_head:current;")
-                            .take(0)
-                            .getLong()
-                            .toString()
-                    },
-                    catalogRevision = { requireNotNull(discoverySnapshots.current()).compilationSignature() },
-                    scope = scope,
-                    onFailure = { failure ->
-                        telemetry.mainSpan(
-                            name = "realm.compiler.failure",
-                            unhandledFailureSlug = ErrorSlug.of("realm-compiler-failure-reporting-failed"),
-                            presentation = SpanPresentation("Realm compilation"),
-                        ) { compileSpan ->
-                            compileSpan.recordDegraded(ErrorSlug.of("realm-compilation-failed"), failure)
-                        }
-                    },
-                )
-            compileCoordinator = compiler
             routeFactory =
                 RealmRouteFactory(
-                    authoring = authoring,
-                    authoringGraph = authoringGraph,
-                    authoringSearch = SurrealAuthoringSearchRepository(connected, typeCatalog),
+                    authoring = routedAuthoring,
+                    authoringSearch = SurrealAuthoringSearchRepository(connected),
+                    snapshots = snapshotStore,
+                    checks = checkRuntime,
                     compiledContent = compiledContent,
-                    editorCatalog = editorCatalog,
-                    presentationSearch = presentationSearch,
-                    capabilityInvocations = capabilityInvocations,
+                    publisher = publisher,
+                    editorCatalog = SnapshotRealmEditorCatalogSource(catalogs),
+                    creation = creation,
+                    presentationSearch = CapabilityRealmPresentationSearchSource(scope, catalogs),
+                    capabilityInvocations = RealmCapabilityInvocationSource(catalogs),
                     compiledContentEvents = compiledContentEvents,
-                    onCompilationInvalidated = compiler::invalidate,
-                    prototypes = prototypes,
-                    catalogGeneration = {
-                        requireNotNull(discoverySnapshots.current()).discovery.generation.value
-                    },
-                    authoringPolicies = authoringPolicies,
-                    authoringSearchMetadata = searchMetadata,
+                    checkEvents = checkEvents,
                 )
-            compiler.start()
-            compileCatalogMonitor =
-                scope.launch {
-                    discoverySnapshots.changes.collect {
-                        rebuildSearchIndex()
-                        compiler.invalidateAll()
-                    }
-                }
             val routesReady = CompletableDeferred<Unit>()
             serviceMonitor =
                 scope.launch(start = CoroutineStart.UNDISPATCHED) {
                     try {
-                        host.messaging.collectLatest { session ->
-                            maintainRouter(realmId, session, routesReady)
-                        }
+                        host.messaging.collectLatest { session -> maintainRouter(realmId, session, routesReady) }
                     } catch (failure: Throwable) {
                         routesReady.completeExceptionally(failure)
                         throw failure
@@ -252,32 +166,11 @@ internal class Realm(
                 }
             routesReady.await()
         } catch (failure: Throwable) {
-            runCatching { catalogInvalidations.stop() }.exceptionOrNull()?.let(failure::addSuppressed)
-            runCatching { compileCatalogMonitor?.cancelAndJoin() }.exceptionOrNull()?.let(failure::addSuppressed)
-            compileCatalogMonitor = null
-            runCatching { compileCoordinator?.stop() }.exceptionOrNull()?.let(failure::addSuppressed)
-            compileCoordinator = null
-            runCatching {
-                lifecycle.withLock {
-                    val active = router
-                    router = null
-                    routerSession = null
-                    active?.closeIfNeeded("startup rollback")
-                }
-            }.exceptionOrNull()?.let(failure::addSuppressed)
-            routeFactory = null
-            database = null
-            runCatching { databaseProvider.close(connected) }.exceptionOrNull()?.let(failure::addSuppressed)
+            withContext(NonCancellable) { closeStartedResources(failure) }
             throw failure
         }
     }
 
-    /**
-     * Stops session monitoring, compilation, catalog invalidation, routes, and database access in dependency order.
-     *
-     * Shutdown is idempotent when no Realm resource is active. Cleanup continues after individual failures; the first
-     * failure is thrown with later cleanup failures suppressed.
-     */
     suspend fun shutdown() {
         if (database == null && router == null && serviceMonitor == null) return
         telemetry.mainSpan(
@@ -285,25 +178,7 @@ internal class Realm(
             unhandledFailureSlug = ErrorSlug.of("realm-routes-shutdown-failed"),
         ) {
             val failures = mutableListOf<Throwable>()
-            runCatching { serviceMonitor?.cancelAndJoin() }.exceptionOrNull()?.let(failures::add)
-            serviceMonitor = null
-            runCatching { compileCatalogMonitor?.cancelAndJoin() }.exceptionOrNull()?.let(failures::add)
-            compileCatalogMonitor = null
-            runCatching { compileCoordinator?.stop() }.exceptionOrNull()?.let(failures::add)
-            compileCoordinator = null
-            runCatching { catalogInvalidations.stop() }.exceptionOrNull()?.let(failures::add)
-            runCatching {
-                lifecycle.withLock {
-                    val active = router
-                    router = null
-                    routerSession = null
-                    active?.closeIfNeeded("stop")
-                }
-            }.exceptionOrNull()?.let(failures::add)
-            routeFactory = null
-            val activeDatabase = database
-            database = null
-            runCatching { activeDatabase?.let { databaseProvider.close(it) } }.exceptionOrNull()?.let(failures::add)
+            closeStartedResources(failures)
             if (failures.isNotEmpty()) {
                 val failure = failures.first()
                 failures.drop(1).forEach(failure::addSuppressed)
@@ -313,12 +188,38 @@ internal class Realm(
         }
     }
 
-    /**
-     * Serializes router replacement with shutdown and session changes.
-     *
-     * The previous router is closed before a replacement is created. A failed replacement therefore leaves no active
-     * duplicate subscriptions, while a missing session deliberately disables route publication.
-     */
+    private suspend fun closeStartedResources(failure: Throwable) {
+        val failures = mutableListOf<Throwable>()
+        closeStartedResources(failures)
+        failures.forEach(failure::addSuppressed)
+    }
+
+    private suspend fun closeStartedResources(failures: MutableList<Throwable>) {
+        runCatching { serviceMonitor?.cancelAndJoin() }.exceptionOrNull()?.let(failures::add)
+        serviceMonitor = null
+        runCatching { catalogInvalidations.stop() }.exceptionOrNull()?.let(failures::add)
+        runCatching {
+            lifecycle.withLock {
+                val active = router
+                router = null
+                routerSession = null
+                active?.closeIfNeeded("stop")
+            }
+        }.exceptionOrNull()?.let(failures::add)
+        routeFactory = null
+        runCatching { checks?.close() }.exceptionOrNull()?.let(failures::add)
+        checks = null
+        runCatching { checkEvents?.close() }.exceptionOrNull()?.let(failures::add)
+        checkEvents = null
+        runCatching { registrarScope?.shutdown() }.exceptionOrNull()?.let(failures::add)
+        registrarScope = null
+        runCatching { snapshots?.close() }.exceptionOrNull()?.let(failures::add)
+        snapshots = null
+        val activeDatabase = database
+        database = null
+        runCatching { activeDatabase?.let { databaseProvider.close(it) } }.exceptionOrNull()?.let(failures::add)
+    }
+
     private suspend fun replaceRouter(
         realmId: String,
         session: HostedMessagingSession?,
@@ -329,15 +230,12 @@ internal class Realm(
             router = null
             routerSession = null
             previous?.closeIfNeeded("replace")
+            checkEvents?.unconfigure()
             if (session == null) {
                 catalogInvalidations.stop()
                 return@withLock null
             }
-            val address =
-                RealmAddress(
-                    realmId = realmId,
-                    organizationId = session.organizationId,
-                )
+            val address = RealmAddress(realmId = realmId, organizationId = session.organizationId)
             val routes = checkNotNull(routeFactory) { "Realm routes are not initialized" }
             val replacement = session.communicator.createRouter(routes.create(address, session.communicator), scope)
             try {
@@ -348,7 +246,9 @@ internal class Realm(
                 replacement
             } catch (failure: Throwable) {
                 withContext(NonCancellable) {
-                    runCatching { replacement.closeIfNeeded("failed replacement") }.exceptionOrNull()?.let(failure::addSuppressed)
+                    runCatching { replacement.closeIfNeeded("failed replacement") }
+                        .exceptionOrNull()
+                        ?.let(failure::addSuppressed)
                 }
                 throw failure
             }
@@ -369,15 +269,11 @@ internal class Realm(
                 telemetry.mainSpan(
                     name = "realm.routes.session",
                     unhandledFailureSlug = ErrorSlug.of("realm-routes-session-failed"),
-                ) { span ->
-                    span.annotate {
-                        attribute("realm.id", realmId)
-                        attribute("messaging.session.id", session.id)
-                    }
+                ) {
                     val active = checkNotNull(replaceRouter(realmId, session))
                     routesReady.complete(Unit)
-                    active.stateFlow.first { it == RouterState.STOPPED }
-                    error("Realm router stopped while messaging session ${session.id} remained active")
+                    active.stateFlow.first { state -> state == RouterState.STOPPED }
+                    error("Realm router stopped while its messaging session remained active")
                 }
             } catch (failure: Throwable) {
                 rethrowExceptionalThrowable(failure)
@@ -388,29 +284,66 @@ internal class Realm(
     }
 }
 
-internal fun RealmDiscoverySnapshot.compilationSignature(): String {
-    val typeFacts =
-        types.catalog.definitions.sortedBy { it.id.toString() }.map { definition ->
-            definition.copy(
-                displayName = "",
-                qualifiedName = null,
-                namedPresentations = emptyMap(),
-                rolePresentations = emptyMap(),
-            )
-        }
-    val facts =
-        canonicalJson.encodeToString(typeFacts) +
-            canonicalJson.encodeToString(types.relations) +
-            resourceDefinitions.sortedBy { it.id.value }.joinToString { definition ->
-                "${definition.id.value}:${canonicalJson.encodeToString(definition.acceptedRoot)}"
-            } +
-            compilationProjections.joinToString { "${it.projection.value}:${it.root}" }
-    return MessageDigest.getInstance("SHA-256").digest(facts.toByteArray()).joinToString("") {
-        "%02x".format(it.toInt() and 0xff)
+internal fun interface RealmCatalogActivator {
+    suspend fun activate(
+        repository: SurrealAuthoringRepository,
+        catalog: SnapshotCatalogLease,
+    )
+}
+
+private object DurableRealmCatalogActivator : RealmCatalogActivator {
+    override suspend fun activate(
+        repository: SurrealAuthoringRepository,
+        catalog: SnapshotCatalogLease,
+    ) {
+        repository.activateCatalog(catalog, install = {}, publish = {})
     }
 }
 
-private val canonicalJson = Json { encodeDefaults = true }
+private class CheckingAuthoringRepository(
+    private val delegate: AuthoringRepository,
+    private val checks: RealmCheckRuntime,
+    private val events: EditorCheckEvents,
+) : AuthoringRepository {
+    override suspend fun replay(edit: com.typewritermc.authoring.PreparedEdit): CommitResult? = delegate.replay(edit)
+
+    override suspend fun commit(edit: com.typewritermc.authoring.PreparedEdit): CommitResult =
+        delegate.commit(edit).also { result ->
+            if (result is CommitResult.Committed) {
+                checks.invalidate(result.changed)
+                events.committed()
+            }
+        }
+}
+
+private class RealmRuntimeScope(
+    override val coroutineScope: CoroutineScope,
+    override val facts: DeploymentFacts,
+) : RuntimeScope {
+    private val lock = Any()
+    private val cleanup = mutableListOf<suspend () -> Unit>()
+    private val closed = AtomicBoolean()
+
+    override fun own(cleanup: suspend () -> Unit) {
+        synchronized(lock) {
+            check(!closed.get()) { "Realm runtime scope is closed." }
+            this.cleanup += cleanup
+        }
+    }
+
+    override fun <R : AutoCloseable> own(resource: R): R = resource.also { own(it::close) }
+
+    suspend fun shutdown() {
+        if (!closed.compareAndSet(false, true)) return
+        val actions = synchronized(lock) { cleanup.asReversed().toList().also { cleanup.clear() } }
+        val failures = actions.mapNotNull { action -> runCatching { action() }.exceptionOrNull() }
+        if (failures.isNotEmpty()) {
+            val failure = failures.first()
+            failures.drop(1).forEach(failure::addSuppressed)
+            throw failure
+        }
+    }
+}
 
 private fun RouterResult.requireSuccess(operation: String) {
     if (this is RouterResult.Failure) error("Realm router $operation failed: $error")

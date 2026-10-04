@@ -1,286 +1,409 @@
-// The editor type catalog is the shared vocabulary for declarations, resolved references, typed values, and
-// constraints.
-// Catalog consumers validate references and values locally, then use the same definitions to decode presentations,
-// capabilities, and conversions. A resolved reference identifies a declaration revision plus its type arguments.
-
 import { Duration } from "kernel/v1/duration.skir";
 
-enum BuiltinTypeId(810100001) {
-  option = 1;
-  some = 2;
-  none = 3;
-}
-
-struct DeclaredTypeId(810100002) {
+struct DeclaredTypeId(810100001) {
   value: string = 0;
 }
-
-struct QualifiedTypeId(810100003) {
+struct QualifiedTypeId(810100002) {
   namespace: string = 0;
   name: string = 1;
 }
-
-enum TypeId(810100004) {
-  builtin: BuiltinTypeId = 1;
-  declared: DeclaredTypeId = 2;
-  qualified: QualifiedTypeId = 3;
+enum TypeId(810100003) {
+  declared: DeclaredTypeId = 1;
+  qualified: QualifiedTypeId = 2;
 }
-
-enum TypeVariance(810100005) {
-  invariant = 1;
-  covariant = 2;
-  contravariant = 3;
+struct TypeDefinitionId(810100004) {
+  type_id: TypeId = 0;
+  revision: int32 = 1;
+}
+struct ParameterKey(810100005) {
+  owner: TypeDefinitionId = 0;
+  index: int32 = 1;
 }
 
 enum IntegerWidth(810100006) {
-  eight_bits = 1;
-  sixteen_bits = 2;
-  thirty_two_bits = 3;
-  sixty_four_bits = 4;
+  signed_eight = 1;
+  signed_sixteen = 2;
+  signed_thirty_two = 3;
+  signed_sixty_four = 4;
+  unsigned_eight = 5;
+  unsigned_sixteen = 6;
+  unsigned_thirty_two = 7;
+  unsigned_sixty_four = 8;
 }
-
 enum FloatWidth(810100007) {
-  thirty_two_bits = 1;
-  sixty_four_bits = 2;
+  thirty_two = 1;
+  sixty_four = 2;
 }
-
-struct StringConstraints(810100008) {
-  minimum_length: int32? = 0;
-  maximum_length: int32? = 1;
-  pattern: string? = 2;
-  allowed_values: [string] = 3;
-}
-
-struct NumericConstraints(810100009) {
-  minimum: string? = 0;
-  minimum_inclusive: bool = 1;
-  maximum: string? = 2;
-  maximum_inclusive: bool = 3;
-  multiple_of: string? = 4;
-}
-
-struct CollectionConstraints(810100010) {
-  minimum_length: int32? = 0;
-  maximum_length: int32? = 1;
-  unique_items: bool = 2;
-}
-
-struct ResolvedTypeRef(810100011) {
-  type_id: TypeId = 0;
-  revision: int32 = 1;
-  arguments: [TypeExpression] = 2;
-}
-
-struct TypedRecordField(810200001) {
-  name: string = 0;
-  value: TypedValue = 1;
-}
-
-struct TypedRecordValue(810200002) {
-  fields: [TypedRecordField|name] = 0;
-}
-
-struct TypedMapEntry(810200003) {
-  key: TypedValue = 0;
-  value: TypedValue = 1;
-}
-
-struct TypedMapValue(810200004) {
-  entries: [TypedMapEntry] = 0;
-}
-
-struct TypedNamedValue(810200005) {
-  tag: ResolvedTypeRef = 0;
-  payload: TypedValue = 1;
-}
-
-struct TypedDurationValue(810200006) {
-  duration: Duration = 0;
-}
-
-/// Opaque authored resource identity. Consumers compare it and never parse it.
-struct ResourceId(810200007) {
-  value: string = 0;
-}
-
-enum TypedValue(810200008) {
-  unit = 1;
-  boolean: bool = 2;
-  string: string = 3;
-  bytes: bytes = 4;
-  signed_eight: int32 = 5;
-  signed_sixteen: int32 = 6;
-  signed_thirty_two: int32 = 7;
-  signed_sixty_four: int64 = 8;
-  unsigned_eight: int32 = 9;
-  unsigned_sixteen: int32 = 10;
-  unsigned_thirty_two: int64 = 11;
-  unsigned_sixty_four: string = 12;
-  float_thirty_two: float32 = 13;
-  float_sixty_four: float64 = 14;
-  decimal: string = 15;
-  timestamp: timestamp = 16;
-  list: [TypedValue] = 17;
-  map: TypedMapValue = 18;
-  record: TypedRecordValue = 19;
-  named: TypedNamedValue = 20;
-  duration: TypedDurationValue = 21;
-  reference: ResourceId = 22;
-}
-
-struct ListType(810100012) {
-  element: TypeExpression = 0;
-  constraints: CollectionConstraints = 1;
-}
-
-struct MapType(810100013) {
-  key: TypeExpression = 0;
-  value: TypeExpression = 1;
-  constraints: CollectionConstraints = 2;
-}
-
-struct RecordField(810100014) {
-  name: string = 0;
-  value_type: TypeExpression = 1;
-  initializer: TypedValue? = 2;
-  defaulted: bool = 3;
-}
-
-struct RecordType(810100015) {
-  fields: [RecordField|name] = 0;
-  closed: bool = 1;
-}
-
-struct IntegerType(810100016) {
+struct IntegerScalar(810100008) {
   width: IntegerWidth = 0;
-  constraints: NumericConstraints = 1;
 }
-
-struct FloatType(810100017) {
+struct FloatScalar(810100009) {
   width: FloatWidth = 0;
-  constraints: NumericConstraints = 1;
+}
+enum ScalarKind(810100010) {
+  unit = 1;
+  boolean = 2;
+  text = 3;
+  bytes = 4;
+  integer: IntegerScalar = 5;
+  float: FloatScalar = 6;
+  decimal = 7;
+  timestamp = 8;
+  duration = 9;
 }
 
-struct EnumType(810100018) {
-  value_type: TypeExpression = 0;
-  canonical_values: [TypedValue] = 1;
+struct NamedTypeTemplate(810100011) {
+  definition: TypeDefinitionId = 0;
+  arguments: [TypeTemplate] = 1;
+}
+struct NullableTypeTemplate(810100012) {
+  value: TypeTemplate = 0;
+}
+enum TypeTemplate(810100013) {
+  parameter: ParameterKey = 1;
+  named: NamedTypeTemplate = 2;
+  nullable: NullableTypeTemplate = 3;
+  scalar: ScalarKind = 4;
+}
+struct NamedTypeUse(810100014) {
+  definition: TypeDefinitionId = 0;
+  arguments: [TypeUse] = 1;
+}
+struct NullableTypeUse(810100015) {
+  value: TypeUse = 0;
+}
+enum TypeUse(810100016) {
+  named: NamedTypeUse = 1;
+  nullable: NullableTypeUse = 2;
+  scalar: ScalarKind = 3;
 }
 
-struct ReferenceType(810100019) {
-  target_type: ResolvedTypeRef = 0;
+struct TypeParameter(810100017) {
+  key: ParameterKey = 0;
+  name: string = 1;
+  bounds: [TypeTemplate] = 2;
+}
+struct FieldOwner(810100018) {
+  definition: TypeDefinitionId = 0;
+  name: string = 1;
+}
+struct FieldDeclaration(810100019) {
+  owner: FieldOwner = 0;
+  type: TypeTemplate = 1;
+  overrides: [FieldOwner] = 2;
+  has_constructor_default: bool = 3;
+}
+enum CollectionKind(810100020) {
+  list = 1;
+  set = 2;
+}
+struct EnumVariant(810100021) {
+  key: string = 0;
+}
+struct ScalarRepresentationTemplate(810100022) {
+  kind: ScalarKind = 0;
+}
+struct RecordRepresentationTemplate(810100023) {
+  fields: [FieldDeclaration] = 0;
+  abstract: bool = 1;
+}
+struct SequenceRepresentationTemplate(810100024) {
+  item: TypeTemplate = 0;
+  kind: CollectionKind = 1;
+}
+struct MappingRepresentationTemplate(810100025) {
+  key: TypeTemplate = 0;
+  value: TypeTemplate = 1;
+}
+struct EnumerationRepresentationTemplate(810100026) {
+  cases: [EnumVariant|key] = 0;
+}
+struct EndpointId(810100027) {
+  value: string = 0;
+}
+struct LinkRepresentationTemplate(810100028) {
+  endpoint: EndpointId = 0;
+  target: TypeTemplate = 1;
+}
+enum RepresentationTemplate(810100029) {
+  scalar: ScalarRepresentationTemplate = 1;
+  record: RecordRepresentationTemplate = 2;
+  sequence: SequenceRepresentationTemplate = 3;
+  mapping: MappingRepresentationTemplate = 4;
+  enumeration: EnumerationRepresentationTemplate = 5;
+  link: LinkRepresentationTemplate = 6;
+}
+struct TypeDefinition(810100030) {
+  id: TypeDefinitionId = 0;
+  parameters: [TypeParameter] = 1;
+  representation: RepresentationTemplate = 2;
+  parents: [NamedTypeTemplate] = 3;
 }
 
-enum TypeExpression(810100020) {
-  any = 1;
-  unit = 2;
-  boolean = 3;
-  string: StringConstraints = 4;
-  bytes: CollectionConstraints = 5;
-  signed_integer: IntegerType = 6;
-  unsigned_integer: IntegerType = 7;
-  float: FloatType = 8;
-  decimal: NumericConstraints = 9;
-  timestamp = 10;
-  duration = 11;
-  list: ListType = 12;
-  map: MapType = 13;
-  record: RecordType = 14;
-  enum_type: EnumType = 15;
-  parameter: string = 16;
-  named: ResolvedTypeRef = 17;
-  reference: ReferenceType = 18;
+struct ResourceId(810100031) {
+  value: string = 0;
 }
-
-struct TypeParameter(810100021) {
+struct ItemId(810100032) {
+  value: string = 0;
+}
+struct LinkTarget(810100033) {
+  resource: ResourceId = 0;
+  opposite: ValuePath? = 1;
+}
+struct LinkValue(810100034) {
+  endpoint: EndpointId = 0;
+  target: LinkTarget = 1;
+}
+struct FieldValue(810100035) {
   name: string = 0;
-  variance: TypeVariance = 1;
-  upper_bounds: [TypeExpression] = 2;
+  value: DataValue = 1;
+}
+struct RecordPayload(810100036) {
+  fields: [FieldValue|name] = 0;
+}
+struct NamedValue(810100037) {
+  actual_type: NamedTypeUse = 0;
+  payload: DataValue = 1;
+}
+struct ListItem(810100038) {
+  id: ItemId = 0;
+  value: DataValue = 1;
+}
+struct ListPayload(810100039) {
+  items: [ListItem] = 0;
+}
+struct MapRow(810100040) {
+  id: ItemId = 0;
+  key: DataValue = 1;
+  value: DataValue = 2;
+}
+struct MapPayload(810100041) {
+  rows: [MapRow] = 0;
+}
+struct DurationValue(810100042) {
+  value: Duration = 0;
+}
+enum DataValue(810100043) {
+  unfilled = 1;
+  null = 2;
+  unit = 3;
+  boolean: bool = 4;
+  integer: string = 5;
+  float: float64 = 6;
+  decimal: string = 7;
+  string_value: string = 8;
+  bytes: bytes = 9;
+  timestamp: timestamp = 10;
+  duration: DurationValue = 11;
+  enum_case: string = 12;
+  record: RecordPayload = 13;
+  named: NamedValue = 14;
+  list_value: ListPayload = 15;
+  set_value: ListPayload = 16;
+  map_value: MapPayload = 17;
+  link: LinkValue = 18;
 }
 
-enum TypeDefinitionKind(810100022) {
-  concrete = 1;
-  open_abstract = 2;
-  sealed_abstract = 3;
+enum ArgumentSelection(810100044) {
+  chosen: TypeUse = 1;
+  unfilled = 2;
+}
+struct PendingTypeSelection(810100045) {
+  definition: TypeDefinitionId = 0;
+  arguments: [ArgumentSelection] = 1;
+}
+enum TypeSelection(810100046) {
+  complete: NamedTypeUse = 1;
+  pending: PendingTypeSelection = 2;
+}
+struct AuthoringRecord(810100047) {
+  configuration: TypeSelection = 0;
+  fields: [FieldValue|name] = 1;
 }
 
-struct PresentationId(810100023) {
+struct PresentationId(810100048) {
   namespace: string = 0;
   name: string = 1;
 }
-
-struct ConversionId(810100024) {
+struct ConversionId(810100049) {
   namespace: string = 0;
   name: string = 1;
 }
-
-struct CapabilityId(810100025) {
+struct CapabilityId(810100050) {
   value: string = 0;
 }
-
-struct CatalogGeneration(810900001) {
+struct CatalogGeneration(810100051) {
   value: string = 0;
 }
+struct SnapshotId(810100052) {
+  value: string = 0;
+}
+struct InputToken(810100053) {
+  value: string = 0;
+}
+struct ExpressionBindingId(810100054) {
+  value: string = 0;
+}
+struct OperationId(810100055) {
+  value: string = 0;
+}
+struct RuleOrigin(810100056) {
+  owner: TypeDefinitionId = 0;
+  ordinal: int32 = 1;
+}
+struct RuleId(810100057) {
+  origin: RuleOrigin = 0;
+  local_index: int32 = 1;
+}
 
-struct NamedPresentation(810100026) {
+struct ValuePath(810100058) {
+  segments: [PathSegment] = 0;
+}
+struct FieldPathSegment(810100059) {
   name: string = 0;
-  presentation_id: PresentationId = 1;
 }
-
-// A semantic surface resolved independently for each nominal type. Consumers
-// select the nearest associated ancestor for the requested role.
-enum PresentationRole(810100027) {
-  editor = 1;
-  creation = 2;
-  reference_summary = 3;
-  reference_option = 4;
-  catalog_option = 5;
-  authoring_result = 6;
-  page_tile = 7;
-  graph_node = 8;
-  inspector_header = 9;
+struct ItemPathSegment(810100060) {
+  id: ItemId = 0;
 }
-
-struct RolePresentation(810100028) {
-  role: PresentationRole = 0;
-  outcome: RolePresentationOutcome = 1;
+enum PathSegment(810100061) {
+  field: FieldPathSegment = 1;
+  item: ItemPathSegment = 2;
+  map_key = 3;
+  map_value = 4;
 }
-
-enum FieldMergeStrategy(810100029) {
-  set_membership = 1;
+struct ValueLocation(810100062) {
+  resource: ResourceId = 0;
+  path: ValuePath = 1;
 }
-
-// Merge policy belongs to the canonical type declaration. Editors use it to
-// reconcile an affected field without introducing resource specific paths.
-struct FieldMergePolicy(810100030) {
-  // Merge policies currently address record fields only. This avoids a schema
-  // cycle between type definitions, typed map keys, and general data paths.
-  field_path: [string] = 0;
-  strategy: FieldMergeStrategy = 1;
+struct NamedFieldPatternSegment(810100063) {
+  name: string = 0;
 }
-
-// A declared role has one usable presentation or one rejection. Absence from
-// role_presentations means no declaration claimed the role.
-enum RolePresentationOutcome(810100031) {
-  ready: PresentationId = 1;
-  rejected: string = 2;
+enum FieldPatternSegment(810100064) {
+  field: NamedFieldPatternSegment = 1;
+  items = 2;
+  keys = 3;
+  values = 4;
 }
-
-struct TypeDefinition(810100032) {
-  display_name: string = 0;
-  parameters: [TypeParameter|name] = 1;
-  direct_parents: [ResolvedTypeRef] = 2;
-  representation: TypeExpression = 3;
-  type_id: TypeId = 4;
-  revision: int32 = 5;
-  kind: TypeDefinitionKind = 6;
-  named_presentations: [NamedPresentation|name] = 7;
-  outgoing_conversion_ids: [ConversionId] = 8;
-  role_presentations: [RolePresentation] = 9;
-  field_merge_policies: [FieldMergePolicy] = 10;
-  initializer: TypedValue? = 11;
-  qualified_name: string? = 12;
+struct RelativeFieldPattern(810100065) {
+  segments: [FieldPatternSegment] = 0;
 }
-
-struct TypeCatalog(810100033) {
+struct BatchId(810100066) {
+  value: string = 0;
+}
+struct InitializationRequestId(810100067) {
+  value: string = 0;
+}
+struct NativeBindingId(810100068) {
+  value: string = 0;
+}
+struct CheckExecutionId(810100069) {
+  value: string = 0;
+}
+struct DiagnosticId(810100070) {
+  value: string = 0;
+}
+struct SelectionId(810100071) {
+  value: string = 0;
+}
+struct PublicationId(810100072) {
+  value: string = 0;
+}
+struct CanonicalValueHash(810100073) {
+  value: string = 0;
+}
+struct RuntimeMemberId(810100074) {
+  value: string = 0;
+}
+struct ScriptCapabilityId(810100075) {
+  value: string = 0;
+}
+struct RelationId(810100076) {
+  value: string = 0;
+}
+struct RelationFamilyId(810100077) {
+  value: string = 0;
+}
+struct TypeCatalog(810100078) {
   definitions: [TypeDefinition] = 0;
+}
+
+struct ScalarResolvedRepresentation(810100079) {
+  kind: ScalarKind = 0;
+}
+struct RecordResolvedRepresentation(810100080) {
+  fields: [ResolvedField|key] = 0;
+  abstract: bool = 1;
+}
+struct SequenceResolvedRepresentation(810100081) {
+  item: TypeUse = 0;
+  kind: CollectionKind = 1;
+}
+struct MappingResolvedRepresentation(810100082) {
+  key: TypeUse = 0;
+  value: TypeUse = 1;
+}
+struct EnumerationResolvedRepresentation(810100083) {
+  cases: [EnumVariant|key] = 0;
+}
+struct LinkResolvedRepresentation(810100084) {
+  endpoint: EndpointId = 0;
+  target: TypeUse = 1;
+}
+enum ResolvedRepresentation(810100085) {
+  scalar: ScalarResolvedRepresentation = 1;
+  record: RecordResolvedRepresentation = 2;
+  sequence: SequenceResolvedRepresentation = 3;
+  mapping: MappingResolvedRepresentation = 4;
+  enumeration: EnumerationResolvedRepresentation = 5;
+  link: LinkResolvedRepresentation = 6;
+}
+struct ResolvedField(810100086) {
+  key: string = 0;
+  declaration_owner: TypeDefinitionId = 1;
+  type: TypeUse = 2;
+  guarantees: [RuleId] = 3;
+}
+struct AppliedSchema(810100087) {
+  use: TypeUse = 0;
+  representation: ResolvedRepresentation = 1;
+  fields: [ResolvedField|key] = 2;
+  ancestors: [NamedTypeUse] = 3;
+}
+struct CheckedType(810100088) {
+  catalog: CatalogGeneration = 0;
+  use: TypeUse = 1;
+  schema: AppliedSchema = 2;
+}
+struct ArgumentLocation(810100089) {
+  index: int32 = 0;
+}
+struct DependentField(810100090) {
+  owner: FieldOwner = 0;
+  type: TypeTemplate = 1;
+  missing: [ParameterKey] = 2;
+}
+struct PartialSchema(810100091) {
+  known_fields: [ResolvedField|key] = 0;
+  dependent_fields: [DependentField] = 1;
+  pending_arguments: [ArgumentLocation] = 2;
+}
+
+struct ContributionSourceId(810100092) {
+  value: string = 0;
+}
+struct ProducerId(810100093) {
+  value: string = 0;
+}
+struct ContributionName(810100094) {
+  value: string = 0;
+}
+struct ContributionKey(810100095) {
+  source: ContributionSourceId = 0;
+  source_part: string = 1;
+  producer: ProducerId = 2;
+  name: ContributionName = 3;
+}
+struct DeclarationOwner(810100096) {
+  source: ContributionKey = 0;
+  local_identity: string = 1;
 }

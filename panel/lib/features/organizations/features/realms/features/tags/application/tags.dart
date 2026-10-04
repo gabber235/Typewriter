@@ -1,7 +1,6 @@
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
-import "package:riverpod/riverpod.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
@@ -62,37 +61,22 @@ class CanonicalTags extends _$CanonicalTags {
     if (organizationId == null || realmId == null) {
       return [];
     }
-    final view = await ref.readAuthoringView(
-      organizationId: organizationId,
-      realmId: realmId,
-      request: RealmEditorCatalogRequest(types: {referenceResourceTypes.tag}),
-      selections: (catalog) => [
-        ...catalog.collectionSelections(catalog.presentations.values),
-        authoringDefinitionSelection(
-          key: "tags",
-          definitions: const [CoreResourceDefinitionIds.tag],
-        ),
-      ],
-    );
-    final catalog = view.catalog;
-    final codec = TypedAuthoringCodec(catalog);
     final provider = authoringSessionProvider(organizationId, realmId);
-    ref.listen(provider, (_, value) {
-      if (value.sequence != null &&
-          value.generation?.value == catalog.generation.value) {
-        state = AsyncData(_projectTags(value, codec));
+    var session = ref.watch(provider);
+    if (session.failure case final failure?) {
+      throw StateError("Authoring is unavailable: $failure");
+    }
+    if (session.snapshot == null) {
+      await ref.read(provider.notifier).ready;
+      session = ref.read(provider);
+      if (session.failure case final failure?) {
+        throw StateError("Authoring is unavailable: $failure");
       }
-    });
-    return _projectTags(view.session, codec);
+    }
+    return _projectTags(session);
   }
 
-  /// Saves a tag through the shared editor mutation boundary.
-  ///
-  /// [expected] is the caller's observed value, normally the projected value
-  /// used for a graph gesture. The patch compares each changed field against
-  /// that observation. Applied responses refresh the editor from authoritative
-  /// content, including fields changed remotely in the same revision.
-  Future<TypedMutationResult> updateTag(Tag tag, {Tag? expected}) async {
+  Future<void> updateTag(Tag tag, {Tag? expected}) async {
     state.ensureReady();
     final before =
         expected ??
@@ -100,11 +84,51 @@ class CanonicalTags extends _$CanonicalTags {
           (candidate) => candidate.tagId == tag.tagId,
           orElse: () => throw ApiException.notFound("Tag"),
         );
-    return ref.updateAuthoringResource(
-      id: tag.tagId,
-      expected: before.inspectorValue,
-      proposed: tag.inspectorValue,
-      label: "Tag",
+    final access = ref.readAuthoringSession();
+    final source = access.state.resources[tag.tagId];
+    final baseline = access.state.draft;
+    if (source == null || baseline == null) {
+      throw ApiException.notFound("Tag");
+    }
+    if (Tag.fromAuthoring(source) != before) {
+      throw ApiException.conflict("The Tag changed before this edit");
+    }
+    final draft = baseline.fork();
+    if (tag.name != before.name) {
+      setAuthoredFieldPayload(
+        draft: draft,
+        resource: tag.tagId,
+        fields: const ["name"],
+        payload: skir.DataValue.wrapStringValue(tag.name),
+      );
+    }
+    if (tag.color != before.color) {
+      setAuthoredFieldPayload(
+        draft: draft,
+        resource: tag.tagId,
+        fields: const ["color"],
+        payload: skir.DataValue.wrapInteger(
+          tag.color.toARGB32().toUnsigned(32).toString(),
+        ),
+      );
+    }
+    _setPlacement(draft, tag, before);
+    if (!const ListEquality<skir.ResourceId>().equals(
+      tag.parentIds,
+      before.parentIds,
+    )) {
+      replacePortableLinkCollection(
+        draft: AuthoredDraftAuthoringDocument(draft),
+        catalog: access.state.catalog!,
+        resource: tag.tagId,
+        field: "parents",
+        expected: before.parentIds,
+        proposed: tag.parentIds,
+      );
+    }
+    await access.notifier.commitDraft(
+      draft,
+      conflictMessage: "The Tag changed before this edit was saved",
     );
   }
 
@@ -136,6 +160,25 @@ class CanonicalTags extends _$CanonicalTags {
   }
 }
 
+void _setPlacement(AuthoredDraft draft, Tag tag, Tag before) {
+  final changes = <String, int>{
+    if (tag.placement.x != before.placement.x) "x": tag.placement.x,
+    if (tag.placement.y != before.placement.y) "y": tag.placement.y,
+    if (tag.placement.width != before.placement.width)
+      "width": tag.placement.width,
+    if (tag.placement.height != before.placement.height)
+      "height": tag.placement.height,
+  };
+  for (final change in changes.entries) {
+    setAuthoredFieldPayload(
+      draft: draft,
+      resource: tag.tagId,
+      fields: ["placement", change.key],
+      payload: skir.DataValue.wrapInteger(change.value.toString()),
+    );
+  }
+}
+
 /// Reads one tag from the canonical Realm projection.
 @riverpod
 Future<Tag?> canonicalTag(Ref ref, skir.ResourceId tagId) async {
@@ -143,97 +186,23 @@ Future<Tag?> canonicalTag(Ref ref, skir.ResourceId tagId) async {
   return tags.firstWhereOrNull((tag) => tag.tagId == tagId);
 }
 
-List<Tag> _projectTags(AuthoringSessionState value, TypedAuthoringCodec codec) {
+List<Tag> _projectTags(AuthoringSessionState value) {
   return value.resources.values
-      .map(codec.decodeResourceOrThrow)
-      .where(
-        (resource) =>
-            codec.isResourceType(resource, CoreResourceDefinitionIds.tag),
-      )
-      .map(Tag.fromTyped)
+      .where((resource) => resource.definition == _tagDefinition)
+      .map(Tag.fromAuthoring)
       .toList();
 }
 
-/// Converts one canonical wire tag and its session revision into editor input.
-extension AuthoringTagValue on AuthoringSessionState {
-  AuthoringValue<Tag>? tagEditorValue(
-    skir.ResourceId tagId,
-    TypedAuthoringCodec codec,
-  ) {
-    final value = resources[tagId];
-    final revision = sequence;
-    if (value == null || revision == null) return null;
-    final decoded = codec.decodeResourceOrThrow(value);
-    if (!codec.isResourceType(decoded, CoreResourceDefinitionIds.tag)) {
-      return null;
-    }
-    return AuthoringValue(value: Tag.fromTyped(decoded), revision: revision);
-  }
-}
+final _tagDefinition = skir.ResourceDefinitionId(value: "typewriter.tag");
 
 /// Combines canonical tags with local editor values for UI consumers.
 ///
 /// Canonical state remains the authority. A local value is only a temporary
-/// projection keyed by organization, realm, and tag identity, and disappears
-/// when the shared editor owner releases it or canonical state catches up.
 @riverpod
-AsyncValue<List<Tag>> projectedTags(Ref ref) {
-  final canonicalTags = ref.watch(canonicalTagsProvider);
-  if (canonicalTags.mapUnready<List<Tag>>() case final value?) return value;
-
-  final local = ref.watch(
-    localWorkProvider.select((state) => state.editorValues),
-  );
-  final organizationId = ref.watch(organizationIdProvider);
-  final realmId = ref.watch(realmIdProvider);
-  if (organizationId == null || realmId == null) {
-    return AsyncData(canonicalTags.requireValue);
-  }
-  return AsyncData(
-    _projectTagValues(
-      canonicalTags.requireValue,
-      local,
-      organizationId,
-      realmId,
-    ),
-  );
-}
-
-List<Tag> _projectTagValues(
-  Iterable<Tag> canonical,
-  Map<EditorResourceKey, LocalEditorValue> local,
-  skir.RecordId organizationId,
-  skir.RecordId realmId,
-) => [
-  for (final tag in canonical)
-    tag.projected(
-      local[EditorResourceKey(
-        scope: EditorResourceScope(
-          organizationId: organizationId,
-          realmId: realmId,
-        ),
-        identity: tag.tagId,
-      )],
-    ),
-];
+AsyncValue<List<Tag>> projectedTags(Ref ref) =>
+    ref.watch(canonicalTagsProvider);
 
 /// Projects one tag for graph nodes that rebuild independently.
 @riverpod
-AsyncValue<Tag?> projectedTag(Ref ref, skir.ResourceId tagId) {
-  final canonical = ref.watch(canonicalTagProvider(tagId));
-  if (canonical.mapUnready<Tag?>() case final value?) return value;
-  final organizationId = ref.watch(organizationIdProvider);
-  final realmId = ref.watch(realmIdProvider);
-  if (organizationId == null || realmId == null) return canonical;
-  final key = EditorResourceKey(
-    scope: EditorResourceScope(
-      organizationId: organizationId,
-      realmId: realmId,
-    ),
-    identity: tagId,
-  );
-  final local = ref.watch(
-    localWorkProvider.select((state) => state.editorValues[key]),
-  );
-  return AsyncData(canonical.requireValue?.projected(local));
-}
+AsyncValue<Tag?> projectedTag(Ref ref, skir.ResourceId tagId) =>
+    ref.watch(canonicalTagProvider(tagId));

@@ -1,4 +1,3 @@
-import "package:collection/collection.dart";
 import "package:faker/faker.dart";
 import "package:flutter_animate/flutter_animate.dart";
 // ignore: depend_on_referenced_packages, implementation_imports
@@ -6,17 +5,21 @@ import "package:riverpod/src/framework.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart" hide random;
-import "package:typewriter_testkit/src/features/organizations/features/realms/features/books/features/pages/features/editor/editor.dart";
 import "package:typewriter_testkit/src/shared/testing/testing.dart";
 
 export "features/features.dart";
 
-const fixturePageType = ResolvedTypeRef(
-  id: QualifiedTypeId(namespace: "fixture", name: "Page"),
-  revision: 1,
+final fixturePageType = skir.NamedTypeUse(
+  definition: skir.TypeDefinitionId(
+    typeId: skir.TypeId.wrapQualified(
+      skir.QualifiedTypeId(namespace: "fixture", name: "Page"),
+    ),
+    revision: 1,
+  ),
+  arguments: const [],
 );
 
-Page generateRandomPage([ResolvedTypeRef pageType = fixturePageType]) {
+Page generateRandomPage([skir.NamedTypeUse? pageType]) {
   final pageName = faker.lorem
       .words(faker.randomGenerator.integer(3, min: 1))
       .join("_")
@@ -34,7 +37,7 @@ Page generateRandomPage([ResolvedTypeRef pageType = fixturePageType]) {
     pageId: skir.ResourceId(value: "page:${faker.guid.guid()}"),
     bookId: skir.ResourceId(value: "book:${faker.guid.guid()}"),
     name: pageName,
-    rootType: pageType,
+    configuration: skir.TypeSelection.wrapComplete(pageType ?? fixturePageType),
     chapter: chapters.randomOrNull() ?? "",
     priority: faker.randomGenerator.integer(100, min: -10),
   );
@@ -49,9 +52,7 @@ class BookPagesMock extends CanonicalBookPages {
   Future<List<Page>> build(skir.ResourceId bookId) async {
     await ref.debounce(300.ms);
     await Future<void>.delayed(100.ms);
-    final pages = await displayState.generate(generateRandomPage);
-
-    return pages;
+    return displayState.generate(generateRandomPage);
   }
 }
 
@@ -59,111 +60,13 @@ class PagesMock extends CanonicalPage {
   PagesMock({this.page, this.pageType});
 
   final Page? page;
-  final ResolvedTypeRef? pageType;
+  final skir.NamedTypeUse? pageType;
 
   @override
   Future<Page> build(skir.ResourceId pageId) async {
     await Future<void>.delayed(50.ms);
-    if (page != null) {
-      return page!;
-    }
-    final randomPage = generateRandomPage(pageType ?? fixturePageType);
-    return randomPage.copyWith(pageId: pageId);
-  }
-}
-
-class PageElementsMock extends PageElements {
-  PageElementsMock({required this.displayState, this.elements});
-
-  final DisplayState displayState;
-  final List<PageElement>? elements;
-
-  @override
-  Future<List<PageElement>> build(
-    skir.RecordId organizationId,
-    skir.RecordId realmId,
-    String pageId,
-  ) async {
-    await Future<void>.delayed(100.ms);
-    return displayState.generateBatch((count) {
-      if (elements case final elements?) return elements;
-      final entries = layoutGraphEntries(
-        List.generate(count, (_) => generateRandomEntryDefinition()),
-        direction: GraphDirection.leftToRight,
-      );
-      return [
-        for (final definition in entries)
-          PageElement.entry(
-            entry: PageEntry.definition(definition: definition),
-          ),
-      ];
-    });
-  }
-
-  @override
-  Future<void> moveAll(List<(String, int, int)> changed) async {
-    state.ensureReady();
-    final positions = {for (final item in changed) item.$1: (item.$2, item.$3)};
-    state = AsyncData([
-      for (final element in state.requireValue)
-        if (positions[element.id] case final position?)
-          element.moveTo(position.$1, position.$2)
-        else
-          element,
-    ]);
-  }
-
-  @override
-  Future<void> resizeAll(List<(String, int, int)> changed) async {
-    state.ensureReady();
-    final sizes = {for (final item in changed) item.$1: (item.$2, item.$3)};
-    state = AsyncData([
-      for (final element in state.requireValue)
-        if (sizes[element.id] case final size?)
-          element.resizeTo(size.$1, size.$2)
-        else
-          element,
-    ]);
-  }
-}
-
-class EntryMock extends Entry {
-  EntryMock({this.definition});
-
-  final EntryDefinition? definition;
-
-  @override
-  Future<EntryDefinition?> build(String entryId) async {
-    await Future<void>.delayed(200.ms);
-    if (definition != null) return definition;
-
-    final organizationId = ref.read(organizationIdProvider);
-    final realmId = ref.read(realmIdProvider);
-    final currentPageId = ref.read(pageIdProvider);
-    if (organizationId == null || realmId == null || currentPageId == null) {
-      return null;
-    }
-
-    final pageElements = await ref.read(
-      pageElementsProvider(organizationId, realmId, currentPageId.id).future,
-    );
-
-    final pageElement = pageElements.firstWhereOrNull(
-      (element) => element.id == entryId,
-    );
-
-    return switch (pageElement) {
-      PageElementEntry(:final entry) => switch (entry) {
-        DefinitionPageEntry(:final definition) => definition,
-        _ => null,
-      },
-      _ => generateRandomEntryDefinition().copyWith(id: entryId),
-    };
-  }
-
-  @override
-  Future<void> updateFieldValue(DataPath path, DataValue value) async {
-    await Future<void>.delayed(200.ms);
+    if (page case final page?) return page;
+    return generateRandomPage(pageType).copyWith(pageId: pageId);
   }
 }
 
@@ -175,45 +78,23 @@ List<Override> bookPagesProviderOverrides({
   ),
 ];
 
-List<Override> pagesProviderOverrides({Page? page, ResolvedTypeRef? pageType}) => [
+List<Override> pagesProviderOverrides({
+  Page? page,
+  skir.NamedTypeUse? pageType,
+}) => [
   canonicalPageProvider.overrideWith2(
     (_) => PagesMock(page: page, pageType: pageType),
   ),
 ];
 
-List<Override> pageElementsProviderOverrides({
-  DisplayState state = DisplayState.loading,
-  List<PageElement>? elements,
-}) {
-  return [
-    pageElementsProvider.overrideWith2(
-      (_) => PageElementsMock(displayState: state, elements: elements),
-    ),
-    authoringPageElementsProvider.overrideWith((ref, argument) {
-      final elements = ref.watch(
-        pageElementsProvider(argument.$1, argument.$2, argument.$3),
-      );
-      return elements.when(
-        data: (value) => AsyncData(AuthoringValue(value: value, revision: 1)),
-        error: AsyncError.new,
-        loading: AsyncLoading.new,
-      );
-    }),
-  ];
-}
-
-List<Override> entryProviderOverrides({EntryDefinition? definition}) => [
-  entryProvider.overrideWith2((_) => EntryMock(definition: definition)),
-];
-
 List<Override> pageIdProviderOverrides({String? pageId}) => [
   pageIdProvider.overrideWith(
-    (ref) => pageId != null ? skir.ResourceId(value: "page:$pageId") : null,
+    (ref) => pageId == null ? null : skir.ResourceId(value: "page:$pageId"),
   ),
 ];
 
 List<Override> bookIdProviderOverrides({String? bookId}) => [
   bookIdProvider.overrideWith(
-    (ref) => bookId != null ? skir.ResourceId(value: "book:$bookId") : null,
+    (ref) => bookId == null ? null : skir.ResourceId(value: "book:$bookId"),
   ),
 ];

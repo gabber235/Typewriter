@@ -1,170 +1,278 @@
-import {
-  CollectionProjectionDefinition,
-  RelationDefinition,
-  ResourceDefinition,
-  ResourceDefinitionId,
-} from "editor/v1/authoring.skir";
 import { CapabilityDefinition } from "editor/v1/capability.skir";
-import { CatalogPresentationSubject } from "editor/v1/catalog_presentation.skir";
-import { CompilationProjectionId } from "editor/v1/compiled_content.skir";
-import { ConversionDefinition } from "editor/v1/conversion.skir";
-import { TypeDiagnostic } from "editor/v1/diagnostic.skir";
-import { DataPath } from "editor/v1/path.skir";
 import {
-  PresentationDefinition,
-  SearchSelectorDefinition,
+  DeclarationDiagnostic,
+  DiagnosticTemplate,
+  InitializationDiagnostic,
+} from "editor/v1/diagnostic.skir";
+import { ExpressionNode } from "editor/v1/expression.skir";
+import {
+  PresentationDependencies,
+  PresentationNode,
 } from "editor/v1/presentation.skir";
 import {
+  AuthoringRecord,
   CatalogGeneration,
+  DataValue,
+  DeclarationOwner,
+  EndpointId,
+  FieldOwner,
+  FieldValue,
+  InitializationRequestId,
+  NamedTypeTemplate,
+  NamedTypeUse,
   PresentationId,
-  ResolvedTypeRef,
+  RelationFamilyId,
+  RelationId,
+  RelativeFieldPattern,
+  RuleId,
+  RuleOrigin,
   TypeDefinition,
-  TypeExpression,
-  TypedValue,
+  TypeDefinitionId,
+  TypeSelection,
+  TypeTemplate,
 } from "editor/v1/type_catalog.skir";
-import { TypedValueEnvelope } from "editor/v1/typed_value.skir";
-import { Color } from "kernel/v1/color.skir";
-import { Icon } from "kernel/v1/icon.skir";
+import { BoundedTransferChunk } from "kernel/v1/bounded_transfer.skir";
+import { InternalError } from "kernel/v1/errors.skir";
 
-// The editor catalog is one versioned capability boundary. A fetch assembles the
-// type system and the metadata that makes those types editable, searchable, and
-// placeable. Consumers should install the returned generation as one snapshot.
-
-struct SubtypeQueryId(810900002) {
+struct ResourceDefinitionId(810900001) {
   value: string = 0;
 }
 
-struct SubtypeQuery(810900003) {
-  query_id: SubtypeQueryId = 0;
-  target: ResolvedTypeRef = 1;
+struct AuthoringResourceDefinition(810900002) {
+  id: ResourceDefinitionId = 0;
+  root: TypeDefinitionId = 1;
+  navigation_handler: string = 2;
 }
 
-struct SubtypeResult(810900004) {
-  query_id: SubtypeQueryId = 0;
-  matching_types: [ResolvedTypeRef] = 1;
+enum RelationDeletePolicy(810900003) {
+  restrict = 1;
+  cascade = 2;
+  clear = 3;
 }
 
-struct AuthoringSearchFacetDefinition(810900005) {
-  id: string = 0;
-  label: string = 1;
-  selector_id: string = 2;
+enum EndpointSlot(810900004) {
+  first = 1;
+  second = 2;
 }
 
-struct AuthoringSearchDefinition(810900006) {
-  definitions: [ResourceDefinitionId] = 0;
-  selectors: [SearchSelectorDefinition] = 1;
-  facets: [AuthoringSearchFacetDefinition] = 2;
+enum EndpointCardinality(810900005) {
+  one = 1;
+  many = 2;
 }
 
-struct AuthoringCompilationProjectionDefinition(810900007) {
-  projection: CompilationProjectionId = 0;
-  root: TypeExpression = 1;
+struct EndpointDefinition(810900006) {
+  id: EndpointId = 0;
+  slot: EndpointSlot = 1;
+  resource: NamedTypeTemplate = 2;
+  cardinality: EndpointCardinality = 3;
+  on_delete: RelationDeletePolicy = 4;
 }
 
-struct TypeDisplay(810900008) {
-  description: string = 0;
-  icon: Icon = 1;
-  color: Color = 2;
+struct RelationContract(810900007) {
+  id: RelationId = 0;
+  first: EndpointDefinition = 1;
+  second: EndpointDefinition = 2;
+  families: [RelationFamilyId] = 3;
 }
 
-enum GraphDirection(810900009) {
-  left_to_right = 1;
-  right_to_left = 2;
-  top_to_bottom = 3;
-  bottom_to_top = 4;
+enum DeclarationStatus(810900008) {
+  ready = 1;
+  unavailable: [DeclarationDiagnostic] = 2;
 }
 
-struct GraphEditorLayout(810900010) {
-  direction: GraphDirection = 0;
+struct EffectiveFieldTemplate(810900009) {
+  key: string = 0;
+  owner: FieldOwner = 1;
+  type: TypeTemplate = 2;
+  rules: [RuleId] = 3;
 }
 
-enum AuthoringEditorLayout(810900011) {
-  graph: GraphEditorLayout = 1;
-  timeline: struct {} = 2;
-}
-
-struct CatalogTypeView(810900012) {
+struct PublishedType(810900010) {
   definition: TypeDefinition = 0;
-  eligible: bool = 1;
-  ineligibility_reasons: [string] = 2;
-  display: TypeDisplay? = 3;
-  editor: AuthoringEditorLayout? = 4;
-  presentation_subject: CatalogPresentationSubject? = 5;
+  status: DeclarationStatus = 1;
+  effective_fields: [EffectiveFieldTemplate|key] = 2;
+  ancestor_templates: [NamedTypeTemplate] = 3;
+  display: TypeDisplay? = 4;
 }
 
-struct CatalogFetchRequest(810900013) {
+struct TypeDisplay(810900011) {
+  name: string = 0;
+  description: string = 1;
+  icon: string = 2;
+  color: string = 3;
+}
+
+enum RepresentationKind(810900012) {
+  unit = 1;
+  boolean = 2;
+  text = 3;
+  bytes = 4;
+  integer = 5;
+  float = 6;
+  decimal = 7;
+  timestamp = 8;
+  duration = 9;
+  record = 10;
+  list = 11;
+  set = 12;
+  map = 13;
+  enumeration = 14;
+  link = 15;
+}
+
+struct RuleDescriptor(810900013) {
+  predicate: ExpressionNode = 0;
+}
+
+struct OwnedRule(810900014) {
+  id: RuleId = 0;
+  descriptor: RuleDescriptor = 1;
+  diagnostic: DiagnosticTemplate = 2;
+}
+
+struct ConfigurationRecipe(810900015) {
+  origin: RuleOrigin = 0;
+  relative_path: RelativeFieldPattern = 1;
+  representation_condition: RepresentationKind? = 2;
+  rules: [OwnedRule] = 3;
+}
+
+enum PresentationRole(810900016) {
+  editor = 1;
+  inspector = 2;
+  reference_summary = 3;
+  reference_option = 4;
+  collection_item = 5;
+  catalog_option = 6;
+  authoring_result = 7;
+  page_tile = 8;
+  graph_node = 9;
+  inspector_header = 10;
+}
+
+enum PresentationTarget(810900017) {
+  named: NamedTypeTemplate = 1;
+  representation: RepresentationKind = 2;
+}
+
+struct PresentationDescriptor(810900018) {
+  id: PresentationId = 0;
+  owner: DeclarationOwner = 1;
+  target: PresentationTarget = 2;
+  roles: [PresentationRole] = 3;
+  priority: int32 = 4;
+}
+
+struct PresentationMaterial(810900019) {
+  provider: PresentationId = 0;
+  target: PresentationTarget = 1;
+  role: PresentationRole = 2;
+  layout: PresentationNode = 3;
+  dependencies: PresentationDependencies = 4;
+  subject: TypeTemplate = 5;
+}
+
+enum InitializationMode(810900020) {
+  startup = 1;
+  creation = 2;
+}
+
+struct CapturedDefault(810900021) {
+  field: FieldOwner = 0;
+  value: DataValue = 1;
+}
+
+struct InitializationDescriptor(810900022) {
+  definition: TypeDefinitionId = 0;
+  mode: InitializationMode = 1;
+  captured: [CapturedDefault] = 2;
+  diagnostics: [InitializationDiagnostic] = 3;
+}
+
+struct RoleFallback(810900023) {
+  role: PresentationRole = 0;
+  parents: [PresentationRole] = 1;
+}
+
+struct EditorCatalogWireSnapshot(810900024) {
+  generation: CatalogGeneration = 0;
+  types: [PublishedType] = 1;
+  relations: [RelationContract] = 2;
+  resource_definitions: [AuthoringResourceDefinition] = 3;
+  presentations: [PresentationDescriptor] = 4;
+  presentation_materials: [PresentationMaterial] = 5;
+  configuration: [ConfigurationRecipe] = 6;
+  diagnostics: [DeclarationDiagnostic] = 7;
+  initialization: [InitializationDescriptor] = 8;
+  endpoint_bindings: [EndpointBindingTemplate] = 9;
+  capabilities: [CapabilityDefinition] = 10;
+  recommendations: [TypeRecommendation] = 11;
+  role_fallbacks: [RoleFallback] = 12;
+}
+
+struct CatalogTransferChunk(810900025) {
+  generation: CatalogGeneration = 0;
+  transfer: BoundedTransferChunk = 1;
+}
+
+enum CatalogUnavailableReason(810900026) {
+  encoded_size_limit = 1;
+}
+
+struct CatalogUnavailable(810900027) {
+  generation: CatalogGeneration = 0;
+  reason: CatalogUnavailableReason = 1;
+  encoded_size: int64 = 2;
+  max_encoded_size: int64 = 3;
+}
+
+struct CatalogFetchRequest(810900028) {
   expected_generation: CatalogGeneration? = 0;
-  requested_types: [ResolvedTypeRef] = 1;
-  presentation_ids: [PresentationId] = 2;
-  subtype_queries: [SubtypeQuery] = 3;
+  transfer_id: string = 1;
 }
 
-// Complete editor catalog snapshot. All returned parts share generation.
-struct CatalogFetchSuccess(810900014) {
+enum CatalogFetchResult(810900029) {
+  chunk: CatalogTransferChunk = 1;
+  generation_changed: CatalogGeneration = 2;
+  unavailable: CatalogUnavailable = 3;
+  internal_error: InternalError = 4;
+}
+
+struct CatalogInvalidated(810900030) {
   generation: CatalogGeneration = 0;
-  type_views: [CatalogTypeView] = 1;
-  presentation_definitions: [PresentationDefinition] = 2;
-  conversions: [ConversionDefinition] = 3;
-  capability_definitions: [CapabilityDefinition] = 4;
-  subtype_results: [SubtypeResult] = 5;
-  diagnostics: [TypeDiagnostic] = 6;
-  resource_definitions: [ResourceDefinition] = 7;
-  relation_definitions: [RelationDefinition] = 8;
-  collection_projection_definitions: [CollectionProjectionDefinition] = 9;
-  authoring_search: AuthoringSearchDefinition? = 10;
-  authoring_compilation_projections: [AuthoringCompilationProjectionDefinition] = 11;
 }
 
-// Reports a conditional fetch against a different catalog generation.
-struct CatalogGenerationMismatch(810900015) {
-  actual_generation: CatalogGeneration = 0;
+struct InitializationRequest(810900031) {
+  id: InitializationRequestId = 0;
+  catalog: CatalogGeneration = 1;
+  type: TypeSelection = 2;
+  supplied: [FieldValue|name] = 3;
+  intent_hash: string = 4;
 }
 
-enum CatalogFetchResult(810900016) {
-  success: CatalogFetchSuccess = 1;
-  generation_mismatch: CatalogGenerationMismatch = 2;
-  unavailable: [TypeDiagnostic] = 3;
+struct PreparedCreation(810900032) {
+  record: AuthoringRecord = 0;
+  findings: [InitializationDiagnostic] = 1;
 }
 
-struct CatalogInvalidated(810900017) {
-  generation: CatalogGeneration = 0;
-  reason: string = 1;
+enum PrepareCreationResult(810900033) {
+  prepared: PreparedCreation = 1;
+  catalog_changed: CatalogGeneration = 2;
+  internal_error: InternalError = 3;
 }
 
-enum CatalogWatchUpdate(810900018) {
-  initial: CatalogGeneration = 1;
-  invalidated: CatalogInvalidated = 2;
+struct EndpointBindingTemplate(810900034) {
+  endpoint: EndpointId = 0;
+  containing_resource: NamedTypeTemplate = 1;
+  value_owner: TypeDefinitionId = 2;
+  relative_path: RelativeFieldPattern = 3;
+  target: TypeTemplate = 4;
+  contains_collection: bool = 5;
 }
 
-struct InitializeTypedValueRequest(810900019) {
-  generation: CatalogGeneration = 0;
-  root_type: ResolvedTypeRef = 1;
-  partial_value: TypedValue? = 2;
-}
-
-enum TypeInitializationRequirementReason(810900020) {
-  missing_value = 1;
-  concrete_type_required = 2;
-}
-
-struct TypeInitializationRequirement(810900021) {
-  path: DataPath = 0;
-  expected: TypeExpression = 1;
-  reason: TypeInitializationRequirementReason = 2;
-}
-
-struct TypeInitializationDraft(810900022) {
-  root_type: ResolvedTypeRef = 0;
-  supplied_value: TypedValue? = 1;
-  requirements: [TypeInitializationRequirement] = 2;
-}
-
-enum InitializeTypedValueResult(810900023) {
-  success: TypedValueEnvelope = 1;
-  needs_input: TypeInitializationDraft = 2;
-  invalid: [TypeDiagnostic] = 3;
-  generation_mismatch: CatalogGenerationMismatch = 4;
-  unavailable: [TypeDiagnostic] = 5;
+struct TypeRecommendation(810900035) {
+  type: NamedTypeUse = 0;
+  occurrences: int64 = 1;
 }
 
 method FetchEditorCatalog(
@@ -173,8 +281,8 @@ method FetchEditorCatalog(
 
 method WatchEditorCatalog(
   struct {}
-): CatalogWatchUpdate = 910002;
+): CatalogInvalidated = 910002;
 
-method InitializeTypedValue(
-  InitializeTypedValueRequest
-): InitializeTypedValueResult = 910004;
+method PrepareCreation(
+  InitializationRequest
+): PrepareCreationResult = 910004;

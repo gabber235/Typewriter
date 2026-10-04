@@ -1,5 +1,6 @@
 import "package:auto_route/auto_route.dart";
 import "package:flutter/material.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
@@ -42,9 +43,28 @@ class OrganizationScaffold extends HookConsumerWidget {
     final realmId = ref.watch(realmIdProvider);
     final interaction = ref.watch(realmInteractionProvider);
     final selectedRealm = ref.watch(selectedRealmProvider).value;
+    ref.watch(realmTopologyRecoveryProvider);
 
-    void retryConnection() =>
-        ref.invalidate(organizationTopologyStreamProvider);
+    useEffect(() {
+      final lifecycle = AppLifecycleListener(
+        onResume: () {
+          if (organizationId == null) return;
+          ref
+              .read(
+                organizationTopologyControllerProvider(organizationId).notifier,
+              )
+              .refresh();
+        },
+      );
+      return lifecycle.dispose;
+    }, [organizationId]);
+
+    void retryConnection() {
+      if (organizationId == null) return;
+      ref
+          .read(organizationTopologyControllerProvider(organizationId).notifier)
+          .refresh();
+    }
 
     return PrimarySearchShortcut(
       child: SimpleScaffold(
@@ -85,9 +105,6 @@ class OrganizationScaffold extends HookConsumerWidget {
                   children: [
                     Expanded(
                       child: InspectorScaffold(
-                        realmRuntime: ref.watch(
-                          activeRealmEditorRuntimeProvider,
-                        ),
                         margin: EdgeInsets.only(
                           top: context.spacing.space2,
                           right: context.spacing.space2,

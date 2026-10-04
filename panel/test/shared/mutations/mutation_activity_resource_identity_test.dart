@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../support/test_utils.dart";
 
@@ -17,7 +18,10 @@ void main() {
       confirmedValue: RecordValue({"name": StringValue("canonical")}),
       revision: 1,
     );
-    final snapshot = DocumentEditorSnapshot(document);
+    final snapshot = FakeEditorSnapshot(
+      document,
+      validation: acceptTestEditorMutation,
+    );
     final workspace = LocalWorkSession();
     addTearDown(workspace.dispose);
     final source = workspace.editor(

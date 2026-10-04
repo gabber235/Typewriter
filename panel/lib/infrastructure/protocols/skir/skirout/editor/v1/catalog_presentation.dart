@@ -22,8 +22,8 @@ import "./typed_value.dart" as _lib_editor_v1_typed_value;
 // -----------------------------------------------------------------------------
 
 sealed class CatalogPresentationSubject_orMutable {
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable get target;
-  _lib_editor_v1_typed_value.TypedValueEnvelope_orMutable get descriptor;
+  _lib_editor_v1_type_catalog.TypeUse get target;
+  _lib_editor_v1_typed_value.PortableValue_orMutable get descriptor;
 
   CatalogPresentationSubject toFrozen();
 }
@@ -31,16 +31,16 @@ sealed class CatalogPresentationSubject_orMutable {
 /// Deeply immutable.
 final class CatalogPresentationSubject implements CatalogPresentationSubject_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.ResolvedTypeRef target;
+  final _lib_editor_v1_type_catalog.TypeUse target;
   @_core.override
-  final _lib_editor_v1_typed_value.TypedValueEnvelope descriptor;
+  final _lib_editor_v1_typed_value.PortableValue descriptor;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CatalogPresentationSubject({
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable target,
-    required _lib_editor_v1_typed_value.TypedValueEnvelope_orMutable descriptor,
+    required _lib_editor_v1_type_catalog.TypeUse target,
+    required _lib_editor_v1_typed_value.PortableValue_orMutable descriptor,
   }) => CatalogPresentationSubject._(
-    target.toFrozen(),
+    target,
     descriptor.toFrozen(),
   );
 
@@ -51,15 +51,15 @@ final class CatalogPresentationSubject implements CatalogPresentationSubject_orM
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CatalogPresentationSubject._(
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    _lib_editor_v1_typed_value.TypedValueEnvelope.defaultInstance,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
+    _lib_editor_v1_typed_value.PortableValue.defaultInstance,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static CatalogPresentationSubject_mutable mutable() => CatalogPresentationSubject_mutable._(
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    _lib_editor_v1_typed_value.TypedValueEnvelope.defaultInstance,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
+    _lib_editor_v1_typed_value.PortableValue.defaultInstance,
   );
 
   /// Returns this instance (no-op).
@@ -98,7 +98,7 @@ final class CatalogPresentationSubject implements CatalogPresentationSubject_orM
         "target",
         "target",
         0,
-        _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
+        _lib_editor_v1_type_catalog.TypeUse.serializer,
         "",
         (it) => it.target,
         (it, v) => it.target = v,
@@ -107,7 +107,7 @@ final class CatalogPresentationSubject implements CatalogPresentationSubject_orM
         "descriptor",
         "descriptor",
         1,
-        _lib_editor_v1_typed_value.TypedValueEnvelope.serializer,
+        _lib_editor_v1_typed_value.PortableValue.serializer,
         "",
         (it) => it.descriptor,
         (it, v) => it.descriptor = v,
@@ -130,8 +130,8 @@ final class CatalogPresentationSubject implements CatalogPresentationSubject_orM
 
 /// Mutable version of [CatalogPresentationSubject].
 final class CatalogPresentationSubject_mutable implements CatalogPresentationSubject_orMutable {
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable target;
-  _lib_editor_v1_typed_value.TypedValueEnvelope_orMutable descriptor;
+  _lib_editor_v1_type_catalog.TypeUse target;
+  _lib_editor_v1_typed_value.PortableValue_orMutable descriptor;
   _skir.internal__UnrecognizedFields? _u;
 
   CatalogPresentationSubject_mutable._(
@@ -139,25 +139,14 @@ final class CatalogPresentationSubject_mutable implements CatalogPresentationSub
     this.descriptor,
   );
 
-  /// If the value of [target] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable get mutableTarget {
-    final value = this.target;
-    if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
-      return value;
-    } else {
-      return this.target = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
-    }
-  }
-
   /// If the value of [descriptor] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [descriptor] and returns it.
-  _lib_editor_v1_typed_value.TypedValueEnvelope_mutable get mutableDescriptor {
+  _lib_editor_v1_typed_value.PortableValue_mutable get mutableDescriptor {
     final value = this.descriptor;
-    if (value is _lib_editor_v1_typed_value.TypedValueEnvelope_mutable) {
+    if (value is _lib_editor_v1_typed_value.PortableValue_mutable) {
       return value;
     } else {
-      return this.descriptor = (value as _lib_editor_v1_typed_value.TypedValueEnvelope).toMutable();
+      return this.descriptor = (value as _lib_editor_v1_typed_value.PortableValue).toMutable();
     }
   }
 

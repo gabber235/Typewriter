@@ -6,6 +6,7 @@
 library;
 
 export "api_exception.dart";
+export "bounded_transfer_assembler.dart";
 export "nats.dart";
 export "nats_client.dart";
 export "nats_core_client.dart";

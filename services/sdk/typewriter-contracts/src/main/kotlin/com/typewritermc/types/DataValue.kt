@@ -2,21 +2,22 @@
 
 package com.typewritermc.types
 
+import com.typewritermc.authoring.ItemId
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.math.BigInteger
-import kotlin.time.Duration
 import kotlin.time.Instant
 
-/**
- * Represents portable values shared by manifests, Realm persistence, and transport codecs.
- *
- * Values retain distinctions such as arbitrary precision integers, decimal text, byte sequences, and explicit
- * polymorphic type references. There is no null variant; nullable Kotlin values use the Option representation
- * through [TypewriterDataFormat]. Structural constraints require a corresponding type graph.
- */
 @Serializable
 sealed interface DataValue {
+    @Serializable
+    @SerialName("unfilled")
+    data object Unfilled : DataValue
+
+    @Serializable
+    @SerialName("null")
+    data object Null : DataValue
+
     @Serializable
     @SerialName("unit")
     data object Unit : DataValue
@@ -38,21 +39,13 @@ sealed interface DataValue {
     @SerialName("float")
     data class Float(
         val value: Double,
-    ) : DataValue {
-        init {
-            require(value.isFinite()) { "Float data values must be finite." }
-        }
-    }
+    ) : DataValue
 
     @Serializable
     @SerialName("decimal")
     data class Decimal(
         val value: String,
-    ) : DataValue {
-        init {
-            value.requireCanonicalDecimal("Decimal value")
-        }
-    }
+    ) : DataValue
 
     @Serializable
     @SerialName("string")
@@ -60,7 +53,6 @@ sealed interface DataValue {
         val value: String,
     ) : DataValue
 
-    /** Stores bytes as a list so the value remains portable across serialization formats. */
     @Serializable
     @SerialName("bytes")
     data class Bytes(
@@ -68,7 +60,6 @@ sealed interface DataValue {
     ) : DataValue {
         constructor(value: ByteArray) : this(value.toList())
 
-        /** Returns a mutable byte array copy of the portable byte list. */
         fun toByteArray(): ByteArray = value.toByteArray()
     }
 
@@ -85,50 +76,59 @@ sealed interface DataValue {
     ) : DataValue
 
     @Serializable
-    @SerialName("list")
-    data class ListValue(
-        val values: List<DataValue>,
-    ) : DataValue
-
-    @Serializable
-    @SerialName("map")
-    data class MapValue(
-        val entries: List<DataMapEntry>,
+    @SerialName("enum")
+    data class EnumCase(
+        val key: String,
     ) : DataValue
 
     @Serializable
     @SerialName("record")
     data class Record(
         val fields: Map<String, DataValue>,
-    ) : DataValue {
-        init {
-            require(fields.keys.none(String::isBlank)) { "Record value field names must not be blank." }
-        }
-    }
-
-    /** Couples a concrete nominal type reference with that type's encoded payload. */
-    @Serializable
-    @SerialName("polymorphic")
-    data class Polymorphic(
-        val concreteType: ResolvedTypeRef,
-        val value: DataValue,
     ) : DataValue
 
-    /** Retains a resource address even when the target cannot currently be loaded. */
     @Serializable
-    @SerialName("reference")
-    data class Reference(
-        val id: ResourceId,
+    @SerialName("named")
+    data class Named(
+        val actualType: TypeUse.Named,
+        val payload: DataValue,
+    ) : DataValue
+
+    @Serializable
+    @SerialName("list")
+    data class ListValue(
+        val items: List<ListItem>,
+    ) : DataValue
+
+    @Serializable
+    @SerialName("set")
+    data class SetValue(
+        val items: List<ListItem>,
+    ) : DataValue
+
+    @Serializable
+    @SerialName("map")
+    data class MapValue(
+        val rows: List<MapRow>,
+    ) : DataValue
+
+    @Serializable
+    @SerialName("link")
+    data class Link(
+        val endpoint: EndpointId,
+        val target: LinkTarget,
     ) : DataValue
 }
 
-/**
- * Retains a map key as a full [DataValue] rather than forcing string keys.
- *
- * A map value stores a list of these entries, so construction alone does not reject duplicate keys.
- */
 @Serializable
-data class DataMapEntry(
+data class ListItem(
+    val id: ItemId,
+    val value: DataValue,
+)
+
+@Serializable
+data class MapRow(
+    val id: ItemId,
     val key: DataValue,
     val value: DataValue,
 )

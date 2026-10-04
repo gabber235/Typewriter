@@ -30,7 +30,7 @@ sealed interface CompilationProjectionId_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class CompilationProjectionId private constructor(
     override val value: kotlin.String,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompilationProjectionId>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompilationProjectionId>? =
         null,
 ): skirout.editor.v1.compiled_content.CompilationProjectionId_OrMutable {
     constructor(
@@ -77,7 +77,7 @@ class CompilationProjectionId private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.compiled_content.CompilationProjectionId.serializerImpl,
+            _SerializerRegistry.CompilationProjectionIdSerializerImpl,
         )
     }
 
@@ -121,34 +121,11 @@ class CompilationProjectionId private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/compiled_content.skir:CompilationProjectionId",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [CompilationProjectionId] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.CompilationProjectionIdSerializer;
 
         /** Describes the [CompilationProjectionId] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "value",
-                "value",
-                0,
-                build.skir.Serializers.string,
-                "",
-                { it.value },
-                { mut, v -> mut.value = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.CompilationProjectionIdSerializerImpl.typeDescriptor;
     }
 }
 
@@ -164,7 +141,7 @@ sealed interface CompilationRoot_OrMutable {
 class CompilationRoot private constructor(
     override val projection: skirout.editor.v1.compiled_content.CompilationProjectionId,
     override val resource: skirout.editor.v1.type_catalog.ResourceId,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompilationRoot>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompilationRoot>? =
         null,
 ): skirout.editor.v1.compiled_content.CompilationRoot_OrMutable {
     constructor(
@@ -217,7 +194,7 @@ class CompilationRoot private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.compiled_content.CompilationRoot.serializerImpl,
+            _SerializerRegistry.CompilationRootSerializerImpl,
         )
     }
 
@@ -300,43 +277,11 @@ class CompilationRoot private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/compiled_content.skir:CompilationRoot",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [CompilationRoot] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.CompilationRootSerializer;
 
         /** Describes the [CompilationRoot] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "projection",
-                "projection",
-                0,
-                skirout.editor.v1.compiled_content.CompilationProjectionId.serializer,
-                "",
-                { it.projection },
-                { mut, v -> mut.projection = v },
-            );
-            serializerImpl.addField(
-                "resource",
-                "resource",
-                1,
-                skirout.editor.v1.type_catalog.ResourceId.serializer,
-                "",
-                { it.resource },
-                { mut, v -> mut.resource = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.CompilationRootSerializerImpl.typeDescriptor;
     }
 }
 
@@ -352,7 +297,7 @@ sealed interface CompiledBlobPointer_OrMutable {
 class CompiledBlobPointer private constructor(
     override val digest: kotlin.String,
     override val size: kotlin.Long,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledBlobPointer>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledBlobPointer>? =
         null,
 ): skirout.editor.v1.compiled_content.CompiledBlobPointer_OrMutable {
     constructor(
@@ -405,7 +350,7 @@ class CompiledBlobPointer private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.compiled_content.CompiledBlobPointer.serializerImpl,
+            _SerializerRegistry.CompiledBlobPointerSerializerImpl,
         )
     }
 
@@ -456,43 +401,11 @@ class CompiledBlobPointer private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/compiled_content.skir:CompiledBlobPointer",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [CompiledBlobPointer] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.CompiledBlobPointerSerializer;
 
         /** Describes the [CompiledBlobPointer] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "digest",
-                "digest",
-                0,
-                build.skir.Serializers.string,
-                "",
-                { it.digest },
-                { mut, v -> mut.digest = v },
-            );
-            serializerImpl.addField(
-                "size",
-                "size",
-                1,
-                build.skir.Serializers.int64,
-                "",
-                { it.size },
-                { mut, v -> mut.size = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.CompiledBlobPointerSerializerImpl.typeDescriptor;
     }
 }
 
@@ -508,7 +421,7 @@ sealed interface CompiledArtifactPointer_OrMutable {
 class CompiledArtifactPointer private constructor(
     override val semanticDigest: kotlin.String,
     override val blob: skirout.editor.v1.compiled_content.CompiledBlobPointer,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledArtifactPointer>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledArtifactPointer>? =
         null,
 ): skirout.editor.v1.compiled_content.CompiledArtifactPointer_OrMutable {
     constructor(
@@ -561,7 +474,7 @@ class CompiledArtifactPointer private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.compiled_content.CompiledArtifactPointer.serializerImpl,
+            _SerializerRegistry.CompiledArtifactPointerSerializerImpl,
         )
     }
 
@@ -628,43 +541,11 @@ class CompiledArtifactPointer private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/compiled_content.skir:CompiledArtifactPointer",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [CompiledArtifactPointer] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.CompiledArtifactPointerSerializer;
 
         /** Describes the [CompiledArtifactPointer] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "semantic_digest",
-                "semanticDigest",
-                0,
-                build.skir.Serializers.string,
-                "",
-                { it.semanticDigest },
-                { mut, v -> mut.semanticDigest = v },
-            );
-            serializerImpl.addField(
-                "blob",
-                "blob",
-                1,
-                skirout.editor.v1.compiled_content.CompiledBlobPointer.serializer,
-                "",
-                { it.blob },
-                { mut, v -> mut.blob = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.CompiledArtifactPointerSerializerImpl.typeDescriptor;
     }
 }
 
@@ -684,7 +565,7 @@ class CompiledContentActivation private constructor(
     override val manifestDigest: kotlin.String,
     override val manifest: skirout.editor.v1.compiled_content.CompiledBlobPointer,
     override val artifacts: kotlin.collections.List<skirout.editor.v1.compiled_content.CompiledArtifactPointer>,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledContentActivation>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledContentActivation>? =
         null,
 ): skirout.editor.v1.compiled_content.CompiledContentActivation_OrMutable {
     constructor(
@@ -749,7 +630,7 @@ class CompiledContentActivation private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.compiled_content.CompiledContentActivation.serializerImpl,
+            _SerializerRegistry.CompiledContentActivationSerializerImpl,
         )
     }
 
@@ -846,63 +727,11 @@ class CompiledContentActivation private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/compiled_content.skir:CompiledContentActivation",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [CompiledContentActivation] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.CompiledContentActivationSerializer;
 
         /** Describes the [CompiledContentActivation] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "activation_revision",
-                "activationRevision",
-                0,
-                build.skir.Serializers.int64,
-                "",
-                { it.activationRevision },
-                { mut, v -> mut.activationRevision = v },
-            );
-            serializerImpl.addField(
-                "manifest_digest",
-                "manifestDigest",
-                1,
-                build.skir.Serializers.string,
-                "",
-                { it.manifestDigest },
-                { mut, v -> mut.manifestDigest = v },
-            );
-            serializerImpl.addField(
-                "manifest",
-                "manifest",
-                2,
-                skirout.editor.v1.compiled_content.CompiledBlobPointer.serializer,
-                "",
-                { it.manifest },
-                { mut, v -> mut.manifest = v },
-            );
-            serializerImpl.addField(
-                "artifacts",
-                "artifacts",
-                3,
-                build.skir.Serializers.list(
-                    skirout.editor.v1.compiled_content.CompiledArtifactPointer.serializer,
-                ),
-                "",
-                { it.artifacts },
-                { mut, v -> mut.artifacts = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.CompiledContentActivationSerializerImpl.typeDescriptor;
     }
 }
 
@@ -940,10 +769,6 @@ sealed class CompiledResourceState private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return Kind.NOT_COMPILED_CONST.ordinal;
-        }
-
-        init {
-            _maybeFinalizeSerializer();
         }
     }
 
@@ -990,7 +815,7 @@ sealed class CompiledResourceState private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.compiled_content.CompiledResourceState._serializerImpl,
+            _SerializerRegistry.CompiledResourceStateSerializerImpl,
         )
     }
 
@@ -1027,61 +852,11 @@ sealed class CompiledResourceState private constructor() {
             )
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.editor.v1.compiled_content.CompiledResourceState, Unknown>(
-                recordId = "editor/v1/compiled_content.skir:CompiledResourceState",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [CompiledResourceState] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.CompiledResourceStateSerializer;
 
         /** Describes the [CompiledResourceState] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            NOT_COMPILED;
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 2) {
-                _serializerImpl.addConstantVariant(
-                    1,
-                    "not_compiled",
-                    Kind.NOT_COMPILED_CONST.ordinal,
-                    "",
-                    NOT_COMPILED,
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "active",
-                    Kind.ACTIVE_WRAPPER.ordinal,
-                    skirout.editor.v1.compiled_content.CompiledResourceState.Active.serializer,
-                    "",
-                    { ActiveWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
-                    "blocked",
-                    Kind.BLOCKED_WRAPPER.ordinal,
-                    skirout.editor.v1.compiled_content.CompiledResourceState.Blocked.serializer,
-                    "",
-                    { BlockedWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.CompiledResourceStateSerializerImpl.typeDescriptor;
     }
 
     sealed interface Active_OrMutable {
@@ -1094,7 +869,7 @@ sealed class CompiledResourceState private constructor() {
     @kotlin.Suppress("UNUSED_PARAMETER")
     class Active private constructor(
         override val manifestId: kotlin.String,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledResourceState.Active>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledResourceState.Active>? =
             null,
     ): skirout.editor.v1.compiled_content.CompiledResourceState.Active_OrMutable {
         constructor(
@@ -1141,7 +916,7 @@ sealed class CompiledResourceState private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.editor.v1.compiled_content.CompiledResourceState.Active.serializerImpl,
+                _SerializerRegistry.CompiledResourceState_ActiveSerializerImpl,
             )
         }
 
@@ -1185,34 +960,11 @@ sealed class CompiledResourceState private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "editor/v1/compiled_content.skir:CompiledResourceState.Active",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [Active] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.CompiledResourceState_ActiveSerializer;
 
             /** Describes the [Active] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "manifest_id",
-                    "manifestId",
-                    0,
-                    build.skir.Serializers.string,
-                    "",
-                    { it.manifestId },
-                    { mut, v -> mut.manifestId = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.CompiledResourceState_ActiveSerializerImpl.typeDescriptor;
         }
     }
 
@@ -1228,7 +980,7 @@ sealed class CompiledResourceState private constructor() {
     class Blocked private constructor(
         override val lastActiveManifestId: kotlin.String?,
         override val diagnosticCount: kotlin.Int,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledResourceState.Blocked>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledResourceState.Blocked>? =
             null,
     ): skirout.editor.v1.compiled_content.CompiledResourceState.Blocked_OrMutable {
         constructor(
@@ -1281,7 +1033,7 @@ sealed class CompiledResourceState private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.editor.v1.compiled_content.CompiledResourceState.Blocked.serializerImpl,
+                _SerializerRegistry.CompiledResourceState_BlockedSerializerImpl,
             )
         }
 
@@ -1332,45 +1084,11 @@ sealed class CompiledResourceState private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "editor/v1/compiled_content.skir:CompiledResourceState.Blocked",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [Blocked] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.CompiledResourceState_BlockedSerializer;
 
             /** Describes the [Blocked] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "last_active_manifest_id",
-                    "lastActiveManifestId",
-                    0,
-                    build.skir.Serializers.optional(
-                        build.skir.Serializers.string,
-                    ),
-                    "",
-                    { it.lastActiveManifestId },
-                    { mut, v -> mut.lastActiveManifestId = v },
-                );
-                serializerImpl.addField(
-                    "diagnostic_count",
-                    "diagnosticCount",
-                    1,
-                    build.skir.Serializers.int32,
-                    "",
-                    { it.diagnosticCount },
-                    { mut, v -> mut.diagnosticCount = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.CompiledResourceState_BlockedSerializerImpl.typeDescriptor;
         }
     }
 }
@@ -1387,7 +1105,7 @@ sealed interface CompiledResourceStatus_OrMutable {
 class CompiledResourceStatus private constructor(
     override val root: skirout.editor.v1.compiled_content.CompilationRoot,
     override val state: skirout.editor.v1.compiled_content.CompiledResourceState,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledResourceStatus>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledResourceStatus>? =
         null,
 ): skirout.editor.v1.compiled_content.CompiledResourceStatus_OrMutable {
     constructor(
@@ -1440,7 +1158,7 @@ class CompiledResourceStatus private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.compiled_content.CompiledResourceStatus.serializerImpl,
+            _SerializerRegistry.CompiledResourceStatusSerializerImpl,
         )
     }
 
@@ -1507,43 +1225,11 @@ class CompiledResourceStatus private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/compiled_content.skir:CompiledResourceStatus",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [CompiledResourceStatus] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.CompiledResourceStatusSerializer;
 
         /** Describes the [CompiledResourceStatus] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "root",
-                "root",
-                0,
-                skirout.editor.v1.compiled_content.CompilationRoot.serializer,
-                "",
-                { it.root },
-                { mut, v -> mut.root = v },
-            );
-            serializerImpl.addField(
-                "state",
-                "state",
-                1,
-                skirout.editor.v1.compiled_content.CompiledResourceState.serializer,
-                "",
-                { it.state },
-                { mut, v -> mut.state = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.CompiledResourceStatusSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1614,7 +1300,7 @@ sealed class CompiledResourceStateChange private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.compiled_content.CompiledResourceStateChange._serializerImpl,
+            _SerializerRegistry.CompiledResourceStateChangeSerializerImpl,
         )
     }
 
@@ -1653,53 +1339,11 @@ sealed class CompiledResourceStateChange private constructor() {
             )
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.editor.v1.compiled_content.CompiledResourceStateChange, Unknown>(
-                recordId = "editor/v1/compiled_content.skir:CompiledResourceStateChange",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [CompiledResourceStateChange] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.CompiledResourceStateChangeSerializer;
 
         /** Describes the [CompiledResourceStateChange] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "upsert",
-                    Kind.UPSERT_WRAPPER.ordinal,
-                    skirout.editor.v1.compiled_content.CompiledResourceStateChange.Upsert.serializer,
-                    "",
-                    { UpsertWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "remove",
-                    Kind.REMOVE_WRAPPER.ordinal,
-                    skirout.editor.v1.compiled_content.CompilationRoot.serializer,
-                    "",
-                    { RemoveWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.CompiledResourceStateChangeSerializerImpl.typeDescriptor;
     }
 
     sealed interface Upsert_OrMutable {
@@ -1714,7 +1358,7 @@ sealed class CompiledResourceStateChange private constructor() {
     class Upsert private constructor(
         override val root: skirout.editor.v1.compiled_content.CompilationRoot,
         override val state: skirout.editor.v1.compiled_content.CompiledResourceState,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledResourceStateChange.Upsert>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledResourceStateChange.Upsert>? =
             null,
     ): skirout.editor.v1.compiled_content.CompiledResourceStateChange.Upsert_OrMutable {
         constructor(
@@ -1767,7 +1411,7 @@ sealed class CompiledResourceStateChange private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.editor.v1.compiled_content.CompiledResourceStateChange.Upsert.serializerImpl,
+                _SerializerRegistry.CompiledResourceStateChange_UpsertSerializerImpl,
             )
         }
 
@@ -1834,43 +1478,11 @@ sealed class CompiledResourceStateChange private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "editor/v1/compiled_content.skir:CompiledResourceStateChange.Upsert",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [Upsert] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.CompiledResourceStateChange_UpsertSerializer;
 
             /** Describes the [Upsert] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "root",
-                    "root",
-                    0,
-                    skirout.editor.v1.compiled_content.CompilationRoot.serializer,
-                    "",
-                    { it.root },
-                    { mut, v -> mut.root = v },
-                );
-                serializerImpl.addField(
-                    "state",
-                    "state",
-                    1,
-                    skirout.editor.v1.compiled_content.CompiledResourceState.serializer,
-                    "",
-                    { it.state },
-                    { mut, v -> mut.state = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.CompiledResourceStateChange_UpsertSerializerImpl.typeDescriptor;
         }
     }
 }
@@ -1889,7 +1501,7 @@ class CompiledContentChanged private constructor(
     override val generation: skirout.editor.v1.type_catalog.CatalogGeneration,
     override val sourceSequence: kotlin.Long,
     override val states: kotlin.collections.List<skirout.editor.v1.compiled_content.CompiledResourceStateChange>,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledContentChanged>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledContentChanged>? =
         null,
 ): skirout.editor.v1.compiled_content.CompiledContentChanged_OrMutable {
     constructor(
@@ -1948,7 +1560,7 @@ class CompiledContentChanged private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.compiled_content.CompiledContentChanged.serializerImpl,
+            _SerializerRegistry.CompiledContentChangedSerializerImpl,
         )
     }
 
@@ -2038,54 +1650,11 @@ class CompiledContentChanged private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/compiled_content.skir:CompiledContentChanged",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [CompiledContentChanged] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.CompiledContentChangedSerializer;
 
         /** Describes the [CompiledContentChanged] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "generation",
-                "generation",
-                0,
-                skirout.editor.v1.type_catalog.CatalogGeneration.serializer,
-                "",
-                { it.generation },
-                { mut, v -> mut.generation = v },
-            );
-            serializerImpl.addField(
-                "source_sequence",
-                "sourceSequence",
-                1,
-                build.skir.Serializers.int64,
-                "",
-                { it.sourceSequence },
-                { mut, v -> mut.sourceSequence = v },
-            );
-            serializerImpl.addField(
-                "states",
-                "states",
-                2,
-                build.skir.Serializers.list(
-                    skirout.editor.v1.compiled_content.CompiledResourceStateChange.serializer,
-                ),
-                "",
-                { it.states },
-                { mut, v -> mut.states = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.CompiledContentChangedSerializerImpl.typeDescriptor;
     }
 }
 
@@ -2096,7 +1665,7 @@ sealed interface WatchCompiledContentRequest_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class WatchCompiledContentRequest private constructor(
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.WatchCompiledContentRequest>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.WatchCompiledContentRequest>? =
         null,
 ): skirout.editor.v1.compiled_content.WatchCompiledContentRequest_OrMutable {
     constructor(
@@ -2125,7 +1694,7 @@ class WatchCompiledContentRequest private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.compiled_content.WatchCompiledContentRequest.serializerImpl,
+            _SerializerRegistry.WatchCompiledContentRequestSerializerImpl,
         )
     }
 
@@ -2161,25 +1730,11 @@ class WatchCompiledContentRequest private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/compiled_content.skir:WatchCompiledContentRequest",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [WatchCompiledContentRequest] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.WatchCompiledContentRequestSerializer;
 
         /** Describes the [WatchCompiledContentRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.WatchCompiledContentRequestSerializerImpl.typeDescriptor;
     }
 }
 
@@ -2288,7 +1843,7 @@ sealed class WatchCompiledContentResponse private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.compiled_content.WatchCompiledContentResponse._serializerImpl,
+            _SerializerRegistry.WatchCompiledContentResponseSerializerImpl,
         )
     }
 
@@ -2347,71 +1902,11 @@ sealed class WatchCompiledContentResponse private constructor() {
             skirout.kernel.v1.errors.InternalError()
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.editor.v1.compiled_content.WatchCompiledContentResponse, Unknown>(
-                recordId = "editor/v1/compiled_content.skir:WatchCompiledContentResponse",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [WatchCompiledContentResponse] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.WatchCompiledContentResponseSerializer;
 
         /** Describes the [WatchCompiledContentResponse] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "initial",
-                    Kind.INITIAL_WRAPPER.ordinal,
-                    skirout.editor.v1.compiled_content.WatchCompiledContentResponse.Initial.serializer,
-                    "",
-                    { InitialWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "activated",
-                    Kind.ACTIVATED_WRAPPER.ordinal,
-                    skirout.editor.v1.compiled_content.CompiledContentActivation.serializer,
-                    "",
-                    { ActivatedWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
-                    "blocked",
-                    Kind.BLOCKED_WRAPPER.ordinal,
-                    skirout.editor.v1.compiled_content.WatchCompiledContentResponse.Blocked.serializer,
-                    "",
-                    { BlockedWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    4,
-                    "internal_error",
-                    Kind.INTERNAL_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InternalError.serializer,
-                    "",
-                    { InternalErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.WatchCompiledContentResponseSerializerImpl.typeDescriptor;
     }
 
     sealed interface Initial_OrMutable {
@@ -2424,7 +1919,7 @@ sealed class WatchCompiledContentResponse private constructor() {
     @kotlin.Suppress("UNUSED_PARAMETER")
     class Initial private constructor(
         override val activation: skirout.editor.v1.compiled_content.CompiledContentActivation?,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.WatchCompiledContentResponse.Initial>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.WatchCompiledContentResponse.Initial>? =
             null,
     ): skirout.editor.v1.compiled_content.WatchCompiledContentResponse.Initial_OrMutable {
         constructor(
@@ -2471,7 +1966,7 @@ sealed class WatchCompiledContentResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.editor.v1.compiled_content.WatchCompiledContentResponse.Initial.serializerImpl,
+                _SerializerRegistry.WatchCompiledContentResponse_InitialSerializerImpl,
             )
         }
 
@@ -2515,36 +2010,11 @@ sealed class WatchCompiledContentResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "editor/v1/compiled_content.skir:WatchCompiledContentResponse.Initial",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [Initial] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.WatchCompiledContentResponse_InitialSerializer;
 
             /** Describes the [Initial] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "activation",
-                    "activation",
-                    0,
-                    build.skir.Serializers.optional(
-                        skirout.editor.v1.compiled_content.CompiledContentActivation.serializer,
-                    ),
-                    "",
-                    { it.activation },
-                    { mut, v -> mut.activation = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.WatchCompiledContentResponse_InitialSerializerImpl.typeDescriptor;
         }
     }
 
@@ -2555,7 +2025,7 @@ sealed class WatchCompiledContentResponse private constructor() {
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class Blocked private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.WatchCompiledContentResponse.Blocked>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.WatchCompiledContentResponse.Blocked>? =
             null,
     ): skirout.editor.v1.compiled_content.WatchCompiledContentResponse.Blocked_OrMutable {
         constructor(
@@ -2584,7 +2054,7 @@ sealed class WatchCompiledContentResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.editor.v1.compiled_content.WatchCompiledContentResponse.Blocked.serializerImpl,
+                _SerializerRegistry.WatchCompiledContentResponse_BlockedSerializerImpl,
             )
         }
 
@@ -2620,25 +2090,11 @@ sealed class WatchCompiledContentResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "editor/v1/compiled_content.skir:WatchCompiledContentResponse.Blocked",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [Blocked] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.WatchCompiledContentResponse_BlockedSerializer;
 
             /** Describes the [Blocked] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.WatchCompiledContentResponse_BlockedSerializerImpl.typeDescriptor;
         }
     }
 }
@@ -2653,7 +2109,7 @@ sealed interface QueryCompiledResourceStatusRequest_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class QueryCompiledResourceStatusRequest private constructor(
     override val roots: kotlin.collections.List<skirout.editor.v1.compiled_content.CompilationRoot>,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.QueryCompiledResourceStatusRequest>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.QueryCompiledResourceStatusRequest>? =
         null,
 ): skirout.editor.v1.compiled_content.QueryCompiledResourceStatusRequest_OrMutable {
     constructor(
@@ -2700,7 +2156,7 @@ class QueryCompiledResourceStatusRequest private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.compiled_content.QueryCompiledResourceStatusRequest.serializerImpl,
+            _SerializerRegistry.QueryCompiledResourceStatusRequestSerializerImpl,
         )
     }
 
@@ -2760,36 +2216,11 @@ class QueryCompiledResourceStatusRequest private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/compiled_content.skir:QueryCompiledResourceStatusRequest",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [QueryCompiledResourceStatusRequest] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.QueryCompiledResourceStatusRequestSerializer;
 
         /** Describes the [QueryCompiledResourceStatusRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "roots",
-                "roots",
-                0,
-                build.skir.Serializers.list(
-                    skirout.editor.v1.compiled_content.CompilationRoot.serializer,
-                ),
-                "",
-                { it.roots },
-                { mut, v -> mut.roots = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.QueryCompiledResourceStatusRequestSerializerImpl.typeDescriptor;
     }
 }
 
@@ -2860,7 +2291,7 @@ sealed class QueryCompiledResourceStatusResponse private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse._serializerImpl,
+            _SerializerRegistry.QueryCompiledResourceStatusResponseSerializerImpl,
         )
     }
 
@@ -2892,53 +2323,11 @@ sealed class QueryCompiledResourceStatusResponse private constructor() {
             skirout.kernel.v1.errors.InternalError()
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse, Unknown>(
-                recordId = "editor/v1/compiled_content.skir:QueryCompiledResourceStatusResponse",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [QueryCompiledResourceStatusResponse] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.QueryCompiledResourceStatusResponseSerializer;
 
         /** Describes the [QueryCompiledResourceStatusResponse] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "success",
-                    Kind.SUCCESS_WRAPPER.ordinal,
-                    skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse.Success.serializer,
-                    "",
-                    { SuccessWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "internal_error",
-                    Kind.INTERNAL_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InternalError.serializer,
-                    "",
-                    { InternalErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.QueryCompiledResourceStatusResponseSerializerImpl.typeDescriptor;
     }
 
     sealed interface Success_OrMutable {
@@ -2951,7 +2340,7 @@ sealed class QueryCompiledResourceStatusResponse private constructor() {
     @kotlin.Suppress("UNUSED_PARAMETER")
     class Success private constructor(
         override val statuses: kotlin.collections.List<skirout.editor.v1.compiled_content.CompiledResourceStatus>,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse.Success>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse.Success>? =
             null,
     ): skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse.Success_OrMutable {
         constructor(
@@ -2998,7 +2387,7 @@ sealed class QueryCompiledResourceStatusResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse.Success.serializerImpl,
+                _SerializerRegistry.QueryCompiledResourceStatusResponse_SuccessSerializerImpl,
             )
         }
 
@@ -3058,36 +2447,11 @@ sealed class QueryCompiledResourceStatusResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "editor/v1/compiled_content.skir:QueryCompiledResourceStatusResponse.Success",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [Success] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.QueryCompiledResourceStatusResponse_SuccessSerializer;
 
             /** Describes the [Success] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "statuses",
-                    "statuses",
-                    0,
-                    build.skir.Serializers.list(
-                        skirout.editor.v1.compiled_content.CompiledResourceStatus.serializer,
-                    ),
-                    "",
-                    { it.statuses },
-                    { mut, v -> mut.statuses = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.QueryCompiledResourceStatusResponse_SuccessSerializerImpl.typeDescriptor;
         }
     }
 }
@@ -3116,4 +2480,603 @@ val QueryCompiledResourceStatus: build.skir.service.Method<
         skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse.serializer,
         "",
     )
+}
+
+private object _SerializerRegistry {
+    val CompilationProjectionIdSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/compiled_content.skir:CompilationProjectionId",
+        doc = "",
+        defaultInstance = skirout.editor.v1.compiled_content.CompilationProjectionId.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.CompilationProjectionId.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val CompilationProjectionIdSerializer = build.skir.internal.makeSerializer(CompilationProjectionIdSerializerImpl);
+
+    val CompilationRootSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/compiled_content.skir:CompilationRoot",
+        doc = "",
+        defaultInstance = skirout.editor.v1.compiled_content.CompilationRoot.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.CompilationRoot.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val CompilationRootSerializer = build.skir.internal.makeSerializer(CompilationRootSerializerImpl);
+
+    val CompiledArtifactPointerSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/compiled_content.skir:CompiledArtifactPointer",
+        doc = "",
+        defaultInstance = skirout.editor.v1.compiled_content.CompiledArtifactPointer.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.CompiledArtifactPointer.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val CompiledArtifactPointerSerializer = build.skir.internal.makeSerializer(CompiledArtifactPointerSerializerImpl);
+
+    val CompiledBlobPointerSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/compiled_content.skir:CompiledBlobPointer",
+        doc = "",
+        defaultInstance = skirout.editor.v1.compiled_content.CompiledBlobPointer.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.CompiledBlobPointer.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val CompiledBlobPointerSerializer = build.skir.internal.makeSerializer(CompiledBlobPointerSerializerImpl);
+
+    val CompiledContentActivationSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/compiled_content.skir:CompiledContentActivation",
+        doc = "",
+        defaultInstance = skirout.editor.v1.compiled_content.CompiledContentActivation.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.CompiledContentActivation.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val CompiledContentActivationSerializer = build.skir.internal.makeSerializer(CompiledContentActivationSerializerImpl);
+
+    val CompiledContentChangedSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/compiled_content.skir:CompiledContentChanged",
+        doc = "",
+        defaultInstance = skirout.editor.v1.compiled_content.CompiledContentChanged.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.CompiledContentChanged.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val CompiledContentChangedSerializer = build.skir.internal.makeSerializer(CompiledContentChangedSerializerImpl);
+
+    val CompiledResourceStateSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.compiled_content.CompiledResourceState, skirout.editor.v1.compiled_content.CompiledResourceState.Unknown>(
+            recordId = "editor/v1/compiled_content.skir:CompiledResourceState",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.compiled_content.CompiledResourceState.Kind.values().size,
+            unknownInstance = skirout.editor.v1.compiled_content.CompiledResourceState.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.compiled_content.CompiledResourceState.Unknown(skirout.editor.v1.compiled_content.CompiledResourceState.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val CompiledResourceStateSerializer = build.skir.internal.makeSerializer(CompiledResourceStateSerializerImpl);
+
+    val CompiledResourceState_ActiveSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/compiled_content.skir:CompiledResourceState.Active",
+        doc = "",
+        defaultInstance = skirout.editor.v1.compiled_content.CompiledResourceState.Active.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.CompiledResourceState.Active.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val CompiledResourceState_ActiveSerializer = build.skir.internal.makeSerializer(CompiledResourceState_ActiveSerializerImpl);
+
+    val CompiledResourceState_BlockedSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/compiled_content.skir:CompiledResourceState.Blocked",
+        doc = "",
+        defaultInstance = skirout.editor.v1.compiled_content.CompiledResourceState.Blocked.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.CompiledResourceState.Blocked.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val CompiledResourceState_BlockedSerializer = build.skir.internal.makeSerializer(CompiledResourceState_BlockedSerializerImpl);
+
+    val CompiledResourceStateChangeSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.compiled_content.CompiledResourceStateChange, skirout.editor.v1.compiled_content.CompiledResourceStateChange.Unknown>(
+            recordId = "editor/v1/compiled_content.skir:CompiledResourceStateChange",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.compiled_content.CompiledResourceStateChange.Kind.values().size,
+            unknownInstance = skirout.editor.v1.compiled_content.CompiledResourceStateChange.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.compiled_content.CompiledResourceStateChange.Unknown(skirout.editor.v1.compiled_content.CompiledResourceStateChange.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val CompiledResourceStateChangeSerializer = build.skir.internal.makeSerializer(CompiledResourceStateChangeSerializerImpl);
+
+    val CompiledResourceStateChange_UpsertSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/compiled_content.skir:CompiledResourceStateChange.Upsert",
+        doc = "",
+        defaultInstance = skirout.editor.v1.compiled_content.CompiledResourceStateChange.Upsert.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.CompiledResourceStateChange.Upsert.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val CompiledResourceStateChange_UpsertSerializer = build.skir.internal.makeSerializer(CompiledResourceStateChange_UpsertSerializerImpl);
+
+    val CompiledResourceStatusSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/compiled_content.skir:CompiledResourceStatus",
+        doc = "",
+        defaultInstance = skirout.editor.v1.compiled_content.CompiledResourceStatus.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.CompiledResourceStatus.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val CompiledResourceStatusSerializer = build.skir.internal.makeSerializer(CompiledResourceStatusSerializerImpl);
+
+    val QueryCompiledResourceStatusRequestSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/compiled_content.skir:QueryCompiledResourceStatusRequest",
+        doc = "",
+        defaultInstance = skirout.editor.v1.compiled_content.QueryCompiledResourceStatusRequest.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.QueryCompiledResourceStatusRequest.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val QueryCompiledResourceStatusRequestSerializer = build.skir.internal.makeSerializer(QueryCompiledResourceStatusRequestSerializerImpl);
+
+    val QueryCompiledResourceStatusResponseSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse, skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse.Unknown>(
+            recordId = "editor/v1/compiled_content.skir:QueryCompiledResourceStatusResponse",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse.Kind.values().size,
+            unknownInstance = skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse.Unknown(skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val QueryCompiledResourceStatusResponseSerializer = build.skir.internal.makeSerializer(QueryCompiledResourceStatusResponseSerializerImpl);
+
+    val QueryCompiledResourceStatusResponse_SuccessSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/compiled_content.skir:QueryCompiledResourceStatusResponse.Success",
+        doc = "",
+        defaultInstance = skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse.Success.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse.Success.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val QueryCompiledResourceStatusResponse_SuccessSerializer = build.skir.internal.makeSerializer(QueryCompiledResourceStatusResponse_SuccessSerializerImpl);
+
+    val WatchCompiledContentRequestSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/compiled_content.skir:WatchCompiledContentRequest",
+        doc = "",
+        defaultInstance = skirout.editor.v1.compiled_content.WatchCompiledContentRequest.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.WatchCompiledContentRequest.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val WatchCompiledContentRequestSerializer = build.skir.internal.makeSerializer(WatchCompiledContentRequestSerializerImpl);
+
+    val WatchCompiledContentResponseSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.compiled_content.WatchCompiledContentResponse, skirout.editor.v1.compiled_content.WatchCompiledContentResponse.Unknown>(
+            recordId = "editor/v1/compiled_content.skir:WatchCompiledContentResponse",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.compiled_content.WatchCompiledContentResponse.Kind.values().size,
+            unknownInstance = skirout.editor.v1.compiled_content.WatchCompiledContentResponse.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.compiled_content.WatchCompiledContentResponse.Unknown(skirout.editor.v1.compiled_content.WatchCompiledContentResponse.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val WatchCompiledContentResponseSerializer = build.skir.internal.makeSerializer(WatchCompiledContentResponseSerializerImpl);
+
+    val WatchCompiledContentResponse_BlockedSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/compiled_content.skir:WatchCompiledContentResponse.Blocked",
+        doc = "",
+        defaultInstance = skirout.editor.v1.compiled_content.WatchCompiledContentResponse.Blocked.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.WatchCompiledContentResponse.Blocked.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val WatchCompiledContentResponse_BlockedSerializer = build.skir.internal.makeSerializer(WatchCompiledContentResponse_BlockedSerializerImpl);
+
+    val WatchCompiledContentResponse_InitialSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/compiled_content.skir:WatchCompiledContentResponse.Initial",
+        doc = "",
+        defaultInstance = skirout.editor.v1.compiled_content.WatchCompiledContentResponse.Initial.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.WatchCompiledContentResponse.Initial.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val WatchCompiledContentResponse_InitialSerializer = build.skir.internal.makeSerializer(WatchCompiledContentResponse_InitialSerializerImpl);
+
+    init {
+        CompilationProjectionIdSerializerImpl.addField(
+            "value",
+            "value",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.value },
+            { mut, v -> mut.value = v },
+        );
+        CompilationProjectionIdSerializerImpl.finalizeStruct();
+
+        CompilationRootSerializerImpl.addField(
+            "projection",
+            "projection",
+            0,
+            _SerializerRegistry.CompilationProjectionIdSerializer,
+            "",
+            { it.projection },
+            { mut, v -> mut.projection = v },
+        );
+        CompilationRootSerializerImpl.addField(
+            "resource",
+            "resource",
+            1,
+            skirout.editor.v1.type_catalog.ResourceId.serializer,
+            "",
+            { it.resource },
+            { mut, v -> mut.resource = v },
+        );
+        CompilationRootSerializerImpl.finalizeStruct();
+
+        CompiledArtifactPointerSerializerImpl.addField(
+            "semantic_digest",
+            "semanticDigest",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.semanticDigest },
+            { mut, v -> mut.semanticDigest = v },
+        );
+        CompiledArtifactPointerSerializerImpl.addField(
+            "blob",
+            "blob",
+            1,
+            _SerializerRegistry.CompiledBlobPointerSerializer,
+            "",
+            { it.blob },
+            { mut, v -> mut.blob = v },
+        );
+        CompiledArtifactPointerSerializerImpl.finalizeStruct();
+
+        CompiledBlobPointerSerializerImpl.addField(
+            "digest",
+            "digest",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.digest },
+            { mut, v -> mut.digest = v },
+        );
+        CompiledBlobPointerSerializerImpl.addField(
+            "size",
+            "size",
+            1,
+            build.skir.Serializers.int64,
+            "",
+            { it.size },
+            { mut, v -> mut.size = v },
+        );
+        CompiledBlobPointerSerializerImpl.finalizeStruct();
+
+        CompiledContentActivationSerializerImpl.addField(
+            "activation_revision",
+            "activationRevision",
+            0,
+            build.skir.Serializers.int64,
+            "",
+            { it.activationRevision },
+            { mut, v -> mut.activationRevision = v },
+        );
+        CompiledContentActivationSerializerImpl.addField(
+            "manifest_digest",
+            "manifestDigest",
+            1,
+            build.skir.Serializers.string,
+            "",
+            { it.manifestDigest },
+            { mut, v -> mut.manifestDigest = v },
+        );
+        CompiledContentActivationSerializerImpl.addField(
+            "manifest",
+            "manifest",
+            2,
+            _SerializerRegistry.CompiledBlobPointerSerializer,
+            "",
+            { it.manifest },
+            { mut, v -> mut.manifest = v },
+        );
+        CompiledContentActivationSerializerImpl.addField(
+            "artifacts",
+            "artifacts",
+            3,
+            build.skir.Serializers.list(
+                _SerializerRegistry.CompiledArtifactPointerSerializer,
+            ),
+            "",
+            { it.artifacts },
+            { mut, v -> mut.artifacts = v },
+        );
+        CompiledContentActivationSerializerImpl.finalizeStruct();
+
+        CompiledContentChangedSerializerImpl.addField(
+            "generation",
+            "generation",
+            0,
+            skirout.editor.v1.type_catalog.CatalogGeneration.serializer,
+            "",
+            { it.generation },
+            { mut, v -> mut.generation = v },
+        );
+        CompiledContentChangedSerializerImpl.addField(
+            "source_sequence",
+            "sourceSequence",
+            1,
+            build.skir.Serializers.int64,
+            "",
+            { it.sourceSequence },
+            { mut, v -> mut.sourceSequence = v },
+        );
+        CompiledContentChangedSerializerImpl.addField(
+            "states",
+            "states",
+            2,
+            build.skir.Serializers.list(
+                _SerializerRegistry.CompiledResourceStateChangeSerializer,
+            ),
+            "",
+            { it.states },
+            { mut, v -> mut.states = v },
+        );
+        CompiledContentChangedSerializerImpl.finalizeStruct();
+
+        CompiledResourceStateSerializerImpl.addConstantVariant(
+            1,
+            "not_compiled",
+            skirout.editor.v1.compiled_content.CompiledResourceState.Kind.NOT_COMPILED_CONST.ordinal,
+            "",
+            skirout.editor.v1.compiled_content.CompiledResourceState.NOT_COMPILED,
+        );
+        CompiledResourceStateSerializerImpl.addWrapperVariant(
+            2,
+            "active",
+            skirout.editor.v1.compiled_content.CompiledResourceState.Kind.ACTIVE_WRAPPER.ordinal,
+            _SerializerRegistry.CompiledResourceState_ActiveSerializer,
+            "",
+            { skirout.editor.v1.compiled_content.CompiledResourceState.ActiveWrapper(it) },
+            { it.value },
+        );
+        CompiledResourceStateSerializerImpl.addWrapperVariant(
+            3,
+            "blocked",
+            skirout.editor.v1.compiled_content.CompiledResourceState.Kind.BLOCKED_WRAPPER.ordinal,
+            _SerializerRegistry.CompiledResourceState_BlockedSerializer,
+            "",
+            { skirout.editor.v1.compiled_content.CompiledResourceState.BlockedWrapper(it) },
+            { it.value },
+        );
+        CompiledResourceStateSerializerImpl.finalizeEnum();
+
+        CompiledResourceState_ActiveSerializerImpl.addField(
+            "manifest_id",
+            "manifestId",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.manifestId },
+            { mut, v -> mut.manifestId = v },
+        );
+        CompiledResourceState_ActiveSerializerImpl.finalizeStruct();
+
+        CompiledResourceState_BlockedSerializerImpl.addField(
+            "last_active_manifest_id",
+            "lastActiveManifestId",
+            0,
+            build.skir.Serializers.optional(
+                build.skir.Serializers.string,
+            ),
+            "",
+            { it.lastActiveManifestId },
+            { mut, v -> mut.lastActiveManifestId = v },
+        );
+        CompiledResourceState_BlockedSerializerImpl.addField(
+            "diagnostic_count",
+            "diagnosticCount",
+            1,
+            build.skir.Serializers.int32,
+            "",
+            { it.diagnosticCount },
+            { mut, v -> mut.diagnosticCount = v },
+        );
+        CompiledResourceState_BlockedSerializerImpl.finalizeStruct();
+
+        CompiledResourceStateChangeSerializerImpl.addWrapperVariant(
+            1,
+            "upsert",
+            skirout.editor.v1.compiled_content.CompiledResourceStateChange.Kind.UPSERT_WRAPPER.ordinal,
+            _SerializerRegistry.CompiledResourceStateChange_UpsertSerializer,
+            "",
+            { skirout.editor.v1.compiled_content.CompiledResourceStateChange.UpsertWrapper(it) },
+            { it.value },
+        );
+        CompiledResourceStateChangeSerializerImpl.addWrapperVariant(
+            2,
+            "remove",
+            skirout.editor.v1.compiled_content.CompiledResourceStateChange.Kind.REMOVE_WRAPPER.ordinal,
+            _SerializerRegistry.CompilationRootSerializer,
+            "",
+            { skirout.editor.v1.compiled_content.CompiledResourceStateChange.RemoveWrapper(it) },
+            { it.value },
+        );
+        CompiledResourceStateChangeSerializerImpl.finalizeEnum();
+
+        CompiledResourceStateChange_UpsertSerializerImpl.addField(
+            "root",
+            "root",
+            0,
+            _SerializerRegistry.CompilationRootSerializer,
+            "",
+            { it.root },
+            { mut, v -> mut.root = v },
+        );
+        CompiledResourceStateChange_UpsertSerializerImpl.addField(
+            "state",
+            "state",
+            1,
+            _SerializerRegistry.CompiledResourceStateSerializer,
+            "",
+            { it.state },
+            { mut, v -> mut.state = v },
+        );
+        CompiledResourceStateChange_UpsertSerializerImpl.finalizeStruct();
+
+        CompiledResourceStatusSerializerImpl.addField(
+            "root",
+            "root",
+            0,
+            _SerializerRegistry.CompilationRootSerializer,
+            "",
+            { it.root },
+            { mut, v -> mut.root = v },
+        );
+        CompiledResourceStatusSerializerImpl.addField(
+            "state",
+            "state",
+            1,
+            _SerializerRegistry.CompiledResourceStateSerializer,
+            "",
+            { it.state },
+            { mut, v -> mut.state = v },
+        );
+        CompiledResourceStatusSerializerImpl.finalizeStruct();
+
+        QueryCompiledResourceStatusRequestSerializerImpl.addField(
+            "roots",
+            "roots",
+            0,
+            build.skir.Serializers.list(
+                _SerializerRegistry.CompilationRootSerializer,
+            ),
+            "",
+            { it.roots },
+            { mut, v -> mut.roots = v },
+        );
+        QueryCompiledResourceStatusRequestSerializerImpl.finalizeStruct();
+
+        QueryCompiledResourceStatusResponseSerializerImpl.addWrapperVariant(
+            1,
+            "success",
+            skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse.Kind.SUCCESS_WRAPPER.ordinal,
+            _SerializerRegistry.QueryCompiledResourceStatusResponse_SuccessSerializer,
+            "",
+            { skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse.SuccessWrapper(it) },
+            { it.value },
+        );
+        QueryCompiledResourceStatusResponseSerializerImpl.addWrapperVariant(
+            2,
+            "internal_error",
+            skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InternalError.serializer,
+            "",
+            { skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse.InternalErrorWrapper(it) },
+            { it.value },
+        );
+        QueryCompiledResourceStatusResponseSerializerImpl.finalizeEnum();
+
+        QueryCompiledResourceStatusResponse_SuccessSerializerImpl.addField(
+            "statuses",
+            "statuses",
+            0,
+            build.skir.Serializers.list(
+                _SerializerRegistry.CompiledResourceStatusSerializer,
+            ),
+            "",
+            { it.statuses },
+            { mut, v -> mut.statuses = v },
+        );
+        QueryCompiledResourceStatusResponse_SuccessSerializerImpl.finalizeStruct();
+
+        WatchCompiledContentRequestSerializerImpl.finalizeStruct();
+
+        WatchCompiledContentResponseSerializerImpl.addWrapperVariant(
+            1,
+            "initial",
+            skirout.editor.v1.compiled_content.WatchCompiledContentResponse.Kind.INITIAL_WRAPPER.ordinal,
+            _SerializerRegistry.WatchCompiledContentResponse_InitialSerializer,
+            "",
+            { skirout.editor.v1.compiled_content.WatchCompiledContentResponse.InitialWrapper(it) },
+            { it.value },
+        );
+        WatchCompiledContentResponseSerializerImpl.addWrapperVariant(
+            2,
+            "activated",
+            skirout.editor.v1.compiled_content.WatchCompiledContentResponse.Kind.ACTIVATED_WRAPPER.ordinal,
+            _SerializerRegistry.CompiledContentActivationSerializer,
+            "",
+            { skirout.editor.v1.compiled_content.WatchCompiledContentResponse.ActivatedWrapper(it) },
+            { it.value },
+        );
+        WatchCompiledContentResponseSerializerImpl.addWrapperVariant(
+            3,
+            "blocked",
+            skirout.editor.v1.compiled_content.WatchCompiledContentResponse.Kind.BLOCKED_WRAPPER.ordinal,
+            _SerializerRegistry.WatchCompiledContentResponse_BlockedSerializer,
+            "",
+            { skirout.editor.v1.compiled_content.WatchCompiledContentResponse.BlockedWrapper(it) },
+            { it.value },
+        );
+        WatchCompiledContentResponseSerializerImpl.addWrapperVariant(
+            4,
+            "internal_error",
+            skirout.editor.v1.compiled_content.WatchCompiledContentResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InternalError.serializer,
+            "",
+            { skirout.editor.v1.compiled_content.WatchCompiledContentResponse.InternalErrorWrapper(it) },
+            { it.value },
+        );
+        WatchCompiledContentResponseSerializerImpl.finalizeEnum();
+
+        WatchCompiledContentResponse_BlockedSerializerImpl.finalizeStruct();
+
+        WatchCompiledContentResponse_InitialSerializerImpl.addField(
+            "activation",
+            "activation",
+            0,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.CompiledContentActivationSerializer,
+            ),
+            "",
+            { it.activation },
+            { mut, v -> mut.activation = v },
+        );
+        WatchCompiledContentResponse_InitialSerializerImpl.finalizeStruct();
+    }
 }

@@ -18,27 +18,29 @@ final class BookAuthoringNavigationAdapter
 
   @override
   Future<void> open(Ref ref, OpenAuthoringResourceEffect effect) async {
-    final handler = ref
-        .read(realmEditorCatalogProvider)
-        .currentCatalog
-        ?.resourceDefinitions[effect.definition]
-        ?.navigationHandler;
-    switch (handler) {
+    final ownerPath = effect._ownerPath(ref, effect.resourceId);
+    switch (effect.navigationHandler) {
       case "typewriter.book":
         await _openBook(ref, effect, effect.resourceId);
       case "typewriter.page":
-        final bookId = effect.ownerPath.firstOrNull;
+        final bookId = ownerPath.firstOrNull;
         if (bookId != null) {
           await _openBook(ref, effect, bookId, pageId: effect.resourceId);
         }
       case "typewriter.page-element":
-        final pageId = effect.ownerPath.firstOrNull;
-        final bookId = effect.ownerPath.skip(1).firstOrNull;
+        final pageId = ownerPath.firstOrNull;
+        final bookId = ownerPath.skip(1).firstOrNull;
         if (bookId == null || pageId == null) return;
         await _openBook(ref, effect, bookId, pageId: pageId);
         ref
             .read(selectionProvider.notifier)
-            .select(effect.elementIdentifier(ref, pageId));
+            .select(
+              AuthoringResourceIdentifier(
+                organizationId: effect.organizationId,
+                realmId: effect.realmId,
+                resourceId: effect.resourceId,
+              ),
+            );
     }
   }
 
@@ -60,17 +62,29 @@ final class BookAuthoringNavigationAdapter
 }
 
 extension on OpenAuthoringResourceEffect {
-  SelectableIdentifier elementIdentifier(Ref ref, skir.ResourceId pageId) {
-    final catalog = ref.read(realmEditorCatalogProvider).currentCatalog;
-    final resolved = catalog == null
-        ? null
-        : TypeRegistry(catalog.catalog).resolveExact(rootType).valueOrNull;
-    final names = {
-      rootType.id,
-      ...?resolved?.ancestors.map((type) => type.id),
-    }.whereType<QualifiedTypeId>().map((id) => id.name).toSet();
-    return names.contains("Cue")
-        ? CueIdentifier(pageId: pageId.id, id: resourceId.id)
-        : EntryIdentifier(resourceId.id, pageId: pageId.id);
+  List<skir.ResourceId> _ownerPath(Ref ref, skir.ResourceId start) {
+    final state = ref.readAuthoringSession().state;
+    final catalog = state.catalog;
+    final draft = state.draft;
+    if (catalog == null || draft == null) return const [];
+    final ownership = {
+      for (final relation in catalog.snapshot.relations)
+        if (relation.families.any(
+          (family) => family.value == "resource.ownership",
+        ))
+          relation.id,
+    };
+    final parents = {
+      for (final link in draft.links)
+        if (ownership.contains(link.contract)) link.second: link.first,
+    };
+    final path = <skir.ResourceId>[];
+    final visited = <skir.ResourceId>{start};
+    var current = parents[start];
+    while (current != null && visited.add(current)) {
+      path.add(current);
+      current = parents[current];
+    }
+    return path;
   }
 }

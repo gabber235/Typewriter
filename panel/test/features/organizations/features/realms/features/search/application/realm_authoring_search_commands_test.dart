@@ -4,133 +4,131 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
-  test("resource command retains scope and typed payload", () async {
-    final bookId = _resourceId("main");
-    final book = _payload(
-      id: bookId,
-      type: referenceResourceTypes.book,
-      definition: CoreResourceDefinitionIds.book,
+  test("resource command retains scope and canonical payload", () async {
+    final resource = skir.ResourceId(value: "book:main");
+    final definition = skir.ResourceDefinitionId(value: "typewriter.book");
+    final configuration = skir.TypeSelection.createComplete(
+      definition: _book,
+      arguments: const [],
     );
-
-    final searchResult = _result(authoringResourceSearchResultType, book);
+    final payload = _payload(
+      resource: resource,
+      definition: definition,
+      configuration: configuration,
+      navigationHandler: "typewriter.book",
+    );
+    final searchResult = SearchResult(
+      id: resource.value,
+      type: authoringResourceSearchResultType,
+      payload: payload,
+    );
     final command = openAuthoringCommands(
       _organization,
       _realm,
-    ).singleWhere((command) => command.id == openAuthoringResourceCommandId);
+    ).singleWhere((value) => value.id == openAuthoringResourceCommandId);
+
     final result = await command.execute(
       const SearchCommandExecutionContext(
         prompts: UnsupportedSearchPromptHost(),
       ),
-      _target(searchResult),
-    );
-    final effect =
-        (result as SearchCommandResultCompleted).hostEffects.single
-            as OpenAuthoringResourceEffect;
-
-    expect(effect.organizationId, _organization);
-    expect(effect.realmId, _realm);
-    expect(effect.resourceId, bookId);
-    expect(effect.definition, CoreResourceDefinitionIds.book);
-  });
-
-  test("resource command classifies Entry identifiers safely", () async {
-    final bookId = _resourceId("main");
-    final pageId = _resourceId("intro");
-    final elementId = _resourceId("greeting");
-    const entryType = ResolvedTypeRef(
-      id: TypeId.qualified(namespace: "test", name: "Entry"),
-      revision: 1,
-    );
-    final element = _payload(
-      id: elementId,
-      owner: pageId,
-      type: entryType,
-      definition: CoreResourceDefinitionIds.element,
-      context: {"book": ReferenceValue(bookId)},
-    );
-
-    final searchResult = _result(authoringResourceSearchResultType, element);
-    final command = openAuthoringCommands(
-      _organization,
-      _realm,
-    ).singleWhere((command) => command.id == openAuthoringResourceCommandId);
-    final result = await command.execute(
-      const SearchCommandExecutionContext(
-        prompts: UnsupportedSearchPromptHost(),
+      SearchCommandTarget(
+        primary: searchResult,
+        selection: [searchResult],
+        query: SearchQueryContext.empty,
       ),
-      _target(searchResult),
     );
+
     final effect =
         (result as SearchCommandResultCompleted).hostEffects.single
             as OpenAuthoringResourceEffect;
-
     expect(effect.organizationId, _organization);
     expect(effect.realmId, _realm);
-    expect(effect.resourceId, elementId);
-    expect(effect.definition, CoreResourceDefinitionIds.element);
-    expect(effect.ownerPath, [pageId, bookId]);
-    expect(effect.rootType, entryType);
+    expect(effect.resourceId, resource);
+    expect(effect.definition, definition);
+    expect(effect.configuration, configuration);
+    expect(effect.navigationHandler, "typewriter.book");
   });
 }
 
-final _organization = _id("organization", "org");
-final _realm = _id("realm", "realm");
-
-skir.RecordId _id(String table, String id) =>
-    skir.RecordId(table: table, key: skir.RecordIdKey.wrapString(id));
-
-skir.ResourceId _resourceId(String id) => skir.ResourceId(value: id);
-
-SearchResult _result(SearchResultType type, Object payload) =>
-    SearchResult(id: type.id, type: type, payload: payload);
-
-SearchCommandTarget _target(SearchResult result) => SearchCommandTarget(
-  primary: result,
-  selection: [result],
-  query: SearchQueryContext.empty,
+final _organization = _recordId("organization", "org");
+final _realm = _recordId("realm", "realm");
+final _book = skir.TypeDefinitionId(
+  typeId: skir.TypeId.createQualified(namespace: "test", name: "Book"),
+  revision: 1,
 );
 
+skir.RecordId _recordId(String table, String key) =>
+    skir.RecordId(table: table, key: skir.RecordIdKey.wrapString(key));
+
 AuthoringSearchResultPayload _payload({
-  required skir.ResourceId id,
-  required ResolvedTypeRef type,
-  required ResourceDefinitionId definition,
-  skir.ResourceId? owner,
-  Map<String, DataValue> context = const {},
+  required skir.ResourceId resource,
+  required skir.ResourceDefinitionId definition,
+  required skir.TypeSelection configuration,
+  required String navigationHandler,
 }) {
-  final catalog = TypeCatalog([
-    TypeDefinition(
-      id: type,
-      kind: NominalTypeKind.concrete,
-      representation: const RecordType(fields: {}),
+  final catalog = CheckedEditorCatalog(
+    skir.EditorCatalogWireSnapshot(
+      generation: skir.CatalogGeneration(value: "catalog:test"),
+      types: [
+        skir.PublishedType(
+          display: null,
+          definition: skir.TypeDefinition(
+            id: _book,
+            parameters: const [],
+            representation: skir.RepresentationTemplate.createRecord(
+              fields: const [],
+              abstract_: false,
+            ),
+            parents: const [],
+          ),
+          status: skir.DeclarationStatus.ready,
+          effectiveFields: const [],
+          ancestorTemplates: const [],
+        ),
+      ],
+      relations: const [],
+      resourceDefinitions: [
+        skir.AuthoringResourceDefinition(
+          id: definition,
+          root: _book,
+          navigationHandler: navigationHandler,
+        ),
+      ],
+      presentations: const [],
+      presentationMaterials: const [],
+      configuration: const [],
+      diagnostics: const [],
+      initialization: const [],
+      endpointBindings: const [],
+      capabilities: const [],
+      recommendations: const [],
+      roleFallbacks: const [],
     ),
-  ]);
-  final envelope = TypedValueEnvelope(
-    rootType: type,
-    rootValue: RecordValue({}),
+  );
+  final content = skir.AuthoringRecord(
+    configuration: configuration,
+    fields: [
+      skir.FieldValue(
+        name: "name",
+        value: skir.DataValue.wrapStringValue("Main Book"),
+      ),
+    ],
   );
   return AuthoringSearchResultPayload(
-    subject: (
-      content: envelope,
-      descriptor: envelope,
-      identityEnvelope: envelope,
-      identity: (id: id, owner: owner),
-    ),
-    context: TypedValueEnvelope(
-      rootType: type,
-      rootValue: RecordValue(context),
-    ),
-    presentation: (
-      model: PresentationModel(
-        catalog: catalog,
-        inputs: const {},
-        root: PresentationNode(
-          id: "test.search.result",
-          element: TextElement("Result".asStringLiteral),
-        ),
+    hit: skir.AuthoringSearchHit(
+      resource: resource,
+      definition: definition,
+      subject: skir.PresentationSubject(
+        resource: resource,
+        definition: definition,
+        content: content,
+        descriptor: skir.DataValue.wrapStringValue("Main Book"),
       ),
-      presentation: const PresentationId(namespace: "test", name: "result"),
+      context: skir.PortableValue(
+        actualType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+        payload: skir.DataValue.wrapStringValue("library"),
+      ),
     ),
-    definition: definition,
-    ownerPath: [?owner, if (context["book"] case ReferenceValue(:final id)) id],
+    catalog: catalog,
   );
 }

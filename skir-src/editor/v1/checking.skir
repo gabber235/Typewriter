@@ -1,0 +1,120 @@
+import { Diagnostic } from "editor/v1/diagnostic.skir";
+import { EvaluationDiagnostic } from "editor/v1/expression.skir";
+import {
+  CatalogGeneration,
+  CheckExecutionId,
+  InputToken,
+  RelationId,
+  ResourceId,
+  RuleId,
+  SelectionId,
+  SnapshotId,
+  ValueLocation,
+} from "editor/v1/type_catalog.skir";
+
+struct ValueInputIdentity(811300001) {
+  at: ValueLocation = 0;
+}
+
+struct ResourceInputIdentity(811300002) {
+  resource: ResourceId = 0;
+}
+
+struct IncomingInputIdentity(811300003) {
+  resource: ResourceId = 0;
+  relation: RelationId? = 1;
+}
+
+enum InputIdentity(811300004) {
+  value: ValueInputIdentity = 1;
+  existence: ResourceInputIdentity = 2;
+  form: ValueInputIdentity = 3;
+  membership: ValueInputIdentity = 4;
+  order: ValueInputIdentity = 5;
+  selection: SelectionId = 6;
+  incoming: IncomingInputIdentity = 7;
+  catalog: CatalogGeneration = 8;
+}
+
+struct InputObservation(811300005) {
+  identity: InputIdentity = 0;
+  token: InputToken = 1;
+}
+
+enum InspectionCompletion(811300006) {
+  complete = 1;
+  interrupted: string = 2;
+}
+
+struct UndecidedCandidate(811300007) {
+  resource: ResourceId = 0;
+  inputs: [ValueLocation] = 1;
+}
+
+enum CheckOutcome(811300008) {
+  finished = 1;
+  needs_input: [ValueLocation] = 2;
+  failed: [Diagnostic] = 3;
+  incomplete: string = 4;
+}
+
+enum FindingStatus(811300009) {
+  current = 1;
+  outdated = 2;
+}
+
+struct CheckInstanceId(811300010) {
+  rule: RuleId = 0;
+  location: ValueLocation = 1;
+}
+
+struct CheckTicket(811300011) {
+  instance: CheckInstanceId = 0;
+  incarnation: string = 1;
+  execution: CheckExecutionId = 2;
+  snapshot: SnapshotId = 3;
+  catalog: CatalogGeneration = 4;
+}
+
+struct FindingSet(811300012) {
+  ticket: CheckTicket = 0;
+  observations: [InputObservation] = 1;
+  outcome: CheckOutcome = 2;
+  findings: [Diagnostic] = 3;
+  status: FindingStatus = 4;
+}
+
+struct CapturedAcceptanceTarget(811300013) {
+  snapshot: SnapshotId = 0;
+  catalog: CatalogGeneration = 1;
+}
+
+enum CheckAdmissionTarget(811300014) {
+  current_findings = 1;
+  captured_acceptance: CapturedAcceptanceTarget = 2;
+}
+
+enum AdmissionResult(811300015) {
+  published = 1;
+  captured = 2;
+  discarded = 3;
+  retry_required = 4;
+}
+
+struct CheckResult(811300016) {
+  ticket: CheckTicket = 0;
+  outcome: CheckOutcome = 1;
+  observations: [InputObservation] = 2;
+  findings: [Diagnostic] = 3;
+}
+
+struct SelectionInspection(811300017) {
+  known_matches: [ResourceId] = 0;
+  undecided: [UndecidedCandidate] = 1;
+  completion: InspectionCompletion = 2;
+  failures: [EvaluationDiagnostic] = 3;
+}
+
+struct FindingsToken(811300018) {
+  value: string = 0;
+}

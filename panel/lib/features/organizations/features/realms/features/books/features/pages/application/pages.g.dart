@@ -66,7 +66,7 @@ final class CanonicalBookPagesProvider
 }
 
 String _$canonicalBookPagesHash() =>
-    r'6a43a0e9ebc2213caadca8095e342548a54870aa';
+    r'10b1cf8db6dc6fcf5e2d936f6ef2b2b1f78a511f';
 
 /// Retains and exposes canonical pages belonging to one book.
 ///
@@ -189,7 +189,7 @@ final class CanonicalPageProvider
   }
 }
 
-String _$canonicalPageHash() => r'ee4bd1c29ef0f9b7beaa323494d8c9c3a334358c';
+String _$canonicalPageHash() => r'9c270074ac946cdca2c916bcb98cd097a12b00c0';
 
 /// Retains one canonical page through a typed resource selection lease.
 ///
@@ -336,7 +336,7 @@ final class ProjectedBookPagesProvider
 }
 
 String _$projectedBookPagesHash() =>
-    r'6a33308159b0dcfa293cc098ff02d75cf043534e';
+    r'41778404b543723f78892885d3bb88aa9eb7a1bb';
 
 /// Produces the book page list visible to the library sidebar.
 ///
@@ -500,7 +500,7 @@ final class ProjectedPageProvider
   }
 }
 
-String _$projectedPageHash() => r'c016ba20844afb63f2a9dc30ca7d1a2146794212';
+String _$projectedPageHash() => r'4147db3f01e1bc33f6163e54dc627b6677c1854c';
 
 /// Produces one page with its current local metadata projection.
 ///

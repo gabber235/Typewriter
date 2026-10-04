@@ -1,5 +1,6 @@
 import "package:flutter/widgets.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 import "package:widgetbook_workspace/stories/features/organizations/features/realms/features/tags/presentation/tag_inheritance_presentation.stories.dart";
 
 void main() {
@@ -16,10 +17,16 @@ void main() {
   for (final MapEntry(key: name, value: story) in stories.entries) {
     testWidgets("$name inheritance story renders", (tester) async {
       await tester.pumpWidget(Builder(builder: story));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
-      expect(find.text("Inheritance"), findsOneWidget);
+      expect(find.byType(TagGraph), findsOneWidget);
+      expect(find.byType(Graph), findsOneWidget);
+      final graph = tester.widget<Graph>(find.byType(Graph));
+      expect(
+        graph.data.elements.map((element) => element.id.id),
+        contains("tag:subject"),
+      );
     });
   }
 }

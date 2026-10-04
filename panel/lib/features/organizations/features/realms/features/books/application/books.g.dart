@@ -54,7 +54,7 @@ final class CanonicalBooksProvider
   CanonicalBooks create() => CanonicalBooks();
 }
 
-String _$canonicalBooksHash() => r'e4fdf434d3852eed6dce2d4511cbcb914d58c104';
+String _$canonicalBooksHash() => r'7274354001f86b6e9a52219c87f8d1c00e760c98';
 
 /// Owns the confirmed book collection for the selected organization and realm.
 ///
@@ -323,20 +323,8 @@ final class CanonicalBookFamily extends $Family
   String toString() => r'canonicalBookProvider';
 }
 
-/// Overlays local editor values on the confirmed book collection.
-///
-/// The authoring session remains canonical. Local values belong to the
-/// resource key for the current organization and realm. An invalid projection
-/// is ignored, leaving the confirmed value visible to this view.
-
 @ProviderFor(projectedBooks)
 final projectedBooksProvider = ProjectedBooksProvider._();
-
-/// Overlays local editor values on the confirmed book collection.
-///
-/// The authoring session remains canonical. Local values belong to the
-/// resource key for the current organization and realm. An invalid projection
-/// is ignored, leaving the confirmed value visible to this view.
 
 final class ProjectedBooksProvider
     extends
@@ -346,11 +334,6 @@ final class ProjectedBooksProvider
           AsyncValue<List<Book>>
         >
     with $Provider<AsyncValue<List<Book>>> {
-  /// Overlays local editor values on the confirmed book collection.
-  ///
-  /// The authoring session remains canonical. Local values belong to the
-  /// resource key for the current organization and realm. An invalid projection
-  /// is ignored, leaving the confirmed value visible to this view.
   ProjectedBooksProvider._()
     : super(
         from: null,
@@ -385,22 +368,10 @@ final class ProjectedBooksProvider
   }
 }
 
-String _$projectedBooksHash() => r'e54b3aacde4ddc90b0a34b08879e9bf735e80152';
-
-/// Returns one book with its local editor projection, if present.
-///
-/// This is the read model for consumers that need edits before confirmation.
-/// It retains the canonical loading or missing value state until the local
-/// overlay can be applied.
+String _$projectedBooksHash() => r'cac8f331b30a57aaa6c160dacec609302d19be40';
 
 @ProviderFor(projectedBook)
 final projectedBookProvider = ProjectedBookFamily._();
-
-/// Returns one book with its local editor projection, if present.
-///
-/// This is the read model for consumers that need edits before confirmation.
-/// It retains the canonical loading or missing value state until the local
-/// overlay can be applied.
 
 final class ProjectedBookProvider
     extends
@@ -410,11 +381,6 @@ final class ProjectedBookProvider
           AsyncValue<Book?>
         >
     with $Provider<AsyncValue<Book?>> {
-  /// Returns one book with its local editor projection, if present.
-  ///
-  /// This is the read model for consumers that need edits before confirmation.
-  /// It retains the canonical loading or missing value state until the local
-  /// overlay can be applied.
   ProjectedBookProvider._({
     required ProjectedBookFamily super.from,
     required skir.ResourceId super.argument,
@@ -467,13 +433,7 @@ final class ProjectedBookProvider
   }
 }
 
-String _$projectedBookHash() => r'47d27d7b9d7b00447dd69a75667bcf56e82df964';
-
-/// Returns one book with its local editor projection, if present.
-///
-/// This is the read model for consumers that need edits before confirmation.
-/// It retains the canonical loading or missing value state until the local
-/// overlay can be applied.
+String _$projectedBookHash() => r'59da9c4f60824bf2741053e4d00acfd4d5de6844';
 
 final class ProjectedBookFamily extends $Family
     with $FunctionalFamilyOverride<AsyncValue<Book?>, skir.ResourceId> {
@@ -485,12 +445,6 @@ final class ProjectedBookFamily extends $Family
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
-
-  /// Returns one book with its local editor projection, if present.
-  ///
-  /// This is the read model for consumers that need edits before confirmation.
-  /// It retains the canonical loading or missing value state until the local
-  /// overlay can be applied.
 
   ProjectedBookProvider call(skir.ResourceId bookId) =>
       ProjectedBookProvider._(argument: bookId, from: this);

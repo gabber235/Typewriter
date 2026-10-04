@@ -20,7 +20,6 @@ ResourceRepositories resourceRepositories(Ref ref) {
       () => ref.read(panelTelemetryProvider.future),
     ),
     ref.read(userIdProvider.future),
-    ref.watch(realmEditorCatalogSourceProvider),
   );
   ref.onDispose(repositories.dispose);
   return repositories;
@@ -29,14 +28,13 @@ ResourceRepositories resourceRepositories(Ref ref) {
 /// Organization scoped factory and lifetime owner for resource repositories.
 ///
 /// The provider creates one instance for the active local work scope and disposes
-/// every cached child when that scope ends. Children retain transport and catalog
-/// dependencies but no resource snapshots or network watches, so callers must not
-/// keep them beyond this owner lifecycle.
+/// every cached child when that scope ends. Authoring children may own network
+/// watches while their route session is active, so that session must release its
+/// child when it ends.
 final class ResourceRepositories {
-  ResourceRepositories(this.transport, this.userId, this.catalog);
+  ResourceRepositories(this.transport, this.userId);
   final SkirMutationClient transport;
   final Future<String?> userId;
-  final RealmEditorCatalogSource catalog;
   final _services = <skir.RecordId, ServiceResourceRepository>{};
   final _authoring =
       <(skir.RecordId, skir.RecordId), AuthoringResourceRepository>{};
@@ -71,6 +69,19 @@ final class ResourceRepositories {
       organization,
       realm,
     ), () => AuthoringResourceRepository(this, organization, realm));
+  }
+
+  /// Releases the exact authoring repository owned by a route session.
+  ///
+  /// Removing it from the cache before disposal ensures a later session receives
+  /// fresh transfer cancellation state and fresh network watches. Identity keeps
+  /// a stale release from evicting a newer session repository for the same Realm.
+  void releaseAuthoring(AuthoringResourceRepository repository) {
+    final key = (repository.organization, repository.realm);
+    if (identical(_authoring[key], repository)) {
+      _authoring.remove(key);
+    }
+    repository.dispose();
   }
 
   /// Ends the resource scope and disposes every repository created by this owner.

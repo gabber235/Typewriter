@@ -39,77 +39,34 @@ class BookIdentifier extends SelectableIdentifier
         StackTrace.current,
       );
     }
-    final repository = ref
-        .watch(resourceRepositoriesProvider)
-        .authoring(organization, realm);
     final router = ref.watch(appRouterProvider);
-    final session = ref.watch(authoringSessionProvider(organization, realm));
-    final catalogState = ref.watch(
-      realmCatalogProvider(
-        RealmEditorCatalogRequest(types: {referenceResourceTypes.book}),
-      ),
-    );
-    if (catalogState.isLoading) return const AsyncLoading();
-    if (catalogState.mapUnready<Selectable>() case final pending?) {
-      return pending;
+    final provider = authoringSessionProvider(organization, realm);
+    final state = ref.watch(provider);
+    if (state.failure case final failure?) {
+      return AsyncError(failure, StackTrace.current);
     }
-    final catalog = catalogState.requireValue;
-    if (session.generation?.value != catalog.generation.value) {
-      return const AsyncLoading();
-    }
-    final codec = TypedAuthoringCodec(catalog);
-    final bookValue = session.bookEditorValue(bookId, codec);
-    if (bookValue == null) {
-      if (session.sequence == null) return const AsyncLoading();
+    final resource = state.resources[bookId];
+    if (resource == null) {
+      if (state.snapshot == null) return const AsyncLoading();
       return AsyncError(SelectableNotFoundException(this), StackTrace.current);
     }
-    final book = bookValue.value;
-    final presentations = catalog.presentations.values.toList(growable: false);
-    if (!ref.retainAuthoringCollections(
-      organizationId: organization,
-      realmId: realm,
-      catalog: catalog,
-      presentations: presentations,
-      session: session,
-    )) {
-      return const AsyncLoading();
-    }
-    final collections = decodeAuthoringCollections(
-      session: session,
-      catalog: catalog,
-      presentations: presentations,
-    );
-    final tags = collections.sources[authoringTagCollectionSourceId];
-    if (tags == null) {
-      return AsyncError(
-        StateError(
-          collections.diagnostics.map((item) => item.message).join("; "),
-        ),
-        StackTrace.current,
-      );
-    }
-    final content = codec.decodeResource(session.resources[bookId]!);
-    if (content.valueOrNull == null) {
-      return AsyncError(
-        StateError(content.diagnostics.map((item) => item.message).join("; ")),
-        StackTrace.current,
-      );
-    }
+    final draft = state.draft;
+    final catalog = state.catalog;
+    if (draft == null || catalog == null) return const AsyncLoading();
+    final book = Book.fromAuthoring(resource);
+    final session = ref.watch(provider.notifier);
     return AsyncData(
       BookSelection(
-        resource: TypedAuthoringEditorResource(repository, bookId),
         onOpen: () => router.navigate(routeFor(organization, realm)),
+        onDelete: () => session.deleteResource(
+          bookId,
+          conflictMessage: "The book changed before deletion",
+        ),
         id: this,
         book: book,
-        snapshot: TypedAuthoringEditorSnapshot(
-          resource: session.resources[bookId]!,
-          content: content.valueOrNull!.content,
-          revision: bookValue.revision,
-          codec: codec,
-        ),
-        catalogPresentations: presentations,
-        tagCollection: tags,
-        presentationDiagnostics: collections.diagnostics,
+        draft: draft,
+        catalog: catalog,
+        session: session,
       ),
     );
   }
@@ -141,125 +98,59 @@ class BookIdentifier extends SelectableIdentifier
 /// revision used to create an editor snapshot, while [resource] owns loading,
 /// draft reconciliation, commit, and disposal. Opening is deliberately
 /// single select because navigation targets one book route.
-class BookSelection extends EditableSelectable<BookIdentifier>
-    implements RealmAuthoringSelection {
+class BookSelection extends InspectableSelectable<BookIdentifier> {
   const BookSelection({
-    required this.resource,
     required this.onOpen,
+    required this.onDelete,
     required this.id,
     required this.book,
-    required this.snapshot,
-    required this.catalogPresentations,
-    required this.tagCollection,
-    this.presentationDiagnostics = const [],
+    required this.draft,
+    required this.catalog,
+    required this.session,
   });
 
   @override
   final BookIdentifier id;
   final Book book;
-  @override
-  final EditorSnapshot snapshot;
-  @override
-  final EditableResource resource;
   final VoidCallback? onOpen;
-
-  final PresentationCollectionSource tagCollection;
-  final List<PresentationDefinition> catalogPresentations;
-  @override
-  final List<TypeDiagnostic> presentationDiagnostics;
-
-  @override
-  MultiInspectionDefinition get multiInspection =>
-      const RealmAuthoringMultiInspectionDefinition(
-        CoreResourceDefinitionIds.book,
-      );
-
-  @override
-  ResourceDefinitionId get resourceDefinition => CoreResourceDefinitionIds.book;
+  final Future<void> Function() onDelete;
+  final AuthoredDraft draft;
+  final CheckedEditorCatalog catalog;
+  final AuthoringSession session;
 
   @override
   String get name => book.title;
 
   @override
-  List<PresentationDefinition> get presentations => catalogPresentations;
-  @override
-  List<PresentationCollectionSource> get collections => [tagCollection];
-
-  @override
-  PresentationModel buildPresentation(EditorOwnerScope owners) =>
-      PresentationModel.editor(
-        owner: owners.editor(this),
-        presentations: presentations,
-        collections: collections,
-        diagnostics: [...document.diagnostics, ...presentationDiagnostics],
-      );
-
-  @override
   List<SelectionCapability> get capabilities => [
     if (onOpen case final open?)
       OpenSelectionCapability(onOpen: open, allowMultiSelect: false),
+    DeleteSelectionCapability(onDelete: onDelete),
   ];
 
   @override
-  Widget? buildInspectorHeader(EditOwner owner) => AuthoringSubjectRole(
-    resourceId: book.bookId,
-    resourceType: rootType,
-    role: PresentationRole.inspectorHeader,
-    historyNamespace: "book.inspector.header.${book.bookId.id}",
-  );
-}
-
-/// Encodes and decodes the book fields understood by the inspector.
-///
-/// Decoding is intentionally strict at the editor boundary. Invalid shape,
-/// empty required text, invalid color, or non string tag entries returns null;
-/// [projected] then falls back to the last valid book rather than exposing a
-/// malformed local draft to consumers.
-extension BookInspectorValue on Book {
-  RecordValue get inspectorValue => RecordValue({
-    "title": title.asValue,
-    "icon": IconValue.from(icon).typedValue,
-    "color": color.asValue,
-    "tags": ListValue(tagIds.map(ReferenceValue.new).toList()),
-  });
-
-  /// Reconstructs a book only when the complete inspector record is valid.
-  Book? withInspectorValue(DataValue value) {
-    if (value is! RecordValue) return null;
-    final title = value.fields["title"];
-    final icon = value.fields["icon"]?.iconValueOrNull;
-    final color = value.fields["color"];
-    final tags = value.fields["tags"];
-    if (title is! StringValue ||
-        title.value.trim().isEmpty ||
-        icon == null ||
-        color is! IntegerValue ||
-        tags is! ListValue) {
-      return null;
-    }
-    final decodedColor = color.asColorOrNull;
-    final tagIds = tags.values
-        .whereType<ReferenceValue>()
-        .map((tag) => tag.id)
-        .toList();
-    if (decodedColor == null || tagIds.length != tags.values.length) {
-      return null;
-    }
-    final encodedIcon = switch (icon) {
-      IconifyIconValue(:final value) => value,
-      SvgIconValue(:final source) => source,
-    };
-    return copyWith(
-      title: title.value,
-      icon: encodedIcon,
-      color: decodedColor,
-      tagIds: tagIds,
-    );
-  }
-
-  /// Applies a local draft while preserving this value on decode failure.
-  Book projected(LocalEditorValue? local) {
-    if (local == null) return this;
-    return withInspectorValue(local.projectOnto(inspectorValue)) ?? this;
-  }
+  InspectionContent buildInspection(EditorOwnerScope owners) =>
+      InspectionContent(
+        header: InspectorHeader(
+          id: book.bookId.value,
+          name: book.title,
+          color: book.color,
+        ),
+        body: AuthoredResourceInspection(
+          key: ValueKey((book.bookId, skir.PresentationRole.inspector)),
+          resource: book.bookId,
+          draft: draft,
+          catalog: catalog,
+          commands: AuthoredResourceCommands(
+            commit: session.commit,
+            previewTypeArguments: session.previewTypeArguments,
+            commitTypeArguments: session.commitTypeArguments,
+            prepareCreation: session.prepareCreation,
+            invokeCommand: session.invokeCommand,
+            watchSearch: session.watchPresentationSearch,
+            reload: session.refresh,
+            openAutosave: session.openAutosave,
+          ),
+        ),
+      );
 }

@@ -17,6 +17,7 @@ val RealmSchemaResourcesTest by testSuite {
                 "compile/active_compiled_artifact_manifest.surql",
                 "compile/authoring_head.surql",
                 "compile/collaboration_head.surql",
+                "compile/publication_attempt.surql",
                 "compile/compile_attempt.surql",
             )
     }

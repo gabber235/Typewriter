@@ -4,57 +4,44 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
-  test("decodes the declared ResourceIdentity carried by a subject", () {
-    final identityType = ResolvedTypeRef(
-      id: TypeId.declared("214fdb63564640e5bc15c7524f6121ef"),
-      revision: 1,
-    );
-    final codec = TypedAuthoringCodec(
-      RealmEditorCatalogSnapshot(
-        catalog: panelPresentationTypeCatalog([
-          TypeDefinition(
-            id: identityType,
-            kind: NominalTypeKind.concrete,
-            representation: RecordType(
-              fields: {
-                "id": const TypeField(name: "id", type: StringType()),
-                "owner": TypeField(
-                  name: "owner",
-                  type: NamedType(
-                    standardTypeRefs.optionOf(const StringType()),
-                  ),
-                ),
-              },
-            ),
+  test(
+    "authored draft retains resource identity from the canonical snapshot",
+    () {
+      final resource = skir.ResourceId(value: "resource:book");
+      final record = skir.AuthoringRecord(
+        configuration: skir.TypeSelection.unknown,
+        fields: [
+          skir.FieldValue(
+            name: "title",
+            value: skir.DataValue.wrapStringValue("Quest"),
           ),
-        ]),
-        generation: const CatalogGeneration("test"),
-      ),
-    );
-    final identity = TypedValueEnvelope(
-      rootType: identityType,
-      rootValue: RecordValue({
-        "id": const StringValue("resource:book"),
-        "owner": PolymorphicValue(
-          concreteType: standardTypeRefs.noneOf(const StringType()),
-          value: const UnitValue(),
-        ),
-      }),
-    );
-    final envelope = codec.encodeEnvelope(identity).valueOrNull!;
-    final decoded = codec.decodeSubject(
-      skir.PresentationSubject(
-        content: envelope,
-        descriptor: envelope,
-        identity: envelope,
-        resource: skir.ResourceId(value: "resource:book"),
-        definition: skir.ResourceDefinitionId(value: "typewriter.book"),
-        ownerPath: const [],
-      ),
-    );
+        ],
+      );
+      final snapshot = skir.AuthoringSnapshot(
+        snapshot: skir.SnapshotId(value: "realm:1"),
+        generation: skir.CatalogGeneration(value: "catalog:1"),
+        resources: [
+          skir.AuthoringResource(
+            id: resource,
+            definition: skir.ResourceDefinitionId(value: "typewriter.book"),
+            content: record,
+          ),
+        ],
+        links: const [],
+        findings: const [],
+        observations: const [],
+        absentInputToken: skir.InputToken(value: "absent"),
+        findingsToken: skir.FindingsToken(value: "findings:1"),
+      );
 
-    expect(decoded.diagnostics, isEmpty);
-    expect(decoded.valueOrNull?.identity.id.value, "resource:book");
-    expect(decoded.valueOrNull?.identity.owner, isNull);
-  });
+      final draft = AuthoredDraft.fromSnapshot(snapshot);
+
+      expect(draft.resources.keys, [resource]);
+      expect(draft.resource(resource), record);
+      expect(
+        draft.prepare(skir.BatchId(value: "batch:1")).snapshot,
+        snapshot.snapshot,
+      );
+    },
+  );
 }

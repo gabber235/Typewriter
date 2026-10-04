@@ -8,7 +8,5 @@ library;
 export "messaging/messaging.dart";
 export "observability/observability.dart";
 export "protocols/skir/converters.dart";
-export "protocols/skir/editor_catalog_codec.dart";
-export "protocols/skir/editor_codec.dart";
-export "protocols/skir/editor_diagnostic_codec.dart";
+export "protocols/skir/realm_search_query_codec.dart";
 export "protocols/skir/skir.dart" show RecordId, ResourceId;

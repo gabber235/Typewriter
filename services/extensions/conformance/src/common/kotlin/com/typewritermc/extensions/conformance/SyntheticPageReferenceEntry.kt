@@ -1,7 +1,10 @@
 package com.typewritermc.extensions.conformance
 
 import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.types.Many
+import com.typewritermc.types.One
 import com.typewritermc.types.Ref
+import com.typewritermc.types.ReferenceContract
 import com.typewritermc.types.TypewriterDisplay
 import com.typewritermc.types.TypewriterType
 
@@ -19,5 +22,14 @@ import com.typewritermc.types.TypewriterType
 data class SyntheticPageReferenceEntry(
     override val name: String,
     override val placement: GraphPlacement,
-    val page: Ref<SyntheticPage>,
+    val page: Ref<SyntheticPageReferences.Entry, SyntheticPage>,
 ) : ConformanceEntry
+
+@ReferenceContract(SYNTHETIC_PAGE_REFERENCES_RELATION_ID)
+interface SyntheticPageReferencesContract {
+    interface Entry : Many<ConformanceEntry>
+
+    interface Page : One<com.typewritermc.library.Page>
+}
+
+const val SYNTHETIC_PAGE_REFERENCES_RELATION_ID = "019d3a87003470008000000000000034"

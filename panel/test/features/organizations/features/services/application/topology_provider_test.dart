@@ -31,13 +31,17 @@ skir.ServiceHost _host({
   state: state ?? skir.HostRuntimeState.defaultInstance,
 );
 
-skir.RealmInstance _realm() => skir.RealmInstance(
-  realmId: recordId("realm_instance:realm1"),
-  ownerHost: skir.OwnerHost(id: _host().hostId, name: "host_1"),
-  revision: 1,
-  targetEngine: skir.EngineTarget(engineId: "paper", versionConstraint: "^1"),
-  state: skir.ChildRuntimeState.defaultInstance,
-);
+skir.RealmInstance _realm({skir.ChildRuntimeState? state}) =>
+    skir.RealmInstance(
+      realmId: recordId("realm_instance:realm1"),
+      ownerHost: skir.OwnerHost(id: _host().hostId, name: "host_1"),
+      revision: 1,
+      targetEngine: skir.EngineTarget(
+        engineId: "paper",
+        versionConstraint: "^1",
+      ),
+      state: state ?? skir.ChildRuntimeState.defaultInstance,
+    );
 
 skir.EngineInstance _engine() => skir.EngineInstance(
   engineId: recordId("engine_instance:engine1"),
@@ -214,6 +218,124 @@ void main() {
       ),
     );
     expect(removed.realmInstances, isEmpty);
+  });
+
+  test(
+    "manual refresh replaces the subscription and reloads the snapshot",
+    () async {
+      var status = skir.ChildRuntimeStatus.failed;
+      final nats = FakeNatsClient()
+        ..registerHandler(
+          _watchSubject,
+          (_) => skir.WatchOrganizationTopologyResponse.serializer.toBytes(
+            skir.WatchOrganizationTopologyResponse.createList(
+              hosts: [_host()],
+              realms: [
+                _realm(
+                  state: skir.ChildRuntimeState(
+                    status: status,
+                    activeArtifactVersion: null,
+                    message: null,
+                    updatedAt: DateTime.utc(2026),
+                  ),
+                ),
+              ],
+              engines: [],
+            ),
+          ),
+        );
+      final container = ProviderContainer.test(
+        overrides: [
+          userIdProvider.overrideWith((ref) async => "user1"),
+          organizationIdProvider.overrideWith((ref) => _organizationId),
+          natsProvider.overrideWithValue(nats),
+        ],
+      );
+      addTearDown(container.dispose);
+      addTearDown(nats.dispose);
+      final values = <OrganizationTopology>[];
+      final listener = container.listen(organizationTopologyStreamProvider, (
+        _,
+        next,
+      ) {
+        if (next case AsyncData(:final value)) values.add(value);
+      }, fireImmediately: true);
+      addTearDown(listener.close);
+      await _waitFor(
+        () =>
+            values.lastOrNull?.realmInstances.single.state.status ==
+            TopologyRuntimeStatus.failed,
+      );
+
+      status = skir.ChildRuntimeStatus.active;
+      container
+          .read(
+            organizationTopologyControllerProvider(_organizationId).notifier,
+          )
+          .refresh();
+      await _waitFor(
+        () =>
+            values.lastOrNull?.realmInstances.single.state.status ==
+            TopologyRuntimeStatus.active,
+      );
+
+      expect(
+        nats.requests.where((request) => request.subject == _watchSubject),
+        hasLength(2),
+      );
+      expect(nats.subscriptionSubjects, [_listenSubject]);
+    },
+  );
+
+  test("service recovery reloads the topology snapshot", () async {
+    var connections = {_host().serviceId: false};
+    final nats = FakeNatsClient()
+      ..registerHandler(
+        _watchSubject,
+        (_) => skir.WatchOrganizationTopologyResponse.serializer.toBytes(
+          skir.WatchOrganizationTopologyResponse.createList(
+            hosts: [_host()],
+            realms: [_realm()],
+            engines: [],
+          ),
+        ),
+      );
+    final container = ProviderContainer.test(
+      overrides: [
+        userIdProvider.overrideWith((ref) async => "user1"),
+        organizationIdProvider.overrideWith((ref) => _organizationId),
+        natsProvider.overrideWithValue(nats),
+        serviceConnectionsProvider.overrideWith((ref) => connections),
+      ],
+    );
+    addTearDown(container.dispose);
+    addTearDown(nats.dispose);
+    final topology = container.listen(
+      organizationTopologyStreamProvider,
+      (_, _) {},
+    );
+    final recovery = container.listen(realmTopologyRecoveryProvider, (_, _) {});
+    addTearDown(topology.close);
+    addTearDown(recovery.close);
+    await _waitFor(
+      () =>
+          nats.requests
+              .where((request) => request.subject == _watchSubject)
+              .length ==
+          1,
+    );
+
+    connections = {_host().serviceId: true};
+    container.invalidate(serviceConnectionsProvider);
+    await _waitFor(
+      () =>
+          nats.requests
+              .where((request) => request.subject == _watchSubject)
+              .length ==
+          2,
+    );
+
+    expect(nats.subscriptionSubjects, [_listenSubject]);
   });
 
   test(

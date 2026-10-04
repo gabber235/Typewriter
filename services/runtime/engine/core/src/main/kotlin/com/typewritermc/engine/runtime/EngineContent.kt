@@ -1,17 +1,18 @@
 package com.typewritermc.engine.runtime
 
-import com.typewritermc.elements.Element
 import com.typewritermc.elements.Cue
+import com.typewritermc.elements.Element
 import com.typewritermc.engine.CompilationProjectionId
 import com.typewritermc.engine.CompiledArtifactManifest
 import com.typewritermc.engine.CompiledArtifactReference
-import com.typewritermc.engine.CompiledResourceKey
 import com.typewritermc.engine.CompiledPageShard
+import com.typewritermc.engine.CompiledResourceKey
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.engine.LoadedCompiledArtifact
 import com.typewritermc.engine.LoadedCompiledContent
-import com.typewritermc.types.TypePrototypeRegistry
-import com.typewritermc.types.RelationDefinition
+import com.typewritermc.types.NativeBindingRegistry
+import com.typewritermc.types.RelationContract
+import com.typewritermc.types.catalog.CheckedCatalog
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.json.Json
@@ -77,8 +78,9 @@ data class EngineContentSnapshot(
 
 /** Decodes and contributes the Page projection without making the generic delivery path Page specific. */
 class PageCompiledArtifactConsumer(
-    private val prototypes: TypePrototypeRegistry,
-    private val relations: Collection<RelationDefinition>,
+    private val catalog: CheckedCatalog,
+    private val bindings: NativeBindingRegistry,
+    private val relations: Collection<RelationContract>,
 ) : CompiledArtifactConsumer {
     override val projection: CompilationProjectionId = CompilationProjectionId("typewriter.page")
     override val mediaType: String = PAGE_MEDIA_TYPE
@@ -110,7 +112,7 @@ class PageCompiledArtifactConsumer(
         }
         target.set(
             EngineContentSnapshot.Resources,
-            CompiledResourceGraph.assemble(shards, relations, prototypes),
+            CompiledResourceGraph.assemble(shards, relations, catalog, bindings),
         )
     }
 

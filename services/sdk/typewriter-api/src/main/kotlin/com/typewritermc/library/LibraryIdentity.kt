@@ -2,12 +2,8 @@ package com.typewritermc.library
 
 import com.typewritermc.types.Ref
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ref
 import kotlinx.serialization.Serializable
 
-/**
- * Gives Book APIs a compile time identity type while retaining one opaque resource id.
- */
 @JvmInline
 @Serializable
 value class BookId(
@@ -16,9 +12,6 @@ value class BookId(
 
 fun BookId(value: String): BookId = BookId(ResourceId(value))
 
-/**
- * Gives Tag APIs a compile time identity type while retaining one opaque resource id.
- */
 @JvmInline
 @Serializable
 value class TagId(
@@ -27,14 +20,14 @@ value class TagId(
 
 fun TagId(value: String): TagId = TagId(ResourceId(value))
 
-fun BookId.ref(): Ref<Book> = value.ref()
+fun BookId.pageOwnerRef(): Ref<BookPages.Page, Book> = Ref(value)
 
-fun TagId.ref(): Ref<Tag> = value.ref()
+fun TagId.parentRef(): Ref<TagParents.Child, Tag> = Ref(value)
 
-fun PageId.ref(): Ref<Page> = value.ref()
+fun PageId.bookPageRef(): Ref<BookPages.Book, Page> = Ref(value)
 
-fun Ref<Book>.bookId(): BookId = BookId(id)
+fun Ref<*, Book>.bookId(): BookId = BookId(target)
 
-fun Ref<Tag>.tagId(): TagId = TagId(id)
+fun Ref<*, Tag>.tagId(): TagId = TagId(target)
 
-fun Ref<Page>.pageId(): PageId = PageId(id)
+fun Ref<*, Page>.pageId(): PageId = PageId(target)

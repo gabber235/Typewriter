@@ -5,7 +5,6 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
-import "package:widgetbook_workspace/support/realm_runtime.dart";
 import "package:widgetbook_workspace/support/selected_inspector_story.dart";
 
 @widgetbook.UseCase(name: "Default", type: BookWidget)
@@ -45,10 +44,7 @@ Widget bookUseCase(BuildContext context) {
       ...tagsProviderOverrides(tags: [directTag, inheritedTag]),
       canonicalBooksProvider.overrideWith(() => _BookStoryBooks([book])),
     ],
-    child: InspectorScaffold(
-      realmRuntime: storyRealmRuntime([directTag, inheritedTag]),
-      child: const Center(child: _BookWidgetStory()),
-    ),
+    child: const InspectorScaffold(child: Center(child: _BookWidgetStory())),
   );
 }
 
@@ -99,7 +95,6 @@ Widget mixedBookSelectionStory({bool initiallySelected = true}) {
       canonicalBooksProvider.overrideWith(() => _BookStoryBooks(books)),
     ],
     child: InspectorScaffold(
-      realmRuntime: storyRealmRuntime([lore, quest]),
       child: SelectedInspectorStory(
         selection: initiallySelected
             ? [for (final book in books) BookIdentifier(book.bookId)]
@@ -119,12 +114,11 @@ class _BookStoryBooks extends CanonicalBooks {
   Future<List<Book>> build() async => _initialBooks;
 
   @override
-  Future<TypedMutationResult> updateBook(Book book, {Book? expected}) async {
+  Future<void> updateBook(Book book, {Book? expected}) async {
     state = AsyncData([
       for (final current in state.requireValue)
         if (current.bookId == book.bookId) book else current,
     ]);
-    return TypedMutationResult.success(revision: 1, value: book.inspectorValue);
   }
 }
 

@@ -1,10 +1,14 @@
-import "package:flutter/widgets.dart";
+import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/features/organizations/features/realms/application/authored_draft.dart";
+import "package:typewriter_panel/features/organizations/features/realms/application/authoring_session.dart";
+import "package:typewriter_panel/features/organizations/features/realms/presentation/authored_resource_inspection.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_panel/shared/editors/editors.dart";
+import "package:typewriter_panel/shared/inspector/inspector.dart";
+import "package:typewriter_panel/shared/selectables/selectables.dart";
 
-/// Stable selection identity for any Realm supplied authored resource.
 final class AuthoringResourceIdentifier extends SelectableIdentifier {
   const AuthoringResourceIdentifier({
     required this.organizationId,
@@ -22,91 +26,26 @@ final class AuthoringResourceIdentifier extends SelectableIdentifier {
 
   @override
   AsyncValue<Selectable> create(Ref ref) {
-    ref.watch(
-      authoringSelectionLeaseProvider(
-        organizationId,
-        realmId,
-        resourceId.resourceAuthoringSelection,
-      ),
-    );
-    final session = ref.watch(
-      authoringSessionProvider(organizationId, realmId),
-    );
-    final resource = session.resources[resourceId];
+    final provider = authoringSessionProvider(organizationId, realmId);
+    final state = ref.watch(provider);
+    if (state.failure case final failure?) {
+      return AsyncError(failure, StackTrace.current);
+    }
+    final resource = state.resources[resourceId];
     if (resource == null) {
-      if (session.sequence == null) return const AsyncLoading();
+      if (state.snapshot == null) return const AsyncLoading();
       return AsyncError(SelectableNotFoundException(this), StackTrace.current);
     }
-    final rootType = SkirTypeCodec(TypeRegistry(const TypeCatalog([])))
-        .decodeReference(resource.content.rootType)
-        .valueOrNull;
-    if (rootType == null) {
-      return AsyncError(
-        StateError("The resource root type is invalid"),
-        StackTrace.current,
-      );
-    }
-    final catalogState = ref.watch(realmEditorCatalogForTypeProvider(rootType));
-    if (catalogState.isLoading) return const AsyncLoading();
-    if (catalogState.mapUnready<Selectable>() case final pending?) {
-      return pending;
-    }
-    final catalog = catalogState.requireValue;
-    if (session.sequence == null) {
-      return const AsyncLoading();
-    }
-    if (session.generation?.value != catalog.generation.value) {
-      return const AsyncLoading();
-    }
-    final presentations = catalog.presentations.values.toList(growable: false);
-    if (!ref.retainAuthoringCollections(
-      organizationId: organizationId,
-      realmId: realmId,
-      catalog: catalog,
-      presentations: presentations,
-      session: session,
-    )) {
-      return const AsyncLoading();
-    }
-    final codec = TypedAuthoringCodec(catalog);
-    final decoded = codec.decodeResource(resource);
-    final value = decoded.valueOrNull;
-    if (value == null) {
-      return AsyncError(
-        StateError(decoded.diagnostics.map((item) => item.message).join("; ")),
-        StackTrace.current,
-      );
-    }
-    final collections = decodeAuthoringCollections(
-      session: session,
-      catalog: catalog,
-      presentations: presentations,
-    );
+    final draft = state.draft;
+    final catalog = state.catalog;
+    if (draft == null || catalog == null) return const AsyncLoading();
     return AsyncData(
       AuthoringSelectableResource(
         id: this,
-        resourceDefinition: resource.definition.toDomain(),
-        resource: TypedAuthoringEditorResource(
-          ref
-              .watch(resourceRepositoriesProvider)
-              .authoring(organizationId, realmId),
-          resourceId,
-        ),
-        snapshot: TypedAuthoringEditorSnapshot(
-          resource: resource,
-          content: value.content,
-          revision: session.sequence!,
-          codec: codec,
-        ),
-        presentations: presentations,
-        collections: collections.sources.values.toList(growable: false),
-        diagnostics: collections.diagnostics,
-        onDelete: () => ref
-            .read(authoringSessionProvider(organizationId, realmId).notifier)
-            .deleteResource(
-              resourceId,
-              conflictMessage: "The resource changed",
-            ),
+        resource: resource,
+        draft: draft,
+        catalog: catalog,
+        session: ref.watch(provider.notifier),
       ),
     );
   }
@@ -122,65 +61,66 @@ final class AuthoringResourceIdentifier extends SelectableIdentifier {
   int get hashCode => Object.hash(organizationId, realmId, resourceId);
 }
 
-/// Generic inspector adapter backed entirely by Realm catalog metadata.
 final class AuthoringSelectableResource
-    extends EditableSelectable<AuthoringResourceIdentifier>
-    implements RealmAuthoringSelection {
+    extends InspectableSelectable<AuthoringResourceIdentifier> {
   const AuthoringSelectableResource({
     required this.id,
-    required this.resourceDefinition,
     required this.resource,
-    required this.snapshot,
-    required this.presentations,
-    required this.collections,
-    required this.diagnostics,
-    required this.onDelete,
+    required this.draft,
+    required this.catalog,
+    required this.session,
   });
 
   @override
   final AuthoringResourceIdentifier id;
-  @override
-  final ResourceDefinitionId resourceDefinition;
-  @override
-  final EditableResource resource;
-  @override
-  final TypedAuthoringEditorSnapshot snapshot;
-  @override
-  final List<PresentationDefinition> presentations;
-  @override
-  final List<PresentationCollectionSource> collections;
-  final List<TypeDiagnostic> diagnostics;
-  final Future<void> Function() onDelete;
+  final skir.AuthoringResource resource;
+  final AuthoredDraft draft;
+  final CheckedEditorCatalog catalog;
+  final AuthoringSession session;
 
   @override
-  String get name => id.resourceId.value;
+  String get name =>
+      resource.content.authoredField("name")?.authoredString ??
+      resource.content.authoredField("title")?.authoredString ??
+      id.resourceId.value;
 
-  @override
-  MultiInspectionDefinition get multiInspection =>
-      RealmAuthoringMultiInspectionDefinition(resourceDefinition);
-
-  @override
-  List<TypeDiagnostic> get presentationDiagnostics => diagnostics;
+  Color get color {
+    final value = resource.content.authoredField("color")?.authoredInteger;
+    return value == null
+        ? Colors.blueGrey
+        : Color(value.toUnsigned(32).toInt());
+  }
 
   @override
   List<SelectionCapability> get capabilities => [
-    DeleteSelectionCapability(onDelete: onDelete),
+    DeleteSelectionCapability(
+      onDelete: () => session.deleteResource(id.resourceId),
+    ),
   ];
 
   @override
-  PresentationModel buildPresentation(EditorOwnerScope owners) =>
-      PresentationModel.editor(
-        owner: owners.editor(this),
-        presentations: presentations,
-        collections: collections,
-        diagnostics: [...document.diagnostics, ...diagnostics],
+  InspectionContent buildInspection(EditorOwnerScope owners) =>
+      InspectionContent(
+        header: InspectorHeader(
+          id: id.resourceId.value,
+          name: name,
+          color: color,
+        ),
+        body: AuthoredResourceInspection(
+          key: ValueKey((id.resourceId, skir.PresentationRole.inspector)),
+          resource: id.resourceId,
+          draft: draft,
+          catalog: catalog,
+          commands: AuthoredResourceCommands(
+            commit: session.commit,
+            previewTypeArguments: session.previewTypeArguments,
+            commitTypeArguments: session.commitTypeArguments,
+            prepareCreation: session.prepareCreation,
+            invokeCommand: session.invokeCommand,
+            watchSearch: session.watchPresentationSearch,
+            reload: session.refresh,
+            openAutosave: session.openAutosave,
+          ),
+        ),
       );
-
-  @override
-  Widget? buildInspectorHeader(EditOwner owner) => AuthoringSubjectRole(
-    resourceId: id.resourceId,
-    resourceType: rootType,
-    role: PresentationRole.inspectorHeader,
-    historyNamespace: "resource.inspector.header.${id.resourceId.value}",
-  );
 }

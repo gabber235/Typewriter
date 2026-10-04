@@ -1,6 +1,7 @@
 package com.typewritermc.authoring
 
-import com.typewritermc.types.TypeExpression
+import com.typewritermc.types.Resource
+import com.typewritermc.types.TypeDefinitionId
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
@@ -19,7 +20,7 @@ value class ResourceDefinitionId(
 @Serializable
 data class AuthoringResourceDefinition(
     val id: ResourceDefinitionId,
-    val acceptedRoot: TypeExpression,
+    val root: TypeDefinitionId,
     val navigationHandler: String = "generic",
 ) {
     init {
@@ -32,6 +33,6 @@ data class AuthoringResourceDefinition(
 @Retention(AnnotationRetention.BINARY)
 annotation class TypewriterResourceDefinition(
     val id: String,
-    val root: KClass<*>,
+    val root: KClass<out Resource>,
     val navigationHandler: String = "generic",
 )

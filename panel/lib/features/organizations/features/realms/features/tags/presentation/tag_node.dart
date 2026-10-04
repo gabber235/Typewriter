@@ -14,36 +14,20 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// state. A missing tag leaves an empty footprint rather than displaying stale
 /// content.
 class TagNode extends HookConsumerWidget {
-  const TagNode({required this.tagId, this.subjects, super.key});
+  const TagNode({required this.tagId, super.key});
 
   final skir.ResourceId tagId;
-  final AsyncValue<AuthoringSubjectProjection>? subjects;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncTag = ref.watch(projectedTagProvider(tagId));
-    final organizationId = ref.watch(organizationIdProvider);
-    final realmId = ref.watch(realmIdProvider);
-    final resolvedSubjects =
-        subjects ??
-        (organizationId == null || realmId == null
-            ? null
-            : ref.watch(
-                authoringSubjectsProvider(
-                  AuthoringSubjectScope(
-                    organizationId: organizationId,
-                    realmId: realmId,
-                    resources: {tagId: referenceResourceTypes.tag},
-                  ),
-                ),
-              ));
 
     return asyncTag(
       name: "Tag",
       shrink: true,
       builder: (tag) {
         if (tag == null) return const SizedBox.shrink();
-        return _TagNode(tag: tag, subjects: resolvedSubjects);
+        return _TagNode(tag: tag);
       },
       loading: (_) =>
           ShimmerBox.rectangle(width: double.infinity, height: double.infinity),
@@ -53,10 +37,9 @@ class TagNode extends HookConsumerWidget {
 
 /// Adds selection, drag feedback, and inheritance drop behavior to a tag.
 class _TagNode extends HookConsumerWidget {
-  const _TagNode({required this.tag, required this.subjects});
+  const _TagNode({required this.tag});
 
   final Tag tag;
-  final AsyncValue<AuthoringSubjectProjection>? subjects;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -73,7 +56,6 @@ class _TagNode extends HookConsumerWidget {
           builder: (isSelected, isFocused, isHovered) {
             final content = _TagNodeContent(
               tag: tag,
-              subjects: subjects,
               isSelected: isSelected,
               isFocused: isFocused,
               isHovered: isHovered,
@@ -92,7 +74,7 @@ class _TagNode extends HookConsumerWidget {
                       : SizedBox(
                           width: constraints.maxWidth,
                           height: constraints.maxHeight,
-                          child: FeedbackTagNode(tag: tag, subjects: subjects),
+                          child: FeedbackTagNode(tag: tag),
                         );
                 },
               ),
@@ -125,7 +107,6 @@ class _TagNode extends HookConsumerWidget {
                     if (isDropTarget) {
                       return _TagNodeContent(
                         tag: tag,
-                        subjects: subjects,
                         isSelected: true,
                         isFocused: true,
                         isHovered: true,
@@ -146,14 +127,12 @@ class _TagNode extends HookConsumerWidget {
 class _TagNodeContent extends StatelessWidget {
   const _TagNodeContent({
     required this.tag,
-    required this.subjects,
     required this.isSelected,
     required this.isFocused,
     required this.isHovered,
   });
 
   final Tag tag;
-  final AsyncValue<AuthoringSubjectProjection>? subjects;
   final bool isSelected;
   final bool isFocused;
   final bool isHovered;
@@ -194,74 +173,28 @@ class _TagNodeContent extends StatelessWidget {
         horizontal: context.spacing.space3,
         vertical: context.spacing.space2,
       ),
-      child: Center(
-        child: _TagRoleNode(tagId: tag.tagId, subjects: subjects),
-      ),
+      child: Center(child: _TagRoleNode(tagId: tag.tagId)),
     );
   }
 }
 
 class _TagRoleNode extends StatelessWidget {
-  const _TagRoleNode({required this.tagId, required this.subjects});
+  const _TagRoleNode({required this.tagId});
 
   final skir.ResourceId tagId;
-  final AsyncValue<AuthoringSubjectProjection>? subjects;
 
   @override
-  Widget build(BuildContext context) {
-    final projection = switch (subjects) {
-      AsyncData(:final value) => value,
-      _ => null,
-    };
-    if (projection == null) {
-      if (subjects?.hasError ?? subjects == null) {
-        return const Tooltip(
-          message: "Tag presentation is unavailable",
-          child: Icon(Icons.warning_rounded, size: 14),
-        );
-      }
-      return ShimmerBox.rectangle(width: double.infinity, height: 20);
-    }
-    final subject = projection.subjects[tagId];
-    final result = subject == null
-        ? null
-        : TypedAuthoringCodec(projection.catalog).subjectPresentation(
-            subject,
-            PresentationRole.graphNode,
-            collections: projection.collections,
-          );
-    final diagnostics = result?.diagnostics ?? projection.diagnostics;
-    final model =
-        result?.valueOrNull?.model ??
-        PresentationModel(
-          catalog: projection.catalog.catalog,
-          inputs: const {},
-          root: PresentationNode(
-            id: "tag.graph.node.diagnostic",
-            element: DiagnosticElement(
-              diagnostics.isEmpty
-                  ? const [
-                      TypeDiagnostic(
-                        code: TypeDiagnosticCode.invalidPresentation,
-                        message: "Tag presentation subject is unavailable",
-                        pathPresent: false,
-                      ),
-                    ]
-                  : diagnostics,
-            ),
-          ),
-          diagnostics: diagnostics,
-        );
-    return ComposedEditor(model: model, readOnly: true);
-  }
+  Widget build(BuildContext context) => AuthoringSubjectRole(
+    resourceId: tagId,
+    role: skir.PresentationRole.graphNode,
+  );
 }
 
 /// Visual representation shown while a tag is dragged outside the graph.
 class FeedbackTagNode extends StatelessWidget {
-  const FeedbackTagNode({required this.tag, required this.subjects, super.key});
+  const FeedbackTagNode({required this.tag, super.key});
 
   final Tag tag;
-  final AsyncValue<AuthoringSubjectProjection>? subjects;
 
   @override
   Widget build(BuildContext context) {
@@ -285,9 +218,7 @@ class FeedbackTagNode extends StatelessWidget {
               ),
             ],
           ),
-          child: Center(
-            child: _TagRoleNode(tagId: tag.tagId, subjects: subjects),
-          ),
+          child: Center(child: _TagRoleNode(tagId: tag.tagId)),
         ),
       ),
     );

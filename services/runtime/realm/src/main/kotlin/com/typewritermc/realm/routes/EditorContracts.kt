@@ -6,6 +6,7 @@ import com.typewritermc.loader.api.RealmServiceAddress
 import com.typewritermc.loader.api.realmEventAddress
 import com.typewritermc.loader.api.realmRequestAddress
 import com.typewritermc.services.libs.communicator.address.AddressTemplate
+import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.client.EncodedPublication
 import com.typewritermc.services.libs.communicator.contract.EventContract
 import com.typewritermc.services.libs.communicator.contract.OperationName
@@ -20,30 +21,35 @@ import com.typewritermc.services.libs.communicator.skir.asPayloadCodec
 import com.typewritermc.services.libs.communicator.skir.skirUnaryContract
 import com.typewritermc.services.libs.communicator.skir.skirWatchContract
 import com.typewritermc.services.libs.telemetry.ErrorSlug
-import skirout.editor.v1.authoring.ApplyAuthoringBatch
-import skirout.editor.v1.authoring.ApplyAuthoringBatchResponse
-import skirout.editor.v1.authoring.AuthoringChanged
-import skirout.editor.v1.authoring.PreviewAuthoringBatch
-import skirout.editor.v1.authoring.PreviewAuthoringBatchResponse
-import skirout.editor.v1.authoring.QueryAuthoringGraph
-import skirout.editor.v1.authoring.QueryAuthoringGraphResponse
-import skirout.editor.v1.authoring.SearchAuthoringGraph
-import skirout.editor.v1.authoring.SearchAuthoringGraphResponse
+import skirout.editor.v1.authoring.AuthoringChangedTransferResult
+import skirout.editor.v1.authoring.CommitPreparedEdit
+import skirout.editor.v1.authoring.CommitPreparedEditResponse
+import skirout.editor.v1.authoring.CommitTypeArgumentChange
+import skirout.editor.v1.authoring.CommitTypeArgumentChangeResponse
+import skirout.editor.v1.authoring.PreviewTypeArgumentChange
+import skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse
+import skirout.editor.v1.authoring.QueryAuthoringSnapshot
+import skirout.editor.v1.authoring.QueryAuthoringSnapshotResponse
+import skirout.editor.v1.authoring.SearchAuthoring
+import skirout.editor.v1.authoring.SearchAuthoringResponse
 import skirout.editor.v1.capability.CommandResult
 import skirout.editor.v1.capability.ComputationResult
 import skirout.editor.v1.capability.InvokeRealmCommand
 import skirout.editor.v1.capability.InvokeRealmComputation
 import skirout.editor.v1.catalog.CatalogFetchResult
-import skirout.editor.v1.catalog.CatalogWatchUpdate
+import skirout.editor.v1.catalog.CatalogInvalidated
 import skirout.editor.v1.catalog.FetchEditorCatalog
-import skirout.editor.v1.catalog.InitializeTypedValue
-import skirout.editor.v1.catalog.InitializeTypedValueResult
+import skirout.editor.v1.catalog.PrepareCreation
+import skirout.editor.v1.catalog.PrepareCreationResult
 import skirout.editor.v1.catalog.WatchEditorCatalog
 import skirout.editor.v1.compiled_content.CompiledContentChanged
 import skirout.editor.v1.compiled_content.QueryCompiledResourceStatus
 import skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse
 import skirout.editor.v1.compiled_content.WatchCompiledContent
 import skirout.editor.v1.compiled_content.WatchCompiledContentResponse
+import skirout.editor.v1.publication.PublishAuthoring
+import skirout.editor.v1.publication.PublishAuthoringResponse
+import skirout.editor.v1.publication.WatchPublication
 import skirout.editor.v1.search.CancelRealmPresentationSearch
 import skirout.editor.v1.search.CancelRealmPresentationSearchResult
 
@@ -59,25 +65,31 @@ internal class EditorContracts(
     private val address: RealmAddress,
 ) {
     val fetchEditorCatalog =
-        unary(
+        watch(
             FetchEditorCatalog,
+            CatalogFetchResult.serializer,
             "editor.catalog.fetch",
-            unavailableCatalogFetchResult("Realm editor catalog fetch failed"),
+            CatalogFetchResult.createInternalError(),
             catalogFetchResponseClassifier(),
+            catalogFetchResponseClassifier(),
+            updateAddressResolver = { realm, request ->
+                scopedUpdateAddress("editor.catalog.fetch", realm, request.transferId)
+            },
         )
     val watchEditorCatalog =
         watch(
             WatchEditorCatalog,
-            CatalogWatchUpdate.serializer,
+            CatalogInvalidated.serializer,
             "editor.catalog.invalidate",
-            CatalogWatchUpdate.createInitial(value = "unavailable"),
-            catalogWatchResponseClassifier(),
+            CatalogInvalidated.partial(),
+            responseClassifier(ResponseOutcome.INTERNAL_ERROR),
+            responseClassifier(ResponseOutcome.SUCCESS),
         )
-    val initializeTypedValue =
+    val prepareCreation =
         unary(
-            InitializeTypedValue,
-            "editor.typed.value.initialize",
-            InitializeTypedValueResult.UnavailableWrapper(emptyList()),
+            PrepareCreation,
+            "editor.creation.prepare",
+            PrepareCreationResult.createInternalError(),
         )
     val watchRealmPresentationSearch = realmPresentationSearchContract(address)
     val cancelRealmPresentationSearch =
@@ -108,35 +120,45 @@ internal class EditorContracts(
                 diagnostics = emptyList(),
             ),
         )
-    val queryAuthoringGraph =
-        unary(
-            QueryAuthoringGraph,
-            "editor.authoring.graph.query",
-            QueryAuthoringGraphResponse.createInternalError(),
+    val queryAuthoringSnapshot =
+        watch(
+            QueryAuthoringSnapshot,
+            QueryAuthoringSnapshotResponse.serializer,
+            "editor.authoring.snapshot.query",
+            QueryAuthoringSnapshotResponse.createInternalError(),
+            updateAddressResolver = { realm, request ->
+                scopedUpdateAddress("editor.authoring.snapshot.query", realm, request.transferId)
+            },
         )
-    val applyAuthoringBatch =
+    val commitPreparedEdit =
         unary(
-            ApplyAuthoringBatch,
-            "editor.authoring.batch.apply",
-            ApplyAuthoringBatchResponse.createInternalError(),
+            CommitPreparedEdit,
+            "editor.authoring.edit.commit",
+            CommitPreparedEditResponse.createInternalError(),
         )
-    val previewAuthoringBatch =
+    val previewTypeArgumentChange =
         unary(
-            PreviewAuthoringBatch,
-            "editor.authoring.batch.preview",
-            PreviewAuthoringBatchResponse.createInternalError(),
+            PreviewTypeArgumentChange,
+            "editor.authoring.type.preview",
+            PreviewTypeArgumentChangeResponse.createInternalError(),
         )
-    val searchAuthoringGraph =
+    val commitTypeArgumentChange =
         unary(
-            SearchAuthoringGraph,
-            "editor.authoring.graph.search",
-            SearchAuthoringGraphResponse.createInternalError(),
+            CommitTypeArgumentChange,
+            "editor.authoring.type.commit",
+            CommitTypeArgumentChangeResponse.createInternalError(),
+        )
+    val searchAuthoring =
+        unary(
+            SearchAuthoring,
+            "editor.authoring.search",
+            SearchAuthoringResponse.createInternalError(),
         )
     val authoringChanged =
         EventContract(
             OperationName.of("editor.authoring.changed"),
             updateAddress("editor.authoring.changed"),
-            AuthoringChanged.serializer.asPayloadCodec(),
+            AuthoringChangedTransferResult.serializer.asPayloadCodec(),
             ErrorSlug.of("editor-authoring-changed-failed"),
         )
     val watchCompiledContent =
@@ -167,6 +189,22 @@ internal class EditorContracts(
             "editor.authoring.compiled.status.query",
             QueryCompiledResourceStatusResponse.createInternalError(),
         )
+    val publishAuthoring =
+        unary(
+            PublishAuthoring,
+            "editor.authoring.publish",
+            PublishAuthoringResponse.createInternalError(),
+        )
+    val watchPublication =
+        watch(
+            WatchPublication,
+            skirout.editor.v1.publication.PublicationAttempt.serializer,
+            "editor.authoring.publication.watch",
+            skirout.editor.v1.publication.PublicationAttempt
+                .partial(),
+            responseClassifier(ResponseOutcome.INTERNAL_ERROR),
+            responseClassifier(ResponseOutcome.SUCCESS),
+        )
 
     private fun <Request : Any, Response : Any> unary(
         method: Method<Request, Response>,
@@ -187,8 +225,10 @@ internal class EditorContracts(
         updateSerializer: Serializer<Response>,
         suffix: String,
         internalFailureResponse: Response,
-        classifier: ResponseClassifier<Response> = responseClassifier(),
+        initialClassifier: ResponseClassifier<Response> = responseClassifier(),
+        updateClassifier: ResponseClassifier<Response> = initialClassifier,
         updateFilter: (Request, Response) -> Boolean = { _, _ -> true },
+        updateAddressResolver: ((RealmAddress, Request) -> MessageAddress)? = null,
     ): WatchContract<RealmAddress, Request, Response, Response> =
         skirWatchContract(
             method = method,
@@ -196,10 +236,11 @@ internal class EditorContracts(
             name = OperationName.of(suffix),
             requestAddress = requestAddress(suffix).subscribedAt(address),
             updateAddress = updateAddress(suffix),
-            initialPolicy = ResponsePolicy(internalFailureResponse, classifier),
-            updateClassifier = classifier,
+            initialPolicy = ResponsePolicy(internalFailureResponse, initialClassifier),
+            updateClassifier = updateClassifier,
             failureSlug = ErrorSlug.of(suffix.replace('.', '-') + "-failed"),
             updateFilter = updateFilter,
+            updateAddressResolver = updateAddressResolver,
         )
 }
 
@@ -208,6 +249,17 @@ internal fun requestAddress(suffix: String): AddressTemplate<RealmAddress> = rea
 
 /** Resolves the event subject used for publications observed by clients of the logical Realm. */
 internal fun updateAddress(suffix: String): AddressTemplate<RealmAddress> = realmEventAddress(suffix)
+
+private fun scopedUpdateAddress(
+    suffix: String,
+    address: RealmAddress,
+    token: String,
+): MessageAddress {
+    require(token.matches(Regex("[A-Za-z0-9_-]{1,64}"))) {
+        "Transfer token must be one safe subject segment"
+    }
+    return MessageAddress.of("${updateAddress(suffix).render(address).value}.$token")
+}
 
 /** Encodes a watch update for direct publication outside the request handler. */
 internal fun <Request : Any, Initial : Any, Update : Any> WatchContract<RealmAddress, Request, Initial, Update>.encodeUpdate(
@@ -219,28 +271,9 @@ private fun catalogFetchResponseClassifier(): ResponseClassifier<CatalogFetchRes
     ResponseClassifier { response ->
         val outcome =
             when (response) {
-                is CatalogFetchResult.SuccessWrapper -> ResponseOutcome.SUCCESS
-                is CatalogFetchResult.UnavailableWrapper -> ResponseOutcome.INTERNAL_ERROR
+                is CatalogFetchResult.ChunkWrapper -> ResponseOutcome.SUCCESS
+                is CatalogFetchResult.InternalErrorWrapper -> ResponseOutcome.INTERNAL_ERROR
                 else -> ResponseOutcome.DOMAIN_ERROR
-            }
-        ResponseClassification(outcome, response.variant())
-    }
-
-private fun catalogWatchResponseClassifier(): ResponseClassifier<CatalogWatchUpdate> =
-    ResponseClassifier { response ->
-        val outcome =
-            when (response) {
-                is CatalogWatchUpdate.InitialWrapper -> {
-                    if (response.value.value == "unavailable") ResponseOutcome.INTERNAL_ERROR else ResponseOutcome.SUCCESS
-                }
-
-                is CatalogWatchUpdate.InvalidatedWrapper -> {
-                    ResponseOutcome.SUCCESS
-                }
-
-                else -> {
-                    ResponseOutcome.DOMAIN_ERROR
-                }
             }
         ResponseClassification(outcome, response.variant())
     }
@@ -251,11 +284,14 @@ private fun <Response : Any> responseClassifier(): ResponseClassifier<Response> 
         val outcome =
             when (variant.value) {
                 "internal-error", "unavailable" -> ResponseOutcome.INTERNAL_ERROR
-                "success", "applied", "initial", "activated", "canceled" -> ResponseOutcome.SUCCESS
+                "success", "prepared", "committed", "result", "applied", "initial", "activated", "canceled" -> ResponseOutcome.SUCCESS
                 else -> ResponseOutcome.DOMAIN_ERROR
             }
         ResponseClassification(outcome, variant)
     }
+
+private fun <Response : Any> responseClassifier(outcome: ResponseOutcome): ResponseClassifier<Response> =
+    ResponseClassifier { response -> ResponseClassification(outcome, response.variant()) }
 
 private fun Any.variant(): ResponseVariant =
     ResponseVariant.of(

@@ -104,6 +104,7 @@ void main() {
   });
 
   testWidgets("shows offline realm details", (tester) async {
+    var retries = 0;
     final realm = TopologyRealm(
       realmId: recordId("realm:test"),
       ownerHost: TopologyOwnerHost(
@@ -132,6 +133,7 @@ void main() {
             connectionState: RealmConnectionState.offline,
           ),
           realm: realm,
+          onRetry: () => retries++,
           child: const ColoredBox(color: Colors.blue),
         ),
       ),
@@ -143,6 +145,8 @@ void main() {
       findsOneWidget,
     );
     expect(find.text("4m ago"), findsOneWidget);
+    await tester.tap(find.text("Check again"));
+    expect(retries, 1);
   });
 }
 

@@ -41,6 +41,7 @@ void main() {
             confirmedValue: StringValue("Original"),
             revision: 1,
           ),
+          validation: acceptTestEditorMutation,
           commit: (_) async => throw StateError("No save expected"),
         ),
       ),
@@ -88,6 +89,7 @@ void main() {
           confirmedValue: StringValue("Original"),
           revision: 1,
         ),
+        validation: acceptTestEditorMutation,
         commitPolicy: EditorCommitPolicy.applyResource,
         commit: (_) async => throw StateError("No save expected"),
       );

@@ -50,7 +50,9 @@ SearchSession<void> testSearchSession(
 
 final class FakeSearchSource
     implements SearchSource, SearchSelectorCompletionSource {
-  FakeSearchSource({this.selectors = const []});
+  FakeSearchSource({this.selectors = const [], this.initialSnapshot});
+
+  final SearchSourceSnapshot? initialSnapshot;
 
   final _snapshots = StreamController<SearchSourceSnapshot>.broadcast(
     sync: true,
@@ -75,6 +77,7 @@ final class FakeSearchSource
   @override
   void initialize(SearchQueryContext context) {
     initializeCount++;
+    if (initialSnapshot case final snapshot?) emitSnapshot(snapshot);
   }
 
   @override

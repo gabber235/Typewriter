@@ -1,0 +1,114 @@
+import {
+  CheckInstanceId,
+  InputObservation,
+} from "editor/v1/checking.skir";
+import { Diagnostic } from "editor/v1/diagnostic.skir";
+import {
+  CatalogGeneration,
+  DeclarationOwner,
+  InputToken,
+  NamedTypeUse,
+  NativeBindingId,
+  PublicationId,
+  RuntimeMemberId,
+  ScriptCapabilityId,
+  SnapshotId,
+  TypeDefinition,
+  TypeDefinitionId,
+  TypeTemplate,
+  TypeUse,
+} from "editor/v1/type_catalog.skir";
+import { InternalError } from "kernel/v1/errors.skir";
+
+struct OwnedPortableTypes(811600001) {
+  owner: DeclarationOwner = 0;
+  definitions: [TypeDefinition] = 1;
+}
+
+struct RuntimeMemberTemplate(811600002) {
+  id: RuntimeMemberId = 0;
+  receiver: TypeTemplate? = 1;
+  arguments: [TypeTemplate] = 2;
+  result: TypeTemplate = 3;
+  required_capabilities: [ScriptCapabilityId] = 4;
+}
+
+struct RuntimeMemberSignature(811600003) {
+  id: RuntimeMemberId = 0;
+  receiver: TypeUse? = 1;
+  parameters: [TypeUse] = 2;
+  result: TypeUse = 3;
+  required_capabilities: [ScriptCapabilityId] = 4;
+}
+
+struct ScriptContextDescriptor(811600004) {
+  types: [TypeDefinitionId] = 0;
+  members: [RuntimeMemberId] = 1;
+  capabilities: [ScriptCapabilityId] = 2;
+}
+
+struct NativeBindingRequirement(811600005) {
+  actual: NamedTypeUse = 0;
+  provider: NativeBindingId = 1;
+  signature: string = 2;
+}
+
+struct EngineImplementationInputs(811600006) {
+  signatures: [RuntimeMemberSignature] = 0;
+  token: InputToken = 1;
+}
+
+enum PublicationState(811600007) {
+  checking = 1;
+  compiling = 2;
+  activating = 3;
+  complete = 4;
+  blocked: [Diagnostic] = 5;
+  interrupted = 6;
+}
+
+struct PublicationAttempt(811600008) {
+  id: PublicationId = 0;
+  capture: SnapshotId = 1;
+  catalog: CatalogGeneration = 2;
+  engine_inputs: EngineImplementationInputs = 3;
+  state: PublicationState = 4;
+}
+
+struct CheckCoverage(811600009) {
+  required: [CheckInstanceId] = 0;
+  completed: [CheckInstanceId] = 1;
+}
+
+struct CapturedAuthoringSnapshot(811600010) {
+  root: SnapshotId = 0;
+  catalog: CatalogGeneration = 1;
+}
+
+struct AcceptedSnapshot(811600011) {
+  capture: CapturedAuthoringSnapshot = 0;
+  required_coverage: CheckCoverage = 1;
+  evidence: [InputObservation] = 2;
+  binding_requirements: [NativeBindingRequirement] = 3;
+}
+
+enum PublicationResult(811600012) {
+  publishing = 1;
+  activated: struct {
+    publication: PublicationId = 0;
+    manifest: string = 1;
+  } = 2;
+  blocked: [Diagnostic] = 3;
+  interrupted: PublicationId = 4;
+}
+
+method PublishAuthoring(
+  PublicationAttempt
+): enum {
+  result: PublicationResult = 1;
+  internal_error: InternalError = 2;
+} = 920020;
+
+method WatchPublication(
+  struct {}
+): PublicationAttempt = 920021;

@@ -1,7 +1,7 @@
 import "dart:math" as math;
 
 import "package:flutter/widgets.dart";
-import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_panel/shared/graph/domain/domain.dart";
 
 /// Places incoming graph rectangles without moving existing content.
 ///

@@ -24,6 +24,7 @@ void main() {
         }),
         revision: 1,
       ),
+      validation: (path, value) => EditorMutationResult.applied(value),
       commitPolicy: EditorCommitPolicy.applyResource,
     );
     addTearDown(owner.dispose);

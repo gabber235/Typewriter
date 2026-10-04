@@ -1,94 +1,58 @@
 import "package:flutter/material.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
+    as catalog_wire;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
+    as expression;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
+    as types;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Renders one resource role from a generation pinned subject projection.
-class AuthoringSubjectRole extends ConsumerWidget {
+final class AuthoringSubjectRole extends ConsumerWidget {
   const AuthoringSubjectRole({
     required this.resourceId,
-    required this.resourceType,
     required this.role,
-    required this.historyNamespace,
     super.key,
   });
 
-  final skir.ResourceId resourceId;
-  final ResolvedTypeRef resourceType;
-  final PresentationRole role;
-  final String historyNamespace;
+  final types.ResourceId resourceId;
+  final catalog_wire.PresentationRole role;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final organizationId = ref.watch(organizationIdProvider);
     final realmId = ref.watch(realmIdProvider);
     if (organizationId == null || realmId == null) {
-      return _diagnostic(const [
-        TypeDiagnostic(
-          code: TypeDiagnosticCode.invalidPresentation,
-          message: "Authoring presentation scope is unavailable",
-          pathPresent: false,
-        ),
-      ]);
+      return const _UnavailableRole();
     }
-    final projection = ref.watch(
-      authoringSubjectsProvider(
-        AuthoringSubjectScope(
-          organizationId: organizationId,
-          realmId: realmId,
-          resources: {resourceId: resourceType},
-        ),
-      ),
-    );
-    return switch (projection) {
-      AsyncLoading() => ShimmerBox.rectangle(
-        width: double.infinity,
-        height: 36,
-      ),
-      AsyncError(:final error) => _diagnostic([
-        TypeDiagnostic(
-          code: TypeDiagnosticCode.invalidPresentation,
-          message: "Authoring presentation is unavailable: $error",
-          pathPresent: false,
-        ),
-      ]),
-      AsyncData(:final value) => _resolved(value),
-    };
-  }
-
-  Widget _resolved(AuthoringSubjectProjection projection) {
-    final subject = projection.subjects[resourceId];
-    final result = subject == null
-        ? null
-        : TypedAuthoringCodec(projection.catalog).subjectPresentation(
-            subject,
-            role,
-            collections: projection.collections,
-          );
-    final resolved = result?.valueOrNull;
-    if (resolved == null) {
-      final diagnostics = result?.diagnostics.isNotEmpty == true
-          ? result!.diagnostics
-          : projection.diagnostics.isNotEmpty
-          ? projection.diagnostics
-          : const [
-              TypeDiagnostic(
-                code: TypeDiagnosticCode.invalidPresentation,
-                message: "Authoring presentation subject is unavailable",
-                pathPresent: false,
-              ),
-            ];
-      return _diagnostic(diagnostics);
+    final state = ref.watch(authoringSessionProvider(organizationId, realmId));
+    final draft = state.draft;
+    final catalog = state.catalog;
+    if (state.failure != null || draft == null || catalog == null) {
+      return state.snapshot == null
+          ? ShimmerBox.rectangle(width: double.infinity, height: 20)
+          : const _UnavailableRole();
     }
-    return ComposedEditor(
-      model: resolved.model,
-      readOnly: true,
-      historyNamespace: historyNamespace,
+    return AuthoredResourceEditor(
+      resource: resourceId,
+      draft: draft,
+      catalog: catalog,
+      role: role,
+      budget: expression.EvaluationBudget(
+        maxSteps: 10000,
+        maxCollectionItems: 10000,
+      ),
+      enabled: false,
     );
   }
+}
 
-  Widget _diagnostic(List<TypeDiagnostic> diagnostics) => Builder(
-    builder: (context) => presentationDiagnostic(context, diagnostics),
+final class _UnavailableRole extends StatelessWidget {
+  const _UnavailableRole();
+
+  @override
+  Widget build(BuildContext context) => const Tooltip(
+    message: "Resource presentation is unavailable",
+    child: Icon(Icons.warning_rounded, size: 14),
   );
 }

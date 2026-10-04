@@ -10,8 +10,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// The bound editor owns the color and receives every valid change through
 /// [onChanged]. This field owns only picker visibility and interaction
 /// boundaries. Opening begins an interaction, ordinary dismissal commits it,
-/// and cancel dismissal reports cancellation without changing the value here.
-/// The mixed constructor keeps differing bound values distinct until the caller
+/// and every dismissal preserves the current value. The mixed constructor
+/// keeps differing bound values distinct until the caller
 /// chooses a replacement color.
 class ColorPickerField extends HookConsumerWidget {
   const ColorPickerField({
@@ -20,7 +20,6 @@ class ColorPickerField extends HookConsumerWidget {
     required this.onChanged,
     this.onInteractionStart,
     this.onInteractionCommit,
-    this.onInteractionCancel,
     this.enabled = true,
     this.readOnly = false,
     super.key,
@@ -31,7 +30,6 @@ class ColorPickerField extends HookConsumerWidget {
     required this.onChanged,
     this.onInteractionStart,
     this.onInteractionCommit,
-    this.onInteractionCancel,
     this.enabled = true,
     this.readOnly = false,
     super.key,
@@ -42,7 +40,6 @@ class ColorPickerField extends HookConsumerWidget {
   final ValueChanged<Color> onChanged;
   final VoidCallback? onInteractionStart;
   final VoidCallback? onInteractionCommit;
-  final VoidCallback? onInteractionCancel;
   final bool enabled;
   final bool readOnly;
 
@@ -56,16 +53,11 @@ class ColorPickerField extends HookConsumerWidget {
     final currentColor = color;
     final pickerColor = currentColor ?? Theme.of(context).colorScheme.primary;
 
-    void close({bool cancel = false}) {
+    void close() {
       if (!open.value) return;
       open.value = false;
-      if (cancel) {
-        onInteractionCancel?.call();
-      } else {
-        onInteractionCommit?.call();
-      }
-      if (!cancel &&
-          currentColor != null &&
+      onInteractionCommit?.call();
+      if (currentColor != null &&
           openingColor.value != currentColor.argbValue) {
         ref
             .read(colorLibraryProvider.notifier)
@@ -122,9 +114,7 @@ class ColorPickerField extends HookConsumerWidget {
           child: Actions(
             actions: {
               DismissIntent: CallbackAction(onInvoke: (_) => close()),
-              CancelIntent: CallbackAction(
-                onInvoke: (_) => close(cancel: true),
-              ),
+              CancelIntent: CallbackAction(onInvoke: (_) => close()),
             },
             child: SizedBox(
               width: 340,
@@ -154,7 +144,6 @@ class ColorPickerField extends HookConsumerWidget {
           onChanged: onChanged,
           onInputFocus: onInteractionStart,
           onInputBlur: onInteractionCommit,
-          onCancel: onInteractionCancel,
           onDone: (value) {
             if (value.argbValue != currentColor?.argbValue) {
               ref

@@ -1,115 +1,92 @@
 import { BindingRef } from "editor/v1/binding.skir";
-import { TypeDiagnostic } from "editor/v1/diagnostic.skir";
-import { TypedExpression } from "editor/v1/expression.skir";
+import { ExpressionNode } from "editor/v1/expression.skir";
 import {
   CapabilityId,
-  ResolvedTypeRef,
-  TypedValue,
+  ItemId,
+  TypeUse,
 } from "editor/v1/type_catalog.skir";
-
-// Editor actions describe local mutations and requests delegated to Realm. Local variants operate on bound values;
-// Realm variants leave execution to Realm. Mutation results carry applied state or failure information.
 
 struct SetValueAction(810700001) {
   target: BindingRef = 0;
-  value: TypedExpression = 1;
+  value: ExpressionNode = 1;
 }
 
 struct InsertListItemAction(810700002) {
   target: BindingRef = 0;
-  index: TypedExpression = 1;
-  value: TypedExpression = 2;
+  after: ItemId? = 1;
+  value: ExpressionNode = 2;
 }
 
-struct RemoveListItemAction(810700003) {
+struct AppendListItemAction(810700003) {
   target: BindingRef = 0;
-  index: TypedExpression = 1;
+  value: ExpressionNode = 1;
 }
 
-struct AppendListItemAction(810700004) {
+struct RemoveListItemAction(810700004) {
   target: BindingRef = 0;
-  value: TypedExpression = 1;
+  item: ItemId = 1;
 }
 
 struct DuplicateListItemAction(810700005) {
-  source: BindingRef = 0;
-}
-
-struct ReorderListItemAction(810700006) {
-  source: BindingRef = 0;
-  new_index: TypedExpression = 1;
-}
-
-struct PutMapEntryAction(810700007) {
   target: BindingRef = 0;
-  key: TypedExpression = 1;
-  value: TypedExpression = 2;
+  item: ItemId = 1;
 }
 
-struct RemoveMapEntryAction(810700008) {
+struct MoveListItemAction(810700006) {
   target: BindingRef = 0;
-  key: TypedExpression = 1;
+  item: ItemId = 1;
+  after: ItemId? = 2;
 }
 
-struct ReplaceConcreteNominalTypeAction(810700009) {
+struct InsertMapRowAction(810700007) {
   target: BindingRef = 0;
-  concrete_type: ResolvedTypeRef = 1;
+  key: ExpressionNode = 1;
+  value: ExpressionNode = 2;
 }
 
-// A mutation that can be evaluated and applied within the current editor
-// value. Binding resolution supplies writability and the revision being edited.
-enum LocalEditorAction(810700010) {
+struct UpdateMapRowAction(810700008) {
+  target: BindingRef = 0;
+  row: ItemId = 1;
+  key: ExpressionNode = 2;
+  value: ExpressionNode = 3;
+}
+
+struct RemoveMapRowAction(810700009) {
+  target: BindingRef = 0;
+  row: ItemId = 1;
+}
+
+struct ChooseFormAction(810700010) {
+  target: BindingRef = 0;
+  type: TypeUse = 1;
+}
+
+enum LocalEditorAction(810700011) {
   set_value: SetValueAction = 1;
   insert_list_item: InsertListItemAction = 2;
-  remove_list_item: RemoveListItemAction = 3;
-  append_list_item: AppendListItemAction = 4;
+  append_list_item: AppendListItemAction = 3;
+  remove_list_item: RemoveListItemAction = 4;
   duplicate_list_item: DuplicateListItemAction = 5;
-  reorder_list_item: ReorderListItemAction = 6;
-  put_map_entry: PutMapEntryAction = 7;
-  remove_map_entry: RemoveMapEntryAction = 8;
-  replace_concrete_nominal_type: ReplaceConcreteNominalTypeAction = 9;
+  move_list_item: MoveListItemAction = 6;
+  insert_map_row: InsertMapRowAction = 7;
+  update_map_row: UpdateMapRowAction = 8;
+  remove_map_row: RemoveMapRowAction = 9;
+  choose_form: ChooseFormAction = 10;
 }
 
-// Requests the owning editor to refresh its Realm view.
-struct ReloadRealmAction(810700011) {}
+struct ReloadRealmAction(810700012) {}
 
-// Requests a Realm capability operation. Execution and authorization belong to the Realm owner.
-struct CommandCapabilityAction(810700012) {
+struct CommandCapabilityAction(810700013) {
   capability_id: CapabilityId = 0;
-  payload: TypedExpression = 1;
+  payload: ExpressionNode = 1;
 }
 
-enum RealmEditorAction(810700013) {
+enum RealmEditorAction(810700014) {
   reload: ReloadRealmAction = 1;
   command: CommandCapabilityAction = 2;
 }
 
-enum EditorAction(810700014) {
+enum EditorAction(810700015) {
   local: LocalEditorAction = 1;
   realm: RealmEditorAction = 2;
-}
-
-// Confirms the resulting value and revision after a mutation is applied.
-struct MutationSuccess(810700015) {
-  revision: int64 = 0;
-  value: TypedValue = 1;
-}
-
-// Reports that the expected revision did not match the current value.
-struct MutationConflict(810700016) {
-  expected_revision: int64 = 0;
-  actual_revision: int64 = 1;
-  actual_value: TypedValue = 2;
-}
-
-struct PermissionDenied(810700017) {
-  message: string = 0;
-}
-
-enum TypedMutationResult(810700018) {
-  success: MutationSuccess = 1;
-  conflict: MutationConflict = 2;
-  invalid: [TypeDiagnostic] = 3;
-  unavailable: [TypeDiagnostic] = 4;
-  permission_denied: PermissionDenied = 5;
 }

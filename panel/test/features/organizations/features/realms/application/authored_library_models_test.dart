@@ -1,0 +1,397 @@
+import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/features/organizations/features/realms/application/authored_library_values.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring.dart"
+    as authoring;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
+    as catalog;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
+    as skir;
+
+void main() {
+  test("book reads tagged visual values and relation items", () {
+    final tag = skir.ResourceId(value: "tag:one");
+    final book = decodeAuthoredBook(
+      authoring.AuthoringResource(
+        id: skir.ResourceId(value: "book:one"),
+        definition: catalog.ResourceDefinitionId(value: "typewriter.book"),
+        content: skir.AuthoringRecord(
+          configuration: skir.TypeSelection.unknown,
+          fields: [
+            _field("title", skir.DataValue.wrapStringValue("Guide")),
+            _field(
+              "icon",
+              _named(
+                skir.DataValue.createRecord(
+                  fields: [
+                    _field(
+                      "value",
+                      skir.DataValue.wrapStringValue("material-symbols:book"),
+                    ),
+                  ],
+                ),
+                actualType: _iconifyType,
+              ),
+            ),
+            _field("color", _named(skir.DataValue.wrapInteger("4281558681"))),
+            _field(
+              "tags",
+              _named(
+                skir.DataValue.createSetValue(
+                  items: [
+                    skir.ListItem(
+                      id: skir.ItemId(value: "tag-item"),
+                      value: _link(tag),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    expect(book.title, "Guide");
+    expect(book.icon, "material-symbols:book");
+    expect(book.argb, 0xff336699);
+    expect(book.tags, [tag]);
+  });
+
+  test("book reads the generated SVG icon payload", () {
+    const source = "<svg viewBox=\"0 0 1 1\"></svg>";
+    final book = decodeAuthoredBook(
+      authoring.AuthoringResource(
+        id: skir.ResourceId(value: "book:svg"),
+        definition: catalog.ResourceDefinitionId(value: "typewriter.book"),
+        content: skir.AuthoringRecord(
+          configuration: skir.TypeSelection.unknown,
+          fields: [
+            _field("title", skir.DataValue.wrapStringValue("SVG guide")),
+            _field(
+              "icon",
+              _named(
+                skir.DataValue.createRecord(
+                  fields: [
+                    _field("source", skir.DataValue.wrapStringValue(source)),
+                  ],
+                ),
+                actualType: _svgType,
+              ),
+            ),
+            _field("color", _named(skir.DataValue.wrapInteger("4281558681"))),
+            _field("tags", _named(skir.DataValue.createSetValue(items: []))),
+          ],
+        ),
+      ),
+    );
+
+    expect(book.icon, source);
+  });
+
+  test("tag reads tagged placement and parent links", () {
+    final parent = skir.ResourceId(value: "tag:parent");
+    final tag = decodeAuthoredTag(
+      authoring.AuthoringResource(
+        id: skir.ResourceId(value: "tag:child"),
+        definition: catalog.ResourceDefinitionId(value: "typewriter.tag"),
+        content: skir.AuthoringRecord(
+          configuration: skir.TypeSelection.unknown,
+          fields: [
+            _field("name", skir.DataValue.wrapStringValue("Child")),
+            _field("color", _named(skir.DataValue.wrapInteger("4289449455"))),
+            _field(
+              "parents",
+              _named(
+                skir.DataValue.createSetValue(
+                  items: [
+                    skir.ListItem(
+                      id: skir.ItemId(value: "parent-item"),
+                      value: _link(parent),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            _field(
+              "placement",
+              _named(
+                skir.DataValue.createRecord(
+                  fields: [
+                    _field("x", skir.DataValue.wrapInteger("2")),
+                    _field("y", skir.DataValue.wrapInteger("3")),
+                    _field("width", skir.DataValue.wrapInteger("4")),
+                    _field("height", skir.DataValue.wrapInteger("1")),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    expect(tag.name, "Child");
+    expect(tag.argb, 0xffabcdef);
+    expect(tag.parents, [parent]);
+    expect((tag.x, tag.y, tag.width, tag.height), (2, 3, 4, 1));
+  });
+
+  test("page retains pending configuration and ordered element links", () {
+    final element = skir.ResourceId(value: "element:one");
+    final configuration = skir.TypeSelection.createPending(
+      definition: skir.TypeDefinitionId(
+        typeId: skir.TypeId.createDeclared(
+          value: "0123456789abcdef0123456789abcdef",
+        ),
+        revision: 1,
+      ),
+      arguments: const [skir.ArgumentSelection.unfilled],
+    );
+    final page = decodeAuthoredPage(
+      authoring.AuthoringResource(
+        id: skir.ResourceId(value: "page:one"),
+        definition: catalog.ResourceDefinitionId(value: "typewriter.page"),
+        content: skir.AuthoringRecord(
+          configuration: configuration,
+          fields: [
+            _field("book", _link(skir.ResourceId(value: "book:one"))),
+            _field("name", skir.DataValue.wrapStringValue("Opening")),
+            _field("chapter", _named(skir.DataValue.wrapStringValue("intro"))),
+            _field("priority", skir.DataValue.wrapInteger("4")),
+            _field(
+              "elements",
+              _named(
+                skir.DataValue.createListValue(
+                  items: [
+                    skir.ListItem(
+                      id: skir.ItemId(value: "element-item"),
+                      value: _link(element),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    expect(page.configuration, configuration);
+    expect(page.book, skir.ResourceId(value: "book:one"));
+    expect((page.name, page.chapter, page.priority), ("Opening", "intro", 4));
+    expect(page.elements, [element]);
+  });
+
+  test("incomplete library resources coexist with complete projections", () {
+    final retainedTag = skir.ResourceId(value: "tag:retained");
+    final retainedElement = skir.ResourceId(value: "element:retained");
+    final books = [
+      decodeAuthoredBook(
+        _resource("book:complete", "typewriter.book", [
+          _field("title", skir.DataValue.wrapStringValue("Complete")),
+          _field(
+            "icon",
+            _named(
+              skir.DataValue.createRecord(
+                fields: [
+                  _field(
+                    "value",
+                    skir.DataValue.wrapStringValue("material-symbols:book"),
+                  ),
+                ],
+              ),
+              actualType: _iconifyType,
+            ),
+          ),
+          _field("color", _named(skir.DataValue.wrapInteger("4281558681"))),
+          _field("tags", _named(skir.DataValue.createSetValue(items: []))),
+        ]),
+      ),
+      decodeAuthoredBook(
+        _resource("book:incomplete", "typewriter.book", [
+          _field("title", skir.DataValue.unfilled),
+          _field("icon", skir.DataValue.unfilled),
+          _field("color", skir.DataValue.unfilled),
+          _field(
+            "tags",
+            _named(
+              skir.DataValue.createSetValue(
+                items: [
+                  skir.ListItem(
+                    id: skir.ItemId(value: "retained-tag"),
+                    value: _link(retainedTag),
+                  ),
+                  skir.ListItem(
+                    id: skir.ItemId(value: "unfinished-tag"),
+                    value: skir.DataValue.unfilled,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ]),
+      ),
+    ];
+    final tags = [
+      decodeAuthoredTag(
+        _resource("tag:complete", "typewriter.tag", [
+          _field("name", skir.DataValue.wrapStringValue("Complete")),
+          _field("color", _named(skir.DataValue.wrapInteger("4289449455"))),
+          _field("parents", _named(skir.DataValue.createSetValue(items: []))),
+          _field(
+            "placement",
+            _named(
+              skir.DataValue.createRecord(
+                fields: [
+                  _field("x", skir.DataValue.wrapInteger("2")),
+                  _field("y", skir.DataValue.wrapInteger("3")),
+                  _field("width", skir.DataValue.wrapInteger("4")),
+                  _field("height", skir.DataValue.wrapInteger("1")),
+                ],
+              ),
+            ),
+          ),
+        ]),
+      ),
+      decodeAuthoredTag(
+        _resource("tag:incomplete", "typewriter.tag", [
+          _field("name", skir.DataValue.unfilled),
+          _field("color", skir.DataValue.unfilled),
+          _field(
+            "parents",
+            _named(
+              skir.DataValue.createSetValue(
+                items: [
+                  skir.ListItem(
+                    id: skir.ItemId(value: "retained-parent"),
+                    value: _link(retainedTag),
+                  ),
+                  skir.ListItem(
+                    id: skir.ItemId(value: "unfinished-parent"),
+                    value: skir.DataValue.unfilled,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          _field(
+            "placement",
+            _named(
+              skir.DataValue.createRecord(
+                fields: [
+                  _field("x", skir.DataValue.unfilled),
+                  _field("y", skir.DataValue.wrapInteger("7")),
+                  _field("width", skir.DataValue.wrapInteger("0")),
+                  _field("height", skir.DataValue.unfilled),
+                ],
+              ),
+            ),
+          ),
+        ]),
+      ),
+    ];
+    final pages = [
+      decodeAuthoredPage(
+        _resource("page:complete", "typewriter.page", [
+          _field("book", _link(skir.ResourceId(value: "book:complete"))),
+          _field("name", skir.DataValue.wrapStringValue("Complete")),
+          _field("chapter", _named(skir.DataValue.wrapStringValue("one"))),
+          _field("priority", skir.DataValue.wrapInteger("1")),
+          _field("elements", _named(skir.DataValue.createListValue(items: []))),
+        ]),
+      ),
+      decodeAuthoredPage(
+        _resource("page:incomplete", "typewriter.page", [
+          _field("book", skir.DataValue.unfilled),
+          _field("name", skir.DataValue.unfilled),
+          _field("chapter", skir.DataValue.unfilled),
+          _field("priority", skir.DataValue.unfilled),
+          _field(
+            "elements",
+            _named(
+              skir.DataValue.createListValue(
+                items: [
+                  skir.ListItem(
+                    id: skir.ItemId(value: "retained-element"),
+                    value: _link(retainedElement),
+                  ),
+                  skir.ListItem(
+                    id: skir.ItemId(value: "unfinished-element"),
+                    value: skir.DataValue.unfilled,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ]),
+      ),
+    ];
+
+    expect(books.map((value) => value.title), ["Complete", "Unnamed Book"]);
+    expect(books.last.icon, "material-symbols:book");
+    expect(books.last.argb, 0xff3f51b5);
+    expect(books.last.tags, [retainedTag]);
+    expect(tags.map((value) => value.name), ["Complete", "Unnamed Tag"]);
+    expect(tags.last.argb, 0xff9e9e9e);
+    expect(tags.last.parents, [retainedTag]);
+    expect(
+      (tags.last.x, tags.last.y, tags.last.width, tags.last.height),
+      (0, 7, 1, 1),
+    );
+    expect(pages.map((value) => value.name), ["Complete", "Unnamed Page"]);
+    expect(pages.last.book, isNull);
+    expect((pages.last.chapter, pages.last.priority), ("", 0));
+    expect(pages.last.elements, [retainedElement]);
+  });
+}
+
+authoring.AuthoringResource _resource(
+  String id,
+  String definition,
+  List<skir.FieldValue> fields,
+) => authoring.AuthoringResource(
+  id: skir.ResourceId(value: id),
+  definition: catalog.ResourceDefinitionId(value: definition),
+  content: skir.AuthoringRecord(
+    configuration: skir.TypeSelection.unknown,
+    fields: fields,
+  ),
+);
+
+skir.FieldValue _field(String name, skir.DataValue value) =>
+    skir.FieldValue(name: name, value: value);
+
+skir.DataValue _named(
+  skir.DataValue payload, {
+  skir.NamedTypeUse? actualType,
+}) => skir.DataValue.createNamed(
+  actualType: actualType ?? skir.NamedTypeUse.defaultInstance,
+  payload: payload,
+);
+
+skir.DataValue _link(skir.ResourceId target) => _named(
+  skir.DataValue.createLink(
+    endpoint: skir.EndpointId(value: "test.endpoint"),
+    target: skir.LinkTarget(resource: target, opposite: null),
+  ),
+);
+
+final _iconifyType = skir.NamedTypeUse(
+  definition: skir.TypeDefinitionId(
+    typeId: skir.TypeId.createDeclared(
+      value: "3845952a4d714e23ad55f07051669930",
+    ),
+    revision: 1,
+  ),
+  arguments: const [],
+);
+
+final _svgType = skir.NamedTypeUse(
+  definition: skir.TypeDefinitionId(
+    typeId: skir.TypeId.createDeclared(
+      value: "67ed1a5b0e534c05b8d233ef9783971b",
+    ),
+    revision: 1,
+  ),
+  arguments: const [],
+);

@@ -1,12 +1,11 @@
 package com.typewritermc.realm.routes
 
-import skirout.editor.v1.diagnostic.DiagnosticCode
 import skirout.editor.v1.search.RealmPresentationSearchRequest
 import skirout.editor.v1.search.RealmPresentationSearchStatus
 import skirout.editor.v1.search.RealmPresentationSearchUpdate
 import skirout.editor.v1.search.RealmSearchSelectorExpression
-import skirout.editor.v1.type_catalog.TypeExpression
-import skirout.editor.v1.type_catalog.TypedValue
+import skirout.editor.v1.type_catalog.DataValue
+import skirout.editor.v1.type_catalog.TypeTemplate
 
 /**
  * Collects request shape diagnostics before a search source can start work.
@@ -23,8 +22,8 @@ internal fun invalidRealmPresentationSearchRequest(request: RealmPresentationSea
             if (request.subscriptionId.isBlank()) add("Realm presentation search subscription ID must not be blank")
             if (request.generation.value.isBlank()) add("Realm catalog generation must not be blank")
             if (request.capabilityId.value.isBlank()) add("Realm search capability ID must not be blank")
-            if (request.payload == TypedValue.UNKNOWN) add("Realm presentation search payload is missing")
-            if (request.resultType == TypeExpression.UNKNOWN) add("Realm presentation search result type is missing")
+            if (request.payload == DataValue.UNKNOWN) add("Realm presentation search payload is missing")
+            if (request.resultType == TypeTemplate.UNKNOWN) add("Realm presentation search result type is missing")
             request.query.selectors.forEach { selector ->
                 if (selector.selectorId.isBlank()) add("Realm search selector ID must not be blank")
                 if (selector.key.isBlank()) add("Realm search selector key must not be blank")
@@ -40,7 +39,7 @@ internal fun invalidRealmPresentationSearchRequest(request: RealmPresentationSea
         status = RealmPresentationSearchStatus.ERROR,
         values = emptyList(),
         guidance = emptyList(),
-        diagnostics = messages.map { message -> realmPresentationSearchDiagnostic(DiagnosticCode.INVALID_VALUE, message) },
+        diagnostics = messages.map(::realmDiagnostic),
     )
 }
 
@@ -57,10 +56,7 @@ internal fun invalidRealmPresentationSearchResponse(subscriptionId: String): Rea
         guidance = emptyList(),
         diagnostics =
             listOf(
-                realmPresentationSearchDiagnostic(
-                    DiagnosticCode.INVALID_VALUE,
-                    "Realm presentation search response used a different subscription ID",
-                ),
+                realmDiagnostic("Realm presentation search response used a different subscription ID"),
             ),
     )
 

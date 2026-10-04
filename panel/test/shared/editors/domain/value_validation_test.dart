@@ -1,8 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
-import "../../../support/realm_catalog_fixture.dart";
-
 void main() {
   group("Value validation", () {
     test("integer width boundaries are inclusive", () {
@@ -50,30 +48,6 @@ void main() {
       expect(diagnostics.last.path, DataPath.root.index(1));
     });
 
-    test("records require explicit option values for optional fields", () {
-      final registry = TypeRegistry(receivedRealmCatalog());
-      final type = RecordType(
-        fields: {
-          "required": const TypeField(name: "required", type: StringType()),
-          "optional": TypeField(
-            name: "optional",
-            type: NamedType(standardTypeRefs.optionOf(const StringType())),
-          ),
-        },
-      );
-
-      final diagnostics = RecordValue({
-        "optional": PolymorphicValue(
-          concreteType: standardTypeRefs.noneOf(const StringType()),
-          value: const UnitValue(),
-        ),
-      }).validateAgainst(type, registry: registry);
-
-      expect(diagnostics, hasLength(1));
-      expect(diagnostics.single.code, TypeDiagnosticCode.missingField);
-      expect(diagnostics.single.path, DataPath.root.field("required"));
-    });
-
     test(
       "closed records reject unknown fields while open records accept them",
       () {
@@ -100,39 +74,6 @@ void main() {
 
       expect(diagnostics.single.path, DataPath.root.mapKey(key));
       expect(diagnostics.single.code, TypeDiagnosticCode.invalidValue);
-    });
-
-    test("polymorphic validation checks the concrete representation", () {
-      final parent = ResolvedTypeRef(
-        id: const QualifiedTypeId(namespace: "test", name: "Value"),
-        revision: 1,
-      );
-      final child = ResolvedTypeRef(
-        id: const QualifiedTypeId(namespace: "test", name: "Count"),
-        revision: 1,
-      );
-      final registry = TypeRegistry(
-        TypeCatalog([
-          TypeDefinition(id: parent, kind: NominalTypeKind.sealedAbstract),
-          TypeDefinition(
-            id: child,
-            kind: NominalTypeKind.concrete,
-            parents: [parent],
-            representation: const IntegerType(width: IntegerWidth.unsigned8),
-          ),
-        ]),
-      );
-      final value = PolymorphicValue(
-        concreteType: child,
-        value: IntegerValue(BigInt.from(-1)),
-      );
-
-      final diagnostics = value.validateAgainst(
-        NamedType(parent),
-        registry: registry,
-      );
-
-      expect(diagnostics.single.path, DataPath.root);
     });
 
     test("float values must be finite and within constraints", () {

@@ -267,8 +267,8 @@ pub struct RealmPresentationSearchRequest {
     pub subscription_id: String,
     pub generation: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
     pub capability_id: crate::skirout::base::editor::v1::type_catalog::CapabilityId,
-    pub payload: crate::skirout::base::editor::v1::type_catalog::TypedValue,
-    pub result_type: crate::skirout::base::editor::v1::type_catalog::TypeExpression,
+    pub payload: crate::skirout::base::editor::v1::type_catalog::DataValue,
+    pub result_type: crate::skirout::base::editor::v1::type_catalog::TypeTemplate,
     pub query: RealmSearchQuery,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RealmPresentationSearchRequest>>,
@@ -353,9 +353,9 @@ impl RealmPresentationSearchStatus {
 pub struct RealmPresentationSearchSnapshot {
     pub subscription_id: String,
     pub status: RealmPresentationSearchStatus,
-    pub values: Vec<crate::skirout::base::editor::v1::type_catalog::TypedValue>,
+    pub values: Vec<crate::skirout::base::editor::v1::type_catalog::DataValue>,
     pub guidance: Vec<String>,
-    pub diagnostics: Vec<crate::skirout::base::editor::v1::diagnostic::TypeDiagnostic>,
+    pub diagnostics: Vec<crate::skirout::base::editor::v1::diagnostic::Diagnostic>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RealmPresentationSearchSnapshot>>,
 }
@@ -394,7 +394,7 @@ impl RealmPresentationSearchSnapshot {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct RealmPresentationSearchUnavailable {
     pub subscription_id: String,
-    pub diagnostics: Vec<crate::skirout::base::editor::v1::diagnostic::TypeDiagnostic>,
+    pub diagnostics: Vec<crate::skirout::base::editor::v1::diagnostic::Diagnostic>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RealmPresentationSearchUnavailable>>,
 }
@@ -600,11 +600,11 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<RealmPresentationSearchRequest> = RealmPresentationSearchRequest::_adapter() as *const _ as *mut _;
                 (*a).add_field("subscription_id", 0, crate::skir_client::Serializer::string(), "", |x: &RealmPresentationSearchRequest| &x.subscription_id, |x: &mut RealmPresentationSearchRequest, v| x.subscription_id = v);
-                (*a).add_field("generation", 5, crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(), "", |x: &RealmPresentationSearchRequest| &x.generation, |x: &mut RealmPresentationSearchRequest, v| x.generation = v);
-                (*a).add_field("capability_id", 1, crate::skirout::base::editor::v1::type_catalog::CapabilityId::serializer(), "", |x: &RealmPresentationSearchRequest| &x.capability_id, |x: &mut RealmPresentationSearchRequest, v| x.capability_id = v);
-                (*a).add_field("payload", 2, crate::skirout::base::editor::v1::type_catalog::TypedValue::serializer(), "", |x: &RealmPresentationSearchRequest| &x.payload, |x: &mut RealmPresentationSearchRequest, v| x.payload = v);
-                (*a).add_field("result_type", 3, crate::skirout::base::editor::v1::type_catalog::TypeExpression::serializer(), "", |x: &RealmPresentationSearchRequest| &x.result_type, |x: &mut RealmPresentationSearchRequest, v| x.result_type = v);
-                (*a).add_field("query", 4, crate::skir_client::internal::struct_serializer_from_static(RealmSearchQuery::_adapter()), "", |x: &RealmPresentationSearchRequest| &x.query, |x: &mut RealmPresentationSearchRequest, v| x.query = v);
+                (*a).add_field("generation", 1, crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(), "", |x: &RealmPresentationSearchRequest| &x.generation, |x: &mut RealmPresentationSearchRequest, v| x.generation = v);
+                (*a).add_field("capability_id", 2, crate::skirout::base::editor::v1::type_catalog::CapabilityId::serializer(), "", |x: &RealmPresentationSearchRequest| &x.capability_id, |x: &mut RealmPresentationSearchRequest, v| x.capability_id = v);
+                (*a).add_field("payload", 3, crate::skirout::base::editor::v1::type_catalog::DataValue::serializer(), "", |x: &RealmPresentationSearchRequest| &x.payload, |x: &mut RealmPresentationSearchRequest, v| x.payload = v);
+                (*a).add_field("result_type", 4, crate::skirout::base::editor::v1::type_catalog::TypeTemplate::serializer(), "", |x: &RealmPresentationSearchRequest| &x.result_type, |x: &mut RealmPresentationSearchRequest, v| x.result_type = v);
+                (*a).add_field("query", 5, crate::skir_client::internal::struct_serializer_from_static(RealmSearchQuery::_adapter()), "", |x: &RealmPresentationSearchRequest| &x.query, |x: &mut RealmPresentationSearchRequest, v| x.query = v);
                 (*a).finalize();
             }
             unsafe {
@@ -618,15 +618,15 @@ fn initialize_module_serializers() {
                 let a: *mut crate::skir_client::internal::StructAdapter<RealmPresentationSearchSnapshot> = RealmPresentationSearchSnapshot::_adapter() as *const _ as *mut _;
                 (*a).add_field("subscription_id", 0, crate::skir_client::Serializer::string(), "", |x: &RealmPresentationSearchSnapshot| &x.subscription_id, |x: &mut RealmPresentationSearchSnapshot, v| x.subscription_id = v);
                 (*a).add_field("status", 1, crate::skir_client::internal::enum_serializer_from_static(RealmPresentationSearchStatus::_adapter()), "", |x: &RealmPresentationSearchSnapshot| &x.status, |x: &mut RealmPresentationSearchSnapshot, v| x.status = v);
-                (*a).add_field("values", 2, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::TypedValue::serializer()), "", |x: &RealmPresentationSearchSnapshot| &x.values, |x: &mut RealmPresentationSearchSnapshot, v| x.values = v);
+                (*a).add_field("values", 2, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::DataValue::serializer()), "", |x: &RealmPresentationSearchSnapshot| &x.values, |x: &mut RealmPresentationSearchSnapshot, v| x.values = v);
                 (*a).add_field("guidance", 3, crate::skir_client::Serializer::array(crate::skir_client::Serializer::string()), "", |x: &RealmPresentationSearchSnapshot| &x.guidance, |x: &mut RealmPresentationSearchSnapshot, v| x.guidance = v);
-                (*a).add_field("diagnostics", 4, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::diagnostic::TypeDiagnostic::serializer()), "", |x: &RealmPresentationSearchSnapshot| &x.diagnostics, |x: &mut RealmPresentationSearchSnapshot, v| x.diagnostics = v);
+                (*a).add_field("diagnostics", 4, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::diagnostic::Diagnostic::serializer()), "", |x: &RealmPresentationSearchSnapshot| &x.diagnostics, |x: &mut RealmPresentationSearchSnapshot, v| x.diagnostics = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<RealmPresentationSearchUnavailable> = RealmPresentationSearchUnavailable::_adapter() as *const _ as *mut _;
                 (*a).add_field("subscription_id", 0, crate::skir_client::Serializer::string(), "", |x: &RealmPresentationSearchUnavailable| &x.subscription_id, |x: &mut RealmPresentationSearchUnavailable, v| x.subscription_id = v);
-                (*a).add_field("diagnostics", 1, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::diagnostic::TypeDiagnostic::serializer()), "", |x: &RealmPresentationSearchUnavailable| &x.diagnostics, |x: &mut RealmPresentationSearchUnavailable, v| x.diagnostics = v);
+                (*a).add_field("diagnostics", 1, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::diagnostic::Diagnostic::serializer()), "", |x: &RealmPresentationSearchUnavailable| &x.diagnostics, |x: &mut RealmPresentationSearchUnavailable, v| x.diagnostics = v);
                 (*a).finalize();
             }
             unsafe {

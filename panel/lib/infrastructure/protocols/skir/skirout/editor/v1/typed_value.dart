@@ -17,65 +17,65 @@ import "package:skir_client/skir_client.dart" as _skir;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 
 // -----------------------------------------------------------------------------
-// struct TypedValueEnvelope
+// struct PortableValue
 // -----------------------------------------------------------------------------
 
-sealed class TypedValueEnvelope_orMutable {
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable get rootType;
-  _lib_editor_v1_type_catalog.TypedValue get rootValue;
+sealed class PortableValue_orMutable {
+  _lib_editor_v1_type_catalog.TypeUse get actualType;
+  _lib_editor_v1_type_catalog.DataValue get payload;
 
-  TypedValueEnvelope toFrozen();
+  PortableValue toFrozen();
 }
 
 /// Deeply immutable.
-final class TypedValueEnvelope implements TypedValueEnvelope_orMutable {
+final class PortableValue implements PortableValue_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.ResolvedTypeRef rootType;
+  final _lib_editor_v1_type_catalog.TypeUse actualType;
   @_core.override
-  final _lib_editor_v1_type_catalog.TypedValue rootValue;
+  final _lib_editor_v1_type_catalog.DataValue payload;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory TypedValueEnvelope({
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable rootType,
-    required _lib_editor_v1_type_catalog.TypedValue rootValue,
-  }) => TypedValueEnvelope._(
-    rootType.toFrozen(),
-    rootValue,
+  factory PortableValue({
+    required _lib_editor_v1_type_catalog.TypeUse actualType,
+    required _lib_editor_v1_type_catalog.DataValue payload,
+  }) => PortableValue._(
+    actualType,
+    payload,
   );
 
-  TypedValueEnvelope._(
-    this.rootType,
-    this.rootValue,
+  PortableValue._(
+    this.actualType,
+    this.payload,
   );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = TypedValueEnvelope._(
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    _lib_editor_v1_type_catalog.TypedValue.unknown,
+  static final defaultInstance = PortableValue._(
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
+    _lib_editor_v1_type_catalog.DataValue.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static TypedValueEnvelope_mutable mutable() => TypedValueEnvelope_mutable._(
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    _lib_editor_v1_type_catalog.TypedValue.unknown,
+  static PortableValue_mutable mutable() => PortableValue_mutable._(
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
+    _lib_editor_v1_type_catalog.DataValue.unknown,
   );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  TypedValueEnvelope toFrozen() => this;
+  PortableValue toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  TypedValueEnvelope_mutable toMutable() => TypedValueEnvelope_mutable._(
-    this.rootType,
-    this.rootValue,
+  PortableValue_mutable toMutable() => PortableValue_mutable._(
+    this.actualType,
+    this.payload,
   );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! TypedValueEnvelope) return false;
+    if (other is! PortableValue) return false;
     return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
@@ -83,33 +83,33 @@ final class TypedValueEnvelope implements TypedValueEnvelope_orMutable {
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
   _core.List get _equality_proxy => [
-    this.rootType,
-    this.rootValue,
+    this.actualType,
+    this.payload,
   ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `TypedValueEnvelope` instances.
-  static _skir.StructSerializer<TypedValueEnvelope, TypedValueEnvelope_mutable> get serializer {
+  /// Serializer for `PortableValue` instances.
+  static _skir.StructSerializer<PortableValue, PortableValue_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
-        "root_type",
-        "rootType",
+        "actual_type",
+        "actualType",
         0,
-        _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
+        _lib_editor_v1_type_catalog.TypeUse.serializer,
         "",
-        (it) => it.rootType,
-        (it, v) => it.rootType = v,
+        (it) => it.actualType,
+        (it, v) => it.actualType = v,
       );
       _serializerBuilder.addField(
-        "root_value",
-        "rootValue",
+        "payload",
+        "payload",
         1,
-        _lib_editor_v1_type_catalog.TypedValue.serializer,
+        _lib_editor_v1_type_catalog.DataValue.serializer,
         "",
-        (it) => it.rootValue,
-        (it, v) => it.rootValue = v,
+        (it) => it.payload,
+        (it, v) => it.payload = v,
       );
       _serializerBuilder.finalize();
     }
@@ -117,42 +117,31 @@ final class TypedValueEnvelope implements TypedValueEnvelope_orMutable {
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/typed_value.skir:TypedValueEnvelope",
+    recordId: "editor/v1/typed_value.skir:PortableValue",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (TypedValueEnvelope_mutable it) => it.toFrozen(),
+    toFrozen: (PortableValue_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [TypedValueEnvelope].
-final class TypedValueEnvelope_mutable implements TypedValueEnvelope_orMutable {
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable rootType;
-  _lib_editor_v1_type_catalog.TypedValue rootValue;
+/// Mutable version of [PortableValue].
+final class PortableValue_mutable implements PortableValue_orMutable {
+  _lib_editor_v1_type_catalog.TypeUse actualType;
+  _lib_editor_v1_type_catalog.DataValue payload;
   _skir.internal__UnrecognizedFields? _u;
 
-  TypedValueEnvelope_mutable._(
-    this.rootType,
-    this.rootValue,
+  PortableValue_mutable._(
+    this.actualType,
+    this.payload,
   );
-
-  /// If the value of [rootType] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [rootType] and returns it.
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable get mutableRootType {
-    final value = this.rootType;
-    if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
-      return value;
-    } else {
-      return this.rootType = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
-    }
-  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  TypedValueEnvelope toFrozen() => TypedValueEnvelope(
-    rootType: this.rootType,
-    rootValue: this.rootValue,
+  PortableValue toFrozen() => PortableValue(
+    actualType: this.actualType,
+    payload: this.payload,
   ).._u = this._u;
 }

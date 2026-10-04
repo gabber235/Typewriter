@@ -58,8 +58,8 @@ impl InvocationId {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct SearchCapabilityDefinition {
     pub capability_id: crate::skirout::base::editor::v1::type_catalog::CapabilityId,
-    pub request_type: crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef,
-    pub result_type: crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef,
+    pub request_type: crate::skirout::base::editor::v1::type_catalog::TypeUse,
+    pub result_type: crate::skirout::base::editor::v1::type_catalog::TypeUse,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SearchCapabilityDefinition>>,
 }
@@ -98,8 +98,8 @@ impl SearchCapabilityDefinition {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ComputationCapabilityDefinition {
     pub capability_id: crate::skirout::base::editor::v1::type_catalog::CapabilityId,
-    pub request_type: crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef,
-    pub result_type: crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef,
+    pub request_type: crate::skirout::base::editor::v1::type_catalog::TypeUse,
+    pub result_type: crate::skirout::base::editor::v1::type_catalog::TypeUse,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ComputationCapabilityDefinition>>,
 }
@@ -138,7 +138,7 @@ impl ComputationCapabilityDefinition {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CommandCapabilityDefinition {
     pub capability_id: crate::skirout::base::editor::v1::type_catalog::CapabilityId,
-    pub request_type: crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef,
+    pub request_type: crate::skirout::base::editor::v1::type_catalog::TypeUse,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CommandCapabilityDefinition>>,
 }
@@ -220,8 +220,8 @@ impl CapabilityDefinition {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ResourceAddress {
-    pub resource_type: crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef,
-    pub identity: crate::skirout::base::editor::v1::type_catalog::TypedValue,
+    pub resource_type: crate::skirout::base::editor::v1::type_catalog::TypeUse,
+    pub identity: crate::skirout::base::editor::v1::type_catalog::DataValue,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ResourceAddress>>,
 }
@@ -467,8 +467,8 @@ pub struct CapabilityInvocationRequest {
     pub invocation_id: InvocationId,
     pub generation: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
     pub capability_id: crate::skirout::base::editor::v1::type_catalog::CapabilityId,
-    pub payload: crate::skirout::base::editor::v1::type_catalog::TypedValue,
-    pub expected_result_type: Option<crate::skirout::base::editor::v1::type_catalog::TypeExpression>,
+    pub payload: crate::skirout::base::editor::v1::type_catalog::DataValue,
+    pub expected_result_type: Option<crate::skirout::base::editor::v1::type_catalog::TypeTemplate>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CapabilityInvocationRequest>>,
 }
@@ -507,7 +507,7 @@ impl CapabilityInvocationRequest {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ComputationSuccess {
     pub invocation_id: InvocationId,
-    pub value: crate::skirout::base::editor::v1::type_catalog::TypedValue,
+    pub value: crate::skirout::base::editor::v1::type_catalog::DataValue,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ComputationSuccess>>,
 }
@@ -663,7 +663,7 @@ impl StaleCatalogGeneration {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CapabilityFailure {
     pub invocation_id: InvocationId,
-    pub diagnostics: Vec<crate::skirout::base::editor::v1::diagnostic::TypeDiagnostic>,
+    pub diagnostics: Vec<crate::skirout::base::editor::v1::diagnostic::Diagnostic>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CapabilityFailure>>,
 }
@@ -806,21 +806,21 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<SearchCapabilityDefinition> = SearchCapabilityDefinition::_adapter() as *const _ as *mut _;
                 (*a).add_field("capability_id", 0, crate::skirout::base::editor::v1::type_catalog::CapabilityId::serializer(), "", |x: &SearchCapabilityDefinition| &x.capability_id, |x: &mut SearchCapabilityDefinition, v| x.capability_id = v);
-                (*a).add_field("request_type", 1, crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer(), "", |x: &SearchCapabilityDefinition| &x.request_type, |x: &mut SearchCapabilityDefinition, v| x.request_type = v);
-                (*a).add_field("result_type", 2, crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer(), "", |x: &SearchCapabilityDefinition| &x.result_type, |x: &mut SearchCapabilityDefinition, v| x.result_type = v);
+                (*a).add_field("request_type", 1, crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(), "", |x: &SearchCapabilityDefinition| &x.request_type, |x: &mut SearchCapabilityDefinition, v| x.request_type = v);
+                (*a).add_field("result_type", 2, crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(), "", |x: &SearchCapabilityDefinition| &x.result_type, |x: &mut SearchCapabilityDefinition, v| x.result_type = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ComputationCapabilityDefinition> = ComputationCapabilityDefinition::_adapter() as *const _ as *mut _;
                 (*a).add_field("capability_id", 0, crate::skirout::base::editor::v1::type_catalog::CapabilityId::serializer(), "", |x: &ComputationCapabilityDefinition| &x.capability_id, |x: &mut ComputationCapabilityDefinition, v| x.capability_id = v);
-                (*a).add_field("request_type", 1, crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer(), "", |x: &ComputationCapabilityDefinition| &x.request_type, |x: &mut ComputationCapabilityDefinition, v| x.request_type = v);
-                (*a).add_field("result_type", 2, crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer(), "", |x: &ComputationCapabilityDefinition| &x.result_type, |x: &mut ComputationCapabilityDefinition, v| x.result_type = v);
+                (*a).add_field("request_type", 1, crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(), "", |x: &ComputationCapabilityDefinition| &x.request_type, |x: &mut ComputationCapabilityDefinition, v| x.request_type = v);
+                (*a).add_field("result_type", 2, crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(), "", |x: &ComputationCapabilityDefinition| &x.result_type, |x: &mut ComputationCapabilityDefinition, v| x.result_type = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<CommandCapabilityDefinition> = CommandCapabilityDefinition::_adapter() as *const _ as *mut _;
                 (*a).add_field("capability_id", 0, crate::skirout::base::editor::v1::type_catalog::CapabilityId::serializer(), "", |x: &CommandCapabilityDefinition| &x.capability_id, |x: &mut CommandCapabilityDefinition, v| x.capability_id = v);
-                (*a).add_field("request_type", 1, crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer(), "", |x: &CommandCapabilityDefinition| &x.request_type, |x: &mut CommandCapabilityDefinition, v| x.request_type = v);
+                (*a).add_field("request_type", 1, crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(), "", |x: &CommandCapabilityDefinition| &x.request_type, |x: &mut CommandCapabilityDefinition, v| x.request_type = v);
                 (*a).finalize();
             }
             unsafe {
@@ -832,8 +832,8 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ResourceAddress> = ResourceAddress::_adapter() as *const _ as *mut _;
-                (*a).add_field("resource_type", 0, crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer(), "", |x: &ResourceAddress| &x.resource_type, |x: &mut ResourceAddress, v| x.resource_type = v);
-                (*a).add_field("identity", 1, crate::skirout::base::editor::v1::type_catalog::TypedValue::serializer(), "", |x: &ResourceAddress| &x.identity, |x: &mut ResourceAddress, v| x.identity = v);
+                (*a).add_field("resource_type", 0, crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(), "", |x: &ResourceAddress| &x.resource_type, |x: &mut ResourceAddress, v| x.resource_type = v);
+                (*a).add_field("identity", 1, crate::skirout::base::editor::v1::type_catalog::DataValue::serializer(), "", |x: &ResourceAddress| &x.identity, |x: &mut ResourceAddress, v| x.identity = v);
                 (*a).finalize();
             }
             unsafe {
@@ -872,14 +872,14 @@ fn initialize_module_serializers() {
                 (*a).add_field("invocation_id", 0, crate::skir_client::internal::struct_serializer_from_static(InvocationId::_adapter()), "", |x: &CapabilityInvocationRequest| &x.invocation_id, |x: &mut CapabilityInvocationRequest, v| x.invocation_id = v);
                 (*a).add_field("generation", 1, crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(), "", |x: &CapabilityInvocationRequest| &x.generation, |x: &mut CapabilityInvocationRequest, v| x.generation = v);
                 (*a).add_field("capability_id", 2, crate::skirout::base::editor::v1::type_catalog::CapabilityId::serializer(), "", |x: &CapabilityInvocationRequest| &x.capability_id, |x: &mut CapabilityInvocationRequest, v| x.capability_id = v);
-                (*a).add_field("payload", 3, crate::skirout::base::editor::v1::type_catalog::TypedValue::serializer(), "", |x: &CapabilityInvocationRequest| &x.payload, |x: &mut CapabilityInvocationRequest, v| x.payload = v);
-                (*a).add_field("expected_result_type", 4, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::type_catalog::TypeExpression::serializer()), "", |x: &CapabilityInvocationRequest| &x.expected_result_type, |x: &mut CapabilityInvocationRequest, v| x.expected_result_type = v);
+                (*a).add_field("payload", 3, crate::skirout::base::editor::v1::type_catalog::DataValue::serializer(), "", |x: &CapabilityInvocationRequest| &x.payload, |x: &mut CapabilityInvocationRequest, v| x.payload = v);
+                (*a).add_field("expected_result_type", 4, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::type_catalog::TypeTemplate::serializer()), "", |x: &CapabilityInvocationRequest| &x.expected_result_type, |x: &mut CapabilityInvocationRequest, v| x.expected_result_type = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ComputationSuccess> = ComputationSuccess::_adapter() as *const _ as *mut _;
                 (*a).add_field("invocation_id", 0, crate::skir_client::internal::struct_serializer_from_static(InvocationId::_adapter()), "", |x: &ComputationSuccess| &x.invocation_id, |x: &mut ComputationSuccess, v| x.invocation_id = v);
-                (*a).add_field("value", 1, crate::skirout::base::editor::v1::type_catalog::TypedValue::serializer(), "", |x: &ComputationSuccess| &x.value, |x: &mut ComputationSuccess, v| x.value = v);
+                (*a).add_field("value", 1, crate::skirout::base::editor::v1::type_catalog::DataValue::serializer(), "", |x: &ComputationSuccess| &x.value, |x: &mut ComputationSuccess, v| x.value = v);
                 (*a).finalize();
             }
             unsafe {
@@ -903,7 +903,7 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<CapabilityFailure> = CapabilityFailure::_adapter() as *const _ as *mut _;
                 (*a).add_field("invocation_id", 0, crate::skir_client::internal::struct_serializer_from_static(InvocationId::_adapter()), "", |x: &CapabilityFailure| &x.invocation_id, |x: &mut CapabilityFailure, v| x.invocation_id = v);
-                (*a).add_field("diagnostics", 1, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::diagnostic::TypeDiagnostic::serializer()), "", |x: &CapabilityFailure| &x.diagnostics, |x: &mut CapabilityFailure, v| x.diagnostics = v);
+                (*a).add_field("diagnostics", 1, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::diagnostic::Diagnostic::serializer()), "", |x: &CapabilityFailure| &x.diagnostics, |x: &mut CapabilityFailure, v| x.diagnostics = v);
                 (*a).finalize();
             }
             unsafe {

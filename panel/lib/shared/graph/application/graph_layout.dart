@@ -1,7 +1,7 @@
 import "package:collection/collection.dart";
 import "package:flutter/material.dart";
 import "package:freezed_annotation/freezed_annotation.dart";
-import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_panel/shared/graph/domain/domain.dart";
 
 part "graph_layout.freezed.dart";
 

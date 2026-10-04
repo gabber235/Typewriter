@@ -1,5 +1,6 @@
 package com.typewritermc.realm.compiler
 
+import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.engine.CompilationContext
 import com.typewritermc.engine.CompileDiagnostic
 import com.typewritermc.engine.CompileDiagnosticSeverity
@@ -10,195 +11,186 @@ import com.typewritermc.engine.CompiledResource
 import com.typewritermc.engine.CompiledResourceKey
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.engine.PageCompileResult
-import com.typewritermc.realm.repository.AuthoringWorkingGraph
-import com.typewritermc.realm.repository.ResourceRelationOrigin
-import com.typewritermc.realm.repository.StoredResourceRelation
-import com.typewritermc.realm.repository.StoredTypedResource
-import com.typewritermc.types.DataMapEntry
+import com.typewritermc.realm.authoring.AuthoredSnapshotRoot
+import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypeId
-import com.typewritermc.authoring.GRAPH_PLACEMENT_TYPE_ID
+import com.typewritermc.types.catalog.Resolution
 import java.security.MessageDigest
-import java.util.Base64
 
-/** Compiles one bounded Page graph without a second Page content model. */
 internal class PageCompiler(
     private val ownershipRelations: Set<RelationId>,
+    private val bindings: Map<com.typewritermc.types.TypeUse.Named, NativeBindingRequirement>,
     private val formatRevision: Int = CURRENT_COMPILER_FORMAT,
 ) {
     fun compile(
         root: ResourceId,
-        graph: AuthoringWorkingGraph,
-        catalogRevision: String,
+        snapshot: AuthoredSnapshotRoot,
     ): PageCompileResult {
-        val resources = graph.resources.values.sortedBy { it.id.value }
-        val edges = graph.relations.values.sortedWith(compareBy({ it.source.value }, { it.target.value }, { it.id }))
-        val fingerprint = digest(buildString {
-            append("format:").append(formatRevision)
-            append("|catalog:").append(catalogRevision)
-            append("|root:").append(root.value)
-            resources.forEach { resource ->
-                append("|resource:").append(resource.id.value)
-                append(':').append(resource.definition.value)
-                append(':').append(resource.root)
-                append(':').append(resource.valueWithSlots.executionCanonical())
-            }
-            edges.forEach { edge -> append("|edge:").append(edge.canonical()) }
-        })
-        val diagnostics = edges.mapNotNull { edge ->
-            val origin = edge.origin as? ResourceRelationOrigin.Declared ?: return@mapNotNull null
-            if (origin.relationId !in ownershipRelations || edge.source !in graph.resources || edge.target in graph.resources) {
-                return@mapNotNull null
-            }
-            CompileDiagnostic(
-                code = "missing-owned-resource",
-                message = "Owned resource ${edge.target.value} is missing from the Page graph.",
-                severity = CompileDiagnosticSeverity.ERROR,
-                source = edge.source,
-                target = edge.target,
+        val projected =
+            ResourceValueMapper.project(
+                snapshot.links.values,
+                snapshot.resources,
+                snapshot.catalog.relations,
+                snapshot.catalog.checked,
             )
+        val byFirst = projected.projections.groupBy { it.first }
+        val occurrencesByLocation = snapshot.links.values.associateBy { it.id.location }
+        val relationByEndpoint =
+            snapshot.catalog.relations
+                .flatMap { relation ->
+                    listOf(relation.first.id to relation.id, relation.second.id to relation.id)
+                }.toMap()
+        val owned = linkedSetOf(root)
+        val pending = ArrayDeque<ResourceId>()
+        pending += root
+        val diagnostics =
+            projected.problems.mapTo(mutableListOf()) { problem ->
+                val occurrence = occurrencesByLocation[problem.location]
+                val missingOwned =
+                    problem.code == "target_resource_missing" &&
+                        occurrence != null &&
+                        relationByEndpoint[occurrence.id.endpoint] in ownershipRelations
+                CompileDiagnostic(
+                    code = if (missingOwned) "missing_owned_resource" else problem.code,
+                    message =
+                        if (missingOwned) {
+                            "Owned resource ${occurrence.target.resource.value} is absent from the captured snapshot."
+                        } else {
+                            "Captured link projection is invalid at ${problem.location}."
+                        },
+                    severity = CompileDiagnosticSeverity.ERROR,
+                    source = occurrence?.source ?: problem.location.resource,
+                    target = occurrence?.target?.resource,
+                )
+            }
+        while (pending.isNotEmpty()) {
+            val parent = pending.removeFirst()
+            byFirst[parent].orEmpty().forEach { projection ->
+                if (projection.contract in ownershipRelations) {
+                    if (projection.second !in snapshot.resources) {
+                        diagnostics +=
+                            CompileDiagnostic(
+                                code = "missing_owned_resource",
+                                message = "Owned resource ${projection.second.value} is absent from the captured snapshot.",
+                                severity = CompileDiagnosticSeverity.ERROR,
+                                source = parent,
+                                target = projection.second,
+                            )
+                    } else if (owned.add(projection.second)) {
+                        pending += projection.second
+                    }
+                }
+            }
         }
+        val projectedEdges =
+            projected.projections
+                .filter { projection -> projection.first in owned || projection.second in owned }
+                .map { projection ->
+                    CompiledEdge(
+                        source = CompiledResourceKey(projection.first, CompilationContext.Root),
+                        target = CompiledResourceKey(projection.second, CompilationContext.Root),
+                        origin =
+                            CompiledEdgeOrigin.Relation(
+                                projection.contract,
+                                projection.firstLocation,
+                                projection.secondLocation,
+                            ),
+                    )
+                }
+        val resources = owned.mapNotNull { id -> snapshot.resources[id]?.let { id to it } }.sortedBy { it.first.value }
+        resources.forEach { (id, record) ->
+            val actual = (record.configuration as? TypeSelection.Complete)?.use
+            if (actual == null) {
+                diagnostics +=
+                    CompileDiagnostic(
+                        code = "pending_resource_type",
+                        message = "Resource ${id.value} has incomplete type arguments.",
+                        severity = CompileDiagnosticSeverity.ERROR,
+                        source = id,
+                    )
+                return@forEach
+            }
+            if (snapshot.catalog.checked.resolve(actual) !is Resolution.Ready) {
+                diagnostics +=
+                    CompileDiagnostic(
+                        code = "unavailable_resource_type",
+                        message = "Resource ${id.value} uses a type that is unavailable in the captured catalog.",
+                        severity = CompileDiagnosticSeverity.ERROR,
+                        source = id,
+                    )
+            }
+            if (id !in snapshot.resourceDefinitions) {
+                diagnostics +=
+                    CompileDiagnostic(
+                        code = "missing_resource_definition",
+                        message = "Resource ${id.value} has no captured resource definition identity.",
+                        severity = CompileDiagnosticSeverity.ERROR,
+                        source = id,
+                    )
+            }
+            if (actual !in bindings) {
+                diagnostics +=
+                    CompileDiagnostic(
+                        code = "missing_native_binding_evidence",
+                        message = "Resource ${id.value} has no accepted native binding evidence.",
+                        severity = CompileDiagnosticSeverity.ERROR,
+                        source = id,
+                    )
+            }
+        }
+        val fingerprint =
+            digest(
+                buildString {
+                    append("format:").append(formatRevision)
+                    append("|catalog:").append(snapshot.catalog.generation.value)
+                    append("|snapshot:").append(snapshot.id.value)
+                    append("|root:").append(root.value)
+                    resources.forEach { (id, record) -> append("|resource:").append(id.value).append(':').append(record) }
+                    projectedEdges.sortedWith(compareBy({ it.source.source.value }, { it.target.source.value })).forEach { edge ->
+                        append("|edge:").append(edge)
+                    }
+                },
+            )
         if (diagnostics.isNotEmpty()) return PageCompileResult.Blocked(fingerprint, diagnostics)
-        val compiledResources = resources.map(StoredTypedResource::compile)
-        val compiledEdges = edges.map(StoredResourceRelation::compile)
-        val semantic = digest("root:${root.value}|input:${fingerprint.value}")
+        val compiledResources = resources.map { (id, record) -> record.compile(id, snapshot, bindings) }
+        val edges = projectedEdges.distinct()
         return PageCompileResult.Success(
             CompiledPageShard(
                 formatRevision = formatRevision,
-                digest = semantic,
+                digest = digest("root:${root.value}|input:${fingerprint.value}"),
                 inputFingerprint = fingerprint,
                 root = CompiledResourceKey(root, CompilationContext.Root),
                 resources = compiledResources,
-                edges = compiledEdges,
+                edges = edges,
             ),
         )
     }
 }
 
-private fun StoredTypedResource.compile(): CompiledResource =
-    CompiledResource(
+private fun com.typewritermc.authoring.AuthoringRecord.compile(
+    id: ResourceId,
+    snapshot: AuthoredSnapshotRoot,
+    bindings: Map<com.typewritermc.types.TypeUse.Named, NativeBindingRequirement>,
+): CompiledResource {
+    val actual = (configuration as TypeSelection.Complete).use
+    val definition = requireNotNull(snapshot.resourceDefinitions[id])
+    val binding = requireNotNull(bindings[actual]) { "Accepted native binding evidence is missing for ${actual.definition}." }
+    return CompiledResource(
         key = CompiledResourceKey(id, CompilationContext.Root),
         definition = definition,
-        rootType = root,
-        valueWithSlots = valueWithSlots,
+        actualType = actual,
+        bindingProvider = binding.provider,
+        bindingSignature = binding.signature,
+        value = DataValue.Named(actual, DataValue.Record(fields)),
     )
-
-private fun StoredResourceRelation.compile(): CompiledEdge =
-    CompiledEdge(
-        source = CompiledResourceKey(source, CompilationContext.Root),
-        target = CompiledResourceKey(target, CompilationContext.Root),
-        origin = when (val value = origin) {
-            is ResourceRelationOrigin.Declared -> CompiledEdgeOrigin.Declared(
-                relation = value.relationId,
-                sourceIndex = value.sourceIndex,
-                targetIndex = value.targetIndex,
-            )
-            is ResourceRelationOrigin.Reference -> CompiledEdgeOrigin.Reference(
-                slot = value.slot,
-                path = value.sourcePath,
-                expectedType = value.expectedTarget,
-            )
-        },
-    )
-
-private fun StoredResourceRelation.canonical(): String = buildString {
-    append(source.value).append(':').append(target.value)
-    when (val value = origin) {
-        is ResourceRelationOrigin.Declared -> {
-            append(":declared:").append(value.relationId.value)
-            append(':').append(value.sourceIndex).append(':').append(value.targetIndex)
-        }
-        is ResourceRelationOrigin.Reference -> {
-            append(":reference:").append(value.slot.value)
-            append(':').append(value.sourcePath)
-            append(':').append(value.expectedTarget)
-        }
-    }
 }
-
-private fun DataValue.executionCanonical(): String =
-    when (this) {
-        is DataValue.Polymorphic -> {
-            val id = concreteType.id as? TypeId.Declared
-            if (id?.id?.toString() == GRAPH_PLACEMENT_TYPE_ID) "graph"
-            else "p:$concreteType:${value.executionCanonical()}"
-        }
-        is DataValue.Record -> fields.entries.sortedBy { it.key }.joinToString(prefix = "o:{", postfix = "}") {
-            "${it.key.length}:${it.key}=${it.value.executionCanonical()}"
-        }
-        is DataValue.ListValue -> values.joinToString(prefix = "l:[", postfix = "]") { it.executionCanonical() }
-        else -> canonical()
-    }
-
-private fun DataValue.canonical(): String =
-    when (this) {
-        DataValue.Unit -> {
-            "u"
-        }
-
-        is DataValue.Boolean -> {
-            "b:$value"
-        }
-
-        is DataValue.Integer -> {
-            "i:$value"
-        }
-
-        is DataValue.Float -> {
-            "f:${value.toBits()}"
-        }
-
-        is DataValue.Decimal -> {
-            "d:$value"
-        }
-
-        is DataValue.StringValue -> {
-            "s:${value.length}:$value"
-        }
-
-        is DataValue.Bytes -> {
-            "y:${Base64.getEncoder().encodeToString(toByteArray())}"
-        }
-
-        is DataValue.Timestamp -> {
-            "t:$value"
-        }
-
-        is DataValue.Duration -> {
-            "r:$value"
-        }
-
-        is DataValue.Reference -> {
-            "x:${id.value}"
-        }
-
-        is DataValue.ListValue -> {
-            values.joinToString(prefix = "l:[", postfix = "]") { it.canonical() }
-        }
-
-        is DataValue.MapValue -> {
-            entries.map(DataMapEntry::canonical).sorted().joinToString(prefix = "m:{", postfix = "}")
-        }
-
-        is DataValue.Record -> {
-            fields.entries.sortedBy(Map.Entry<String, DataValue>::key).joinToString(prefix = "o:{", postfix = "}") {
-                "${it.key.length}:${it.key}=${it.value.canonical()}"
-            }
-        }
-
-        is DataValue.Polymorphic -> {
-            "p:$concreteType:${value.canonical()}"
-        }
-    }
-
-private fun DataMapEntry.canonical(): String = "${key.canonical()}=${value.canonical()}"
 
 private fun digest(value: String): ContentDigest =
     ContentDigest(
-        MessageDigest.getInstance("SHA-256").digest(value.toByteArray()).joinToString("") {
-            "%02x".format(it.toInt() and 0xff)
+        MessageDigest.getInstance("SHA-256").digest(value.encodeToByteArray()).joinToString("") { byte ->
+            "%02x".format(byte.toInt() and 0xff)
         },
     )
 

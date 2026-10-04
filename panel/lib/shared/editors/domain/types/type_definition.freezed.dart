@@ -177,7 +177,7 @@ return rejected(_that.message);case _:
 
 class RolePresentationReady implements RolePresentationStatus {
   const RolePresentationReady(this.id);
-
+  
 
  final  PresentationId id;
 
@@ -242,7 +242,7 @@ as PresentationId,
 @override
 @pragma('vm:prefer-inline')
 $PresentationIdCopyWith<$Res> get id {
-
+  
   return $PresentationIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -254,7 +254,7 @@ $PresentationIdCopyWith<$Res> get id {
 
 class RolePresentationRejected implements RolePresentationStatus {
   const RolePresentationRejected(this.message);
-
+  
 
  final  String message;
 
@@ -385,7 +385,7 @@ as FieldMergeStrategy,
 @override
 @pragma('vm:prefer-inline')
 $DataPathCopyWith<$Res> get path {
-
+  
   return $DataPathCopyWith<$Res>(_self.path, (value) {
     return _then(_self.copyWith(path: value));
   });
@@ -528,7 +528,7 @@ return $default(_that.path,_that.strategy);case _:
 
 class _FieldMergePolicy implements FieldMergePolicy {
   const _FieldMergePolicy({required this.path, required this.strategy});
-
+  
 
 @override final  DataPath path;
 @override final  FieldMergeStrategy strategy;
@@ -595,7 +595,7 @@ as FieldMergeStrategy,
 @override
 @pragma('vm:prefer-inline')
 $DataPathCopyWith<$Res> get path {
-
+  
   return $DataPathCopyWith<$Res>(_self.path, (value) {
     return _then(_self.copyWith(path: value));
   });
@@ -671,7 +671,7 @@ as TypeVariance,
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get bound {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.bound, (value) {
     return _then(_self.copyWith(bound: value));
   });
@@ -814,7 +814,7 @@ return $default(_that.name,_that.bound,_that.variance);case _:
 
 class _TypeParameter implements TypeParameter {
   const _TypeParameter({required this.name, this.bound = const AnyType(), this.variance = TypeVariance.invariant}): assert(name != "", 'Parameter name must not be empty.');
-
+  
 
 @override final  String name;
 @override@JsonKey() final  TypeExpression bound;
@@ -883,7 +883,7 @@ as TypeVariance,
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get bound {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.bound, (value) {
     return _then(_self.copyWith(bound: value));
   });
@@ -967,7 +967,7 @@ as DataValue?,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get id {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -976,7 +976,7 @@ $ResolvedTypeRefCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get representation {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.representation, (value) {
     return _then(_self.copyWith(representation: value));
   });
@@ -1131,7 +1131,7 @@ return $default(_that.id,_that.kind,_that.displayName,_that.qualifiedName,_that.
 
 class _TypeDefinition implements TypeDefinition {
   const _TypeDefinition({required this.id, required this.kind, this.displayName, this.qualifiedName, this.representation = const AnyType(),  List<TypeParameter> parameters = const [],  List<ResolvedTypeRef> parents = const [],  Map<String, PresentationId> namedPresentations = const {},  Map<PresentationRole, RolePresentationStatus> rolePresentations = const {},  List<FieldMergePolicy> fieldMergePolicies = const [], this.initialValue}): _parameters = parameters,_parents = parents,_namedPresentations = namedPresentations,_rolePresentations = rolePresentations,_fieldMergePolicies = fieldMergePolicies;
-
+  
 
 @override final  ResolvedTypeRef id;
 @override final  NominalTypeKind kind;
@@ -1246,7 +1246,7 @@ as DataValue?,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get id {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -1255,7 +1255,7 @@ $ResolvedTypeRefCopyWith<$Res> get id {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get representation {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.representation, (value) {
     return _then(_self.copyWith(representation: value));
   });
@@ -1475,7 +1475,7 @@ return $default(_that.definitions);case _:
 
 class _TypeCatalog implements TypeCatalog {
   const _TypeCatalog( List<TypeDefinition> definitions): _definitions = definitions;
-
+  
 
  final  List<TypeDefinition> _definitions;
 @override List<TypeDefinition> get definitions {
@@ -1616,7 +1616,7 @@ as DataValue?,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get reference {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.reference, (value) {
     return _then(_self.copyWith(reference: value));
   });
@@ -1625,7 +1625,7 @@ $ResolvedTypeRefCopyWith<$Res> get reference {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get representation {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.representation, (value) {
     return _then(_self.copyWith(representation: value));
   });
@@ -1780,7 +1780,7 @@ return $default(_that.reference,_that.kind,_that.representation,_that.ancestors,
 
 class _ResolvedType extends ResolvedType {
   const _ResolvedType({required this.reference, required this.kind, required this.representation, required  Set<ResolvedTypeRef> ancestors,  Set<ResolvedTypeRef> directParents = const {}, this.initialValue}): _ancestors = ancestors,_directParents = directParents,super._();
-
+  
 
 @override final  ResolvedTypeRef reference;
 @override final  NominalTypeKind kind;
@@ -1867,7 +1867,7 @@ as DataValue?,
 @override
 @pragma('vm:prefer-inline')
 $ResolvedTypeRefCopyWith<$Res> get reference {
-
+  
   return $ResolvedTypeRefCopyWith<$Res>(_self.reference, (value) {
     return _then(_self.copyWith(reference: value));
   });
@@ -1876,7 +1876,7 @@ $ResolvedTypeRefCopyWith<$Res> get reference {
 @override
 @pragma('vm:prefer-inline')
 $TypeExpressionCopyWith<$Res> get representation {
-
+  
   return $TypeExpressionCopyWith<$Res>(_self.representation, (value) {
     return _then(_self.copyWith(representation: value));
   });

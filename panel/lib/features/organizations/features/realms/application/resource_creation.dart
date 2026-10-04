@@ -1,9 +1,16 @@
-import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
+import "dart:convert";
+
+import "package:crypto/crypto.dart";
+import "package:flutter/widgets.dart";
 import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring.dart"
+    as authoring;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
+    as catalog_wire;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
+    as types;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:uuid/uuid.dart";
 
 part "resource_creation.g.dart";
 
@@ -11,55 +18,115 @@ part "resource_creation.g.dart";
 ResourceCreationSession resourceCreation(Ref ref) =>
     ResourceCreationSession(ref);
 
-final class ResourceCreationRequest {
-  factory ResourceCreationRequest({
-    required ResourceDefinitionId definition,
-    required String title,
-    required ResolvedTypeRef concreteRoot,
-    skir.CreationAttachment? attachment,
-    List<skir.CreationAttachment> links = const [],
-    DataValue? partial,
-    List<skir.ResourceId> referenceOrigins = const [],
-  }) {
-    final id = newResourceId();
-    return ResourceCreationRequest._(
-      id: id,
-      definition: definition,
-      attachment: attachment,
-      links: List.unmodifiable(links),
-      title: title,
-      concreteRoot: concreteRoot,
-      partial: partial,
-      referenceOrigins: List.unmodifiable(referenceOrigins),
-    );
-  }
-
-  const ResourceCreationRequest._({
-    required this.id,
-    required this.definition,
-    required this.attachment,
-    required this.links,
-    required this.title,
-    required this.concreteRoot,
-    required this.partial,
-    required this.referenceOrigins,
+final class ResourceCreationConnection {
+  const ResourceCreationConnection({
+    required this.source,
+    required this.endpoint,
+    required this.path,
   });
 
-  final skir.ResourceId id;
-  final ResourceDefinitionId definition;
-  final skir.CreationAttachment? attachment;
-  final List<skir.CreationAttachment> links;
-  final String title;
-  final ResolvedTypeRef concreteRoot;
-  final DataValue? partial;
-  final List<skir.ResourceId> referenceOrigins;
+  factory ResourceCreationConnection.collection({
+    required types.ResourceId source,
+    required types.EndpointId endpoint,
+    required types.ValuePath containing,
+    required types.ItemId item,
+  }) => ResourceCreationConnection(
+    source: source,
+    endpoint: endpoint,
+    path: types.ValuePath(
+      segments: [
+        ...containing.segments,
+        types.PathSegment.createItem(id: item),
+      ],
+    ),
+  );
+
+  final types.ResourceId source;
+  final types.EndpointId endpoint;
+  final types.ValuePath path;
+}
+
+final class ResourceCreationRequest {
+  ResourceCreationRequest({
+    required this.definition,
+    required this.configuration,
+    this.supplied = const [],
+    this.connections = const [],
+    types.ResourceId? id,
+    types.InitializationRequestId? initializationId,
+  }) : id = id ?? newResourceId(),
+       initializationId =
+           initializationId ??
+           types.InitializationRequestId(value: "panel:${_uuid.v4()}");
+
+  final types.ResourceId id;
+  final types.InitializationRequestId initializationId;
+  final catalog_wire.ResourceDefinitionId definition;
+  final types.TypeSelection configuration;
+  final List<types.FieldValue> supplied;
+  final List<ResourceCreationConnection> connections;
+
+  ResourceCreationRequest withConfiguration(types.TypeSelection next) =>
+      ResourceCreationRequest(
+        id: id,
+        initializationId: initializationId,
+        definition: definition,
+        configuration: next,
+        supplied: supplied,
+        connections: connections,
+      );
 }
 
 typedef CreatedAuthoringResource = ({
-  skir.ResourceId id,
-  ResourceDefinitionId definition,
-  TypedValueEnvelope content,
+  types.ResourceId id,
+  catalog_wire.ResourceDefinitionId definition,
+  types.AuthoringRecord content,
 });
+
+typedef ResourceCreationTemplate = ({
+  catalog_wire.ResourceDefinitionId definition,
+  types.TypeSelection configuration,
+});
+
+ResourceCreationTemplate? resourceCreationTemplate(
+  CheckedEditorCatalog? checked,
+  String definition,
+) {
+  if (checked == null) return null;
+  final id = catalog_wire.ResourceDefinitionId(value: definition);
+  final resource = checked.snapshot.resourceDefinitions
+      .where((candidate) => candidate.id == id)
+      .firstOrNull;
+  if (resource == null) return null;
+  final configuration = checked.beginSelection(resource.root);
+  if (configuration == types.TypeSelection.unknown) return null;
+  return (definition: id, configuration: configuration);
+}
+
+AuthoredDraft stageResourceCreation({
+  required AuthoredDraft baseline,
+  required ResourceCreationRequest request,
+  required catalog_wire.PreparedCreation prepared,
+}) {
+  final draft = baseline.fork()..createPrepared(request.id, prepared);
+  for (final connection in request.connections) {
+    draft.connect(
+      authoring.LinkOccurrence(
+        id: authoring.LinkOccurrenceId(
+          endpoint: connection.endpoint,
+          location: types.ValueLocation(
+            resource: connection.source,
+            path: connection.path,
+          ),
+        ),
+        source: connection.source,
+        target: types.LinkTarget(resource: request.id, opposite: null),
+      ),
+      request.id,
+    );
+  }
+  return draft;
+}
 
 final class ResourceCreationSession {
   const ResourceCreationSession(this.ref);
@@ -70,344 +137,106 @@ final class ResourceCreationSession {
     required BuildContext context,
     required ResourceCreationRequest request,
   }) async {
-    final organizationId = ref.read(organizationIdProvider);
-    final realmId = ref.read(realmIdProvider);
-    if (organizationId == null || realmId == null) {
-      throw StateError("No Realm is selected");
+    final access = ref.readAuthoringSession();
+    final checked = access.state.catalog;
+    final baseline = access.state.draft;
+    if (checked == null || baseline == null) {
+      throw StateError("Authoring is not ready");
     }
-    final catalog = ref.read(realmEditorCatalogProvider).currentCatalog;
-    if (catalog == null) throw StateError("The editor catalog is unavailable");
-    final definition = catalog.resourceDefinitions[request.definition];
-    if (definition == null ||
-        !NamedType(request.concreteRoot).isStructurallyAssignableTo(
-          definition.acceptedRoot,
-          TypeRegistry(catalog.catalog),
-        )) {
-      throw ApiException.badRequest("Concrete root is unavailable");
-    }
-    final codec = TypedAuthoringCodec(catalog);
-    final route = RealmEditorCatalogRoute(
-      organizationId: organizationId,
-      realmId: realmId,
-    );
-    final source = ref.read(realmEditorCatalogSourceProvider);
-    final initializeConcreteType = source.concreteTypeInitializer(
-      route: route,
-      generation: catalog.generation,
-      registry: codec.registry,
-    );
-    final basePartial = (await source.initialize(
-      route,
-      generation: catalog.generation,
-      root: request.concreteRoot,
-      supplied: request.partial,
-      registry: codec.registry,
-    )).creationDraftValue;
-    final suppliedPartial = _bindAttachment(catalog, request, basePartial);
-    final supplied = (await source.initialize(
-      route,
-      generation: catalog.generation,
-      root: request.concreteRoot,
-      supplied: suppliedPartial,
-      registry: codec.registry,
-    )).creationDraftValue;
-    if (!context.mounted) return null;
-    final draft = supplied == null
-        ? CreationDraft(
-            rootType: NamedType(request.concreteRoot),
-            registry: codec.registry,
-            concreteTypeInitializer: initializeConcreteType,
-          )
-        : CreationDraft.fromMaterialized(
-            rootType: NamedType(request.concreteRoot),
-            value: supplied,
-            registry: codec.registry,
-            concreteTypeInitializer: initializeConcreteType,
-          );
-    try {
-      final value = await promptResourceCreationEditor(
-        context: context,
-        title: request.title,
-        draft: draft,
-        presentations: catalog.presentations.values.toList(),
-        origins: request.referenceOrigins,
+    var effectiveRequest = request;
+    if (checked.isAbstractRecordSelection(effectiveRequest.configuration)) {
+      final selection = await showCreationConcreteTypePicker(
+        context,
+        expected: effectiveRequest.configuration,
+        catalog: checked,
       );
-      if (value == null || !ref.mounted) return null;
-      final completed = await source.initialize(
-        route,
-        generation: catalog.generation,
-        root: request.concreteRoot,
-        supplied: value,
-        registry: codec.registry,
-      );
-      final content = switch (completed) {
-        RealmTypedValueInitialized(:final value) => value,
-        RealmTypedValueInitializationNeedsInput(:final draft) =>
-          throw ApiException.badRequest(
-            draft.requirements
-                .map((requirement) => requirement.path.toString())
-                .join("; "),
-          ),
-        RealmTypedValueInitializationGenerationMismatch() =>
-          throw ApiException.conflict("The Realm catalog changed"),
-        RealmTypedValueInitializationRejected(:final diagnostics) =>
-          throw ApiException.badRequest(
-            diagnostics.map((item) => item.message).join("; "),
-          ),
-      };
-      final access = ref.readAuthoringSession();
-      final operations = <skir.AuthoringOperation>[
-        skir.AuthoringOperation.createCreate(
-          resource: codec.encodeResource(
-            request.id,
-            request.definition,
-            content,
-          ),
-          attachment: request.attachment,
-        ),
-        for (final link in request.links)
-          skir.AuthoringOperation.createDeclareRelation(
-            relation: link.relation,
-            source: link.hostSide == skir.RelationEndpointSide.source
-                ? link.host
-                : request.id,
-            target: link.hostSide == skir.RelationEndpointSide.source
-                ? request.id
-                : link.host,
-            sourceBefore: null,
-            targetBefore: null,
-          ),
-      ];
-      final response = await access.notifier.apply(operations);
-      response.requireApplied(conflictMessage: "The resource already exists");
-      return (id: request.id, definition: request.definition, content: content);
-    } finally {
-      draft.dispose();
+      if (selection == null || !context.mounted) return null;
+      effectiveRequest = effectiveRequest.withConfiguration(selection);
     }
-  }
-
-  DataValue? _bindAttachment(
-    RealmEditorCatalogSnapshot catalog,
-    ResourceCreationRequest request,
-    DataValue? partial,
-  ) {
-    final registry = TypeRegistry(catalog.catalog);
-    var supplied = partial;
-    for (final attachment in [?request.attachment, ...request.links]) {
-      final relation = catalog.relations[attachment.relation.value];
-      if (relation == null) {
-        throw ApiException.badRequest("Relation is unavailable");
-      }
-      final inverse = attachment.hostSide == skir.RelationEndpointSide.source
-          ? relation.targetEndpoint
-          : relation.sourceEndpoint;
-      if (inverse == null ||
-          !NamedType(request.concreteRoot)
-              .isStructurallyAssignableTo(NamedType(inverse.owner), registry)) {
-        continue;
-      }
-      final current = supplied ?? RecordValue({});
-      final value = inverse.cardinality == RealmRelationCardinality.one
-          ? ReferenceValue(attachment.host)
-          : ListValue([
-              if (inverse.path.read(current).valueOrNull case ListValue(
-                :final values,
-              ))
-                ...values,
-              ReferenceValue(attachment.host),
-            ]);
-      supplied =
-          inverse.path.replace(current, value).valueOrNull ??
-          (throw ApiException.badRequest("Creation relation path is invalid"));
+    if (!checked.isResourceDefinition(
+          effectiveRequest.configuration,
+          request.definition,
+        ) ||
+        checked.isAbstractRecordSelection(effectiveRequest.configuration)) {
+      throw StateError("The selected resource type is unavailable");
     }
-    return supplied;
-  }
-}
-
-extension on RealmTypedValueInitializationResult {
-  DataValue? get creationDraftValue => switch (this) {
-    RealmTypedValueInitialized(:final value) => value.rootValue,
-    RealmTypedValueInitializationNeedsInput(:final draft) =>
-      draft.suppliedValue,
-    RealmTypedValueInitializationGenerationMismatch() =>
-      throw ApiException.conflict("The Realm catalog changed"),
-    RealmTypedValueInitializationRejected(:final diagnostics) =>
-      throw ApiException.badRequest(
-        diagnostics.map((item) => item.message).join("; "),
-      ),
-  };
-}
-
-Future<DataValue?> promptResourceCreationEditor({
-  required BuildContext context,
-  required String title,
-  required CreationDraft draft,
-  required List<PresentationDefinition> presentations,
-  required List<skir.ResourceId> origins,
-}) => showAdvancedDialog<DataValue>(
-  context: context,
-  fullscreenDialog: context.isMobile,
-  builder: (dialogContext) => ResourceCreationDialog(
-    title: title,
-    draft: draft,
-    presentations: presentations,
-    origins: origins,
-    onCancel: () => Navigator.of(dialogContext).pop(),
-    onCreate: (value) => Navigator.of(dialogContext).pop(value),
-  ),
-);
-
-final class ResourceCreationDialog extends StatelessWidget {
-  const ResourceCreationDialog({
-    required this.title,
-    required this.draft,
-    required this.presentations,
-    required this.origins,
-    required this.onCancel,
-    required this.onCreate,
-    super.key,
-  });
-
-  final String title;
-  final CreationDraft draft;
-  final List<PresentationDefinition> presentations;
-  final List<skir.ResourceId> origins;
-  final VoidCallback onCancel;
-  final ValueChanged<DataValue> onCreate;
-
-  @override
-  Widget build(BuildContext context) {
-    final editor = _ResourceCreationEditor(
-      title: title,
-      draft: draft,
-      presentations: presentations,
-      origins: origins,
-      onCancel: onCancel,
-      onCreate: onCreate,
-    );
-    if (context.isMobile) {
-      return Dialog.fullscreen(child: SafeArea(child: editor));
-    }
-    return Dialog(
-      insetPadding: const EdgeInsets.all(24),
-      constraints: const BoxConstraints(maxWidth: 840, maxHeight: 900),
-      clipBehavior: Clip.antiAlias,
-      child: SizedBox.expand(child: editor),
-    );
-  }
-}
-
-final class _ResourceCreationEditor extends ConsumerStatefulWidget {
-  const _ResourceCreationEditor({
-    required this.title,
-    required this.draft,
-    required this.presentations,
-    required this.origins,
-    required this.onCancel,
-    required this.onCreate,
-  });
-
-  final String title;
-  final CreationDraft draft;
-  final List<PresentationDefinition> presentations;
-  final List<skir.ResourceId> origins;
-  final VoidCallback onCancel;
-  final ValueChanged<DataValue> onCreate;
-
-  @override
-  ConsumerState<_ResourceCreationEditor> createState() =>
-      _ResourceCreationEditorState();
-}
-
-final class _ResourceCreationEditorState
-    extends ConsumerState<_ResourceCreationEditor> {
-  final ScrollController _scrollController = ScrollController();
-
-  @override
-  void initState() {
-    super.initState();
-    widget.draft.addListener(_changed);
-  }
-
-  @override
-  void didUpdateWidget(_ResourceCreationEditor oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.draft == widget.draft) return;
-    oldWidget.draft.removeListener(_changed);
-    widget.draft.addListener(_changed);
-  }
-
-  void _changed() {
-    if (mounted) setState(() {});
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final runtime = ref.watch(editorRealmRuntimeProvider);
-    final result = widget.draft.finalize();
-    final value = result.valueOrNull;
-    final model = PresentationModel.editor(
-      owner: widget.draft,
-      roles: const [PresentationRole.creation, PresentationRole.editor],
-      presentations: widget.presentations,
-      diagnostics: result.diagnostics,
-    );
-
-    return Surface(
-      color: DialogTheme.of(context).backgroundColor!,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
-            child: Text(
-              widget.title,
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-          ),
-          Expanded(
-            child: Scrollbar(
-              controller: _scrollController,
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                padding: const EdgeInsets.all(24),
-                child: ComposedEditor(
-                  model: model,
-                  host: runtime?.host() ?? const EditorHostCapabilities(),
-                  referenceOrigins: widget.origins,
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
-            child: OverflowBar(
-              alignment: MainAxisAlignment.end,
-              spacing: 8,
-              overflowAlignment: OverflowBarAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: widget.onCancel,
-                  child: const Text("Cancel"),
-                ),
-                FilledButton(
-                  onPressed: value == null
-                      ? null
-                      : () => widget.onCreate(value),
-                  child: const Text("Create"),
-                ),
-              ],
-            ),
-          ),
-        ],
+    final initialization = catalog_wire.InitializationRequest(
+      id: effectiveRequest.initializationId,
+      catalog: baseline.generation,
+      type: effectiveRequest.configuration,
+      supplied: effectiveRequest.supplied,
+      intentHash: _initializationHash(
+        effectiveRequest.configuration,
+        effectiveRequest.supplied,
       ),
     );
+    final prepared = await access.notifier.prepareCreation(initialization);
+    final latest = access.state.draft;
+    if (latest == null || latest.generation != baseline.generation) {
+      throw StateError("The Realm changed while creation was prepared");
+    }
+    final draft = stageResourceCreation(
+      baseline: latest,
+      request: effectiveRequest,
+      prepared: prepared,
+    );
+    final response = await access.notifier.commit(
+      draft.prepare(types.BatchId(value: "panel:${_uuid.v4()}")),
+    );
+    final CreatedAuthoringResource created;
+    switch (response) {
+      case authoring.CommitPreparedEditResponse_resultWrapper(
+        value: authoring.CommitResult_committedWrapper(),
+      ):
+        final adopted = await access.notifier.awaitResource(
+          effectiveRequest.id,
+        );
+        created = (
+          id: effectiveRequest.id,
+          definition: adopted.definition,
+          content: adopted.content,
+        );
+      case authoring.CommitPreparedEditResponse_resultWrapper(
+        value: authoring.CommitResult_conflictWrapper(),
+      ):
+        throw StateError("The Realm changed before this resource was saved");
+      case authoring.CommitPreparedEditResponse_resultWrapper(
+        value: authoring.CommitResult_catalogChangedWrapper(),
+      ):
+        throw StateError("The editor catalog changed");
+      case authoring.CommitPreparedEditResponse_resultWrapper(
+        value: authoring.CommitResult_rejectedWrapper(),
+      ):
+        throw StateError(response.rejectionMessage);
+      default:
+        throw StateError("The creation result is unavailable");
+    }
+    if (prepared.findings.isNotEmpty && context.mounted) {
+      showErrorSnackBar(
+        context,
+        prepared.findings
+            .map(formatPortableInitializationDiagnostic)
+            .join("\n"),
+      );
+    }
+    return created;
   }
+}
 
-  @override
-  void dispose() {
-    widget.draft.removeListener(_changed);
-    _scrollController.dispose();
-    super.dispose();
+const _uuid = Uuid();
+
+String _initializationHash(
+  types.TypeSelection selection,
+  List<types.FieldValue> fields,
+) {
+  final canonical = StringBuffer(selection);
+  for (final field
+      in fields.toList()..sort((a, b) => a.name.compareTo(b.name))) {
+    canonical
+      ..write("\u0000")
+      ..write(field.name)
+      ..write("\u0000")
+      ..write(field.value);
   }
+  return sha256.convert(utf8.encode(canonical.toString())).toString();
 }

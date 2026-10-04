@@ -13,12 +13,16 @@ void main() {
     addTearDown(controller.dispose);
     var inputDismissals = 0;
     var ancestorDismissals = 0;
+    var ancestorCancellations = 0;
 
     await tester.pumpTestApp(
       child: Actions(
         actions: {
           DismissIntent: CallbackAction<DismissIntent>(
             onInvoke: (_) => ancestorDismissals++,
+          ),
+          CancelIntent: CallbackAction<CancelIntent>(
+            onInvoke: (_) => ancestorCancellations++,
           ),
         },
         child: InputFieldContainer(
@@ -52,6 +56,14 @@ void main() {
 
     expect(inputDismissals, 1);
     expect(ancestorDismissals, 1);
+
+    Actions.invoke(
+      tester.element(find.byKey(const ValueKey("input"))),
+      const CancelIntent(),
+    );
+
+    expect(inputDismissals, 1);
+    expect(ancestorCancellations, 1);
   });
 
   testWidgets("endInteraction only ends the controller interaction", (

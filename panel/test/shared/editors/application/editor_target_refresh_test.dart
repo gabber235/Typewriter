@@ -32,6 +32,7 @@ ResourceEditorTarget _target({
     confirmedValue: _value("Original", description),
     revision: revision,
   ),
+  validation: acceptTestEditorMutation,
   commitPolicy: policy,
   validateDraft: validateDraft,
   commit: commit,
@@ -307,4 +308,8 @@ final class _ContractSnapshot extends EditorSnapshot
   @override
   bool contractCompatibleWith(EditorSnapshot candidate) =>
       candidate is _ContractSnapshot && candidate.contract == contract;
+
+  @override
+  EditorMutationResult validate(DataPath path, DataValue value) =>
+      acceptTestEditorMutation(path, value);
 }

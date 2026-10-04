@@ -2,23 +2,22 @@ package com.typewritermc.authoring
 
 import com.typewritermc.types.Color
 import com.typewritermc.types.Icon
-import com.typewritermc.types.ResolvedTypeRef
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.TypedValueEnvelope
+import com.typewritermc.types.TypeUse
 import com.typewritermc.types.TypewriterType
 
 /** Generic presentation subject shared by authoring, search, and reference resolution. */
 data class PresentationSubject(
-    val content: TypedValueEnvelope,
-    val descriptor: TypedValueEnvelope,
-    val identity: TypedValueEnvelope,
+    val resource: ResourceId,
+    val content: DraftBinding,
+    val descriptor: ResourceTypeDescriptor,
 )
 
 /** Result of resolving one stable resource identity for presentation. */
 sealed interface ReferenceResourceResolution {
     data class Resolved(
         val subject: PresentationSubject,
-        val compatibleTypes: List<ResolvedTypeRef>,
+        val compatibleTypes: List<TypeUse.Named>,
     ) : ReferenceResourceResolution
 
     data class Missing(
@@ -35,13 +34,6 @@ sealed interface ReferenceResourceResolution {
 data class ReferenceResourceDiagnostic(
     val code: String,
     val message: String,
-)
-
-/** Stable identity input supplied separately from editable presentation content. */
-@TypewriterType(id = "214fdb63564640e5bc15c7524f6121ef")
-data class ResourceIdentity(
-    val id: ResourceId,
-    val owner: ResourceId? = null,
 )
 
 /** Describes one authored resource family for role presentations. */

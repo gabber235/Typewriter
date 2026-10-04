@@ -21,8 +21,11 @@ List<SearchCommand> openAuthoringCommands(
       realmId: realmId,
       resourceId: value.id,
       definition: value.definition,
-      ownerPath: value.ownerPath,
-      rootType: value.subject.content.rootType,
+      configuration: value.configuration,
+      navigationHandler: value.catalog.snapshot.resourceDefinitions
+          .where((definition) => definition.id == value.definition)
+          .map((definition) => definition.navigationHandler)
+          .firstOrNull,
     ),
   ),
 ];
@@ -47,8 +50,8 @@ abstract class OpenAuthoringResourceEffect
     required skir.RecordId organizationId,
     required skir.RecordId realmId,
     required skir.ResourceId resourceId,
-    required ResourceDefinitionId definition,
-    required List<skir.ResourceId> ownerPath,
-    required ResolvedTypeRef rootType,
+    required skir.ResourceDefinitionId definition,
+    required skir.TypeSelection configuration,
+    required String? navigationHandler,
   }) = _OpenAuthoringResourceEffect;
 }

@@ -160,14 +160,6 @@ Placement decodePlacement(DataValue value) {
   };
 }
 
-TypedValueEnvelope encodePlacement(
-  ResolvedTypeRef rootType,
-  Placement placement,
-) => TypedValueEnvelope(
-  rootType: rootType,
-  rootValue: placementValue(placement),
-);
-
 PolymorphicValue placementValue(Placement placement) {
   switch (placement) {
     case GraphPlacement(:final width, :final height)

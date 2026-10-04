@@ -1,6 +1,4 @@
 import "package:collection/collection.dart";
-import "package:flutter/foundation.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 const authoringBookSelectorId = "book";
@@ -77,52 +75,3 @@ String authoringBookInitialQuery(
       : book.title;
   return "${selector.key}$value";
 }
-
-/// Restricts an element type picker to definitions accepted by one live page.
-///
-/// Unavailable policy state exposes no definitions. The source remains the
-/// owner of loading and catalog failures, while the command revalidates the
-/// policy immediately before mutation.
-SearchScope pageRelationFieldScope({
-  required ValueListenable<AsyncValue<RealmRelationField>> field,
-  required ValueListenable<AsyncValue<RealmEditorCatalogSnapshot>> catalog,
-}) => PredicateSearchScope(
-  dependencies: [field, catalog],
-  evaluate: (result, query) {
-    final current = field.value.value;
-    final snapshot = catalog.value.currentCatalog;
-    return switch (result.payload) {
-      ElementDefinition(:final rootType)
-          when snapshot != null &&
-              current?.accepts(rootType, TypeRegistry(snapshot.catalog)) ==
-                  true =>
-        const SearchResultVisibility.visible(),
-      _ => const SearchResultVisibility.hidden(),
-    };
-  },
-);
-
-SearchScope elementDestinationScope({
-  required ValueListenable<AsyncValue<List<Book>>> books,
-  required ValueListenable<AsyncValue<Map<ResolvedTypeRef, RealmRelationField>>>
-  compatibleFields,
-}) => PredicateSearchScope(
-  dependencies: [books, compatibleFields],
-  evaluate: (result, query) {
-    final fields = compatibleFields.value.value;
-    if (fields == null) return const SearchResultVisibility.hidden();
-    return switch (result.payload) {
-      AuthoringSearchResultPayload(:final pageType) when pageType != null =>
-        fields.containsKey(pageType)
-            ? const SearchResultVisibility.visible()
-            : const SearchResultVisibility.hidden(),
-      RealmTypeEntry(:final type) =>
-        fields.containsKey(type) &&
-                books.value.value != null &&
-                resolveSearchBook(query, books.value.requireValue) != null
-            ? const SearchResultVisibility.visible()
-            : const SearchResultVisibility.hidden(),
-      _ => const SearchResultVisibility.hidden(),
-    };
-  },
-);

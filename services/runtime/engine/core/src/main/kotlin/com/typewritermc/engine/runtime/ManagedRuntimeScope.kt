@@ -1,7 +1,6 @@
 package com.typewritermc.engine.runtime
 
 import com.typewritermc.discovery.DeploymentFacts
-import com.typewritermc.types.TypePrototypeRegistry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -16,7 +15,6 @@ import kotlinx.coroutines.cancelAndJoin
  */
 class ManagedRuntimeScope(
     parent: CoroutineScope,
-    override val prototypes: TypePrototypeRegistry,
     override val facts: DeploymentFacts,
 ) : com.typewritermc.discovery.RuntimeScope {
     private val job = SupervisorJob(parent.coroutineContext[Job])

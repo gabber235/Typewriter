@@ -112,7 +112,13 @@ data class IncomingWatchCall<Address : Any, Request : Any, Initial : Any, Update
     val concreteAddress: MessageAddress,
     val contract: WatchContract<Address, Request, Initial, Update>,
     val communicator: Communicator,
-)
+) {
+    /** Publishes one update on the subject resolved from this exact request. */
+    suspend fun publishUpdate(
+        update: Update,
+        headers: MessageHeaders = MessageHeaders.Empty,
+    ): CommunicationResult<Unit> = communicator.publishUpdate(contract, address, request, update, headers)
+}
 
 /**
  * Bounds global in flight work, per route worker concurrency, buffering, and shutdown draining.

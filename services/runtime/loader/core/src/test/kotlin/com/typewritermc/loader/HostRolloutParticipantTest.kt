@@ -10,6 +10,8 @@ import com.typewritermc.imprint.IMPRINT_MANIFEST_PATH
 import com.typewritermc.imprint.ImprintManifest
 import com.typewritermc.imprint.ImprintManifestCodec
 import com.typewritermc.imprint.VersionConstraint
+import com.typewritermc.loader.api.EngineImplementationArtifact
+import com.typewritermc.loader.api.EngineImplementationTarget
 import com.typewritermc.loader.api.HostedArtifact
 import com.typewritermc.loader.api.HostedArtifactPackage
 import com.typewritermc.loader.api.HostedDeploymentContext
@@ -164,6 +166,8 @@ val HostRolloutParticipantTest by testSuite {
             fixture.participant.handle(stage).accepted shouldBe true
             fixture.participant.handle(stage).accepted shouldBe true
             fixture.stagedContexts.size shouldBe 1
+            fixture.stagedContexts.single().publicationTarget shouldBe projection.publicationTarget
+            fixture.stagedContexts.single().engineImplementation shouldBe projection.runtimes.single().implementation
 
             fixture.participant.handle(commit).accepted shouldBe true
             fixture.participant.handle(commit).accepted shouldBe true
@@ -434,6 +438,8 @@ private class ParticipantFixture(
                 root.resolve("deployment"),
             ),
         artifacts = HostedArtifactPackage(HostedArtifact(artifact, manifest), emptyList(), emptyList()),
+        publicationTarget = implementationTarget(manifest.id, manifest.version, ArtifactDigest.sha256("runtime".encodeToByteArray())),
+        engineImplementation = implementationTarget(manifest.id, manifest.version, ArtifactDigest.sha256("runtime".encodeToByteArray())),
         facts = emptyMap(),
         host = host,
     )
@@ -469,12 +475,14 @@ private class ParticipantFixture(
             } else {
                 emptyList()
             }
+        val implementation = implementationTarget(runtime.coordinate.id, runtime.coordinate.version, runtime.digest)
         return HostDeploymentProjection(
             realmId.value,
             reference.generation,
             serviceId,
-            listOf(ProjectedRuntime.primaryEngine(runtime)),
+            listOf(ProjectedRuntime.primaryEngine(runtime).copy(implementation = implementation)),
             extensions,
+            implementation,
             emptyMap(),
         )
     }
@@ -493,6 +501,22 @@ private class ParticipantFixture(
         )
     }
 }
+
+private fun implementationTarget(
+    id: ArtifactId,
+    version: ArtifactVersion,
+    digest: ArtifactDigest,
+) = EngineImplementationTarget(
+    placement = RuntimePlacement.PRIMARY_ENGINE,
+    engine =
+        EngineImplementationArtifact(
+            id,
+            version,
+            digest,
+            emptyList(),
+        ),
+    extensions = emptyList(),
+)
 
 private fun participantFixture(scope: TestScope): ParticipantFixture {
     val root = Files.createTempDirectory("participant")

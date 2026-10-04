@@ -1,7 +1,5 @@
 import "dart:async";
 
-import "package:collection/collection.dart";
-import "package:flutter/widgets.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
@@ -9,27 +7,29 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 const authoringResourceSearchResultType = SearchResultType(
   id: "authoring.resource",
-  rowRendererId: "typed.presentation.subject",
+  rowRendererId: "authored.presentation.subject",
   label: "Resource",
 );
 
 final class AuthoringSearchResultPayload {
   const AuthoringSearchResultPayload({
-    required this.definition,
-    required this.subject,
-    required this.context,
-    required this.presentation,
-    required this.ownerPath,
+    required this.hit,
+    required this.catalog,
   });
 
-  final ResourceDefinitionId definition;
-  final TypedPresentationSubject subject;
-  final TypedValueEnvelope context;
-  final SubjectPresentationModel presentation;
-  final List<skir.ResourceId> ownerPath;
+  final skir.AuthoringSearchHit hit;
+  final CheckedEditorCatalog catalog;
 
-  skir.ResourceId get id => subject.identity.id;
-  skir.ResourceId? get owner => subject.identity.owner;
+  skir.ResourceId get id => hit.resource;
+  skir.ResourceDefinitionId get definition => hit.definition;
+  skir.PresentationSubject get subject => hit.subject;
+  skir.PortableValue get context => hit.context;
+  skir.TypeSelection get configuration => hit.subject.content.configuration;
+
+  String get title =>
+      subject.descriptor.authoredString ??
+      subject.content.authoredField("name")?.authoredString ??
+      id.value;
 }
 
 final class RealmAuthoringSearchSource
@@ -39,22 +39,18 @@ final class RealmAuthoringSearchSource
     required this.organizationId,
     required this.realmId,
     this.contextResource,
-    this.referenceTarget,
-    this.assignableTo,
-    this.referenceOrigins = const [],
+    this.target,
+    this.contexts = const [],
     this.definitionFilter,
-    this.typeRegistry,
   });
 
   final Ref ref;
   final skir.RecordId organizationId;
   final skir.RecordId realmId;
   final skir.ResourceId? contextResource;
-  final ResolvedTypeRef? referenceTarget;
-  final TypeExpression? assignableTo;
-  final List<skir.ResourceId> referenceOrigins;
-  final Set<ResourceDefinitionId>? definitionFilter;
-  final TypeRegistry? typeRegistry;
+  final skir.NamedTypeUse? target;
+  final List<skir.ResourceId> contexts;
+  final Set<skir.ResourceDefinitionId>? definitionFilter;
 
   final _snapshots = StreamController<SearchSourceSnapshot>.broadcast(
     sync: true,
@@ -66,12 +62,7 @@ final class RealmAuthoringSearchSource
   Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
 
   @override
-  List<QuerySelectorDefinition> get selectors => referenceTarget == null
-      ? _catalogOrNull?.authoringSearch?.selectors
-                .map((selector) => selector.toQuerySelector())
-                .toList(growable: false) ??
-            const []
-      : const [];
+  List<QuerySelectorDefinition> get selectors => const [];
 
   @override
   void initialize(SearchQueryContext context) => search(context);
@@ -84,80 +75,49 @@ final class RealmAuthoringSearchSource
     unawaited(_search(context, revision));
   }
 
-  Future<void> _search(SearchQueryContext context, int revision) async {
+  Future<void> _search(SearchQueryContext query, int revision) async {
     try {
-      final catalog = _catalog();
-      final query = encodeRealmSearchQuery(context);
-      final target = _encodedTarget(catalog);
-      final response = await ref.readAuthoringSession().notifier.search(
-        skir.SearchAuthoringGraphRequest(
-          generation: skir.CatalogGeneration(value: catalog.generation.value),
-          query: query,
-          resources: skir.ResourceFilter(
-            definitions: _resourceDefinitions(catalog),
-            assignableTo: target,
-          ),
-          contexts: referenceOrigins.isNotEmpty
-              ? referenceOrigins
-              : [?contextResource],
-          referenceTarget: target,
+      final access = ref.readAuthoringSession();
+      final snapshot = access.state.snapshot;
+      final catalog = access.state.catalog;
+      if (snapshot == null || catalog == null) {
+        throw StateError("Realm authoring is not ready");
+      }
+      final requestedDefinitions = definitionFilter;
+      final roots = catalog.snapshot.resourceDefinitions
+          .where(
+            (definition) =>
+                requestedDefinitions == null ||
+                requestedDefinitions.isEmpty ||
+                requestedDefinitions.contains(definition.id),
+          )
+          .map((definition) => definition.root)
+          .toList(growable: false);
+      final response = await access.notifier.search(
+        skir.SearchAuthoringRequest(
+          generation: snapshot.generation,
+          snapshot: snapshot.snapshot,
+          query: encodeRealmSearchQuery(query),
+          roots: roots,
+          contexts: contexts.isNotEmpty ? contexts : [?contextResource],
+          target: target,
           facets: _validationFacets(query),
         ),
       );
       if (_disposed || revision != _revision) return;
-      await _publish(response, revision);
+      _publish(response, catalog);
     } on Object catch (error) {
       if (_disposed || revision != _revision) return;
       _publishError(["Realm search failed: $error"]);
     }
   }
 
-  RealmEditorCatalogSnapshot _catalog() {
-    final snapshot = ref.read(realmEditorCatalogProvider).currentCatalog;
-    if (snapshot == null) {
-      throw StateError("Realm search catalog is unavailable");
-    }
-    return snapshot;
-  }
-
-  RealmEditorCatalogSnapshot? get _catalogOrNull =>
-      ref.read(realmEditorCatalogProvider).currentCatalog;
-
-  List<skir.ResourceDefinitionId> _resourceDefinitions(
-    RealmEditorCatalogSnapshot catalog,
-  ) {
-    final searchable = catalog.authoringSearch?.definitions.toSet() ?? const {};
-    final requested = definitionFilter;
-    final definitions = requested == null || requested.isEmpty
-        ? searchable
-        : requested.where(searchable.contains);
-    return definitions
-        .map((definition) => skir.ResourceDefinitionId(value: definition.value))
-        .toList(growable: false);
-  }
-
-  skir.TypeExpression? _encodedTarget(RealmEditorCatalogSnapshot catalog) {
-    final target =
-        assignableTo ??
-        (referenceTarget == null ? null : NamedType(referenceTarget!));
-    if (target == null) return null;
-    final registry = typeRegistry ?? TypeRegistry(catalog.catalog);
-    final encoded = SkirTypeCodec(registry).encodeExpression(target);
-    if (encoded.valueOrNull == null) {
-      throw StateError(
-        encoded.diagnostics.map((item) => item.message).join(", "),
-      );
-    }
-    return encoded.valueOrNull;
-  }
-
-  List<skir.SearchFacetRequest> _validationFacets(skir.RealmSearchQuery query) {
+  List<skir.SearchFacetRequest> _validationFacets(SearchQueryContext query) {
     final values = <String, List<String>>{};
     for (final selector in query.selectors) {
       final value = selector.value;
-      if (value != null) {
-        values.putIfAbsent(_facetId(selector.selectorId), () => []).add(value);
-      }
+      if (value == null) continue;
+      values.putIfAbsent(selector.selectorId, () => []).add(value);
     }
     return [
       for (final entry in values.entries)
@@ -169,47 +129,37 @@ final class RealmAuthoringSearchSource
     ];
   }
 
-  String _facetId(String selectorId) =>
-      _catalogOrNull?.authoringSearch?.facets
-          .firstWhereOrNull((facet) => facet.selectorId == selectorId)
-          ?.id ??
-      selectorId;
-
-  Future<void> _publish(
-    skir.SearchAuthoringGraphResponse response,
-    int revision,
-  ) async {
+  void _publish(
+    skir.SearchAuthoringResponse response,
+    CheckedEditorCatalog catalog,
+  ) {
     switch (response) {
-      case skir.SearchAuthoringGraphResponse_successWrapper(:final value):
-        final catalogResult = await _catalogForSearch(value);
-        if (_disposed || revision != _revision) return;
-        final snapshot = switch (catalogResult) {
-          RealmEditorCatalogFetched(:final snapshot) => snapshot,
-          _ => null,
-        };
-        if (snapshot == null) {
-          _publishError(["Realm search catalog generation is unavailable"]);
-          return;
-        }
-        final decoded = value.hits
-            .map((hit) => _result(hit, snapshot))
-            .toList(growable: false);
+      case skir.SearchAuthoringResponse_successWrapper(:final value):
+        final payloads = [
+          for (final hit in value.hits)
+            AuthoringSearchResultPayload(hit: hit, catalog: catalog),
+        ];
         _snapshots.add(
           SearchSourceSnapshot.ready(
-            nodes: decoded
-                .map((item) => item.result)
-                .nonNulls
-                .map((result) => SearchNode.result(result: result))
-                .toList(growable: false),
-            errorSummaries: [
-              for (final item in decoded.indexed)
-                for (final diagnostic in item.$2.diagnostics)
-                  SearchErrorSummary(
-                    id: "realm.authoring.decode.${item.$1}.${diagnostic.code.name}",
-                    message: diagnostic.message,
-                    severity: SearchErrorSeverity.error,
-                    sourceLabel: "Realm",
+            nodes: [
+              for (final payload in payloads)
+                SearchNode.result(
+                  result: SearchResult(
+                    id: "${payload.definition.value}:${payload.id.value}",
+                    type: authoringResourceSearchResultType,
+                    payload: payload,
+                    title: payload.title,
                   ),
+                ),
+            ],
+            errorSummaries: [
+              for (final diagnostic in value.diagnostics)
+                SearchErrorSummary(
+                  id: "realm.authoring.${diagnostic.code}",
+                  message: diagnostic.message,
+                  severity: SearchErrorSeverity.error,
+                  sourceLabel: "Realm",
+                ),
             ],
             selectorValidations: [
               for (final facet in value.facets)
@@ -229,161 +179,17 @@ final class RealmAuthoringSearchSource
             ],
           ),
         );
-      case skir.SearchAuthoringGraphResponse_invalidWrapper(:final value):
-        _publishError(value.diagnostics.map((item) => item.message).toList());
-      case skir.SearchAuthoringGraphResponse_catalogChangedWrapper():
+      case skir.SearchAuthoringResponse_invalidWrapper(:final value):
+        _publishError(
+          value.diagnostics.map((diagnostic) => diagnostic.message).toList(),
+        );
+      case skir.SearchAuthoringResponse_catalogChangedWrapper():
         _publishError(const ["The Realm editor catalog changed"]);
-      case skir.SearchAuthoringGraphResponse_internalErrorWrapper():
+      case skir.SearchAuthoringResponse_internalErrorWrapper():
         _publishError(const ["Realm could not complete the search"]);
-      case skir.SearchAuthoringGraphResponse_unknown():
+      case skir.SearchAuthoringResponse_unknown():
         _publishError(const ["Realm returned an unknown search response"]);
     }
-  }
-
-  Future<RealmEditorCatalogFetchResult> _catalogForSearch(
-    skir.AuthoringSearchSnapshot search,
-  ) async {
-    final request = presentationSubjectCatalogRequest(
-      search.hits.map((hit) => hit.subject),
-      contexts: search.hits.map((hit) => hit.context),
-    );
-    final demand = request.valueOrNull;
-    if (demand == null) {
-      return RealmEditorCatalogFetchResult.unavailable(request.diagnostics);
-    }
-    final cache = await ref.read(realmEditorCatalogCacheProvider.future);
-    if (cache == null) {
-      return RealmEditorCatalogFetchResult.unavailable([
-        realmEditorCatalogUnavailableDiagnostic(
-          "Realm search catalog is unavailable",
-        ),
-      ]);
-    }
-    return cache.fetchExact(CatalogGeneration(search.generation.value), demand);
-  }
-
-  ({SearchResult? result, List<TypeDiagnostic> diagnostics}) _result(
-    skir.AuthoringSearchHit hit,
-    RealmEditorCatalogSnapshot snapshot,
-  ) {
-    final codec = TypedAuthoringCodec(snapshot);
-    final subjectResult = codec.decodeSubject(hit.subject);
-    final contextResult = codec.decodeEnvelope(hit.context);
-    final subject = subjectResult.valueOrNull;
-    final context = contextResult.valueOrNull;
-    if (subject == null || context == null) {
-      return (
-        result: null,
-        diagnostics: [
-          ...subjectResult.diagnostics,
-          ...contextResult.diagnostics,
-        ],
-      );
-    }
-    final target = referenceTarget;
-    if (target != null &&
-        !NamedType(subject.content.rootType)
-            .isStructurallyAssignableTo(NamedType(target), codec.registry)) {
-      return (result: null, diagnostics: const []);
-    }
-    return target == null
-        ? _authoringResult(
-            hit.definition.toDomain(),
-            subject,
-            context,
-            hit.ownerPath.toList(growable: false),
-            snapshot,
-            codec,
-          )
-        : _referenceResult(subject, codec);
-  }
-
-  ({SearchResult? result, List<TypeDiagnostic> diagnostics}) _authoringResult(
-    ResourceDefinitionId definition,
-    TypedPresentationSubject subject,
-    TypedValueEnvelope context,
-    List<skir.ResourceId> ownerPath,
-    RealmEditorCatalogSnapshot snapshot,
-    TypedAuthoringCodec codec,
-  ) {
-    final presentationResult = codec.subjectPresentation(
-      subject,
-      PresentationRole.authoringResult,
-      context: context,
-    );
-    final presentation =
-        presentationResult.valueOrNull ??
-        (
-          model: PresentationModel(
-            catalog: snapshot.catalog,
-            inputs: const {},
-            root: PresentationNode(
-              id: "authoring.search.diagnostic",
-              element: DiagnosticElement(presentationResult.diagnostics),
-            ),
-            diagnostics: presentationResult.diagnostics,
-          ),
-          presentation: const PresentationId(
-            namespace: "typewriter.diagnostic",
-            name: "authoring.search",
-          ),
-        );
-    return (
-      result: SearchResult(
-        id: "${definition.value}:${subject.identity.id.value}",
-        type: authoringResourceSearchResultType,
-        payload: AuthoringSearchResultPayload(
-          definition: definition,
-          subject: subject,
-          context: context,
-          presentation: presentation,
-          ownerPath: ownerPath,
-        ),
-        title: subject.identity.id.value,
-      ),
-      diagnostics: const [],
-    );
-  }
-
-  ({SearchResult? result, List<TypeDiagnostic> diagnostics}) _referenceResult(
-    TypedPresentationSubject subject,
-    TypedAuthoringCodec codec,
-  ) {
-    final presentationResult = codec.subjectPresentation(
-      subject,
-      PresentationRole.referenceOption,
-    );
-    final presentation = presentationResult.valueOrNull;
-    if (presentation == null) {
-      return (result: null, diagnostics: presentationResult.diagnostics);
-    }
-    final bindings = <BindingId, BindingSource>{};
-    for (final MapEntry(key: id, value: input)
-        in presentation.model.inputs.entries) {
-      if (input case PresentationValueInput(:final type, :final value)) {
-        bindings[id] = EditorValueBindingSource(
-          type: type,
-          value: value,
-          revision: 0,
-        );
-      }
-    }
-    return (
-      result: SearchResult(
-        id: "reference:${subject.identity.id.value}",
-        type: presentationSearchResultType,
-        title: subject.identity.id.value,
-        payload: PresentationSearchResultPayload(
-          selectedValue: ReferenceValue(subject.identity.id),
-          providerKey: "authoring.reference",
-          expressions: ExpressionContext(
-            bindings: BindingEnvironment(bindings),
-          ),
-          presentation: presentation.model.root,
-        ),
-      ),
-      diagnostics: const [],
-    );
   }
 
   void _publishError(List<String> messages) {
@@ -403,13 +209,17 @@ final class RealmAuthoringSearchSource
   }
 
   @override
-  Future<SearchPreviewRequestResult> preview(SearchPreviewRequest request) {
-    return Future.value(
-      const SearchPreviewRequestResult.error(
-        message: "Authoring resources do not provide a separate preview",
-      ),
-    );
-  }
+  Future<SearchPreviewRequestResult> preview(SearchPreviewRequest request) =>
+      Future.value(
+        const SearchPreviewRequestResult.error(
+          message: "Authoring resources do not provide a separate preview",
+        ),
+      );
+
+  @override
+  Future<SearchSelectorCompletionResult> completeSelector(
+    SearchSelectorCompletionRequest request,
+  ) async => const SearchSelectorCompletionResult();
 
   @override
   void dispose() {
@@ -418,224 +228,4 @@ final class RealmAuthoringSearchSource
     _revision++;
     unawaited(_snapshots.close());
   }
-
-  @override
-  Future<SearchSelectorCompletionResult> completeSelector(
-    SearchSelectorCompletionRequest request,
-  ) async {
-    if (!selectors.any((item) => item.id == request.selectorId)) {
-      return const SearchSelectorCompletionResult();
-    }
-    final catalog = _catalog();
-    final target = _encodedTarget(catalog);
-    final response = await ref.readAuthoringSession().notifier.search(
-      skir.SearchAuthoringGraphRequest(
-        generation: skir.CatalogGeneration(value: catalog.generation.value),
-        query: skir.RealmSearchQuery(
-          normalizedQuery: "",
-          selectors: const [],
-          selectorExpression: request.scope == null
-              ? null
-              : encodeRealmSearchSelectorExpression(request.scope!),
-          terms: const [],
-        ),
-        resources: skir.ResourceFilter(
-          definitions: _resourceDefinitions(catalog),
-          assignableTo: target,
-        ),
-        contexts: referenceOrigins.isNotEmpty
-            ? referenceOrigins
-            : [?contextResource],
-        referenceTarget: target,
-        facets: [
-          skir.SearchFacetRequest(
-            facetId: skir.SearchFacetId(value: _facetId(request.selectorId)),
-            partial: request.partial,
-            validate: const [],
-          ),
-        ],
-      ),
-    );
-    return switch (response) {
-      skir.SearchAuthoringGraphResponse_successWrapper(:final value) =>
-        SearchSelectorCompletionResult(
-          values: value.facets.firstOrNull?.suggestions.toList() ?? const [],
-          exhaustive: true,
-        ),
-      skir.SearchAuthoringGraphResponse_invalidWrapper(:final value) =>
-        throw StateError(
-          value.diagnostics.map((item) => item.message).join(", "),
-        ),
-      skir.SearchAuthoringGraphResponse_catalogChangedWrapper() =>
-        throw StateError("The Realm editor catalog changed"),
-      skir.SearchAuthoringGraphResponse_internalErrorWrapper() =>
-        throw StateError("Realm could not suggest selector values"),
-      skir.SearchAuthoringGraphResponse_unknown() => throw StateError(
-        "Realm returned an unknown search response",
-      ),
-    };
-  }
 }
-
-List<QuerySelectorDefinition> authoringQuerySelectors(
-  RealmEditorCatalogSnapshot? catalog,
-  Set<String> ids,
-) =>
-    catalog?.authoringSearch?.selectors
-        .where((selector) => ids.contains(selector.id))
-        .map((selector) => selector.toQuerySelector())
-        .toList(growable: false) ??
-    const [];
-
-extension AuthoringSearchSelectorQueryDefinition on SearchSelectorDefinition {
-  QuerySelectorDefinition toQuerySelector() => switch (this) {
-    KeyValueSearchSelectorDefinition(
-      :final id,
-      :final key,
-      :final values,
-      :final caseSensitive,
-      :final multiplicity,
-      :final colorValue,
-    ) =>
-      KeyValueSelectorDefinition(
-        id: id,
-        key: key,
-        value: switch (values) {
-          FreeTextSearchSelectorValues() => QuerySelectorValue.freeText(),
-          EnumeratedSearchSelectorValues(:final values) =>
-            QuerySelectorValue.enumValue(values),
-        },
-        caseSensitive: caseSensitive,
-        multiplicity: switch (multiplicity) {
-          SearchSelectorMultiplicity.single => QueryMultiplicity.single,
-          SearchSelectorMultiplicity.multiple => QueryMultiplicity.multiple,
-        },
-        color: colorValue == null ? null : Color(colorValue),
-      ),
-    _ => throw StateError("Unknown authoring search selector definition"),
-  };
-}
-
-Future<List<ReferenceResourceSummary>> resolveAuthoringReferences({
-  required Ref ref,
-  required skir.RecordId organizationId,
-  required skir.RecordId realmId,
-  required ResolvedTypeRef target,
-  required List<skir.ResourceId> ids,
-  required TypeRegistry registry,
-}) async {
-  if (ids.isEmpty) return const [];
-  final encodedTarget = SkirTypeCodec(registry)
-      .encodeExpression(NamedType(target));
-  if (encodedTarget.valueOrNull == null) {
-    throw StateError(
-      encodedTarget.diagnostics.map((item) => item.message).join(", "),
-    );
-  }
-  final catalog = ref.read(realmEditorCatalogProvider).currentCatalog;
-  if (catalog == null) {
-    throw StateError("Realm reference catalog is unavailable");
-  }
-  final graph = await ref
-      .read(resourceRepositoriesProvider)
-      .authoring(organizationId, realmId)
-      .fetch(
-        skir.GraphSelection(
-          key: "reference.resolve",
-          seed: skir.ResourceSeed.createIds(
-            values: ids,
-            requireAssignableTo: encodedTarget.valueOrNull,
-          ),
-          steps: const [],
-        ),
-        generation: catalog.generation,
-      );
-  final subjects = {
-    for (final value in graph.presentations) value.resource: value.subject,
-  };
-  final demand = presentationSubjectCatalogRequest(subjects.values);
-  if (demand.valueOrNull == null) {
-    throw StateError(demand.diagnostics.map((item) => item.message).join(", "));
-  }
-  final cache = await ref.read(realmEditorCatalogCacheProvider.future);
-  if (cache == null) throw StateError("Realm reference catalog is unavailable");
-  final exact = await cache.fetchExact(
-    CatalogGeneration(graph.generation.value),
-    demand.valueOrNull!,
-  );
-  final snapshot = switch (exact) {
-    RealmEditorCatalogFetched(:final snapshot) => snapshot,
-    RealmEditorCatalogGenerationMismatch() => throw StateError(
-      "Realm reference catalog generation is unavailable",
-    ),
-    RealmEditorCatalogFetchUnavailable(:final diagnostics) => throw StateError(
-      diagnostics.firstOrNull?.message ??
-          "Realm reference catalog is unavailable",
-    ),
-  };
-  final selection = graph.selections.single;
-  final missing = selection.missingIds.toSet();
-  final incompatible = selection.incompatibleIds.toSet();
-  final codec = TypedAuthoringCodec(snapshot);
-  return [
-    for (final id in ids)
-      if (subjects[id] case final subject?)
-        _resolvedReferenceSummary(id, subject, codec)
-      else
-        ReferenceResourceSummary(
-          id: id,
-          exists: false,
-          title: id.value,
-          subtitle: incompatible.contains(id)
-              ? "Referenced resource has an incompatible type"
-              : missing.contains(id)
-              ? "Referenced resource is missing"
-              : "Referenced resource is unavailable",
-          diagnostics: [
-            _searchResourceDiagnostic(
-              id,
-              incompatible.contains(id)
-                  ? "Referenced resource has an incompatible type"
-                  : missing.contains(id)
-                  ? "Referenced resource is missing"
-                  : "Referenced resource is unavailable",
-            ),
-          ],
-        ),
-  ];
-}
-
-ReferenceResourceSummary _resolvedReferenceSummary(
-  skir.ResourceId id,
-  skir.PresentationSubject wire,
-  TypedAuthoringCodec codec,
-) {
-  final subject = codec.decodeSubject(wire);
-  final decoded = subject.valueOrNull;
-  if (decoded == null) {
-    return ReferenceResourceSummary(
-      id: id,
-      exists: false,
-      title: id.value,
-      diagnostics: subject.diagnostics,
-    );
-  }
-  final presentation = codec.subjectPresentation(
-    decoded,
-    PresentationRole.referenceSummary,
-  );
-  return ReferenceResourceSummary(
-    id: id,
-    exists: true,
-    title: id.value,
-    presentation: presentation.valueOrNull?.model,
-    diagnostics: presentation.diagnostics,
-  );
-}
-
-TypeDiagnostic _searchResourceDiagnostic(skir.ResourceId id, String message) =>
-    TypeDiagnostic(
-      code: TypeDiagnosticCode.invalidValue,
-      message: "$message (${id.value})",
-      pathPresent: false,
-    );

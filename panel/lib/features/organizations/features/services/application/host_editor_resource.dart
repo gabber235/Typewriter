@@ -41,13 +41,82 @@ final class HostEditorSnapshot extends EditorSnapshot {
   @override
   EditorDocument get document => EditorDocument(
     rootType: _hostConfigurationType,
-    typeCatalog: _hostInspectorCatalog,
+    typeCatalog: _hostConfigurationCatalog,
     confirmedValue: _configurationValue(_realm, _engine),
     revision: host.revision,
   );
   @override
-  List<TypeDiagnostic> validateDraft(DataValue value) =>
-      _configurationIssues(value);
+  List<TypeDiagnostic> validateDraft(DataValue value) {
+    final shape = _configurationShapeIssues(value);
+    return shape.isEmpty ? _configurationIssues(value) : shape;
+  }
+
+  @override
+  EditorMutationResult validate(DataPath path, DataValue value) {
+    if (_admitsConfigurationValue(path, value)) {
+      return EditorMutationResult.applied(value);
+    }
+    return EditorMutationResult.invalid([
+      TypeDiagnostic(
+        code: TypeDiagnosticCode.invalidValue,
+        message: "The host configuration value is invalid",
+        path: path,
+      ),
+    ]);
+  }
+
+  bool _admitsConfigurationValue(DataPath path, DataValue value) {
+    if (path == DataPath.root) return _configurationShapeIssues(value).isEmpty;
+    if (path == DataPath.root.field("realm")) {
+      return _isRealmConfiguration(value);
+    }
+    if (path == DataPath.root.field("engine")) {
+      return _isEngineConfiguration(value);
+    }
+    if (path == DataPath.root.field("realm").field("target") ||
+        path == DataPath.root.field("engine").field("target") ||
+        path == DataPath.root.field("engine").field("realm")) {
+      return value is StringValue;
+    }
+    return false;
+  }
+
+  List<TypeDiagnostic> _configurationShapeIssues(DataValue value) {
+    if (value is RecordValue &&
+        value.fields.length == 2 &&
+        _isRealmConfiguration(value.fields["realm"]) &&
+        _isEngineConfiguration(value.fields["engine"])) {
+      return const [];
+    }
+    return const [
+      TypeDiagnostic(
+        code: TypeDiagnosticCode.invalidValue,
+        message: "The host configuration structure is invalid",
+      ),
+    ];
+  }
+
+  bool _isRealmConfiguration(DataValue? value) => switch (value) {
+    PolymorphicValue(:final concreteType, value: RecordValue(:final fields))
+        when concreteType == _realmDisabled =>
+      fields.isEmpty,
+    PolymorphicValue(:final concreteType, value: RecordValue(:final fields))
+        when concreteType == _realmHosted =>
+      fields.length == 1 && fields["target"] is StringValue,
+    _ => false,
+  };
+
+  bool _isEngineConfiguration(DataValue? value) => switch (value) {
+    PolymorphicValue(:final concreteType, value: RecordValue(:final fields))
+        when concreteType == _engineDisabled =>
+      fields.isEmpty,
+    PolymorphicValue(:final concreteType, value: RecordValue(:final fields))
+        when concreteType == _engineEnabled =>
+      fields.length == 2 &&
+          fields["target"] is StringValue &&
+          fields["realm"] is StringValue,
+    _ => false,
+  };
   TopologyEngineTarget? _decodeTarget(
     String? value,
     Map<String, List<String>> targets,

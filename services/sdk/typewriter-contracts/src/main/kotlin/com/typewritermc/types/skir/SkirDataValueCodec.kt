@@ -2,249 +2,254 @@
 
 package com.typewritermc.types.skir
 
-import com.typewritermc.types.DataMapEntry
+import com.typewritermc.authoring.ItemId
 import com.typewritermc.types.DataValue
+import com.typewritermc.types.EndpointId
+import com.typewritermc.types.LinkTarget
+import com.typewritermc.types.ListItem
+import com.typewritermc.types.MapRow
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.requireCanonicalDecimal
 import okio.ByteString.Companion.toByteString
-import java.math.BigInteger
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.toJavaInstant
 import kotlin.time.toKotlinInstant
-import skirout.editor.v1.type_catalog.ResolvedTypeRef as SkirResolvedTypeRef
+import skirout.editor.v1.type_catalog.DataValue as SkirDataValue
+import skirout.editor.v1.type_catalog.EndpointId as SkirEndpointId
+import skirout.editor.v1.type_catalog.FieldValue as SkirFieldValue
+import skirout.editor.v1.type_catalog.ItemId as SkirItemId
+import skirout.editor.v1.type_catalog.LinkTarget as SkirLinkTarget
+import skirout.editor.v1.type_catalog.ListItem as SkirListItem
+import skirout.editor.v1.type_catalog.MapRow as SkirMapRow
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
-import skirout.editor.v1.type_catalog.TypedMapEntry as SkirTypedMapEntry
-import skirout.editor.v1.type_catalog.TypedRecordField as SkirTypedRecordField
-import skirout.editor.v1.type_catalog.TypedValue as SkirTypedValue
 import skirout.kernel.v1.duration.Duration as SkirDuration
 
-/**
- * Converts portable value trees to and from Skir typed values. Recursive conversion preserves represented
- * structure and reports unsupported variants or numeric representations through [SkirConversionResult]. It does
- * not resolve a catalog or establish that a value satisfies a domain schema.
- */
 object SkirDataValueCodec {
-    /** Encodes a Typewriter value, returning diagnostics for representations Skir cannot carry. */
-    fun encode(value: DataValue): SkirConversionResult<SkirTypedValue> = captureSkirConversion { encodeDataValue(value) }
+    fun encode(value: DataValue): SkirConversionResult<SkirDataValue> = captureSkirConversion { encodeDataValue(value) }
 
-    /** Decodes a Skir value, returning diagnostics for unknown or invalid payload variants. */
-    fun decode(value: SkirTypedValue): SkirConversionResult<DataValue> = captureSkirConversion { decodeDataValue(value) }
+    fun decode(value: SkirDataValue): SkirConversionResult<DataValue> = captureSkirConversion { decodeDataValue(value) }
 }
 
-internal fun ConversionScope.encodeDataValue(value: DataValue): SkirTypedValue =
-    when (value) {
-        DataValue.Unit -> {
-            SkirTypedValue.UNIT
-        }
-
-        is DataValue.Boolean -> {
-            SkirTypedValue.BooleanWrapper(value.value)
-        }
-
-        is DataValue.Integer -> {
-            encodeInteger(value.value)
-        }
-
-        is DataValue.Float -> {
-            SkirTypedValue.FloatSixtyFourWrapper(value.value)
-        }
-
-        is DataValue.Decimal -> {
-            SkirTypedValue.DecimalWrapper(value.value)
-        }
-
-        is DataValue.StringValue -> {
-            SkirTypedValue.StringWrapper(value.value)
-        }
-
-        is DataValue.Bytes -> {
-            SkirTypedValue.BytesWrapper(value.toByteArray().toByteString())
-        }
-
-        is DataValue.Timestamp -> {
-            SkirTypedValue.TimestampWrapper(value.value.toJavaInstant())
-        }
-
-        is DataValue.Duration -> {
-            if (value.value.isInfinite() || value.value.inWholeMilliseconds.milliseconds != value.value) {
-                fail("Skir duration values require finite millisecond precision.")
+internal fun ConversionScope.encodeDataValue(value: DataValue): SkirDataValue =
+    withinValueDepth {
+        when (value) {
+            DataValue.Unfilled -> {
+                SkirDataValue.UNFILLED
             }
-            SkirTypedValue.createDuration(duration = SkirDuration(milliseconds = value.value.inWholeMilliseconds))
-        }
 
-        is DataValue.ListValue -> {
-            SkirTypedValue.ListWrapper(value.values.mapIndexed { index, item -> at("list item $index") { encodeDataValue(item) } })
-        }
+            DataValue.Null -> {
+                SkirDataValue.NULL
+            }
 
-        is DataValue.MapValue -> {
-            SkirTypedValue.createMap(
-                entries =
-                    value.entries.mapIndexed { index, entry ->
-                        SkirTypedMapEntry(
-                            key = at("map key $index") { encodeDataValue(entry.key) },
-                            value = at("map value $index") { encodeDataValue(entry.value) },
-                        )
-                    },
-            )
-        }
+            DataValue.Unit -> {
+                SkirDataValue.UNIT
+            }
 
-        is DataValue.Record -> {
-            SkirTypedValue.createRecord(
-                fields =
-                    value.fields.toSortedMap().map { (name, item) ->
-                        SkirTypedRecordField(name = name, value = at(name) { encodeDataValue(item) })
-                    },
-            )
-        }
+            is DataValue.Boolean -> {
+                SkirDataValue.BooleanWrapper(value.value)
+            }
 
-        is DataValue.Polymorphic -> {
-            val reference = SkirTypeCodec.encode(value.concreteType)
-            val encodedReference =
-                when (reference) {
-                    is SkirConversionResult.Success -> reference.value
-                    is SkirConversionResult.Failure -> fail(reference.diagnostics.joinToString())
+            is DataValue.Integer -> {
+                SkirDataValue.IntegerWrapper(value.value.toString())
+            }
+
+            is DataValue.Float -> {
+                if (!value.value.isFinite()) fail("Float values must be finite.")
+                SkirDataValue.FloatWrapper(value.value)
+            }
+
+            is DataValue.Decimal -> {
+                runCatching { value.value.requireCanonicalDecimal("Decimal value") }
+                    .getOrElse { fail("Decimal values must use canonical notation.") }
+                SkirDataValue.DecimalWrapper(value.value)
+            }
+
+            is DataValue.StringValue -> {
+                SkirDataValue.StringValueWrapper(value.value)
+            }
+
+            is DataValue.Bytes -> {
+                SkirDataValue.BytesWrapper(value.toByteArray().toByteString())
+            }
+
+            is DataValue.Timestamp -> {
+                SkirDataValue.TimestampWrapper(value.value.toJavaInstant())
+            }
+
+            is DataValue.Duration -> {
+                if (value.value.isInfinite() || value.value.inWholeMilliseconds.milliseconds != value.value) {
+                    fail("Duration values require finite millisecond precision.")
                 }
-            SkirTypedValue.createNamed(
-                tag = encodedReference,
-                payload = at("payload") { encodeDataValue(value.value) },
-            )
-        }
+                SkirDataValue.createDuration(value = SkirDuration(milliseconds = value.value.inWholeMilliseconds))
+            }
 
-        is DataValue.Reference -> {
-            SkirTypedValue.ReferenceWrapper(SkirResourceId(value = value.id.value))
-        }
-    }
+            is DataValue.EnumCase -> {
+                SkirDataValue.EnumCaseWrapper(value.key)
+            }
 
-internal fun ConversionScope.decodeDataValue(value: SkirTypedValue): DataValue =
-    when (value) {
-        SkirTypedValue.UNIT -> {
-            DataValue.Unit
-        }
+            is DataValue.Record -> {
+                SkirDataValue.createRecord(
+                    fields =
+                        value.fields.toSortedMap().map { (name, field) ->
+                            SkirFieldValue(name = name, value = at(name) { encodeDataValue(field) })
+                        },
+                )
+            }
 
-        is SkirTypedValue.BooleanWrapper -> {
-            DataValue.Boolean(value.value)
-        }
+            is DataValue.Named -> {
+                SkirDataValue.createNamed(
+                    actualType = encodeNamedTypeUse(value.actualType),
+                    payload = at("payload") { encodeDataValue(value.payload) },
+                )
+            }
 
-        is SkirTypedValue.StringWrapper -> {
-            DataValue.StringValue(value.value)
-        }
+            is DataValue.ListValue -> {
+                SkirDataValue.createListValue(items = value.items.mapIndexed { index, item -> at("item $index") { encode(item) } })
+            }
 
-        is SkirTypedValue.BytesWrapper -> {
-            DataValue.Bytes(value.value.toByteArray())
-        }
+            is DataValue.SetValue -> {
+                SkirDataValue.createSetValue(items = value.items.mapIndexed { index, item -> at("item $index") { encode(item) } })
+            }
 
-        is SkirTypedValue.SignedEightWrapper -> {
-            integerInRange(value.value.toLong(), Byte.MIN_VALUE.toLong(), Byte.MAX_VALUE.toLong())
-        }
+            is DataValue.MapValue -> {
+                SkirDataValue.createMapValue(rows = value.rows.mapIndexed { index, row -> at("row $index") { encode(row) } })
+            }
 
-        is SkirTypedValue.SignedSixteenWrapper -> {
-            integerInRange(value.value.toLong(), Short.MIN_VALUE.toLong(), Short.MAX_VALUE.toLong())
-        }
-
-        is SkirTypedValue.SignedThirtyTwoWrapper -> {
-            DataValue.Integer(value.value.toBigInteger())
-        }
-
-        is SkirTypedValue.SignedSixtyFourWrapper -> {
-            DataValue.Integer(value.value.toBigInteger())
-        }
-
-        is SkirTypedValue.UnsignedEightWrapper -> {
-            integerInRange(value.value.toLong(), 0, UByte.MAX_VALUE.toLong())
-        }
-
-        is SkirTypedValue.UnsignedSixteenWrapper -> {
-            integerInRange(value.value.toLong(), 0, UShort.MAX_VALUE.toLong())
-        }
-
-        is SkirTypedValue.UnsignedThirtyTwoWrapper -> {
-            integerInRange(value.value, 0, UInt.MAX_VALUE.toLong())
-        }
-
-        is SkirTypedValue.UnsignedSixtyFourWrapper -> {
-            val integer = value.value.toBigIntegerOrNull() ?: fail("Invalid unsigned 64 bit integer payload.")
-            if (integer < BigInteger.ZERO || integer > UNSIGNED_64_MAX) fail("Unsigned 64 bit integer payload is outside its range.")
-            DataValue.Integer(integer)
-        }
-
-        is SkirTypedValue.FloatThirtyTwoWrapper -> {
-            finiteFloat(value.value.toDouble())
-        }
-
-        is SkirTypedValue.FloatSixtyFourWrapper -> {
-            finiteFloat(value.value)
-        }
-
-        is SkirTypedValue.DecimalWrapper -> {
-            runCatching { DataValue.Decimal(value.value) }.getOrElse { fail("Invalid decimal payload.") }
-        }
-
-        is SkirTypedValue.TimestampWrapper -> {
-            DataValue.Timestamp(value.value.toKotlinInstant())
-        }
-
-        is SkirTypedValue.DurationWrapper -> {
-            DataValue.Duration(value.value.duration.milliseconds.milliseconds)
-        }
-
-        is SkirTypedValue.ListWrapper -> {
-            DataValue.ListValue(value.value.mapIndexed { index, item -> at("list item $index") { decodeDataValue(item) } })
-        }
-
-        is SkirTypedValue.MapWrapper -> {
-            DataValue.MapValue(
-                value.value.entries.mapIndexed { index, entry ->
-                    DataMapEntry(
-                        key = at("map key $index") { decodeDataValue(entry.key) },
-                        value = at("map value $index") { decodeDataValue(entry.value) },
-                    )
-                },
-            )
-        }
-
-        is SkirTypedValue.RecordWrapper -> {
-            DataValue.Record(value.value.fields.associate { field -> field.name to at(field.name) { decodeDataValue(field.value) } })
-        }
-
-        is SkirTypedValue.NamedWrapper -> {
-            val reference = SkirTypeCodec.decode(value.value.tag)
-            val decodedReference =
-                when (reference) {
-                    is SkirConversionResult.Success -> reference.value
-                    is SkirConversionResult.Failure -> fail(reference.diagnostics.joinToString())
-                }
-            DataValue.Polymorphic(decodedReference, at("payload") { decodeDataValue(value.value.payload) })
-        }
-
-        is SkirTypedValue.ReferenceWrapper -> {
-            DataValue.Reference(ResourceId(value.value.value))
-        }
-
-        else -> {
-            fail("Unknown Skir typed value.")
+            is DataValue.Link -> {
+                SkirDataValue.createLink(
+                    endpoint = SkirEndpointId(value = value.endpoint.value),
+                    target =
+                        SkirLinkTarget(
+                            resource = SkirResourceId(value = value.target.resource.value),
+                            opposite = value.target.opposite?.let(::encodeValuePath),
+                        ),
+                )
+            }
         }
     }
 
-private fun ConversionScope.encodeInteger(value: BigInteger): SkirTypedValue =
-    when {
-        value in SIGNED_64_MIN..SIGNED_64_MAX -> SkirTypedValue.SignedSixtyFourWrapper(value.toLong())
-        value in BigInteger.ZERO..UNSIGNED_64_MAX -> SkirTypedValue.UnsignedSixtyFourWrapper(value.toString())
-        else -> fail("Integer value is outside the Skir 64 bit range.")
+internal fun ConversionScope.decodeDataValue(value: SkirDataValue): DataValue =
+    withinValueDepth {
+        when (value) {
+            SkirDataValue.UNFILLED -> {
+                DataValue.Unfilled
+            }
+
+            SkirDataValue.NULL -> {
+                DataValue.Null
+            }
+
+            SkirDataValue.UNIT -> {
+                DataValue.Unit
+            }
+
+            is SkirDataValue.BooleanWrapper -> {
+                DataValue.Boolean(value.value)
+            }
+
+            is SkirDataValue.IntegerWrapper -> {
+                DataValue.Integer(value.value.toBigIntegerOrNull() ?: fail("Integer payload is invalid."))
+            }
+
+            is SkirDataValue.FloatWrapper -> {
+                if (!value.value.isFinite()) fail("Float payload must be finite.")
+                DataValue.Float(value.value)
+            }
+
+            is SkirDataValue.DecimalWrapper -> {
+                runCatching { value.value.requireCanonicalDecimal("Decimal payload") }
+                    .getOrElse { fail("Decimal payload must use canonical notation.") }
+                DataValue.Decimal(value.value)
+            }
+
+            is SkirDataValue.StringValueWrapper -> {
+                DataValue.StringValue(value.value)
+            }
+
+            is SkirDataValue.BytesWrapper -> {
+                DataValue.Bytes(value.value.toByteArray())
+            }
+
+            is SkirDataValue.TimestampWrapper -> {
+                DataValue.Timestamp(value.value.toKotlinInstant())
+            }
+
+            is SkirDataValue.DurationWrapper -> {
+                DataValue.Duration(value.value.value.milliseconds.milliseconds)
+            }
+
+            is SkirDataValue.EnumCaseWrapper -> {
+                DataValue.EnumCase(value.value)
+            }
+
+            is SkirDataValue.RecordWrapper -> {
+                DataValue.Record(decodeRecordFields(value.value.fields))
+            }
+
+            is SkirDataValue.NamedWrapper -> {
+                DataValue.Named(
+                    actualType = decodeNamedTypeUse(value.value.actualType),
+                    payload = at("payload") { decodeDataValue(value.value.payload) },
+                )
+            }
+
+            is SkirDataValue.ListValueWrapper -> {
+                DataValue.ListValue(value.value.items.mapIndexed { index, item -> at("item $index") { decode(item) } })
+            }
+
+            is SkirDataValue.SetValueWrapper -> {
+                DataValue.SetValue(value.value.items.mapIndexed { index, item -> at("item $index") { decode(item) } })
+            }
+
+            is SkirDataValue.MapValueWrapper -> {
+                DataValue.MapValue(value.value.rows.mapIndexed { index, row -> at("row $index") { decode(row) } })
+            }
+
+            is SkirDataValue.LinkWrapper -> {
+                DataValue.Link(
+                    endpoint = EndpointId(value.value.endpoint.value),
+                    target =
+                        LinkTarget(
+                            resource = ResourceId(value.value.target.resource.value),
+                            opposite =
+                                value.value.target.opposite
+                                    ?.let(::decodeValuePath),
+                        ),
+                )
+            }
+
+            else -> {
+                fail("Unknown Skir data value variant.")
+            }
+        }
     }
 
-private fun ConversionScope.integerInRange(
-    value: Long,
-    minimum: Long,
-    maximum: Long,
-): DataValue.Integer {
-    if (value !in minimum..maximum) fail("Integer payload is outside its tagged width.")
-    return DataValue.Integer(value.toBigInteger())
+internal fun ConversionScope.decodeRecordFields(fields: List<SkirFieldValue>): Map<String, DataValue> {
+    val decoded = linkedMapOf<String, DataValue>()
+    fields.forEachIndexed { index, field ->
+        at("field $index") {
+            if (field.name in decoded) fail("Record field ${field.name} is duplicated.")
+            decoded[field.name] = at(field.name) { decodeDataValue(field.value) }
+        }
+    }
+    return decoded
 }
 
-private fun ConversionScope.finiteFloat(value: Double): DataValue.Float {
-    if (!value.isFinite()) fail("Float payload must be finite.")
-    return DataValue.Float(value)
-}
+private fun ConversionScope.encode(item: ListItem): SkirListItem =
+    SkirListItem(id = SkirItemId(value = item.id.value), value = encodeDataValue(item.value))
 
-private val SIGNED_64_MIN = Long.MIN_VALUE.toBigInteger()
-private val SIGNED_64_MAX = Long.MAX_VALUE.toBigInteger()
-private val UNSIGNED_64_MAX = BigInteger.ONE.shiftLeft(64).subtract(BigInteger.ONE)
+private fun ConversionScope.decode(item: SkirListItem): ListItem = ListItem(id = ItemId(item.id.value), value = decodeDataValue(item.value))
+
+private fun ConversionScope.encode(row: MapRow): SkirMapRow =
+    SkirMapRow(
+        id = SkirItemId(value = row.id.value),
+        key = at("key") { encodeDataValue(row.key) },
+        value = at("value") { encodeDataValue(row.value) },
+    )
+
+private fun ConversionScope.decode(row: SkirMapRow): MapRow =
+    MapRow(
+        id = ItemId(row.id.value),
+        key = at("key") { decodeDataValue(row.key) },
+        value = at("value") { decodeDataValue(row.value) },
+    )

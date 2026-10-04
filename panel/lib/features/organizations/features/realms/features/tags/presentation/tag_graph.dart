@@ -16,19 +16,14 @@ class TagGraph extends HookConsumerWidget {
 
   final ValueChanged<Offset?>? onViewportCenterChanged;
 
-  GraphElement _elementFromTag(
-    Tag tag,
-    AsyncValue<AuthoringSubjectProjection>? subjects,
-  ) {
+  GraphElement _elementFromTag(Tag tag) {
     return GraphElement(
       id: GraphIdentifier(tag.tagId.id),
       x: tag.placement.x,
       y: tag.placement.y,
       width: tag.placement.width,
       height: tag.placement.height,
-      builder: (context) => SizedBox.expand(
-        child: TagNode(tagId: tag.tagId, subjects: subjects),
-      ),
+      builder: (context) => SizedBox.expand(child: TagNode(tagId: tag.tagId)),
     );
   }
 
@@ -59,12 +54,8 @@ class TagGraph extends HookConsumerWidget {
     return edges;
   }
 
-  GraphData _graphFromTags(
-    BuildContext context,
-    List<Tag> tags,
-    AsyncValue<AuthoringSubjectProjection>? subjects,
-  ) {
-    final elements = tags.map((tag) => _elementFromTag(tag, subjects)).toList();
+  GraphData _graphFromTags(BuildContext context, List<Tag> tags) {
+    final elements = tags.map(_elementFromTag).toList();
     final edges = _edgesFromTags(context, tags);
 
     return GraphData(
@@ -82,48 +73,40 @@ class TagGraph extends HookConsumerWidget {
       name: "tags",
       builder: (tagList) {
         if (tagList.isEmpty) {
-          final root = ref
-              .read(realmEditorCatalogProvider)
-              .currentCatalog
-              ?.creatableRoots(CoreResourceDefinitionIds.tag)
-              .singleOrNull;
+          final organizationId = ref.read(organizationIdProvider);
+          final realmId = ref.read(realmIdProvider);
+          final template = organizationId == null || realmId == null
+              ? null
+              : resourceCreationTemplate(
+                  ref
+                      .read(authoringSessionProvider(organizationId, realmId))
+                      .catalog,
+                  coreTagResourceDefinition.value,
+                );
           return EmptyTagsPage(
-            onCreateTag: () => ref
-                .read(resourceCreationProvider)
-                .create(
-                  context: context,
-                  request: ResourceCreationRequest(
-                    definition: CoreResourceDefinitionIds.tag,
-                    title: "Create Tag",
-                    concreteRoot:
-                        root ??
-                        (throw StateError("Tag creation is unavailable")),
-                    partial: tagCreationPartial(tagList),
-                  ),
-                ),
+            onCreateTag: template == null
+                ? null
+                : () async {
+                    final created = await ref
+                        .read(resourceCreationProvider)
+                        .create(
+                          context: context,
+                          request: ResourceCreationRequest(
+                            definition: template.definition,
+                            configuration: template.configuration,
+                          ),
+                        );
+                    if (created == null) return;
+                    ref
+                        .read(selectionProvider.notifier)
+                        .select(TagIdentifier(created.id));
+                  },
           );
         }
 
         final tagIds = {for (final tag in tagList) tag.tagId.id: tag.tagId};
-        final organizationId = ref.watch(organizationIdProvider);
-        final realmId = ref.watch(realmIdProvider);
-        final subjects = organizationId == null || realmId == null
-            ? null
-            : ref.watch(
-                authoringSubjectsProvider(
-                  AuthoringSubjectScope(
-                    organizationId: organizationId,
-                    realmId: realmId,
-                    resources: {
-                      for (final tag in tagList)
-                        tag.tagId: referenceResourceTypes.tag,
-                    },
-                  ),
-                ),
-              );
-
         return Graph(
-          data: _graphFromTags(context, tagList, subjects),
+          data: _graphFromTags(context, tagList),
           onViewportCenterChanged: onViewportCenterChanged,
           onElementsMoved: (changes) {
             final tagsById = {for (final tag in tagList) tag.tagId: tag};
@@ -171,7 +154,7 @@ class TagGraph extends HookConsumerWidget {
 class EmptyTagsPage extends StatelessWidget {
   const EmptyTagsPage({required this.onCreateTag, super.key});
 
-  final VoidCallback onCreateTag;
+  final VoidCallback? onCreateTag;
 
   @override
   Widget build(BuildContext context) {

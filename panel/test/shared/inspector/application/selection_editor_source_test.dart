@@ -1,6 +1,20 @@
+import "dart:async";
+
 import "package:flutter/widgets.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/action.dart"
+    as portable_action;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/binding.dart"
+    as portable_binding;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
+    as portable_catalog;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
+    as portable_expression;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/presentation.dart"
+    as portable_presentation;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
+    as portable_types;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
@@ -12,11 +26,11 @@ void main() {
   group("InspectionSession values", () {
     test("has no presentation before a selection resolves", () {
       final container = ProviderContainer.test();
-      expect(container.read(_sourceProvider).model, isNull);
+      expect(container.read(_sourceProvider).hosts, isEmpty);
       container
           .read(selectionProvider.notifier)
           .select(_loadingIdentifier("loading"));
-      expect(container.read(_sourceProvider).model, isNull);
+      expect(container.read(_sourceProvider).hosts, isEmpty);
     });
 
     test("uses structural equality for selected values", () {
@@ -128,6 +142,53 @@ void main() {
       expect(_resource(source).document?.readOnly, isTrue);
       expect(notifications, greaterThan(0));
     });
+
+    test(
+      "failed refresh disposes staged hosts and keeps installed hosts",
+      () async {
+        final installed = _identifier("installed", const StringValue("value"));
+        final first = _identifier(
+          "first",
+          const StringValue("value"),
+          surfaceSpecs: const [
+            _TestSurfaceSpec("identity"),
+            _TestSurfaceSpec("configuration", failBuild: true),
+          ],
+        );
+        final second = _identifier(
+          "second",
+          const StringValue("value"),
+          surfaceSpecs: const [
+            _TestSurfaceSpec("identity"),
+            _TestSurfaceSpec("configuration"),
+          ],
+        );
+        final providerErrors = <Object>[];
+        late ProviderContainer container;
+        final operation = runZonedGuarded(() async {
+          container = ProviderContainer.test();
+          addTearDown(container.dispose);
+          container.read(selectionProvider.notifier).select(installed);
+          final sessionSubscription = container.listen(
+            _sourceProvider,
+            (_, _) {},
+          );
+          addTearDown(sessionSubscription.close);
+          final session = container.read(_sourceProvider);
+          final installedHost = session.hosts.single;
+
+          container.read(selectionProvider.notifier).selectAll([first, second]);
+          await Future<void>.delayed(Duration.zero);
+
+          expect(session.hosts.single, same(installedHost));
+          expect((installedHost as _OwnerInspectionHost)._disposed, isFalse);
+          expect(first.disposedHosts + second.disposedHosts, 1);
+        }, (error, _) => providerErrors.add(error));
+        await operation;
+        expect(providerErrors, hasLength(1));
+        expect(providerErrors.single, isA<StateError>());
+      },
+    );
 
     testWidgets("renders deletion before removing the selection", (
       tester,

@@ -1,5 +1,6 @@
 package com.typewritermc.engine.runtime
 
+import com.typewritermc.engine.CompilationContext
 import com.typewritermc.engine.CompilationProjectionId
 import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.engine.CompiledArtifactActivation
@@ -9,7 +10,6 @@ import com.typewritermc.engine.CompiledArtifactReference
 import com.typewritermc.engine.CompiledBlobPointer
 import com.typewritermc.engine.CompiledPageShard
 import com.typewritermc.engine.CompiledResourceKey
-import com.typewritermc.engine.CompilationContext
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.loader.api.artifact.ArtifactDigest
 import com.typewritermc.loader.api.artifact.BlobChunk
@@ -18,6 +18,7 @@ import com.typewritermc.loader.api.artifact.BlobMetadata
 import com.typewritermc.loader.api.artifact.BlobResult
 import com.typewritermc.loader.api.artifact.BlobWriteSession
 import com.typewritermc.loader.api.artifact.TransferId
+import com.typewritermc.scripting.RuntimeMemberSignature
 import com.typewritermc.types.ResourceId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
@@ -115,6 +116,8 @@ private fun activation(
             digest = ContentDigest(revision.toString().repeat(64).take(64)),
             sourceRevision = "realm:$revision",
             catalogRevision = "catalog:1",
+            implementationToken = "implementation",
+            runtimeSignatures = emptySet<RuntimeMemberSignature>(),
             artifacts = references,
         )
     return CompiledArtifactActivation(

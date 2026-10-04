@@ -27,6 +27,7 @@ extension RefSkirMutation on Ref {
     Serializer<TResponse> serializer, {
     required String label,
     required MutationResponseDisposition Function(TResponse) classify,
+    String Function(TResponse)? rejectionMessage,
     Future<void> Function(TResponse)? onResponse,
     String? submissionId,
     Set<Object> resources = const {},
@@ -43,6 +44,7 @@ extension RefSkirMutation on Ref {
           serializer,
           label: label,
           classify: classify,
+          rejectionMessage: rejectionMessage,
           onResponse: onResponse,
           submissionId: submissionId,
           resources: resources,
@@ -61,6 +63,7 @@ extension RefSkirMutation on Ref {
     Serializer<TResponse> serializer, {
     required String label,
     required MutationResponseDisposition Function(TResponse) classify,
+    String Function(TResponse)? rejectionMessage,
     Future<void> Function(TResponse)? onResponse,
     String? submissionId,
     Set<Object> resources = const {},
@@ -72,6 +75,7 @@ extension RefSkirMutation on Ref {
       serializer,
       label: label,
       classify: classify,
+      rejectionMessage: rejectionMessage,
       onResponse: onResponse,
       submissionId: submissionId,
       resources: resources,
@@ -123,6 +127,59 @@ final class SkirMutationClient {
     return serializer.fromBytes(response.payload);
   }
 
+  /// Opens the update subscription before sending one request, then yields the
+  /// initial response followed by every update from that concrete subject.
+  Stream<T> watchRequest<T>(
+    String subject,
+    String updateSubject,
+    Uint8List bytes,
+    Serializer<T> serializer,
+  ) => Stream<T>.multi((controller) async {
+    NatsSubscription? subscription;
+    var active = true;
+    Future<void>? unsubscribeOperation;
+
+    Future<void> unsubscribe() => unsubscribeOperation ??= () async {
+      active = false;
+      await subscription?.unsubscribe();
+    }();
+
+    controller.onCancel = unsubscribe;
+    try {
+      final client = _client();
+      subscription = await client.subscribe(updateSubject);
+      if (!active) {
+        await subscription.unsubscribe();
+        return;
+      }
+      final telemetry = await _telemetry();
+      final initial = await telemetry.traceNats(
+        subject: subject,
+        payloadSize: bytes.length,
+        operationName: "request",
+        operation: (headers) => client.request(
+          subject,
+          bytes,
+          headers: headers,
+          timeout: const Duration(seconds: 10),
+        ),
+      );
+      if (!active) return;
+      controller.add(serializer.fromBytes(initial.payload));
+      await for (final message in subscription.messages) {
+        if (!active) return;
+        controller.add(serializer.fromBytes(message.payload));
+      }
+    } on Object catch (error, stackTrace) {
+      if (active) controller.addError(error, stackTrace);
+    } finally {
+      await unsubscribe();
+      if (!controller.isClosed) {
+        await controller.close();
+      }
+    }
+  });
+
   /// Captures a mutation attempt and returns a commit for the shared owner.
   ///
   /// The byte copy makes every send of this commit use the same request. The
@@ -138,6 +195,7 @@ final class SkirMutationClient {
     Serializer<TResponse> serializer, {
     required String label,
     required MutationResponseDisposition Function(TResponse) classify,
+    String Function(TResponse)? rejectionMessage,
     Future<void> Function(TResponse)? onResponse,
     String? submissionId,
     Set<Object> resources = const {},
@@ -197,7 +255,8 @@ final class SkirMutationClient {
             value,
           ),
           MutationResponseDisposition.rejected => SubmissionResult.rejected(
-            message: "The operation was rejected",
+            message:
+                rejectionMessage?.call(value) ?? "The operation was rejected",
             response: value,
           ),
           MutationResponseDisposition.uncertain => SubmissionResult.uncertain(

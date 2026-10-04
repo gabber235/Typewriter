@@ -1,0 +1,16 @@
+broad_generic_setter	cases	reject	Unresolved reference 'setValue'
+collection_lookup_key_mismatch	cases	reject	Argument type mismatch
+imported_collection_shape	cases	reject	requires a collection on its containing field path
+imported_dependency_endpoint	cases	reject	does not accept source fixture.ImportedEndpointOnWrongResource
+nested_collection_shape	cases	reject	forbids a collection on its containing field path
+presentation_unhandled_condition	cases	reject	Return type mismatch
+presentation_unhandled_text	cases	reject	Argument type mismatch
+source_resource_mismatch	cases	reject	does not accept source fixture.WrongSource
+target_bound_mismatch	cases	reject	does not accept target fixture.WrongTarget
+covariant_applied_target	positive	accept	BUILD SUCCESSFUL
+exact_generic_setter	positive	accept	BUILD SUCCESSFUL
+generated_provider_roundtrip	positive	accept	BUILD SUCCESSFUL
+intersection_bound_target	positive	accept	BUILD SUCCESSFUL
+nonregular_recursive_record	positive	accept	BUILD SUCCESSFUL
+presentation_explicit_fallback	positive	accept	BUILD SUCCESSFUL
+universal_resource_endpoint	positive	accept	BUILD SUCCESSFUL

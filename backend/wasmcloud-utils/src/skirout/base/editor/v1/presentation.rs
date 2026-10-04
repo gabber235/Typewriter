@@ -115,7 +115,7 @@ impl CrossAxisAlignment {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PresentationProperties {
-    pub enabled_if: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub enabled_if: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     pub read_only: bool,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationProperties>>,
@@ -279,9 +279,9 @@ impl HeaderActionPlacement {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct HeaderActionConfirmation {
-    pub title: crate::skirout::base::editor::v1::expression::TypedExpression,
-    pub message: crate::skirout::base::editor::v1::expression::TypedExpression,
-    pub confirmation_label: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub title: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub message: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub confirmation_label: crate::skirout::base::editor::v1::expression::ExpressionNode,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<HeaderActionConfirmation>>,
 }
@@ -320,13 +320,13 @@ impl HeaderActionConfirmation {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct HeaderButtonItem {
     pub item_id: HeaderItemId,
-    pub icon: crate::skirout::base::editor::v1::expression::TypedExpression,
-    pub label: crate::skirout::base::editor::v1::expression::TypedExpression,
-    pub tooltip: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub icon: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub label: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub tooltip: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     pub action: crate::skirout::base::editor::v1::action::EditorAction,
-    pub priority: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
-    pub visible_if: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
-    pub enabled_if: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub priority: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub visible_if: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub enabled_if: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     pub tone: HeaderActionTone,
     pub confirmation: Option<HeaderActionConfirmation>,
     pub placement: HeaderActionPlacement,
@@ -368,13 +368,13 @@ impl HeaderButtonItem {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct HeaderBooleanToggleItem {
     pub item_id: HeaderItemId,
-    pub label: crate::skirout::base::editor::v1::expression::TypedExpression,
-    pub checked: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub label: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub checked: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub action: crate::skirout::base::editor::v1::action::EditorAction,
-    pub tooltip: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
-    pub priority: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
-    pub visible_if: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
-    pub enabled_if: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub tooltip: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub priority: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub visible_if: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub enabled_if: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     pub confirmation: Option<HeaderActionConfirmation>,
     pub placement: HeaderActionPlacement,
     /// Set this to None when you're creating a struct.
@@ -415,11 +415,11 @@ impl HeaderBooleanToggleItem {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct HeaderReorderHandleItem {
     pub item_id: HeaderItemId,
-    pub label: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub label: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub source: crate::skirout::base::editor::v1::binding::BindingRef,
-    pub tooltip: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
-    pub visible_if: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
-    pub enabled_if: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub tooltip: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub visible_if: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub enabled_if: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<HeaderReorderHandleItem>>,
 }
@@ -502,7 +502,7 @@ impl HeaderItem {
 #[derive(Debug, Clone, PartialEq)]
 pub enum PresentationHeaderTitle {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<PresentationHeaderTitle>>),
-    Text(Box<crate::skirout::base::editor::v1::expression::TypedExpression>),
+    Text(Box<crate::skirout::base::editor::v1::expression::ExpressionNode>),
     Presentation(Box<PresentationNode>),
 }
 
@@ -669,7 +669,7 @@ impl PresentationInsets {
 pub struct PresentationHeader {
     pub binding: Option<crate::skirout::base::editor::v1::binding::BindingRef>,
     pub title: Option<PresentationHeaderTitle>,
-    pub description: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub description: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     pub initially_expanded: Option<bool>,
     pub items: Vec<HeaderItem>,
     pub header_padding: Option<PresentationInsets>,
@@ -1248,7 +1248,7 @@ impl ChildrenElement {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PresentationBorderSide {
-    pub color: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub color: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     pub width: f64,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationBorderSide>>,
@@ -1490,7 +1490,7 @@ impl PresentationSlotElement {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct TabItem {
     pub tab_id: String,
-    pub label: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub label: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub child: PresentationNode,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<TabItem>>,
@@ -1585,8 +1585,8 @@ impl TabsLayout {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct SpacerLayout {
-    pub width: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
-    pub height: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub width: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub height: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SpacerLayout>>,
 }
@@ -1624,19 +1624,19 @@ impl SpacerLayout {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct TextContent {
-    pub value: crate::skirout::base::editor::v1::expression::TypedExpression,
-    pub color: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
-    pub font_size: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
-    pub font_weight: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
-    pub font_italic: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
-    pub font_optical_size: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
-    pub font_slant: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
-    pub font_width: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
-    pub text_alignment: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
-    pub line_height: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
-    pub letter_spacing: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
-    pub decoration: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
-    pub semantic_label: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub value: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub color: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub font_size: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub font_weight: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub font_italic: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub font_optical_size: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub font_slant: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub font_width: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub text_alignment: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub line_height: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub letter_spacing: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub decoration: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub semantic_label: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     pub paragraph: TextParagraph,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<TextContent>>,
@@ -1801,10 +1801,10 @@ impl TextParagraph {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct TextStyleOverride {
-    pub color: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
-    pub font_weight: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
-    pub font_italic: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
-    pub decoration: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub color: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub font_weight: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub font_italic: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub decoration: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<TextStyleOverride>>,
 }
@@ -1842,7 +1842,7 @@ impl TextStyleOverride {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct TextRun {
-    pub text: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub text: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub style: Option<TextStyleOverride>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<TextRun>>,
@@ -1965,10 +1965,10 @@ impl AdaptiveLeadingElement {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct IconContent {
-    pub name: crate::skirout::base::editor::v1::expression::TypedExpression,
-    pub semantic_label: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
-    pub color: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
-    pub size: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub name: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub semantic_label: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub color: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub size: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<IconContent>>,
 }
@@ -2006,8 +2006,8 @@ impl IconContent {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ImageContent {
-    pub source: crate::skirout::base::editor::v1::expression::TypedExpression,
-    pub semantic_label: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub source: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub semantic_label: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ImageContent>>,
 }
@@ -2045,7 +2045,7 @@ impl ImageContent {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct BadgeContent {
-    pub label: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub label: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub tone: String,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<BadgeContent>>,
@@ -2084,8 +2084,8 @@ impl BadgeContent {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ChipContent {
-    pub label: crate::skirout::base::editor::v1::expression::TypedExpression,
-    pub color: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub label: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub color: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ChipContent>>,
 }
@@ -2123,9 +2123,9 @@ impl ChipContent {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ProgressContent {
-    pub value: crate::skirout::base::editor::v1::expression::TypedExpression,
-    pub maximum: crate::skirout::base::editor::v1::expression::TypedExpression,
-    pub label: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub value: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub maximum: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub label: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ProgressContent>>,
 }
@@ -2228,7 +2228,7 @@ impl StatusTone {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct StatusAppearance {
     pub tone: StatusTone,
-    pub label: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub label: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<StatusAppearance>>,
 }
@@ -2266,7 +2266,7 @@ impl StatusAppearance {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct StatusCase {
-    pub match_: crate::skirout::base::editor::v1::type_catalog::TypedValue,
+    pub match_: crate::skirout::base::editor::v1::type_catalog::DataValue,
     pub appearance: StatusAppearance,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<StatusCase>>,
@@ -2305,7 +2305,7 @@ impl StatusCase {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct StatusContent {
-    pub value: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub value: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub cases: Vec<StatusCase>,
     pub fallback: Option<StatusAppearance>,
     /// Set this to None when you're creating a struct.
@@ -2387,8 +2387,8 @@ impl DateTimeZone {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct DateTimeContent {
-    pub value: crate::skirout::base::editor::v1::expression::TypedExpression,
-    pub format: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub value: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub format: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub time_zone: DateTimeZone,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<DateTimeContent>>,
@@ -2469,7 +2469,7 @@ impl RelativeTimeStyle {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct RelativeTimeContent {
-    pub value: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub value: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub style: RelativeTimeStyle,
     pub time_zone: DateTimeZone,
     /// Set this to None when you're creating a struct.
@@ -2510,7 +2510,7 @@ impl RelativeTimeContent {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct TypedFieldElement {
     pub binding: crate::skirout::base::editor::v1::binding::BindingRef,
-    pub expected_type: crate::skirout::base::editor::v1::type_catalog::TypeExpression,
+    pub expected_type: crate::skirout::base::editor::v1::type_catalog::TypeTemplate,
     pub presentation: Option<PresentationNode>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<TypedFieldElement>>,
@@ -2549,7 +2549,7 @@ impl TypedFieldElement {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ConditionalElement {
-    pub condition: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub condition: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub when_true: PresentationNode,
     pub when_false: Option<PresentationNode>,
     /// Set this to None when you're creating a struct.
@@ -2630,8 +2630,8 @@ impl SequencePresentation {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct RepeatedElement {
-    pub source: crate::skirout::base::editor::v1::expression::TypedExpression,
-    pub item_binding_id: crate::skirout::base::editor::v1::binding::BindingId,
+    pub source: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub item_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
     pub presentation: SequencePresentation,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RepeatedElement>>,
@@ -2671,7 +2671,7 @@ impl RepeatedElement {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ScopedBindingElement {
     pub binding: crate::skirout::base::editor::v1::binding::BindingRef,
-    pub scope_binding_id: crate::skirout::base::editor::v1::binding::BindingId,
+    pub scope_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
     pub child: PresentationNode,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ScopedBindingElement>>,
@@ -2795,14 +2795,14 @@ impl CollectionLookupElement {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CollectionGraphElement {
     pub source_id: String,
-    pub roots: crate::skirout::base::editor::v1::binding::BindingRef,
+    pub roots: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub root_sequence: SequencePresentation,
     pub relation_id: String,
     pub direction: CollectionGraphDirection,
     pub maximum_depth: Option<i32>,
     pub node: PresentationNode,
-    pub children_binding_id: crate::skirout::base::editor::v1::binding::BindingId,
-    pub child_binding_id: crate::skirout::base::editor::v1::binding::BindingId,
+    pub children_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub child_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
     pub children: SequencePresentation,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CollectionGraphElement>>,
@@ -2846,7 +2846,7 @@ pub enum PresentationRadius {
     Small,
     Medium,
     Large,
-    Custom(Box<crate::skirout::base::editor::v1::expression::TypedExpression>),
+    Custom(Box<crate::skirout::base::editor::v1::expression::ExpressionNode>),
 }
 
 impl Default for PresentationRadius {
@@ -2891,7 +2891,7 @@ impl PresentationRadius {
 pub struct ContainerLayout {
     pub child: PresentationNode,
     pub border: Option<PresentationBorder>,
-    pub background_color: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub background_color: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     pub radius: PresentationRadius,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ContainerLayout>>,
@@ -2986,8 +2986,8 @@ impl PresentationAnchorAlignment {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PresentationOffset {
-    pub x: crate::skirout::base::editor::v1::expression::TypedExpression,
-    pub y: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub x: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub y: crate::skirout::base::editor::v1::expression::ExpressionNode,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationOffset>>,
 }
@@ -3029,7 +3029,7 @@ pub struct PresentationAnchorPoint {
     pub group_ids: Vec<String>,
     pub alignment: PresentationAnchorAlignment,
     pub offset: Option<PresentationOffset>,
-    pub visible_if: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub visible_if: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     pub export_to_parent: bool,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationAnchorPoint>>,
@@ -3210,8 +3210,8 @@ impl ConnectionExpressionScope {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ConnectorStroke {
-    pub color: crate::skirout::base::editor::v1::expression::TypedExpression,
-    pub width: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub color: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub width: crate::skirout::base::editor::v1::expression::ExpressionNode,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ConnectorStroke>>,
 }
@@ -3250,8 +3250,8 @@ impl ConnectorStroke {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ConnectionMarker {
     pub node: PresentationNode,
-    pub position: crate::skirout::base::editor::v1::expression::TypedExpression,
-    pub align_to_path: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub position: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub align_to_path: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub scope: ConnectionExpressionScope,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ConnectionMarker>>,
@@ -3290,7 +3290,7 @@ impl ConnectionMarker {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct OrthogonalConnectionPath {
-    pub bend_position: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub bend_position: crate::skirout::base::editor::v1::expression::ExpressionNode,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<OrthogonalConnectionPath>>,
 }
@@ -3454,7 +3454,7 @@ impl ConnectionAxis {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct OrthogonalConnectionBundlePath {
     pub axis: ConnectionAxis,
-    pub bend_position: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub bend_position: crate::skirout::base::editor::v1::expression::ExpressionNode,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<OrthogonalConnectionBundlePath>>,
 }
@@ -3539,7 +3539,7 @@ pub struct AnchoredConnection {
     pub path: ConnectionPath,
     pub style: ConnectorStyle,
     pub markers: Vec<ConnectionMarker>,
-    pub visible_if: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub visible_if: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AnchoredConnection>>,
 }
@@ -3584,7 +3584,7 @@ pub struct AnchoredConnectionBundle {
     pub branch_style: ConnectorStyle,
     pub trunk_markers: Vec<ConnectionMarker>,
     pub branch_markers: Vec<ConnectionMarker>,
-    pub visible_if: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub visible_if: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AnchoredConnectionBundle>>,
 }
@@ -3703,7 +3703,7 @@ impl ConnectionLayerLayout {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ArrowConnectorMarker {
-    pub size: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub size: crate::skirout::base::editor::v1::expression::ExpressionNode,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ArrowConnectorMarker>>,
 }
@@ -3741,7 +3741,7 @@ impl ArrowConnectorMarker {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CircleConnectorMarker {
-    pub diameter: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub diameter: crate::skirout::base::editor::v1::expression::ExpressionNode,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CircleConnectorMarker>>,
 }
@@ -3822,7 +3822,7 @@ impl ConnectorEndpointMarker {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ConnectorStyle {
     pub stroke: ConnectorStroke,
-    pub corner_radius: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub corner_radius: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub start_marker: Option<ConnectorEndpointMarker>,
     pub end_marker: Option<ConnectorEndpointMarker>,
     /// Set this to None when you're creating a struct.
@@ -3865,7 +3865,7 @@ pub enum ConnectorAnchor {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<ConnectorAnchor>>),
     Start,
     Center,
-    Offset(Box<crate::skirout::base::editor::v1::expression::TypedExpression>),
+    Offset(Box<crate::skirout::base::editor::v1::expression::ExpressionNode>),
 }
 
 impl Default for ConnectorAnchor {
@@ -3909,11 +3909,11 @@ pub struct HierarchySequenceLayout {
     pub unary_connector: ConnectorStyle,
     pub trunk_connector: ConnectorStyle,
     pub branch_connector: ConnectorStyle,
-    pub item_spacing: crate::skirout::base::editor::v1::expression::TypedExpression,
-    pub indentation: crate::skirout::base::editor::v1::expression::TypedExpression,
-    pub leading_spacing: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub item_spacing: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub indentation: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub leading_spacing: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub item_anchor: ConnectorAnchor,
-    pub flatten_single_item: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub flatten_single_item: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub cross_axis_alignment: CrossAxisAlignment,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<HierarchySequenceLayout>>,
@@ -3995,10 +3995,10 @@ impl SequenceLayout {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct BoundControl {
     pub binding: crate::skirout::base::editor::v1::binding::BindingRef,
-    pub label: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
-    pub description: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub label: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub description: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     pub prefix: Option<PresentationNode>,
-    pub semantic_label: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub semantic_label: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<BoundControl>>,
 }
@@ -4125,7 +4125,7 @@ impl TextInputFormat {
 pub struct TextControl {
     pub control: BoundControl,
     pub multiline: Option<bool>,
-    pub placeholder: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub placeholder: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     pub input_formatters: Vec<TextInputFormat>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<TextControl>>,
@@ -4244,8 +4244,8 @@ impl DateTimeControl {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct SelectOption {
     pub option_id: String,
-    pub label: crate::skirout::base::editor::v1::expression::TypedExpression,
-    pub value: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub label: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub value: crate::skirout::base::editor::v1::expression::ExpressionNode,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SelectOption>>,
 }
@@ -4303,7 +4303,6 @@ pub struct SelectControl {
     pub control: BoundControl,
     pub options: crate::skir_client::KeyedVec<SelectOption_byOptionId>,
     pub allow_custom_value: bool,
-    pub default_value: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SelectControl>>,
 }
@@ -4342,9 +4341,9 @@ impl SelectControl {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct SliderControl {
     pub control: BoundControl,
-    pub minimum: crate::skirout::base::editor::v1::expression::TypedExpression,
-    pub maximum: crate::skirout::base::editor::v1::expression::TypedExpression,
-    pub divisions: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub minimum: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub maximum: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub divisions: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SliderControl>>,
 }
@@ -4387,8 +4386,8 @@ pub struct ListControl {
     pub allow_add: bool,
     pub allow_remove: bool,
     pub allow_reorder: bool,
-    pub item_binding_id: crate::skirout::base::editor::v1::binding::BindingId,
-    pub index_binding_id: crate::skirout::base::editor::v1::binding::BindingId,
+    pub item_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub index_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ListControl>>,
 }
@@ -4431,8 +4430,8 @@ pub struct MapControl {
     pub value_presentation: Option<PresentationNode>,
     pub allow_add: bool,
     pub allow_remove: bool,
-    pub key_binding_id: crate::skirout::base::editor::v1::binding::BindingId,
-    pub value_binding_id: crate::skirout::base::editor::v1::binding::BindingId,
+    pub key_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub value_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<MapControl>>,
 }
@@ -4509,8 +4508,8 @@ impl RecordControl {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ConcreteTypePresentation {
-    pub concrete_type: crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef,
-    pub label: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub concrete_type: crate::skirout::base::editor::v1::type_catalog::TypeUse,
+    pub label: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub presentation: Option<PresentationNode>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ConcreteTypePresentation>>,
@@ -4583,12 +4582,51 @@ impl PolymorphicControl {
 }
 
 // ==============================================================================
+// struct NamedControl
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct NamedControl {
+    pub control: BoundControl,
+    pub payload_presentation: Option<PresentationNode>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<NamedControl>>,
+}
+
+impl NamedControl {
+    pub fn default_ref() -> &'static NamedControl {
+        static D: std::sync::LazyLock<NamedControl> = std::sync::LazyLock::new(NamedControl::default);
+        &D
+    }
+}
+
+impl NamedControl {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<NamedControl> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<NamedControl>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "NamedControl",
+                    "",
+                    |x: &NamedControl| &x._unrecognized,
+                    |x: &mut NamedControl, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<NamedControl> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(NamedControl::_adapter())
+    }
+}
+
+// ==============================================================================
 // struct PolymorphicMatchCase
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PolymorphicMatchCase {
-    pub concrete_type: crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef,
+    pub concrete_type: crate::skirout::base::editor::v1::type_catalog::TypeUse,
     pub child: PresentationNode,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PolymorphicMatchCase>>,
@@ -4628,7 +4666,7 @@ impl PolymorphicMatchCase {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PolymorphicMatchElement {
     pub binding: crate::skirout::base::editor::v1::binding::BindingRef,
-    pub scope_binding_id: crate::skirout::base::editor::v1::binding::BindingId,
+    pub scope_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
     pub cases: Vec<PolymorphicMatchCase>,
     pub fallback: Option<PresentationNode>,
     /// Set this to None when you're creating a struct.
@@ -4834,7 +4872,7 @@ impl SearchSelectorValues {
 pub struct SearchSelectorDefinition {
     pub selector_id: String,
     pub key: String,
-    pub value_binding_id: crate::skirout::base::editor::v1::binding::BindingId,
+    pub value_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
     pub values: SearchSelectorValues,
     pub case_sensitive: bool,
     pub multiplicity: SearchSelectorMultiplicity,
@@ -4893,11 +4931,11 @@ impl SearchSelectorDefinition {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct SearchResultMapping {
-    pub binding_id: crate::skirout::base::editor::v1::binding::BindingId,
-    pub key: crate::skirout::base::editor::v1::expression::TypedExpression,
-    pub selected_value: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub key: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub selected_value: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub presentation: PresentationNode,
-    pub label: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub label: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SearchResultMapping>>,
 }
@@ -4936,7 +4974,7 @@ impl SearchResultMapping {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct HttpQueryParameter {
     pub name: String,
-    pub value: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub value: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub omit_if_empty: bool,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<HttpQueryParameter>>,
@@ -4992,9 +5030,9 @@ impl HttpQueryParameter {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct HttpJsonContextBinding {
-    pub binding_id: crate::skirout::base::editor::v1::binding::BindingId,
+    pub binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
     pub path: String,
-    pub value_type: crate::skirout::base::editor::v1::type_catalog::TypeExpression,
+    pub value_type: crate::skirout::base::editor::v1::type_catalog::TypeTemplate,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<HttpJsonContextBinding>>,
 }
@@ -5032,7 +5070,7 @@ impl HttpJsonContextBinding {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct StaticSearchProvider {
-    pub values: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub values: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub result: SearchResultMapping,
     pub selectors: crate::skir_client::KeyedVec<SearchSelectorDefinition_bySelectorId>,
     /// Set this to None when you're creating a struct.
@@ -5074,7 +5112,7 @@ impl StaticSearchProvider {
 pub struct CollectionSearchProvider {
     pub source_id: String,
     pub result: SearchResultMapping,
-    pub where_: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub where_: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     pub selectors: crate::skir_client::KeyedVec<SearchSelectorDefinition_bySelectorId>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CollectionSearchProvider>>,
@@ -5113,10 +5151,10 @@ impl CollectionSearchProvider {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct HttpJsonSearchProvider {
-    pub uri: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub uri: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub parameters: crate::skir_client::KeyedVec<HttpQueryParameter_byName>,
     pub result_path: String,
-    pub result_type: crate::skirout::base::editor::v1::type_catalog::TypeExpression,
+    pub result_type: crate::skirout::base::editor::v1::type_catalog::TypeTemplate,
     pub result: SearchResultMapping,
     pub context_bindings: Vec<HttpJsonContextBinding>,
     pub selectors: crate::skir_client::KeyedVec<SearchSelectorDefinition_bySelectorId>,
@@ -5159,7 +5197,7 @@ impl HttpJsonSearchProvider {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct RealmCallbackSearchProvider {
     pub capability_id: crate::skirout::base::editor::v1::type_catalog::CapabilityId,
-    pub payload: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub payload: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub result: SearchResultMapping,
     pub selectors: crate::skir_client::KeyedVec<SearchSelectorDefinition_bySelectorId>,
     /// Set this to None when you're creating a struct.
@@ -5199,8 +5237,8 @@ impl RealmCallbackSearchProvider {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct GatedSearchProvider {
-    pub condition: crate::skirout::base::editor::v1::expression::TypedExpression,
-    pub guidance: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub condition: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub guidance: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     pub child: SearchProvider,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<GatedSearchProvider>>,
@@ -5318,7 +5356,7 @@ impl CachedSearchProvider {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct SearchRankingField {
-    pub expression: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub expression: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub weight: i32,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SearchRankingField>>,
@@ -5396,7 +5434,7 @@ impl RankedSearchProvider {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct LimitedSearchProvider {
-    pub maximum: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub maximum: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub child: SearchProvider,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<LimitedSearchProvider>>,
@@ -5474,7 +5512,7 @@ impl DistinctSearchProvider {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct HistoricalSearchProvider {
     pub history_key: String,
-    pub label: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub label: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub capacity: i32,
     pub child: SearchProvider,
     /// Set this to None when you're creating a struct.
@@ -5515,7 +5553,7 @@ impl HistoricalSearchProvider {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct SectionSearchProvider {
     pub section_id: String,
-    pub label: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub label: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub child: SearchProvider,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SectionSearchProvider>>,
@@ -5658,14 +5696,14 @@ impl SearchProvider {
 pub struct SearchControl {
     pub control: BoundControl,
     pub selection_mode: SearchSelectionMode,
-    pub query_binding_id: crate::skirout::base::editor::v1::binding::BindingId,
-    pub summary_binding_id: crate::skirout::base::editor::v1::binding::BindingId,
-    pub maximum_extent: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub query_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub summary_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub maximum_extent: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub provider: SearchProvider,
     pub summary: Option<PresentationNode>,
-    pub placeholder: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
-    pub custom_value: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
-    pub initial_query: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub placeholder: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub custom_value: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub initial_query: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SearchControl>>,
 }
@@ -5780,7 +5818,7 @@ impl CommitControlsElement {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ButtonElement {
-    pub label: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub label: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub action: crate::skirout::base::editor::v1::action::EditorAction,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ButtonElement>>,
@@ -5819,8 +5857,8 @@ impl ButtonElement {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct IconButtonElement {
-    pub icon: crate::skirout::base::editor::v1::expression::TypedExpression,
-    pub semantic_label: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub icon: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub semantic_label: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub action: crate::skirout::base::editor::v1::action::EditorAction,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<IconButtonElement>>,
@@ -5860,7 +5898,7 @@ impl IconButtonElement {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct MenuItem {
     pub item_id: String,
-    pub label: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub label: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub action: crate::skirout::base::editor::v1::action::EditorAction,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<MenuItem>>,
@@ -5916,7 +5954,7 @@ impl MenuItem {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct MenuElement {
-    pub label: Option<crate::skirout::base::editor::v1::expression::TypedExpression>,
+    pub label: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     pub items: crate::skir_client::KeyedVec<MenuItem_byItemId>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<MenuElement>>,
@@ -5955,7 +5993,7 @@ impl MenuElement {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct TooltipElement {
-    pub message: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub message: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub child: PresentationNode,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<TooltipElement>>,
@@ -6025,7 +6063,7 @@ pub enum PresentationElement {
     DurationInput(Box<BoundControl>),
     ColorInput(Box<ColorControl>),
     BytesInput(Box<BoundControl>),
-    NamedInput(Box<BoundControl>),
+    NamedInput(Box<NamedControl>),
     CommitControls(Box<CommitControlsElement>),
     Button(Box<ButtonElement>),
     IconButton(Box<IconButtonElement>),
@@ -6045,9 +6083,14 @@ pub enum PresentationElement {
     ConnectionLayer(Box<ConnectionLayerLayout>),
     PolymorphicMatch(Box<PolymorphicMatchElement>),
     Invocation(Box<PresentationInvocation>),
-    ReferenceInput(Box<ReferenceControl>),
+    LinkInput(Box<LinkControl>),
     RichText(Box<RichTextContent>),
     AdaptiveLeading(Box<AdaptiveLeadingElement>),
+    RemainingFields(Box<RemainingFieldsElement>),
+    NullableInput(Box<NullableControl>),
+    SetInput(Box<SetControl>),
+    PageGraph(Box<PageGraphElement>),
+    PageTimeline(Box<PageTimelineElement>),
 }
 
 impl Default for PresentationElement {
@@ -6113,9 +6156,14 @@ impl PresentationElement {
                         PresentationElement::ConnectionLayer(_) => 48,
                         PresentationElement::PolymorphicMatch(_) => 49,
                         PresentationElement::Invocation(_) => 50,
-                        PresentationElement::ReferenceInput(_) => 51,
+                        PresentationElement::LinkInput(_) => 51,
                         PresentationElement::RichText(_) => 52,
                         PresentationElement::AdaptiveLeading(_) => 53,
+                        PresentationElement::RemainingFields(_) => 54,
+                        PresentationElement::NullableInput(_) => 55,
+                        PresentationElement::SetInput(_) => 56,
+                        PresentationElement::PageGraph(_) => 57,
+                        PresentationElement::PageTimeline(_) => 58,
                     },
                     |u| PresentationElement::Unknown(Some(u)),
                     |x: &PresentationElement| match x { PresentationElement::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -6142,7 +6190,7 @@ pub struct PresentationDefinition {
     pub inputs: Vec<PresentationInput>,
     pub root: PresentationNode,
     pub dependencies: PresentationDependencies,
-    pub primary_input: Option<crate::skirout::base::editor::v1::binding::BindingId>,
+    pub primary_input: Option<crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationDefinition>>,
 }
@@ -6180,7 +6228,7 @@ impl PresentationDefinition {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PresentationDependencies {
-    pub types: Vec<crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef>,
+    pub types: Vec<crate::skirout::base::editor::v1::type_catalog::TypeUse>,
     pub presentations: Vec<crate::skirout::base::editor::v1::type_catalog::PresentationId>,
     pub conversions: Vec<crate::skirout::base::editor::v1::type_catalog::ConversionId>,
     pub capabilities: Vec<crate::skirout::base::editor::v1::type_catalog::CapabilityId>,
@@ -6223,7 +6271,7 @@ impl PresentationDependencies {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PresentationCollectionRelationDefinition {
     pub relation_id: String,
-    pub targets: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub targets: crate::skirout::base::editor::v1::expression::ExpressionNode,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationCollectionRelationDefinition>>,
 }
@@ -6281,11 +6329,13 @@ impl PresentationCollectionRelationDefinition {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PresentationCollectionDefinition {
     pub source_id: String,
-    pub row_type: crate::skirout::base::editor::v1::type_catalog::TypeExpression,
-    pub row_binding_id: crate::skirout::base::editor::v1::binding::BindingId,
-    pub key: crate::skirout::base::editor::v1::expression::TypedExpression,
-    pub selectability: crate::skirout::base::editor::v1::expression::TypedExpression,
+    pub row_type: crate::skirout::base::editor::v1::type_catalog::TypeTemplate,
+    pub row_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub key: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub selectability: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub relations: crate::skir_client::KeyedVec<PresentationCollectionRelationDefinition_byRelationId>,
+    pub projection: Option<PresentationCollectionProjection>,
+    pub resources: Option<PresentationResourceCollection>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationCollectionDefinition>>,
 }
@@ -6331,6 +6381,167 @@ impl PresentationCollectionDefinition {
     pub fn serializer() -> crate::skir_client::Serializer<PresentationCollectionDefinition> {
         initialize_module_serializers();
         crate::skir_client::internal::struct_serializer_from_static(PresentationCollectionDefinition::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum PresentationCollectionProjectionValue
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum PresentationCollectionProjectionValue {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<PresentationCollectionProjectionValue>>),
+    Content(Box<crate::skirout::base::editor::v1::type_catalog::ValuePath>),
+    Literal(Box<crate::skirout::base::editor::v1::type_catalog::DataValue>),
+}
+
+impl Default for PresentationCollectionProjectionValue {
+    fn default() -> Self {
+        PresentationCollectionProjectionValue::Unknown(None)
+    }
+}
+
+impl PresentationCollectionProjectionValue {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PresentationCollectionProjectionValue> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<PresentationCollectionProjectionValue>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &PresentationCollectionProjectionValue| match x {
+                        PresentationCollectionProjectionValue::Unknown(_) => 0,
+                        PresentationCollectionProjectionValue::Content(_) => 1,
+                        PresentationCollectionProjectionValue::Literal(_) => 2,
+                    },
+                    |u| PresentationCollectionProjectionValue::Unknown(Some(u)),
+                    |x: &PresentationCollectionProjectionValue| match x { PresentationCollectionProjectionValue::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "editor/v1/presentation.skir",
+                    "PresentationCollectionProjectionValue",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationCollectionProjectionValue> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(PresentationCollectionProjectionValue::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct PresentationCollectionProjectionField
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PresentationCollectionProjectionField {
+    pub target: crate::skirout::base::editor::v1::type_catalog::ValuePath,
+    pub source: PresentationCollectionProjectionValue,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationCollectionProjectionField>>,
+}
+
+impl PresentationCollectionProjectionField {
+    pub fn default_ref() -> &'static PresentationCollectionProjectionField {
+        static D: std::sync::LazyLock<PresentationCollectionProjectionField> = std::sync::LazyLock::new(PresentationCollectionProjectionField::default);
+        &D
+    }
+}
+
+impl PresentationCollectionProjectionField {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PresentationCollectionProjectionField> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<PresentationCollectionProjectionField>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "PresentationCollectionProjectionField",
+                    "",
+                    |x: &PresentationCollectionProjectionField| &x._unrecognized,
+                    |x: &mut PresentationCollectionProjectionField, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationCollectionProjectionField> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(PresentationCollectionProjectionField::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct PresentationCollectionProjection
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PresentationCollectionProjection {
+    pub root: crate::skirout::base::editor::v1::type_catalog::NamedTypeTemplate,
+    pub resource_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub fields: Vec<PresentationCollectionProjectionField>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationCollectionProjection>>,
+}
+
+impl PresentationCollectionProjection {
+    pub fn default_ref() -> &'static PresentationCollectionProjection {
+        static D: std::sync::LazyLock<PresentationCollectionProjection> = std::sync::LazyLock::new(PresentationCollectionProjection::default);
+        &D
+    }
+}
+
+impl PresentationCollectionProjection {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PresentationCollectionProjection> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<PresentationCollectionProjection>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "PresentationCollectionProjection",
+                    "",
+                    |x: &PresentationCollectionProjection| &x._unrecognized,
+                    |x: &mut PresentationCollectionProjection, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationCollectionProjection> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(PresentationCollectionProjection::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct PresentationResourceCollection
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PresentationResourceCollection {
+    pub root: crate::skirout::base::editor::v1::type_catalog::TypeDefinitionId,
+    pub resource_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub appearance: Option<crate::skirout::base::editor::v1::type_catalog::PresentationId>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationResourceCollection>>,
+}
+
+impl PresentationResourceCollection {
+    pub fn default_ref() -> &'static PresentationResourceCollection {
+        static D: std::sync::LazyLock<PresentationResourceCollection> = std::sync::LazyLock::new(PresentationResourceCollection::default);
+        &D
+    }
+}
+
+impl PresentationResourceCollection {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PresentationResourceCollection> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<PresentationResourceCollection>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "PresentationResourceCollection",
+                    "",
+                    |x: &PresentationResourceCollection| &x._unrecognized,
+                    |x: &mut PresentationResourceCollection, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationResourceCollection> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(PresentationResourceCollection::_adapter())
     }
 }
 
@@ -6382,9 +6593,9 @@ impl PresentationInputAccess {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PresentationInput {
-    pub binding_id: crate::skirout::base::editor::v1::binding::BindingId,
+    pub binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
     pub name: String,
-    pub value_type: crate::skirout::base::editor::v1::type_catalog::TypeExpression,
+    pub value_type: crate::skirout::base::editor::v1::type_catalog::TypeTemplate,
     pub access: PresentationInputAccess,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationInput>>,
@@ -6423,7 +6634,7 @@ impl PresentationInput {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PresentationArgument {
-    pub input: crate::skirout::base::editor::v1::binding::BindingId,
+    pub input: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
     pub binding: crate::skirout::base::editor::v1::binding::BindingRef,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationArgument>>,
@@ -6496,123 +6707,366 @@ impl PresentationInvocation {
 }
 
 // ==============================================================================
-// struct ReferenceControl
+// struct LinkControl
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct ReferenceControl {
+pub struct LinkControl {
     pub control: BoundControl,
     pub allow_reorder: bool,
-    pub candidate_policy: Option<ReferencePolicyId>,
-    pub rejection_display: ReferenceRejectionDisplay,
+    pub candidate_policy: Option<LinkCandidatePolicyId>,
+    pub rejection_display: LinkRejectionDisplay,
+    pub source_id: Option<String>,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ReferenceControl>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<LinkControl>>,
 }
 
-impl ReferenceControl {
-    pub fn default_ref() -> &'static ReferenceControl {
-        static D: std::sync::LazyLock<ReferenceControl> = std::sync::LazyLock::new(ReferenceControl::default);
+impl LinkControl {
+    pub fn default_ref() -> &'static LinkControl {
+        static D: std::sync::LazyLock<LinkControl> = std::sync::LazyLock::new(LinkControl::default);
         &D
     }
 }
 
-impl ReferenceControl {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ReferenceControl> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ReferenceControl>> =
+impl LinkControl {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<LinkControl> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<LinkControl>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::StructAdapter::new(
                     "editor/v1/presentation.skir",
-                    "ReferenceControl",
+                    "LinkControl",
                     "",
-                    |x: &ReferenceControl| &x._unrecognized,
-                    |x: &mut ReferenceControl, u| x._unrecognized = u,
+                    |x: &LinkControl| &x._unrecognized,
+                    |x: &mut LinkControl, u| x._unrecognized = u,
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ReferenceControl> {
+    pub fn serializer() -> crate::skir_client::Serializer<LinkControl> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ReferenceControl::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(LinkControl::_adapter())
     }
 }
 
 // ==============================================================================
-// struct ReferencePolicyId
+// struct LinkCandidatePolicyId
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct ReferencePolicyId {
+pub struct LinkCandidatePolicyId {
     pub value: String,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ReferencePolicyId>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<LinkCandidatePolicyId>>,
 }
 
-impl ReferencePolicyId {
-    pub fn default_ref() -> &'static ReferencePolicyId {
-        static D: std::sync::LazyLock<ReferencePolicyId> = std::sync::LazyLock::new(ReferencePolicyId::default);
+impl LinkCandidatePolicyId {
+    pub fn default_ref() -> &'static LinkCandidatePolicyId {
+        static D: std::sync::LazyLock<LinkCandidatePolicyId> = std::sync::LazyLock::new(LinkCandidatePolicyId::default);
         &D
     }
 }
 
-impl ReferencePolicyId {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ReferencePolicyId> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ReferencePolicyId>> =
+impl LinkCandidatePolicyId {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<LinkCandidatePolicyId> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<LinkCandidatePolicyId>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::StructAdapter::new(
                     "editor/v1/presentation.skir",
-                    "ReferencePolicyId",
+                    "LinkCandidatePolicyId",
                     "",
-                    |x: &ReferencePolicyId| &x._unrecognized,
-                    |x: &mut ReferencePolicyId, u| x._unrecognized = u,
+                    |x: &LinkCandidatePolicyId| &x._unrecognized,
+                    |x: &mut LinkCandidatePolicyId, u| x._unrecognized = u,
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ReferencePolicyId> {
+    pub fn serializer() -> crate::skir_client::Serializer<LinkCandidatePolicyId> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ReferencePolicyId::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(LinkCandidatePolicyId::_adapter())
     }
 }
 
 // ==============================================================================
-// enum ReferenceRejectionDisplay
+// enum LinkRejectionDisplay
 // ==============================================================================
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum ReferenceRejectionDisplay {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<ReferenceRejectionDisplay>>),
+pub enum LinkRejectionDisplay {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<LinkRejectionDisplay>>),
     Hidden,
     Disabled,
 }
 
-impl Default for ReferenceRejectionDisplay {
+impl Default for LinkRejectionDisplay {
     fn default() -> Self {
-        ReferenceRejectionDisplay::Unknown(None)
+        LinkRejectionDisplay::Unknown(None)
     }
 }
 
-impl ReferenceRejectionDisplay {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ReferenceRejectionDisplay> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<ReferenceRejectionDisplay>> =
+impl LinkRejectionDisplay {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<LinkRejectionDisplay> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<LinkRejectionDisplay>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::EnumAdapter::new(
-                    |x: &ReferenceRejectionDisplay| match x {
-                        ReferenceRejectionDisplay::Unknown(_) => 0,
-                        ReferenceRejectionDisplay::Hidden => 1,
-                        ReferenceRejectionDisplay::Disabled => 2,
+                    |x: &LinkRejectionDisplay| match x {
+                        LinkRejectionDisplay::Unknown(_) => 0,
+                        LinkRejectionDisplay::Hidden => 1,
+                        LinkRejectionDisplay::Disabled => 2,
                     },
-                    |u| ReferenceRejectionDisplay::Unknown(Some(u)),
-                    |x: &ReferenceRejectionDisplay| match x { ReferenceRejectionDisplay::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    |u| LinkRejectionDisplay::Unknown(Some(u)),
+                    |x: &LinkRejectionDisplay| match x { LinkRejectionDisplay::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
                     "editor/v1/presentation.skir",
-                    "ReferenceRejectionDisplay",
+                    "LinkRejectionDisplay",
                     "",
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ReferenceRejectionDisplay> {
+    pub fn serializer() -> crate::skir_client::Serializer<LinkRejectionDisplay> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(ReferenceRejectionDisplay::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(LinkRejectionDisplay::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct RemainingFieldsElement
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct RemainingFieldsElement {
+    pub excluded: Vec<crate::skirout::base::editor::v1::type_catalog::RelativeFieldPattern>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RemainingFieldsElement>>,
+}
+
+impl RemainingFieldsElement {
+    pub fn default_ref() -> &'static RemainingFieldsElement {
+        static D: std::sync::LazyLock<RemainingFieldsElement> = std::sync::LazyLock::new(RemainingFieldsElement::default);
+        &D
+    }
+}
+
+impl RemainingFieldsElement {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RemainingFieldsElement> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RemainingFieldsElement>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "RemainingFieldsElement",
+                    "",
+                    |x: &RemainingFieldsElement| &x._unrecognized,
+                    |x: &mut RemainingFieldsElement, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RemainingFieldsElement> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(RemainingFieldsElement::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct NullableControl
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct NullableControl {
+    pub control: BoundControl,
+    pub value_presentation: Option<PresentationNode>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<NullableControl>>,
+}
+
+impl NullableControl {
+    pub fn default_ref() -> &'static NullableControl {
+        static D: std::sync::LazyLock<NullableControl> = std::sync::LazyLock::new(NullableControl::default);
+        &D
+    }
+}
+
+impl NullableControl {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<NullableControl> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<NullableControl>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "NullableControl",
+                    "",
+                    |x: &NullableControl| &x._unrecognized,
+                    |x: &mut NullableControl, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<NullableControl> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(NullableControl::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct SetControl
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct SetControl {
+    pub control: BoundControl,
+    pub item_presentation: Option<PresentationNode>,
+    pub allow_add: bool,
+    pub allow_remove: bool,
+    pub item_binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SetControl>>,
+}
+
+impl SetControl {
+    pub fn default_ref() -> &'static SetControl {
+        static D: std::sync::LazyLock<SetControl> = std::sync::LazyLock::new(SetControl::default);
+        &D
+    }
+}
+
+impl SetControl {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<SetControl> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<SetControl>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "SetControl",
+                    "",
+                    |x: &SetControl| &x._unrecognized,
+                    |x: &mut SetControl, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<SetControl> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(SetControl::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum PageGraphDirection
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum PageGraphDirection {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<PageGraphDirection>>),
+    LeftToRight,
+    RightToLeft,
+    TopToBottom,
+    BottomToTop,
+}
+
+impl Default for PageGraphDirection {
+    fn default() -> Self {
+        PageGraphDirection::Unknown(None)
+    }
+}
+
+impl PageGraphDirection {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PageGraphDirection> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<PageGraphDirection>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &PageGraphDirection| match x {
+                        PageGraphDirection::Unknown(_) => 0,
+                        PageGraphDirection::LeftToRight => 1,
+                        PageGraphDirection::RightToLeft => 2,
+                        PageGraphDirection::TopToBottom => 3,
+                        PageGraphDirection::BottomToTop => 4,
+                    },
+                    |u| PageGraphDirection::Unknown(Some(u)),
+                    |x: &PageGraphDirection| match x { PageGraphDirection::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "editor/v1/presentation.skir",
+                    "PageGraphDirection",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PageGraphDirection> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(PageGraphDirection::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct PageGraphElement
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PageGraphElement {
+    pub control: BoundControl,
+    pub direction: PageGraphDirection,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PageGraphElement>>,
+}
+
+impl PageGraphElement {
+    pub fn default_ref() -> &'static PageGraphElement {
+        static D: std::sync::LazyLock<PageGraphElement> = std::sync::LazyLock::new(PageGraphElement::default);
+        &D
+    }
+}
+
+impl PageGraphElement {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PageGraphElement> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<PageGraphElement>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "PageGraphElement",
+                    "",
+                    |x: &PageGraphElement| &x._unrecognized,
+                    |x: &mut PageGraphElement, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PageGraphElement> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(PageGraphElement::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct PageTimelineElement
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PageTimelineElement {
+    pub control: BoundControl,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PageTimelineElement>>,
+}
+
+impl PageTimelineElement {
+    pub fn default_ref() -> &'static PageTimelineElement {
+        static D: std::sync::LazyLock<PageTimelineElement> = std::sync::LazyLock::new(PageTimelineElement::default);
+        &D
+    }
+}
+
+impl PageTimelineElement {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PageTimelineElement> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<PageTimelineElement>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "PageTimelineElement",
+                    "",
+                    |x: &PageTimelineElement| &x._unrecognized,
+                    |x: &mut PageTimelineElement, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PageTimelineElement> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(PageTimelineElement::_adapter())
     }
 }
 
@@ -6643,7 +7097,7 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<PresentationProperties> = PresentationProperties::_adapter() as *const _ as *mut _;
-                (*a).add_field("enabled_if", 0, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &PresentationProperties| &x.enabled_if, |x: &mut PresentationProperties, v| x.enabled_if = v);
+                (*a).add_field("enabled_if", 0, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &PresentationProperties| &x.enabled_if, |x: &mut PresentationProperties, v| x.enabled_if = v);
                 (*a).add_field("read_only", 1, crate::skir_client::Serializer::bool(), "", |x: &PresentationProperties| &x.read_only, |x: &mut PresentationProperties, v| x.read_only = v);
                 (*a).finalize();
             }
@@ -6668,21 +7122,21 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<HeaderActionConfirmation> = HeaderActionConfirmation::_adapter() as *const _ as *mut _;
-                (*a).add_field("title", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &HeaderActionConfirmation| &x.title, |x: &mut HeaderActionConfirmation, v| x.title = v);
-                (*a).add_field("message", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &HeaderActionConfirmation| &x.message, |x: &mut HeaderActionConfirmation, v| x.message = v);
-                (*a).add_field("confirmation_label", 2, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &HeaderActionConfirmation| &x.confirmation_label, |x: &mut HeaderActionConfirmation, v| x.confirmation_label = v);
+                (*a).add_field("title", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &HeaderActionConfirmation| &x.title, |x: &mut HeaderActionConfirmation, v| x.title = v);
+                (*a).add_field("message", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &HeaderActionConfirmation| &x.message, |x: &mut HeaderActionConfirmation, v| x.message = v);
+                (*a).add_field("confirmation_label", 2, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &HeaderActionConfirmation| &x.confirmation_label, |x: &mut HeaderActionConfirmation, v| x.confirmation_label = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<HeaderButtonItem> = HeaderButtonItem::_adapter() as *const _ as *mut _;
                 (*a).add_field("item_id", 0, crate::skir_client::internal::struct_serializer_from_static(HeaderItemId::_adapter()), "", |x: &HeaderButtonItem| &x.item_id, |x: &mut HeaderButtonItem, v| x.item_id = v);
-                (*a).add_field("icon", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &HeaderButtonItem| &x.icon, |x: &mut HeaderButtonItem, v| x.icon = v);
-                (*a).add_field("label", 2, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &HeaderButtonItem| &x.label, |x: &mut HeaderButtonItem, v| x.label = v);
-                (*a).add_field("tooltip", 3, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &HeaderButtonItem| &x.tooltip, |x: &mut HeaderButtonItem, v| x.tooltip = v);
+                (*a).add_field("icon", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &HeaderButtonItem| &x.icon, |x: &mut HeaderButtonItem, v| x.icon = v);
+                (*a).add_field("label", 2, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &HeaderButtonItem| &x.label, |x: &mut HeaderButtonItem, v| x.label = v);
+                (*a).add_field("tooltip", 3, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &HeaderButtonItem| &x.tooltip, |x: &mut HeaderButtonItem, v| x.tooltip = v);
                 (*a).add_field("action", 4, crate::skirout::base::editor::v1::action::EditorAction::serializer(), "", |x: &HeaderButtonItem| &x.action, |x: &mut HeaderButtonItem, v| x.action = v);
-                (*a).add_field("priority", 5, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &HeaderButtonItem| &x.priority, |x: &mut HeaderButtonItem, v| x.priority = v);
-                (*a).add_field("visible_if", 6, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &HeaderButtonItem| &x.visible_if, |x: &mut HeaderButtonItem, v| x.visible_if = v);
-                (*a).add_field("enabled_if", 7, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &HeaderButtonItem| &x.enabled_if, |x: &mut HeaderButtonItem, v| x.enabled_if = v);
+                (*a).add_field("priority", 5, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &HeaderButtonItem| &x.priority, |x: &mut HeaderButtonItem, v| x.priority = v);
+                (*a).add_field("visible_if", 6, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &HeaderButtonItem| &x.visible_if, |x: &mut HeaderButtonItem, v| x.visible_if = v);
+                (*a).add_field("enabled_if", 7, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &HeaderButtonItem| &x.enabled_if, |x: &mut HeaderButtonItem, v| x.enabled_if = v);
                 (*a).add_field("tone", 8, crate::skir_client::internal::enum_serializer_from_static(HeaderActionTone::_adapter()), "", |x: &HeaderButtonItem| &x.tone, |x: &mut HeaderButtonItem, v| x.tone = v);
                 (*a).add_field("confirmation", 9, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(HeaderActionConfirmation::_adapter())), "", |x: &HeaderButtonItem| &x.confirmation, |x: &mut HeaderButtonItem, v| x.confirmation = v);
                 (*a).add_field("placement", 10, crate::skir_client::internal::enum_serializer_from_static(HeaderActionPlacement::_adapter()), "", |x: &HeaderButtonItem| &x.placement, |x: &mut HeaderButtonItem, v| x.placement = v);
@@ -6691,13 +7145,13 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<HeaderBooleanToggleItem> = HeaderBooleanToggleItem::_adapter() as *const _ as *mut _;
                 (*a).add_field("item_id", 0, crate::skir_client::internal::struct_serializer_from_static(HeaderItemId::_adapter()), "", |x: &HeaderBooleanToggleItem| &x.item_id, |x: &mut HeaderBooleanToggleItem, v| x.item_id = v);
-                (*a).add_field("label", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &HeaderBooleanToggleItem| &x.label, |x: &mut HeaderBooleanToggleItem, v| x.label = v);
-                (*a).add_field("checked", 2, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &HeaderBooleanToggleItem| &x.checked, |x: &mut HeaderBooleanToggleItem, v| x.checked = v);
+                (*a).add_field("label", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &HeaderBooleanToggleItem| &x.label, |x: &mut HeaderBooleanToggleItem, v| x.label = v);
+                (*a).add_field("checked", 2, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &HeaderBooleanToggleItem| &x.checked, |x: &mut HeaderBooleanToggleItem, v| x.checked = v);
                 (*a).add_field("action", 3, crate::skirout::base::editor::v1::action::EditorAction::serializer(), "", |x: &HeaderBooleanToggleItem| &x.action, |x: &mut HeaderBooleanToggleItem, v| x.action = v);
-                (*a).add_field("tooltip", 4, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &HeaderBooleanToggleItem| &x.tooltip, |x: &mut HeaderBooleanToggleItem, v| x.tooltip = v);
-                (*a).add_field("priority", 5, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &HeaderBooleanToggleItem| &x.priority, |x: &mut HeaderBooleanToggleItem, v| x.priority = v);
-                (*a).add_field("visible_if", 6, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &HeaderBooleanToggleItem| &x.visible_if, |x: &mut HeaderBooleanToggleItem, v| x.visible_if = v);
-                (*a).add_field("enabled_if", 7, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &HeaderBooleanToggleItem| &x.enabled_if, |x: &mut HeaderBooleanToggleItem, v| x.enabled_if = v);
+                (*a).add_field("tooltip", 4, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &HeaderBooleanToggleItem| &x.tooltip, |x: &mut HeaderBooleanToggleItem, v| x.tooltip = v);
+                (*a).add_field("priority", 5, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &HeaderBooleanToggleItem| &x.priority, |x: &mut HeaderBooleanToggleItem, v| x.priority = v);
+                (*a).add_field("visible_if", 6, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &HeaderBooleanToggleItem| &x.visible_if, |x: &mut HeaderBooleanToggleItem, v| x.visible_if = v);
+                (*a).add_field("enabled_if", 7, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &HeaderBooleanToggleItem| &x.enabled_if, |x: &mut HeaderBooleanToggleItem, v| x.enabled_if = v);
                 (*a).add_field("confirmation", 8, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(HeaderActionConfirmation::_adapter())), "", |x: &HeaderBooleanToggleItem| &x.confirmation, |x: &mut HeaderBooleanToggleItem, v| x.confirmation = v);
                 (*a).add_field("placement", 9, crate::skir_client::internal::enum_serializer_from_static(HeaderActionPlacement::_adapter()), "", |x: &HeaderBooleanToggleItem| &x.placement, |x: &mut HeaderBooleanToggleItem, v| x.placement = v);
                 (*a).finalize();
@@ -6705,11 +7159,11 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<HeaderReorderHandleItem> = HeaderReorderHandleItem::_adapter() as *const _ as *mut _;
                 (*a).add_field("item_id", 0, crate::skir_client::internal::struct_serializer_from_static(HeaderItemId::_adapter()), "", |x: &HeaderReorderHandleItem| &x.item_id, |x: &mut HeaderReorderHandleItem, v| x.item_id = v);
-                (*a).add_field("label", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &HeaderReorderHandleItem| &x.label, |x: &mut HeaderReorderHandleItem, v| x.label = v);
+                (*a).add_field("label", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &HeaderReorderHandleItem| &x.label, |x: &mut HeaderReorderHandleItem, v| x.label = v);
                 (*a).add_field("source", 2, crate::skirout::base::editor::v1::binding::BindingRef::serializer(), "", |x: &HeaderReorderHandleItem| &x.source, |x: &mut HeaderReorderHandleItem, v| x.source = v);
-                (*a).add_field("tooltip", 3, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &HeaderReorderHandleItem| &x.tooltip, |x: &mut HeaderReorderHandleItem, v| x.tooltip = v);
-                (*a).add_field("visible_if", 4, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &HeaderReorderHandleItem| &x.visible_if, |x: &mut HeaderReorderHandleItem, v| x.visible_if = v);
-                (*a).add_field("enabled_if", 5, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &HeaderReorderHandleItem| &x.enabled_if, |x: &mut HeaderReorderHandleItem, v| x.enabled_if = v);
+                (*a).add_field("tooltip", 3, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &HeaderReorderHandleItem| &x.tooltip, |x: &mut HeaderReorderHandleItem, v| x.tooltip = v);
+                (*a).add_field("visible_if", 4, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &HeaderReorderHandleItem| &x.visible_if, |x: &mut HeaderReorderHandleItem, v| x.visible_if = v);
+                (*a).add_field("enabled_if", 5, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &HeaderReorderHandleItem| &x.enabled_if, |x: &mut HeaderReorderHandleItem, v| x.enabled_if = v);
                 (*a).finalize();
             }
             unsafe {
@@ -6721,7 +7175,7 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<PresentationHeaderTitle> = PresentationHeaderTitle::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("text", 1, 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |v| PresentationHeaderTitle::Text(Box::new(v)), |x| match x { PresentationHeaderTitle::Text(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("text", 1, 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |v| PresentationHeaderTitle::Text(Box::new(v)), |x| match x { PresentationHeaderTitle::Text(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("presentation", 2, 2, crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter()), "", |v| PresentationHeaderTitle::Presentation(Box::new(v)), |x| match x { PresentationHeaderTitle::Presentation(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
@@ -6750,7 +7204,7 @@ fn initialize_module_serializers() {
                 let a: *mut crate::skir_client::internal::StructAdapter<PresentationHeader> = PresentationHeader::_adapter() as *const _ as *mut _;
                 (*a).add_field("binding", 0, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::binding::BindingRef::serializer()), "", |x: &PresentationHeader| &x.binding, |x: &mut PresentationHeader, v| x.binding = v);
                 (*a).add_field("title", 1, crate::skir_client::Serializer::optional(crate::skir_client::internal::enum_serializer_from_static(PresentationHeaderTitle::_adapter())), "", |x: &PresentationHeader| &x.title, |x: &mut PresentationHeader, v| x.title = v);
-                (*a).add_field("description", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &PresentationHeader| &x.description, |x: &mut PresentationHeader, v| x.description = v);
+                (*a).add_field("description", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &PresentationHeader| &x.description, |x: &mut PresentationHeader, v| x.description = v);
                 (*a).add_field("initially_expanded", 3, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::bool()), "", |x: &PresentationHeader| &x.initially_expanded, |x: &mut PresentationHeader, v| x.initially_expanded = v);
                 (*a).add_field("items", 4, crate::skir_client::Serializer::array(crate::skir_client::internal::enum_serializer_from_static(HeaderItem::_adapter())), "", |x: &PresentationHeader| &x.items, |x: &mut PresentationHeader, v| x.items = v);
                 (*a).add_field("header_padding", 5, crate::skir_client::Serializer::optional(crate::skir_client::internal::enum_serializer_from_static(PresentationInsets::_adapter())), "", |x: &PresentationHeader| &x.header_padding, |x: &mut PresentationHeader, v| x.header_padding = v);
@@ -6849,7 +7303,7 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<PresentationBorderSide> = PresentationBorderSide::_adapter() as *const _ as *mut _;
-                (*a).add_field("color", 0, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &PresentationBorderSide| &x.color, |x: &mut PresentationBorderSide, v| x.color = v);
+                (*a).add_field("color", 0, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &PresentationBorderSide| &x.color, |x: &mut PresentationBorderSide, v| x.color = v);
                 (*a).add_field("width", 1, crate::skir_client::Serializer::float64(), "", |x: &PresentationBorderSide| &x.width, |x: &mut PresentationBorderSide, v| x.width = v);
                 (*a).finalize();
             }
@@ -6890,7 +7344,7 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<TabItem> = TabItem::_adapter() as *const _ as *mut _;
                 (*a).add_field("tab_id", 0, crate::skir_client::Serializer::string(), "", |x: &TabItem| &x.tab_id, |x: &mut TabItem, v| x.tab_id = v);
-                (*a).add_field("label", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &TabItem| &x.label, |x: &mut TabItem, v| x.label = v);
+                (*a).add_field("label", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &TabItem| &x.label, |x: &mut TabItem, v| x.label = v);
                 (*a).add_field("child", 2, crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter()), "", |x: &TabItem| &x.child, |x: &mut TabItem, v| x.child = v);
                 (*a).finalize();
             }
@@ -6902,25 +7356,25 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<SpacerLayout> = SpacerLayout::_adapter() as *const _ as *mut _;
-                (*a).add_field("width", 0, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &SpacerLayout| &x.width, |x: &mut SpacerLayout, v| x.width = v);
-                (*a).add_field("height", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &SpacerLayout| &x.height, |x: &mut SpacerLayout, v| x.height = v);
+                (*a).add_field("width", 0, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &SpacerLayout| &x.width, |x: &mut SpacerLayout, v| x.width = v);
+                (*a).add_field("height", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &SpacerLayout| &x.height, |x: &mut SpacerLayout, v| x.height = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<TextContent> = TextContent::_adapter() as *const _ as *mut _;
-                (*a).add_field("value", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &TextContent| &x.value, |x: &mut TextContent, v| x.value = v);
-                (*a).add_field("color", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &TextContent| &x.color, |x: &mut TextContent, v| x.color = v);
-                (*a).add_field("font_size", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &TextContent| &x.font_size, |x: &mut TextContent, v| x.font_size = v);
-                (*a).add_field("font_weight", 3, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &TextContent| &x.font_weight, |x: &mut TextContent, v| x.font_weight = v);
-                (*a).add_field("font_italic", 4, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &TextContent| &x.font_italic, |x: &mut TextContent, v| x.font_italic = v);
-                (*a).add_field("font_optical_size", 5, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &TextContent| &x.font_optical_size, |x: &mut TextContent, v| x.font_optical_size = v);
-                (*a).add_field("font_slant", 6, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &TextContent| &x.font_slant, |x: &mut TextContent, v| x.font_slant = v);
-                (*a).add_field("font_width", 7, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &TextContent| &x.font_width, |x: &mut TextContent, v| x.font_width = v);
-                (*a).add_field("text_alignment", 8, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &TextContent| &x.text_alignment, |x: &mut TextContent, v| x.text_alignment = v);
-                (*a).add_field("line_height", 9, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &TextContent| &x.line_height, |x: &mut TextContent, v| x.line_height = v);
-                (*a).add_field("letter_spacing", 10, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &TextContent| &x.letter_spacing, |x: &mut TextContent, v| x.letter_spacing = v);
-                (*a).add_field("decoration", 11, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &TextContent| &x.decoration, |x: &mut TextContent, v| x.decoration = v);
-                (*a).add_field("semantic_label", 12, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &TextContent| &x.semantic_label, |x: &mut TextContent, v| x.semantic_label = v);
+                (*a).add_field("value", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &TextContent| &x.value, |x: &mut TextContent, v| x.value = v);
+                (*a).add_field("color", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextContent| &x.color, |x: &mut TextContent, v| x.color = v);
+                (*a).add_field("font_size", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextContent| &x.font_size, |x: &mut TextContent, v| x.font_size = v);
+                (*a).add_field("font_weight", 3, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextContent| &x.font_weight, |x: &mut TextContent, v| x.font_weight = v);
+                (*a).add_field("font_italic", 4, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextContent| &x.font_italic, |x: &mut TextContent, v| x.font_italic = v);
+                (*a).add_field("font_optical_size", 5, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextContent| &x.font_optical_size, |x: &mut TextContent, v| x.font_optical_size = v);
+                (*a).add_field("font_slant", 6, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextContent| &x.font_slant, |x: &mut TextContent, v| x.font_slant = v);
+                (*a).add_field("font_width", 7, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextContent| &x.font_width, |x: &mut TextContent, v| x.font_width = v);
+                (*a).add_field("text_alignment", 8, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextContent| &x.text_alignment, |x: &mut TextContent, v| x.text_alignment = v);
+                (*a).add_field("line_height", 9, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextContent| &x.line_height, |x: &mut TextContent, v| x.line_height = v);
+                (*a).add_field("letter_spacing", 10, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextContent| &x.letter_spacing, |x: &mut TextContent, v| x.letter_spacing = v);
+                (*a).add_field("decoration", 11, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextContent| &x.decoration, |x: &mut TextContent, v| x.decoration = v);
+                (*a).add_field("semantic_label", 12, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextContent| &x.semantic_label, |x: &mut TextContent, v| x.semantic_label = v);
                 (*a).add_field("paragraph", 13, crate::skir_client::internal::struct_serializer_from_static(TextParagraph::_adapter()), "", |x: &TextContent| &x.paragraph, |x: &mut TextContent, v| x.paragraph = v);
                 (*a).finalize();
             }
@@ -6947,15 +7401,15 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<TextStyleOverride> = TextStyleOverride::_adapter() as *const _ as *mut _;
-                (*a).add_field("color", 0, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &TextStyleOverride| &x.color, |x: &mut TextStyleOverride, v| x.color = v);
-                (*a).add_field("font_weight", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &TextStyleOverride| &x.font_weight, |x: &mut TextStyleOverride, v| x.font_weight = v);
-                (*a).add_field("font_italic", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &TextStyleOverride| &x.font_italic, |x: &mut TextStyleOverride, v| x.font_italic = v);
-                (*a).add_field("decoration", 3, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &TextStyleOverride| &x.decoration, |x: &mut TextStyleOverride, v| x.decoration = v);
+                (*a).add_field("color", 0, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextStyleOverride| &x.color, |x: &mut TextStyleOverride, v| x.color = v);
+                (*a).add_field("font_weight", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextStyleOverride| &x.font_weight, |x: &mut TextStyleOverride, v| x.font_weight = v);
+                (*a).add_field("font_italic", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextStyleOverride| &x.font_italic, |x: &mut TextStyleOverride, v| x.font_italic = v);
+                (*a).add_field("decoration", 3, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextStyleOverride| &x.decoration, |x: &mut TextStyleOverride, v| x.decoration = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<TextRun> = TextRun::_adapter() as *const _ as *mut _;
-                (*a).add_field("text", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &TextRun| &x.text, |x: &mut TextRun, v| x.text = v);
+                (*a).add_field("text", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &TextRun| &x.text, |x: &mut TextRun, v| x.text = v);
                 (*a).add_field("style", 1, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(TextStyleOverride::_adapter())), "", |x: &TextRun| &x.style, |x: &mut TextRun, v| x.style = v);
                 (*a).finalize();
             }
@@ -6979,35 +7433,35 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<IconContent> = IconContent::_adapter() as *const _ as *mut _;
-                (*a).add_field("name", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &IconContent| &x.name, |x: &mut IconContent, v| x.name = v);
-                (*a).add_field("semantic_label", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &IconContent| &x.semantic_label, |x: &mut IconContent, v| x.semantic_label = v);
-                (*a).add_field("color", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &IconContent| &x.color, |x: &mut IconContent, v| x.color = v);
-                (*a).add_field("size", 3, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &IconContent| &x.size, |x: &mut IconContent, v| x.size = v);
+                (*a).add_field("name", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &IconContent| &x.name, |x: &mut IconContent, v| x.name = v);
+                (*a).add_field("semantic_label", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &IconContent| &x.semantic_label, |x: &mut IconContent, v| x.semantic_label = v);
+                (*a).add_field("color", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &IconContent| &x.color, |x: &mut IconContent, v| x.color = v);
+                (*a).add_field("size", 3, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &IconContent| &x.size, |x: &mut IconContent, v| x.size = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ImageContent> = ImageContent::_adapter() as *const _ as *mut _;
-                (*a).add_field("source", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &ImageContent| &x.source, |x: &mut ImageContent, v| x.source = v);
-                (*a).add_field("semantic_label", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &ImageContent| &x.semantic_label, |x: &mut ImageContent, v| x.semantic_label = v);
+                (*a).add_field("source", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &ImageContent| &x.source, |x: &mut ImageContent, v| x.source = v);
+                (*a).add_field("semantic_label", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &ImageContent| &x.semantic_label, |x: &mut ImageContent, v| x.semantic_label = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<BadgeContent> = BadgeContent::_adapter() as *const _ as *mut _;
-                (*a).add_field("label", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &BadgeContent| &x.label, |x: &mut BadgeContent, v| x.label = v);
+                (*a).add_field("label", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &BadgeContent| &x.label, |x: &mut BadgeContent, v| x.label = v);
                 (*a).add_field("tone", 1, crate::skir_client::Serializer::string(), "", |x: &BadgeContent| &x.tone, |x: &mut BadgeContent, v| x.tone = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ChipContent> = ChipContent::_adapter() as *const _ as *mut _;
-                (*a).add_field("label", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &ChipContent| &x.label, |x: &mut ChipContent, v| x.label = v);
-                (*a).add_field("color", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &ChipContent| &x.color, |x: &mut ChipContent, v| x.color = v);
+                (*a).add_field("label", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &ChipContent| &x.label, |x: &mut ChipContent, v| x.label = v);
+                (*a).add_field("color", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &ChipContent| &x.color, |x: &mut ChipContent, v| x.color = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ProgressContent> = ProgressContent::_adapter() as *const _ as *mut _;
-                (*a).add_field("value", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &ProgressContent| &x.value, |x: &mut ProgressContent, v| x.value = v);
-                (*a).add_field("maximum", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &ProgressContent| &x.maximum, |x: &mut ProgressContent, v| x.maximum = v);
-                (*a).add_field("label", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &ProgressContent| &x.label, |x: &mut ProgressContent, v| x.label = v);
+                (*a).add_field("value", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &ProgressContent| &x.value, |x: &mut ProgressContent, v| x.value = v);
+                (*a).add_field("maximum", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &ProgressContent| &x.maximum, |x: &mut ProgressContent, v| x.maximum = v);
+                (*a).add_field("label", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &ProgressContent| &x.label, |x: &mut ProgressContent, v| x.label = v);
                 (*a).finalize();
             }
             unsafe {
@@ -7030,18 +7484,18 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<StatusAppearance> = StatusAppearance::_adapter() as *const _ as *mut _;
                 (*a).add_field("tone", 0, crate::skir_client::internal::enum_serializer_from_static(StatusTone::_adapter()), "", |x: &StatusAppearance| &x.tone, |x: &mut StatusAppearance, v| x.tone = v);
-                (*a).add_field("label", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &StatusAppearance| &x.label, |x: &mut StatusAppearance, v| x.label = v);
+                (*a).add_field("label", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &StatusAppearance| &x.label, |x: &mut StatusAppearance, v| x.label = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<StatusCase> = StatusCase::_adapter() as *const _ as *mut _;
-                (*a).add_field("match", 0, crate::skirout::base::editor::v1::type_catalog::TypedValue::serializer(), "", |x: &StatusCase| &x.match_, |x: &mut StatusCase, v| x.match_ = v);
+                (*a).add_field("match", 0, crate::skirout::base::editor::v1::type_catalog::DataValue::serializer(), "", |x: &StatusCase| &x.match_, |x: &mut StatusCase, v| x.match_ = v);
                 (*a).add_field("appearance", 1, crate::skir_client::internal::struct_serializer_from_static(StatusAppearance::_adapter()), "", |x: &StatusCase| &x.appearance, |x: &mut StatusCase, v| x.appearance = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<StatusContent> = StatusContent::_adapter() as *const _ as *mut _;
-                (*a).add_field("value", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &StatusContent| &x.value, |x: &mut StatusContent, v| x.value = v);
+                (*a).add_field("value", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &StatusContent| &x.value, |x: &mut StatusContent, v| x.value = v);
                 (*a).add_field("cases", 1, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(StatusCase::_adapter())), "", |x: &StatusContent| &x.cases, |x: &mut StatusContent, v| x.cases = v);
                 (*a).add_field("fallback", 2, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(StatusAppearance::_adapter())), "", |x: &StatusContent| &x.fallback, |x: &mut StatusContent, v| x.fallback = v);
                 (*a).finalize();
@@ -7054,8 +7508,8 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<DateTimeContent> = DateTimeContent::_adapter() as *const _ as *mut _;
-                (*a).add_field("value", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &DateTimeContent| &x.value, |x: &mut DateTimeContent, v| x.value = v);
-                (*a).add_field("format", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &DateTimeContent| &x.format, |x: &mut DateTimeContent, v| x.format = v);
+                (*a).add_field("value", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &DateTimeContent| &x.value, |x: &mut DateTimeContent, v| x.value = v);
+                (*a).add_field("format", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &DateTimeContent| &x.format, |x: &mut DateTimeContent, v| x.format = v);
                 (*a).add_field("time_zone", 2, crate::skir_client::internal::enum_serializer_from_static(DateTimeZone::_adapter()), "", |x: &DateTimeContent| &x.time_zone, |x: &mut DateTimeContent, v| x.time_zone = v);
                 (*a).finalize();
             }
@@ -7067,7 +7521,7 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<RelativeTimeContent> = RelativeTimeContent::_adapter() as *const _ as *mut _;
-                (*a).add_field("value", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &RelativeTimeContent| &x.value, |x: &mut RelativeTimeContent, v| x.value = v);
+                (*a).add_field("value", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &RelativeTimeContent| &x.value, |x: &mut RelativeTimeContent, v| x.value = v);
                 (*a).add_field("style", 1, crate::skir_client::internal::enum_serializer_from_static(RelativeTimeStyle::_adapter()), "", |x: &RelativeTimeContent| &x.style, |x: &mut RelativeTimeContent, v| x.style = v);
                 (*a).add_field("time_zone", 2, crate::skir_client::internal::enum_serializer_from_static(DateTimeZone::_adapter()), "", |x: &RelativeTimeContent| &x.time_zone, |x: &mut RelativeTimeContent, v| x.time_zone = v);
                 (*a).finalize();
@@ -7075,13 +7529,13 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<TypedFieldElement> = TypedFieldElement::_adapter() as *const _ as *mut _;
                 (*a).add_field("binding", 0, crate::skirout::base::editor::v1::binding::BindingRef::serializer(), "", |x: &TypedFieldElement| &x.binding, |x: &mut TypedFieldElement, v| x.binding = v);
-                (*a).add_field("expected_type", 1, crate::skirout::base::editor::v1::type_catalog::TypeExpression::serializer(), "", |x: &TypedFieldElement| &x.expected_type, |x: &mut TypedFieldElement, v| x.expected_type = v);
+                (*a).add_field("expected_type", 1, crate::skirout::base::editor::v1::type_catalog::TypeTemplate::serializer(), "", |x: &TypedFieldElement| &x.expected_type, |x: &mut TypedFieldElement, v| x.expected_type = v);
                 (*a).add_field("presentation", 2, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter())), "", |x: &TypedFieldElement| &x.presentation, |x: &mut TypedFieldElement, v| x.presentation = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ConditionalElement> = ConditionalElement::_adapter() as *const _ as *mut _;
-                (*a).add_field("condition", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &ConditionalElement| &x.condition, |x: &mut ConditionalElement, v| x.condition = v);
+                (*a).add_field("condition", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &ConditionalElement| &x.condition, |x: &mut ConditionalElement, v| x.condition = v);
                 (*a).add_field("when_true", 1, crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter()), "", |x: &ConditionalElement| &x.when_true, |x: &mut ConditionalElement, v| x.when_true = v);
                 (*a).add_field("when_false", 2, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter())), "", |x: &ConditionalElement| &x.when_false, |x: &mut ConditionalElement, v| x.when_false = v);
                 (*a).finalize();
@@ -7096,15 +7550,15 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<RepeatedElement> = RepeatedElement::_adapter() as *const _ as *mut _;
-                (*a).add_field("source", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &RepeatedElement| &x.source, |x: &mut RepeatedElement, v| x.source = v);
-                (*a).add_field("item_binding_id", 1, crate::skirout::base::editor::v1::binding::BindingId::serializer(), "", |x: &RepeatedElement| &x.item_binding_id, |x: &mut RepeatedElement, v| x.item_binding_id = v);
+                (*a).add_field("source", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &RepeatedElement| &x.source, |x: &mut RepeatedElement, v| x.source = v);
+                (*a).add_field("item_binding_id", 1, crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(), "", |x: &RepeatedElement| &x.item_binding_id, |x: &mut RepeatedElement, v| x.item_binding_id = v);
                 (*a).add_field("presentation", 2, crate::skir_client::internal::struct_serializer_from_static(SequencePresentation::_adapter()), "", |x: &RepeatedElement| &x.presentation, |x: &mut RepeatedElement, v| x.presentation = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ScopedBindingElement> = ScopedBindingElement::_adapter() as *const _ as *mut _;
                 (*a).add_field("binding", 0, crate::skirout::base::editor::v1::binding::BindingRef::serializer(), "", |x: &ScopedBindingElement| &x.binding, |x: &mut ScopedBindingElement, v| x.binding = v);
-                (*a).add_field("scope_binding_id", 1, crate::skirout::base::editor::v1::binding::BindingId::serializer(), "", |x: &ScopedBindingElement| &x.scope_binding_id, |x: &mut ScopedBindingElement, v| x.scope_binding_id = v);
+                (*a).add_field("scope_binding_id", 1, crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(), "", |x: &ScopedBindingElement| &x.scope_binding_id, |x: &mut ScopedBindingElement, v| x.scope_binding_id = v);
                 (*a).add_field("child", 2, crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter()), "", |x: &ScopedBindingElement| &x.child, |x: &mut ScopedBindingElement, v| x.child = v);
                 (*a).finalize();
             }
@@ -7126,14 +7580,14 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<CollectionGraphElement> = CollectionGraphElement::_adapter() as *const _ as *mut _;
                 (*a).add_field("source_id", 0, crate::skir_client::Serializer::string(), "", |x: &CollectionGraphElement| &x.source_id, |x: &mut CollectionGraphElement, v| x.source_id = v);
-                (*a).add_field("roots", 1, crate::skirout::base::editor::v1::binding::BindingRef::serializer(), "", |x: &CollectionGraphElement| &x.roots, |x: &mut CollectionGraphElement, v| x.roots = v);
+                (*a).add_field("roots", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &CollectionGraphElement| &x.roots, |x: &mut CollectionGraphElement, v| x.roots = v);
                 (*a).add_field("root_sequence", 2, crate::skir_client::internal::struct_serializer_from_static(SequencePresentation::_adapter()), "", |x: &CollectionGraphElement| &x.root_sequence, |x: &mut CollectionGraphElement, v| x.root_sequence = v);
                 (*a).add_field("relation_id", 3, crate::skir_client::Serializer::string(), "", |x: &CollectionGraphElement| &x.relation_id, |x: &mut CollectionGraphElement, v| x.relation_id = v);
                 (*a).add_field("direction", 4, crate::skir_client::internal::enum_serializer_from_static(CollectionGraphDirection::_adapter()), "", |x: &CollectionGraphElement| &x.direction, |x: &mut CollectionGraphElement, v| x.direction = v);
                 (*a).add_field("maximum_depth", 5, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::int32()), "", |x: &CollectionGraphElement| &x.maximum_depth, |x: &mut CollectionGraphElement, v| x.maximum_depth = v);
                 (*a).add_field("node", 6, crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter()), "", |x: &CollectionGraphElement| &x.node, |x: &mut CollectionGraphElement, v| x.node = v);
-                (*a).add_field("children_binding_id", 7, crate::skirout::base::editor::v1::binding::BindingId::serializer(), "", |x: &CollectionGraphElement| &x.children_binding_id, |x: &mut CollectionGraphElement, v| x.children_binding_id = v);
-                (*a).add_field("child_binding_id", 8, crate::skirout::base::editor::v1::binding::BindingId::serializer(), "", |x: &CollectionGraphElement| &x.child_binding_id, |x: &mut CollectionGraphElement, v| x.child_binding_id = v);
+                (*a).add_field("children_binding_id", 7, crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(), "", |x: &CollectionGraphElement| &x.children_binding_id, |x: &mut CollectionGraphElement, v| x.children_binding_id = v);
+                (*a).add_field("child_binding_id", 8, crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(), "", |x: &CollectionGraphElement| &x.child_binding_id, |x: &mut CollectionGraphElement, v| x.child_binding_id = v);
                 (*a).add_field("children", 9, crate::skir_client::internal::struct_serializer_from_static(SequencePresentation::_adapter()), "", |x: &CollectionGraphElement| &x.children, |x: &mut CollectionGraphElement, v| x.children = v);
                 (*a).finalize();
             }
@@ -7143,14 +7597,14 @@ fn initialize_module_serializers() {
                 (*a).add_constant_variant("small", 2, 2, "", PresentationRadius::Small);
                 (*a).add_constant_variant("medium", 3, 3, "", PresentationRadius::Medium);
                 (*a).add_constant_variant("large", 4, 4, "", PresentationRadius::Large);
-                (*a).add_wrapper_variant("custom", 5, 5, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |v| PresentationRadius::Custom(Box::new(v)), |x| match x { PresentationRadius::Custom(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("custom", 5, 5, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |v| PresentationRadius::Custom(Box::new(v)), |x| match x { PresentationRadius::Custom(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ContainerLayout> = ContainerLayout::_adapter() as *const _ as *mut _;
                 (*a).add_field("child", 0, crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter()), "", |x: &ContainerLayout| &x.child, |x: &mut ContainerLayout, v| x.child = v);
                 (*a).add_field("border", 1, crate::skir_client::Serializer::optional(crate::skir_client::internal::enum_serializer_from_static(PresentationBorder::_adapter())), "", |x: &ContainerLayout| &x.border, |x: &mut ContainerLayout, v| x.border = v);
-                (*a).add_field("background_color", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &ContainerLayout| &x.background_color, |x: &mut ContainerLayout, v| x.background_color = v);
+                (*a).add_field("background_color", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &ContainerLayout| &x.background_color, |x: &mut ContainerLayout, v| x.background_color = v);
                 (*a).add_field("radius", 3, crate::skir_client::internal::enum_serializer_from_static(PresentationRadius::_adapter()), "", |x: &ContainerLayout| &x.radius, |x: &mut ContainerLayout, v| x.radius = v);
                 (*a).finalize();
             }
@@ -7169,8 +7623,8 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<PresentationOffset> = PresentationOffset::_adapter() as *const _ as *mut _;
-                (*a).add_field("x", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &PresentationOffset| &x.x, |x: &mut PresentationOffset, v| x.x = v);
-                (*a).add_field("y", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &PresentationOffset| &x.y, |x: &mut PresentationOffset, v| x.y = v);
+                (*a).add_field("x", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &PresentationOffset| &x.x, |x: &mut PresentationOffset, v| x.x = v);
+                (*a).add_field("y", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &PresentationOffset| &x.y, |x: &mut PresentationOffset, v| x.y = v);
                 (*a).finalize();
             }
             unsafe {
@@ -7179,7 +7633,7 @@ fn initialize_module_serializers() {
                 (*a).add_field("group_ids", 1, crate::skir_client::Serializer::array(crate::skir_client::Serializer::string()), "", |x: &PresentationAnchorPoint| &x.group_ids, |x: &mut PresentationAnchorPoint, v| x.group_ids = v);
                 (*a).add_field("alignment", 2, crate::skir_client::internal::enum_serializer_from_static(PresentationAnchorAlignment::_adapter()), "", |x: &PresentationAnchorPoint| &x.alignment, |x: &mut PresentationAnchorPoint, v| x.alignment = v);
                 (*a).add_field("offset", 3, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(PresentationOffset::_adapter())), "", |x: &PresentationAnchorPoint| &x.offset, |x: &mut PresentationAnchorPoint, v| x.offset = v);
-                (*a).add_field("visible_if", 4, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &PresentationAnchorPoint| &x.visible_if, |x: &mut PresentationAnchorPoint, v| x.visible_if = v);
+                (*a).add_field("visible_if", 4, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &PresentationAnchorPoint| &x.visible_if, |x: &mut PresentationAnchorPoint, v| x.visible_if = v);
                 (*a).add_field("export_to_parent", 5, crate::skir_client::Serializer::bool(), "", |x: &PresentationAnchorPoint| &x.export_to_parent, |x: &mut PresentationAnchorPoint, v| x.export_to_parent = v);
                 (*a).finalize();
             }
@@ -7204,21 +7658,21 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ConnectorStroke> = ConnectorStroke::_adapter() as *const _ as *mut _;
-                (*a).add_field("color", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &ConnectorStroke| &x.color, |x: &mut ConnectorStroke, v| x.color = v);
-                (*a).add_field("width", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &ConnectorStroke| &x.width, |x: &mut ConnectorStroke, v| x.width = v);
+                (*a).add_field("color", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &ConnectorStroke| &x.color, |x: &mut ConnectorStroke, v| x.color = v);
+                (*a).add_field("width", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &ConnectorStroke| &x.width, |x: &mut ConnectorStroke, v| x.width = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ConnectionMarker> = ConnectionMarker::_adapter() as *const _ as *mut _;
                 (*a).add_field("node", 0, crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter()), "", |x: &ConnectionMarker| &x.node, |x: &mut ConnectionMarker, v| x.node = v);
-                (*a).add_field("position", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &ConnectionMarker| &x.position, |x: &mut ConnectionMarker, v| x.position = v);
-                (*a).add_field("align_to_path", 2, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &ConnectionMarker| &x.align_to_path, |x: &mut ConnectionMarker, v| x.align_to_path = v);
+                (*a).add_field("position", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &ConnectionMarker| &x.position, |x: &mut ConnectionMarker, v| x.position = v);
+                (*a).add_field("align_to_path", 2, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &ConnectionMarker| &x.align_to_path, |x: &mut ConnectionMarker, v| x.align_to_path = v);
                 (*a).add_field("scope", 3, crate::skir_client::internal::enum_serializer_from_static(ConnectionExpressionScope::_adapter()), "", |x: &ConnectionMarker| &x.scope, |x: &mut ConnectionMarker, v| x.scope = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<OrthogonalConnectionPath> = OrthogonalConnectionPath::_adapter() as *const _ as *mut _;
-                (*a).add_field("bend_position", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &OrthogonalConnectionPath| &x.bend_position, |x: &mut OrthogonalConnectionPath, v| x.bend_position = v);
+                (*a).add_field("bend_position", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &OrthogonalConnectionPath| &x.bend_position, |x: &mut OrthogonalConnectionPath, v| x.bend_position = v);
                 (*a).finalize();
             }
             unsafe {
@@ -7243,7 +7697,7 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<OrthogonalConnectionBundlePath> = OrthogonalConnectionBundlePath::_adapter() as *const _ as *mut _;
                 (*a).add_field("axis", 0, crate::skir_client::internal::enum_serializer_from_static(ConnectionAxis::_adapter()), "", |x: &OrthogonalConnectionBundlePath| &x.axis, |x: &mut OrthogonalConnectionBundlePath, v| x.axis = v);
-                (*a).add_field("bend_position", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &OrthogonalConnectionBundlePath| &x.bend_position, |x: &mut OrthogonalConnectionBundlePath, v| x.bend_position = v);
+                (*a).add_field("bend_position", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &OrthogonalConnectionBundlePath| &x.bend_position, |x: &mut OrthogonalConnectionBundlePath, v| x.bend_position = v);
                 (*a).finalize();
             }
             unsafe {
@@ -7259,7 +7713,7 @@ fn initialize_module_serializers() {
                 (*a).add_field("path", 2, crate::skir_client::internal::enum_serializer_from_static(ConnectionPath::_adapter()), "", |x: &AnchoredConnection| &x.path, |x: &mut AnchoredConnection, v| x.path = v);
                 (*a).add_field("style", 3, crate::skir_client::internal::struct_serializer_from_static(ConnectorStyle::_adapter()), "", |x: &AnchoredConnection| &x.style, |x: &mut AnchoredConnection, v| x.style = v);
                 (*a).add_field("markers", 4, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(ConnectionMarker::_adapter())), "", |x: &AnchoredConnection| &x.markers, |x: &mut AnchoredConnection, v| x.markers = v);
-                (*a).add_field("visible_if", 5, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &AnchoredConnection| &x.visible_if, |x: &mut AnchoredConnection, v| x.visible_if = v);
+                (*a).add_field("visible_if", 5, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &AnchoredConnection| &x.visible_if, |x: &mut AnchoredConnection, v| x.visible_if = v);
                 (*a).finalize();
             }
             unsafe {
@@ -7271,7 +7725,7 @@ fn initialize_module_serializers() {
                 (*a).add_field("branch_style", 4, crate::skir_client::internal::struct_serializer_from_static(ConnectorStyle::_adapter()), "", |x: &AnchoredConnectionBundle| &x.branch_style, |x: &mut AnchoredConnectionBundle, v| x.branch_style = v);
                 (*a).add_field("trunk_markers", 5, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(ConnectionMarker::_adapter())), "", |x: &AnchoredConnectionBundle| &x.trunk_markers, |x: &mut AnchoredConnectionBundle, v| x.trunk_markers = v);
                 (*a).add_field("branch_markers", 6, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(ConnectionMarker::_adapter())), "", |x: &AnchoredConnectionBundle| &x.branch_markers, |x: &mut AnchoredConnectionBundle, v| x.branch_markers = v);
-                (*a).add_field("visible_if", 7, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &AnchoredConnectionBundle| &x.visible_if, |x: &mut AnchoredConnectionBundle, v| x.visible_if = v);
+                (*a).add_field("visible_if", 7, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &AnchoredConnectionBundle| &x.visible_if, |x: &mut AnchoredConnectionBundle, v| x.visible_if = v);
                 (*a).finalize();
             }
             unsafe {
@@ -7288,12 +7742,12 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ArrowConnectorMarker> = ArrowConnectorMarker::_adapter() as *const _ as *mut _;
-                (*a).add_field("size", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &ArrowConnectorMarker| &x.size, |x: &mut ArrowConnectorMarker, v| x.size = v);
+                (*a).add_field("size", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &ArrowConnectorMarker| &x.size, |x: &mut ArrowConnectorMarker, v| x.size = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<CircleConnectorMarker> = CircleConnectorMarker::_adapter() as *const _ as *mut _;
-                (*a).add_field("diameter", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &CircleConnectorMarker| &x.diameter, |x: &mut CircleConnectorMarker, v| x.diameter = v);
+                (*a).add_field("diameter", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &CircleConnectorMarker| &x.diameter, |x: &mut CircleConnectorMarker, v| x.diameter = v);
                 (*a).finalize();
             }
             unsafe {
@@ -7305,7 +7759,7 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ConnectorStyle> = ConnectorStyle::_adapter() as *const _ as *mut _;
                 (*a).add_field("stroke", 0, crate::skir_client::internal::struct_serializer_from_static(ConnectorStroke::_adapter()), "", |x: &ConnectorStyle| &x.stroke, |x: &mut ConnectorStyle, v| x.stroke = v);
-                (*a).add_field("corner_radius", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &ConnectorStyle| &x.corner_radius, |x: &mut ConnectorStyle, v| x.corner_radius = v);
+                (*a).add_field("corner_radius", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &ConnectorStyle| &x.corner_radius, |x: &mut ConnectorStyle, v| x.corner_radius = v);
                 (*a).add_field("start_marker", 2, crate::skir_client::Serializer::optional(crate::skir_client::internal::enum_serializer_from_static(ConnectorEndpointMarker::_adapter())), "", |x: &ConnectorStyle| &x.start_marker, |x: &mut ConnectorStyle, v| x.start_marker = v);
                 (*a).add_field("end_marker", 3, crate::skir_client::Serializer::optional(crate::skir_client::internal::enum_serializer_from_static(ConnectorEndpointMarker::_adapter())), "", |x: &ConnectorStyle| &x.end_marker, |x: &mut ConnectorStyle, v| x.end_marker = v);
                 (*a).finalize();
@@ -7314,7 +7768,7 @@ fn initialize_module_serializers() {
                 let a: *mut crate::skir_client::internal::EnumAdapter<ConnectorAnchor> = ConnectorAnchor::_adapter() as *const _ as *mut _;
                 (*a).add_constant_variant("start", 1, 1, "", ConnectorAnchor::Start);
                 (*a).add_constant_variant("center", 2, 2, "", ConnectorAnchor::Center);
-                (*a).add_wrapper_variant("offset", 3, 3, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |v| ConnectorAnchor::Offset(Box::new(v)), |x| match x { ConnectorAnchor::Offset(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("offset", 3, 3, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |v| ConnectorAnchor::Offset(Box::new(v)), |x| match x { ConnectorAnchor::Offset(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {
@@ -7322,11 +7776,11 @@ fn initialize_module_serializers() {
                 (*a).add_field("unary_connector", 0, crate::skir_client::internal::struct_serializer_from_static(ConnectorStyle::_adapter()), "", |x: &HierarchySequenceLayout| &x.unary_connector, |x: &mut HierarchySequenceLayout, v| x.unary_connector = v);
                 (*a).add_field("trunk_connector", 1, crate::skir_client::internal::struct_serializer_from_static(ConnectorStyle::_adapter()), "", |x: &HierarchySequenceLayout| &x.trunk_connector, |x: &mut HierarchySequenceLayout, v| x.trunk_connector = v);
                 (*a).add_field("branch_connector", 2, crate::skir_client::internal::struct_serializer_from_static(ConnectorStyle::_adapter()), "", |x: &HierarchySequenceLayout| &x.branch_connector, |x: &mut HierarchySequenceLayout, v| x.branch_connector = v);
-                (*a).add_field("item_spacing", 3, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &HierarchySequenceLayout| &x.item_spacing, |x: &mut HierarchySequenceLayout, v| x.item_spacing = v);
-                (*a).add_field("indentation", 4, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &HierarchySequenceLayout| &x.indentation, |x: &mut HierarchySequenceLayout, v| x.indentation = v);
-                (*a).add_field("leading_spacing", 5, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &HierarchySequenceLayout| &x.leading_spacing, |x: &mut HierarchySequenceLayout, v| x.leading_spacing = v);
+                (*a).add_field("item_spacing", 3, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &HierarchySequenceLayout| &x.item_spacing, |x: &mut HierarchySequenceLayout, v| x.item_spacing = v);
+                (*a).add_field("indentation", 4, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &HierarchySequenceLayout| &x.indentation, |x: &mut HierarchySequenceLayout, v| x.indentation = v);
+                (*a).add_field("leading_spacing", 5, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &HierarchySequenceLayout| &x.leading_spacing, |x: &mut HierarchySequenceLayout, v| x.leading_spacing = v);
                 (*a).add_field("item_anchor", 6, crate::skir_client::internal::enum_serializer_from_static(ConnectorAnchor::_adapter()), "", |x: &HierarchySequenceLayout| &x.item_anchor, |x: &mut HierarchySequenceLayout, v| x.item_anchor = v);
-                (*a).add_field("flatten_single_item", 7, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &HierarchySequenceLayout| &x.flatten_single_item, |x: &mut HierarchySequenceLayout, v| x.flatten_single_item = v);
+                (*a).add_field("flatten_single_item", 7, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &HierarchySequenceLayout| &x.flatten_single_item, |x: &mut HierarchySequenceLayout, v| x.flatten_single_item = v);
                 (*a).add_field("cross_axis_alignment", 8, crate::skir_client::internal::enum_serializer_from_static(CrossAxisAlignment::_adapter()), "", |x: &HierarchySequenceLayout| &x.cross_axis_alignment, |x: &mut HierarchySequenceLayout, v| x.cross_axis_alignment = v);
                 (*a).finalize();
             }
@@ -7339,10 +7793,10 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<BoundControl> = BoundControl::_adapter() as *const _ as *mut _;
                 (*a).add_field("binding", 0, crate::skirout::base::editor::v1::binding::BindingRef::serializer(), "", |x: &BoundControl| &x.binding, |x: &mut BoundControl, v| x.binding = v);
-                (*a).add_field("label", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &BoundControl| &x.label, |x: &mut BoundControl, v| x.label = v);
-                (*a).add_field("description", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &BoundControl| &x.description, |x: &mut BoundControl, v| x.description = v);
+                (*a).add_field("label", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &BoundControl| &x.label, |x: &mut BoundControl, v| x.label = v);
+                (*a).add_field("description", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &BoundControl| &x.description, |x: &mut BoundControl, v| x.description = v);
                 (*a).add_field("prefix", 3, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter())), "", |x: &BoundControl| &x.prefix, |x: &mut BoundControl, v| x.prefix = v);
-                (*a).add_field("semantic_label", 4, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &BoundControl| &x.semantic_label, |x: &mut BoundControl, v| x.semantic_label = v);
+                (*a).add_field("semantic_label", 4, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &BoundControl| &x.semantic_label, |x: &mut BoundControl, v| x.semantic_label = v);
                 (*a).finalize();
             }
             unsafe {
@@ -7364,7 +7818,7 @@ fn initialize_module_serializers() {
                 let a: *mut crate::skir_client::internal::StructAdapter<TextControl> = TextControl::_adapter() as *const _ as *mut _;
                 (*a).add_field("control", 0, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |x: &TextControl| &x.control, |x: &mut TextControl, v| x.control = v);
                 (*a).add_field("multiline", 1, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::bool()), "", |x: &TextControl| &x.multiline, |x: &mut TextControl, v| x.multiline = v);
-                (*a).add_field("placeholder", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &TextControl| &x.placeholder, |x: &mut TextControl, v| x.placeholder = v);
+                (*a).add_field("placeholder", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextControl| &x.placeholder, |x: &mut TextControl, v| x.placeholder = v);
                 (*a).add_field("input_formatters", 3, crate::skir_client::Serializer::array(crate::skir_client::internal::enum_serializer_from_static(TextInputFormat::_adapter())), "", |x: &TextControl| &x.input_formatters, |x: &mut TextControl, v| x.input_formatters = v);
                 (*a).finalize();
             }
@@ -7384,8 +7838,8 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<SelectOption> = SelectOption::_adapter() as *const _ as *mut _;
                 (*a).add_field("option_id", 0, crate::skir_client::Serializer::string(), "", |x: &SelectOption| &x.option_id, |x: &mut SelectOption, v| x.option_id = v);
-                (*a).add_field("label", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &SelectOption| &x.label, |x: &mut SelectOption, v| x.label = v);
-                (*a).add_field("value", 2, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &SelectOption| &x.value, |x: &mut SelectOption, v| x.value = v);
+                (*a).add_field("label", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &SelectOption| &x.label, |x: &mut SelectOption, v| x.label = v);
+                (*a).add_field("value", 2, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &SelectOption| &x.value, |x: &mut SelectOption, v| x.value = v);
                 (*a).finalize();
             }
             unsafe {
@@ -7393,15 +7847,14 @@ fn initialize_module_serializers() {
                 (*a).add_field("control", 0, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |x: &SelectControl| &x.control, |x: &mut SelectControl, v| x.control = v);
                 (*a).add_field("options", 1, crate::skir_client::Serializer::<crate::skir_client::KeyedVec<SelectOption_byOptionId>>::keyed_array(crate::skir_client::internal::struct_serializer_from_static(SelectOption::_adapter())), "", |x: &SelectControl| &x.options, |x: &mut SelectControl, v| x.options = v);
                 (*a).add_field("allow_custom_value", 2, crate::skir_client::Serializer::bool(), "", |x: &SelectControl| &x.allow_custom_value, |x: &mut SelectControl, v| x.allow_custom_value = v);
-                (*a).add_field("default_value", 3, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &SelectControl| &x.default_value, |x: &mut SelectControl, v| x.default_value = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<SliderControl> = SliderControl::_adapter() as *const _ as *mut _;
                 (*a).add_field("control", 0, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |x: &SliderControl| &x.control, |x: &mut SliderControl, v| x.control = v);
-                (*a).add_field("minimum", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &SliderControl| &x.minimum, |x: &mut SliderControl, v| x.minimum = v);
-                (*a).add_field("maximum", 2, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &SliderControl| &x.maximum, |x: &mut SliderControl, v| x.maximum = v);
-                (*a).add_field("divisions", 3, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &SliderControl| &x.divisions, |x: &mut SliderControl, v| x.divisions = v);
+                (*a).add_field("minimum", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &SliderControl| &x.minimum, |x: &mut SliderControl, v| x.minimum = v);
+                (*a).add_field("maximum", 2, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &SliderControl| &x.maximum, |x: &mut SliderControl, v| x.maximum = v);
+                (*a).add_field("divisions", 3, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &SliderControl| &x.divisions, |x: &mut SliderControl, v| x.divisions = v);
                 (*a).finalize();
             }
             unsafe {
@@ -7411,8 +7864,8 @@ fn initialize_module_serializers() {
                 (*a).add_field("allow_add", 2, crate::skir_client::Serializer::bool(), "", |x: &ListControl| &x.allow_add, |x: &mut ListControl, v| x.allow_add = v);
                 (*a).add_field("allow_remove", 3, crate::skir_client::Serializer::bool(), "", |x: &ListControl| &x.allow_remove, |x: &mut ListControl, v| x.allow_remove = v);
                 (*a).add_field("allow_reorder", 4, crate::skir_client::Serializer::bool(), "", |x: &ListControl| &x.allow_reorder, |x: &mut ListControl, v| x.allow_reorder = v);
-                (*a).add_field("item_binding_id", 5, crate::skirout::base::editor::v1::binding::BindingId::serializer(), "", |x: &ListControl| &x.item_binding_id, |x: &mut ListControl, v| x.item_binding_id = v);
-                (*a).add_field("index_binding_id", 6, crate::skirout::base::editor::v1::binding::BindingId::serializer(), "", |x: &ListControl| &x.index_binding_id, |x: &mut ListControl, v| x.index_binding_id = v);
+                (*a).add_field("item_binding_id", 5, crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(), "", |x: &ListControl| &x.item_binding_id, |x: &mut ListControl, v| x.item_binding_id = v);
+                (*a).add_field("index_binding_id", 6, crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(), "", |x: &ListControl| &x.index_binding_id, |x: &mut ListControl, v| x.index_binding_id = v);
                 (*a).finalize();
             }
             unsafe {
@@ -7422,8 +7875,8 @@ fn initialize_module_serializers() {
                 (*a).add_field("value_presentation", 2, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter())), "", |x: &MapControl| &x.value_presentation, |x: &mut MapControl, v| x.value_presentation = v);
                 (*a).add_field("allow_add", 3, crate::skir_client::Serializer::bool(), "", |x: &MapControl| &x.allow_add, |x: &mut MapControl, v| x.allow_add = v);
                 (*a).add_field("allow_remove", 4, crate::skir_client::Serializer::bool(), "", |x: &MapControl| &x.allow_remove, |x: &mut MapControl, v| x.allow_remove = v);
-                (*a).add_field("key_binding_id", 5, crate::skirout::base::editor::v1::binding::BindingId::serializer(), "", |x: &MapControl| &x.key_binding_id, |x: &mut MapControl, v| x.key_binding_id = v);
-                (*a).add_field("value_binding_id", 6, crate::skirout::base::editor::v1::binding::BindingId::serializer(), "", |x: &MapControl| &x.value_binding_id, |x: &mut MapControl, v| x.value_binding_id = v);
+                (*a).add_field("key_binding_id", 5, crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(), "", |x: &MapControl| &x.key_binding_id, |x: &mut MapControl, v| x.key_binding_id = v);
+                (*a).add_field("value_binding_id", 6, crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(), "", |x: &MapControl| &x.value_binding_id, |x: &mut MapControl, v| x.value_binding_id = v);
                 (*a).finalize();
             }
             unsafe {
@@ -7434,8 +7887,8 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ConcreteTypePresentation> = ConcreteTypePresentation::_adapter() as *const _ as *mut _;
-                (*a).add_field("concrete_type", 0, crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer(), "", |x: &ConcreteTypePresentation| &x.concrete_type, |x: &mut ConcreteTypePresentation, v| x.concrete_type = v);
-                (*a).add_field("label", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &ConcreteTypePresentation| &x.label, |x: &mut ConcreteTypePresentation, v| x.label = v);
+                (*a).add_field("concrete_type", 0, crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(), "", |x: &ConcreteTypePresentation| &x.concrete_type, |x: &mut ConcreteTypePresentation, v| x.concrete_type = v);
+                (*a).add_field("label", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &ConcreteTypePresentation| &x.label, |x: &mut ConcreteTypePresentation, v| x.label = v);
                 (*a).add_field("presentation", 2, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter())), "", |x: &ConcreteTypePresentation| &x.presentation, |x: &mut ConcreteTypePresentation, v| x.presentation = v);
                 (*a).finalize();
             }
@@ -7446,15 +7899,21 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<NamedControl> = NamedControl::_adapter() as *const _ as *mut _;
+                (*a).add_field("control", 0, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |x: &NamedControl| &x.control, |x: &mut NamedControl, v| x.control = v);
+                (*a).add_field("payload_presentation", 1, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter())), "", |x: &NamedControl| &x.payload_presentation, |x: &mut NamedControl, v| x.payload_presentation = v);
+                (*a).finalize();
+            }
+            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<PolymorphicMatchCase> = PolymorphicMatchCase::_adapter() as *const _ as *mut _;
-                (*a).add_field("concrete_type", 0, crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer(), "", |x: &PolymorphicMatchCase| &x.concrete_type, |x: &mut PolymorphicMatchCase, v| x.concrete_type = v);
+                (*a).add_field("concrete_type", 0, crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(), "", |x: &PolymorphicMatchCase| &x.concrete_type, |x: &mut PolymorphicMatchCase, v| x.concrete_type = v);
                 (*a).add_field("child", 1, crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter()), "", |x: &PolymorphicMatchCase| &x.child, |x: &mut PolymorphicMatchCase, v| x.child = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<PolymorphicMatchElement> = PolymorphicMatchElement::_adapter() as *const _ as *mut _;
                 (*a).add_field("binding", 0, crate::skirout::base::editor::v1::binding::BindingRef::serializer(), "", |x: &PolymorphicMatchElement| &x.binding, |x: &mut PolymorphicMatchElement, v| x.binding = v);
-                (*a).add_field("scope_binding_id", 1, crate::skirout::base::editor::v1::binding::BindingId::serializer(), "", |x: &PolymorphicMatchElement| &x.scope_binding_id, |x: &mut PolymorphicMatchElement, v| x.scope_binding_id = v);
+                (*a).add_field("scope_binding_id", 1, crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(), "", |x: &PolymorphicMatchElement| &x.scope_binding_id, |x: &mut PolymorphicMatchElement, v| x.scope_binding_id = v);
                 (*a).add_field("cases", 2, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(PolymorphicMatchCase::_adapter())), "", |x: &PolymorphicMatchElement| &x.cases, |x: &mut PolymorphicMatchElement, v| x.cases = v);
                 (*a).add_field("fallback", 3, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter())), "", |x: &PolymorphicMatchElement| &x.fallback, |x: &mut PolymorphicMatchElement, v| x.fallback = v);
                 (*a).finalize();
@@ -7486,7 +7945,7 @@ fn initialize_module_serializers() {
                 let a: *mut crate::skir_client::internal::StructAdapter<SearchSelectorDefinition> = SearchSelectorDefinition::_adapter() as *const _ as *mut _;
                 (*a).add_field("selector_id", 0, crate::skir_client::Serializer::string(), "", |x: &SearchSelectorDefinition| &x.selector_id, |x: &mut SearchSelectorDefinition, v| x.selector_id = v);
                 (*a).add_field("key", 1, crate::skir_client::Serializer::string(), "", |x: &SearchSelectorDefinition| &x.key, |x: &mut SearchSelectorDefinition, v| x.key = v);
-                (*a).add_field("value_binding_id", 2, crate::skirout::base::editor::v1::binding::BindingId::serializer(), "", |x: &SearchSelectorDefinition| &x.value_binding_id, |x: &mut SearchSelectorDefinition, v| x.value_binding_id = v);
+                (*a).add_field("value_binding_id", 2, crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(), "", |x: &SearchSelectorDefinition| &x.value_binding_id, |x: &mut SearchSelectorDefinition, v| x.value_binding_id = v);
                 (*a).add_field("values", 3, crate::skir_client::internal::enum_serializer_from_static(SearchSelectorValues::_adapter()), "", |x: &SearchSelectorDefinition| &x.values, |x: &mut SearchSelectorDefinition, v| x.values = v);
                 (*a).add_field("case_sensitive", 4, crate::skir_client::Serializer::bool(), "", |x: &SearchSelectorDefinition| &x.case_sensitive, |x: &mut SearchSelectorDefinition, v| x.case_sensitive = v);
                 (*a).add_field("multiplicity", 5, crate::skir_client::internal::enum_serializer_from_static(SearchSelectorMultiplicity::_adapter()), "", |x: &SearchSelectorDefinition| &x.multiplicity, |x: &mut SearchSelectorDefinition, v| x.multiplicity = v);
@@ -7495,30 +7954,30 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<SearchResultMapping> = SearchResultMapping::_adapter() as *const _ as *mut _;
-                (*a).add_field("binding_id", 0, crate::skirout::base::editor::v1::binding::BindingId::serializer(), "", |x: &SearchResultMapping| &x.binding_id, |x: &mut SearchResultMapping, v| x.binding_id = v);
-                (*a).add_field("key", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &SearchResultMapping| &x.key, |x: &mut SearchResultMapping, v| x.key = v);
-                (*a).add_field("selected_value", 2, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &SearchResultMapping| &x.selected_value, |x: &mut SearchResultMapping, v| x.selected_value = v);
+                (*a).add_field("binding_id", 0, crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(), "", |x: &SearchResultMapping| &x.binding_id, |x: &mut SearchResultMapping, v| x.binding_id = v);
+                (*a).add_field("key", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &SearchResultMapping| &x.key, |x: &mut SearchResultMapping, v| x.key = v);
+                (*a).add_field("selected_value", 2, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &SearchResultMapping| &x.selected_value, |x: &mut SearchResultMapping, v| x.selected_value = v);
                 (*a).add_field("presentation", 3, crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter()), "", |x: &SearchResultMapping| &x.presentation, |x: &mut SearchResultMapping, v| x.presentation = v);
-                (*a).add_field("label", 4, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &SearchResultMapping| &x.label, |x: &mut SearchResultMapping, v| x.label = v);
+                (*a).add_field("label", 4, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &SearchResultMapping| &x.label, |x: &mut SearchResultMapping, v| x.label = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<HttpQueryParameter> = HttpQueryParameter::_adapter() as *const _ as *mut _;
                 (*a).add_field("name", 0, crate::skir_client::Serializer::string(), "", |x: &HttpQueryParameter| &x.name, |x: &mut HttpQueryParameter, v| x.name = v);
-                (*a).add_field("value", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &HttpQueryParameter| &x.value, |x: &mut HttpQueryParameter, v| x.value = v);
+                (*a).add_field("value", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &HttpQueryParameter| &x.value, |x: &mut HttpQueryParameter, v| x.value = v);
                 (*a).add_field("omit_if_empty", 2, crate::skir_client::Serializer::bool(), "", |x: &HttpQueryParameter| &x.omit_if_empty, |x: &mut HttpQueryParameter, v| x.omit_if_empty = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<HttpJsonContextBinding> = HttpJsonContextBinding::_adapter() as *const _ as *mut _;
-                (*a).add_field("binding_id", 0, crate::skirout::base::editor::v1::binding::BindingId::serializer(), "", |x: &HttpJsonContextBinding| &x.binding_id, |x: &mut HttpJsonContextBinding, v| x.binding_id = v);
+                (*a).add_field("binding_id", 0, crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(), "", |x: &HttpJsonContextBinding| &x.binding_id, |x: &mut HttpJsonContextBinding, v| x.binding_id = v);
                 (*a).add_field("path", 1, crate::skir_client::Serializer::string(), "", |x: &HttpJsonContextBinding| &x.path, |x: &mut HttpJsonContextBinding, v| x.path = v);
-                (*a).add_field("value_type", 2, crate::skirout::base::editor::v1::type_catalog::TypeExpression::serializer(), "", |x: &HttpJsonContextBinding| &x.value_type, |x: &mut HttpJsonContextBinding, v| x.value_type = v);
+                (*a).add_field("value_type", 2, crate::skirout::base::editor::v1::type_catalog::TypeTemplate::serializer(), "", |x: &HttpJsonContextBinding| &x.value_type, |x: &mut HttpJsonContextBinding, v| x.value_type = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<StaticSearchProvider> = StaticSearchProvider::_adapter() as *const _ as *mut _;
-                (*a).add_field("values", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &StaticSearchProvider| &x.values, |x: &mut StaticSearchProvider, v| x.values = v);
+                (*a).add_field("values", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &StaticSearchProvider| &x.values, |x: &mut StaticSearchProvider, v| x.values = v);
                 (*a).add_field("result", 1, crate::skir_client::internal::struct_serializer_from_static(SearchResultMapping::_adapter()), "", |x: &StaticSearchProvider| &x.result, |x: &mut StaticSearchProvider, v| x.result = v);
                 (*a).add_field("selectors", 2, crate::skir_client::Serializer::<crate::skir_client::KeyedVec<SearchSelectorDefinition_bySelectorId>>::keyed_array(crate::skir_client::internal::struct_serializer_from_static(SearchSelectorDefinition::_adapter())), "", |x: &StaticSearchProvider| &x.selectors, |x: &mut StaticSearchProvider, v| x.selectors = v);
                 (*a).finalize();
@@ -7527,16 +7986,16 @@ fn initialize_module_serializers() {
                 let a: *mut crate::skir_client::internal::StructAdapter<CollectionSearchProvider> = CollectionSearchProvider::_adapter() as *const _ as *mut _;
                 (*a).add_field("source_id", 0, crate::skir_client::Serializer::string(), "", |x: &CollectionSearchProvider| &x.source_id, |x: &mut CollectionSearchProvider, v| x.source_id = v);
                 (*a).add_field("result", 1, crate::skir_client::internal::struct_serializer_from_static(SearchResultMapping::_adapter()), "", |x: &CollectionSearchProvider| &x.result, |x: &mut CollectionSearchProvider, v| x.result = v);
-                (*a).add_field("where", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &CollectionSearchProvider| &x.where_, |x: &mut CollectionSearchProvider, v| x.where_ = v);
+                (*a).add_field("where", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &CollectionSearchProvider| &x.where_, |x: &mut CollectionSearchProvider, v| x.where_ = v);
                 (*a).add_field("selectors", 3, crate::skir_client::Serializer::<crate::skir_client::KeyedVec<SearchSelectorDefinition_bySelectorId>>::keyed_array(crate::skir_client::internal::struct_serializer_from_static(SearchSelectorDefinition::_adapter())), "", |x: &CollectionSearchProvider| &x.selectors, |x: &mut CollectionSearchProvider, v| x.selectors = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<HttpJsonSearchProvider> = HttpJsonSearchProvider::_adapter() as *const _ as *mut _;
-                (*a).add_field("uri", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &HttpJsonSearchProvider| &x.uri, |x: &mut HttpJsonSearchProvider, v| x.uri = v);
+                (*a).add_field("uri", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &HttpJsonSearchProvider| &x.uri, |x: &mut HttpJsonSearchProvider, v| x.uri = v);
                 (*a).add_field("parameters", 1, crate::skir_client::Serializer::<crate::skir_client::KeyedVec<HttpQueryParameter_byName>>::keyed_array(crate::skir_client::internal::struct_serializer_from_static(HttpQueryParameter::_adapter())), "", |x: &HttpJsonSearchProvider| &x.parameters, |x: &mut HttpJsonSearchProvider, v| x.parameters = v);
                 (*a).add_field("result_path", 2, crate::skir_client::Serializer::string(), "", |x: &HttpJsonSearchProvider| &x.result_path, |x: &mut HttpJsonSearchProvider, v| x.result_path = v);
-                (*a).add_field("result_type", 3, crate::skirout::base::editor::v1::type_catalog::TypeExpression::serializer(), "", |x: &HttpJsonSearchProvider| &x.result_type, |x: &mut HttpJsonSearchProvider, v| x.result_type = v);
+                (*a).add_field("result_type", 3, crate::skirout::base::editor::v1::type_catalog::TypeTemplate::serializer(), "", |x: &HttpJsonSearchProvider| &x.result_type, |x: &mut HttpJsonSearchProvider, v| x.result_type = v);
                 (*a).add_field("result", 4, crate::skir_client::internal::struct_serializer_from_static(SearchResultMapping::_adapter()), "", |x: &HttpJsonSearchProvider| &x.result, |x: &mut HttpJsonSearchProvider, v| x.result = v);
                 (*a).add_field("context_bindings", 5, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(HttpJsonContextBinding::_adapter())), "", |x: &HttpJsonSearchProvider| &x.context_bindings, |x: &mut HttpJsonSearchProvider, v| x.context_bindings = v);
                 (*a).add_field("selectors", 6, crate::skir_client::Serializer::<crate::skir_client::KeyedVec<SearchSelectorDefinition_bySelectorId>>::keyed_array(crate::skir_client::internal::struct_serializer_from_static(SearchSelectorDefinition::_adapter())), "", |x: &HttpJsonSearchProvider| &x.selectors, |x: &mut HttpJsonSearchProvider, v| x.selectors = v);
@@ -7546,15 +8005,15 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<RealmCallbackSearchProvider> = RealmCallbackSearchProvider::_adapter() as *const _ as *mut _;
                 (*a).add_field("capability_id", 0, crate::skirout::base::editor::v1::type_catalog::CapabilityId::serializer(), "", |x: &RealmCallbackSearchProvider| &x.capability_id, |x: &mut RealmCallbackSearchProvider, v| x.capability_id = v);
-                (*a).add_field("payload", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &RealmCallbackSearchProvider| &x.payload, |x: &mut RealmCallbackSearchProvider, v| x.payload = v);
+                (*a).add_field("payload", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &RealmCallbackSearchProvider| &x.payload, |x: &mut RealmCallbackSearchProvider, v| x.payload = v);
                 (*a).add_field("result", 2, crate::skir_client::internal::struct_serializer_from_static(SearchResultMapping::_adapter()), "", |x: &RealmCallbackSearchProvider| &x.result, |x: &mut RealmCallbackSearchProvider, v| x.result = v);
                 (*a).add_field("selectors", 3, crate::skir_client::Serializer::<crate::skir_client::KeyedVec<SearchSelectorDefinition_bySelectorId>>::keyed_array(crate::skir_client::internal::struct_serializer_from_static(SearchSelectorDefinition::_adapter())), "", |x: &RealmCallbackSearchProvider| &x.selectors, |x: &mut RealmCallbackSearchProvider, v| x.selectors = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<GatedSearchProvider> = GatedSearchProvider::_adapter() as *const _ as *mut _;
-                (*a).add_field("condition", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &GatedSearchProvider| &x.condition, |x: &mut GatedSearchProvider, v| x.condition = v);
-                (*a).add_field("guidance", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &GatedSearchProvider| &x.guidance, |x: &mut GatedSearchProvider, v| x.guidance = v);
+                (*a).add_field("condition", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &GatedSearchProvider| &x.condition, |x: &mut GatedSearchProvider, v| x.condition = v);
+                (*a).add_field("guidance", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &GatedSearchProvider| &x.guidance, |x: &mut GatedSearchProvider, v| x.guidance = v);
                 (*a).add_field("child", 2, crate::skir_client::internal::enum_serializer_from_static(SearchProvider::_adapter()), "", |x: &GatedSearchProvider| &x.child, |x: &mut GatedSearchProvider, v| x.child = v);
                 (*a).finalize();
             }
@@ -7573,7 +8032,7 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<SearchRankingField> = SearchRankingField::_adapter() as *const _ as *mut _;
-                (*a).add_field("expression", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &SearchRankingField| &x.expression, |x: &mut SearchRankingField, v| x.expression = v);
+                (*a).add_field("expression", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &SearchRankingField| &x.expression, |x: &mut SearchRankingField, v| x.expression = v);
                 (*a).add_field("weight", 1, crate::skir_client::Serializer::int32(), "", |x: &SearchRankingField| &x.weight, |x: &mut SearchRankingField, v| x.weight = v);
                 (*a).finalize();
             }
@@ -7585,7 +8044,7 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<LimitedSearchProvider> = LimitedSearchProvider::_adapter() as *const _ as *mut _;
-                (*a).add_field("maximum", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &LimitedSearchProvider| &x.maximum, |x: &mut LimitedSearchProvider, v| x.maximum = v);
+                (*a).add_field("maximum", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &LimitedSearchProvider| &x.maximum, |x: &mut LimitedSearchProvider, v| x.maximum = v);
                 (*a).add_field("child", 1, crate::skir_client::internal::enum_serializer_from_static(SearchProvider::_adapter()), "", |x: &LimitedSearchProvider| &x.child, |x: &mut LimitedSearchProvider, v| x.child = v);
                 (*a).finalize();
             }
@@ -7597,7 +8056,7 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<HistoricalSearchProvider> = HistoricalSearchProvider::_adapter() as *const _ as *mut _;
                 (*a).add_field("history_key", 0, crate::skir_client::Serializer::string(), "", |x: &HistoricalSearchProvider| &x.history_key, |x: &mut HistoricalSearchProvider, v| x.history_key = v);
-                (*a).add_field("label", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &HistoricalSearchProvider| &x.label, |x: &mut HistoricalSearchProvider, v| x.label = v);
+                (*a).add_field("label", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &HistoricalSearchProvider| &x.label, |x: &mut HistoricalSearchProvider, v| x.label = v);
                 (*a).add_field("capacity", 2, crate::skir_client::Serializer::int32(), "", |x: &HistoricalSearchProvider| &x.capacity, |x: &mut HistoricalSearchProvider, v| x.capacity = v);
                 (*a).add_field("child", 3, crate::skir_client::internal::enum_serializer_from_static(SearchProvider::_adapter()), "", |x: &HistoricalSearchProvider| &x.child, |x: &mut HistoricalSearchProvider, v| x.child = v);
                 (*a).finalize();
@@ -7605,7 +8064,7 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<SectionSearchProvider> = SectionSearchProvider::_adapter() as *const _ as *mut _;
                 (*a).add_field("section_id", 0, crate::skir_client::Serializer::string(), "", |x: &SectionSearchProvider| &x.section_id, |x: &mut SectionSearchProvider, v| x.section_id = v);
-                (*a).add_field("label", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &SectionSearchProvider| &x.label, |x: &mut SectionSearchProvider, v| x.label = v);
+                (*a).add_field("label", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &SectionSearchProvider| &x.label, |x: &mut SectionSearchProvider, v| x.label = v);
                 (*a).add_field("child", 2, crate::skir_client::internal::enum_serializer_from_static(SearchProvider::_adapter()), "", |x: &SectionSearchProvider| &x.child, |x: &mut SectionSearchProvider, v| x.child = v);
                 (*a).finalize();
             }
@@ -7635,14 +8094,14 @@ fn initialize_module_serializers() {
                 let a: *mut crate::skir_client::internal::StructAdapter<SearchControl> = SearchControl::_adapter() as *const _ as *mut _;
                 (*a).add_field("control", 0, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |x: &SearchControl| &x.control, |x: &mut SearchControl, v| x.control = v);
                 (*a).add_field("selection_mode", 1, crate::skir_client::internal::enum_serializer_from_static(SearchSelectionMode::_adapter()), "", |x: &SearchControl| &x.selection_mode, |x: &mut SearchControl, v| x.selection_mode = v);
-                (*a).add_field("query_binding_id", 2, crate::skirout::base::editor::v1::binding::BindingId::serializer(), "", |x: &SearchControl| &x.query_binding_id, |x: &mut SearchControl, v| x.query_binding_id = v);
-                (*a).add_field("summary_binding_id", 3, crate::skirout::base::editor::v1::binding::BindingId::serializer(), "", |x: &SearchControl| &x.summary_binding_id, |x: &mut SearchControl, v| x.summary_binding_id = v);
-                (*a).add_field("maximum_extent", 4, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &SearchControl| &x.maximum_extent, |x: &mut SearchControl, v| x.maximum_extent = v);
+                (*a).add_field("query_binding_id", 2, crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(), "", |x: &SearchControl| &x.query_binding_id, |x: &mut SearchControl, v| x.query_binding_id = v);
+                (*a).add_field("summary_binding_id", 3, crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(), "", |x: &SearchControl| &x.summary_binding_id, |x: &mut SearchControl, v| x.summary_binding_id = v);
+                (*a).add_field("maximum_extent", 4, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &SearchControl| &x.maximum_extent, |x: &mut SearchControl, v| x.maximum_extent = v);
                 (*a).add_field("provider", 5, crate::skir_client::internal::enum_serializer_from_static(SearchProvider::_adapter()), "", |x: &SearchControl| &x.provider, |x: &mut SearchControl, v| x.provider = v);
                 (*a).add_field("summary", 6, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter())), "", |x: &SearchControl| &x.summary, |x: &mut SearchControl, v| x.summary = v);
-                (*a).add_field("placeholder", 7, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &SearchControl| &x.placeholder, |x: &mut SearchControl, v| x.placeholder = v);
-                (*a).add_field("custom_value", 8, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &SearchControl| &x.custom_value, |x: &mut SearchControl, v| x.custom_value = v);
-                (*a).add_field("initial_query", 9, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &SearchControl| &x.initial_query, |x: &mut SearchControl, v| x.initial_query = v);
+                (*a).add_field("placeholder", 7, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &SearchControl| &x.placeholder, |x: &mut SearchControl, v| x.placeholder = v);
+                (*a).add_field("custom_value", 8, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &SearchControl| &x.custom_value, |x: &mut SearchControl, v| x.custom_value = v);
+                (*a).add_field("initial_query", 9, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &SearchControl| &x.initial_query, |x: &mut SearchControl, v| x.initial_query = v);
                 (*a).finalize();
             }
             unsafe {
@@ -7658,33 +8117,33 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ButtonElement> = ButtonElement::_adapter() as *const _ as *mut _;
-                (*a).add_field("label", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &ButtonElement| &x.label, |x: &mut ButtonElement, v| x.label = v);
+                (*a).add_field("label", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &ButtonElement| &x.label, |x: &mut ButtonElement, v| x.label = v);
                 (*a).add_field("action", 1, crate::skirout::base::editor::v1::action::EditorAction::serializer(), "", |x: &ButtonElement| &x.action, |x: &mut ButtonElement, v| x.action = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<IconButtonElement> = IconButtonElement::_adapter() as *const _ as *mut _;
-                (*a).add_field("icon", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &IconButtonElement| &x.icon, |x: &mut IconButtonElement, v| x.icon = v);
-                (*a).add_field("semantic_label", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &IconButtonElement| &x.semantic_label, |x: &mut IconButtonElement, v| x.semantic_label = v);
+                (*a).add_field("icon", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &IconButtonElement| &x.icon, |x: &mut IconButtonElement, v| x.icon = v);
+                (*a).add_field("semantic_label", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &IconButtonElement| &x.semantic_label, |x: &mut IconButtonElement, v| x.semantic_label = v);
                 (*a).add_field("action", 2, crate::skirout::base::editor::v1::action::EditorAction::serializer(), "", |x: &IconButtonElement| &x.action, |x: &mut IconButtonElement, v| x.action = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<MenuItem> = MenuItem::_adapter() as *const _ as *mut _;
                 (*a).add_field("item_id", 0, crate::skir_client::Serializer::string(), "", |x: &MenuItem| &x.item_id, |x: &mut MenuItem, v| x.item_id = v);
-                (*a).add_field("label", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &MenuItem| &x.label, |x: &mut MenuItem, v| x.label = v);
+                (*a).add_field("label", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &MenuItem| &x.label, |x: &mut MenuItem, v| x.label = v);
                 (*a).add_field("action", 2, crate::skirout::base::editor::v1::action::EditorAction::serializer(), "", |x: &MenuItem| &x.action, |x: &mut MenuItem, v| x.action = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<MenuElement> = MenuElement::_adapter() as *const _ as *mut _;
-                (*a).add_field("label", 0, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::TypedExpression::serializer()), "", |x: &MenuElement| &x.label, |x: &mut MenuElement, v| x.label = v);
+                (*a).add_field("label", 0, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &MenuElement| &x.label, |x: &mut MenuElement, v| x.label = v);
                 (*a).add_field("items", 1, crate::skir_client::Serializer::<crate::skir_client::KeyedVec<MenuItem_byItemId>>::keyed_array(crate::skir_client::internal::struct_serializer_from_static(MenuItem::_adapter())), "", |x: &MenuElement| &x.items, |x: &mut MenuElement, v| x.items = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<TooltipElement> = TooltipElement::_adapter() as *const _ as *mut _;
-                (*a).add_field("message", 0, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &TooltipElement| &x.message, |x: &mut TooltipElement, v| x.message = v);
+                (*a).add_field("message", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &TooltipElement| &x.message, |x: &mut TooltipElement, v| x.message = v);
                 (*a).add_field("child", 1, crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter()), "", |x: &TooltipElement| &x.child, |x: &mut TooltipElement, v| x.child = v);
                 (*a).finalize();
             }
@@ -7720,7 +8179,7 @@ fn initialize_module_serializers() {
                 (*a).add_wrapper_variant("duration_input", 28, 28, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |v| PresentationElement::DurationInput(Box::new(v)), |x| match x { PresentationElement::DurationInput(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("color_input", 29, 29, crate::skir_client::internal::struct_serializer_from_static(ColorControl::_adapter()), "", |v| PresentationElement::ColorInput(Box::new(v)), |x| match x { PresentationElement::ColorInput(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("bytes_input", 30, 30, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |v| PresentationElement::BytesInput(Box::new(v)), |x| match x { PresentationElement::BytesInput(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("named_input", 31, 31, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |v| PresentationElement::NamedInput(Box::new(v)), |x| match x { PresentationElement::NamedInput(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("named_input", 31, 31, crate::skir_client::internal::struct_serializer_from_static(NamedControl::_adapter()), "", |v| PresentationElement::NamedInput(Box::new(v)), |x| match x { PresentationElement::NamedInput(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("commit_controls", 32, 32, crate::skir_client::internal::struct_serializer_from_static(CommitControlsElement::_adapter()), "", |v| PresentationElement::CommitControls(Box::new(v)), |x| match x { PresentationElement::CommitControls(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("button", 33, 33, crate::skir_client::internal::struct_serializer_from_static(ButtonElement::_adapter()), "", |v| PresentationElement::Button(Box::new(v)), |x| match x { PresentationElement::Button(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("icon_button", 34, 34, crate::skir_client::internal::struct_serializer_from_static(IconButtonElement::_adapter()), "", |v| PresentationElement::IconButton(Box::new(v)), |x| match x { PresentationElement::IconButton(b) => b.as_ref(), _ => unreachable!() });
@@ -7740,9 +8199,14 @@ fn initialize_module_serializers() {
                 (*a).add_wrapper_variant("connection_layer", 48, 48, crate::skir_client::internal::struct_serializer_from_static(ConnectionLayerLayout::_adapter()), "", |v| PresentationElement::ConnectionLayer(Box::new(v)), |x| match x { PresentationElement::ConnectionLayer(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("polymorphic_match", 49, 49, crate::skir_client::internal::struct_serializer_from_static(PolymorphicMatchElement::_adapter()), "", |v| PresentationElement::PolymorphicMatch(Box::new(v)), |x| match x { PresentationElement::PolymorphicMatch(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("invocation", 50, 50, crate::skir_client::internal::struct_serializer_from_static(PresentationInvocation::_adapter()), "", |v| PresentationElement::Invocation(Box::new(v)), |x| match x { PresentationElement::Invocation(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("reference_input", 51, 51, crate::skir_client::internal::struct_serializer_from_static(ReferenceControl::_adapter()), "", |v| PresentationElement::ReferenceInput(Box::new(v)), |x| match x { PresentationElement::ReferenceInput(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("link_input", 51, 51, crate::skir_client::internal::struct_serializer_from_static(LinkControl::_adapter()), "", |v| PresentationElement::LinkInput(Box::new(v)), |x| match x { PresentationElement::LinkInput(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("rich_text", 52, 52, crate::skir_client::internal::struct_serializer_from_static(RichTextContent::_adapter()), "", |v| PresentationElement::RichText(Box::new(v)), |x| match x { PresentationElement::RichText(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("adaptive_leading", 53, 53, crate::skir_client::internal::struct_serializer_from_static(AdaptiveLeadingElement::_adapter()), "", |v| PresentationElement::AdaptiveLeading(Box::new(v)), |x| match x { PresentationElement::AdaptiveLeading(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("remaining_fields", 54, 54, crate::skir_client::internal::struct_serializer_from_static(RemainingFieldsElement::_adapter()), "", |v| PresentationElement::RemainingFields(Box::new(v)), |x| match x { PresentationElement::RemainingFields(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("nullable_input", 55, 55, crate::skir_client::internal::struct_serializer_from_static(NullableControl::_adapter()), "", |v| PresentationElement::NullableInput(Box::new(v)), |x| match x { PresentationElement::NullableInput(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("set_input", 56, 56, crate::skir_client::internal::struct_serializer_from_static(SetControl::_adapter()), "", |v| PresentationElement::SetInput(Box::new(v)), |x| match x { PresentationElement::SetInput(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("page_graph", 57, 57, crate::skir_client::internal::struct_serializer_from_static(PageGraphElement::_adapter()), "", |v| PresentationElement::PageGraph(Box::new(v)), |x| match x { PresentationElement::PageGraph(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("page_timeline", 58, 58, crate::skir_client::internal::struct_serializer_from_static(PageTimelineElement::_adapter()), "", |v| PresentationElement::PageTimeline(Box::new(v)), |x| match x { PresentationElement::PageTimeline(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {
@@ -7751,12 +8215,12 @@ fn initialize_module_serializers() {
                 (*a).add_field("inputs", 1, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(PresentationInput::_adapter())), "", |x: &PresentationDefinition| &x.inputs, |x: &mut PresentationDefinition, v| x.inputs = v);
                 (*a).add_field("root", 2, crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter()), "", |x: &PresentationDefinition| &x.root, |x: &mut PresentationDefinition, v| x.root = v);
                 (*a).add_field("dependencies", 3, crate::skir_client::internal::struct_serializer_from_static(PresentationDependencies::_adapter()), "", |x: &PresentationDefinition| &x.dependencies, |x: &mut PresentationDefinition, v| x.dependencies = v);
-                (*a).add_field("primary_input", 4, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::binding::BindingId::serializer()), "", |x: &PresentationDefinition| &x.primary_input, |x: &mut PresentationDefinition, v| x.primary_input = v);
+                (*a).add_field("primary_input", 4, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer()), "", |x: &PresentationDefinition| &x.primary_input, |x: &mut PresentationDefinition, v| x.primary_input = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<PresentationDependencies> = PresentationDependencies::_adapter() as *const _ as *mut _;
-                (*a).add_field("types", 0, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer()), "", |x: &PresentationDependencies| &x.types, |x: &mut PresentationDependencies, v| x.types = v);
+                (*a).add_field("types", 0, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer()), "", |x: &PresentationDependencies| &x.types, |x: &mut PresentationDependencies, v| x.types = v);
                 (*a).add_field("presentations", 1, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::PresentationId::serializer()), "", |x: &PresentationDependencies| &x.presentations, |x: &mut PresentationDependencies, v| x.presentations = v);
                 (*a).add_field("conversions", 2, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::ConversionId::serializer()), "", |x: &PresentationDependencies| &x.conversions, |x: &mut PresentationDependencies, v| x.conversions = v);
                 (*a).add_field("capabilities", 3, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::CapabilityId::serializer()), "", |x: &PresentationDependencies| &x.capabilities, |x: &mut PresentationDependencies, v| x.capabilities = v);
@@ -7766,17 +8230,45 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<PresentationCollectionRelationDefinition> = PresentationCollectionRelationDefinition::_adapter() as *const _ as *mut _;
                 (*a).add_field("relation_id", 0, crate::skir_client::Serializer::string(), "", |x: &PresentationCollectionRelationDefinition| &x.relation_id, |x: &mut PresentationCollectionRelationDefinition, v| x.relation_id = v);
-                (*a).add_field("targets", 1, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &PresentationCollectionRelationDefinition| &x.targets, |x: &mut PresentationCollectionRelationDefinition, v| x.targets = v);
+                (*a).add_field("targets", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &PresentationCollectionRelationDefinition| &x.targets, |x: &mut PresentationCollectionRelationDefinition, v| x.targets = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<PresentationCollectionDefinition> = PresentationCollectionDefinition::_adapter() as *const _ as *mut _;
                 (*a).add_field("source_id", 0, crate::skir_client::Serializer::string(), "", |x: &PresentationCollectionDefinition| &x.source_id, |x: &mut PresentationCollectionDefinition, v| x.source_id = v);
-                (*a).add_field("row_type", 1, crate::skirout::base::editor::v1::type_catalog::TypeExpression::serializer(), "", |x: &PresentationCollectionDefinition| &x.row_type, |x: &mut PresentationCollectionDefinition, v| x.row_type = v);
-                (*a).add_field("row_binding_id", 2, crate::skirout::base::editor::v1::binding::BindingId::serializer(), "", |x: &PresentationCollectionDefinition| &x.row_binding_id, |x: &mut PresentationCollectionDefinition, v| x.row_binding_id = v);
-                (*a).add_field("key", 3, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &PresentationCollectionDefinition| &x.key, |x: &mut PresentationCollectionDefinition, v| x.key = v);
-                (*a).add_field("selectability", 4, crate::skirout::base::editor::v1::expression::TypedExpression::serializer(), "", |x: &PresentationCollectionDefinition| &x.selectability, |x: &mut PresentationCollectionDefinition, v| x.selectability = v);
+                (*a).add_field("row_type", 1, crate::skirout::base::editor::v1::type_catalog::TypeTemplate::serializer(), "", |x: &PresentationCollectionDefinition| &x.row_type, |x: &mut PresentationCollectionDefinition, v| x.row_type = v);
+                (*a).add_field("row_binding_id", 2, crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(), "", |x: &PresentationCollectionDefinition| &x.row_binding_id, |x: &mut PresentationCollectionDefinition, v| x.row_binding_id = v);
+                (*a).add_field("key", 3, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &PresentationCollectionDefinition| &x.key, |x: &mut PresentationCollectionDefinition, v| x.key = v);
+                (*a).add_field("selectability", 4, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &PresentationCollectionDefinition| &x.selectability, |x: &mut PresentationCollectionDefinition, v| x.selectability = v);
                 (*a).add_field("relations", 5, crate::skir_client::Serializer::<crate::skir_client::KeyedVec<PresentationCollectionRelationDefinition_byRelationId>>::keyed_array(crate::skir_client::internal::struct_serializer_from_static(PresentationCollectionRelationDefinition::_adapter())), "", |x: &PresentationCollectionDefinition| &x.relations, |x: &mut PresentationCollectionDefinition, v| x.relations = v);
+                (*a).add_field("projection", 6, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(PresentationCollectionProjection::_adapter())), "", |x: &PresentationCollectionDefinition| &x.projection, |x: &mut PresentationCollectionDefinition, v| x.projection = v);
+                (*a).add_field("resources", 7, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(PresentationResourceCollection::_adapter())), "", |x: &PresentationCollectionDefinition| &x.resources, |x: &mut PresentationCollectionDefinition, v| x.resources = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<PresentationCollectionProjectionValue> = PresentationCollectionProjectionValue::_adapter() as *const _ as *mut _;
+                (*a).add_wrapper_variant("content", 1, 1, crate::skirout::base::editor::v1::type_catalog::ValuePath::serializer(), "", |v| PresentationCollectionProjectionValue::Content(Box::new(v)), |x| match x { PresentationCollectionProjectionValue::Content(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("literal", 2, 2, crate::skirout::base::editor::v1::type_catalog::DataValue::serializer(), "", |v| PresentationCollectionProjectionValue::Literal(Box::new(v)), |x| match x { PresentationCollectionProjectionValue::Literal(b) => b.as_ref(), _ => unreachable!() });
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<PresentationCollectionProjectionField> = PresentationCollectionProjectionField::_adapter() as *const _ as *mut _;
+                (*a).add_field("target", 0, crate::skirout::base::editor::v1::type_catalog::ValuePath::serializer(), "", |x: &PresentationCollectionProjectionField| &x.target, |x: &mut PresentationCollectionProjectionField, v| x.target = v);
+                (*a).add_field("source", 1, crate::skir_client::internal::enum_serializer_from_static(PresentationCollectionProjectionValue::_adapter()), "", |x: &PresentationCollectionProjectionField| &x.source, |x: &mut PresentationCollectionProjectionField, v| x.source = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<PresentationCollectionProjection> = PresentationCollectionProjection::_adapter() as *const _ as *mut _;
+                (*a).add_field("root", 0, crate::skirout::base::editor::v1::type_catalog::NamedTypeTemplate::serializer(), "", |x: &PresentationCollectionProjection| &x.root, |x: &mut PresentationCollectionProjection, v| x.root = v);
+                (*a).add_field("resource_binding_id", 1, crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(), "", |x: &PresentationCollectionProjection| &x.resource_binding_id, |x: &mut PresentationCollectionProjection, v| x.resource_binding_id = v);
+                (*a).add_field("fields", 2, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(PresentationCollectionProjectionField::_adapter())), "", |x: &PresentationCollectionProjection| &x.fields, |x: &mut PresentationCollectionProjection, v| x.fields = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<PresentationResourceCollection> = PresentationResourceCollection::_adapter() as *const _ as *mut _;
+                (*a).add_field("root", 0, crate::skirout::base::editor::v1::type_catalog::TypeDefinitionId::serializer(), "", |x: &PresentationResourceCollection| &x.root, |x: &mut PresentationResourceCollection, v| x.root = v);
+                (*a).add_field("resource_binding_id", 1, crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(), "", |x: &PresentationResourceCollection| &x.resource_binding_id, |x: &mut PresentationResourceCollection, v| x.resource_binding_id = v);
+                (*a).add_field("appearance", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::type_catalog::PresentationId::serializer()), "", |x: &PresentationResourceCollection| &x.appearance, |x: &mut PresentationResourceCollection, v| x.appearance = v);
                 (*a).finalize();
             }
             unsafe {
@@ -7787,15 +8279,15 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<PresentationInput> = PresentationInput::_adapter() as *const _ as *mut _;
-                (*a).add_field("binding_id", 0, crate::skirout::base::editor::v1::binding::BindingId::serializer(), "", |x: &PresentationInput| &x.binding_id, |x: &mut PresentationInput, v| x.binding_id = v);
+                (*a).add_field("binding_id", 0, crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(), "", |x: &PresentationInput| &x.binding_id, |x: &mut PresentationInput, v| x.binding_id = v);
                 (*a).add_field("name", 1, crate::skir_client::Serializer::string(), "", |x: &PresentationInput| &x.name, |x: &mut PresentationInput, v| x.name = v);
-                (*a).add_field("value_type", 2, crate::skirout::base::editor::v1::type_catalog::TypeExpression::serializer(), "", |x: &PresentationInput| &x.value_type, |x: &mut PresentationInput, v| x.value_type = v);
+                (*a).add_field("value_type", 2, crate::skirout::base::editor::v1::type_catalog::TypeTemplate::serializer(), "", |x: &PresentationInput| &x.value_type, |x: &mut PresentationInput, v| x.value_type = v);
                 (*a).add_field("access", 3, crate::skir_client::internal::enum_serializer_from_static(PresentationInputAccess::_adapter()), "", |x: &PresentationInput| &x.access, |x: &mut PresentationInput, v| x.access = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<PresentationArgument> = PresentationArgument::_adapter() as *const _ as *mut _;
-                (*a).add_field("input", 0, crate::skirout::base::editor::v1::binding::BindingId::serializer(), "", |x: &PresentationArgument| &x.input, |x: &mut PresentationArgument, v| x.input = v);
+                (*a).add_field("input", 0, crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(), "", |x: &PresentationArgument| &x.input, |x: &mut PresentationArgument, v| x.input = v);
                 (*a).add_field("binding", 1, crate::skirout::base::editor::v1::binding::BindingRef::serializer(), "", |x: &PresentationArgument| &x.binding, |x: &mut PresentationArgument, v| x.binding = v);
                 (*a).finalize();
             }
@@ -7806,22 +8298,62 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ReferenceControl> = ReferenceControl::_adapter() as *const _ as *mut _;
-                (*a).add_field("control", 0, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |x: &ReferenceControl| &x.control, |x: &mut ReferenceControl, v| x.control = v);
-                (*a).add_field("allow_reorder", 1, crate::skir_client::Serializer::bool(), "", |x: &ReferenceControl| &x.allow_reorder, |x: &mut ReferenceControl, v| x.allow_reorder = v);
-                (*a).add_field("candidate_policy", 2, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(ReferencePolicyId::_adapter())), "", |x: &ReferenceControl| &x.candidate_policy, |x: &mut ReferenceControl, v| x.candidate_policy = v);
-                (*a).add_field("rejection_display", 3, crate::skir_client::internal::enum_serializer_from_static(ReferenceRejectionDisplay::_adapter()), "", |x: &ReferenceControl| &x.rejection_display, |x: &mut ReferenceControl, v| x.rejection_display = v);
+                let a: *mut crate::skir_client::internal::StructAdapter<LinkControl> = LinkControl::_adapter() as *const _ as *mut _;
+                (*a).add_field("control", 0, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |x: &LinkControl| &x.control, |x: &mut LinkControl, v| x.control = v);
+                (*a).add_field("allow_reorder", 1, crate::skir_client::Serializer::bool(), "", |x: &LinkControl| &x.allow_reorder, |x: &mut LinkControl, v| x.allow_reorder = v);
+                (*a).add_field("candidate_policy", 2, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(LinkCandidatePolicyId::_adapter())), "", |x: &LinkControl| &x.candidate_policy, |x: &mut LinkControl, v| x.candidate_policy = v);
+                (*a).add_field("rejection_display", 3, crate::skir_client::internal::enum_serializer_from_static(LinkRejectionDisplay::_adapter()), "", |x: &LinkControl| &x.rejection_display, |x: &mut LinkControl, v| x.rejection_display = v);
+                (*a).add_field("source_id", 4, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &LinkControl| &x.source_id, |x: &mut LinkControl, v| x.source_id = v);
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ReferencePolicyId> = ReferencePolicyId::_adapter() as *const _ as *mut _;
-                (*a).add_field("value", 0, crate::skir_client::Serializer::string(), "", |x: &ReferencePolicyId| &x.value, |x: &mut ReferencePolicyId, v| x.value = v);
+                let a: *mut crate::skir_client::internal::StructAdapter<LinkCandidatePolicyId> = LinkCandidatePolicyId::_adapter() as *const _ as *mut _;
+                (*a).add_field("value", 0, crate::skir_client::Serializer::string(), "", |x: &LinkCandidatePolicyId| &x.value, |x: &mut LinkCandidatePolicyId, v| x.value = v);
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<ReferenceRejectionDisplay> = ReferenceRejectionDisplay::_adapter() as *const _ as *mut _;
-                (*a).add_constant_variant("hidden", 1, 1, "", ReferenceRejectionDisplay::Hidden);
-                (*a).add_constant_variant("disabled", 2, 2, "", ReferenceRejectionDisplay::Disabled);
+                let a: *mut crate::skir_client::internal::EnumAdapter<LinkRejectionDisplay> = LinkRejectionDisplay::_adapter() as *const _ as *mut _;
+                (*a).add_constant_variant("hidden", 1, 1, "", LinkRejectionDisplay::Hidden);
+                (*a).add_constant_variant("disabled", 2, 2, "", LinkRejectionDisplay::Disabled);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<RemainingFieldsElement> = RemainingFieldsElement::_adapter() as *const _ as *mut _;
+                (*a).add_field("excluded", 0, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::RelativeFieldPattern::serializer()), "", |x: &RemainingFieldsElement| &x.excluded, |x: &mut RemainingFieldsElement, v| x.excluded = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<NullableControl> = NullableControl::_adapter() as *const _ as *mut _;
+                (*a).add_field("control", 0, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |x: &NullableControl| &x.control, |x: &mut NullableControl, v| x.control = v);
+                (*a).add_field("value_presentation", 1, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter())), "", |x: &NullableControl| &x.value_presentation, |x: &mut NullableControl, v| x.value_presentation = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<SetControl> = SetControl::_adapter() as *const _ as *mut _;
+                (*a).add_field("control", 0, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |x: &SetControl| &x.control, |x: &mut SetControl, v| x.control = v);
+                (*a).add_field("item_presentation", 1, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter())), "", |x: &SetControl| &x.item_presentation, |x: &mut SetControl, v| x.item_presentation = v);
+                (*a).add_field("allow_add", 2, crate::skir_client::Serializer::bool(), "", |x: &SetControl| &x.allow_add, |x: &mut SetControl, v| x.allow_add = v);
+                (*a).add_field("allow_remove", 3, crate::skir_client::Serializer::bool(), "", |x: &SetControl| &x.allow_remove, |x: &mut SetControl, v| x.allow_remove = v);
+                (*a).add_field("item_binding_id", 4, crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(), "", |x: &SetControl| &x.item_binding_id, |x: &mut SetControl, v| x.item_binding_id = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<PageGraphDirection> = PageGraphDirection::_adapter() as *const _ as *mut _;
+                (*a).add_constant_variant("left_to_right", 1, 1, "", PageGraphDirection::LeftToRight);
+                (*a).add_constant_variant("right_to_left", 2, 2, "", PageGraphDirection::RightToLeft);
+                (*a).add_constant_variant("top_to_bottom", 3, 3, "", PageGraphDirection::TopToBottom);
+                (*a).add_constant_variant("bottom_to_top", 4, 4, "", PageGraphDirection::BottomToTop);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<PageGraphElement> = PageGraphElement::_adapter() as *const _ as *mut _;
+                (*a).add_field("control", 0, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |x: &PageGraphElement| &x.control, |x: &mut PageGraphElement, v| x.control = v);
+                (*a).add_field("direction", 1, crate::skir_client::internal::enum_serializer_from_static(PageGraphDirection::_adapter()), "", |x: &PageGraphElement| &x.direction, |x: &mut PageGraphElement, v| x.direction = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<PageTimelineElement> = PageTimelineElement::_adapter() as *const _ as *mut _;
+                (*a).add_field("control", 0, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |x: &PageTimelineElement| &x.control, |x: &mut PageTimelineElement, v| x.control = v);
                 (*a).finalize();
             }
         });

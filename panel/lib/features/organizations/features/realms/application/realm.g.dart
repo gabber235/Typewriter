@@ -8,6 +8,65 @@ part of 'realm.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Reloads topology when a previously disconnected service becomes available.
+///
+/// Service heartbeats are independent from topology observations. A recovered
+/// service therefore provides a reliable opportunity to replace any topology
+/// event that core NATS could not deliver while the panel was disconnected.
+
+@ProviderFor(realmTopologyRecovery)
+final realmTopologyRecoveryProvider = RealmTopologyRecoveryProvider._();
+
+/// Reloads topology when a previously disconnected service becomes available.
+///
+/// Service heartbeats are independent from topology observations. A recovered
+/// service therefore provides a reliable opportunity to replace any topology
+/// event that core NATS could not deliver while the panel was disconnected.
+
+final class RealmTopologyRecoveryProvider
+    extends $FunctionalProvider<void, void, void>
+    with $Provider<void> {
+  /// Reloads topology when a previously disconnected service becomes available.
+  ///
+  /// Service heartbeats are independent from topology observations. A recovered
+  /// service therefore provides a reliable opportunity to replace any topology
+  /// event that core NATS could not deliver while the panel was disconnected.
+  RealmTopologyRecoveryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'realmTopologyRecoveryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$realmTopologyRecoveryHash();
+
+  @$internal
+  @override
+  $ProviderElement<void> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  void create(Ref ref) {
+    return realmTopologyRecovery(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(void value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<void>(value),
+    );
+  }
+}
+
+String _$realmTopologyRecoveryHash() =>
+    r'8f67b392b182c9e355f0d888d88e6122a9e35ade';
+
 /// Resolves the route's realm parameter to the typed topology identifier.
 ///
 /// A missing parameter deliberately remains `null`; it represents the

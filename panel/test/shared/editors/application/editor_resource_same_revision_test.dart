@@ -11,7 +11,7 @@ final _title = DataPath.root.field("title");
 RecordValue _value(String title) => RecordValue({"title": StringValue(title)});
 
 EditorSnapshot _snapshot({required String title, required int revision}) =>
-    DocumentEditorSnapshot(
+    FakeEditorSnapshot(
       EditorDocument(
         rootType: RecordType(
           fields: const {"title": TypeField(name: "title", type: StringType())},
@@ -20,6 +20,7 @@ EditorSnapshot _snapshot({required String title, required int revision}) =>
         confirmedValue: _value(title),
         revision: revision,
       ),
+      validation: acceptTestEditorMutation,
     );
 
 void main() {

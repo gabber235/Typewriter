@@ -19,7 +19,6 @@ Widget bookPageUseCase(BuildContext context) {
       realmInteractionProvider.overrideWith(
         (ref) => RealmInteractionState(connectionState: connectionState),
       ),
-      ...entryProviderOverrides(),
       ...bookPagesProviderOverrides(state: pagesState),
       ...pagesProviderOverrides(),
       ...pageIdProviderOverrides(pageId: "example-page-id"),

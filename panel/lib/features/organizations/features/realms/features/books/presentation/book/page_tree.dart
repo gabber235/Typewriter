@@ -15,40 +15,15 @@ class _PagesTree extends HookConsumerWidget {
     final tree = useMemoized(() => createTreeNode(pages, (p) => p.chapter), [
       pages,
     ]);
-    final organizationId = ref.watch(organizationIdProvider);
-    final realmId = ref.watch(realmIdProvider);
-    final subjects = organizationId == null || realmId == null
-        ? null
-        : ref.watch(
-            authoringSubjectsProvider(
-              AuthoringSubjectScope(
-                organizationId: organizationId,
-                realmId: realmId,
-                resources: {
-                  for (final page in pages)
-                    page.pageId: referenceResourceTypes.page,
-                },
-              ),
-            ),
-          );
-    return _TreeChildren(
-      children: tree.children,
-      expanded: expanded,
-      subjects: subjects,
-    );
+    return _TreeChildren(children: tree.children, expanded: expanded);
   }
 }
 
 class _TreeChildren extends HookWidget {
-  const _TreeChildren({
-    required this.children,
-    required this.expanded,
-    required this.subjects,
-  });
+  const _TreeChildren({required this.children, required this.expanded});
 
   final List<TreeNode<Page>> children;
   final bool expanded;
-  final AsyncValue<AuthoringSubjectProjection>? subjects;
 
   @override
   Widget build(BuildContext context) {
@@ -71,39 +46,26 @@ class _TreeChildren extends HookWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final child in sorted)
-          _TreeItem(node: child, expanded: expanded, subjects: subjects),
+        for (final child in sorted) _TreeItem(node: child, expanded: expanded),
       ],
     );
   }
 }
 
 class _TreeItem extends HookWidget {
-  const _TreeItem({
-    required this.node,
-    required this.expanded,
-    required this.subjects,
-  });
+  const _TreeItem({required this.node, required this.expanded});
 
   final TreeNode<Page> node;
   final bool expanded;
-  final AsyncValue<AuthoringSubjectProjection>? subjects;
 
   @override
   Widget build(BuildContext context) {
     return switch (node) {
-      LeafTreeNode<Page>(:final value) when expanded => _PageTile(
-        page: value,
-        subjects: subjects,
-      ),
-      LeafTreeNode<Page>(:final value) => _SmallPageTile(
-        page: value,
-        subjects: subjects,
-      ),
+      LeafTreeNode<Page>(:final value) when expanded => _PageTile(page: value),
+      LeafTreeNode<Page>(:final value) => _SmallPageTile(page: value),
       InnerTreeNode<Page>() => _TreeCategory(
         node: node as InnerTreeNode<Page>,
         expanded: expanded,
-        subjects: subjects,
       ),
       _ => throw UnimplementedError(),
     };
@@ -115,15 +77,10 @@ class _TreeItem extends HookWidget {
 /// Chapter expansion is local display state. Renaming and moving a chapter
 /// delegate to the page mutation path so every descendant is updated together.
 class _TreeCategory extends HookConsumerWidget {
-  const _TreeCategory({
-    required this.node,
-    required this.expanded,
-    required this.subjects,
-  });
+  const _TreeCategory({required this.node, required this.expanded});
 
   final InnerTreeNode<Page> node;
   final bool expanded;
-  final AsyncValue<AuthoringSubjectProjection>? subjects;
 
   String get chapter => node.path;
 
@@ -156,11 +113,7 @@ class _TreeCategory extends HookConsumerWidget {
               activators: [SingleActivator(LogicalKeyboardKey.keyN)],
               priority: 2,
               onInvoke: (_) {
-                promptAndCreatePage(
-                  context: context,
-                  ref: ref,
-                  chapter: chapter,
-                );
+                createPage(context: context, ref: ref, chapter: chapter);
               },
             ),
             ActionShortcut(
@@ -187,11 +140,8 @@ class _TreeCategory extends HookConsumerWidget {
               MenuItem(
                 label: "New Page",
                 icon: Icones(Fa6Solid.plus),
-                onPressed: () => promptAndCreatePage(
-                  context: context,
-                  ref: ref,
-                  chapter: chapter,
-                ),
+                onPressed: () =>
+                    createPage(context: context, ref: ref, chapter: chapter),
               ),
               MenuItem(
                 label: "Rename Chapter",
@@ -217,13 +167,10 @@ class _TreeCategory extends HookConsumerWidget {
                 return DragTarget<PageDrag>(
                   onWillAcceptWithDetails: (details) => true,
                   onAcceptWithDetails: (details) async {
-                    final result = await ref.editPage(
+                    await ref.editPage(
                       id: details.data.pageId,
                       chapter: node.path,
                       expectedChapter: details.data.chapter,
-                    );
-                    result.requireApplied(
-                      conflictMessage: "The page chapter changed",
                     );
                   },
                   builder: (context, pageCandidates, pageRejected) {
@@ -291,7 +238,6 @@ class _TreeCategory extends HookConsumerWidget {
                   child: _TreeChildren(
                     children: node.children,
                     expanded: expanded,
-                    subjects: subjects,
                   ),
                 )
               : const SizedBox(height: 0),

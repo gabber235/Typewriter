@@ -3,41 +3,32 @@
 package com.typewritermc.realm
 
 import ch.qos.logback.classic.Level
-import com.typewritermc.authoring.Placement
-import com.typewritermc.capability.RealmCapabilityProvider
-import com.typewritermc.capability.RealmCapabilityRegistry
-import com.typewritermc.discovery.CatalogGeneration
+import com.typewritermc.authoring.DefaultInitializationRuntime
+import com.typewritermc.checking.CatalogGeneration
+import com.typewritermc.checking.InputToken
+import com.typewritermc.discovery.CapabilityOwnerResolver
+import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.DeploymentFacts
-import com.typewritermc.discovery.DiscoveryDomains
-import com.typewritermc.discovery.Eligibility
-import com.typewritermc.discovery.SourcePartCatalogEntry
-import com.typewritermc.discovery.runtime.DiscoveryArtifactPackage
-import com.typewritermc.discovery.runtime.DiscoveryDeployment
-import com.typewritermc.discovery.runtime.DiscoveryModuleLoader
-import com.typewritermc.elements.Element
-import com.typewritermc.imprint.EngineManifest
-import com.typewritermc.imprint.ExtensionManifest
-import com.typewritermc.library.Book
-import com.typewritermc.library.Page
-import com.typewritermc.library.Tag
+import com.typewritermc.discovery.GeneratedProviderArtifact
+import com.typewritermc.discovery.GeneratedProviderDeployment
+import com.typewritermc.discovery.GeneratedProviderInstantiator
+import com.typewritermc.discovery.GeneratedProviderLoader
+import com.typewritermc.discovery.assemble
 import com.typewritermc.loader.api.HostedArtifact
 import com.typewritermc.loader.api.HostedDeploymentContext
 import com.typewritermc.loader.api.SourcePartDisposition
-import com.typewritermc.presentation.CollectionProjectionCatalogAssembler
-import com.typewritermc.presentation.CollectionProjectionProvider
-import com.typewritermc.presentation.PresentationCatalogAssembler
-import com.typewritermc.presentation.PresentationProvider
+import com.typewritermc.presentation.DefaultPresentationRuntime
+import com.typewritermc.presentation.PresentationRuntime
+import com.typewritermc.realm.authoring.CreationEvaluator
+import com.typewritermc.realm.catalog.RealmCatalogIncarnation
+import com.typewritermc.realm.catalog.RealmCatalogStore
+import com.typewritermc.realm.compiler.EngineImplementationInputs
+import com.typewritermc.realm.compiler.StagedEngineImplementationSource
 import com.typewritermc.realm.deployment.ManagedRealmRuntime
 import com.typewritermc.realm.deployment.RealmRuntimeFactory
-import com.typewritermc.realm.routes.CapabilityRealmPresentationSearchSource
-import com.typewritermc.realm.routes.RealmCapabilityInvocationSource
-import com.typewritermc.realm.routes.RealmEditorCatalogSource
-import com.typewritermc.realm.routes.RealmPresentationSearchSource
-import com.typewritermc.realm.routes.SnapshotRealmEditorCatalogSource
 import com.typewritermc.realm.schema.DatabaseEndpoint
 import com.typewritermc.realm.schema.DatabaseProvider
 import com.typewritermc.realm.schema.RealmDatabaseConfiguration
-import com.typewritermc.realm.schema.RealmDatabaseProvider
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.EventProjection
 import com.typewritermc.services.libs.telemetry.LogSeverity
@@ -48,253 +39,164 @@ import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.telemetry.serviceTelemetry
 import com.typewritermc.services.libs.utils.CoroutineDelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
-import com.typewritermc.types.TypeExpression
-import com.typewritermc.types.skir.SkirTypeCodec
-import com.typewritermc.types.skir.getOrThrow
-import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import org.koin.core.KoinApplication
-import org.koin.dsl.koinApplication
-import org.koin.dsl.module
-import org.koin.dsl.onClose
-import org.slf4j.LoggerFactory
-import skirout.editor.v1.catalog.AuthoringCompilationProjectionDefinition
-import skirout.editor.v1.compiled_content.CompilationProjectionId
+import java.lang.reflect.Modifier
 import java.nio.file.Path
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration.Companion.seconds
 
-/**
- * Stages the Realm composition from loader supplied artifacts, directories, facts, and host services.
- *
- * It assembles discovery, page and presentation catalogs, capabilities, and isolated application resources.
- * Activation starts Realm storage and routes; quiescing retains the staged deployment for resume. Construction
- * failure releases resources already acquired.
- */
 class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
-    private val logger = LoggerFactory.getLogger(DefaultRealmRuntimeFactory::class.java)
-
-    /**
-     * Reads the deployment package once, builds all Realm catalogs, and returns an inactive runtime.
-     *
-     * Discovery and catalog assembly happen before storage or messaging activation. Koin owns the assembled
-     * resources after success; construction failure closes the application, discovery deployment, logging bridge,
-     * and application scope acquired during staging.
-     */
     override suspend fun stage(context: HostedDeploymentContext): ManagedRealmRuntime {
         val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         var logback: AutoCloseable? = null
-        var discovery: DiscoveryDeployment? = null
-        var application: KoinApplication? = null
+        var deployment: GeneratedProviderDeployment? = null
+        var catalogs: RealmCatalogStore? = null
         try {
             val configuration = RealmSettings.system().applicationConfiguration().resolveAgainst(context.directories.state)
-            val delayScheduler = CoroutineDelayScheduler
-            val routeRetryPolicy = RetryPolicy.fixed(1.seconds)
             logback =
                 installOpenTelemetryLogback(
                     context.host.openTelemetry,
                     Level.toLevel(configuration.diagnosticLevel.name, Level.WARN),
                 )
-            val catalogArtifacts =
-                (
-                    listOf(context.artifacts.runtimeArtifact) +
-                        context.artifacts.catalogArtifacts +
-                        context.artifacts.extensions.map { HostedArtifact(it.path, it.manifest) }
-                ).distinctBy { it.path }
-            val catalogPaths = catalogArtifacts.map { it.path }
-            val manifests = catalogArtifacts.map { it.manifest }
-            val sourceParts =
-                context.artifacts.extensions.flatMap { extension ->
-                    extension.sourceParts.map { sourcePart ->
-                        SourcePartCatalogEntry(
-                            extension.id,
-                            sourcePart.name,
-                            when (val disposition = sourcePart.disposition) {
-                                is SourcePartDisposition.Eligible -> Eligibility.Eligible
-                                is SourcePartDisposition.Ineligible -> Eligibility.Ineligible(disposition.reasons)
-                            },
-                        )
-                    }
-                }
-            val assembled =
-                DeploymentCatalogAssembler.assemble(
-                    generation =
-                        CatalogGeneration(
-                            context.directories.deployment.fileName
-                                .toString(),
-                        ),
-                    engines = manifests.filterIsInstance<EngineManifest>(),
-                    extensions = manifests.filterIsInstance<ExtensionManifest>(),
-                    sourceParts = sourceParts,
+            val resolver = ReflectiveRuntimeResolver()
+            val loaded =
+                GeneratedProviderLoader().load(
+                    artifacts = context.generatedProviderArtifacts(),
                     facts = DeploymentFacts(context.facts),
-                    otherManifests = manifests.filterNot { it is EngineManifest || it is ExtensionManifest },
+                    instantiator = GeneratedProviderInstantiator.resolving(resolver::resolve),
+                    capabilityOwners = CapabilityOwnerResolver { owner -> resolver.resolve(owner.java) },
                 )
-            val snapshotStore = RealmDiscoverySnapshotStore()
-            val loadedDiscovery =
-                DiscoveryModuleLoader().load(
-                    DiscoveryArtifactPackage(
-                        artifacts = catalogPaths.map { it.toUri().toURL() },
-                        selectedEngine = null,
-                        selectedExtensions = context.artifacts.extensions.mapTo(mutableSetOf()) { it.id },
-                        facts = DeploymentFacts(context.facts),
+            deployment = loaded
+            val generation =
+                CatalogGeneration(
+                    context.directories.deployment.fileName
+                        .toString(),
+                )
+            val assembly =
+                loaded.providers.contributions.assemble(
+                    CatalogAssemblyContext(
+                        generation = generation,
+                        capabilities = loaded.providers.capabilities.map { it.provider.descriptor },
                     ),
-                    DiscoveryDomains.Realm,
-                    assembled.types,
-                    requireNotNull(javaClass.classLoader),
                 )
-            discovery = loadedDiscovery
-            val capabilityRegistry =
-                RealmCapabilityRegistry(
-                    providers = loadedDiscovery.application.koin.getAll<RealmCapabilityProvider>(),
-                    prototypes = loadedDiscovery.prototypes,
-                )
-            val authoringPolicies =
-                RealmAuthoringPolicyAssembler.assemble(
-                    providers =
-                        listOf(
-                            CoreAuthoringPolicyProvider(
-                                catalog = assembled.types,
-                                types = assembled.discovery.types,
-                                relations = assembled.types.relations,
-                                catalogRevision = { requireNotNull(snapshotStore.current()).compilationSignature() },
-                            ),
-                        ) + loadedDiscovery.application.koin.getAll<com.typewritermc.authoring.AuthoringPolicyProvider>(),
-                    catalog = assembled.discovery.types,
-                    relations = assembled.types.relations,
-                    resourceDefinitions = assembled.types.resourceDefinitions,
-                )
-            val collectionProjections =
-                CollectionProjectionCatalogAssembler.assemble(
-                    providers = loadedDiscovery.application.koin.getAll<CollectionProjectionProvider>(),
-                    prototypes = loadedDiscovery.prototypes,
-                    resourceDefinitions = authoringPolicies.definitions,
-                )
-            val presentationCatalog =
-                PresentationCatalogAssembler.assemble(
-                    providers = loadedDiscovery.application.koin.getAll<PresentationProvider>(),
-                    prototypes = loadedDiscovery.prototypes,
-                    types = assembled.discovery.types,
-                    capabilities = capabilityRegistry.descriptors,
-                    collectionProjections = collectionProjections.definitions,
-                )
-            presentationCatalog.diagnostics.forEach { diagnostic ->
-                logger
-                    .atWarn()
-                    .addKeyValue("catalog.generation", assembled.discovery.generation.value)
-                    .addKeyValue("presentation.namespace", diagnostic.namespace.orEmpty())
-                    .addKeyValue("presentation.source_part", diagnostic.sourcePart.orEmpty())
-                    .addKeyValue("presentation.declaration", diagnostic.presentationName.orEmpty())
-                    .addKeyValue("presentation.code", diagnostic.code)
-                    .setCause(diagnostic.cause)
-                    .log("Presentation rejected: {}", diagnostic.message)
-            }
-            val realmModule =
-                module {
-                    single<OpenTelemetry> { context.host.openTelemetry }
-                    single { context.host }
-                    single<ServiceTelemetry> { context.host.openTelemetry.serviceTelemetry("realm", REALM_VERSION) }
-                    single { applicationScope } onClose { it?.cancel() }
-                    single { configuration.database }
-                    single<RealmDatabaseProvider> { DatabaseProvider(get()) }
-                    single { snapshotStore }
-                    single { loadedDiscovery.prototypes }
-                    single { capabilityRegistry }
-                    single { authoringPolicies }
-                    single<RealmEditorCatalogSource> {
-                        SnapshotRealmEditorCatalogSource(get()) { get<RealmDiscoverySnapshotStore>().current() }
-                    }
-                    single<RealmPresentationSearchSource> {
-                        CapabilityRealmPresentationSearchSource(get(), get(), get(), get())
-                    }
-                    single { RealmCapabilityInvocationSource(get(), get(), get()) }
-                    single { RealmCatalogInvalidationProcess(get(), get(), get()) }
-                    single {
-                        Realm(
-                            get(),
-                            get(),
-                            get(),
-                            get(),
-                            get(),
-                            routeRetryPolicy,
-                            delayScheduler,
-                            get(),
-                            get(),
-                            get(),
-                            get(),
-                            capabilityInvocations = get(),
-                            authoringPolicies = get(),
-                        )
-                    }
-                }
-
-            val startedApplication =
-                koinApplication {
-                    modules(
-                        realmModule,
-                    )
-                }
-            application = startedApplication
-            val realm = startedApplication.koin.get<Realm>()
-            snapshotStore.replace(
-                RealmDiscoverySnapshot(
-                    discovery = assembled.discovery.copy(types = presentationCatalog.types),
-                    resourceDefinitions = authoringPolicies.definitions,
-                    relations = assembled.types.relations,
-                    collectionProjections = collectionProjections.definitions,
-                    authoringSearch = authoringPolicies.searchDefinition(),
-                    compilationProjections =
-                        authoringPolicies.compilation.projections.map { projection ->
-                            AuthoringCompilationProjectionDefinition(
-                                projection = CompilationProjectionId(value = projection.id.value),
-                                root = SkirTypeCodec.encode(projection.root).getOrThrow(),
-                            )
+            val catalogStore = RealmCatalogStore()
+            catalogs = catalogStore
+            catalogStore.replace(RealmCatalogIncarnation(assembly, loaded))
+            deployment = null
+            val telemetry = context.host.openTelemetry.serviceTelemetry("realm", REALM_VERSION)
+            val realm =
+                Realm(
+                    databaseProvider = DatabaseProvider(configuration.database),
+                    catalogs = catalogStore,
+                    scope = applicationScope,
+                    telemetry = telemetry,
+                    retryPolicy = RetryPolicy.fixed(1.seconds),
+                    delayScheduler = CoroutineDelayScheduler,
+                    host = context.host,
+                    registrars = loaded.providers.registrars.map { it.registrar },
+                    facts = loaded.facts,
+                    creationEvaluator =
+                        CreationEvaluator { request, catalog ->
+                            DefaultInitializationRuntime(
+                                catalog.checked,
+                                catalog.nativeBindings,
+                                catalog.initialization,
+                            ).prepare(request)
                         },
-                    types = assembled.types,
-                    presentations = presentationCatalog.definitions,
-                    capabilities = capabilityRegistry.descriptors,
-                    presentationDiagnostics = collectionProjections.diagnostics + presentationCatalog.diagnostics,
-                ),
-            )
-            val telemetry = startedApplication.koin.get<ServiceTelemetry>()
+                    engine =
+                        StagedEngineImplementationSource(
+                            EngineImplementationInputs(
+                                signatures = emptySet(),
+                                token = InputToken(context.publicationTarget.fingerprint()),
+                            ),
+                        ),
+                )
             return DefaultManagedRealmRuntime(
-                startedApplication,
-                telemetry,
-                realm,
-                requireNotNull(logback),
-                context,
-                loadedDiscovery,
+                telemetry = telemetry,
+                realm = realm,
+                logback = requireNotNull(logback),
+                catalogs = catalogStore,
+                scope = applicationScope,
+                context = context,
             )
         } catch (failure: Throwable) {
             applicationScope.cancel()
-            runCatching { application?.close() }.exceptionOrNull()?.let(failure::addSuppressed)
-            runCatching { discovery?.close() }.exceptionOrNull()?.let(failure::addSuppressed)
+            runCatching { catalogs?.close() }.exceptionOrNull()?.let(failure::addSuppressed)
+            runCatching { deployment?.close() }.exceptionOrNull()?.let(failure::addSuppressed)
             runCatching { logback?.close() }.exceptionOrNull()?.let(failure::addSuppressed)
             throw failure
         }
     }
 }
 
-/**
- * Owns the staged Realm composition and maps loader lifecycle calls to the live Realm owner.
- *
- * Quiescing stops active database and messaging work but retains the staged graph. Stop is terminal and releases the
- * graph, discovery deployment, and logging bridge exactly once.
- */
+private class ReflectiveRuntimeResolver {
+    private val instances = ConcurrentHashMap<Class<*>, Any>()
+
+    fun resolve(type: Class<*>): Any =
+        instances.computeIfAbsent(type) { requested ->
+            when (requested) {
+                PresentationRuntime::class.java -> DefaultPresentationRuntime()
+                else -> instantiate(requested)
+            }
+        }
+
+    private fun instantiate(type: Class<*>): Any {
+        type.fields
+            .singleOrNull { field ->
+                field.name == "INSTANCE" && Modifier.isStatic(field.modifiers) && field.type == type
+            }?.let { return it.get(null) }
+        val constructors = type.constructors.filter { Modifier.isPublic(it.modifiers) }
+        require(constructors.size == 1) {
+            "Runtime owner ${type.name} requires one public constructor."
+        }
+        val constructor = constructors.single()
+        return constructor.newInstance(*constructor.parameterTypes.map(::resolve).toTypedArray())
+    }
+}
+
+private fun HostedDeploymentContext.generatedProviderArtifacts(): List<GeneratedProviderArtifact> {
+    val extensionParts =
+        artifacts.extensions.associate { extension ->
+            extension.id to
+                extension.sourceParts.mapNotNullTo(linkedSetOf()) { part ->
+                    val eligible = part.disposition as? SourcePartDisposition.Eligible
+                    part.name.takeIf { eligible != null && identity.placement in eligible.placements }
+                }
+        }
+    val physical =
+        buildList {
+            add(artifacts.runtimeArtifact)
+            addAll(artifacts.catalogArtifacts)
+            artifacts.extensions.forEach { extension -> add(HostedArtifact(extension.path, extension.manifest)) }
+        }.distinctBy { it.path }
+    val duplicateIdentities = physical.groupBy { it.manifest.id }.filterValues { entries -> entries.map { it.path }.distinct().size > 1 }
+    require(duplicateIdentities.isEmpty()) {
+        "Generated provider artifact identities must resolve to one physical path: ${duplicateIdentities.keys.joinToString()}."
+    }
+    return physical.distinctBy { it.manifest.id }.map { artifact ->
+        GeneratedProviderArtifact(
+            artifact = artifact.manifest.id,
+            path = artifact.path,
+            acceptedSourceParts = extensionParts[artifact.manifest.id],
+        )
+    }
+}
+
 private class DefaultManagedRealmRuntime(
-    private val application: KoinApplication,
     private val telemetry: ServiceTelemetry,
     private val realm: Realm,
     private val logback: AutoCloseable,
+    private val catalogs: RealmCatalogStore,
+    private val scope: CoroutineScope,
     private val context: HostedDeploymentContext,
-    private val discovery: DiscoveryDeployment,
 ) : ManagedRealmRuntime {
     private val closed = AtomicBoolean()
     private var active = false
 
-    /** Starts Realm resources and rejects activation after terminal cleanup. */
     override suspend fun activate() {
         check(!closed.get()) { "Realm runtime is closed." }
         if (active) return
@@ -302,31 +204,24 @@ private class DefaultManagedRealmRuntime(
         active = true
     }
 
-    /** Stops live Realm work while retaining the staged composition for resume. */
     override suspend fun quiesce() {
-        if (active) {
-            stopRealm(telemetry, realm)
-            active = false
-        }
+        if (!active) return
+        stopRealm(telemetry, realm)
+        active = false
     }
 
-    /** Reenters the active state using the retained staged composition. */
     override suspend fun resume() = activate()
 
-    /** Permanently releases active work and all resources acquired during staging. */
     override suspend fun stop() {
         if (!closed.compareAndSet(false, true)) return
         try {
             if (active) stopRealm(telemetry, realm)
         } finally {
+            scope.cancel()
             try {
-                application.close()
+                catalogs.close()
             } finally {
-                try {
-                    discovery.close()
-                } finally {
-                    logback.close()
-                }
+                logback.close()
             }
         }
     }
@@ -339,19 +234,13 @@ private fun RealmDatabaseConfiguration.resolveAgainst(workDirectory: Path): Real
     copy(
         endpoint =
             when (val configured = endpoint) {
-                is DatabaseEndpoint.Embedded.SurrealKv -> {
-                    configured.copy(path = configured.path.resolveAgainst(workDirectory))
-                }
+                is DatabaseEndpoint.Embedded.SurrealKv -> configured.copy(path = configured.path.resolveAgainst(workDirectory))
 
-                is DatabaseEndpoint.Embedded.RocksDb -> {
-                    configured.copy(path = configured.path.resolveAgainst(workDirectory))
-                }
+                is DatabaseEndpoint.Embedded.RocksDb -> configured.copy(path = configured.path.resolveAgainst(workDirectory))
 
                 is DatabaseEndpoint.Embedded.Memory,
                 is DatabaseEndpoint.Remote,
-                -> {
-                    configured
-                }
+                -> configured
             },
     )
 
@@ -379,7 +268,7 @@ private suspend fun startRealm(
 ) { main ->
     main.annotate {
         attribute("service.version", REALM_VERSION)
-        stage("koin") { outcome("ready") }
+        stage("composition") { outcome("ready") }
     }
     main.event(
         name = "workflow.stage.started",

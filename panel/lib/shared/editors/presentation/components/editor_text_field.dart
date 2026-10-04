@@ -41,7 +41,6 @@ class EditorTextField extends HookWidget {
     this.selectAllOnFocus = false,
     this.onInputFocus,
     this.onDismiss,
-    this.onCancel,
     super.key,
   }) : super();
   final TextEditingController? controller;
@@ -100,7 +99,6 @@ class EditorTextField extends HookWidget {
   final bool selectAllOnFocus;
   final VoidCallback? onInputFocus;
   final VoidCallback? onDismiss;
-  final VoidCallback? onCancel;
 
   @override
   Widget build(BuildContext context) {
@@ -176,7 +174,6 @@ class EditorTextField extends HookWidget {
       surroundingActions: surroundingActions,
       onInputFocus: onInputFocus,
       onDismiss: onDismiss,
-      onCancel: onCancel,
       child: TextFormField(
         focusNode: focusNode,
         autofocus: autofocus == EditorTextFieldAutoFocus.textField,

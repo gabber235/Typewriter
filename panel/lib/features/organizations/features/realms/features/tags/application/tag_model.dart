@@ -4,8 +4,9 @@ part of "tags.dart";
 ///
 /// [parentIds] names direct parents. The relationship is treated as a directed
 /// acyclic graph by the panel, and drag validation rejects self links, cycles,
-/// and unknown nodes. Wire conversion is lossless for the fields represented
-/// here. Inspector values omit the identity because the editor resource owns it.
+/// and unknown nodes. Unfinished authored fields receive display values here
+/// without changing the authoring record. Inspector values omit the identity
+/// because the editor resource owns it.
 @freezed
 abstract class Tag with _$Tag {
   @Assert("name != \"\"", "Name must not be empty.")
@@ -19,119 +20,20 @@ abstract class Tag with _$Tag {
 
   const Tag._();
 
-  factory Tag.fromTyped(TypedAuthoringResource resource) {
-    final value = resource.content.rootValue;
-    if (value is! RecordValue) throw StateError("The Tag content is invalid");
-    final name = value.fields["name"];
-    final color = value.fields["color"];
-    final parents = value.fields["parents"];
-    final placement = value.fields["placement"];
-    if (name is! StringValue ||
-        color is! IntegerValue ||
-        parents is! ListValue ||
-        placement is! RecordValue) {
-      throw StateError("The Tag content is invalid");
-    }
-    final decodedColor = color.asColorOrNull;
-    final ids = parents.values
-        .whereType<ReferenceValue>()
-        .map((item) => item.id)
-        .toList();
-    final x = placement.fields["x"];
-    final y = placement.fields["y"];
-    final width = placement.fields["width"];
-    final height = placement.fields["height"];
-    if (decodedColor == null ||
-        ids.length != parents.values.length ||
-        x is! IntegerValue ||
-        y is! IntegerValue ||
-        width is! IntegerValue ||
-        height is! IntegerValue) {
-      throw StateError("The Tag content is invalid");
-    }
+  factory Tag.fromAuthoring(skir.AuthoringResource resource) {
+    final value = decodeAuthoredTag(resource);
     return Tag(
-      tagId: resource.id,
-      name: name.value,
-      color: decodedColor,
-      parentIds: ids,
+      tagId: value.id,
+      name: value.name,
+      color: Color(value.argb),
+      parentIds: value.parents,
       placement: GraphPlacement(
-        x: x.value.toInt(),
-        y: y.value.toInt(),
-        width: width.value.toInt(),
-        height: height.value.toInt(),
+        x: value.x,
+        y: value.y,
+        width: value.width,
+        height: value.height,
       ),
     );
-  }
-}
-
-/// Converts a tag to and from the structural value used by the editor.
-///
-/// Decoding is deliberately strict. Wrong field types, malformed parent IDs,
-/// invalid colors, or nonpositive dimensions return null, allowing the shared
-/// editor to keep an invalid draft visible without creating an invalid Tag.
-extension TagInspectorValue on Tag {
-  RecordValue get inspectorValue => RecordValue({
-    "name": name.asValue,
-    "color": color.asValue,
-    "parents": ListValue(parentIds.map(ReferenceValue.new).toList()),
-    "placement": RecordValue({
-      "x": placement.x.asValue,
-      "y": placement.y.asValue,
-      "width": placement.width.asValue,
-      "height": placement.height.asValue,
-    }),
-  });
-
-  Tag? withInspectorValue(DataValue value) {
-    if (value is! RecordValue) return null;
-    final name = value.fields["name"];
-    final color = value.fields["color"];
-    final parents = value.fields["parents"];
-    final placement = value.fields["placement"];
-    if (name is! StringValue ||
-        name.value.trim().isEmpty ||
-        color is! IntegerValue ||
-        parents is! ListValue ||
-        placement is! RecordValue) {
-      return null;
-    }
-
-    final decodedColor = color.asColorOrNull;
-    final parentIds = parents.values
-        .whereType<ReferenceValue>()
-        .map((parent) => parent.id)
-        .toList();
-    final x = placement.fields["x"];
-    final y = placement.fields["y"];
-    final width = placement.fields["width"];
-    final height = placement.fields["height"];
-
-    if (decodedColor == null ||
-        parentIds.length != parents.values.length ||
-        x is! IntegerValue ||
-        y is! IntegerValue ||
-        width is! IntegerValue ||
-        height is! IntegerValue ||
-        width.value < BigInt.one ||
-        height.value < BigInt.one) {
-      return null;
-    }
-    return copyWith(
-      name: name.value,
-      color: decodedColor,
-      parentIds: parentIds,
-      placement: GraphPlacement(
-        x: x.value.toInt(),
-        y: y.value.toInt(),
-        width: width.value.toInt(),
-        height: height.value.toInt(),
-      ),
-    );
-  }
-
-  Tag projected(LocalEditorValue? local) {
-    if (local == null) return this;
-    return withInspectorValue(local.projectOnto(inspectorValue)) ?? this;
   }
 }
 

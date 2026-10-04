@@ -2,7 +2,9 @@ import "dart:math";
 
 import "package:flutter/material.dart";
 import "package:flutter_hooks/flutter_hooks.dart";
-import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_panel/shared/graph/application/graph_commit.dart";
+import "package:typewriter_panel/shared/graph/application/graph_layout.dart";
+import "package:typewriter_panel/shared/graph/domain/domain.dart";
 
 /// Owns transient graph manipulation state for one mounted [Graph].
 ///

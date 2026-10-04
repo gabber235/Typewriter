@@ -1,0 +1,601 @@
+package com.typewritermc.realm.authoring
+
+import com.typewritermc.authoring.ArgumentLocation
+import com.typewritermc.authoring.BatchId
+import com.typewritermc.authoring.CommitResult
+import com.typewritermc.authoring.EditIntent
+import com.typewritermc.authoring.InputConflict
+import com.typewritermc.authoring.LinkOccurrenceId
+import com.typewritermc.authoring.PathSegment
+import com.typewritermc.authoring.PreparedEdit
+import com.typewritermc.authoring.TypeSelection
+import com.typewritermc.authoring.ValueLocation
+import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.ValueProblem
+import com.typewritermc.checking.CatalogGeneration
+import com.typewritermc.checking.InputIdentity
+import com.typewritermc.checking.InputObservation
+import com.typewritermc.checking.InputToken
+import com.typewritermc.checking.SnapshotId
+import com.typewritermc.realm.repository.AuthoringMutationPlanner
+import com.typewritermc.realm.repository.AuthoringRepository
+import com.typewritermc.realm.repository.MutationPlanningResult
+import com.typewritermc.realm.repository.ResourceValueMapper
+import com.typewritermc.realm.repository.canonicalPreparedIntentDigest
+import com.typewritermc.realm.repository.mutationPlanWriteInputs
+import com.typewritermc.types.DataValue
+import com.typewritermc.types.EndpointSlot
+import com.typewritermc.types.RelationContract
+import com.typewritermc.types.ResourceId
+import com.typewritermc.types.TypeTemplate
+import com.typewritermc.types.TypeUse
+import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.types.catalog.DeclarationDiagnostic
+import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.ResolvedRepresentation
+
+internal data class TypeArgumentChangePreview(
+    val resource: ResourceId,
+    val next: TypeSelection,
+    val catalog: CatalogGeneration,
+    val sourceSnapshot: SnapshotId,
+    val observations: List<InputObservation>,
+    val intents: List<TypeRepairIntent>,
+    val linkRepairs: List<LinkRepairIntent>,
+    val clearedLocations: List<ValueLocation>,
+)
+
+internal sealed interface TypeRepairIntent {
+    data class ConfigureResource(
+        val resource: ResourceId,
+        val configuration: TypeSelection,
+    ) : TypeRepairIntent
+
+    data class Retag(
+        val at: ValueLocation,
+        val type: TypeUse.Named,
+    ) : TypeRepairIntent
+
+    data class Clear(
+        val at: ValueLocation,
+    ) : TypeRepairIntent
+}
+
+internal sealed interface LinkRepairIntent {
+    data class Clear(
+        val occurrence: LinkOccurrenceId,
+    ) : LinkRepairIntent
+
+    data class Remove(
+        val occurrence: LinkOccurrenceId,
+    ) : LinkRepairIntent
+}
+
+internal sealed interface TypePreviewResult {
+    data class Ready(
+        val preview: TypeArgumentChangePreview,
+    ) : TypePreviewResult
+
+    data class InvalidArguments(
+        val diagnostics: List<DeclarationDiagnostic>,
+    ) : TypePreviewResult
+
+    data class Incomplete(
+        val arguments: List<ArgumentLocation>,
+    ) : TypePreviewResult
+
+    data class Rejected(
+        val problems: List<com.typewritermc.authoring.ValueProblem>,
+    ) : TypePreviewResult
+}
+
+internal interface TypeArgumentOperations {
+    fun preview(
+        resource: ResourceId,
+        requested: TypeSelection,
+        snapshot: SnapshotLease,
+    ): TypePreviewResult
+
+    suspend fun confirm(preview: TypeArgumentChangePreview): CommitResult
+}
+
+/** Previews precise repairs and commits them through ordinary prepared acceptance. */
+internal class DefaultTypeArgumentOperations(
+    private val repository: AuthoringRepository,
+    private val snapshots: AuthoringSnapshotStore,
+) : TypeArgumentOperations {
+    override fun preview(
+        resource: ResourceId,
+        requested: TypeSelection,
+        snapshot: SnapshotLease,
+    ): TypePreviewResult {
+        val root = snapshot.root
+        val requestedDefinition = requested.definition
+        val record =
+            root.resources[resource]
+                ?: return TypePreviewResult.InvalidArguments(
+                    listOf(DeclarationDiagnostic(requestedDefinition, "resource_missing")),
+                )
+        val previous = record.configuration
+        if (previous.definition != requestedDefinition) {
+            return TypePreviewResult.InvalidArguments(
+                listOf(DeclarationDiagnostic(requestedDefinition, "type_argument_definition_changed")),
+            )
+        }
+        val next = root.catalog.checked.resolvePartial(requested)
+        if (next is Resolution.Invalid) return TypePreviewResult.InvalidArguments(next.diagnostics)
+        val old = root.catalog.checked.resolvePartial(previous)
+        if (old is Resolution.Invalid) return TypePreviewResult.InvalidArguments(old.diagnostics)
+        old as Resolution.Ready
+        next as Resolution.Ready
+
+        val cleared = mutableListOf<ValueLocation>()
+        val nestedRetags = mutableListOf<TypeRepairIntent.Retag>()
+        val inspected = linkedSetOf<InputIdentity>()
+        val rootLocation = ValueLocation(resource, ValuePath())
+        val oldFields = old.value.knownFields.associateBy { it.key }
+        val newFields = next.value.knownFields.associateBy { it.key }
+        newFields.forEach { (name, newField) ->
+            val location = rootLocation.field(name)
+            val oldField = oldFields[name]
+            val value = record.fields[name]
+            if (oldField == null || value == null) {
+                cleared += location
+                inspected += InputIdentity.Value(location)
+            } else {
+                collectRepairs(
+                    value,
+                    oldField.type,
+                    newField.type,
+                    location,
+                    root.catalog.checked,
+                    cleared,
+                    nestedRetags,
+                    inspected,
+                )
+            }
+        }
+        next.value.dependentFields.forEach { field ->
+            val location = rootLocation.field(field.owner.name)
+            inspected += InputIdentity.Value(location)
+            if (record.fields[field.owner.name] != DataValue.Unfilled) cleared += location
+        }
+        val relationRepairs =
+            incompatibleLinks(
+                resource,
+                requested,
+                root.resources,
+                root.links.values,
+                root.catalog.relations,
+                root.catalog.checked,
+                inspected,
+            )
+        val relationRepairLocations = relationRepairs.mapTo(mutableSetOf(), LinkRepairIntent::location)
+        val evidence =
+            buildSet<InputIdentity> {
+                add(InputIdentity.Existence(resource))
+                add(InputIdentity.Form(rootLocation))
+                add(InputIdentity.Incoming(resource, null))
+                addAll(inspected)
+                relationRepairs.forEach { repair ->
+                    val occurrence =
+                        when (repair) {
+                            is LinkRepairIntent.Clear -> repair.occurrence
+                            is LinkRepairIntent.Remove -> repair.occurrence
+                        }
+                    add(InputIdentity.Value(occurrence.location))
+                }
+                add(InputIdentity.Catalog(root.catalog.generation))
+            }.toMutableSet()
+        val repairs =
+            buildList {
+                add(TypeRepairIntent.ConfigureResource(resource, requested))
+                addAll(nestedRetags)
+                cleared
+                    .distinct()
+                    .filterNot(relationRepairLocations::contains)
+                    .forEach { add(TypeRepairIntent.Clear(it)) }
+            }
+        val plannedIntents =
+            buildList {
+                repairs.forEach { repair ->
+                    when (repair) {
+                        is TypeRepairIntent.ConfigureResource -> {
+                            add(EditIntent.ConfigureResource(repair.resource, repair.configuration))
+                        }
+
+                        is TypeRepairIntent.Retag -> {
+                            add(EditIntent.Retag(repair.at, repair.type))
+                        }
+
+                        is TypeRepairIntent.Clear -> {
+                            add(EditIntent.SetValue(repair.at, DataValue.Unfilled))
+                        }
+                    }
+                }
+                relationRepairs.forEach { repair ->
+                    val occurrence =
+                        when (repair) {
+                            is LinkRepairIntent.Clear -> repair.occurrence
+                            is LinkRepairIntent.Remove -> repair.occurrence
+                        }
+                    add(EditIntent.DisconnectRelation(occurrence))
+                }
+            }
+        val planned =
+            AuthoringMutationPlanner(
+                root.catalog.checked,
+                root.catalog.relations,
+                root.catalog.endpointBindings,
+            ).plan(
+                root.resources,
+                PreparedEdit(
+                    BatchId("type_argument_preview"),
+                    root.catalog.generation,
+                    root.id,
+                    emptyList(),
+                    plannedIntents,
+                ),
+            )
+        if (planned is MutationPlanningResult.Rejected) return TypePreviewResult.Rejected(planned.problems)
+        planned as MutationPlanningResult.Accepted
+        evidence += mutationPlanWriteInputs(planned.plan, root.resources)
+        val observed = evidence.map { identity -> InputObservation(identity, root.inputs[identity] ?: absentInputToken()) }
+        return TypePreviewResult.Ready(
+            TypeArgumentChangePreview(
+                resource = resource,
+                next = requested,
+                catalog = root.catalog.generation,
+                sourceSnapshot = root.id,
+                observations = observed,
+                intents = repairs,
+                linkRepairs = relationRepairs,
+                clearedLocations =
+                    (cleared + relationRepairLocations).distinct(),
+            ),
+        )
+    }
+
+    override suspend fun confirm(preview: TypeArgumentChangePreview): CommitResult {
+        val rootLocation = ValueLocation(preview.resource, ValuePath())
+        if (!preview.hasCoherentMetadata()) {
+            return CommitResult.Rejected(listOf(ValueProblem(rootLocation, "type_argument_preview_mismatch")))
+        }
+        val prepared = preview.preparedEdit()
+        repository.replay(prepared)?.let { return it }
+        val retained =
+            try {
+                snapshots.retain(preview.sourceSnapshot)
+            } catch (_: IllegalArgumentException) {
+                snapshots.capture()
+            }
+        return retained.use { snapshot ->
+            if (snapshot.root.catalog.generation != preview.catalog) {
+                return CommitResult.Rejected(
+                    listOf(ValueProblem(rootLocation, "type_argument_preview_catalog_mismatch")),
+                )
+            }
+            val verified =
+                when (val regenerated = preview(preview.resource, preview.next, snapshot)) {
+                    is TypePreviewResult.Ready -> {
+                        regenerated.preview
+                    }
+
+                    is TypePreviewResult.Rejected -> {
+                        return CommitResult.Rejected(regenerated.problems)
+                    }
+
+                    else -> {
+                        return CommitResult.Rejected(
+                            listOf(ValueProblem(rootLocation, "type_argument_preview_no_longer_valid")),
+                        )
+                    }
+                }
+            if (!verified.sameRepairs(preview)) {
+                return CommitResult.Rejected(listOf(ValueProblem(rootLocation, "type_argument_preview_mismatch")))
+            }
+            val suppliedInputs = preview.observations.associate { it.identity to it.token }
+            val verifiedInputs = verified.observations.associate { it.identity to it.token }
+            if (suppliedInputs.keys != verifiedInputs.keys) {
+                return CommitResult.Rejected(listOf(ValueProblem(rootLocation, "type_argument_preview_mismatch")))
+            }
+            val conflicts =
+                suppliedInputs.mapNotNull { (identity, expected) ->
+                    val actual = verifiedInputs.getValue(identity)
+                    if (actual == expected) null else InputConflict(identity, expected, actual)
+                }
+            if (conflicts.isNotEmpty()) return CommitResult.Conflict(conflicts)
+            repository.commit(prepared)
+        }
+    }
+
+    private fun TypeArgumentChangePreview.sameRepairs(other: TypeArgumentChangePreview): Boolean =
+        resource == other.resource &&
+            next == other.next &&
+            catalog == other.catalog &&
+            intents == other.intents &&
+            linkRepairs == other.linkRepairs &&
+            clearedLocations == other.clearedLocations
+
+    private fun TypeArgumentChangePreview.hasCoherentMetadata(): Boolean {
+        val configuration = intents.filterIsInstance<TypeRepairIntent.ConfigureResource>()
+        if (configuration != listOf(TypeRepairIntent.ConfigureResource(resource, next))) return false
+        val cleared =
+            (
+                intents.filterIsInstance<TypeRepairIntent.Clear>().map { it.at } +
+                    linkRepairs.map(LinkRepairIntent::location)
+            ).distinct()
+        return clearedLocations == cleared
+    }
+
+    private fun TypeArgumentChangePreview.preparedEdit(): PreparedEdit {
+        val intents =
+            buildList {
+                this@preparedEdit.intents.forEach { repair ->
+                    when (repair) {
+                        is TypeRepairIntent.ConfigureResource -> {
+                            add(EditIntent.ConfigureResource(repair.resource, repair.configuration))
+                        }
+
+                        is TypeRepairIntent.Retag -> {
+                            add(EditIntent.Retag(repair.at, repair.type))
+                        }
+
+                        is TypeRepairIntent.Clear -> {
+                            add(EditIntent.SetValue(repair.at, DataValue.Unfilled))
+                        }
+                    }
+                }
+                linkRepairs.forEach { repair ->
+                    val occurrence =
+                        when (repair) {
+                            is LinkRepairIntent.Clear -> repair.occurrence
+                            is LinkRepairIntent.Remove -> repair.occurrence
+                        }
+                    add(EditIntent.DisconnectRelation(occurrence))
+                }
+            }
+        val prepared =
+            PreparedEdit(
+                id = BatchId("type_argument_pending"),
+                catalog = catalog,
+                snapshot = sourceSnapshot,
+                observations = observations,
+                intents = intents,
+            )
+        val digest = canonicalPreparedIntentDigest(prepared)
+        return prepared.copy(id = BatchId("type_argument_$digest"))
+    }
+}
+
+private fun collectRepairs(
+    value: DataValue,
+    old: TypeUse,
+    next: TypeUse,
+    at: ValueLocation,
+    catalog: CheckedCatalog,
+    repairs: MutableList<ValueLocation>,
+    retags: MutableList<TypeRepairIntent.Retag>,
+    inspected: MutableSet<InputIdentity>,
+) {
+    inspected += InputIdentity.Value(at)
+    if (value == DataValue.Unfilled) return
+    if (value == DataValue.Null) {
+        if (next !is TypeUse.Nullable) repairs += at
+        return
+    }
+
+    val expected = if (next is TypeUse.Nullable) next.value else next
+    val declaredActual = if (old is TypeUse.Nullable) old.value else old
+    val actual = (value as? DataValue.Named)?.actualType ?: declaredActual
+    if (catalog.isReadableAs(actual, next)) return
+
+    val namedValue = value as? DataValue.Named
+    val actualNamed = actual as? TypeUse.Named
+    val expectedNamed = expected as? TypeUse.Named
+    val canRetag =
+        namedValue != null &&
+            actualNamed != null &&
+            expectedNamed != null &&
+            actualNamed.definition == expectedNamed.definition
+    if (!canRetag) {
+        repairs += at
+        return
+    }
+
+    inspected += InputIdentity.Form(at)
+    val actualType = requireNotNull(actualNamed)
+    val expectedType = requireNotNull(expectedNamed)
+    val oldResolved = catalog.resolve(actualType) as? Resolution.Ready
+    val newResolved = catalog.resolve(expectedType) as? Resolution.Ready
+    val oldRepresentation = oldResolved?.value?.schema?.representation
+    val newRepresentation = newResolved?.value?.schema?.representation
+    if (oldRepresentation == null || newRepresentation == null || oldRepresentation::class != newRepresentation::class) {
+        repairs += at
+        return
+    }
+    retags += TypeRepairIntent.Retag(at, expectedType)
+    val payload = requireNotNull(namedValue).payload
+    when {
+        payload is DataValue.Record && oldRepresentation is ResolvedRepresentation.Record &&
+            newRepresentation is ResolvedRepresentation.Record -> {
+            val oldFields = oldRepresentation.fields.associateBy { it.key }
+            newRepresentation.fields.forEach { field ->
+                val child = payload.fields[field.key]
+                val previous = oldFields[field.key]
+                val childLocation = at.field(field.key)
+                if (child == null || previous == null) {
+                    repairs += childLocation
+                    inspected += InputIdentity.Value(childLocation)
+                } else {
+                    collectRepairs(child, previous.type, field.type, childLocation, catalog, repairs, retags, inspected)
+                }
+            }
+        }
+
+        payload is DataValue.ListValue && oldRepresentation is ResolvedRepresentation.Sequence &&
+            newRepresentation is ResolvedRepresentation.Sequence -> {
+            inspected += InputIdentity.Membership(at)
+            inspected += InputIdentity.Order(at)
+            payload.items.forEach { item ->
+                collectRepairs(
+                    item.value,
+                    oldRepresentation.item,
+                    newRepresentation.item,
+                    at.item(item.id),
+                    catalog,
+                    repairs,
+                    retags,
+                    inspected,
+                )
+            }
+        }
+
+        payload is DataValue.SetValue && oldRepresentation is ResolvedRepresentation.Sequence &&
+            newRepresentation is ResolvedRepresentation.Sequence -> {
+            inspected += InputIdentity.Membership(at)
+            payload.items.forEach { item ->
+                collectRepairs(
+                    item.value,
+                    oldRepresentation.item,
+                    newRepresentation.item,
+                    at.item(item.id),
+                    catalog,
+                    repairs,
+                    retags,
+                    inspected,
+                )
+            }
+        }
+
+        payload is DataValue.MapValue && oldRepresentation is ResolvedRepresentation.Mapping &&
+            newRepresentation is ResolvedRepresentation.Mapping -> {
+            inspected += InputIdentity.Membership(at)
+            inspected += InputIdentity.Order(at)
+            payload.rows.forEach { row ->
+                collectRepairs(
+                    row.key,
+                    oldRepresentation.key,
+                    newRepresentation.key,
+                    at.item(row.id).mapKey(),
+                    catalog,
+                    repairs,
+                    retags,
+                    inspected,
+                )
+                collectRepairs(
+                    row.value,
+                    oldRepresentation.value,
+                    newRepresentation.value,
+                    at.item(row.id).mapValue(),
+                    catalog,
+                    repairs,
+                    retags,
+                    inspected,
+                )
+            }
+        }
+
+        else -> {
+            repairs += at
+        }
+    }
+}
+
+private fun incompatibleLinks(
+    resource: ResourceId,
+    requested: TypeSelection,
+    resources: Map<ResourceId, com.typewritermc.authoring.AuthoringRecord>,
+    occurrences: Collection<com.typewritermc.authoring.LinkOccurrence>,
+    contracts: List<RelationContract>,
+    catalog: CheckedCatalog,
+    inspected: MutableSet<InputIdentity>,
+): List<LinkRepairIntent> {
+    val endpointContracts =
+        contracts.flatMap { contract -> listOf(contract.first.id to contract, contract.second.id to contract) }.toMap()
+    return occurrences
+        .mapNotNull { occurrence ->
+            if (occurrence.source != resource && occurrence.target.resource != resource) return@mapNotNull null
+            val sourceRecord = resources[occurrence.source]
+            val targetRecord = resources[occurrence.target.resource]
+            inspected += InputIdentity.Form(ValueLocation(occurrence.source, ValuePath()))
+            inspected += InputIdentity.Value(occurrence.id.location)
+            inspected += InputIdentity.Form(ValueLocation(occurrence.target.resource, ValuePath()))
+            val contract = endpointContracts[occurrence.id.endpoint] ?: return@mapNotNull LinkRepairIntent.Clear(occurrence.id)
+            val sourceEndpoint = if (contract.first.id == occurrence.id.endpoint) contract.first else contract.second
+            val targetEndpoint = if (sourceEndpoint.slot == EndpointSlot.First) contract.second else contract.first
+            inspected += InputIdentity.Incoming(resource, contract.id)
+            val proposedSource = sourceRecord?.proposedIf(occurrence.source == resource, requested)
+            val proposedTarget = targetRecord?.proposedIf(occurrence.target.resource == resource, requested)
+            val expectedTarget =
+                proposedSource?.let {
+                    ResourceValueMapper.expectedTarget(occurrence, it, catalog)
+                }
+            val sourceValid = proposedSource?.matches(sourceEndpoint.resource, catalog) == true
+            val targetValid = proposedTarget?.matches(targetEndpoint.resource, catalog) == true
+            val bindingValid = expectedTarget != null && proposedTarget?.matches(expectedTarget, catalog) == true
+            if (sourceValid && targetValid && bindingValid) {
+                null
+            } else if (occurrence.id.location.path.segments
+                    .lastOrNull() is PathSegment.Item
+            ) {
+                LinkRepairIntent.Remove(occurrence.id)
+            } else {
+                LinkRepairIntent.Clear(occurrence.id)
+            }
+        }.distinct()
+}
+
+private fun com.typewritermc.authoring.AuthoringRecord.proposedIf(
+    proposed: Boolean,
+    requested: TypeSelection,
+): com.typewritermc.authoring.AuthoringRecord = if (proposed) copy(configuration = requested) else this
+
+private fun com.typewritermc.authoring.AuthoringRecord.matches(
+    expected: TypeUse,
+    catalog: CheckedCatalog,
+): Boolean =
+    when (val selected = configuration) {
+        is TypeSelection.Complete -> catalog.isReadableAs(selected.use, expected)
+        is TypeSelection.Pending -> catalog.knownApplications(selected).any { catalog.isReadableAs(it, expected) }
+    }
+
+private fun com.typewritermc.authoring.AuthoringRecord.matches(
+    expected: TypeTemplate.Named,
+    catalog: CheckedCatalog,
+): Boolean {
+    val concrete = expected.concreteUseOrNull()
+    if (concrete != null) return matches(concrete, catalog)
+    return catalog.isNominalSubtype(configuration.definition, expected.definition)
+}
+
+private val LinkRepairIntent.location: ValueLocation
+    get() =
+        when (this) {
+            is LinkRepairIntent.Clear -> occurrence.location
+            is LinkRepairIntent.Remove -> occurrence.location
+        }
+
+private fun TypeTemplate.concreteUseOrNull(): TypeUse? {
+    return when (this) {
+        is TypeTemplate.Parameter -> null
+        is TypeTemplate.Named -> TypeUse.Named(definition, arguments.map { it.concreteUseOrNull() ?: return null })
+        is TypeTemplate.Nullable -> value.concreteUseOrNull()?.let(TypeUse::Nullable)
+        is TypeTemplate.Scalar -> TypeUse.Scalar(kind)
+    }
+}
+
+private val TypeSelection.definition
+    get() =
+        when (this) {
+            is TypeSelection.Complete -> use.definition
+            is TypeSelection.Pending -> definition
+        }
+
+private fun ValueLocation.field(name: String) = copy(path = ValuePath(path.segments + PathSegment.Field(name)))
+
+private fun ValueLocation.item(id: com.typewritermc.authoring.ItemId) = copy(path = ValuePath(path.segments + PathSegment.Item(id)))
+
+private fun ValueLocation.mapKey() = copy(path = ValuePath(path.segments + PathSegment.MapKey))
+
+private fun ValueLocation.mapValue() = copy(path = ValuePath(path.segments + PathSegment.MapValue))

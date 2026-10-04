@@ -66,9 +66,11 @@ abstract interface class LocalWorkCommands {
 /// the source can be released.
 final class EditorResource {
   EditorResource(EditorTarget target, this.source)
-    : targetId = target.targetId,
+    : target = target,
+      targetId = target.targetId,
       label = target.label;
 
+  EditorTarget target;
   final Object targetId;
   String label;
   EditorDestination? _destination;
@@ -79,6 +81,14 @@ final class EditorResource {
   VoidCallback? listener;
   VoidCallback? _destinationListener;
   final TransactionalEditorSource source;
+
+  PortablePresentationHost? buildPortablePresentationHost() {
+    final current = target;
+    if (current case final PortablePresentationTarget portable) {
+      return portable.buildPortablePresentationHost(source);
+    }
+    return null;
+  }
 
   set destination(EditorDestination? value) {
     if (identical(value, _destination)) return;
@@ -262,8 +272,10 @@ final class LocalWorkSession implements LocalWorkCommands {
       if (existing.source.commitPolicy != target.commitPolicy) {
         throw StateError("A resource cannot change its commit policy");
       }
-      existing.label = target.label;
-      existing.source.refreshTarget(target);
+      existing
+        ..target = target
+        ..label = target.label
+        ..source.refreshTarget(target);
       _publish();
       return existing.source;
     }

@@ -54,7 +54,7 @@ final class CanonicalTagsProvider
   CanonicalTags create() => CanonicalTags();
 }
 
-String _$canonicalTagsHash() => r'2897d502e353109dc660e062ace393bbe209ffad';
+String _$canonicalTagsHash() => r'3ccd483ee44ccc87946d274aa32f7d769236cdab';
 
 /// Owns the current Realm tag projection and its authoring mutations.
 ///
@@ -163,8 +163,6 @@ final class CanonicalTagFamily extends $Family
 /// Combines canonical tags with local editor values for UI consumers.
 ///
 /// Canonical state remains the authority. A local value is only a temporary
-/// projection keyed by organization, realm, and tag identity, and disappears
-/// when the shared editor owner releases it or canonical state catches up.
 
 @ProviderFor(projectedTags)
 final projectedTagsProvider = ProjectedTagsProvider._();
@@ -172,8 +170,6 @@ final projectedTagsProvider = ProjectedTagsProvider._();
 /// Combines canonical tags with local editor values for UI consumers.
 ///
 /// Canonical state remains the authority. A local value is only a temporary
-/// projection keyed by organization, realm, and tag identity, and disappears
-/// when the shared editor owner releases it or canonical state catches up.
 
 final class ProjectedTagsProvider
     extends
@@ -186,8 +182,6 @@ final class ProjectedTagsProvider
   /// Combines canonical tags with local editor values for UI consumers.
   ///
   /// Canonical state remains the authority. A local value is only a temporary
-  /// projection keyed by organization, realm, and tag identity, and disappears
-  /// when the shared editor owner releases it or canonical state catches up.
   ProjectedTagsProvider._()
     : super(
         from: null,
@@ -222,7 +216,7 @@ final class ProjectedTagsProvider
   }
 }
 
-String _$projectedTagsHash() => r'3e3386aecdcda929315fde5b5243dd490a935c3c';
+String _$projectedTagsHash() => r'ec7e7bcb7fab6b84b99ffce821e9ba696dc7c550';
 
 /// Projects one tag for graph nodes that rebuild independently.
 
@@ -291,7 +285,7 @@ final class ProjectedTagProvider
   }
 }
 
-String _$projectedTagHash() => r'49e6666eff5dcd958fddcc2d1107dcd42d4c7a21';
+String _$projectedTagHash() => r'bd6692f58de18d1f83fce86b47fdb23e3a3cbb37';
 
 /// Projects one tag for graph nodes that rebuild independently.
 

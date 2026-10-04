@@ -12,7 +12,7 @@ enum NominalTypeKind { concrete, openAbstract, sealedAbstract }
 /// Semantic surface for which a nominal type can supply a presentation.
 enum PresentationRole {
   editor,
-  creation,
+  inspector,
   referenceSummary,
   referenceOption,
   catalogOption,
