@@ -9,6 +9,13 @@ group = "com.typewritermc"
 
 repositories {
     mavenCentral()
+    maven {
+        name = "SkirClientFork"
+        url = uri("https://jitpack.io")
+        content {
+            includeModule("com.github.gabber235", "skir-kotlin-client")
+        }
+    }
 }
 
 val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
