@@ -1,3 +1,4 @@
+import "package:clock/clock.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
@@ -22,6 +23,231 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "../../../support/test_utils.dart";
 
 void main() {
+  testWidgets("relative time refreshes without a new host snapshot", (
+    tester,
+  ) async {
+    var now = DateTime.utc(2026, 10, 5, 12);
+    final host = _TestPortableHost(
+      root: presentation.PresentationNode(
+        nodeId: "relative",
+        properties: presentation.PresentationProperties.defaultInstance,
+        header: null,
+        element: presentation.PresentationElement.createRelativeTime(
+          value: expression.ExpressionNode.wrapLiteral(
+            types.DataValue.wrapTimestamp(now),
+          ),
+          style: presentation.RelativeTimeStyle.natural,
+          timeZone: presentation.DateTimeZone.utc,
+        ),
+      ),
+    );
+    addTearDown(host.dispose);
+    await withClock(Clock(() => now), () async {
+      await tester.pumpTestApp(
+        child: Material(child: PortablePresentationRenderer(host: host)),
+      );
+      expect(find.text("Just now"), findsOneWidget);
+      now = now.add(const Duration(minutes: 1));
+      await tester.pump(const Duration(minutes: 1));
+      expect(find.text("1 minute ago"), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  });
+
+  testWidgets("grid cells keep their content height", (tester) async {
+    final host = _TestPortableHost(
+      root: presentation.PresentationNode(
+        nodeId: "grid",
+        properties: presentation.PresentationProperties.defaultInstance,
+        header: null,
+        element: presentation.PresentationElement.wrapChildren(
+          presentation.ChildrenElement.createGrid(
+            layout: presentation.GridChildrenLayout(
+              columns: 2,
+              horizontalSpacing: 12,
+              verticalSpacing: 12,
+            ),
+            children: [
+              _visualText("grid.first", "Alpha"),
+              _visualText("grid.second", "Beta"),
+              _visualText("grid.third", "Gamma"),
+            ],
+          ),
+        ),
+      ),
+    );
+    addTearDown(host.dispose);
+    await tester.pumpTestApp(
+      child: Material(
+        child: Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 600,
+            child: PortablePresentationRenderer(host: host),
+          ),
+        ),
+      ),
+    );
+    expect(
+      tester.getSize(find.byKey(const ValueKey("grid.first"))).height,
+      lessThan(100),
+    );
+    expect(
+      tester.getTopLeft(find.text("Gamma")).dy -
+          tester.getTopLeft(find.text("Alpha")).dy,
+      lessThan(100),
+    );
+    expect(
+      tester.getTopLeft(find.text("Beta")).dx,
+      greaterThan(tester.getTopLeft(find.text("Alpha")).dx),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets("text content retains inherited typography", (tester) async {
+    final host = _TestPortableHost(
+      root: _visualText("typography", "Inherited text"),
+    );
+    addTearDown(host.dispose);
+    await tester.pumpTestApp(
+      child: Material(child: PortablePresentationRenderer(host: host)),
+    );
+    final text = find.text("Inherited text");
+    expect(
+      tester.widget<Text>(text).style?.fontFamily,
+      DefaultTextStyle.of(tester.element(text)).style.fontFamily,
+    );
+  });
+
+  testWidgets("section surfaces include their collapsible headers", (
+    tester,
+  ) async {
+    final host = _TestPortableHost(
+      root: presentation.PresentationNode(
+        nodeId: "section",
+        properties: presentation.PresentationProperties.defaultInstance,
+        element: presentation.PresentationElement.createSection(
+          child: _visualText("section.body", "Section body"),
+          border: null,
+        ),
+        header: presentation.PresentationHeader(
+          binding: null,
+          title: presentation.PresentationHeaderTitle.wrapText(
+            expression.ExpressionNode.wrapLiteral(
+              types.DataValue.wrapStringValue("Section title"),
+            ),
+          ),
+          description: null,
+          initiallyExpanded: true,
+          items: const [],
+          headerPadding: null,
+          contentPadding: null,
+        ),
+      ),
+    );
+    addTearDown(host.dispose);
+    await tester.pumpTestApp(
+      child: Material(child: PortablePresentationRenderer(host: host)),
+    );
+    expect(
+      find.ancestor(
+        of: find.text("Section title"),
+        matching: find.byType(DepthBox),
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.byTooltip("Collapse"));
+    await tester.pump();
+    expect(find.text("Section body"), findsNothing);
+    await tester.tap(find.byTooltip("Expand"));
+    await tester.pump();
+    expect(find.text("Section body"), findsOneWidget);
+  });
+
+  testWidgets("statuses preserve the source label and distinct visual tone", (
+    tester,
+  ) async {
+    final host = _TestPortableHost(
+      root: presentation.PresentationNode(
+        nodeId: "status",
+        properties: presentation.PresentationProperties.defaultInstance,
+        header: null,
+        element: presentation.PresentationElement.createStatus(
+          value: expression.ExpressionNode.wrapLiteral(
+            types.DataValue.wrapStringValue("Connected"),
+          ),
+          cases: [
+            presentation.StatusCase(
+              match: types.DataValue.wrapStringValue("Connected"),
+              appearance: presentation.StatusAppearance(
+                tone: presentation.StatusTone.online,
+                label: null,
+              ),
+            ),
+          ],
+          fallback: null,
+        ),
+      ),
+    );
+    addTearDown(host.dispose);
+    await tester.pumpTestApp(
+      child: Material(child: PortablePresentationRenderer(host: host)),
+    );
+    expect(find.text("Connected"), findsOneWidget);
+    expect(find.byIcon(Icons.cloud_done_outlined), findsOneWidget);
+    final context = tester.element(find.text("Connected"));
+    expect(
+      tester.widget<Icon>(find.byIcon(Icons.cloud_done_outlined)).color,
+      context.colors.online,
+    );
+    expect(
+      tester.widget<Text>(find.text("Connected")).style?.color,
+      context.colors.online,
+    );
+  });
+
+  testWidgets("enum statuses use their value as the default label", (
+    tester,
+  ) async {
+    final host = _TestPortableHost(
+      root: presentation.PresentationNode(
+        nodeId: "status",
+        properties: presentation.PresentationProperties.defaultInstance,
+        header: null,
+        element: presentation.PresentationElement.createStatus(
+          value: expression.ExpressionNode.wrapLiteral(
+            types.DataValue.wrapEnumCase("Connected"),
+          ),
+          cases: [
+            presentation.StatusCase(
+              match: types.DataValue.wrapEnumCase("Connected"),
+              appearance: presentation.StatusAppearance(
+                tone: presentation.StatusTone.online,
+                label: null,
+              ),
+            ),
+          ],
+          fallback: null,
+        ),
+      ),
+    );
+    addTearDown(host.dispose);
+    await tester.pumpTestApp(
+      child: Material(child: PortablePresentationRenderer(host: host)),
+    );
+    expect(find.text("Connected"), findsOneWidget);
+    expect(find.byIcon(Icons.cloud_done_outlined), findsOneWidget);
+    final context = tester.element(find.text("Connected"));
+    expect(
+      tester.widget<Icon>(find.byIcon(Icons.cloud_done_outlined)).color,
+      context.colors.online,
+    );
+    expect(
+      tester.widget<Text>(find.text("Connected")).style?.color,
+      context.colors.online,
+    );
+  });
+
   testWidgets("writes through the host using its checked expected type", (
     tester,
   ) async {
@@ -2245,3 +2471,17 @@ presentation.PresentationNode _node(
   element: element,
   header: null,
 );
+
+presentation.PresentationNode _visualText(String id, String value) =>
+    presentation.PresentationNode(
+      nodeId: id,
+      properties: presentation.PresentationProperties.defaultInstance,
+      header: null,
+      element: presentation.PresentationElement.wrapText(
+        (presentation.TextContent.defaultInstance.toMutable()
+              ..value = expression.ExpressionNode.wrapLiteral(
+                types.DataValue.wrapStringValue(value),
+              ))
+            .toFrozen(),
+      ),
+    );

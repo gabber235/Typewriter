@@ -96,6 +96,87 @@ void main() {
     expect(host.read(_rootReference), types.DataValue.wrapInteger("127"));
   });
 
+  test(
+    "local value actions evaluate current bindings and use checked writes",
+    () async {
+      var value = types.DataValue.wrapStringValue("first");
+      var writes = 0;
+      final host = _host(
+        bindings: [
+          _binding(
+            read: (_) => value,
+            write: (_, next) {
+              writes++;
+              value = next;
+              return const PortablePresentationWriteApplied();
+            },
+          ),
+        ],
+      );
+      addTearDown(host.dispose);
+      final uppercase = action.EditorAction.wrapLocal(
+        action.LocalEditorAction.createSetValue(
+          target: _rootReference,
+          value: expression.ExpressionNode.createCall(
+            operation: types.OperationId(value: "typewriter.text.upper"),
+            arguments: [
+              expression.ExpressionNode.createRead(
+                binding: _bindingId,
+                path: types.ValuePath(segments: const []),
+              ),
+            ],
+          ),
+        ),
+      );
+      expect(
+        await host.execute(uppercase),
+        isA<PortablePresentationWriteApplied>(),
+      );
+      expect(
+        host.read(_rootReference),
+        types.DataValue.wrapStringValue("FIRST"),
+      );
+      expect(writes, 1);
+      final invalid = action.EditorAction.wrapLocal(
+        action.LocalEditorAction.createSetValue(
+          target: _rootReference,
+          value: expression.ExpressionNode.wrapLiteral(
+            types.DataValue.wrapBoolean(true),
+          ),
+        ),
+      );
+      expect(
+        await host.execute(invalid),
+        isA<PortablePresentationWriteRejected>(),
+      );
+      expect(writes, 1);
+    },
+  );
+
+  test("local value actions cannot mutate observational bindings", () async {
+    final host = _host(
+      bindings: [
+        _binding(read: (_) => types.DataValue.wrapStringValue("original")),
+      ],
+    );
+    addTearDown(host.dispose);
+    final result = await host.execute(
+      action.EditorAction.wrapLocal(
+        action.LocalEditorAction.createSetValue(
+          target: _rootReference,
+          value: expression.ExpressionNode.wrapLiteral(
+            types.DataValue.wrapStringValue("changed"),
+          ),
+        ),
+      ),
+    );
+    expect(result, isA<PortablePresentationWriteRejected>());
+    expect(
+      host.read(_rootReference),
+      types.DataValue.wrapStringValue("original"),
+    );
+  });
+
   test("accepts nullable scalar roots without a named wrapper", () async {
     var value = types.DataValue.wrapStringValue("value");
     final host = _host(
@@ -382,7 +463,7 @@ EditorSourcePresentationHost _host({
   catalog: catalog ?? _emptyCatalog(),
   root: () => presentation.PresentationNode.defaultInstance,
   bindings: bindings,
-  budget: expression.EvaluationBudget.defaultInstance,
+  budget: expression.EvaluationBudget(maxSteps: 256, maxCollectionItems: 32),
   executeAction: executeAction,
 );
 

@@ -19,6 +19,7 @@ part "service_editor_resource.dart";
 part "service_route_projection.dart";
 part "service_connections.dart";
 part "service_portable_presentation.dart";
+part "service_inspector_layout.dart";
 part "topology_portable_presentation.dart";
 part "service_selection.dart";
 part "topology_models.dart";

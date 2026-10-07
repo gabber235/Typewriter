@@ -15,15 +15,13 @@ abstract final class _RuntimeInspectorFields {
 skir.ExpressionBindingId _topologyBinding(String value) =>
     skir.ExpressionBindingId(value: value);
 
-EditorSourcePresentationHost topologyRuntimePortableHost({
+EditorSourcePresentationHost _topologyRuntimePortableHost({
   required String rootId,
   required Map<String, skir.DataValue> values,
+  required Color color,
 }) {
-  final displayValues = values.map(
-    (key, value) => MapEntry(key, _portableDisplayValue(value)),
-  );
   final bindings = [
-    for (final entry in displayValues.entries)
+    for (final entry in values.entries)
       EditorSourcePresentationBinding(
         id: _topologyBinding("$rootId.${entry.key}"),
         use: _portableUse(entry.value),
@@ -33,13 +31,52 @@ EditorSourcePresentationHost topologyRuntimePortableHost({
   return EditorSourcePresentationHost(
     catalog: _servicePortableCatalog,
     root: () => _portableColumn(rootId, [
-      for (final entry in displayValues.entries)
-        _portableFact(
-          "$rootId.${entry.key}",
-          _topologyLabel(entry.key),
-          _topologyBinding("$rootId.${entry.key}"),
-        ),
-    ]),
+      _inspectorSection("$rootId.overview", "Runtime", [
+        _inspectorCard("$rootId.health", "STATUS", color, [
+          _inspectorRuntimeStatus(
+            "$rootId.status",
+            _topologyBinding(
+              "$rootId.${_RuntimeInspectorFields.runtimeStatus}",
+            ),
+          ),
+          _portableFact(
+            "$rootId.artifact",
+            "Artifact",
+            _topologyBinding(
+              "$rootId.${_RuntimeInspectorFields.artifactVersion}",
+            ),
+          ),
+          _inspectorFact(
+            "$rootId.updated",
+            "Updated",
+            _inspectorDateTime(
+              _topologyBinding("$rootId.${_RuntimeInspectorFields.updatedAt}"),
+            ),
+          ),
+          _inspectorMessage(
+            "$rootId.message",
+            _topologyBinding(
+              "$rootId.${_RuntimeInspectorFields.runtimeMessage}",
+            ),
+          ),
+        ]),
+      ]),
+      _inspectorSection("$rootId.placement", "Placement", [
+        _inspectorCard("$rootId.assignment", "ASSIGNMENT", color, [
+          for (final field in [
+            _RuntimeInspectorFields.ownerHost,
+            _RuntimeInspectorFields.assignedRealm,
+            _RuntimeInspectorFields.target,
+          ])
+            if (values.containsKey(field))
+              _portableFact(
+                "$rootId.$field",
+                _topologyLabel(field),
+                _topologyBinding("$rootId.$field"),
+              ),
+        ]),
+      ]),
+    ], spacing: 16),
     bindings: bindings,
     budget: skir.EvaluationBudget(maxSteps: 512, maxCollectionItems: 64),
     readOnly: true,
@@ -88,26 +125,17 @@ EditorSourcePresentationHost topologyHostPortableHost({
       connected ? "Connected" : "Offline",
     ),
     "service.last_seen": lastSeen == null
-        ? skir.DataValue.wrapStringValue("Never")
-        : skir.DataValue.wrapStringValue(lastSeen.toIso8601String()),
+        ? skir.DataValue.null_
+        : skir.DataValue.wrapTimestamp(lastSeen),
     "host.entrypoint": skir.DataValue.wrapStringValue(
       host.entrypoint.formatted,
     ),
-    "host.can_host_realm": skir.DataValue.wrapStringValue(
-      host.canHostRealm ? "Available" : "Unavailable",
-    ),
-    "host.supported_engines": skir.DataValue.wrapStringValue(
-      host.supportedEngines.map((value) => value.engineId).join(", "),
-    ),
-    "host.state": skir.DataValue.wrapStringValue(
-      hostRuntimeStatusLabel(host.state.status),
-    ),
+    "host.can_host_realm": skir.DataValue.wrapBoolean(host.canHostRealm),
+    "host.state": skir.DataValue.wrapStringValue(host.state.status.name),
     "host.message": skir.DataValue.wrapStringValue(
       host.state.message ?? "None",
     ),
-    "host.updated_at": skir.DataValue.wrapStringValue(
-      host.state.updatedAt.toIso8601String(),
-    ),
+    "host.updated_at": skir.DataValue.wrapTimestamp(host.state.updatedAt),
   };
   final bindings = <EditorSourcePresentationBinding>[
     if (!configurationOnly) ...[
@@ -145,7 +173,7 @@ EditorSourcePresentationHost topologyHostPortableHost({
       id: realmEnabled,
       owner: configurationOwner,
       field: "realm",
-      enabled: _realmHosted,
+      enabled: _draftVariant(_realmHosted, {"target": "".asValue}),
       disabled: _realmDisabled,
     ),
     _configurationString(
@@ -157,7 +185,10 @@ EditorSourcePresentationHost topologyHostPortableHost({
       id: engineEnabled,
       owner: configurationOwner,
       field: "engine",
-      enabled: _engineEnabled,
+      enabled: _draftVariant(_engineEnabled, {
+        "target": "".asValue,
+        "realm": "".asValue,
+      }),
       disabled: _engineDisabled,
     ),
     _configurationString(
@@ -176,84 +207,181 @@ EditorSourcePresentationHost topologyHostPortableHost({
     catalog: _servicePortableCatalog,
     root: () => _portableColumn("serviceHost", [
       if (!configurationOnly) ...[
-        if (identityOwner == null)
-          _portableFact("serviceHost.name", "Name", _serviceNameBinding)
-        else
-          _portableTextInput(
-            "serviceHost.name",
-            _serviceNameBinding,
-            label: "Name",
-            inputFormatters: [
-              skir.TextInputFormat.lowercase,
-              skir.TextInputFormat.createReplace(
-                pattern: r"[\s\-]+",
-                replacement: "_",
+        _inspectorSection("serviceHost.service", "Service", [
+          if (identityOwner == null)
+            _portableFact("serviceHost.name", "Name", _serviceNameBinding)
+          else
+            _portableTextInput(
+              "serviceHost.name",
+              _serviceNameBinding,
+              label: "Name",
+              inputFormatters: _serviceNameInputFormats,
+            ),
+          _inspectorCard(
+            "serviceHost.connection",
+            "CONNECTION",
+            service?.color ?? standaloneServiceColor,
+            [
+              _inspectorConnectionStatus(
+                "serviceHost.connection.status",
+                _topologyBinding("service.state"),
               ),
-              skir.TextInputFormat.wrapAllow("[a-z0-9_]"),
+              _inspectorGrid("serviceHost.connection.facts", [
+                _portableFact(
+                  "serviceHost.version",
+                  "Version",
+                  _topologyBinding("service.version"),
+                ),
+                _inspectorFact(
+                  "serviceHost.lastSeen",
+                  "Last seen",
+                  _inspectorRelativeTime(_topologyBinding("service.last_seen")),
+                ),
+              ]),
             ],
           ),
-        for (final entry in runtime.entries)
-          _portableFact(
-            "serviceHost.${entry.key}",
-            _topologyLabel(entry.key),
-            _topologyBinding(entry.key),
-          ),
-      ],
-      if (host.canHostRealm) ...[
-        _portableToggle(
-          "serviceHost.realm.enabled",
-          realmEnabled,
-          "Host a Realm",
-        ),
-        _portableConditional(
-          "serviceHost.realm.options",
-          realmEnabled,
-          _portableSelect(
-            "serviceHost.realm.target",
-            realmTarget,
-            "Realm target",
-            _targetOptions(realmTargets),
-          ),
-        ),
-      ],
-      _portableToggle(
-        "serviceHost.engine.enabled",
-        engineEnabled,
-        "Run an execution engine",
-      ),
-      _portableConditional(
-        "serviceHost.engine.options",
-        engineEnabled,
-        _portableColumn("serviceHost.engine.fields", [
-          _portableSelect(
-            "serviceHost.engine.target",
-            engineTarget,
-            "Engine target",
-            _targetOptions(engineTargets),
-          ),
-          if (!usesHostedRealm())
-            _portableSelect(
-              "serviceHost.engine.realm",
-              engineRealm,
-              "Assigned Realm",
-              [
-                for (final realm in realms)
-                  if (_encodeTarget(
-                        realm.targetEngine.engineId,
-                        realm.targetEngine.versionConstraint,
-                      ) ==
-                      selectedEngineTarget())
-                    (
-                      id: realm.realmId.id,
-                      label: realm.ownerHost.name.formatted,
-                      value: realm.realmId.id,
-                    ),
-              ],
-            ),
         ]),
-      ),
-      _portableCommit("serviceHost.save", engineEnabled),
-    ]),
+        _inspectorSection("serviceHost.host", "Host", [
+          _inspectorCard(
+            "serviceHost.capabilities",
+            "CAPABILITIES",
+            service?.color ?? standaloneServiceColor,
+            [
+              _inspectorGrid("serviceHost.capabilityFacts", [
+                _portableFact(
+                  "serviceHost.entrypoint",
+                  "Entry point",
+                  _topologyBinding("host.entrypoint"),
+                ),
+                _inspectorFact(
+                  "serviceHost.realmHosting",
+                  "Realm hosting",
+                  skir.PresentationElement.createStatus(
+                    value: _portableRead(
+                      _topologyBinding("host.can_host_realm"),
+                    ),
+                    cases: [
+                      skir.StatusCase(
+                        match: skir.DataValue.wrapBoolean(true),
+                        appearance: skir.StatusAppearance(
+                          tone: skir.StatusTone.active,
+                          label: _portableLiteral("Available"),
+                        ),
+                      ),
+                      skir.StatusCase(
+                        match: skir.DataValue.wrapBoolean(false),
+                        appearance: skir.StatusAppearance(
+                          tone: skir.StatusTone.inactive,
+                          label: _portableLiteral("Unavailable"),
+                        ),
+                      ),
+                    ],
+                    fallback: null,
+                  ),
+                ),
+              ]),
+              _inspectorFact(
+                "serviceHost.engines",
+                "Supported engines",
+                skir.PresentationElement.wrapChildren(
+                  skir.ChildrenElement.createWrap(
+                    layout: skir.WrapChildrenLayout(
+                      spacing: 6,
+                      runSpacing: 6,
+                      mainAxisAlignment: skir.MainAxisAlignment.start,
+                      crossAxisAlignment: skir.CrossAxisAlignment.start,
+                    ),
+                    children: [
+                      for (final engine in host.supportedEngines)
+                        _inspectorNode(
+                          "serviceHost.engine.${engine.engineId}",
+                          skir.PresentationElement.createChip(
+                            label: _portableLiteral(engine.engineId),
+                            color: _inspectorColor(engineServiceRoleColor),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          _inspectorCard(
+            "serviceHost.health",
+            "RUNTIME HEALTH",
+            service?.color ?? standaloneServiceColor,
+            [
+              _inspectorHostStatus(
+                "serviceHost.health.status",
+                _topologyBinding("host.state"),
+              ),
+              _inspectorFact(
+                "serviceHost.updated",
+                "Updated",
+                _inspectorDateTime(_topologyBinding("host.updated_at")),
+              ),
+              _inspectorMessage(
+                "serviceHost.message",
+                _topologyBinding("host.message"),
+              ),
+            ],
+          ),
+        ]),
+      ],
+      _inspectorSection("serviceHost.configuration", "Configuration", [
+        if (host.canHostRealm)
+          _inspectorWorkload(
+            "serviceHost.realm",
+            "REALM HOSTING",
+            "Host a Realm",
+            realmServiceRoleColor,
+            realmEnabled,
+            [
+              _portableSelect(
+                "serviceHost.realm.target",
+                realmTarget,
+                "Realm target",
+                _targetOptions(realmTargets),
+              ),
+            ],
+          ),
+        _inspectorWorkload(
+          "serviceHost.engine",
+          "EXECUTION ENGINE",
+          "Run an execution engine",
+          engineServiceRoleColor,
+          engineEnabled,
+          [
+            _portableSelect(
+              "serviceHost.engine.target",
+              engineTarget,
+              "Engine target",
+              _targetOptions(engineTargets),
+            ),
+            if (!usesHostedRealm())
+              _portableSelect(
+                "serviceHost.engine.realm",
+                engineRealm,
+                "Assigned Realm",
+                [
+                  for (final realm in realms)
+                    if (_encodeTarget(
+                          realm.targetEngine.engineId,
+                          realm.targetEngine.versionConstraint,
+                        ) ==
+                        selectedEngineTarget())
+                      (
+                        id: realm.realmId.id,
+                        label: realm.ownerHost.name.formatted,
+                        value: realm.realmId.id,
+                      ),
+                ],
+              ),
+          ],
+        ),
+        _portableCommit("serviceHost.save", engineEnabled),
+      ]),
+    ], spacing: 16),
     bindings: bindings,
     budget: skir.EvaluationBudget(maxSteps: 1024, maxCollectionItems: 128),
     capabilities: commit == null
@@ -266,7 +394,7 @@ EditorSourcePresentationBinding _configurationToggle({
   required skir.ExpressionBindingId id,
   required EditOwner owner,
   required String field,
-  required ResolvedTypeRef enabled,
+  required PolymorphicValue enabled,
   required ResolvedTypeRef disabled,
 }) => EditorSourcePresentationBinding(
   id: id,
@@ -275,7 +403,8 @@ EditorSourcePresentationBinding _configurationToggle({
   read: (_) {
     final current = owner.value(DataPath.root.field(field)).valueOrNull;
     return skir.DataValue.wrapBoolean(
-      current is PolymorphicValue && current.concreteType == enabled,
+      current is PolymorphicValue &&
+          current.concreteType == enabled.concreteType,
     );
   },
   write: (path, value) {
@@ -287,7 +416,7 @@ EditorSourcePresentationBinding _configurationToggle({
     return owner
         .update(
           DataPath.root.field(field),
-          _draftVariant(value.value ? enabled : disabled),
+          value.value ? enabled : _draftVariant(disabled),
         )
         .portablePresentationResult;
   },
@@ -360,20 +489,6 @@ String _topologyLabel(String field) {
   };
 }
 
-skir.DataValue _portableDisplayValue(skir.DataValue value) =>
-    skir.DataValue.wrapStringValue(switch (value) {
-      skir.DataValue_stringValueWrapper(:final value) => value,
-      skir.DataValue_booleanWrapper(:final value) =>
-        value ? "Available" : "Unavailable",
-      skir.DataValue_timestampWrapper(:final value) => value.toIso8601String(),
-      skir.DataValue_integerWrapper(:final value) => value,
-      skir.DataValue_floatWrapper(:final value) => value.toString(),
-      skir.DataValue_decimalWrapper(:final value) => value,
-      final current when current == skir.DataValue.null_ => "None",
-      final current when current == skir.DataValue.unfilled => "Unavailable",
-      _ => "Unavailable",
-    });
-
 List<({String id, String label, String value})> _targetOptions(
   Map<String, List<String>> targets,
 ) => [
@@ -387,23 +502,6 @@ List<({String id, String label, String value})> _targetOptions(
         value: _encodeTarget(entry.key, version),
       ),
 ];
-
-skir.PresentationNode _portableToggle(
-  String id,
-  skir.ExpressionBindingId bindingId,
-  String label,
-) => skir.PresentationNode(
-  nodeId: id,
-  properties: skir.PresentationProperties.defaultInstance,
-  element: skir.PresentationElement.createToggleInput(
-    binding: _portableReference(bindingId),
-    label: _portableLiteral(label),
-    description: null,
-    prefix: null,
-    semanticLabel: _portableLiteral(label),
-  ),
-  header: null,
-);
 
 skir.PresentationNode _portableSelect(
   String id,
@@ -434,17 +532,59 @@ skir.PresentationNode _portableSelect(
   header: null,
 );
 
-skir.PresentationNode _portableConditional(
-  String id,
-  skir.ExpressionBindingId bindingId,
-  skir.PresentationNode child,
-) => skir.PresentationNode(
-  nodeId: id,
-  properties: skir.PresentationProperties.defaultInstance,
-  element: skir.PresentationElement.createConditional(
-    condition: _portableRead(bindingId),
-    whenTrue: child,
-    whenFalse: null,
-  ),
-  header: null,
-);
+/// Builds the observational inspector without introducing another mutation owner.
+extension RealmPortablePresentation on TopologyRealm {
+  EditorSourcePresentationHost portablePresentationHost() =>
+      _topologyRuntimePortableHost(
+        rootId: "realmInstance",
+        color: realmServiceRoleColor,
+        values: {
+          _RuntimeInspectorFields.ownerHost: skir.DataValue.wrapStringValue(
+            ownerHost.name.formatted,
+          ),
+          _RuntimeInspectorFields.target: skir.DataValue.wrapStringValue(
+            _targetLabel(targetEngine),
+          ),
+          _RuntimeInspectorFields.runtimeStatus: skir.DataValue.wrapStringValue(
+            state.status.name,
+          ),
+          _RuntimeInspectorFields.artifactVersion: skir
+              .DataValue.wrapStringValue(state.activeArtifactVersion ?? "None"),
+          _RuntimeInspectorFields.runtimeMessage:
+              skir.DataValue.wrapStringValue(state.message ?? "None"),
+          _RuntimeInspectorFields.updatedAt: skir.DataValue.wrapTimestamp(
+            state.updatedAt,
+          ),
+        },
+      );
+}
+
+/// Builds the observational inspector without introducing another mutation owner.
+extension EnginePortablePresentation on TopologyEngine {
+  EditorSourcePresentationHost portablePresentationHost() =>
+      _topologyRuntimePortableHost(
+        rootId: "engineInstance",
+        color: engineServiceRoleColor,
+        values: {
+          _RuntimeInspectorFields.ownerHost: skir.DataValue.wrapStringValue(
+            ownerHost.name.formatted,
+          ),
+          _RuntimeInspectorFields.assignedRealm: skir.DataValue.wrapStringValue(
+            realm.ownerHost.name.formatted,
+          ),
+          _RuntimeInspectorFields.target: skir.DataValue.wrapStringValue(
+            _targetLabel(target),
+          ),
+          _RuntimeInspectorFields.runtimeStatus: skir.DataValue.wrapStringValue(
+            state.status.name,
+          ),
+          _RuntimeInspectorFields.artifactVersion: skir
+              .DataValue.wrapStringValue(state.activeArtifactVersion ?? "None"),
+          _RuntimeInspectorFields.runtimeMessage:
+              skir.DataValue.wrapStringValue(state.message ?? "None"),
+          _RuntimeInspectorFields.updatedAt: skir.DataValue.wrapTimestamp(
+            state.updatedAt,
+          ),
+        },
+      );
+}

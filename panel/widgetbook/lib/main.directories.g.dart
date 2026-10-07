@@ -584,6 +584,24 @@ final directories = <_widgetbook.WidgetbookNode>[
                                     .servicesPageUseCase,
                           ),
                           _widgetbook.WidgetbookUseCase(
+                            name: 'Engine inspector',
+                            builder:
+                                _widgetbook_workspace_stories_features_organizations_features_services_presentation_route_stories
+                                    .engineInspectorUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Host inspector',
+                            builder:
+                                _widgetbook_workspace_stories_features_organizations_features_services_presentation_route_stories
+                                    .hostInspectorUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Realm inspector',
+                            builder:
+                                _widgetbook_workspace_stories_features_organizations_features_services_presentation_route_stories
+                                    .realmInspectorUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
                             name: 'Service inspector',
                             builder:
                                 _widgetbook_workspace_stories_features_organizations_features_services_presentation_route_stories

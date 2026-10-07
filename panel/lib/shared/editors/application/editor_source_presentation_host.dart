@@ -184,6 +184,26 @@ final class EditorSourcePresentationHost extends ChangeNotifier
     }
     final executor = executeAction;
     if (executor == null) {
+      if (editorAction case action.EditorAction_localWrapper(
+        value: action.LocalEditorAction_setValueWrapper(:final value),
+      )) {
+        final evaluated = PortableExpressionEvaluator({
+          for (final entry in document.bindings.entries)
+            entry.key: entry.value.value,
+        }, budget: budget).evaluate(value.value);
+        return switch (evaluated) {
+          PortableExpressionAvailable(value: final replacement) => write(
+            value.target,
+            replacement,
+          ),
+          PortableExpressionFailed(:final message) =>
+            PortablePresentationWriteRejected(message),
+          PortableExpressionUnavailable() =>
+            const PortablePresentationWriteRejected(
+              "The action value is unavailable",
+            ),
+        };
+      }
       return const PortablePresentationWriteRejected(
         "This presentation action is unavailable",
       );

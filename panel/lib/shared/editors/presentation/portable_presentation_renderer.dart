@@ -3,11 +3,13 @@ import "dart:convert";
 import "dart:math" as math;
 import "dart:ui" as ui show TextDirection;
 
+import "package:clock/clock.dart";
 import "package:crypto/crypto.dart";
 import "package:duration/duration.dart";
 import "package:flutter/material.dart";
 import "package:flutter/rendering.dart";
 import "package:flutter/services.dart";
+import "package:flutter_hooks/flutter_hooks.dart";
 import "package:flutter_markdown_plus/flutter_markdown_plus.dart";
 import "package:http/http.dart" as http;
 import "package:iconify_flutter_plus/icons/bi.dart";
@@ -926,13 +928,18 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
       return _diagnostic("The presentation node has no element");
     }
     final rendered = _renderElement(context, element, childScope);
-    final child = node.header == null
+    var child = node.header == null
         ? rendered
         : _AuthoredPresentationHeader(
             header: node.header!,
             body: rendered,
             scope: childScope,
           );
+    if (element case presentation.PresentationElement_sectionWrapper(
+      :final value,
+    )) {
+      child = _decorateSection(context, value, childScope, child);
+    }
     return Semantics(
       container: true,
       enabled: available,
@@ -987,6 +994,7 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
       childScope,
     ),
     presentation.PresentationElement_chipWrapper(:final value) => _renderChip(
+      context,
       value,
       childScope,
     ),
@@ -1700,12 +1708,8 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
           PortablePresentationNodeRenderer(node: child, scope: childScope),
       ],
     ),
-    presentation.ChildrenElement_gridWrapper(:final value) => GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: value.layout.columns < 1 ? 1 : value.layout.columns,
-      crossAxisSpacing: value.layout.horizontalSpacing,
-      mainAxisSpacing: value.layout.verticalSpacing,
+    presentation.ChildrenElement_gridWrapper(:final value) => _presentationGrid(
+      value.layout,
       children: [
         for (final child in value.children)
           PortablePresentationNodeRenderer(node: child, scope: childScope),
@@ -1939,12 +1943,8 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
       crossAxisAlignment: _wrapCrossAlignment(value.crossAxisAlignment),
       children: children,
     ),
-    presentation.ChildrenLayout_gridWrapper(:final value) => GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: value.columns < 1 ? 1 : value.columns,
-      crossAxisSpacing: value.horizontalSpacing,
-      mainAxisSpacing: value.verticalSpacing,
+    presentation.ChildrenLayout_gridWrapper(:final value) => _presentationGrid(
+      value,
       children: children,
     ),
     presentation.ChildrenLayout.stack => Stack(children: children),
@@ -2066,7 +2066,7 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
           paragraph.overflow == presentation.PresentationTextOverflow.ellipsis
           ? TextOverflow.ellipsis
           : TextOverflow.clip,
-      style: TextStyle(
+      style: DefaultTextStyle.of(context).style.copyWith(
         color:
             (color as _ResolvedValue<Color?>).value ??
             _paragraphToneColor(context, paragraph.tone),
@@ -2174,17 +2174,33 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
   }
 
   Widget _renderChip(
+    BuildContext context,
     presentation.ChipContent content,
     PortablePresentationScope childScope,
   ) {
     final label = _string(childScope, content.label);
-    return switch (label) {
-      _ResolvedValue(:final value) => Chip(
-        label: Text(value),
-        backgroundColor: _color(childScope, content.color),
+    if (label case _ResolvedFailure(:final message)) {
+      return _diagnostic(message);
+    }
+    final resolvedColor = _optionalTextColor(childScope, content.color);
+    if (resolvedColor case _ResolvedFailure(:final message)) {
+      return _diagnostic(message);
+    }
+    final color =
+        (resolvedColor as _ResolvedValue<Color?>).value ??
+        Theme.of(context).colorScheme.primary;
+    final hsl = HSLColor.fromColor(color);
+    final foreground = Theme.of(context).brightness == Brightness.dark
+        ? color
+        : hsl.withLightness(hsl.lightness.clamp(0.2, 0.4)).toColor();
+    return Chip(
+      label: Text(
+        (label as _ResolvedValue<String>).value,
+        style: DefaultTextStyle.of(context).style.copyWith(color: foreground),
       ),
-      _ResolvedFailure(:final message) => _diagnostic(message),
-    };
+      backgroundColor: color.withValues(alpha: 0.18),
+      side: BorderSide(color: color),
+    );
   }
 
   Widget _renderProgress(
@@ -2219,16 +2235,33 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
             .firstOrNull
             ?.appearance ??
         content.fallback;
-    if (appearance == null) {
-      return _diagnostic("The status has no matching appearance");
+    final tone = appearance?.tone ?? presentation.StatusTone.unknownStatus;
+    final labelResult = appearance?.label == null
+        ? _ResolvedValue(portableExpressionDisplayText(result.value))
+        : _string(childScope, appearance!.label!);
+    if (labelResult case _ResolvedFailure(:final message)) {
+      return _diagnostic(message);
     }
-    final label =
-        _controlString(appearance.label, childScope) ??
-        appearance.tone.kind.name;
-    final color = _statusColor(appearance.tone, Theme.of(context).colorScheme);
-    return Chip(
-      avatar: Icon(Icons.circle, size: 12, color: color),
-      label: Text(label),
+    final label = (labelResult as _ResolvedValue<String>).value;
+    final color = _statusColor(context, tone);
+    return Semantics(
+      label: label,
+      child: ExcludeSemantics(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(_statusIcon(tone), size: 14, color: color),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                label,
+                style: DefaultTextStyle.of(context).style
+                    .copyWith(color: color),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -2280,27 +2313,48 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
     if (timestamp == null) {
       return _diagnostic("The relative time value is unavailable");
     }
-    final now = DateTime.now();
-    final display = content.timeZone == presentation.DateTimeZone.utc
-        ? timestamp.toUtc()
-        : timestamp.toLocal();
-    final displayNow = content.timeZone == presentation.DateTimeZone.utc
-        ? now.toUtc()
-        : now.toLocal();
-    final description = describeRelativeTime(value: display, now: displayNow);
-    final label = content.style == presentation.RelativeTimeStyle.compact
-        ? description.compact
-        : description.natural;
-    final exact = DateFormat(
-      "yyyy/MM/dd HH:mm:ss",
-      Localizations.localeOf(context).toLanguageTag(),
-    ).format(display);
-    return Tooltip(
-      message: exact,
-      child: Semantics(
-        label: description.natural,
-        child: ExcludeSemantics(child: Text(label)),
-      ),
+    return HookBuilder(
+      builder: (context) {
+        final now = clock.now();
+        final display = content.timeZone == presentation.DateTimeZone.utc
+            ? timestamp.toUtc()
+            : timestamp.toLocal();
+        final displayNow = content.timeZone == presentation.DateTimeZone.utc
+            ? now.toUtc()
+            : now.toLocal();
+        final description = describeRelativeTime(
+          value: display,
+          now: displayNow,
+        );
+        useRefreshAt(description.nextRefreshAt, now: clock.now);
+        final tooltipKey = useMemoized(GlobalKey<TooltipState>.new);
+        final label = content.style == presentation.RelativeTimeStyle.compact
+            ? description.compact
+            : description.natural;
+        final exact = DateFormat(
+          "yyyy/MM/dd HH:mm:ss",
+          Localizations.localeOf(context).toLanguageTag(),
+        ).format(display);
+        return Tooltip(
+          key: tooltipKey,
+          message: exact,
+          child: Focus(
+            onFocusChange: (focused) {
+              if (!focused) {
+                Tooltip.dismissAllToolTips();
+                return;
+              }
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                tooltipKey.currentState?.ensureTooltipVisible();
+              });
+            },
+            child: Semantics(
+              label: description.natural,
+              child: ExcludeSemantics(child: Text(label)),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -4466,10 +4520,18 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
     presentation.SectionLayout section,
     PortablePresentationScope childScope,
   ) {
-    final child = PortablePresentationNodeRenderer(
+    return PortablePresentationNodeRenderer(
       node: section.child,
       scope: childScope,
     );
+  }
+
+  Widget _decorateSection(
+    BuildContext context,
+    presentation.SectionLayout section,
+    PortablePresentationScope childScope,
+    Widget child,
+  ) {
     final border = _border(context, section.border, childScope);
     return DepthBox(
       child: border == null
@@ -4583,7 +4645,12 @@ Widget? _paddedControlPrefix(
   final prefix = _controlPrefix(control, childScope);
   return prefix == null
       ? null
-      : Padding(padding: const EdgeInsets.all(8), child: prefix);
+      : Builder(
+          builder: (context) => Padding(
+            padding: EdgeInsets.all(context.spacing.space2),
+            child: prefix,
+          ),
+        );
 }
 
 Widget _withControlPrefix(
@@ -4593,12 +4660,14 @@ Widget _withControlPrefix(
 ) {
   final prefix = _controlPrefix(control, childScope);
   if (prefix == null) return child;
-  return Row(
-    children: [
-      Padding(padding: const EdgeInsets.all(8), child: prefix),
-      const SizedBox(width: 6),
-      Expanded(child: child),
-    ],
+  return Builder(
+    builder: (context) => Row(
+      children: [
+        Padding(padding: EdgeInsets.all(context.spacing.space2), child: prefix),
+        const SizedBox(width: 6),
+        Expanded(child: child),
+      ],
+    ),
   );
 }
 
@@ -5874,25 +5943,36 @@ final class _AuthoredPresentationHeaderState
               widget.scope.canExecuteAction &&
               enabledResult is _ResolvedValue<bool> &&
               enabledResult.value;
-          final chip = FilterChip(
-            label: Text(labelValue),
-            selected: checkedValue,
-            onSelected: enabled
-                ? (_) => _runAction(context, value.action, value.confirmation)
-                : null,
+          final checkbox = Shortcuts(
+            shortcuts: const {
+              SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+              SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+              SingleActivator(LogicalKeyboardKey.numpadEnter): ActivateIntent(),
+            },
+            child: Checkbox(
+              value: checkedValue,
+              semanticLabel: labelValue,
+              visualDensity: VisualDensity.compact,
+              onChanged: enabled
+                  ? (_) => _runAction(context, value.action, value.confirmation)
+                  : null,
+            ),
           );
           resolved.add(
             _AuthoredHeaderItem(
               widget: value.tooltip == null
                   ? enabledResult is _ResolvedFailure<bool>
-                        ? Tooltip(message: enabledResult.message, child: chip)
-                        : chip
+                        ? Tooltip(
+                            message: enabledResult.message,
+                            child: checkbox,
+                          )
+                        : checkbox
                   : Tooltip(
                       message: switch (_string(widget.scope, value.tooltip!)) {
                         _ResolvedValue(:final value) => value,
                         _ResolvedFailure(:final message) => message,
                       },
-                      child: chip,
+                      child: checkbox,
                     ),
               placement: value.placement,
               priority: _priority(value.priority),
@@ -6958,20 +7038,64 @@ Color? _paragraphToneColor(
   _ => null,
 };
 
-Color _statusColor(presentation.StatusTone tone, ColorScheme colors) =>
+Color _statusColor(BuildContext context, presentation.StatusTone tone) =>
     switch (tone.kind) {
-      presentation.StatusTone_kind.successConst ||
+      presentation.StatusTone_kind.successConst => context.colors.success,
       presentation.StatusTone_kind.activeConst ||
-      presentation.StatusTone_kind.onlineConst => colors.primary,
+      presentation.StatusTone_kind.onlineConst => context.colors.online,
       presentation.StatusTone_kind.warningConst ||
-      presentation.StatusTone_kind.pendingConst ||
-      presentation.StatusTone_kind.pausedConst => colors.tertiary,
-      presentation.StatusTone_kind.dangerConst ||
-      presentation.StatusTone_kind.offlineConst => colors.error,
+      presentation.StatusTone_kind.pausedConst => context.colors.warning,
+      presentation.StatusTone_kind.dangerConst => context.colors.danger,
+      presentation.StatusTone_kind.inactiveConst ||
+      presentation.StatusTone_kind.offlineConst => context.colors.offline,
       presentation.StatusTone_kind.informationConst ||
-      presentation.StatusTone_kind.inProgressConst => colors.secondary,
-      _ => colors.outline,
+      presentation.StatusTone_kind.pendingConst ||
+      presentation.StatusTone_kind.inProgressConst => context.colors.info,
+      _ => context.colors.contentSecondary,
     };
+
+IconData _statusIcon(presentation.StatusTone tone) => switch (tone.kind) {
+  presentation.StatusTone_kind.neutralConst => Icons.circle_outlined,
+  presentation.StatusTone_kind.informationConst => Icons.info_outline,
+  presentation.StatusTone_kind.successConst => Icons.check_circle_outline,
+  presentation.StatusTone_kind.warningConst => Icons.warning_amber_rounded,
+  presentation.StatusTone_kind.dangerConst => Icons.error_outline,
+  presentation.StatusTone_kind.activeConst => Icons.play_circle_outline,
+  presentation.StatusTone_kind.inactiveConst => Icons.stop_circle_outlined,
+  presentation.StatusTone_kind.onlineConst => Icons.cloud_done_outlined,
+  presentation.StatusTone_kind.offlineConst => Icons.cloud_off_outlined,
+  presentation.StatusTone_kind.pendingConst => Icons.schedule_outlined,
+  presentation.StatusTone_kind.inProgressConst => Icons.sync,
+  presentation.StatusTone_kind.pausedConst => Icons.pause_circle_outline,
+  _ => Icons.help_outline,
+};
+
+Widget _presentationGrid(
+  presentation.GridChildrenLayout layout, {
+  required List<Widget> children,
+}) => LayoutBuilder(
+  builder: (context, constraints) {
+    if (!constraints.hasBoundedWidth) {
+      return Wrap(
+        spacing: layout.horizontalSpacing,
+        runSpacing: layout.verticalSpacing,
+        children: children,
+      );
+    }
+    final columns = layout.columns < 1 ? 1 : layout.columns;
+    final width =
+        ((constraints.maxWidth - layout.horizontalSpacing * (columns - 1)) /
+                columns)
+            .clamp(0.0, constraints.maxWidth);
+    return Wrap(
+      spacing: layout.horizontalSpacing,
+      runSpacing: layout.verticalSpacing,
+      children: [
+        for (final child in children) SizedBox(width: width, child: child),
+      ],
+    );
+  },
+);
 
 IconData _materialIcon(String name) => switch (name) {
   "add" => Icons.add,

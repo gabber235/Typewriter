@@ -30,7 +30,7 @@ extension ServicePortablePresentation on Service {
     required EditOwner identityOwner,
   }) => EditorSourcePresentationHost(
     catalog: _servicePortableCatalog,
-    root: _servicePortablePresentation,
+    root: () => _servicePortablePresentation(color),
     budget: skir.EvaluationBudget(maxSteps: 512, maxCollectionItems: 64),
     capabilities: identityOwner.portablePresentationCapabilities,
     bindings: [
@@ -48,13 +48,10 @@ extension ServicePortablePresentation on Service {
       ),
       EditorSourcePresentationBinding(
         id: _serviceLastSeenBinding,
-        use: _portableTextType,
-        read: (_) {
-          final value = lastSeen;
-          return skir.DataValue.wrapStringValue(
-            value?.toIso8601String() ?? "Never",
-          );
-        },
+        use: _portableOptionalTimestampType,
+        read: (_) => lastSeen == null
+            ? skir.DataValue.null_
+            : skir.DataValue.wrapTimestamp(lastSeen!),
       ),
     ],
   );
@@ -126,26 +123,35 @@ extension EditorMutationPortablePresentation on EditorMutationResult {
       };
 }
 
-skir.PresentationNode _servicePortablePresentation() =>
+skir.PresentationNode _servicePortablePresentation(Color color) =>
     _portableColumn("service", [
-      _portableTextInput(
-        "service.name",
-        _serviceNameBinding,
-        label: "Name",
-        inputFormatters: [
-          skir.TextInputFormat.lowercase,
-          skir.TextInputFormat.createReplace(
-            pattern: r"[\s\-]+",
-            replacement: "_",
-          ),
-          skir.TextInputFormat.wrapAllow("[a-z0-9_]"),
-        ],
-      ),
-      _portableFact("service.state", "Connection", _serviceStateBinding),
-      _portableFact("service.version", "Version", _serviceVersionBinding),
-      _portableFact("service.last_seen", "Last seen", _serviceLastSeenBinding),
+      _inspectorSection("service.details", "Service", [
+        _portableTextInput(
+          "service.name",
+          _serviceNameBinding,
+          label: "Name",
+          inputFormatters: _serviceNameInputFormats,
+        ),
+        _inspectorCard("service.connection", "CONNECTION", color, [
+          _inspectorConnectionStatus("service.state", _serviceStateBinding),
+          _inspectorGrid("service.facts", [
+            _portableFact("service.version", "Version", _serviceVersionBinding),
+            _inspectorFact(
+              "service.lastSeen",
+              "Last seen",
+              _inspectorRelativeTime(_serviceLastSeenBinding),
+            ),
+          ]),
+        ]),
+      ]),
       _portableCommit("service.save", _serviceNameBinding),
-    ]);
+    ], spacing: 16);
+
+final _serviceNameInputFormats = [
+  skir.TextInputFormat.lowercase,
+  skir.TextInputFormat.createReplace(pattern: r"[\s\-]+", replacement: "_"),
+  skir.TextInputFormat.wrapAllow("[a-z0-9_]"),
+];
 
 skir.PresentationNode _serviceIdentityPortablePresentation() =>
     _portableColumn("serviceIdentity", [
@@ -153,14 +159,7 @@ skir.PresentationNode _serviceIdentityPortablePresentation() =>
         "serviceIdentity.name",
         _serviceNameBinding,
         label: "Name",
-        inputFormatters: [
-          skir.TextInputFormat.lowercase,
-          skir.TextInputFormat.createReplace(
-            pattern: r"[\s\-]+",
-            replacement: "_",
-          ),
-          skir.TextInputFormat.wrapAllow("[a-z0-9_]"),
-        ],
+        inputFormatters: _serviceNameInputFormats,
       ),
       _portableCommit("serviceIdentity.save", _serviceNameBinding),
     ]);
@@ -192,10 +191,13 @@ skir.PresentationNode _portableFact(
   String id,
   String label,
   skir.ExpressionBindingId bindingId,
-) => _portableColumn(id, [
-  _portableText("$id.label", _portableLiteral(label)),
-  _portableText("$id.value", _portableRead(bindingId)),
-]);
+) => _inspectorFact(
+  id,
+  label,
+  skir.PresentationElement.wrapText(
+    _inspectorTextContent(_portableRead(bindingId)),
+  ),
+);
 
 skir.PresentationNode _portableCommit(
   String id,
@@ -211,15 +213,16 @@ skir.PresentationNode _portableCommit(
 
 skir.PresentationNode _portableColumn(
   String id,
-  List<skir.PresentationNode> children,
-) => skir.PresentationNode(
+  List<skir.PresentationNode> children, {
+  double spacing = 8,
+}) => skir.PresentationNode(
   nodeId: id,
   properties: skir.PresentationProperties.defaultInstance,
   element: skir.PresentationElement.wrapChildren(
     skir.ChildrenElement.createColumn(
       children: children.map(skir.AxisChild.wrapFixed),
       layout: skir.AxisChildrenLayout(
-        spacing: 8,
+        spacing: spacing,
         mainAxisAlignment: skir.MainAxisAlignment.start,
         crossAxisAlignment: skir.CrossAxisAlignment.stretch,
       ),
@@ -229,26 +232,9 @@ skir.PresentationNode _portableColumn(
 );
 
 skir.PresentationNode _portableText(String id, skir.ExpressionNode value) =>
-    skir.PresentationNode(
-      nodeId: id,
-      properties: skir.PresentationProperties.defaultInstance,
-      element: skir.PresentationElement.createText(
-        value: value,
-        color: null,
-        fontSize: null,
-        fontWeight: null,
-        fontItalic: null,
-        fontOpticalSize: null,
-        fontSlant: null,
-        fontWidth: null,
-        textAlignment: null,
-        lineHeight: null,
-        letterSpacing: null,
-        decoration: null,
-        semanticLabel: null,
-        paragraph: skir.TextParagraph.defaultInstance,
-      ),
-      header: null,
+    _inspectorNode(
+      id,
+      skir.PresentationElement.wrapText(_inspectorTextContent(value)),
     );
 
 skir.BindingRef _portableReference(skir.ExpressionBindingId bindingId) =>

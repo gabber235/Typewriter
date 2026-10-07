@@ -1521,7 +1521,9 @@ String _boundedInterpolate(
   List<types.DataValue> values,
   void Function() consumeStep,
 ) {
-  final rendered = values.map(_displayText).toList(growable: false);
+  final rendered = values
+      .map(portableExpressionDisplayText)
+      .toList(growable: false);
   for (final value in rendered) {
     _chargeCodePoints(value, consumeStep);
   }
@@ -1659,7 +1661,10 @@ int _size(types.DataValue value) => switch (_unwrap(value)) {
   ),
 };
 
-String _displayText(types.DataValue value) {
+/// Formats a value for presentation labels and expression interpolation.
+///
+/// Named values use their payload, and empty values have no display text.
+String portableExpressionDisplayText(types.DataValue value) {
   final unwrapped = _unwrap(value);
   if (unwrapped == types.DataValue.unfilled ||
       unwrapped == types.DataValue.null_ ||

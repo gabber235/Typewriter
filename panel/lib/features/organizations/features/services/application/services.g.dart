@@ -617,7 +617,7 @@ final class OrganizationTopologyControllerProvider
 }
 
 String _$organizationTopologyControllerHash() =>
-    r'cec8f253356df5eab1a1db336f82ea653b81265e';
+    r'e4d5e6e601dcc11697e8f21b0dbec696e82dc012';
 
 /// Owns the live organization topology projection.
 ///

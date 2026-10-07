@@ -112,7 +112,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text("Name"), findsOneWidget);
-    expect(find.text("Connection"), findsOneWidget);
+    expect(find.text("CONNECTION"), findsOneWidget);
     expect(
       find.descendant(
         of: find.byType(PortablePresentationRenderer),
@@ -124,19 +124,19 @@ void main() {
     expect(find.text("Entry point"), findsOneWidget);
     expect(find.text("Realm hosting"), findsOneWidget);
     expect(find.text("Supported engines"), findsOneWidget);
-    expect(find.text("Runtime health"), findsOneWidget);
+    expect(find.text("RUNTIME HEALTH"), findsOneWidget);
     expect(find.text("Host a Realm"), findsOneWidget);
     expect(find.text("Run an execution engine"), findsOneWidget);
 
     expect(find.text("Assigned Realm"), findsNothing);
     expect(find.text("Hosted Realm"), findsNothing);
-    expect(find.text("Message"), findsOneWidget);
+    expect(find.text("Message"), findsNothing);
     expect(find.byType(PortablePresentationRenderer), findsOneWidget);
     expect(find.text("Unbind"), findsOneWidget);
 
     await tester.ensureVisible(find.text("Host a Realm"));
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(Switch).first);
+    await tester.tap(find.byType(Checkbox).first);
     await tester.pumpAndSettle();
 
     expect(find.text("Assigned Realm"), findsOneWidget);
@@ -194,8 +194,8 @@ void main() {
 
     expect(find.text("Owner host"), findsOneWidget);
     expect(find.text("Target"), findsOneWidget);
-    expect(find.text("Status"), findsOneWidget);
-    expect(find.text("Artifact version"), findsOneWidget);
+    expect(find.text("STATUS"), findsOneWidget);
+    expect(find.text("Artifact"), findsOneWidget);
     expect(find.text("Assigned Realm"), findsOneWidget);
     expect(find.text("Message"), findsOneWidget);
     expect(find.text("Deployment needs attention"), findsOneWidget);

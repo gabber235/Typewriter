@@ -3,6 +3,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/stories/features/organizations/features/services/presentation/topology_scenarios.dart";
 
@@ -13,11 +14,12 @@ Widget servicesPageUseCase(BuildContext context) {
 
 @widgetbook.UseCase(name: "Service inspector", type: ServicesPage)
 Widget serviceInspectorUseCase(BuildContext context) {
-  return serviceInspectorStory();
+  return serviceInspectorStory(width: _inspectorWidth(context));
 }
 
-Widget serviceInspectorStory({Service? service}) =>
-    FakeApp(child: _ServiceInspectorStory(service: service));
+Widget serviceInspectorStory({Service? service, double width = 360}) => FakeApp(
+  child: _ServiceInspectorStory(service: service, width: width),
+);
 
 Widget servicesPageStory() {
   final scenario = completeTopologyScenario();
@@ -59,9 +61,10 @@ class _StoryTopology extends OrganizationTopologyController {
 }
 
 final class _ServiceInspectorStory extends StatefulWidget {
-  const _ServiceInspectorStory({this.service});
+  const _ServiceInspectorStory({required this.width, this.service});
 
   final Service? service;
+  final double width;
 
   @override
   State<_ServiceInspectorStory> createState() => _ServiceInspectorStoryState();
@@ -70,7 +73,7 @@ final class _ServiceInspectorStory extends StatefulWidget {
 final class _ServiceInspectorStoryState extends State<_ServiceInspectorStory> {
   late final Service _service =
       widget.service ?? completeTopologyScenario().services.first;
-  late final _StoryServiceSource _source = _StoryServiceSource(
+  late final _StoryEditorSource _source = _StoryEditorSource(
     _service.editorSnapshot,
   );
   late final EditorSourcePresentationHost _host = _service
@@ -89,7 +92,7 @@ final class _ServiceInspectorStoryState extends State<_ServiceInspectorStory> {
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: SizedBox(
-          width: 640,
+          width: widget.width,
           child: PortablePresentationRenderer(host: _host),
         ),
       ),
@@ -97,8 +100,8 @@ final class _ServiceInspectorStoryState extends State<_ServiceInspectorStory> {
   );
 }
 
-final class _StoryServiceSource extends ChangeNotifier implements EditorSource {
-  _StoryServiceSource(this._snapshot)
+final class _StoryEditorSource extends ChangeNotifier implements EditorSource {
+  _StoryEditorSource(this._snapshot)
     : _document = _snapshot.document,
       _value = _snapshot.document.confirmedValue;
 
@@ -209,7 +212,7 @@ final class _StoryServiceSource extends ChangeNotifier implements EditorSource {
 final class _StoryServiceInteraction implements EditorInteractionSession {
   _StoryServiceInteraction(this._source, this.path, this._origin);
 
-  final _StoryServiceSource _source;
+  final _StoryEditorSource _source;
   final DataValue? _origin;
 
   @override
@@ -229,4 +232,163 @@ final class _StoryServiceInteraction implements EditorInteractionSession {
     active = false;
     if (_origin case final value?) _source.update(path, value);
   }
+}
+
+@widgetbook.UseCase(name: "Host inspector", type: ServicesPage)
+Widget hostInspectorUseCase(BuildContext context) {
+  final scenario = completeTopologyScenario();
+  final index = context.knobs.int.slider(
+    label: "Host scenario",
+    initialValue: 0,
+    min: 0,
+    max: scenario.topology.hosts.length - 1,
+  );
+  return hostInspectorStory(
+    host: scenario.topology.hosts[index],
+    width: _inspectorWidth(context),
+  );
+}
+
+double _inspectorWidth(BuildContext context) => context.knobs.double.slider(
+  label: "Inspector width",
+  initialValue: 360,
+  min: 280,
+  max: 700,
+);
+
+Widget hostInspectorStory({TopologyHost? host, double width = 360}) => FakeApp(
+  child: _HostInspectorStory(
+    key: ValueKey(host?.hostId),
+    host: host,
+    width: width,
+  ),
+);
+
+final class _HostInspectorStory extends StatefulWidget {
+  const _HostInspectorStory({required this.width, this.host, super.key});
+  final TopologyHost? host;
+  final double width;
+  @override
+  State<_HostInspectorStory> createState() => _HostInspectorStoryState();
+}
+
+final class _HostInspectorStoryState extends State<_HostInspectorStory> {
+  late final _scenario = completeTopologyScenario();
+  late final _hostValue = widget.host ?? _scenario.topology.hosts.first;
+  late final _service = _scenario.services.firstWhere(
+    (service) => service.serviceId == _hostValue.serviceId,
+  );
+  late final _configuration = _StoryEditorSource(
+    HostEditorSnapshot(_hostValue, _scenario.topology),
+  );
+  late final _identity = _StoryEditorSource(_service.editorSnapshot);
+  late final _host = topologyHostPortableHost(
+    host: _hostValue,
+    service: _service,
+    connected: _hostValue.state.status != TopologyHostStatus.offline,
+    configurationOwner: _configuration,
+    identityOwner: _identity,
+    realmTargets: const {
+      "paper": ["^1"],
+      "conformance": ["^1"],
+    },
+    engineTargets: {
+      for (final engine in _hostValue.supportedEngines) engine.engineId: ["^1"],
+    },
+    realms: _scenario.topology.realmInstances
+        .where((realm) => realm.ownerHost.id != _hostValue.hostId)
+        .toList(),
+  );
+  @override
+  void dispose() {
+    _host.dispose();
+    _configuration.dispose();
+    _identity.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: SizedBox(
+          width: widget.width,
+          child: PortablePresentationRenderer(host: _host),
+        ),
+      ),
+    ),
+  );
+}
+
+@widgetbook.UseCase(name: "Realm inspector", type: ServicesPage)
+Widget realmInspectorUseCase(BuildContext context) {
+  final realms = completeTopologyScenario().topology.realmInstances;
+  final index = context.knobs.int.slider(
+    label: "Realm scenario",
+    initialValue: 0,
+    min: 0,
+    max: realms.length - 1,
+  );
+  return runtimeInspectorStory(
+    host: realms[index].portablePresentationHost(),
+    width: _inspectorWidth(context),
+  );
+}
+
+@widgetbook.UseCase(name: "Engine inspector", type: ServicesPage)
+Widget engineInspectorUseCase(BuildContext context) {
+  final engines = completeTopologyScenario().topology.engineInstances;
+  final index = context.knobs.int.slider(
+    label: "Engine scenario",
+    initialValue: 0,
+    min: 0,
+    max: engines.length - 1,
+  );
+  return runtimeInspectorStory(
+    host: engines[index].portablePresentationHost(),
+    width: _inspectorWidth(context),
+  );
+}
+
+Widget runtimeInspectorStory({
+  required EditorSourcePresentationHost host,
+  double width = 360,
+}) => FakeApp(
+  child: _RuntimeInspectorStory(host: host, width: width),
+);
+
+final class _RuntimeInspectorStory extends StatefulWidget {
+  const _RuntimeInspectorStory({required this.host, required this.width});
+  final EditorSourcePresentationHost host;
+  final double width;
+  @override
+  State<_RuntimeInspectorStory> createState() => _RuntimeInspectorStoryState();
+}
+
+final class _RuntimeInspectorStoryState extends State<_RuntimeInspectorStory> {
+  @override
+  void didUpdateWidget(covariant _RuntimeInspectorStory oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.host != widget.host) oldWidget.host.dispose();
+  }
+
+  @override
+  void dispose() {
+    widget.host.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: SizedBox(
+          width: widget.width,
+          child: PortablePresentationRenderer(host: widget.host),
+        ),
+      ),
+    ),
+  );
 }

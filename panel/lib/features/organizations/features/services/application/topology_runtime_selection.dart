@@ -34,38 +34,15 @@ class _RealmInstanceSelectable
   ];
 
   @override
-  InspectionContent buildInspection(
-    EditorOwnerScope owners,
-  ) => InspectionContent(
-    host: topologyRuntimePortableHost(
-      rootId: "realmInstance",
-      values: {
-        _RuntimeInspectorFields.ownerHost: skir.DataValue.wrapStringValue(
-          realm.ownerHost.name.formatted,
+  InspectionContent buildInspection(EditorOwnerScope owners) =>
+      InspectionContent(
+        host: realm.portablePresentationHost(),
+        header: InspectorHeader(
+          id: realm.realmId.id,
+          name: name,
+          color: realmServiceRoleColor,
         ),
-        _RuntimeInspectorFields.target: skir.DataValue.wrapStringValue(
-          _targetLabel(realm.targetEngine),
-        ),
-        _RuntimeInspectorFields.runtimeStatus: skir.DataValue.wrapStringValue(
-          childRuntimeStatusLabel(realm.state.status),
-        ),
-        _RuntimeInspectorFields.artifactVersion: skir.DataValue.wrapStringValue(
-          realm.state.activeArtifactVersion ?? "None",
-        ),
-        _RuntimeInspectorFields.runtimeMessage: skir.DataValue.wrapStringValue(
-          realm.state.message ?? "None",
-        ),
-        _RuntimeInspectorFields.updatedAt: skir.DataValue.wrapTimestamp(
-          realm.state.updatedAt,
-        ),
-      },
-    ),
-    header: InspectorHeader(
-      id: realm.realmId.id,
-      name: name,
-      color: realmServiceRoleColor,
-    ),
-  );
+      );
 }
 
 /// Builds the route to a Realm owned by an organization.
@@ -107,39 +84,13 @@ class _EngineInstanceSelectable
   List<SelectionCapability> get capabilities => [];
 
   @override
-  InspectionContent buildInspection(
-    EditorOwnerScope owners,
-  ) => InspectionContent(
-    host: topologyRuntimePortableHost(
-      rootId: "engineInstance",
-      values: {
-        _RuntimeInspectorFields.ownerHost: skir.DataValue.wrapStringValue(
-          engine.ownerHost.name.formatted,
+  InspectionContent buildInspection(EditorOwnerScope owners) =>
+      InspectionContent(
+        host: engine.portablePresentationHost(),
+        header: InspectorHeader(
+          id: engine.engineId.id,
+          name: name,
+          color: engineServiceRoleColor,
         ),
-        _RuntimeInspectorFields.assignedRealm: skir.DataValue.wrapStringValue(
-          engine.realm.ownerHost.name.formatted,
-        ),
-        _RuntimeInspectorFields.target: skir.DataValue.wrapStringValue(
-          _targetLabel(engine.target),
-        ),
-        _RuntimeInspectorFields.runtimeStatus: skir.DataValue.wrapStringValue(
-          childRuntimeStatusLabel(engine.state.status),
-        ),
-        _RuntimeInspectorFields.artifactVersion: skir.DataValue.wrapStringValue(
-          engine.state.activeArtifactVersion ?? "None",
-        ),
-        _RuntimeInspectorFields.runtimeMessage: skir.DataValue.wrapStringValue(
-          engine.state.message ?? "None",
-        ),
-        _RuntimeInspectorFields.updatedAt: skir.DataValue.wrapTimestamp(
-          engine.state.updatedAt,
-        ),
-      },
-    ),
-    header: InspectorHeader(
-      id: engine.engineId.id,
-      name: name,
-      color: engineServiceRoleColor,
-    ),
-  );
+      );
 }
