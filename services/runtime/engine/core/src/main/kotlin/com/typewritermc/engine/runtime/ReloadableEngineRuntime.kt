@@ -2,7 +2,7 @@ package com.typewritermc.engine.runtime
 
 import com.typewritermc.discovery.GeneratedProviderDeployment
 import com.typewritermc.discovery.RuntimeRegistrar
-import com.typewritermc.engine.LoadedCompiledContent
+import com.typewritermc.engine.LoadedPublishedContent
 import com.typewritermc.loader.api.RuntimeHealth
 import com.typewritermc.loader.api.StagedHostedRuntime
 import com.typewritermc.scripting.RuntimeMemberSignature
@@ -31,7 +31,7 @@ class ReloadableEngineRuntime(
     override val health: StateFlow<RuntimeHealth> = mutableHealth
     private var deployment: GeneratedProviderDeployment? = deployment
     private var scope: ManagedRuntimeScope? = null
-    private var lastContent: LoadedCompiledContent? = null
+    private var lastContent: LoadedPublishedContent? = null
 
     override suspend fun activate() {
         val currentDeployment = checkNotNull(deployment) { "Engine deployment is stopped." }
@@ -52,30 +52,25 @@ class ReloadableEngineRuntime(
         }
     }
 
-    /**
-     * Applies content only while active and only if its activation revision exceeds the last successful one.
-     *
-     * The remembered revision advances after the gateway succeeds. Missing gateways return Unsupported; older or
-     * equal revisions return the current activation without reapplying.
-     */
-    suspend fun applyContent(content: LoadedCompiledContent): ContentApplicationResult {
+    /** Applies a current descriptor delivered by the serialized content worker. */
+    suspend fun applyContent(content: LoadedPublishedContent): ContentApplicationResult {
         check(scope != null) { "Engine deployment is not active." }
         if (enforceImplementationCompatibility) {
-            require(content.manifest.implementationToken == implementationToken) {
+            require(content.descriptor.implementationToken == implementationToken) {
                 "Compiled content targets a different engine implementation."
             }
         }
-        require(content.manifest.runtimeSignatures == runtimeSignatures) {
+        require(content.descriptor.runtimeSignatures == runtimeSignatures) {
             "Compiled content requires a different runtime member signature set."
         }
         val current = lastContent
-        if (current != null && content.activationRevision <= current.activationRevision) {
-            return ContentApplicationResult.Ignored(current.activationRevision, current.manifest.digest)
+        if (current?.descriptor?.publication == content.descriptor.publication) {
+            return ContentApplicationResult.Unchanged(current.descriptor.publication)
         }
         val gateway = contentGateway ?: return ContentApplicationResult.Unsupported
         gateway.apply(content)
         lastContent = content
-        return ContentApplicationResult.Applied(content.activationRevision, content.manifest.digest)
+        return ContentApplicationResult.Applied(content.descriptor.publication)
     }
 
     override suspend fun quiesce() {

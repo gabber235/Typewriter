@@ -14,7 +14,9 @@
 import "dart:core" as _core;
 import "package:skir_client/skir_client.dart" as _skir;
 
+import "./publication.dart" as _lib_editor_v1_publication;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
+import "../../kernel/v1/bounded_transfer.dart" as _lib_kernel_v1_bounded_transfer;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 
 // -----------------------------------------------------------------------------
@@ -408,65 +410,83 @@ final class CompiledBlobPointer_mutable implements CompiledBlobPointer_orMutable
 }
 
 // -----------------------------------------------------------------------------
-// struct CompiledArtifactPointer
+// struct CompiledArtifactReference
 // -----------------------------------------------------------------------------
 
-sealed class CompiledArtifactPointer_orMutable {
+sealed class CompiledArtifactReference_orMutable {
+  CompilationRoot_orMutable get root;
+  _core.int get formatRevision;
+  _core.String get mediaType;
   _core.String get semanticDigest;
-  CompiledBlobPointer_orMutable get blob;
 
-  CompiledArtifactPointer toFrozen();
+  CompiledArtifactReference toFrozen();
 }
 
 /// Deeply immutable.
-final class CompiledArtifactPointer implements CompiledArtifactPointer_orMutable {
+final class CompiledArtifactReference implements CompiledArtifactReference_orMutable {
+  @_core.override
+  final CompilationRoot root;
+  @_core.override
+  final _core.int formatRevision;
+  @_core.override
+  final _core.String mediaType;
   @_core.override
   final _core.String semanticDigest;
-  @_core.override
-  final CompiledBlobPointer blob;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory CompiledArtifactPointer({
+  factory CompiledArtifactReference({
+    required CompilationRoot_orMutable root,
+    required _core.int formatRevision,
+    required _core.String mediaType,
     required _core.String semanticDigest,
-    required CompiledBlobPointer_orMutable blob,
-  }) => CompiledArtifactPointer._(
+  }) => CompiledArtifactReference._(
+    root.toFrozen(),
+    formatRevision,
+    mediaType,
     semanticDigest,
-    blob.toFrozen(),
   );
 
-  CompiledArtifactPointer._(
+  CompiledArtifactReference._(
+    this.root,
+    this.formatRevision,
+    this.mediaType,
     this.semanticDigest,
-    this.blob,
   );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = CompiledArtifactPointer._(
+  static final defaultInstance = CompiledArtifactReference._(
+    CompilationRoot.defaultInstance,
+    0,
     "",
-    CompiledBlobPointer.defaultInstance,
+    "",
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CompiledArtifactPointer_mutable mutable() => CompiledArtifactPointer_mutable._(
+  static CompiledArtifactReference_mutable mutable() => CompiledArtifactReference_mutable._(
+    CompilationRoot.defaultInstance,
+    0,
     "",
-    CompiledBlobPointer.defaultInstance,
+    "",
   );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  CompiledArtifactPointer toFrozen() => this;
+  CompiledArtifactReference toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CompiledArtifactPointer_mutable toMutable() => CompiledArtifactPointer_mutable._(
+  CompiledArtifactReference_mutable toMutable() => CompiledArtifactReference_mutable._(
+    this.root,
+    this.formatRevision,
+    this.mediaType,
     this.semanticDigest,
-    this.blob,
   );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! CompiledArtifactPointer) return false;
+    if (other is! CompiledArtifactReference) return false;
     return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
@@ -474,24 +494,191 @@ final class CompiledArtifactPointer implements CompiledArtifactPointer_orMutable
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
   _core.List get _equality_proxy => [
+    this.root,
+    this.formatRevision,
+    this.mediaType,
     this.semanticDigest,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `CompiledArtifactReference` instances.
+  static _skir.StructSerializer<CompiledArtifactReference, CompiledArtifactReference_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "root",
+        "root",
+        0,
+        CompilationRoot.serializer,
+        "",
+        (it) => it.root,
+        (it, v) => it.root = v,
+      );
+      _serializerBuilder.addField(
+        "format_revision",
+        "formatRevision",
+        1,
+        _skir.Serializers.int32,
+        "",
+        (it) => it.formatRevision,
+        (it, v) => it.formatRevision = v,
+      );
+      _serializerBuilder.addField(
+        "media_type",
+        "mediaType",
+        2,
+        _skir.Serializers.string,
+        "",
+        (it) => it.mediaType,
+        (it, v) => it.mediaType = v,
+      );
+      _serializerBuilder.addField(
+        "semantic_digest",
+        "semanticDigest",
+        3,
+        _skir.Serializers.string,
+        "",
+        (it) => it.semanticDigest,
+        (it, v) => it.semanticDigest = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/compiled_content.skir:CompiledArtifactReference",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (CompiledArtifactReference_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [CompiledArtifactReference].
+final class CompiledArtifactReference_mutable implements CompiledArtifactReference_orMutable {
+  CompilationRoot_orMutable root;
+  _core.int formatRevision;
+  _core.String mediaType;
+  _core.String semanticDigest;
+  _skir.internal__UnrecognizedFields? _u;
+
+  CompiledArtifactReference_mutable._(
+    this.root,
+    this.formatRevision,
+    this.mediaType,
+    this.semanticDigest,
+  );
+
+  /// If the value of [root] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [root] and returns it.
+  CompilationRoot_mutable get mutableRoot {
+    final value = this.root;
+    if (value is CompilationRoot_mutable) {
+      return value;
+    } else {
+      return this.root = (value as CompilationRoot).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  CompiledArtifactReference toFrozen() => CompiledArtifactReference(
+    root: this.root,
+    formatRevision: this.formatRevision,
+    mediaType: this.mediaType,
+    semanticDigest: this.semanticDigest,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct PublishedOutput
+// -----------------------------------------------------------------------------
+
+sealed class PublishedOutput_orMutable {
+  CompiledArtifactReference_orMutable get reference;
+  CompiledBlobPointer_orMutable get blob;
+
+  PublishedOutput toFrozen();
+}
+
+/// Deeply immutable.
+final class PublishedOutput implements PublishedOutput_orMutable {
+  @_core.override
+  final CompiledArtifactReference reference;
+  @_core.override
+  final CompiledBlobPointer blob;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PublishedOutput({
+    required CompiledArtifactReference_orMutable reference,
+    required CompiledBlobPointer_orMutable blob,
+  }) => PublishedOutput._(
+    reference.toFrozen(),
+    blob.toFrozen(),
+  );
+
+  PublishedOutput._(
+    this.reference,
+    this.blob,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PublishedOutput._(
+    CompiledArtifactReference.defaultInstance,
+    CompiledBlobPointer.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PublishedOutput_mutable mutable() => PublishedOutput_mutable._(
+    CompiledArtifactReference.defaultInstance,
+    CompiledBlobPointer.defaultInstance,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PublishedOutput toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PublishedOutput_mutable toMutable() => PublishedOutput_mutable._(
+    this.reference,
+    this.blob,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PublishedOutput) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.reference,
     this.blob,
   ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `CompiledArtifactPointer` instances.
-  static _skir.StructSerializer<CompiledArtifactPointer, CompiledArtifactPointer_mutable> get serializer {
+  /// Serializer for `PublishedOutput` instances.
+  static _skir.StructSerializer<PublishedOutput, PublishedOutput_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
-        "semantic_digest",
-        "semanticDigest",
+        "reference",
+        "reference",
         0,
-        _skir.Serializers.string,
+        CompiledArtifactReference.serializer,
         "",
-        (it) => it.semanticDigest,
-        (it, v) => it.semanticDigest = v,
+        (it) => it.reference,
+        (it, v) => it.reference = v,
       );
       _serializerBuilder.addField(
         "blob",
@@ -508,26 +695,37 @@ final class CompiledArtifactPointer implements CompiledArtifactPointer_orMutable
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/compiled_content.skir:CompiledArtifactPointer",
+    recordId: "editor/v1/compiled_content.skir:PublishedOutput",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (CompiledArtifactPointer_mutable it) => it.toFrozen(),
+    toFrozen: (PublishedOutput_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [CompiledArtifactPointer].
-final class CompiledArtifactPointer_mutable implements CompiledArtifactPointer_orMutable {
-  _core.String semanticDigest;
+/// Mutable version of [PublishedOutput].
+final class PublishedOutput_mutable implements PublishedOutput_orMutable {
+  CompiledArtifactReference_orMutable reference;
   CompiledBlobPointer_orMutable blob;
   _skir.internal__UnrecognizedFields? _u;
 
-  CompiledArtifactPointer_mutable._(
-    this.semanticDigest,
+  PublishedOutput_mutable._(
+    this.reference,
     this.blob,
   );
+
+  /// If the value of [reference] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [reference] and returns it.
+  CompiledArtifactReference_mutable get mutableReference {
+    final value = this.reference;
+    if (value is CompiledArtifactReference_mutable) {
+      return value;
+    } else {
+      return this.reference = (value as CompiledArtifactReference).toMutable();
+    }
+  }
 
   /// If the value of [blob] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [blob] and returns it.
@@ -542,90 +740,108 @@ final class CompiledArtifactPointer_mutable implements CompiledArtifactPointer_o
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  CompiledArtifactPointer toFrozen() => CompiledArtifactPointer(
-    semanticDigest: this.semanticDigest,
+  PublishedOutput toFrozen() => PublishedOutput(
+    reference: this.reference,
     blob: this.blob,
   ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
-// struct CompiledContentActivation
+// struct PublishedContent
 // -----------------------------------------------------------------------------
 
-sealed class CompiledContentActivation_orMutable {
-  _core.int get activationRevision;
-  _core.String get manifestDigest;
-  CompiledBlobPointer_orMutable get manifest;
-  _core.Iterable<CompiledArtifactPointer_orMutable> get artifacts;
+sealed class PublishedContent_orMutable {
+  _lib_editor_v1_type_catalog.PublicationId_orMutable get publication;
+  _core.int get formatRevision;
+  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get catalog;
+  _core.String get implementationToken;
+  _core.Iterable<_lib_editor_v1_publication.RuntimeMemberSignature_orMutable> get runtimeSignatures;
+  _core.Iterable<PublishedOutput_orMutable> get outputs;
 
-  CompiledContentActivation toFrozen();
+  PublishedContent toFrozen();
 }
 
 /// Deeply immutable.
-final class CompiledContentActivation implements CompiledContentActivation_orMutable {
+final class PublishedContent implements PublishedContent_orMutable {
   @_core.override
-  final _core.int activationRevision;
+  final _lib_editor_v1_type_catalog.PublicationId publication;
   @_core.override
-  final _core.String manifestDigest;
+  final _core.int formatRevision;
   @_core.override
-  final CompiledBlobPointer manifest;
+  final _lib_editor_v1_type_catalog.CatalogGeneration catalog;
   @_core.override
-  final _core.Iterable<CompiledArtifactPointer> artifacts;
+  final _core.String implementationToken;
+  @_core.override
+  final _core.Iterable<_lib_editor_v1_publication.RuntimeMemberSignature> runtimeSignatures;
+  @_core.override
+  final _core.Iterable<PublishedOutput> outputs;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory CompiledContentActivation({
-    required _core.int activationRevision,
-    required _core.String manifestDigest,
-    required CompiledBlobPointer_orMutable manifest,
-    required _core.Iterable<CompiledArtifactPointer_orMutable> artifacts,
-  }) => CompiledContentActivation._(
-    activationRevision,
-    manifestDigest,
-    manifest.toFrozen(),
-    _skir.internal__frozenMappedCopy(artifacts, (it) => it.toFrozen()),
+  factory PublishedContent({
+    required _lib_editor_v1_type_catalog.PublicationId_orMutable publication,
+    required _core.int formatRevision,
+    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog,
+    required _core.String implementationToken,
+    required _core.Iterable<_lib_editor_v1_publication.RuntimeMemberSignature_orMutable> runtimeSignatures,
+    required _core.Iterable<PublishedOutput_orMutable> outputs,
+  }) => PublishedContent._(
+    publication.toFrozen(),
+    formatRevision,
+    catalog.toFrozen(),
+    implementationToken,
+    _skir.internal__frozenMappedCopy(runtimeSignatures, (it) => it.toFrozen()),
+    _skir.internal__frozenMappedCopy(outputs, (it) => it.toFrozen()),
   );
 
-  CompiledContentActivation._(
-    this.activationRevision,
-    this.manifestDigest,
-    this.manifest,
-    this.artifacts,
+  PublishedContent._(
+    this.publication,
+    this.formatRevision,
+    this.catalog,
+    this.implementationToken,
+    this.runtimeSignatures,
+    this.outputs,
   );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = CompiledContentActivation._(
+  static final defaultInstance = PublishedContent._(
+    _lib_editor_v1_type_catalog.PublicationId.defaultInstance,
     0,
+    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
     "",
-    CompiledBlobPointer.defaultInstance,
+    _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CompiledContentActivation_mutable mutable() => CompiledContentActivation_mutable._(
+  static PublishedContent_mutable mutable() => PublishedContent_mutable._(
+    _lib_editor_v1_type_catalog.PublicationId.defaultInstance,
     0,
+    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
     "",
-    CompiledBlobPointer.defaultInstance,
+    _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
   );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  CompiledContentActivation toFrozen() => this;
+  PublishedContent toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CompiledContentActivation_mutable toMutable() => CompiledContentActivation_mutable._(
-    this.activationRevision,
-    this.manifestDigest,
-    this.manifest,
-    this.artifacts,
+  PublishedContent_mutable toMutable() => PublishedContent_mutable._(
+    this.publication,
+    this.formatRevision,
+    this.catalog,
+    this.implementationToken,
+    this.runtimeSignatures,
+    this.outputs,
   );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! CompiledContentActivation) return false;
+    if (other is! PublishedContent) return false;
     return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
@@ -633,323 +849,77 @@ final class CompiledContentActivation implements CompiledContentActivation_orMut
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
   _core.List get _equality_proxy => [
-    this.activationRevision,
-    this.manifestDigest,
-    this.manifest,
-    this.artifacts,
+    this.publication,
+    this.formatRevision,
+    this.catalog,
+    this.implementationToken,
+    this.runtimeSignatures,
+    this.outputs,
   ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `CompiledContentActivation` instances.
-  static _skir.StructSerializer<CompiledContentActivation, CompiledContentActivation_mutable> get serializer {
+  /// Serializer for `PublishedContent` instances.
+  static _skir.StructSerializer<PublishedContent, PublishedContent_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
-        "activation_revision",
-        "activationRevision",
+        "publication",
+        "publication",
         0,
-        _skir.Serializers.int64,
+        _lib_editor_v1_type_catalog.PublicationId.serializer,
         "",
-        (it) => it.activationRevision,
-        (it, v) => it.activationRevision = v,
+        (it) => it.publication,
+        (it, v) => it.publication = v,
       );
       _serializerBuilder.addField(
-        "manifest_digest",
-        "manifestDigest",
-        1,
-        _skir.Serializers.string,
-        "",
-        (it) => it.manifestDigest,
-        (it, v) => it.manifestDigest = v,
-      );
-      _serializerBuilder.addField(
-        "manifest",
-        "manifest",
-        2,
-        CompiledBlobPointer.serializer,
-        "",
-        (it) => it.manifest,
-        (it, v) => it.manifest = v,
-      );
-      _serializerBuilder.addField(
-        "artifacts",
-        "artifacts",
-        3,
-        _skir.Serializers.iterable(
-          CompiledArtifactPointer.serializer,
-        ),
-        "",
-        (it) => it.artifacts,
-        (it, v) => it.artifacts = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/compiled_content.skir:CompiledContentActivation",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (CompiledContentActivation_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [CompiledContentActivation].
-final class CompiledContentActivation_mutable implements CompiledContentActivation_orMutable {
-  _core.int activationRevision;
-  _core.String manifestDigest;
-  CompiledBlobPointer_orMutable manifest;
-  _core.Iterable<CompiledArtifactPointer_orMutable> artifacts;
-  _skir.internal__UnrecognizedFields? _u;
-
-  CompiledContentActivation_mutable._(
-    this.activationRevision,
-    this.manifestDigest,
-    this.manifest,
-    this.artifacts,
-  );
-
-  /// If the value of [manifest] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [manifest] and returns it.
-  CompiledBlobPointer_mutable get mutableManifest {
-    final value = this.manifest;
-    if (value is CompiledBlobPointer_mutable) {
-      return value;
-    } else {
-      return this.manifest = (value as CompiledBlobPointer).toMutable();
-    }
-  }
-
-  /// If the value of [artifacts] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [artifacts] and returns it.
-  _core.List<CompiledArtifactPointer_orMutable> get mutableArtifacts {
-    final value = this.artifacts;
-    if (value is _skir.internal__MutableList<CompiledArtifactPointer_orMutable>) {
-      return value;
-    } else {
-      return this.artifacts = _skir.internal__MutableList([...value]);
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  CompiledContentActivation toFrozen() => CompiledContentActivation(
-    activationRevision: this.activationRevision,
-    manifestDigest: this.manifestDigest,
-    manifest: this.manifest,
-    artifacts: this.artifacts,
-  ).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// struct CompiledResourceState.Active
-// -----------------------------------------------------------------------------
-
-sealed class CompiledResourceState_Active_orMutable {
-  _core.String get manifestId;
-
-  CompiledResourceState_Active toFrozen();
-}
-
-/// Deeply immutable.
-final class CompiledResourceState_Active implements CompiledResourceState_Active_orMutable {
-  @_core.override
-  final _core.String manifestId;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory CompiledResourceState_Active({
-    required _core.String manifestId,
-  }) => CompiledResourceState_Active._(
-    manifestId,
-  );
-
-  CompiledResourceState_Active._(
-    this.manifestId,
-  );
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = CompiledResourceState_Active._(
-    "",
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static CompiledResourceState_Active_mutable mutable() => CompiledResourceState_Active_mutable._(
-    "",
-  );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  CompiledResourceState_Active toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  CompiledResourceState_Active_mutable toMutable() => CompiledResourceState_Active_mutable._(
-    this.manifestId,
-  );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! CompiledResourceState_Active) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.manifestId,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `CompiledResourceState_Active` instances.
-  static _skir.StructSerializer<CompiledResourceState_Active, CompiledResourceState_Active_mutable> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "manifest_id",
-        "manifestId",
-        0,
-        _skir.Serializers.string,
-        "",
-        (it) => it.manifestId,
-        (it, v) => it.manifestId = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/compiled_content.skir:CompiledResourceState.Active",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (CompiledResourceState_Active_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [CompiledResourceState_Active].
-final class CompiledResourceState_Active_mutable implements CompiledResourceState_Active_orMutable {
-  _core.String manifestId;
-  _skir.internal__UnrecognizedFields? _u;
-
-  CompiledResourceState_Active_mutable._(
-    this.manifestId,
-  );
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  CompiledResourceState_Active toFrozen() => CompiledResourceState_Active(
-    manifestId: this.manifestId,
-  ).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// struct CompiledResourceState.Blocked
-// -----------------------------------------------------------------------------
-
-sealed class CompiledResourceState_Blocked_orMutable {
-  _core.String? get lastActiveManifestId;
-  _core.int get diagnosticCount;
-
-  CompiledResourceState_Blocked toFrozen();
-}
-
-/// Deeply immutable.
-final class CompiledResourceState_Blocked implements CompiledResourceState_Blocked_orMutable {
-  @_core.override
-  final _core.String? lastActiveManifestId;
-  @_core.override
-  final _core.int diagnosticCount;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory CompiledResourceState_Blocked({
-    required _core.String? lastActiveManifestId,
-    required _core.int diagnosticCount,
-  }) => CompiledResourceState_Blocked._(
-    lastActiveManifestId,
-    diagnosticCount,
-  );
-
-  CompiledResourceState_Blocked._(
-    this.lastActiveManifestId,
-    this.diagnosticCount,
-  );
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = CompiledResourceState_Blocked._(
-    null,
-    0,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static CompiledResourceState_Blocked_mutable mutable() => CompiledResourceState_Blocked_mutable._(
-    null,
-    0,
-  );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  CompiledResourceState_Blocked toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  CompiledResourceState_Blocked_mutable toMutable() => CompiledResourceState_Blocked_mutable._(
-    this.lastActiveManifestId,
-    this.diagnosticCount,
-  );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! CompiledResourceState_Blocked) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.lastActiveManifestId,
-    this.diagnosticCount,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `CompiledResourceState_Blocked` instances.
-  static _skir.StructSerializer<CompiledResourceState_Blocked, CompiledResourceState_Blocked_mutable> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "last_active_manifest_id",
-        "lastActiveManifestId",
-        0,
-        _skir.Serializers.optional(
-          _skir.Serializers.string,
-        ),
-        "",
-        (it) => it.lastActiveManifestId,
-        (it, v) => it.lastActiveManifestId = v,
-      );
-      _serializerBuilder.addField(
-        "diagnostic_count",
-        "diagnosticCount",
+        "format_revision",
+        "formatRevision",
         1,
         _skir.Serializers.int32,
         "",
-        (it) => it.diagnosticCount,
-        (it, v) => it.diagnosticCount = v,
+        (it) => it.formatRevision,
+        (it, v) => it.formatRevision = v,
+      );
+      _serializerBuilder.addField(
+        "catalog",
+        "catalog",
+        2,
+        _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
+        "",
+        (it) => it.catalog,
+        (it, v) => it.catalog = v,
+      );
+      _serializerBuilder.addField(
+        "implementation_token",
+        "implementationToken",
+        3,
+        _skir.Serializers.string,
+        "",
+        (it) => it.implementationToken,
+        (it, v) => it.implementationToken = v,
+      );
+      _serializerBuilder.addField(
+        "runtime_signatures",
+        "runtimeSignatures",
+        4,
+        _skir.Serializers.iterable(
+          _lib_editor_v1_publication.RuntimeMemberSignature.serializer,
+        ),
+        "",
+        (it) => it.runtimeSignatures,
+        (it, v) => it.runtimeSignatures = v,
+      );
+      _serializerBuilder.addField(
+        "outputs",
+        "outputs",
+        5,
+        _skir.Serializers.iterable(
+          PublishedOutput.serializer,
+        ),
+        "",
+        (it) => it.outputs,
+        (it, v) => it.outputs = v,
       );
       _serializerBuilder.finalize();
     }
@@ -957,32 +927,207 @@ final class CompiledResourceState_Blocked implements CompiledResourceState_Block
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/compiled_content.skir:CompiledResourceState.Blocked",
+    recordId: "editor/v1/compiled_content.skir:PublishedContent",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (CompiledResourceState_Blocked_mutable it) => it.toFrozen(),
+    toFrozen: (PublishedContent_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [CompiledResourceState_Blocked].
-final class CompiledResourceState_Blocked_mutable implements CompiledResourceState_Blocked_orMutable {
-  _core.String? lastActiveManifestId;
-  _core.int diagnosticCount;
+/// Mutable version of [PublishedContent].
+final class PublishedContent_mutable implements PublishedContent_orMutable {
+  _lib_editor_v1_type_catalog.PublicationId_orMutable publication;
+  _core.int formatRevision;
+  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog;
+  _core.String implementationToken;
+  _core.Iterable<_lib_editor_v1_publication.RuntimeMemberSignature_orMutable> runtimeSignatures;
+  _core.Iterable<PublishedOutput_orMutable> outputs;
   _skir.internal__UnrecognizedFields? _u;
 
-  CompiledResourceState_Blocked_mutable._(
-    this.lastActiveManifestId,
-    this.diagnosticCount,
+  PublishedContent_mutable._(
+    this.publication,
+    this.formatRevision,
+    this.catalog,
+    this.implementationToken,
+    this.runtimeSignatures,
+    this.outputs,
   );
+
+  /// If the value of [publication] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [publication] and returns it.
+  _lib_editor_v1_type_catalog.PublicationId_mutable get mutablePublication {
+    final value = this.publication;
+    if (value is _lib_editor_v1_type_catalog.PublicationId_mutable) {
+      return value;
+    } else {
+      return this.publication = (value as _lib_editor_v1_type_catalog.PublicationId).toMutable();
+    }
+  }
+
+  /// If the value of [catalog] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [catalog] and returns it.
+  _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableCatalog {
+    final value = this.catalog;
+    if (value is _lib_editor_v1_type_catalog.CatalogGeneration_mutable) {
+      return value;
+    } else {
+      return this.catalog = (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
+    }
+  }
+
+  /// If the value of [runtimeSignatures] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [runtimeSignatures] and returns it.
+  _core.List<_lib_editor_v1_publication.RuntimeMemberSignature_orMutable> get mutableRuntimeSignatures {
+    final value = this.runtimeSignatures;
+    if (value is _skir.internal__MutableList<_lib_editor_v1_publication.RuntimeMemberSignature_orMutable>) {
+      return value;
+    } else {
+      return this.runtimeSignatures = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// If the value of [outputs] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [outputs] and returns it.
+  _core.List<PublishedOutput_orMutable> get mutableOutputs {
+    final value = this.outputs;
+    if (value is _skir.internal__MutableList<PublishedOutput_orMutable>) {
+      return value;
+    } else {
+      return this.outputs = _skir.internal__MutableList([...value]);
+    }
+  }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  CompiledResourceState_Blocked toFrozen() => CompiledResourceState_Blocked(
-    lastActiveManifestId: this.lastActiveManifestId,
-    diagnosticCount: this.diagnosticCount,
+  PublishedContent toFrozen() => PublishedContent(
+    publication: this.publication,
+    formatRevision: this.formatRevision,
+    catalog: this.catalog,
+    implementationToken: this.implementationToken,
+    runtimeSignatures: this.runtimeSignatures,
+    outputs: this.outputs,
+  ).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct PublishedContentChunk
+// -----------------------------------------------------------------------------
+
+sealed class PublishedContentChunk_orMutable {
+  _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable get transfer;
+
+  PublishedContentChunk toFrozen();
+}
+
+/// Deeply immutable.
+final class PublishedContentChunk implements PublishedContentChunk_orMutable {
+  @_core.override
+  final _lib_kernel_v1_bounded_transfer.BoundedTransferChunk transfer;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PublishedContentChunk({
+    required _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable transfer,
+  }) => PublishedContentChunk._(
+    transfer.toFrozen(),
+  );
+
+  PublishedContentChunk._(
+    this.transfer,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PublishedContentChunk._(
+    _lib_kernel_v1_bounded_transfer.BoundedTransferChunk.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PublishedContentChunk_mutable mutable() => PublishedContentChunk_mutable._(
+    _lib_kernel_v1_bounded_transfer.BoundedTransferChunk.defaultInstance,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PublishedContentChunk toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PublishedContentChunk_mutable toMutable() => PublishedContentChunk_mutable._(
+    this.transfer,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PublishedContentChunk) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.transfer,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PublishedContentChunk` instances.
+  static _skir.StructSerializer<PublishedContentChunk, PublishedContentChunk_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "transfer",
+        "transfer",
+        0,
+        _lib_kernel_v1_bounded_transfer.BoundedTransferChunk.serializer,
+        "",
+        (it) => it.transfer,
+        (it, v) => it.transfer = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/compiled_content.skir:PublishedContentChunk",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PublishedContentChunk_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PublishedContentChunk].
+final class PublishedContentChunk_mutable implements PublishedContentChunk_orMutable {
+  _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable transfer;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PublishedContentChunk_mutable._(
+    this.transfer,
+  );
+
+  /// If the value of [transfer] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [transfer] and returns it.
+  _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_mutable get mutableTransfer {
+    final value = this.transfer;
+    if (value is _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_mutable) {
+      return value;
+    } else {
+      return this.transfer = (value as _lib_kernel_v1_bounded_transfer.BoundedTransferChunk).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PublishedContentChunk toFrozen() => PublishedContentChunk(
+    transfer: this.transfer,
   ).._u = this._u;
 }
 
@@ -996,7 +1141,6 @@ final class CompiledResourceState_Blocked_mutable implements CompiledResourceSta
 ///     case CompiledResourceState_unknown(): { ... }
 ///     case CompiledResourceState.notCompiled: { ... }
 ///     case CompiledResourceState_active(:var value): { ... }
-///     case CompiledResourceState_blocked(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -1010,31 +1154,15 @@ sealed class CompiledResourceState {
 
   /// Create a 'active' variant wrapping around the given value.
   factory CompiledResourceState.wrapActive(
-    CompiledResourceState_Active value
+    _lib_editor_v1_type_catalog.PublicationId value
   ) => CompiledResourceState_activeWrapper._(value);
 
-  /// Same as `wrapActive(CompiledResourceState_Active(...))`.
+  /// Same as `wrapActive(_lib_editor_v1_type_catalog.PublicationId(...))`.
   factory CompiledResourceState.createActive({
-    required _core.String manifestId,
+    required _core.String value,
   }) => CompiledResourceState.wrapActive(
-    CompiledResourceState_Active(
-      manifestId: manifestId,
-    )
-  );
-
-  /// Create a 'blocked' variant wrapping around the given value.
-  factory CompiledResourceState.wrapBlocked(
-    CompiledResourceState_Blocked value
-  ) => CompiledResourceState_blockedWrapper._(value);
-
-  /// Same as `wrapBlocked(CompiledResourceState_Blocked(...))`.
-  factory CompiledResourceState.createBlocked({
-    required _core.String? lastActiveManifestId,
-    required _core.int diagnosticCount,
-  }) => CompiledResourceState.wrapBlocked(
-    CompiledResourceState_Blocked(
-      lastActiveManifestId: lastActiveManifestId,
-      diagnosticCount: diagnosticCount,
+    _lib_editor_v1_type_catalog.PublicationId(
+      value: value,
     )
   );
 
@@ -1055,21 +1183,11 @@ sealed class CompiledResourceState {
         2,
         "active",
         "wrapActive",
-        CompiledResourceState_Active.serializer,
+        _lib_editor_v1_type_catalog.PublicationId.serializer,
         "",
         CompiledResourceState_activeWrapper._,
         (it) => it.value,
         ordinal: CompiledResourceState_kind.activeWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        3,
-        "blocked",
-        "wrapBlocked",
-        CompiledResourceState_Blocked.serializer,
-        "",
-        CompiledResourceState_blockedWrapper._,
-        (it) => it.value,
-        ordinal: CompiledResourceState_kind.blockedWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -1091,8 +1209,7 @@ sealed class CompiledResourceState {
 enum CompiledResourceState_kind {
   unknown(0),
   notCompiledConst(1),
-  activeWrapper(2),
-  blockedWrapper(3);
+  activeWrapper(2);
 
   final _core.int _ordinal;
 
@@ -1146,21 +1263,12 @@ sealed class _CompiledResourceState_wrapper implements CompiledResourceState {
 }
 
 final class CompiledResourceState_activeWrapper extends _CompiledResourceState_wrapper {
-  final CompiledResourceState_Active value;
+  final _lib_editor_v1_type_catalog.PublicationId value;
 
   CompiledResourceState_activeWrapper._(this.value);
 
   @_core.override
   CompiledResourceState_kind get kind => CompiledResourceState_kind.activeWrapper;
-}
-
-final class CompiledResourceState_blockedWrapper extends _CompiledResourceState_wrapper {
-  final CompiledResourceState_Blocked value;
-
-  CompiledResourceState_blockedWrapper._(this.value);
-
-  @_core.override
-  CompiledResourceState_kind get kind => CompiledResourceState_kind.blockedWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -1305,310 +1413,11 @@ final class CompiledResourceStatus_mutable implements CompiledResourceStatus_orM
 }
 
 // -----------------------------------------------------------------------------
-// struct CompiledResourceStateChange.Upsert
-// -----------------------------------------------------------------------------
-
-sealed class CompiledResourceStateChange_Upsert_orMutable {
-  CompilationRoot_orMutable get root;
-  CompiledResourceState get state;
-
-  CompiledResourceStateChange_Upsert toFrozen();
-}
-
-/// Deeply immutable.
-final class CompiledResourceStateChange_Upsert implements CompiledResourceStateChange_Upsert_orMutable {
-  @_core.override
-  final CompilationRoot root;
-  @_core.override
-  final CompiledResourceState state;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory CompiledResourceStateChange_Upsert({
-    required CompilationRoot_orMutable root,
-    required CompiledResourceState state,
-  }) => CompiledResourceStateChange_Upsert._(
-    root.toFrozen(),
-    state,
-  );
-
-  CompiledResourceStateChange_Upsert._(
-    this.root,
-    this.state,
-  );
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = CompiledResourceStateChange_Upsert._(
-    CompilationRoot.defaultInstance,
-    CompiledResourceState.unknown,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static CompiledResourceStateChange_Upsert_mutable mutable() => CompiledResourceStateChange_Upsert_mutable._(
-    CompilationRoot.defaultInstance,
-    CompiledResourceState.unknown,
-  );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  CompiledResourceStateChange_Upsert toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  CompiledResourceStateChange_Upsert_mutable toMutable() => CompiledResourceStateChange_Upsert_mutable._(
-    this.root,
-    this.state,
-  );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! CompiledResourceStateChange_Upsert) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.root,
-    this.state,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `CompiledResourceStateChange_Upsert` instances.
-  static _skir.StructSerializer<CompiledResourceStateChange_Upsert, CompiledResourceStateChange_Upsert_mutable> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "root",
-        "root",
-        0,
-        CompilationRoot.serializer,
-        "",
-        (it) => it.root,
-        (it, v) => it.root = v,
-      );
-      _serializerBuilder.addField(
-        "state",
-        "state",
-        1,
-        CompiledResourceState.serializer,
-        "",
-        (it) => it.state,
-        (it, v) => it.state = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/compiled_content.skir:CompiledResourceStateChange.Upsert",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (CompiledResourceStateChange_Upsert_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [CompiledResourceStateChange_Upsert].
-final class CompiledResourceStateChange_Upsert_mutable implements CompiledResourceStateChange_Upsert_orMutable {
-  CompilationRoot_orMutable root;
-  CompiledResourceState state;
-  _skir.internal__UnrecognizedFields? _u;
-
-  CompiledResourceStateChange_Upsert_mutable._(
-    this.root,
-    this.state,
-  );
-
-  /// If the value of [root] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [root] and returns it.
-  CompilationRoot_mutable get mutableRoot {
-    final value = this.root;
-    if (value is CompilationRoot_mutable) {
-      return value;
-    } else {
-      return this.root = (value as CompilationRoot).toMutable();
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  CompiledResourceStateChange_Upsert toFrozen() => CompiledResourceStateChange_Upsert(
-    root: this.root,
-    state: this.state,
-  ).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// enum CompiledResourceStateChange
-// -----------------------------------------------------------------------------
-
-/// To switch on the variants:
-///   ```
-///   switch (e) {
-///     case CompiledResourceStateChange_unknown(): { ... }
-///     case CompiledResourceStateChange_upsert(:var value): { ... }
-///     case CompiledResourceStateChange_remove(:var value): { ... }
-///   }
-///   ```
-///
-/// Deeply immutable.
-sealed class CompiledResourceStateChange {
-  /// Constant indicating an unknown `CompiledResourceStateChange`.
-  /// Default value for fields of type `CompiledResourceStateChange`.
-  static const CompiledResourceStateChange unknown = CompiledResourceStateChange_unknown._instance;
-
-  /// Create a 'upsert' variant wrapping around the given value.
-  factory CompiledResourceStateChange.wrapUpsert(
-    CompiledResourceStateChange_Upsert value
-  ) => CompiledResourceStateChange_upsertWrapper._(value);
-
-  /// Same as `wrapUpsert(CompiledResourceStateChange_Upsert(...))`.
-  factory CompiledResourceStateChange.createUpsert({
-    required CompilationRoot_orMutable root,
-    required CompiledResourceState state,
-  }) => CompiledResourceStateChange.wrapUpsert(
-    CompiledResourceStateChange_Upsert(
-      root: root,
-      state: state,
-    )
-  );
-
-  /// Create a 'remove' variant wrapping around the given value.
-  factory CompiledResourceStateChange.wrapRemove(
-    CompilationRoot value
-  ) => CompiledResourceStateChange_removeWrapper._(value);
-
-  /// Same as `wrapRemove(CompilationRoot(...))`.
-  factory CompiledResourceStateChange.createRemove({
-    required CompilationProjectionId_orMutable projection,
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
-  }) => CompiledResourceStateChange.wrapRemove(
-    CompilationRoot(
-      projection: projection,
-      resource: resource,
-    )
-  );
-
-  /// Returns the kind of variant held by this CompiledResourceStateChange.
-  CompiledResourceStateChange_kind get kind;
-
-  /// Serializer for `CompiledResourceStateChange` instances.
-  static _skir.EnumSerializer<CompiledResourceStateChange> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addWrapperVariant(
-        1,
-        "upsert",
-        "wrapUpsert",
-        CompiledResourceStateChange_Upsert.serializer,
-        "",
-        CompiledResourceStateChange_upsertWrapper._,
-        (it) => it.value,
-        ordinal: CompiledResourceStateChange_kind.upsertWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        2,
-        "remove",
-        "wrapRemove",
-        CompilationRoot.serializer,
-        "",
-        CompiledResourceStateChange_removeWrapper._,
-        (it) => it.value,
-        ordinal: CompiledResourceStateChange_kind.removeWrapper._ordinal,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/compiled_content.skir:CompiledResourceStateChange",
-    doc: "",
-    unknownInstance: CompiledResourceStateChange_unknown._instance,
-    enumInstance: CompiledResourceStateChange.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: CompiledResourceStateChange_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
-}
-
-/// The kind of variant held by a `CompiledResourceStateChange`.
-enum CompiledResourceStateChange_kind {
-  unknown(0),
-  upsertWrapper(1),
-  removeWrapper(2);
-
-  final _core.int _ordinal;
-
-  const CompiledResourceStateChange_kind(this._ordinal);
-}
-
-final class CompiledResourceStateChange_unknown implements CompiledResourceStateChange {
-  static const _instance = CompiledResourceStateChange_unknown._();
-
-  final _skir.internal__UnrecognizedVariant? _u;
-
-  const CompiledResourceStateChange_unknown._() : _u = null;
-  CompiledResourceStateChange_unknown._unrecognized(this._u);
-
-  @_core.override
-  CompiledResourceStateChange_kind get kind => CompiledResourceStateChange_kind.unknown;
-  @_core.override
-  _core.bool operator ==(other) => other is CompiledResourceStateChange_unknown;
-  @_core.override
-  _core.int get hashCode => 8118964;
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, CompiledResourceStateChange.serializer);
-}
-
-sealed class _CompiledResourceStateChange_wrapper implements CompiledResourceStateChange {
-  _core.dynamic get value;
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (other is! _CompiledResourceStateChange_wrapper) return false;
-    return kind == other.kind && value == other.value;
-  }
-
-  @_core.override
-  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, CompiledResourceStateChange.serializer);
-}
-
-final class CompiledResourceStateChange_upsertWrapper extends _CompiledResourceStateChange_wrapper {
-  final CompiledResourceStateChange_Upsert value;
-
-  CompiledResourceStateChange_upsertWrapper._(this.value);
-
-  @_core.override
-  CompiledResourceStateChange_kind get kind => CompiledResourceStateChange_kind.upsertWrapper;
-}
-
-final class CompiledResourceStateChange_removeWrapper extends _CompiledResourceStateChange_wrapper {
-  final CompilationRoot value;
-
-  CompiledResourceStateChange_removeWrapper._(this.value);
-
-  @_core.override
-  CompiledResourceStateChange_kind get kind => CompiledResourceStateChange_kind.removeWrapper;
-}
-
-// -----------------------------------------------------------------------------
 // struct CompiledContentChanged
 // -----------------------------------------------------------------------------
 
 sealed class CompiledContentChanged_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
-  _core.int get sourceSequence;
-  _core.Iterable<CompiledResourceStateChange> get states;
 
   CompiledContentChanged toFrozen();
 }
@@ -1617,41 +1426,27 @@ sealed class CompiledContentChanged_orMutable {
 final class CompiledContentChanged implements CompiledContentChanged_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.CatalogGeneration generation;
-  @_core.override
-  final _core.int sourceSequence;
-  @_core.override
-  final _core.Iterable<CompiledResourceStateChange> states;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CompiledContentChanged({
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
-    required _core.int sourceSequence,
-    required _core.Iterable<CompiledResourceStateChange> states,
   }) => CompiledContentChanged._(
     generation.toFrozen(),
-    sourceSequence,
-    _skir.internal__frozenCopy(states),
   );
 
   CompiledContentChanged._(
     this.generation,
-    this.sourceSequence,
-    this.states,
   );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CompiledContentChanged._(
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    0,
-    _skir.KeyedIterable.empty,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static CompiledContentChanged_mutable mutable() => CompiledContentChanged_mutable._(
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    0,
-    _skir.KeyedIterable.empty,
   );
 
   /// Returns this instance (no-op).
@@ -1662,8 +1457,6 @@ final class CompiledContentChanged implements CompiledContentChanged_orMutable {
   /// Returns a mutable shallow copy of this instance.
   CompiledContentChanged_mutable toMutable() => CompiledContentChanged_mutable._(
     this.generation,
-    this.sourceSequence,
-    this.states,
   );
 
   @_core.override
@@ -1678,8 +1471,6 @@ final class CompiledContentChanged implements CompiledContentChanged_orMutable {
 
   _core.List get _equality_proxy => [
     this.generation,
-    this.sourceSequence,
-    this.states,
   ];
 
   @_core.override
@@ -1696,26 +1487,6 @@ final class CompiledContentChanged implements CompiledContentChanged_orMutable {
         "",
         (it) => it.generation,
         (it, v) => it.generation = v,
-      );
-      _serializerBuilder.addField(
-        "source_sequence",
-        "sourceSequence",
-        1,
-        _skir.Serializers.int64,
-        "",
-        (it) => it.sourceSequence,
-        (it, v) => it.sourceSequence = v,
-      );
-      _serializerBuilder.addField(
-        "states",
-        "states",
-        2,
-        _skir.Serializers.iterable(
-          CompiledResourceStateChange.serializer,
-        ),
-        "",
-        (it) => it.states,
-        (it, v) => it.states = v,
       );
       _serializerBuilder.finalize();
     }
@@ -1736,14 +1507,10 @@ final class CompiledContentChanged implements CompiledContentChanged_orMutable {
 /// Mutable version of [CompiledContentChanged].
 final class CompiledContentChanged_mutable implements CompiledContentChanged_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation;
-  _core.int sourceSequence;
-  _core.Iterable<CompiledResourceStateChange> states;
   _skir.internal__UnrecognizedFields? _u;
 
   CompiledContentChanged_mutable._(
     this.generation,
-    this.sourceSequence,
-    this.states,
   );
 
   /// If the value of [generation] is already mutable, returns it as-is.
@@ -1757,153 +1524,64 @@ final class CompiledContentChanged_mutable implements CompiledContentChanged_orM
     }
   }
 
-  /// If the value of [states] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [states] and returns it.
-  _core.List<CompiledResourceStateChange> get mutableStates {
-    final value = this.states;
-    if (value is _skir.internal__MutableList<CompiledResourceStateChange>) {
-      return value;
-    } else {
-      return this.states = _skir.internal__MutableList([...value]);
-    }
-  }
-
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   CompiledContentChanged toFrozen() => CompiledContentChanged(
     generation: this.generation,
-    sourceSequence: this.sourceSequence,
-    states: this.states,
   ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
-// struct WatchCompiledContentRequest
+// struct QueryPublishedContentRequest
 // -----------------------------------------------------------------------------
 
-sealed class WatchCompiledContentRequest_orMutable {
-  WatchCompiledContentRequest toFrozen();
+sealed class QueryPublishedContentRequest_orMutable {
+  _core.String get transferId;
+
+  QueryPublishedContentRequest toFrozen();
 }
 
 /// Deeply immutable.
-final class WatchCompiledContentRequest implements WatchCompiledContentRequest_orMutable {
+final class QueryPublishedContentRequest implements QueryPublishedContentRequest_orMutable {
+  @_core.override
+  final _core.String transferId;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory WatchCompiledContentRequest() => WatchCompiledContentRequest._();
-
-  WatchCompiledContentRequest._();
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = WatchCompiledContentRequest._();
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static WatchCompiledContentRequest_mutable mutable() => WatchCompiledContentRequest_mutable._();
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  WatchCompiledContentRequest toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  WatchCompiledContentRequest_mutable toMutable() => WatchCompiledContentRequest_mutable._();
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! WatchCompiledContentRequest) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `WatchCompiledContentRequest` instances.
-  static _skir.StructSerializer<WatchCompiledContentRequest, WatchCompiledContentRequest_mutable> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/compiled_content.skir:WatchCompiledContentRequest",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (WatchCompiledContentRequest_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [WatchCompiledContentRequest].
-final class WatchCompiledContentRequest_mutable implements WatchCompiledContentRequest_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  WatchCompiledContentRequest_mutable._();
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  WatchCompiledContentRequest toFrozen() => WatchCompiledContentRequest().._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// struct WatchCompiledContentResponse.Initial
-// -----------------------------------------------------------------------------
-
-sealed class WatchCompiledContentResponse_Initial_orMutable {
-  CompiledContentActivation_orMutable? get activation;
-
-  WatchCompiledContentResponse_Initial toFrozen();
-}
-
-/// Deeply immutable.
-final class WatchCompiledContentResponse_Initial implements WatchCompiledContentResponse_Initial_orMutable {
-  @_core.override
-  final CompiledContentActivation? activation;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory WatchCompiledContentResponse_Initial({
-    required CompiledContentActivation_orMutable? activation,
-  }) => WatchCompiledContentResponse_Initial._(
-    (activation != null) ? activation.toFrozen() : null,
+  factory QueryPublishedContentRequest({
+    required _core.String transferId,
+  }) => QueryPublishedContentRequest._(
+    transferId,
   );
 
-  WatchCompiledContentResponse_Initial._(
-    this.activation,
+  QueryPublishedContentRequest._(
+    this.transferId,
   );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = WatchCompiledContentResponse_Initial._(
-    null,
+  static final defaultInstance = QueryPublishedContentRequest._(
+    "",
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static WatchCompiledContentResponse_Initial_mutable mutable() => WatchCompiledContentResponse_Initial_mutable._(
-    null,
+  static QueryPublishedContentRequest_mutable mutable() => QueryPublishedContentRequest_mutable._(
+    "",
   );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  WatchCompiledContentResponse_Initial toFrozen() => this;
+  QueryPublishedContentRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WatchCompiledContentResponse_Initial_mutable toMutable() => WatchCompiledContentResponse_Initial_mutable._(
-    this.activation,
+  QueryPublishedContentRequest_mutable toMutable() => QueryPublishedContentRequest_mutable._(
+    this.transferId,
   );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! WatchCompiledContentResponse_Initial) return false;
+    if (other is! QueryPublishedContentRequest) return false;
     return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
@@ -1911,25 +1589,23 @@ final class WatchCompiledContentResponse_Initial implements WatchCompiledContent
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
   _core.List get _equality_proxy => [
-    this.activation,
+    this.transferId,
   ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `WatchCompiledContentResponse_Initial` instances.
-  static _skir.StructSerializer<WatchCompiledContentResponse_Initial, WatchCompiledContentResponse_Initial_mutable> get serializer {
+  /// Serializer for `QueryPublishedContentRequest` instances.
+  static _skir.StructSerializer<QueryPublishedContentRequest, QueryPublishedContentRequest_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
-        "activation",
-        "activation",
+        "transfer_id",
+        "transferId",
         0,
-        _skir.Serializers.optional(
-          CompiledContentActivation.serializer,
-        ),
+        _skir.Serializers.string,
         "",
-        (it) => it.activation,
-        (it, v) => it.activation = v,
+        (it) => it.transferId,
+        (it, v) => it.transferId = v,
       );
       _serializerBuilder.finalize();
     }
@@ -1937,67 +1613,67 @@ final class WatchCompiledContentResponse_Initial implements WatchCompiledContent
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/compiled_content.skir:WatchCompiledContentResponse.Initial",
+    recordId: "editor/v1/compiled_content.skir:QueryPublishedContentRequest",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (WatchCompiledContentResponse_Initial_mutable it) => it.toFrozen(),
+    toFrozen: (QueryPublishedContentRequest_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [WatchCompiledContentResponse_Initial].
-final class WatchCompiledContentResponse_Initial_mutable implements WatchCompiledContentResponse_Initial_orMutable {
-  CompiledContentActivation_orMutable? activation;
+/// Mutable version of [QueryPublishedContentRequest].
+final class QueryPublishedContentRequest_mutable implements QueryPublishedContentRequest_orMutable {
+  _core.String transferId;
   _skir.internal__UnrecognizedFields? _u;
 
-  WatchCompiledContentResponse_Initial_mutable._(
-    this.activation,
+  QueryPublishedContentRequest_mutable._(
+    this.transferId,
   );
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WatchCompiledContentResponse_Initial toFrozen() => WatchCompiledContentResponse_Initial(
-    activation: this.activation,
+  QueryPublishedContentRequest toFrozen() => QueryPublishedContentRequest(
+    transferId: this.transferId,
   ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
-// struct WatchCompiledContentResponse.Blocked
+// struct QueryPublishedContentResponse.Absent
 // -----------------------------------------------------------------------------
 
-sealed class WatchCompiledContentResponse_Blocked_orMutable {
-  WatchCompiledContentResponse_Blocked toFrozen();
+sealed class QueryPublishedContentResponse_Absent_orMutable {
+  QueryPublishedContentResponse_Absent toFrozen();
 }
 
 /// Deeply immutable.
-final class WatchCompiledContentResponse_Blocked implements WatchCompiledContentResponse_Blocked_orMutable {
+final class QueryPublishedContentResponse_Absent implements QueryPublishedContentResponse_Absent_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  factory WatchCompiledContentResponse_Blocked() => WatchCompiledContentResponse_Blocked._();
+  factory QueryPublishedContentResponse_Absent() => QueryPublishedContentResponse_Absent._();
 
-  WatchCompiledContentResponse_Blocked._();
+  QueryPublishedContentResponse_Absent._();
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = WatchCompiledContentResponse_Blocked._();
+  static final defaultInstance = QueryPublishedContentResponse_Absent._();
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static WatchCompiledContentResponse_Blocked_mutable mutable() => WatchCompiledContentResponse_Blocked_mutable._();
+  static QueryPublishedContentResponse_Absent_mutable mutable() => QueryPublishedContentResponse_Absent_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  WatchCompiledContentResponse_Blocked toFrozen() => this;
+  QueryPublishedContentResponse_Absent toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WatchCompiledContentResponse_Blocked_mutable toMutable() => WatchCompiledContentResponse_Blocked_mutable._();
+  QueryPublishedContentResponse_Absent_mutable toMutable() => QueryPublishedContentResponse_Absent_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! WatchCompiledContentResponse_Blocked) return false;
+    if (other is! QueryPublishedContentResponse_Absent) return false;
     return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
@@ -2009,8 +1685,8 @@ final class WatchCompiledContentResponse_Blocked implements WatchCompiledContent
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `WatchCompiledContentResponse_Blocked` instances.
-  static _skir.StructSerializer<WatchCompiledContentResponse_Blocked, WatchCompiledContentResponse_Blocked_mutable> get serializer {
+  /// Serializer for `QueryPublishedContentResponse_Absent` instances.
+  static _skir.StructSerializer<QueryPublishedContentResponse_Absent, QueryPublishedContentResponse_Absent_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -2018,137 +1694,203 @@ final class WatchCompiledContentResponse_Blocked implements WatchCompiledContent
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/compiled_content.skir:WatchCompiledContentResponse.Blocked",
+    recordId: "editor/v1/compiled_content.skir:QueryPublishedContentResponse.Absent",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (WatchCompiledContentResponse_Blocked_mutable it) => it.toFrozen(),
+    toFrozen: (QueryPublishedContentResponse_Absent_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [WatchCompiledContentResponse_Blocked].
-final class WatchCompiledContentResponse_Blocked_mutable implements WatchCompiledContentResponse_Blocked_orMutable {
+/// Mutable version of [QueryPublishedContentResponse_Absent].
+final class QueryPublishedContentResponse_Absent_mutable implements QueryPublishedContentResponse_Absent_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
-  WatchCompiledContentResponse_Blocked_mutable._();
+  QueryPublishedContentResponse_Absent_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  WatchCompiledContentResponse_Blocked toFrozen() => WatchCompiledContentResponse_Blocked().._u = this._u;
+  QueryPublishedContentResponse_Absent toFrozen() => QueryPublishedContentResponse_Absent().._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
-// enum WatchCompiledContentResponse
+// struct QueryPublishedContentResponse.Unavailable
+// -----------------------------------------------------------------------------
+
+sealed class QueryPublishedContentResponse_Unavailable_orMutable {
+  QueryPublishedContentResponse_Unavailable toFrozen();
+}
+
+/// Deeply immutable.
+final class QueryPublishedContentResponse_Unavailable implements QueryPublishedContentResponse_Unavailable_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory QueryPublishedContentResponse_Unavailable() => QueryPublishedContentResponse_Unavailable._();
+
+  QueryPublishedContentResponse_Unavailable._();
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = QueryPublishedContentResponse_Unavailable._();
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static QueryPublishedContentResponse_Unavailable_mutable mutable() => QueryPublishedContentResponse_Unavailable_mutable._();
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  QueryPublishedContentResponse_Unavailable toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  QueryPublishedContentResponse_Unavailable_mutable toMutable() => QueryPublishedContentResponse_Unavailable_mutable._();
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! QueryPublishedContentResponse_Unavailable) return false;
+    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `QueryPublishedContentResponse_Unavailable` instances.
+  static _skir.StructSerializer<QueryPublishedContentResponse_Unavailable, QueryPublishedContentResponse_Unavailable_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/compiled_content.skir:QueryPublishedContentResponse.Unavailable",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (QueryPublishedContentResponse_Unavailable_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [QueryPublishedContentResponse_Unavailable].
+final class QueryPublishedContentResponse_Unavailable_mutable implements QueryPublishedContentResponse_Unavailable_orMutable {
+  _skir.internal__UnrecognizedFields? _u;
+
+  QueryPublishedContentResponse_Unavailable_mutable._();
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  QueryPublishedContentResponse_Unavailable toFrozen() => QueryPublishedContentResponse_Unavailable().._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum QueryPublishedContentResponse
 // -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
-///     case WatchCompiledContentResponse_unknown(): { ... }
-///     case WatchCompiledContentResponse_initial(:var value): { ... }
-///     case WatchCompiledContentResponse_activated(:var value): { ... }
-///     case WatchCompiledContentResponse_blocked(:var value): { ... }
-///     case WatchCompiledContentResponse_internalError(:var value): { ... }
+///     case QueryPublishedContentResponse_unknown(): { ... }
+///     case QueryPublishedContentResponse_chunk(:var value): { ... }
+///     case QueryPublishedContentResponse_absent(:var value): { ... }
+///     case QueryPublishedContentResponse_unavailable(:var value): { ... }
+///     case QueryPublishedContentResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
 ///
 /// Deeply immutable.
-sealed class WatchCompiledContentResponse {
-  /// Constant indicating an unknown `WatchCompiledContentResponse`.
-  /// Default value for fields of type `WatchCompiledContentResponse`.
-  static const WatchCompiledContentResponse unknown = WatchCompiledContentResponse_unknown._instance;
+sealed class QueryPublishedContentResponse {
+  /// Constant indicating an unknown `QueryPublishedContentResponse`.
+  /// Default value for fields of type `QueryPublishedContentResponse`.
+  static const QueryPublishedContentResponse unknown = QueryPublishedContentResponse_unknown._instance;
 
-  /// Create a 'initial' variant wrapping around the given value.
-  factory WatchCompiledContentResponse.wrapInitial(
-    WatchCompiledContentResponse_Initial value
-  ) => WatchCompiledContentResponse_initialWrapper._(value);
+  /// Create a 'chunk' variant wrapping around the given value.
+  factory QueryPublishedContentResponse.wrapChunk(
+    PublishedContentChunk value
+  ) => QueryPublishedContentResponse_chunkWrapper._(value);
 
-  /// Same as `wrapInitial(WatchCompiledContentResponse_Initial(...))`.
-  factory WatchCompiledContentResponse.createInitial({
-    required CompiledContentActivation_orMutable? activation,
-  }) => WatchCompiledContentResponse.wrapInitial(
-    WatchCompiledContentResponse_Initial(
-      activation: activation,
+  /// Same as `wrapChunk(PublishedContentChunk(...))`.
+  factory QueryPublishedContentResponse.createChunk({
+    required _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable transfer,
+  }) => QueryPublishedContentResponse.wrapChunk(
+    PublishedContentChunk(
+      transfer: transfer,
     )
   );
 
-  /// Create a 'activated' variant wrapping around the given value.
-  factory WatchCompiledContentResponse.wrapActivated(
-    CompiledContentActivation value
-  ) => WatchCompiledContentResponse_activatedWrapper._(value);
+  /// Create a 'absent' variant wrapping around the given value.
+  factory QueryPublishedContentResponse.wrapAbsent(
+    QueryPublishedContentResponse_Absent value
+  ) => QueryPublishedContentResponse_absentWrapper._(value);
 
-  /// Same as `wrapActivated(CompiledContentActivation(...))`.
-  factory WatchCompiledContentResponse.createActivated({
-    required _core.int activationRevision,
-    required _core.String manifestDigest,
-    required CompiledBlobPointer_orMutable manifest,
-    required _core.Iterable<CompiledArtifactPointer_orMutable> artifacts,
-  }) => WatchCompiledContentResponse.wrapActivated(
-    CompiledContentActivation(
-      activationRevision: activationRevision,
-      manifestDigest: manifestDigest,
-      manifest: manifest,
-      artifacts: artifacts,
-    )
+  /// Same as `wrapAbsent(QueryPublishedContentResponse_Absent(...))`.
+  factory QueryPublishedContentResponse.createAbsent() => QueryPublishedContentResponse.wrapAbsent(
+    QueryPublishedContentResponse_Absent()
   );
 
-  /// Create a 'blocked' variant wrapping around the given value.
-  factory WatchCompiledContentResponse.wrapBlocked(
-    WatchCompiledContentResponse_Blocked value
-  ) => WatchCompiledContentResponse_blockedWrapper._(value);
+  /// Create a 'unavailable' variant wrapping around the given value.
+  factory QueryPublishedContentResponse.wrapUnavailable(
+    QueryPublishedContentResponse_Unavailable value
+  ) => QueryPublishedContentResponse_unavailableWrapper._(value);
 
-  /// Same as `wrapBlocked(WatchCompiledContentResponse_Blocked(...))`.
-  factory WatchCompiledContentResponse.createBlocked() => WatchCompiledContentResponse.wrapBlocked(
-    WatchCompiledContentResponse_Blocked()
+  /// Same as `wrapUnavailable(QueryPublishedContentResponse_Unavailable(...))`.
+  factory QueryPublishedContentResponse.createUnavailable() => QueryPublishedContentResponse.wrapUnavailable(
+    QueryPublishedContentResponse_Unavailable()
   );
 
   /// Create a 'internal_error' variant wrapping around the given value.
-  factory WatchCompiledContentResponse.wrapInternalError(
+  factory QueryPublishedContentResponse.wrapInternalError(
     _lib_kernel_v1_errors.InternalError value
-  ) => WatchCompiledContentResponse_internalErrorWrapper._(value);
+  ) => QueryPublishedContentResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory WatchCompiledContentResponse.createInternalError() => WatchCompiledContentResponse.wrapInternalError(
+  factory QueryPublishedContentResponse.createInternalError() => QueryPublishedContentResponse.wrapInternalError(
     _lib_kernel_v1_errors.InternalError()
   );
 
-  /// Returns the kind of variant held by this WatchCompiledContentResponse.
-  WatchCompiledContentResponse_kind get kind;
+  /// Returns the kind of variant held by this QueryPublishedContentResponse.
+  QueryPublishedContentResponse_kind get kind;
 
-  /// Serializer for `WatchCompiledContentResponse` instances.
-  static _skir.EnumSerializer<WatchCompiledContentResponse> get serializer {
+  /// Serializer for `QueryPublishedContentResponse` instances.
+  static _skir.EnumSerializer<QueryPublishedContentResponse> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addWrapperVariant(
         1,
-        "initial",
-        "wrapInitial",
-        WatchCompiledContentResponse_Initial.serializer,
+        "chunk",
+        "wrapChunk",
+        PublishedContentChunk.serializer,
         "",
-        WatchCompiledContentResponse_initialWrapper._,
+        QueryPublishedContentResponse_chunkWrapper._,
         (it) => it.value,
-        ordinal: WatchCompiledContentResponse_kind.initialWrapper._ordinal,
+        ordinal: QueryPublishedContentResponse_kind.chunkWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         2,
-        "activated",
-        "wrapActivated",
-        CompiledContentActivation.serializer,
+        "absent",
+        "wrapAbsent",
+        QueryPublishedContentResponse_Absent.serializer,
         "",
-        WatchCompiledContentResponse_activatedWrapper._,
+        QueryPublishedContentResponse_absentWrapper._,
         (it) => it.value,
-        ordinal: WatchCompiledContentResponse_kind.activatedWrapper._ordinal,
+        ordinal: QueryPublishedContentResponse_kind.absentWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
-        "blocked",
-        "wrapBlocked",
-        WatchCompiledContentResponse_Blocked.serializer,
+        "unavailable",
+        "wrapUnavailable",
+        QueryPublishedContentResponse_Unavailable.serializer,
         "",
-        WatchCompiledContentResponse_blockedWrapper._,
+        QueryPublishedContentResponse_unavailableWrapper._,
         (it) => it.value,
-        ordinal: WatchCompiledContentResponse_kind.blockedWrapper._ordinal,
+        ordinal: QueryPublishedContentResponse_kind.unavailableWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         4,
@@ -2156,9 +1898,9 @@ sealed class WatchCompiledContentResponse {
         "wrapInternalError",
         _lib_kernel_v1_errors.InternalError.serializer,
         "",
-        WatchCompiledContentResponse_internalErrorWrapper._,
+        QueryPublishedContentResponse_internalErrorWrapper._,
         (it) => it.value,
-        ordinal: WatchCompiledContentResponse_kind.internalErrorWrapper._ordinal,
+        ordinal: QueryPublishedContentResponse_kind.internalErrorWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -2166,53 +1908,53 @@ sealed class WatchCompiledContentResponse {
   }
 
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/compiled_content.skir:WatchCompiledContentResponse",
+    recordId: "editor/v1/compiled_content.skir:QueryPublishedContentResponse",
     doc: "",
-    unknownInstance: WatchCompiledContentResponse_unknown._instance,
-    enumInstance: WatchCompiledContentResponse.unknown,
+    unknownInstance: QueryPublishedContentResponse_unknown._instance,
+    enumInstance: QueryPublishedContentResponse.unknown,
     getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: WatchCompiledContentResponse_unknown._unrecognized,
+    wrapUnrecognized: QueryPublishedContentResponse_unknown._unrecognized,
     getUnrecognized: (it) => it._u,
   );
 }
 
-/// The kind of variant held by a `WatchCompiledContentResponse`.
-enum WatchCompiledContentResponse_kind {
+/// The kind of variant held by a `QueryPublishedContentResponse`.
+enum QueryPublishedContentResponse_kind {
   unknown(0),
-  initialWrapper(1),
-  activatedWrapper(2),
-  blockedWrapper(3),
+  chunkWrapper(1),
+  absentWrapper(2),
+  unavailableWrapper(3),
   internalErrorWrapper(4);
 
   final _core.int _ordinal;
 
-  const WatchCompiledContentResponse_kind(this._ordinal);
+  const QueryPublishedContentResponse_kind(this._ordinal);
 }
 
-final class WatchCompiledContentResponse_unknown implements WatchCompiledContentResponse {
-  static const _instance = WatchCompiledContentResponse_unknown._();
+final class QueryPublishedContentResponse_unknown implements QueryPublishedContentResponse {
+  static const _instance = QueryPublishedContentResponse_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
 
-  const WatchCompiledContentResponse_unknown._() : _u = null;
-  WatchCompiledContentResponse_unknown._unrecognized(this._u);
+  const QueryPublishedContentResponse_unknown._() : _u = null;
+  QueryPublishedContentResponse_unknown._unrecognized(this._u);
 
   @_core.override
-  WatchCompiledContentResponse_kind get kind => WatchCompiledContentResponse_kind.unknown;
+  QueryPublishedContentResponse_kind get kind => QueryPublishedContentResponse_kind.unknown;
   @_core.override
-  _core.bool operator ==(other) => other is WatchCompiledContentResponse_unknown;
+  _core.bool operator ==(other) => other is QueryPublishedContentResponse_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, WatchCompiledContentResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, QueryPublishedContentResponse.serializer);
 }
 
-sealed class _WatchCompiledContentResponse_wrapper implements WatchCompiledContentResponse {
+sealed class _QueryPublishedContentResponse_wrapper implements QueryPublishedContentResponse {
   _core.dynamic get value;
 
   @_core.override
   _core.bool operator ==(other) {
-    if (other is! _WatchCompiledContentResponse_wrapper) return false;
+    if (other is! _QueryPublishedContentResponse_wrapper) return false;
     return kind == other.kind && value == other.value;
   }
 
@@ -2220,43 +1962,43 @@ sealed class _WatchCompiledContentResponse_wrapper implements WatchCompiledConte
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, WatchCompiledContentResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, QueryPublishedContentResponse.serializer);
 }
 
-final class WatchCompiledContentResponse_initialWrapper extends _WatchCompiledContentResponse_wrapper {
-  final WatchCompiledContentResponse_Initial value;
+final class QueryPublishedContentResponse_chunkWrapper extends _QueryPublishedContentResponse_wrapper {
+  final PublishedContentChunk value;
 
-  WatchCompiledContentResponse_initialWrapper._(this.value);
+  QueryPublishedContentResponse_chunkWrapper._(this.value);
 
   @_core.override
-  WatchCompiledContentResponse_kind get kind => WatchCompiledContentResponse_kind.initialWrapper;
+  QueryPublishedContentResponse_kind get kind => QueryPublishedContentResponse_kind.chunkWrapper;
 }
 
-final class WatchCompiledContentResponse_activatedWrapper extends _WatchCompiledContentResponse_wrapper {
-  final CompiledContentActivation value;
+final class QueryPublishedContentResponse_absentWrapper extends _QueryPublishedContentResponse_wrapper {
+  final QueryPublishedContentResponse_Absent value;
 
-  WatchCompiledContentResponse_activatedWrapper._(this.value);
+  QueryPublishedContentResponse_absentWrapper._(this.value);
 
   @_core.override
-  WatchCompiledContentResponse_kind get kind => WatchCompiledContentResponse_kind.activatedWrapper;
+  QueryPublishedContentResponse_kind get kind => QueryPublishedContentResponse_kind.absentWrapper;
 }
 
-final class WatchCompiledContentResponse_blockedWrapper extends _WatchCompiledContentResponse_wrapper {
-  final WatchCompiledContentResponse_Blocked value;
+final class QueryPublishedContentResponse_unavailableWrapper extends _QueryPublishedContentResponse_wrapper {
+  final QueryPublishedContentResponse_Unavailable value;
 
-  WatchCompiledContentResponse_blockedWrapper._(this.value);
+  QueryPublishedContentResponse_unavailableWrapper._(this.value);
 
   @_core.override
-  WatchCompiledContentResponse_kind get kind => WatchCompiledContentResponse_kind.blockedWrapper;
+  QueryPublishedContentResponse_kind get kind => QueryPublishedContentResponse_kind.unavailableWrapper;
 }
 
-final class WatchCompiledContentResponse_internalErrorWrapper extends _WatchCompiledContentResponse_wrapper {
+final class QueryPublishedContentResponse_internalErrorWrapper extends _QueryPublishedContentResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
-  WatchCompiledContentResponse_internalErrorWrapper._(this.value);
+  QueryPublishedContentResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  WatchCompiledContentResponse_kind get kind => WatchCompiledContentResponse_kind.internalErrorWrapper;
+  QueryPublishedContentResponse_kind get kind => QueryPublishedContentResponse_kind.internalErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -2650,14 +2392,14 @@ final class QueryCompiledResourceStatusResponse_internalErrorWrapper extends _Qu
 }
 
 final _skir.Method<
-  WatchCompiledContentRequest,
-  WatchCompiledContentResponse
-> watchCompiledContentMethod =
+  QueryPublishedContentRequest,
+  QueryPublishedContentResponse
+> queryPublishedContentMethod =
   _skir.Method(
-    "WatchCompiledContent",
+    "QueryPublishedContent",
     920004,
-    WatchCompiledContentRequest.serializer,
-    WatchCompiledContentResponse.serializer,
+    QueryPublishedContentRequest.serializer,
+    QueryPublishedContentResponse.serializer,
     "",
   );
 

@@ -16,6 +16,7 @@ pub mod type_catalog;
 pub mod typed_value;
 pub mod diagnostic;
 pub mod search;
+pub mod authoring_facts;
 pub mod expression;
 pub mod checking;
 pub mod publication;

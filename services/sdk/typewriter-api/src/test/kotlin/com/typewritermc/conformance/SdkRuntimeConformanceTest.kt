@@ -12,7 +12,6 @@ import com.typewritermc.authoring.WorklistDefaultModeResolver
 import com.typewritermc.authoring.complete
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.PartialSelection
-import com.typewritermc.checking.SnapshotId
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.configuration.ConfigurationCollectionScope
 import com.typewritermc.configuration.ConfigurationProvider
@@ -1462,9 +1461,8 @@ private fun com.typewritermc.authoring.CompletenessResult.complete() = (this as 
 private fun DataValue.available(): Availability<DataValue> = Availability.Available(this)
 
 private object EmptyReads : AuthoredReads {
-    override val snapshot: SnapshotId = SnapshotId("expression snapshot")
     override val catalog: CatalogGeneration = CatalogGeneration("expression catalog")
-    override val readContext = com.typewritermc.authoring.ReadContext(snapshot, catalog)
+    override val readContext = com.typewritermc.authoring.ReadContext(catalog)
 
     override fun <T> read(path: BoundPath<T>): Availability<T> = error("Portable reads use the expression reader in this fixture.")
 

@@ -9,9 +9,11 @@ import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.DraftExpectation
+import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ReadContext
+import com.typewritermc.authoring.TraversalDirection
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
@@ -19,11 +21,9 @@ import com.typewritermc.authoring.complete
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.DraftType
 import com.typewritermc.checking.InputIdentity
-import com.typewritermc.checking.InputToken
 import com.typewritermc.checking.InspectionCompletion
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.ResourceTypeMatch
-import com.typewritermc.checking.SnapshotId
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.checking.UndecidedCandidate
 import com.typewritermc.configuration.FieldPatternSegment
@@ -32,9 +32,10 @@ import com.typewritermc.configuration.RepresentationKind
 import com.typewritermc.configuration.kind
 import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.presentation.ExpressionNode
-import com.typewritermc.realm.authoring.AuthoredSnapshotView
+import com.typewritermc.realm.authoring.AuthoredReadView
 import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
-import com.typewritermc.realm.authoring.absentInputToken
+import com.typewritermc.realm.repository.CapturedAuthoringValues
+import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.MapRow
@@ -73,17 +74,16 @@ data class SnapshotReadHealth(
  * Original views provide admissible evidence. Staged views are intended for edit validation and retain the original
  * snapshot identity so callers can keep original conflict evidence separate from proposed content.
  */
-class SnapshotReads(
-    internal val view: AuthoredSnapshotView,
+class CapturedAuthoringReads(
+    internal val view: AuthoredReadView,
     private val recorder: ObservationRecorder = DefaultObservationRecorder(),
     private val predicates: SelectionPredicateEvaluator = MissingSelectionPredicateEvaluator,
     private val limits: SnapshotReadLimits = SnapshotReadLimits(),
     override val readContext: ReadContext = view.readContext,
 ) : AuthoredReads,
     SnapshotReadCapability {
-    override val snapshotReads: SnapshotReads
+    override val snapshotReads: CapturedAuthoringReads
         get() = this
-    override val snapshot: SnapshotId = view.original.id
     override val catalog: CatalogGeneration = view.original.catalog.generation
 
     private var reads = 0L
@@ -263,7 +263,6 @@ class SnapshotReads(
                 val checked = resolve(named.actualType, path.location) ?: return Availability.Failed(failures.last())
                 Availability.Available(
                     DraftBinding(
-                        snapshot,
                         catalog,
                         readContext,
                         path.location,
@@ -491,7 +490,6 @@ class SnapshotReads(
                     if (checked != null && checked.represents(owner)) {
                         occurrences +=
                             DraftBinding(
-                                snapshot,
                                 catalog,
                                 readContext,
                                 at,
@@ -537,7 +535,7 @@ class SnapshotReads(
                             .takeIf { it.definition.couldRepresent(owner) }
                             ?.let { resolve(it, root) }
                     if (checked != null && checked.represents(owner)) {
-                        occurrences += DraftBinding(snapshot, catalog, readContext, root, DraftExpectation.Complete(checked), selection)
+                        occurrences += DraftBinding(catalog, readContext, root, DraftExpectation.Complete(checked), selection)
                     }
                 }
 
@@ -550,7 +548,7 @@ class SnapshotReads(
                                 .resolvePartial(selection)
                         if (partial is Resolution.Ready) {
                             occurrences +=
-                                DraftBinding(snapshot, catalog, readContext, root, DraftExpectation.PartialRoot(partial.value), selection)
+                                DraftBinding(catalog, readContext, root, DraftExpectation.PartialRoot(partial.value), selection)
                         }
                     }
                 }
@@ -575,7 +573,7 @@ class SnapshotReads(
 
     fun health(): SnapshotReadHealth = SnapshotReadHealth(missing.toList(), failures.toList(), incomplete.toList())
 
-    fun observations(): List<com.typewritermc.checking.InputObservation> = recorder.captured()
+    fun observations(): List<EditExpectation> = recorder.captured()
 
     internal fun observeInput(identity: InputIdentity) {
         observe(identity)
@@ -651,7 +649,6 @@ class SnapshotReads(
         val checked = resolve(named.actualType, location) ?: return null
         if (!checked.represents(owner)) return null
         return DraftBinding(
-            snapshot,
             catalog,
             readContext,
             location,
@@ -905,7 +902,7 @@ class SnapshotReads(
         when (selection) {
             is TypeSelection.Complete -> {
                 val resolved = checked ?: resolve(selection.use, location) ?: return null
-                DraftBinding(snapshot, catalog, readContext, location, DraftExpectation.Complete(resolved), selection)
+                DraftBinding(catalog, readContext, location, DraftExpectation.Complete(resolved), selection)
             }
 
             is TypeSelection.Pending -> {
@@ -915,7 +912,7 @@ class SnapshotReads(
                             .resolvePartial(selection)
                 ) {
                     is Resolution.Ready -> {
-                        DraftBinding(snapshot, catalog, readContext, location, DraftExpectation.PartialRoot(partial.value), selection)
+                        DraftBinding(catalog, readContext, location, DraftExpectation.PartialRoot(partial.value), selection)
                     }
 
                     is Resolution.Invalid -> {
@@ -958,8 +955,55 @@ class SnapshotReads(
             markIncomplete("authored read limit exceeded")
             return
         }
-        val token = view.original.inputs[identity] ?: absentInputToken()
-        recorder.observe(identity, token)
+        val original = view.original
+        val values = original.values
+        when (identity) {
+            is InputIdentity.Value -> {
+                recorder.observe(EditExpectation.Value(identity.at, values.value(identity.at)))
+            }
+
+            is InputIdentity.Form -> {
+                recorder.observe(EditExpectation.Configuration(identity.at, values.configuration(identity.at)))
+            }
+
+            is InputIdentity.Membership -> {
+                recorder.observe(EditExpectation.Value(identity.at, values.value(identity.at)))
+            }
+
+            is InputIdentity.Order -> {
+                recorder.observe(EditExpectation.Value(identity.at, values.value(identity.at)))
+            }
+
+            is InputIdentity.Existence -> {
+                recorder.observe(
+                    EditExpectation.ResourceExists(
+                        identity.resource,
+                        values.resource(identity.resource) != null,
+                    ),
+                )
+            }
+
+            is InputIdentity.Selection -> {
+                recorder.observe(EditExpectation.ResourceIds(values.resourceIds()))
+            }
+
+            is InputIdentity.Incoming -> {
+                original.catalog.relations.filter { identity.relation == null || it.id == identity.relation }.forEach { contract ->
+                    recorder.observe(
+                        EditExpectation.Links(
+                            identity.resource,
+                            contract.id,
+                            TraversalDirection.Both,
+                            values.links(identity.resource, contract.id, TraversalDirection.Both),
+                        ),
+                    )
+                }
+            }
+
+            is InputIdentity.Catalog -> {
+                Unit
+            }
+        }
     }
 
     private fun unavailable(location: ValueLocation): Availability.Unavailable =
@@ -984,7 +1028,7 @@ class SnapshotReads(
 }
 
 internal interface SnapshotReadCapability {
-    val snapshotReads: SnapshotReads
+    val snapshotReads: CapturedAuthoringReads
 }
 
 internal object MissingSelectionPredicateEvaluator : SelectionPredicateEvaluator {

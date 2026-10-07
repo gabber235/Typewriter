@@ -1,60 +1,52 @@
 package com.typewritermc.realm.compiler
 
+import com.typewritermc.authoring.PublicationId
+import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.engine.CompiledArtifact
-import com.typewritermc.engine.CompiledArtifactActivation
-import com.typewritermc.engine.CompiledArtifactManifest
-import com.typewritermc.engine.CompiledArtifactPointer
 import com.typewritermc.engine.CompiledArtifactReference
 import com.typewritermc.engine.CompiledBlobPointer
 import com.typewritermc.engine.ContentDigest
+import com.typewritermc.engine.PublishedContent
+import com.typewritermc.engine.PublishedOutput
 import com.typewritermc.loader.api.artifact.ArtifactDigest
 import com.typewritermc.loader.api.artifact.BlobEndpoint
 import com.typewritermc.loader.api.artifact.BlobMetadata
 import com.typewritermc.loader.api.artifact.BlobResult
 import com.typewritermc.loader.api.artifact.DEFAULT_CHUNK_SIZE
 import com.typewritermc.loader.api.artifact.TransferId
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
+import com.typewritermc.scripting.RuntimeMemberSignature
 
-/** Stores generic manifest and projection owned payloads without interpreting their media type. */
+/** Stores the complete published output set without interpreting payload media types. */
 class RegisteredCompiledArtifactStore(
     private val blobs: BlobEndpoint,
 ) {
     suspend fun store(
-        activationRevision: Long,
-        manifest: CompiledArtifactManifest,
+        publication: PublicationId,
+        catalog: CatalogGeneration,
+        implementationToken: String,
+        runtimeSignatures: Set<RuntimeMemberSignature>,
         artifacts: Collection<CompiledArtifact>,
-        previousActivation: CompiledArtifactActivation?,
-    ): CompiledArtifactActivation {
-        val manifestBlob = write(json.encodeToString(manifest).encodeToByteArray())
-        val freshPointers =
-            artifacts
-                .groupBy(CompiledArtifact::semanticDigest)
-                .map { (semanticDigest, matching) ->
-                    val artifact = matching.first()
-                    require(matching.all { it.payload.contentEquals(artifact.payload) }) {
-                        "Compiled artifacts with semantic digest ${semanticDigest.value} must have identical payloads."
-                    }
-                    CompiledArtifactPointer(
-                        semanticDigest = semanticDigest,
+    ): PublishedContent =
+        PublishedContent(
+            publication = publication,
+            formatRevision = 2,
+            catalog = catalog,
+            implementationToken = implementationToken,
+            runtimeSignatures = runtimeSignatures,
+            outputs =
+                artifacts.map { artifact ->
+                    PublishedOutput(
+                        reference =
+                            CompiledArtifactReference(
+                                root = artifact.root,
+                                formatRevision = artifact.formatRevision,
+                                mediaType = artifact.mediaType,
+                                semanticDigest = artifact.semanticDigest,
+                            ),
                         blob = write(artifact.payload),
                     )
-                }
-        val availablePointers =
-            (previousActivation?.artifacts.orEmpty() + freshPointers)
-                .associateBy(CompiledArtifactPointer::semanticDigest)
-        val requiredDigests = manifest.artifacts.mapTo(linkedSetOf(), CompiledArtifactReference::semanticDigest)
-        require(requiredDigests.all(availablePointers::containsKey)) {
-            "Compiled activation is missing preserved artifact payloads."
-        }
-        val artifactPointers = requiredDigests.map(availablePointers::getValue)
-        return CompiledArtifactActivation(
-            activationRevision = activationRevision,
-            manifestDigest = manifest.digest,
-            manifest = manifestBlob,
-            artifacts = artifactPointers,
+                },
         )
-    }
 
     private suspend fun write(bytes: ByteArray): CompiledBlobPointer {
         val digest = ArtifactDigest.sha256(bytes)
@@ -85,5 +77,3 @@ private fun <T> BlobResult<T>.success(operation: String): T =
         is BlobResult.Conflict -> error("$operation failed: $reason")
         is BlobResult.Invalid -> error("$operation failed: $reason")
     }
-
-private val json = Json { encodeDefaults = true }

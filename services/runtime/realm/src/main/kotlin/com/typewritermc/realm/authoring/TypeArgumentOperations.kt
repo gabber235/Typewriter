@@ -1,10 +1,9 @@
 package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.ArgumentLocation
-import com.typewritermc.authoring.BatchId
 import com.typewritermc.authoring.CommitResult
+import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.EditIntent
-import com.typewritermc.authoring.InputConflict
 import com.typewritermc.authoring.LinkOccurrenceId
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.PreparedEdit
@@ -14,15 +13,14 @@ import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.ValueProblem
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputIdentity
-import com.typewritermc.checking.InputObservation
-import com.typewritermc.checking.InputToken
-import com.typewritermc.checking.SnapshotId
+import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.realm.repository.AuthoringMutationPlanner
 import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.realm.repository.MutationPlanningResult
 import com.typewritermc.realm.repository.ResourceValueMapper
-import com.typewritermc.realm.repository.canonicalPreparedIntentDigest
-import com.typewritermc.realm.repository.mutationPlanWriteInputs
+import com.typewritermc.realm.repository.conflicts
+import com.typewritermc.realm.repository.requiredExpectations
+import com.typewritermc.realm.repository.sameFact
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointSlot
 import com.typewritermc.types.RelationContract
@@ -38,8 +36,7 @@ internal data class TypeArgumentChangePreview(
     val resource: ResourceId,
     val next: TypeSelection,
     val catalog: CatalogGeneration,
-    val sourceSnapshot: SnapshotId,
-    val observations: List<InputObservation>,
+    val expectations: List<EditExpectation>,
     val intents: List<TypeRepairIntent>,
     val linkRepairs: List<LinkRepairIntent>,
     val clearedLocations: List<ValueLocation>,
@@ -93,7 +90,7 @@ internal interface TypeArgumentOperations {
     fun preview(
         resource: ResourceId,
         requested: TypeSelection,
-        snapshot: SnapshotLease,
+        snapshot: AuthoringLease,
     ): TypePreviewResult
 
     suspend fun confirm(preview: TypeArgumentChangePreview): CommitResult
@@ -102,12 +99,12 @@ internal interface TypeArgumentOperations {
 /** Previews precise repairs and commits them through ordinary prepared acceptance. */
 internal class DefaultTypeArgumentOperations(
     private val repository: AuthoringRepository,
-    private val snapshots: AuthoringSnapshotStore,
+    private val snapshots: AuthoringViewStore,
 ) : TypeArgumentOperations {
     override fun preview(
         resource: ResourceId,
         requested: TypeSelection,
-        snapshot: SnapshotLease,
+        snapshot: AuthoringLease,
     ): TypePreviewResult {
         val root = snapshot.root
         val requestedDefinition = requested.definition
@@ -230,24 +227,32 @@ internal class DefaultTypeArgumentOperations(
             ).plan(
                 root.resources,
                 PreparedEdit(
-                    BatchId("type_argument_preview"),
                     root.catalog.generation,
-                    root.id,
                     emptyList(),
                     plannedIntents,
                 ),
             )
         if (planned is MutationPlanningResult.Rejected) return TypePreviewResult.Rejected(planned.problems)
         planned as MutationPlanningResult.Accepted
-        evidence += mutationPlanWriteInputs(planned.plan, root.resources)
-        val observed = evidence.map { identity -> InputObservation(identity, root.inputs[identity] ?: absentInputToken()) }
+        val reads = CapturedAuthoringReads(snapshot.originalView())
+        evidence.forEach(reads::observeInput)
+        val witness = PreparedEdit(root.catalog.generation, emptyList(), plannedIntents)
+        val required =
+            root.values.requiredExpectations(
+                witness,
+                root.resources,
+                root.catalog.relations.mapTo(linkedSetOf()) {
+                    it.id
+                },
+                planned.plan,
+            )
+        val observed = (reads.observations() + required).distinct()
         return TypePreviewResult.Ready(
             TypeArgumentChangePreview(
                 resource = resource,
                 next = requested,
                 catalog = root.catalog.generation,
-                sourceSnapshot = root.id,
-                observations = observed,
+                expectations = observed,
                 intents = repairs,
                 linkRepairs = relationRepairs,
                 clearedLocations =
@@ -262,19 +267,10 @@ internal class DefaultTypeArgumentOperations(
             return CommitResult.Rejected(listOf(ValueProblem(rootLocation, "type_argument_preview_mismatch")))
         }
         val prepared = preview.preparedEdit()
-        repository.replay(prepared)?.let { return it }
-        val retained =
-            try {
-                snapshots.retain(preview.sourceSnapshot)
-            } catch (_: IllegalArgumentException) {
-                snapshots.capture()
-            }
-        return retained.use { snapshot ->
-            if (snapshot.root.catalog.generation != preview.catalog) {
-                return CommitResult.Rejected(
-                    listOf(ValueProblem(rootLocation, "type_argument_preview_catalog_mismatch")),
-                )
-            }
+        return snapshots.capture().use { snapshot ->
+            if (snapshot.root.catalog.generation != preview.catalog) return CommitResult.CatalogChanged(snapshot.root.catalog.generation)
+            val conflicts = snapshot.root.values.conflicts(preview.expectations)
+            if (conflicts.isNotEmpty()) return CommitResult.Conflict(conflicts)
             val verified =
                 when (val regenerated = preview(preview.resource, preview.next, snapshot)) {
                     is TypePreviewResult.Ready -> {
@@ -294,17 +290,11 @@ internal class DefaultTypeArgumentOperations(
             if (!verified.sameRepairs(preview)) {
                 return CommitResult.Rejected(listOf(ValueProblem(rootLocation, "type_argument_preview_mismatch")))
             }
-            val suppliedInputs = preview.observations.associate { it.identity to it.token }
-            val verifiedInputs = verified.observations.associate { it.identity to it.token }
-            if (suppliedInputs.keys != verifiedInputs.keys) {
+            if (preview.expectations.any { expected -> verified.expectations.none { it.sameFact(expected) } } ||
+                verified.expectations.any { expected -> preview.expectations.none { it.sameFact(expected) } }
+            ) {
                 return CommitResult.Rejected(listOf(ValueProblem(rootLocation, "type_argument_preview_mismatch")))
             }
-            val conflicts =
-                suppliedInputs.mapNotNull { (identity, expected) ->
-                    val actual = verifiedInputs.getValue(identity)
-                    if (actual == expected) null else InputConflict(identity, expected, actual)
-                }
-            if (conflicts.isNotEmpty()) return CommitResult.Conflict(conflicts)
             repository.commit(prepared)
         }
     }
@@ -357,14 +347,11 @@ internal class DefaultTypeArgumentOperations(
             }
         val prepared =
             PreparedEdit(
-                id = BatchId("type_argument_pending"),
                 catalog = catalog,
-                snapshot = sourceSnapshot,
-                observations = observations,
+                expectations = expectations,
                 intents = intents,
             )
-        val digest = canonicalPreparedIntentDigest(prepared)
-        return prepared.copy(id = BatchId("type_argument_$digest"))
+        return prepared
     }
 }
 

@@ -1,9 +1,10 @@
 package com.typewritermc.realm.compiler
 
+import com.typewritermc.authoring.PublicationId
+import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.engine.CompilationProjectionId
 import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.engine.CompiledArtifact
-import com.typewritermc.engine.CompiledArtifactManifest
 import com.typewritermc.engine.CompiledArtifactReference
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.loader.api.artifact.ArtifactDigest
@@ -18,18 +19,20 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 
 val RegisteredCompiledArtifactStoreTest by testSuite {
-    test("replacement activation retains preserved artifact pointers") {
-        val store = RegisteredCompiledArtifactStore(InMemoryBlobEndpoint())
-        val preserved = 'a'.compiledArtifact("preserved")
-        val firstManifest = 'c'.compiledManifest("1", listOf(preserved))
-        val first = store.store(1, firstManifest, listOf(preserved), previousActivation = null)
+    test("publication outputs are complete and reuse verified payload blobs") {
+        val blobs = InMemoryBlobEndpoint()
+        val store = RegisteredCompiledArtifactStore(blobs)
+        val firstArtifact = 'a'.compiledArtifact("first")
+        val first = store.store(PublicationId("first"), CatalogGeneration("catalog"), "implementation", emptySet(), listOf(firstArtifact))
+        val second = store.store(PublicationId("second"), CatalogGeneration("catalog"), "implementation", emptySet(), listOf(firstArtifact))
+        first.outputs.single().blob shouldBe second.outputs.single().blob
         val replacement = 'b'.compiledArtifact("replacement")
-        val secondManifest = 'd'.compiledManifest("2", listOf(preserved, replacement))
-
-        val second = store.store(2, secondManifest, listOf(replacement), previousActivation = first)
-
-        second.artifacts.mapTo(linkedSetOf()) { it.semanticDigest } shouldBe
-            setOf(preserved.semanticDigest, replacement.semanticDigest)
+        val third = store.store(PublicationId("third"), CatalogGeneration("catalog"), "implementation", emptySet(), listOf(replacement))
+        third.outputs.map { it.reference.root } shouldBe listOf(replacement.root)
+        third.publication shouldBe PublicationId("third")
+        third.formatRevision shouldBe 2
+        val empty = store.store(PublicationId("empty"), CatalogGeneration("catalog"), "implementation", emptySet(), emptyList())
+        empty.outputs shouldBe emptyList()
     }
 }
 
@@ -42,27 +45,6 @@ private fun Char.compiledArtifact(resource: String) =
         semanticDigest = ContentDigest(toString().repeat(64)),
         payload = byteArrayOf(code.toByte()),
     )
-
-private fun Char.compiledManifest(
-    sourceRevision: String,
-    artifacts: List<CompiledArtifact>,
-) = CompiledArtifactManifest(
-    formatRevision = 1,
-    digest = ContentDigest(toString().repeat(64)),
-    sourceRevision = sourceRevision,
-    catalogRevision = "catalog",
-    implementationToken = "implementation",
-    runtimeSignatures = emptySet(),
-    artifacts =
-        artifacts.map { artifact ->
-            CompiledArtifactReference(
-                root = artifact.root,
-                formatRevision = artifact.formatRevision,
-                mediaType = artifact.mediaType,
-                semanticDigest = artifact.semanticDigest,
-            )
-        },
-)
 
 internal class InMemoryBlobEndpoint : BlobEndpoint {
     private data class PendingWrite(

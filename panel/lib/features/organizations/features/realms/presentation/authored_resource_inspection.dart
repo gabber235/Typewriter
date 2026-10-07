@@ -72,7 +72,7 @@ final class _AuthoredResourceInspectionState
   void didUpdateWidget(covariant AuthoredResourceInspection oldWidget) {
     super.didUpdateWidget(oldWidget);
     final changed =
-        widget.draft.snapshot != oldWidget.draft.snapshot ||
+        !identical(widget.draft, oldWidget.draft) ||
         widget.draft.generation != oldWidget.draft.generation;
     if (!changed) return;
     _autosave.acceptBaseline(widget.draft);

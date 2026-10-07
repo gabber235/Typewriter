@@ -1,16 +1,15 @@
 package com.typewritermc.engine.runtime
 
-import com.typewritermc.engine.CompiledArtifactActivation
 import com.typewritermc.engine.CompiledArtifactReference
 import com.typewritermc.engine.CompiledBlobPointer
 import com.typewritermc.engine.LoadedCompiledArtifact
-import com.typewritermc.engine.LoadedCompiledContent
+import com.typewritermc.engine.LoadedPublishedContent
+import com.typewritermc.engine.PublishedContent
 import com.typewritermc.loader.api.artifact.ArtifactDigest
 import com.typewritermc.loader.api.artifact.BlobEndpoint
 import com.typewritermc.loader.api.artifact.BlobResult
 import com.typewritermc.loader.api.artifact.DEFAULT_CHUNK_SIZE
 import com.typewritermc.loader.api.artifact.DigestAlgorithm
-import kotlinx.serialization.json.Json
 import java.io.ByteArrayOutputStream
 
 /** Contributes every artifact for one projection and media type to an atomic engine content snapshot. */
@@ -36,7 +35,7 @@ class CompiledArtifactConsumerRegistry(
         }
 
     fun contribute(
-        content: LoadedCompiledContent,
+        content: LoadedPublishedContent,
         target: EngineContentBuilder,
     ) {
         val grouped =
@@ -54,30 +53,11 @@ class CompiledArtifactConsumerRegistry(
 class BlobCompiledArtifactSource(
     private val blobs: BlobEndpoint,
 ) {
-    suspend fun load(activation: CompiledArtifactActivation): LoadedCompiledContent {
-        val manifest =
-            json.decodeFromString(
-                com.typewritermc.engine.CompiledArtifactManifest
-                    .serializer(),
-                read(activation.manifest).decodeToString(),
-            )
-        require(manifest.digest == activation.manifestDigest) {
-            "Compiled artifact manifest identity does not match activation."
-        }
-        val pointers = activation.artifacts.associateBy { it.semanticDigest }
-        require(pointers.keys == manifest.artifacts.mapTo(linkedSetOf(), CompiledArtifactReference::semanticDigest)) {
-            "Compiled artifact activation does not match its manifest."
-        }
-        val artifacts =
-            manifest.artifacts.map { reference ->
-                val pointer =
-                    requireNotNull(pointers[reference.semanticDigest]) {
-                        "Activation is missing artifact ${reference.semanticDigest.value}."
-                    }
-                LoadedCompiledArtifact(reference, read(pointer.blob))
-            }
-        return LoadedCompiledContent(activation.activationRevision, manifest, artifacts)
-    }
+    suspend fun load(content: PublishedContent): LoadedPublishedContent =
+        LoadedPublishedContent(
+            content,
+            content.outputs.map { output -> LoadedCompiledArtifact(output.reference, read(output.blob)) },
+        )
 
     private suspend fun read(pointer: CompiledBlobPointer): ByteArray {
         require(pointer.size <= Int.MAX_VALUE) { "Compiled blob is too large to buffer." }
@@ -113,5 +93,3 @@ private fun <T> BlobResult<T>.success(operation: String): T =
         is BlobResult.Conflict -> error("$operation failed: $reason")
         is BlobResult.Invalid -> error("$operation failed: $reason")
     }
-
-private val json = Json { ignoreUnknownKeys = true }

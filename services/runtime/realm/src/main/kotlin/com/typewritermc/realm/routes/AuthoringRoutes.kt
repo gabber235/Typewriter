@@ -4,16 +4,13 @@ import com.typewritermc.authoring.ArgumentLocation
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.InputObservation
-import com.typewritermc.checking.SnapshotId
-import com.typewritermc.realm.authoring.AuthoringSnapshotStore
+import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.DefaultTypeArgumentOperations
 import com.typewritermc.realm.authoring.LinkRepairIntent
 import com.typewritermc.realm.authoring.TypeArgumentChangePreview
 import com.typewritermc.realm.authoring.TypeArgumentOperations
 import com.typewritermc.realm.authoring.TypePreviewResult
 import com.typewritermc.realm.authoring.TypeRepairIntent
-import com.typewritermc.realm.authoring.absentInputToken
 import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
@@ -27,43 +24,41 @@ import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import okio.ByteString.Companion.toByteString
-import skirout.editor.v1.authoring.AuthoringSnapshotTransferChunk
+import skirout.editor.v1.authoring.AuthoringStateTransferChunk
 import skirout.editor.v1.authoring.AuthoringTransferUnavailable
 import skirout.editor.v1.authoring.AuthoringTransferUnavailableReason
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.CommitTypeArgumentChangeResponse
 import skirout.editor.v1.authoring.PreviewTypeArgumentChangeRequest
 import skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse
-import skirout.editor.v1.authoring.QueryAuthoringSnapshotRequest
-import skirout.editor.v1.authoring.QueryAuthoringSnapshotResponse
+import skirout.editor.v1.authoring.QueryAuthoringStateRequest
+import skirout.editor.v1.authoring.QueryAuthoringStateResponse
 import skirout.editor.v1.authoring.ArgumentLocation as SkirArgumentLocation
 import skirout.editor.v1.authoring.AuthoringResource as SkirAuthoringResource
-import skirout.editor.v1.authoring.AuthoringSnapshot as SkirAuthoringSnapshot
+import skirout.editor.v1.authoring.AuthoringState as SkirAuthoringState
 import skirout.editor.v1.authoring.CatalogChanged as SkirCatalogChanged
-import skirout.editor.v1.authoring.LinkProjection as SkirLinkProjection
 import skirout.editor.v1.authoring.LinkRepairIntent as SkirLinkRepairIntent
 import skirout.editor.v1.authoring.TypeArgumentChangePreview as SkirTypeArgumentChangePreview
 import skirout.editor.v1.authoring.TypePreviewResult as SkirTypePreviewResult
 import skirout.editor.v1.authoring.TypeRepairIntent as SkirTypeRepairIntent
+import skirout.editor.v1.authoring_facts.LinkProjection as SkirLinkProjection
 import skirout.editor.v1.catalog.ResourceDefinitionId as SkirResourceDefinitionId
 import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
-import skirout.editor.v1.type_catalog.InputToken as SkirInputToken
 import skirout.editor.v1.type_catalog.NamedTypeUse as SkirNamedTypeUse
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
-import skirout.editor.v1.type_catalog.SnapshotId as SkirSnapshotId
 import skirout.editor.v1.type_catalog.TypeUse as SkirTypeUse
 import skirout.kernel.v1.bounded_transfer.BoundedTransferChunk as SkirBoundedTransferChunk
 
 internal class AuthoringRoutes private constructor(
     private val repository: AuthoringRepository,
-    private val snapshots: AuthoringSnapshotStore,
-    private val captureFindings: suspend (com.typewritermc.realm.authoring.AuthoredSnapshotRoot) -> CapturedFindings,
+    private val snapshots: AuthoringViewStore,
+    private val captureFindings: suspend (com.typewritermc.realm.authoring.AuthoringView) -> CapturedFindings,
     private val typeArguments: TypeArgumentOperations = DefaultTypeArgumentOperations(repository, snapshots),
     private val contracts: EditorContracts,
 ) {
     constructor(
         repository: AuthoringRepository,
-        snapshots: AuthoringSnapshotStore,
+        snapshots: AuthoringViewStore,
         events: EditorCheckEvents,
         typeArguments: TypeArgumentOperations = DefaultTypeArgumentOperations(repository, snapshots),
         contracts: EditorContracts,
@@ -71,7 +66,7 @@ internal class AuthoringRoutes private constructor(
 
     constructor(
         repository: AuthoringRepository,
-        snapshots: AuthoringSnapshotStore,
+        snapshots: AuthoringViewStore,
         findings: () -> List<com.typewritermc.realm.checking.FindingSet>,
         typeArguments: TypeArgumentOperations = DefaultTypeArgumentOperations(repository, snapshots),
         contracts: EditorContracts,
@@ -85,7 +80,7 @@ internal class AuthoringRoutes private constructor(
 
     fun register(builder: CommunicatorRoutesBuilder) =
         with(builder) {
-            watch(contracts.queryAuthoringSnapshot) { call ->
+            watch(contracts.queryAuthoringState) { call ->
                 val transfer = query(call.request)
                 transfer.updates.forEach { update -> call.publishUpdate(update).requirePublished() }
                 transfer.initial
@@ -107,13 +102,13 @@ internal class AuthoringRoutes private constructor(
             }
         }
 
-    private suspend fun query(request: QueryAuthoringSnapshotRequest): AuthoringSnapshotTransfer {
-        val lease = request.snapshot?.let { snapshots.retain(SnapshotId(it.value)) } ?: snapshots.capture()
+    private suspend fun query(request: QueryAuthoringStateRequest): AuthoringStateTransfer {
+        val lease = snapshots.capture()
         lease.use { snapshot ->
             val root = snapshot.root
             if (root.catalog.generation.value != request.generation.value) {
-                return AuthoringSnapshotTransfer(
-                    QueryAuthoringSnapshotResponse.CatalogChangedWrapper(
+                return AuthoringStateTransfer(
+                    QueryAuthoringStateResponse.CatalogChangedWrapper(
                         SkirCatalogChanged(actualGeneration = SkirCatalogGeneration(value = root.catalog.generation.value)),
                     ),
                     emptyList(),
@@ -146,37 +141,26 @@ internal class AuthoringRoutes private constructor(
                         secondLocation = link.secondLocation?.let { SkirAuthoringValueCodec.encode(it).getOrThrow() },
                     )
                 }
-            val observations =
-                root.inputs.entries
-                    .sortedBy { it.key.toString() }
-                    .map { (identity, token) ->
-                        SkirAuthoringValueCodec.encode(InputObservation(identity, token)).getOrThrow()
-                    }
             val capturedFindings = captureFindings(root)
             val authored =
-                SkirAuthoringSnapshot(
-                    snapshot = SkirSnapshotId(value = root.id.value),
+                SkirAuthoringState(
                     generation = SkirCatalogGeneration(value = root.catalog.generation.value),
                     resources = resources,
                     links = links,
                     findings = capturedFindings.findings,
-                    observations = observations,
-                    absentInputToken = SkirInputToken(value = absentInputToken().value),
-                    findingsToken = capturedFindings.token,
                 )
             return authored.toTransfer(request.transferId)
         }
     }
 
-    private fun SkirAuthoringSnapshot.toTransfer(transferId: String): AuthoringSnapshotTransfer {
-        val encoded = SkirAuthoringSnapshot.serializer.toBytes(this).toByteArray()
+    private fun SkirAuthoringState.toTransfer(transferId: String): AuthoringStateTransfer {
+        val encoded = SkirAuthoringState.serializer.toBytes(this).toByteArray()
         return when (val plan = BoundedByteTransferEncoder(nextTransferId = { transferId }).encode(encoded)) {
             is BoundedTransferPlan.Unavailable -> {
-                AuthoringSnapshotTransfer(
-                    QueryAuthoringSnapshotResponse.UnavailableWrapper(
+                AuthoringStateTransfer(
+                    QueryAuthoringStateResponse.UnavailableWrapper(
                         AuthoringTransferUnavailable(
                             generation = generation,
-                            snapshot = snapshot,
                             reason = AuthoringTransferUnavailableReason.ENCODED_SIZE_LIMIT,
                             encodedSize = plan.encodedSize,
                             maxEncodedSize = plan.maxEncodedSize,
@@ -189,15 +173,14 @@ internal class AuthoringRoutes private constructor(
             is BoundedTransferPlan.Ready -> {
                 val responses =
                     plan.chunks.map { chunk ->
-                        QueryAuthoringSnapshotResponse.ChunkWrapper(
-                            AuthoringSnapshotTransferChunk(
+                        QueryAuthoringStateResponse.ChunkWrapper(
+                            AuthoringStateTransferChunk(
                                 generation = generation,
-                                snapshot = snapshot,
                                 transfer = chunk.toWire(),
                             ),
                         )
                     }
-                AuthoringSnapshotTransfer(responses.first(), responses.drop(1))
+                AuthoringStateTransfer(responses.first(), responses.drop(1))
             }
         }
     }
@@ -205,13 +188,7 @@ internal class AuthoringRoutes private constructor(
     private fun preview(request: PreviewTypeArgumentChangeRequest): TypePreviewResult {
         val requested = SkirAuthoringValueCodec.decode(request.requested).getOrThrow()
         val requestedCatalog = CatalogGeneration(request.catalog.value)
-        val lease =
-            runCatching { snapshots.retain(SnapshotId(request.snapshot.value)) }
-                .getOrElse {
-                    return TypePreviewResult.InvalidArguments(
-                        listOf(DeclarationDiagnostic(requested.definition, "snapshot_missing")),
-                    )
-                }
+        val lease = snapshots.capture()
         lease.use { snapshot ->
             if (snapshot.root.catalog.generation != requestedCatalog) {
                 return TypePreviewResult.InvalidArguments(
@@ -223,9 +200,9 @@ internal class AuthoringRoutes private constructor(
     }
 }
 
-private data class AuthoringSnapshotTransfer(
-    val initial: QueryAuthoringSnapshotResponse,
-    val updates: List<QueryAuthoringSnapshotResponse>,
+private data class AuthoringStateTransfer(
+    val initial: QueryAuthoringStateResponse,
+    val updates: List<QueryAuthoringStateResponse>,
 )
 
 private fun BoundedTransferChunk.toWire(): SkirBoundedTransferChunk =
@@ -271,10 +248,9 @@ private val TypeSelection.definition
 private fun TypeArgumentChangePreview.toWire(): SkirTypeArgumentChangePreview =
     SkirTypeArgumentChangePreview(
         catalog = SkirCatalogGeneration(value = catalog.value),
-        sourceSnapshot = SkirSnapshotId(value = sourceSnapshot.value),
         resource = SkirResourceId(value = resource.value),
         next = SkirAuthoringValueCodec.encode(next).getOrThrow(),
-        observations = observations.map { SkirAuthoringValueCodec.encode(it).getOrThrow() },
+        expectations = expectations.map { SkirAuthoringOperationCodec.encode(it).getOrThrow() },
         intents = intents.map(TypeRepairIntent::toWire),
         linkRepairs = linkRepairs.map(LinkRepairIntent::toWire),
         clearedLocations = clearedLocations.map { SkirAuthoringValueCodec.encode(it).getOrThrow() },
@@ -285,8 +261,7 @@ private fun SkirTypeArgumentChangePreview.toDomain(): TypeArgumentChangePreview 
         resource = ResourceId(resource.value),
         next = SkirAuthoringValueCodec.decode(next).getOrThrow(),
         catalog = CatalogGeneration(catalog.value),
-        sourceSnapshot = SnapshotId(sourceSnapshot.value),
-        observations = observations.map { SkirAuthoringValueCodec.decode(it).getOrThrow() },
+        expectations = expectations.map { SkirAuthoringOperationCodec.decode(it).getOrThrow() },
         intents = intents.map(SkirTypeRepairIntent::toDomain),
         linkRepairs = linkRepairs.map(SkirLinkRepairIntent::toDomain),
         clearedLocations = clearedLocations.map { SkirAuthoringValueCodec.decode(it).getOrThrow() },

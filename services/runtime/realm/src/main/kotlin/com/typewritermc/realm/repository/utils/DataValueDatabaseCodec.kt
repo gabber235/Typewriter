@@ -13,9 +13,9 @@ import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.longOrNull
 
 /** Encodes typed metadata as structured Surreal objects without string serialization. */
-internal object StructuredDatabaseCodec {
-    private val json = Json { classDiscriminator = "kind" }
-
+internal class StructuredDatabaseCodec(
+    private val json: Json,
+) {
     fun <T> encode(
         serializer: KSerializer<T>,
         value: T,

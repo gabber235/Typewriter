@@ -21,6 +21,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1
     as action;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring.dart"
     as authoring;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring_facts.dart"
+    as facts;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/binding.dart"
     as binding;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/capability.dart"
@@ -5447,7 +5449,7 @@ _PageGraphPlacement? _graphPlacement(types.DataValue? value) {
 }
 
 String _linkOccurrenceKey(
-  authoring.LinkProjection link,
+  facts.LinkProjection link,
   catalog_wire.RelationContract? relation,
 ) {
   final location = link.firstLocation ?? link.secondLocation;

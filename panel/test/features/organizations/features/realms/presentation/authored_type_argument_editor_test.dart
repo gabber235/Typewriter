@@ -201,10 +201,9 @@ void main() {
             requested = next;
             return authoring.TypePreviewResult.createReady(
               catalog: fixture.catalog.snapshot.generation,
-              sourceSnapshot: types.SnapshotId(value: "realm:1"),
               resource: types.ResourceId(value: "variable:1"),
               next: next,
-              observations: const [],
+              expectations: const [],
               intents: const [],
               linkRepairs: const [],
               clearedLocations: [
@@ -220,10 +219,7 @@ void main() {
           commit: (preview) async {
             committed = preview;
             return authoring.CommitTypeArgumentChangeResponse.wrapResult(
-              authoring.CommitResult.createCommitted(
-                snapshot: types.SnapshotId(value: "realm:2"),
-                changed: const [],
-              ),
+              authoring.CommitResult.committed,
             );
           },
           onStatus: (value) => status = value,
@@ -282,10 +278,9 @@ void main() {
             requested = next;
             return authoring.TypePreviewResult.createReady(
               catalog: fixture.catalog.snapshot.generation,
-              sourceSnapshot: types.SnapshotId(value: "realm:1"),
               resource: types.ResourceId(value: "variable:1"),
               next: next,
-              observations: const [],
+              expectations: const [],
               intents: const [],
               linkRepairs: const [],
               clearedLocations: const [],
@@ -293,10 +288,7 @@ void main() {
           },
           commit: (_) async =>
               authoring.CommitTypeArgumentChangeResponse.wrapResult(
-                authoring.CommitResult.createCommitted(
-                  snapshot: types.SnapshotId(value: "realm:2"),
-                  changed: const [],
-                ),
+                authoring.CommitResult.committed,
               ),
         ),
       ),

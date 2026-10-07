@@ -113,8 +113,7 @@ AuthoringSessionState _state() {
   final catalog = receivedCheckedEditorCatalog(generation: _generation);
   return AuthoringSessionState(
     catalog: catalog,
-    snapshot: skir.AuthoringSnapshot(
-      snapshot: skir.SnapshotId(value: "snapshot:page"),
+    snapshot: skir.AuthoringState(
       generation: _generation,
       resources: [
         skir.AuthoringResource(
@@ -141,9 +140,6 @@ AuthoringSessionState _state() {
       ],
       links: const [],
       findings: const [],
-      observations: const [],
-      absentInputToken: skir.InputToken(value: "absent"),
-      findingsToken: skir.FindingsToken(value: "findings:page"),
     ),
   );
 }

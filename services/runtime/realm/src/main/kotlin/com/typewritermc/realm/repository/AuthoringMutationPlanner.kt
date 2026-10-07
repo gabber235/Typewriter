@@ -16,10 +16,8 @@ import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.ValueProblem
 import com.typewritermc.authoring.validateStructure
-import com.typewritermc.checking.InputIdentity
 import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
 import com.typewritermc.realm.authoring.authoredTypeAt
-import com.typewritermc.realm.authoring.changedAuthoringInputs
 import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointBindingTemplate
@@ -80,19 +78,19 @@ internal class AuthoringMutationPlanner(
                 is EditIntent.SetValue -> {
                     val before = ResourceValueMapper.discover(resources)
                     update(resources, intent.at, intent.value, problems)
-                    synchronizeValueMutation(before, resources, edit.id.value, index, problems)
+                    synchronizeValueMutation(before, resources, canonicalPreparedIntentDigest(edit), index, problems)
                 }
 
                 is EditIntent.Insert -> {
                     val before = ResourceValueMapper.discover(resources)
                     insert(resources, intent, problems)
-                    synchronizeValueMutation(before, resources, edit.id.value, index, problems)
+                    synchronizeValueMutation(before, resources, canonicalPreparedIntentDigest(edit), index, problems)
                 }
 
                 is EditIntent.Remove -> {
                     val before = ResourceValueMapper.discover(resources)
                     remove(resources, intent, problems)
-                    synchronizeValueMutation(before, resources, edit.id.value, index, problems)
+                    synchronizeValueMutation(before, resources, canonicalPreparedIntentDigest(edit), index, problems)
                 }
 
                 is EditIntent.Move -> {
@@ -100,7 +98,7 @@ internal class AuthoringMutationPlanner(
                 }
 
                 is EditIntent.ConnectRelation -> {
-                    connect(resources, intent, edit.id.value, index, problems)
+                    connect(resources, intent, canonicalPreparedIntentDigest(edit), index, problems)
                 }
 
                 is EditIntent.DisconnectRelation -> {
@@ -152,14 +150,11 @@ internal class AuthoringMutationPlanner(
                 created = (afterSet - beforeSet).sortedBy(::projectionKey),
                 metadataChanged = emptyList(),
             )
-        val changed = changedAuthoringInputs(latestResources, resources).toMutableSet()
-        changed += changedRelationInputs(beforeSet, afterSet)
         return MutationPlanningResult.Accepted(
             AuthoringMutationPlan(
                 resources = resources.filter { (id, value) -> latestResources[id] != value },
                 removedResources = removed,
                 relations = relations,
-                changedInputs = changed,
             ),
         )
     }
@@ -826,21 +821,6 @@ private fun validateCardinality(
         }
     }
 }
-
-private fun changedRelationInputs(
-    before: Set<com.typewritermc.authoring.LinkProjection>,
-    after: Set<com.typewritermc.authoring.LinkProjection>,
-): Set<InputIdentity> =
-    buildSet {
-        (before xor after).forEach { projection ->
-            add(InputIdentity.Incoming(projection.first, projection.contract))
-            add(InputIdentity.Incoming(projection.first, null))
-            add(InputIdentity.Incoming(projection.second, projection.contract))
-            add(InputIdentity.Incoming(projection.second, null))
-        }
-    }
-
-private infix fun <T> Set<T>.xor(other: Set<T>): Set<T> = (this - other) + (other - this)
 
 private val TypeSelection.definition
     get() =

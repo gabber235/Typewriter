@@ -1,5 +1,7 @@
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring.dart"
     as authoring;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring_facts.dart"
+    as facts;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
     as catalog;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/diagnostic.dart"
@@ -13,7 +15,7 @@ abstract interface class PortableAuthoringDocument {
 
   Map<types.ResourceId, types.AuthoringRecord> get resources;
 
-  List<authoring.LinkProjection> get links;
+  List<facts.LinkProjection> get links;
 
   List<diagnostic.InitializationDiagnostic> get initializationFindings;
 

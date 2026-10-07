@@ -27,8 +27,8 @@ import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.UndecidedCandidate
 import com.typewritermc.expression.EvaluationDiagnostic
+import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.realm.checking.SnapshotReadCapability
-import com.typewritermc.realm.checking.SnapshotReads
 import com.typewritermc.realm.repository.LinkSchemaCapabilities
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.types.DataValue
@@ -45,7 +45,7 @@ import com.typewritermc.types.catalog.Resolution
 internal object RealmGraphReads : GraphReads {
     context(reads: com.typewritermc.authoring.AuthoredReads)
     override fun <D : ResourceDraft> reachable(query: ReachabilityQuery<D>): ReachabilityResult<D> {
-        val snapshot = reads.requireSnapshotReads()
+        val snapshot = reads.requireCapturedAuthoringReads()
         val graph = CapturedGraph(snapshot, query.links)
         val queue = ArrayDeque<Pair<ResourceId, Int>>()
         query.seeds.sortedBy(ResourceId::value).forEach { queue += it to 0 }
@@ -90,7 +90,7 @@ internal object RealmGraphReads : GraphReads {
         target: ResourceId,
         family: RelationFamilyId,
     ): PartialSelection<ResourceDraft> {
-        val snapshot = reads.requireSnapshotReads()
+        val snapshot = reads.requireCapturedAuthoringReads()
         val graph = CapturedGraph(snapshot, RelationSelection.Family(family, TraversalDirection.Forward))
         graph.observeAt(target)
         val known = mutableListOf<ResourceDraft>()
@@ -108,7 +108,7 @@ internal object RealmGraphReads : GraphReads {
 
     context(reads: com.typewritermc.authoring.AuthoredReads)
     override fun routes(query: RouteQuery): RouteResult {
-        val snapshot = reads.requireSnapshotReads()
+        val snapshot = reads.requireCapturedAuthoringReads()
         val graph = CapturedGraph(snapshot, query.links)
         val paths = mutableListOf<List<GraphStep>>()
         var steps = 0L
@@ -153,7 +153,7 @@ internal object RealmGraphReads : GraphReads {
 
     context(reads: com.typewritermc.authoring.AuthoredReads)
     override fun occurrences(query: LinkInspectionQuery): LinkInspectionResult {
-        val snapshot = reads.requireSnapshotReads()
+        val snapshot = reads.requireCapturedAuthoringReads()
         val graph = CapturedGraph(snapshot, query.links)
         val occurrences = mutableListOf<LinkOccurrence>()
         var inspected = 0L
@@ -178,7 +178,7 @@ internal object RealmGraphReads : GraphReads {
 
     context(reads: com.typewritermc.authoring.AuthoredReads)
     override fun follow(occurrence: LinkOccurrence): Availability<DraftBinding> {
-        val snapshot = reads.requireSnapshotReads()
+        val snapshot = reads.requireCapturedAuthoringReads()
         snapshot.observeInput(InputIdentity.Value(occurrence.id.location))
         snapshot.observeInput(InputIdentity.Existence(occurrence.target.resource))
         return snapshot.resourceBinding(occurrence.target.resource)
@@ -186,7 +186,7 @@ internal object RealmGraphReads : GraphReads {
 }
 
 private class CapturedGraph(
-    private val reads: SnapshotReads,
+    private val reads: CapturedAuthoringReads,
     private val selection: RelationSelection,
 ) {
     private val view = reads.view
@@ -314,7 +314,7 @@ private class CapturedGraph(
 }
 
 internal class CapturedGraphIndex(
-    private val view: AuthoredSnapshotView,
+    private val view: AuthoredReadView,
     selection: RelationSelection,
 ) {
     private val root = view.original
@@ -511,12 +511,12 @@ private sealed interface RawCursor {
 
 private fun DataValue.unwrapNamed(): DataValue = if (this is DataValue.Named) payload.unwrapNamed() else this
 
-private fun com.typewritermc.authoring.AuthoredReads.requireSnapshotReads(): SnapshotReads =
+private fun com.typewritermc.authoring.AuthoredReads.requireCapturedAuthoringReads(): CapturedAuthoringReads =
     (this as? SnapshotReadCapability)?.snapshotReads
         ?: error("Graph reads require the retained Realm snapshot capability.")
 
 private fun interrupted(
-    reads: SnapshotReads,
+    reads: CapturedAuthoringReads,
     reason: String,
 ): InspectionCompletion.Interrupted {
     reads.recordIncomplete(reason)

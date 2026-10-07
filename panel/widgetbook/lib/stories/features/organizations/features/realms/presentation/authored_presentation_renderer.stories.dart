@@ -535,7 +535,6 @@ skir.PresentationNode _textNode(String id, String value) =>
 AuthoredDraft _interactionDraft() {
   final configuration = _namedType("InteractionStory");
   return AuthoredDraft(
-    snapshot: skir.SnapshotId(value: "realm:interaction_story"),
     generation: skir.CatalogGeneration(value: "catalog:interaction_story"),
     resources: [
       skir.AuthoringResource(
@@ -582,8 +581,6 @@ AuthoredDraft _interactionDraft() {
       ),
     ],
     links: const [],
-    observations: const [],
-    absentInputToken: skir.InputToken(value: "absent"),
   );
 }
 

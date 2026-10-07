@@ -3,11 +3,6 @@ package com.typewritermc.authoring
 import kotlinx.serialization.Serializable
 
 @JvmInline @Serializable
-value class BatchId(
-    val value: String,
-)
-
-@JvmInline @Serializable
 value class InitializationRequestId(
     val value: String,
 )

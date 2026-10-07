@@ -10,15 +10,15 @@ void main() {
     "publication transport uses the Realm route and streams transitions",
     () async {
       final nats = FakeNatsClient();
-      skir.PublicationAttempt? published;
+      skir.PublishAuthoringRequest? published;
       nats
         ..registerHandler(_watchSubject, (_) {
-          return skir.PublicationAttempt.serializer.toBytes(
+          return skir.PublicationReport.serializer.toBytes(
             _attempt(skir.PublicationState.checking),
           );
         })
         ..registerHandler(_publishSubject, (bytes) {
-          published = skir.PublicationAttempt.serializer.fromBytes(bytes);
+          published = skir.PublishAuthoringRequest.serializer.fromBytes(bytes);
           return skir.PublishAuthoringResponse.serializer.toBytes(
             skir.PublishAuthoringResponse.wrapResult(
               skir.PublicationResult.publishing,
@@ -36,16 +36,13 @@ void main() {
       final source = container.read(
         realmPublicationSourceProvider(_organization, _realm),
       );
-      final transitions = <skir.PublicationAttempt>[];
+      final transitions = <skir.PublicationReport>[];
       final subscription = source.watch().listen(transitions.add);
       await _waitUntil(() => transitions.isNotEmpty);
 
-      final result = await source.publish(
-        _attempt(skir.PublicationState.checking),
-      );
+      final result = await source.publish();
       expect(result, skir.PublicationResult.publishing);
-      expect(published?.capture, _snapshot);
-      expect(published?.catalog, _catalog);
+      expect(published, skir.PublishAuthoringRequest.defaultInstance);
 
       for (final state in [
         skir.PublicationState.compiling,
@@ -54,7 +51,7 @@ void main() {
       ]) {
         nats.emitMessageOnSubject(
           _watchUpdateSubject,
-          skir.PublicationAttempt.serializer.toBytes(_attempt(state)),
+          skir.PublicationReport.serializer.toBytes(_attempt(state)),
         );
       }
       await _waitUntil(() => transitions.length == 4);
@@ -79,8 +76,6 @@ void main() {
 final _organization = recordId("organization:org1");
 final _realm = recordId("service:realm1");
 final _publication = skir.PublicationId(value: "publication:1");
-final _snapshot = skir.SnapshotId(value: "realm:1");
-final _catalog = skir.CatalogGeneration(value: "catalog:1");
 const _publishSubject =
     "service.to.realm1.organization.org1.realm.editor.authoring.publish";
 const _watchSubject =
@@ -88,14 +83,8 @@ const _watchSubject =
 const _watchUpdateSubject =
     "service.from.realm1.organization.org1.realm.editor.authoring.publication.watch";
 
-skir.PublicationAttempt _attempt(skir.PublicationState state) =>
-    skir.PublicationAttempt(
-      id: _publication,
-      capture: _snapshot,
-      catalog: _catalog,
-      engineInputs: skir.EngineImplementationInputs.defaultInstance,
-      state: state,
-    );
+skir.PublicationReport _attempt(skir.PublicationState state) =>
+    skir.PublicationReport(id: _publication, findings: const [], state: state);
 
 Future<void> _waitUntil(bool Function() predicate) async {
   for (var index = 0; index < 100 && !predicate(); index++) {

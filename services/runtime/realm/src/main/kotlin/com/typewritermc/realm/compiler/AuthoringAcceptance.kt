@@ -2,6 +2,7 @@ package com.typewritermc.realm.compiler
 
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.DiagnosticId
+import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.PublicationId
@@ -13,12 +14,10 @@ import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.CheckOutcome
 import com.typewritermc.checking.Diagnostic
 import com.typewritermc.checking.DiagnosticSeverity
-import com.typewritermc.checking.InputObservation
 import com.typewritermc.checking.InputToken
-import com.typewritermc.checking.SnapshotId
 import com.typewritermc.configuration.RuleOrigin
-import com.typewritermc.realm.authoring.AuthoringSnapshotStore
-import com.typewritermc.realm.authoring.SnapshotLease
+import com.typewritermc.realm.authoring.AuthoringLease
+import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.checking.CheckAdmissionTarget
 import com.typewritermc.realm.checking.CheckInstanceId
 import com.typewritermc.realm.checking.RealmCheckRuntime
@@ -82,17 +81,16 @@ class StagedEngineImplementationSource(
         }
 }
 
-data class AcceptedSnapshot(
-    val snapshot: SnapshotId,
+data class AcceptedAuthoring(
     val catalog: CatalogGeneration,
     val coverage: CheckCoverage,
-    val evidence: List<InputObservation>,
+    val evidence: List<EditExpectation>,
     val bindingRequirements: List<NativeBindingRequirement>,
 )
 
 sealed interface AcceptanceResult {
     data class Accepted(
-        val proof: AcceptedSnapshot,
+        val proof: AcceptedAuthoring,
     ) : AcceptanceResult
 
     data class Blocked(
@@ -101,38 +99,21 @@ sealed interface AcceptanceResult {
 }
 
 internal interface PublicationAcceptance {
-    fun retain(
-        expectedSnapshot: SnapshotId,
-        expectedCatalog: CatalogGeneration,
-    ): SnapshotLease
+    fun capture(): AuthoringLease
 
-    suspend fun evaluate(capture: SnapshotLease): AcceptanceResult
+    suspend fun evaluate(capture: AuthoringLease): AcceptanceResult
 }
 
 internal class AuthoringAcceptance(
-    private val snapshots: AuthoringSnapshotStore,
+    private val snapshots: AuthoringViewStore,
     private val checks: RealmCheckRuntime,
 ) : PublicationAcceptance {
-    override fun retain(
-        expectedSnapshot: SnapshotId,
-        expectedCatalog: CatalogGeneration,
-    ): SnapshotLease {
-        val snapshot = snapshots.retain(expectedSnapshot)
-        try {
-            require(snapshot.root.catalog.generation == expectedCatalog) {
-                "Publication capture uses a different catalog generation."
-            }
-            return snapshot
-        } catch (failure: Throwable) {
-            snapshot.close()
-            throw failure
-        }
-    }
+    override fun capture(): AuthoringLease = snapshots.capture()
 
-    override suspend fun evaluate(capture: SnapshotLease): AcceptanceResult {
+    override suspend fun evaluate(capture: AuthoringLease): AcceptanceResult {
         val snapshot = capture
         return run {
-            val target = CheckAdmissionTarget.CapturedAcceptance(snapshot.root.id, snapshot.root.catalog.generation)
+            val target = CheckAdmissionTarget.CapturedAcceptance(snapshot.root)
             val report = checks.evaluateCapture(target)
             val required = report.required
             val completed =
@@ -233,11 +214,10 @@ internal class AuthoringAcceptance(
                 AcceptanceResult.Blocked(findings.distinctBy { it.id })
             } else {
                 AcceptanceResult.Accepted(
-                    AcceptedSnapshot(
-                        snapshot = snapshot.root.id,
+                    AcceptedAuthoring(
                         catalog = snapshot.root.catalog.generation,
                         coverage = coverage,
-                        evidence = report.results.flatMap { it.observations }.distinct(),
+                        evidence = report.results.flatMap { it.expectations }.distinct(),
                         bindingRequirements = requirements.distinct(),
                     ),
                 )

@@ -6,8 +6,6 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1
     as binding;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
     as catalog;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/checking.dart"
-    as checking;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
     as expression;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/presentation.dart"
@@ -504,8 +502,7 @@ _fixture({
   );
   final one = types.ResourceId(value: "tag:one");
   final two = types.ResourceId(value: "tag:two");
-  final snapshot = authoring.AuthoringSnapshot(
-    snapshot: types.SnapshotId(value: "realm:collections"),
+  final snapshot = authoring.AuthoringState(
     generation: generation,
     resources: [
       _resource(one, type, listOfText, "Alpha", [two]),
@@ -519,11 +516,8 @@ _fixture({
     ],
     links: const [],
     findings: const [],
-    findingsToken: checking.FindingsToken(value: "findings:collections"),
-    observations: const [],
-    absentInputToken: types.InputToken(value: "absent"),
   );
-  final draft = AuthoredDraft.fromSnapshot(snapshot, catalog: checked);
+  final draft = AuthoredDraft.fromState(snapshot, catalog: checked);
   final definition = presentation.PresentationCollectionDefinition(
     sourceId: "tags",
     rowType: types.TypeTemplate.createNamed(

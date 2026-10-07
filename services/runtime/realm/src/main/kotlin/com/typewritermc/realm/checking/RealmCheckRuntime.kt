@@ -22,9 +22,10 @@ import com.typewritermc.discovery.OwnedCheck
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.ProviderLease
 import com.typewritermc.expression.EvaluationDiagnostic
-import com.typewritermc.realm.authoring.AuthoringSnapshotStore
+import com.typewritermc.realm.authoring.AuthoringLease
+import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
-import com.typewritermc.realm.authoring.SnapshotLease
+import com.typewritermc.realm.repository.conflicts
 import com.typewritermc.types.ResourceId
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -45,7 +46,7 @@ interface CheckScheduler : AutoCloseable {
 }
 
 data class CapturedCheckReport(
-    val snapshot: com.typewritermc.checking.SnapshotId,
+    val context: com.typewritermc.authoring.ReadContext,
     val catalog: com.typewritermc.checking.CatalogGeneration,
     val required: Set<CheckInstanceId>,
     val results: List<CheckResult>,
@@ -57,7 +58,7 @@ data class CapturedCheckReport(
 }
 
 class RealmCheckRuntime(
-    private val snapshots: AuthoringSnapshotStore,
+    private val snapshots: AuthoringViewStore,
     dispatcher: CoroutineDispatcher = Dispatchers.Default,
     private val dependencies: ReverseDependencyIndex = DefaultReverseDependencyIndex(),
     private val checkInputs: RealmCheckInputs = RealmCheckInputs(),
@@ -108,6 +109,25 @@ class RealmCheckRuntime(
         reconcileAndSchedule()
     }
 
+    fun invalidateCurrent() {
+        snapshots.capture().use { lease ->
+            val values = lease.root.values
+            synchronized(lock) {
+                if (closed) return
+                instances.values.forEach { state ->
+                    val evidence = state.findings?.expectations ?: return@forEach
+                    if (values.conflicts(evidence).isNotEmpty()) {
+                        state.findings = state.findings?.copy(status = FindingStatus.Outdated)
+                        retireJobLocked(state.job)
+                        state.job = null
+                        scheduleLocked(state)
+                    }
+                }
+            }
+        }
+        scope.launch { reconcileAndSchedule() }
+    }
+
     override fun invalidate(changed: Set<InputIdentity>) {
         if (changed.isEmpty()) return
         val rediscover = RESOURCE_SELECTION_INPUT in changed || changed.any { it is InputIdentity.Form || it is InputIdentity.Membership }
@@ -149,7 +169,7 @@ class RealmCheckRuntime(
         }
 
     suspend fun evaluateCapture(target: CheckAdmissionTarget.CapturedAcceptance): CapturedCheckReport {
-        var snapshot: SnapshotLease? = snapshots.retain(target.snapshot)
+        var snapshot: AuthoringLease? = snapshots.retain(target.view.readContext)
         var catalog: ActiveCatalog? = null
         return try {
             val captured = requireNotNull(snapshot)
@@ -166,13 +186,32 @@ class RealmCheckRuntime(
                 subjects.map { subject ->
                     val result = evaluate(active, subject, target)
                     when (admission.requireEvidenceForCapture(result, target)) {
-                        AdmissionResult.Captured -> result
-                        AdmissionResult.Discarded -> result.copy(outcome = CheckOutcome.Incomplete("captured evidence was discarded"))
-                        AdmissionResult.RetryRequired -> result.copy(outcome = CheckOutcome.Incomplete("captured evidence requires retry"))
-                        AdmissionResult.Published -> error("Captured admission cannot publish current findings.")
+                        AdmissionResult.Captured -> {
+                            result
+                        }
+
+                        AdmissionResult.Discarded -> {
+                            result.copy(outcome = CheckOutcome.Incomplete("captured evidence was discarded"))
+                        }
+
+                        AdmissionResult.RetryRequired -> {
+                            if (target.view.values
+                                    .conflicts(result.expectations)
+                                    .isEmpty() &&
+                                result.outcome != CheckOutcome.Finished
+                            ) {
+                                result
+                            } else {
+                                result.copy(outcome = CheckOutcome.Incomplete("captured evidence requires retry"))
+                            }
+                        }
+
+                        AdmissionResult.Published -> {
+                            error("Captured admission cannot publish current findings.")
+                        }
                     }
                 }
-            CapturedCheckReport(target.snapshot, target.catalog, required, results)
+            CapturedCheckReport(target.view.readContext, target.catalog, required, results)
         } finally {
             catalog?.close()
             snapshot?.close()
@@ -235,7 +274,7 @@ class RealmCheckRuntime(
                     tickets
                 }
             removedTickets
-                .distinctBy { ticket -> ticket.snapshot to ticket.catalog }
+                .distinctBy { ticket -> ticket.catalog }
                 .forEach { ticket -> scope.launch { onFindingsChanged(ticket) } }
         } finally {
             retained.lease.close()
@@ -244,7 +283,7 @@ class RealmCheckRuntime(
 
     private fun discoverSubjects(
         catalog: ActiveCatalog,
-        retained: SnapshotLease? = null,
+        retained: AuthoringLease? = null,
     ): SubjectDiscovery {
         val lease = retained ?: snapshots.capture()
         return try {
@@ -252,7 +291,7 @@ class RealmCheckRuntime(
             val subjects = mutableListOf<CheckSubject>()
             val incompleteRules = linkedSetOf<RuleId>()
             catalog.plans.forEach { plan ->
-                val reads = SnapshotReads(lease.originalView(), predicates = selectionPredicates, limits = readLimits)
+                val reads = CapturedAuthoringReads(lease.originalView(), predicates = selectionPredicates, limits = readLimits)
                 subjects +=
                     when (plan) {
                         is CheckPlan.Simple -> {
@@ -311,7 +350,7 @@ class RealmCheckRuntime(
                                 rule = plan.rule,
                                 outcome = outcome,
                                 findings = findings,
-                                observed = reads.observations().map { it.identity },
+                                observed = reads.observations().flatMap { it.dependencies() },
                             ).subject(DISCOVERY_LOCATION)
                 }
             }
@@ -333,7 +372,6 @@ class RealmCheckRuntime(
                 instance = state.id,
                 incarnation = catalog.incarnation,
                 execution = CheckExecutionId("check:${nextExecution.getAndIncrement()}"),
-                snapshot = lease.root.id,
                 catalog = lease.root.catalog.generation,
             )
         state.ticket = ticket
@@ -364,13 +402,15 @@ class RealmCheckRuntime(
             synchronized(lock) {
                 val state = instances[id] ?: return
                 if (state.ticket != result.ticket) return
-                dependencies.replace(id, result.observations)
-                val admission = DefaultCheckAdmission(snapshots, this).requireCurrentExecutionAndInputs(result)
+                dependencies.replace(id, result.expectations)
+                val admission =
+                    DefaultCheckAdmission(snapshots, this).requireCurrentExecutionAndInputs(result) {
+                        state.findings =
+                            FindingSet(result.ticket, result.expectations, result.outcome, result.findings, FindingStatus.Current)
+                    }
                 state.job = null
                 when (admission) {
                     AdmissionResult.Published -> {
-                        state.findings =
-                            FindingSet(result.ticket, result.observations, result.outcome, result.findings, FindingStatus.Current)
                         result.ticket
                     }
 
@@ -396,18 +436,17 @@ class RealmCheckRuntime(
         subject: CheckSubject,
         target: CheckAdmissionTarget,
         ticket: CheckTicket? = null,
-        suppliedLease: SnapshotLease? = null,
+        suppliedLease: AuthoringLease? = null,
     ): CheckResult {
-        val lease = suppliedLease ?: snapshots.retain((target as CheckAdmissionTarget.CapturedAcceptance).snapshot)
+        val lease = suppliedLease ?: snapshots.retain((target as CheckAdmissionTarget.CapturedAcceptance).view.readContext)
         val actualTicket =
             ticket ?: CheckTicket(
                 instance = subject.id,
                 incarnation = catalog.incarnation,
                 execution = CheckExecutionId("capture:${nextExecution.getAndIncrement()}"),
-                snapshot = lease.root.id,
                 catalog = lease.root.catalog.generation,
             )
-        val reads = SnapshotReads(lease.originalView(), predicates = selectionPredicates, limits = readLimits)
+        val reads = CapturedAuthoringReads(lease.originalView(), predicates = selectionPredicates, limits = readLimits)
         val findings = mutableListOf<Diagnostic>()
         var explicitOutcome: CheckOutcome? = null
         return try {
@@ -528,7 +567,7 @@ class RealmCheckRuntime(
         }
     }
 
-    private fun collectCatalog(snapshot: SnapshotLease): ActiveCatalog {
+    private fun collectCatalog(snapshot: AuthoringLease): ActiveCatalog {
         val root = snapshot.root
         val incarnation = "catalog:${nextIncarnation.getAndIncrement()}"
         val leases = mutableListOf<ProviderLease>()
@@ -593,7 +632,7 @@ class RealmCheckRuntime(
     private fun portableDiagnostic(
         plan: CheckPlan.Portable,
         subject: CheckSubject,
-        reads: SnapshotReads,
+        reads: CapturedAuthoringReads,
     ): Diagnostic {
         val targets =
             plan.ownedRule.diagnostic.targets
@@ -659,7 +698,7 @@ private class ActiveCatalog(
     val incarnation: String,
     val plans: List<CheckPlan>,
     private val providerLeases: List<ProviderLease>,
-    val snapshot: SnapshotLease,
+    val snapshot: AuthoringLease,
 ) : AutoCloseable {
     private val lock = Any()
     private var references = 1

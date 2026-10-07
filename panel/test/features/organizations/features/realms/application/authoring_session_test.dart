@@ -15,616 +15,199 @@ import "../../../../../support/provider_test_utils.dart";
 const _catalogSubject =
     "service.to.realm1.organization.org1.realm.editor.catalog.fetch";
 const _snapshotSubject =
-    "service.to.realm1.organization.org1.realm.editor.authoring.snapshot.query";
+    "service.to.realm1.organization.org1.realm.editor.authoring.state.query";
 const _eventSubject =
     "service.from.realm1.organization.org1.realm.editor.authoring.changed";
-const _catalogInvalidationRequestSubject =
-    "service.to.realm1.organization.org1.realm.editor.catalog.invalidate";
 const _catalogInvalidationEventSubject =
     "service.from.realm1.organization.org1.realm.editor.catalog.invalidate";
 
 void main() {
-  test("snapshot state exposes one coherent authored view", () {
-    final catalog = CheckedEditorCatalog(_catalog());
+  test("current state exposes one coherent authored view", () {
+    final checked = CheckedEditorCatalog(_catalog());
     final state = AuthoringSessionState(
       snapshot: _snapshot("Initial", 1),
-      catalog: catalog,
+      catalog: checked,
     );
-
     expect(state.generation, _generation);
-    expect(state.snapshotId, skir.SnapshotId(value: "realm:1"));
-    expect(
-      state.resources[_resourceId]?.content.fields.single.value,
-      skir.DataValue.wrapStringValue("Initial"),
-    );
+    expect(_title(state), "Initial");
+    expect(state.draft?.catalog, same(checked));
     expect(state.links, isEmpty);
-    expect(state.catalog, same(catalog));
-    expect(state.draft?.generation, _generation);
-    expect(state.draft?.catalog, same(catalog));
   });
-
-  test("draft is unavailable when snapshot and catalog differ", () {
-    final source = _catalog(
-      generation: skir.CatalogGeneration(value: "catalog:2"),
-    );
+  test("drafts require a matching catalog", () {
     final state = AuthoringSessionState(
       snapshot: _snapshot("Initial", 1),
-      catalog: CheckedEditorCatalog(source),
+      catalog: CheckedEditorCatalog(
+        _catalog(generation: skir.CatalogGeneration(value: "replacement")),
+      ),
     );
-
     expect(state.draft, isNull);
   });
-
   test(
-    "an accepted change applies atomically without a full refresh",
+    "hints fetch current state and missed hints recover after reconnect",
     () async {
       final harness = _Harness();
+      var title = "Initial";
       harness.nats
         ..registerHandler(_catalogSubject, (_) => _catalogResponse())
         ..registerHandler(
-          _catalogInvalidationRequestSubject,
-          (_) => skir.CatalogInvalidated.serializer.toBytes(
-            skir.CatalogInvalidated(generation: _generation),
-          ),
-        )
-        ..registerHandler(
           _snapshotSubject,
-          (_) => _snapshotResponse(_snapshot("Initial", 1)),
+          (_) => _snapshotResponse(_snapshot(title, 1)),
         );
-
       final provider = authoringSessionProvider(_organization, _realm);
       final subscription = harness.container.listen(provider, (_, _) {});
-      await waitForProvider(
-        harness.container,
-        provider,
-        (state) => state.snapshotId == skir.SnapshotId(value: "realm:1"),
-        description: "initial authored snapshot",
-      );
-
-      harness.emit(_changed(previous: 1, revision: 2, title: "Changed"));
-      await waitForProvider(
-        harness.container,
-        provider,
-        (state) => state.snapshotId == skir.SnapshotId(value: "realm:2"),
-        description: "refreshed authored snapshot",
-      );
-
-      expect(
-        harness.container
-            .read(provider)
-            .resources[_resourceId]
-            ?.content
-            .fields
-            .single
-            .value,
-        skir.DataValue.wrapStringValue("Changed"),
-      );
-      expect(
-        harness.nats.requests.where(
-          (request) => request.subject == _snapshotSubject,
-        ),
-        hasLength(1),
-      );
-      expect(
-        harness.nats.requests.where(
-          (request) => request.subject == _catalogSubject,
-        ),
-        hasLength(1),
-      );
-
-      subscription.close();
-      await harness.dispose();
-    },
-  );
-
-  test(
-    "resource adoption waits for the matching change notification",
-    () async {
-      final harness = _Harness();
-      harness.nats
-        ..registerHandler(_catalogSubject, (_) => _catalogResponse())
-        ..registerHandler(
-          _catalogInvalidationRequestSubject,
-          (_) => skir.CatalogInvalidated.serializer.toBytes(
-            skir.CatalogInvalidated(generation: _generation),
-          ),
-        )
-        ..registerHandler(
-          _snapshotSubject,
-          (_) => _snapshotResponse(_snapshot("Initial", 1)),
+      try {
+        await waitForProvider(
+          harness.container,
+          provider,
+          (state) => _title(state) == "Initial",
+          description: "initial current state",
         );
-
-      final provider = authoringSessionProvider(_organization, _realm);
-      final subscription = harness.container.listen(provider, (_, _) {});
-      await waitForProvider(
-        harness.container,
-        provider,
-        (state) => state.snapshotId == skir.SnapshotId(value: "realm:1"),
-        description: "initial authored snapshot",
-      );
-      final created = skir.ResourceId(value: "book:created");
-      final waiting = harness.container
-          .read(provider.notifier)
-          .awaitResource(created);
-      var completed = false;
-      unawaited(waiting.then((_) => completed = true));
-      await harness.container.pump();
-      expect(completed, isFalse);
-
-      harness.emit(
-        _changed(previous: 1, revision: 2, title: "Created", resource: created),
-      );
-
-      final adopted = await waiting;
-      expect(adopted.id, created);
-      expect(
-        adopted.content.fields.single.value,
-        skir.DataValue.wrapStringValue("Created"),
-      );
-
-      subscription.close();
-      await harness.dispose();
+        title = "Changed";
+        harness.emit();
+        await waitForProvider(
+          harness.container,
+          provider,
+          (state) => _title(state) == "Changed",
+          description: "state after hint",
+        );
+        title = "Missed hint";
+        harness.nats.setConnectionState(
+          const NatsReconnecting(
+            NatsClientException(
+              kind: NatsFailureKind.unavailable,
+              message: "Disconnected",
+            ),
+          ),
+        );
+        await Future<void>.delayed(Duration.zero);
+        harness.nats.setConnectionState(const NatsConnected());
+        await waitForProvider(
+          harness.container,
+          provider,
+          (state) => _title(state) == "Missed hint",
+          description: "reconnected current state",
+        );
+        expect(
+          harness.nats.requests
+              .where((request) => request.subject == _snapshotSubject)
+              .length,
+          greaterThanOrEqualTo(3),
+        );
+      } finally {
+        subscription.close();
+        await harness.dispose();
+      }
     },
   );
-
-  test("resource adoption reports a session refresh failure", () async {
+  test("a hint during an active query schedules a fresh query", () async {
     final harness = _Harness();
-    var snapshotRequests = 0;
+    final delayed = Completer<Uint8List>();
+    var requests = 0;
     harness.nats
       ..registerHandler(_catalogSubject, (_) => _catalogResponse())
-      ..registerHandler(
-        _catalogInvalidationRequestSubject,
-        (_) => skir.CatalogInvalidated.serializer.toBytes(
-          skir.CatalogInvalidated(generation: _generation),
-        ),
-      )
       ..registerHandler(_snapshotSubject, (_) {
-        snapshotRequests++;
-        if (snapshotRequests > 1) throw StateError("snapshot failed");
-        return _snapshotResponse(_snapshot("Initial", 1));
+        requests++;
+        return requests == 2
+            ? delayed.future
+            : _snapshotResponse(
+                _snapshot(requests > 2 ? "Newest" : "Initial", 1),
+              );
       });
-
     final provider = authoringSessionProvider(_organization, _realm);
     final subscription = harness.container.listen(provider, (_, _) {});
-    await waitForProvider(
-      harness.container,
-      provider,
-      (state) => state.snapshotId == skir.SnapshotId(value: "realm:1"),
-      description: "initial authored snapshot",
-    );
-    final notifier = harness.container.read(provider.notifier);
-    final waiting = notifier.awaitResource(
-      skir.ResourceId(value: "book:missing"),
-    );
-
-    await expectLater(notifier.refresh(), throwsA(isA<StateError>()));
-    await expectLater(waiting, throwsA(isA<StateError>()));
-
-    subscription.close();
-    await harness.dispose();
+    try {
+      await waitForProvider(
+        harness.container,
+        provider,
+        (state) => _title(state) == "Initial",
+        description: "initial state",
+      );
+      harness.emit();
+      await _waitUntil(() => requests == 2);
+      harness.emit();
+      delayed.complete(_snapshotResponse(_snapshot("Intermediate", 1)));
+      await waitForProvider(
+        harness.container,
+        provider,
+        (state) => _title(state) == "Newest",
+        description: "query queued by hint",
+      );
+      expect(requests, 3);
+    } finally {
+      subscription.close();
+      await harness.dispose();
+    }
   });
-
-  test("resource adoption ends when its session is disposed", () async {
+  test("catalog invalidation refetches matching state and preserves the local draft", () async {
     final harness = _Harness();
+    var generation = _generation;
     harness.nats
-      ..registerHandler(_catalogSubject, (_) => _catalogResponse())
       ..registerHandler(
-        _catalogInvalidationRequestSubject,
-        (_) => skir.CatalogInvalidated.serializer.toBytes(
-          skir.CatalogInvalidated(generation: _generation),
-        ),
+        _catalogSubject,
+        (_) => _catalogResponse(generation: generation),
       )
       ..registerHandler(
         _snapshotSubject,
-        (_) => _snapshotResponse(_snapshot("Initial", 1)),
-      );
-
-    final provider = authoringSessionProvider(_organization, _realm);
-    final subscription = harness.container.listen(provider, (_, _) {});
-    await waitForProvider(
-      harness.container,
-      provider,
-      (state) => state.snapshotId == skir.SnapshotId(value: "realm:1"),
-      description: "initial authored snapshot",
-    );
-    final waiting = harness.container
-        .read(provider.notifier)
-        .awaitResource(skir.ResourceId(value: "book:missing"));
-
-    subscription.close();
-    await harness.container.pump();
-
-    await expectLater(waiting, throwsA(isA<StateError>()));
-    await harness.dispose();
-  });
-
-  test("exact snapshot adoption is available after its notification", () async {
-    final harness = _Harness();
-    harness.nats
-      ..registerHandler(_catalogSubject, (_) => _catalogResponse())
-      ..registerHandler(
-        _catalogInvalidationRequestSubject,
-        (_) => skir.CatalogInvalidated.serializer.toBytes(
-          skir.CatalogInvalidated(generation: _generation),
-        ),
-      )
-      ..registerHandler(
-        _snapshotSubject,
-        (_) => _snapshotResponse(_snapshot("Initial", 1)),
+        (_) =>
+            _snapshotResponse(_snapshot("Initial", 1, generation: generation)),
       );
     final provider = authoringSessionProvider(_organization, _realm);
     final subscription = harness.container.listen(provider, (_, _) {});
-    await waitForProvider(
-      harness.container,
-      provider,
-      (state) => state.snapshotId == skir.SnapshotId(value: "realm:1"),
-      description: "initial authored snapshot",
-    );
-
-    harness.emit(_changed(previous: 1, revision: 2, title: "Adopted"));
-    await waitForProvider(
-      harness.container,
-      provider,
-      (state) => state.snapshotId == skir.SnapshotId(value: "realm:2"),
-      description: "exact adopted snapshot",
-    );
-    final adopted = await harness.container
-        .read(provider.notifier)
-        .awaitSnapshot(skir.SnapshotId(value: "realm:2"));
-
-    expect(adopted.snapshot, skir.SnapshotId(value: "realm:2"));
-    subscription.close();
-    await harness.dispose();
-  });
-
-  test("snapshot recovery reports a skipped commit receipt", () async {
-    final harness = _Harness();
-    var revision = 1;
-    harness.nats
-      ..registerHandler(_catalogSubject, (_) => _catalogResponse())
-      ..registerHandler(
-        _catalogInvalidationRequestSubject,
-        (_) => skir.CatalogInvalidated.serializer.toBytes(
-          skir.CatalogInvalidated(generation: _generation),
-        ),
-      )
-      ..registerHandler(
-        _snapshotSubject,
-        (_) => _snapshotResponse(_snapshot("Snapshot $revision", revision)),
+    try {
+      final initial = await waitForProvider(
+        harness.container,
+        provider,
+        (state) => state.draft != null,
+        description: "initial draft",
       );
-    final provider = authoringSessionProvider(_organization, _realm);
-    final subscription = harness.container.listen(provider, (_, _) {});
-    await waitForProvider(
-      harness.container,
-      provider,
-      (state) => state.snapshotId == skir.SnapshotId(value: "realm:1"),
-      description: "initial authored snapshot",
-    );
-    final notifier = harness.container.read(provider.notifier);
-    final recovery = notifier.snapshotRecoveryRevision;
-    final waiting = notifier.awaitSnapshot(
-      skir.SnapshotId(value: "realm:2"),
-      sinceRecovery: recovery,
-    );
-
-    revision = 3;
-    await notifier.refresh();
-
-    await expectLater(waiting, throwsA(isA<StateError>()));
-    subscription.close();
-    await harness.dispose();
-  });
-
-  test("a detached dirty autosave is reclaimed on Realm reentry", () async {
-    final harness = _Harness();
-    harness.nats
-      ..registerHandler(_catalogSubject, (_) => _catalogResponse())
-      ..registerHandler(
-        _catalogInvalidationRequestSubject,
-        (_) => skir.CatalogInvalidated.serializer.toBytes(
-          skir.CatalogInvalidated(generation: _generation),
-        ),
-      )
-      ..registerHandler(
-        _snapshotSubject,
-        (_) => _snapshotResponse(_snapshot("Initial", 1)),
-      );
-    final provider = authoringSessionProvider(_organization, _realm);
-    final first = harness.container.listen(provider, (_, _) {});
-    final state = await waitForProvider(
-      harness.container,
-      provider,
-      (state) => state.draft != null,
-      description: "initial authored draft",
-    );
-    final notifier = harness.container.read(provider.notifier);
-    final baseline = state.draft!;
-    final staged = baseline.fork()
-      ..set(
+      final local = initial.draft!;
+      local.set(
         skir.ValueLocation(
           resource: _resourceId,
           path: skir.ValuePath(
             segments: [skir.PathSegment.createField(name: "title")],
           ),
         ),
-        skir.DataValue.wrapStringValue("Retained"),
+        skir.DataValue.wrapStringValue("Local"),
       );
-    final autosave = notifier.openAutosave(
-      resource: _resourceId,
-      baseline: baseline,
-      policy: EditorCommitPolicy.applyResource,
-    )
-      ..stage(staged)
-      ..detach();
-    first.close();
-    await harness.container.pump();
-
-    final second = harness.container.listen(provider, (_, _) {});
-    final reclaimed = harness.container
-        .read(provider.notifier)
-        .openAutosave(
-          resource: _resourceId,
-          baseline: harness.container.read(provider).draft!,
-          policy: EditorCommitPolicy.applyResource,
-        );
-
-    expect(reclaimed, same(autosave));
-    expect(
-      reclaimed.draft.resource(_resourceId)?.fields.single.value.authoredString,
-      "Retained",
-    );
-    reclaimed
-      ..discard(harness.container.read(provider).draft!)
-      ..detach();
-    second.close();
-    await harness.dispose();
-  });
-
-  test(
-    "leaving and reentering a Realm starts a fresh authoring session",
-    () async {
-      final harness = _Harness();
-      var revision = 0;
-      harness.nats
-        ..registerHandler(_catalogSubject, (_) => _catalogResponse())
-        ..registerHandler(
-          _catalogInvalidationRequestSubject,
-          (_) => skir.CatalogInvalidated.serializer.toBytes(
-            skir.CatalogInvalidated(generation: _generation),
-          ),
-        )
-        ..registerHandler(_snapshotSubject, (_) {
-          revision++;
-          return _snapshotResponse(_snapshot("Visit $revision", revision));
-        });
-
-      final provider = authoringSessionProvider(_organization, _realm);
-      final first = harness.container.listen(provider, (_, _) {});
-      await waitForProvider(
-        harness.container,
-        provider,
-        (state) => state.snapshotId == skir.SnapshotId(value: "realm:1"),
-        description: "first Realm visit",
-      );
-
-      first.close();
-      await harness.container.pump();
-
-      final second = harness.container.listen(provider, (_, _) {});
-      final reentered = await waitForProvider(
-        harness.container,
-        provider,
-        (state) => state.snapshotId == skir.SnapshotId(value: "realm:2"),
-        description: "same Realm reentry",
-      );
-
-      expect(reentered.failure, isNull);
-      expect(
-        harness.nats.requests.where(
-          (request) => request.subject == _snapshotSubject,
-        ),
-        hasLength(2),
-      );
-      expect(
-        harness.nats.subscriptionSubjects.where(
-          (subject) => subject == _eventSubject,
-        ),
-        hasLength(1),
-      );
-
-      second.close();
-      await harness.dispose();
-    },
-  );
-
-  test(
-    "an active route replaces its repository when the resource owner changes",
-    () async {
-      final harness = _Harness();
-      final releaseFirstSnapshot = Completer<void>();
-      var request = 0;
-      harness.nats
-        ..registerHandler(_catalogSubject, (_) => _catalogResponse())
-        ..registerHandler(
-          _catalogInvalidationRequestSubject,
-          (_) => skir.CatalogInvalidated.serializer.toBytes(
-            skir.CatalogInvalidated(generation: _generation),
-          ),
-        )
-        ..registerHandler(_snapshotSubject, (_) async {
-          final currentRequest = ++request;
-          if (currentRequest == 1) {
-            await releaseFirstSnapshot.future;
-          }
-          return _snapshotResponse(
-            _snapshot("Owner $currentRequest", currentRequest),
-          );
-        });
-
-      final provider = authoringSessionProvider(_organization, _realm);
-      final subscription = harness.container.listen(provider, (_, _) {});
-      while (request < 1) {
-        await Future<void>.delayed(Duration.zero);
-      }
-      final notifier = harness.container.read(provider.notifier);
-      final firstRepository = notifier.repository;
-
-      harness.container.invalidate(resourceRepositoriesProvider);
-      await harness.container.pump();
-      final replaced = await waitForProvider(
-        harness.container,
-        provider,
-        (state) => state.snapshotId == skir.SnapshotId(value: "realm:2"),
-        description: "snapshot from the replacement resource owner",
-      );
-
-      expect(harness.container.read(provider.notifier), same(notifier));
-      expect(notifier.repository, isNot(same(firstRepository)));
-      expect(replaced.failure, isNull);
-      releaseFirstSnapshot.complete();
-      await harness.container.pump();
-      expect(
-        harness.container.read(provider).snapshotId,
-        skir.SnapshotId(value: "realm:2"),
-      );
-      expect(harness.container.read(provider).failure, isNull);
-      expect(
-        harness.nats.subscriptionSubjects.where(
-          (subject) => subject == _eventSubject,
-        ),
-        hasLength(1),
-      );
-
-      subscription.close();
-      await harness.dispose();
-    },
-  );
-
-  test("a gap during refresh queues another snapshot fetch", () async {
-    final harness = _Harness();
-    final releaseSecond = Completer<void>();
-    var request = 0;
-    harness.nats
-      ..registerHandler(_catalogSubject, (_) => _catalogResponse())
-      ..registerHandler(
-        _catalogInvalidationRequestSubject,
-        (_) => skir.CatalogInvalidated.serializer.toBytes(
-          skir.CatalogInvalidated(generation: _generation),
-        ),
-      )
-      ..registerHandler(_snapshotSubject, (_) async {
-        request++;
-        if (request == 2) await releaseSecond.future;
-        return _snapshotResponse(_snapshot("Title $request", request));
-      });
-
-    final provider = authoringSessionProvider(_organization, _realm);
-    final subscription = harness.container.listen(provider, (_, _) {});
-    await waitForProvider(
-      harness.container,
-      provider,
-      (state) => state.snapshotId == skir.SnapshotId(value: "realm:1"),
-      description: "initial authored snapshot",
-    );
-
-    harness.emit(_changed(previous: 0, revision: 2));
-    while (request < 2) {
-      await Future<void>.delayed(Duration.zero);
-    }
-    harness.emit(_changed(previous: 99, revision: 3));
-    releaseSecond.complete();
-
-    await waitForProvider(
-      harness.container,
-      provider,
-      (state) => state.snapshotId == skir.SnapshotId(value: "realm:3"),
-      description: "queued authored snapshot",
-    );
-    expect(request, 3);
-
-    subscription.close();
-    await harness.dispose();
-  });
-
-  test(
-    "catalog replacement preserves an edited draft for verified rebase",
-    () async {
-      final harness = _Harness();
-      var generation = _generation;
-      var revision = 1;
-      harness.nats
-        ..registerHandler(
-          _catalogSubject,
-          (_) => _catalogResponse(generation: generation),
-        )
-        ..registerHandler(
-          _catalogInvalidationRequestSubject,
-          (_) => skir.CatalogInvalidated.serializer.toBytes(
-            skir.CatalogInvalidated(generation: generation),
-          ),
-        )
-        ..registerHandler(_snapshotSubject, (_) {
-          return _snapshotResponse(
-            _snapshot("Server value", revision, generation: generation),
-          );
-        });
-
-      final provider = authoringSessionProvider(_organization, _realm);
-      final subscription = harness.container.listen(provider, (_, _) {});
-      await waitForProvider(
-        harness.container,
-        provider,
-        (state) => state.snapshotId == skir.SnapshotId(value: "realm:1"),
-        description: "initial authored snapshot",
-      );
-
-      final edited = harness.container.read(provider).draft!
-        ..set(
-          skir.ValueLocation(
-            resource: _resourceId,
-            path: skir.ValuePath(
-              segments: [skir.PathSegment.createField(name: "title")],
-            ),
-          ),
-          skir.DataValue.wrapStringValue("Pending value"),
-        );
-
-      generation = skir.CatalogGeneration(value: "catalog:2");
-      revision = 2;
+      generation = skir.CatalogGeneration(value: "replacement");
       harness.nats.emitMessageOnSubject(
         _catalogInvalidationEventSubject,
         skir.CatalogInvalidated.serializer.toBytes(
           skir.CatalogInvalidated(generation: generation),
         ),
       );
-      final latest = await waitForProvider(
+      final current = await waitForProvider(
         harness.container,
         provider,
-        (state) => state.generation == generation,
-        description: "replacement catalog and authored snapshot",
-      );
-
-      final rebased = edited.rebaseOnto(latest.draft!);
-      expect(rebased, isA<AuthoredDraftRebased>());
-      expect(
-        (rebased as AuthoredDraftRebased).draft
-            .resource(_resourceId)
-            ?.fields
-            .single
-            .value,
-        skir.DataValue.wrapStringValue("Pending value"),
+        (state) => state.generation == generation && state.draft != null,
+        description: "matching replacement catalog",
       );
       expect(
-        harness.nats.requests.where(
-          (request) => request.subject == _catalogSubject,
-        ),
-        hasLength(2),
+        local.resources[_resourceId]?.authoredField("title")?.authoredString,
+        "Local",
       );
-
+      expect(
+        local.rebaseOnto(current.draft!),
+        isA<AuthoredDraftRebaseFailed>(),
+      );
+    } finally {
       subscription.close();
       await harness.dispose();
-    },
-  );
+    }
+  });
+}
+
+String? _title(AuthoringSessionState state) => state
+    .resources[_resourceId]
+    ?.content
+    .authoredField("title")
+    ?.authoredString;
+Future<void> _waitUntil(bool Function() predicate) async {
+  for (var attempt = 0; attempt < 100 && !predicate(); attempt++) {
+    await Future<void>.delayed(Duration.zero);
+  }
+  expect(predicate(), isTrue);
 }
 
 final _organization = recordId("organization:org1");
@@ -633,7 +216,7 @@ final _generation = skir.CatalogGeneration(value: "catalog:1");
 final _resourceId = skir.ResourceId(value: "book:1");
 final _definition = skir.ResourceDefinitionId(value: "typewriter.book");
 
-skir.AuthoringSnapshot _snapshot(
+skir.AuthoringState _snapshot(
   String title,
   int revision, {
   skir.CatalogGeneration? generation,
@@ -647,8 +230,7 @@ skir.AuthoringSnapshot _snapshot(
       ),
     ],
   );
-  return skir.AuthoringSnapshot(
-    snapshot: skir.SnapshotId(value: "realm:$revision"),
+  return skir.AuthoringState(
     generation: generation ?? _generation,
     resources: [
       skir.AuthoringResource(
@@ -659,20 +241,16 @@ skir.AuthoringSnapshot _snapshot(
     ],
     links: const [],
     findings: const [],
-    observations: const [],
-    absentInputToken: skir.InputToken(value: "absent"),
-    findingsToken: _findings(revision),
   );
 }
 
-Uint8List _snapshotResponse(skir.AuthoringSnapshot snapshot) {
-  final encoded = skir.AuthoringSnapshot.serializer.toBytes(snapshot);
-  return skir.QueryAuthoringSnapshotResponse.serializer.toBytes(
-    skir.QueryAuthoringSnapshotResponse.wrapChunk(
-      skir.AuthoringSnapshotTransferChunk(
+Uint8List _snapshotResponse(skir.AuthoringState snapshot) {
+  final encoded = skir.AuthoringState.serializer.toBytes(snapshot);
+  return skir.QueryAuthoringStateResponse.serializer.toBytes(
+    skir.QueryAuthoringStateResponse.wrapChunk(
+      skir.AuthoringStateTransferChunk(
         generation: snapshot.generation,
-        snapshot: snapshot.snapshot,
-        transfer: _transfer("snapshot_${snapshot.snapshot.value}", encoded),
+        transfer: _transfer("current_state", encoded),
       ),
     ),
   );
@@ -708,48 +286,6 @@ skir.EditorCatalogWireSnapshot _catalog({skir.CatalogGeneration? generation}) =>
       roleFallbacks: const [],
     );
 
-skir.AuthoringChanged _changed({
-  required int previous,
-  required int revision,
-  String? title,
-  skir.ResourceId? resource,
-}) => skir.AuthoringChanged(
-  previousSnapshot: skir.SnapshotId(value: "realm:$previous"),
-  snapshot: skir.SnapshotId(value: "realm:$revision"),
-  generation: _generation,
-  batch: skir.BatchId(value: "batch:$revision"),
-  resources: [
-    if (title != null)
-      skir.AuthoringResourceChange.wrapUpsert(
-        skir.AuthoringResource(
-          id: resource ?? _resourceId,
-          definition: _definition,
-          content: skir.AuthoringRecord(
-            configuration: skir.TypeSelection.unknown,
-            fields: [
-              skir.FieldValue(
-                name: "title",
-                value: skir.DataValue.wrapStringValue(title),
-              ),
-            ],
-          ),
-        ),
-      ),
-  ],
-  relations: skir.RelationProjectionDelta(
-    removals: const [],
-    created: const [],
-    metadataChanged: const [],
-  ),
-  previousFindings: _findings(previous),
-  findingsToken: _findings(revision),
-  findings: null,
-  changedObservations: const [],
-);
-
-skir.FindingsToken _findings(int revision) =>
-    skir.FindingsToken(value: "findings:$revision");
-
 skir.BoundedTransferChunk _transfer(String id, Uint8List encoded) =>
     skir.BoundedTransferChunk(
       transferId: id,
@@ -777,25 +313,12 @@ final class _Harness {
   final FakeNatsClient nats = FakeNatsClient();
   late final ProviderContainer container;
 
-  void emit(skir.AuthoringChanged change) {
-    final encoded = skir.AuthoringChanged.serializer.toBytes(change);
-    nats.emitMessageOnSubject(
-      _eventSubject,
-      skir.AuthoringChangedTransferResult.serializer.toBytes(
-        skir.AuthoringChangedTransferResult.wrapChunk(
-          skir.AuthoringChangedTransferChunk(
-            generation: change.generation,
-            previousSnapshot: change.previousSnapshot,
-            snapshot: change.snapshot,
-            previousFindings: change.previousFindings,
-            findingsToken: change.findingsToken,
-            transfer: _transfer("change_${change.batch.value}", encoded),
-          ),
-        ),
-      ),
-    );
-  }
-
+  void emit() => nats.emitMessageOnSubject(
+    _eventSubject,
+    skir.AuthoringChanged.serializer.toBytes(
+      skir.AuthoringChanged(generation: _generation),
+    ),
+  );
   Future<void> dispose() async {
     container.dispose();
     await nats.dispose();

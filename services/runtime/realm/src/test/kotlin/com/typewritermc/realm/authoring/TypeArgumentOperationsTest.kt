@@ -12,10 +12,10 @@ import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputIdentity
-import com.typewritermc.checking.SnapshotId
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.realm.checking.EmptyProviders
+import com.typewritermc.realm.checking.dependencies
 import com.typewritermc.realm.checking.tokensFor
 import com.typewritermc.realm.repository.AuthoringMutationPlanner
 import com.typewritermc.realm.repository.AuthoringRepository
@@ -58,13 +58,9 @@ class TypeArgumentOperationsTest {
         val resource = ResourceId("container")
         val record = repairRecord(ItemId("bundle"))
         val store =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(
-                    SnapshotId("snapshot"),
-                    mapOf(resource to record),
-                    tokensFor(mapOf(resource to record), catalog.generation),
-                ),
+                AuthoringSeed(mapOf(resource to record)),
             )
         val operations = DefaultTypeArgumentOperations(RecordingRepository(), store)
 
@@ -78,13 +74,9 @@ class TypeArgumentOperationsTest {
         val invalid = record.copy(fields = record.fields + ("unknown" to DataValue.StringValue("retained")))
         val invalidCatalog = RepairCatalogLease()
         val invalidStore =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 invalidCatalog,
-                AuthoredSnapshotSeed(
-                    SnapshotId("invalid_snapshot"),
-                    mapOf(resource to invalid),
-                    tokensFor(mapOf(resource to invalid), invalidCatalog.generation),
-                ),
+                AuthoringSeed(mapOf(resource to invalid)),
             )
         invalidStore.capture().use { snapshot ->
             assertIs<TypePreviewResult.Rejected>(
@@ -100,13 +92,9 @@ class TypeArgumentOperationsTest {
         val item = ItemId("bundle")
         val record = repairRecord(item)
         val store =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(
-                    SnapshotId("snapshot"),
-                    mapOf(resource to record),
-                    tokensFor(mapOf(resource to record), catalog.generation),
-                ),
+                AuthoringSeed(mapOf(resource to record)),
             )
         val repository = RecordingRepository()
         val operations = DefaultTypeArgumentOperations(repository, store)
@@ -157,12 +145,12 @@ class TypeArgumentOperationsTest {
             preview.intents,
         )
         assertEquals(listOf(incompatible), preview.clearedLocations)
-        val observed = preview.observations.mapTo(linkedSetOf()) { it.identity }
+        val observed = preview.expectations.flatMapTo(linkedSetOf()) { it.dependencies() }
         assertTrue(InputIdentity.Value(title) in observed)
         assertTrue(InputIdentity.Value(compatible) in observed)
         assertTrue(InputIdentity.Value(incompatible) in observed)
-        assertTrue(InputIdentity.Membership(bundles) in observed)
-        assertTrue(InputIdentity.Order(bundles) in observed)
+        assertTrue(InputIdentity.Value(bundles) in observed)
+        assertTrue(InputIdentity.Value(bundles) in observed)
         assertFalse(preview.intents.any { it == TypeRepairIntent.Clear(compatible) })
 
         store.close()
@@ -174,13 +162,9 @@ class TypeArgumentOperationsTest {
             val resource = ResourceId("container")
             val record = repairRecord(ItemId("bundle"))
             val store =
-                InMemoryAuthoringSnapshotStore(
+                InMemoryAuthoringViewStore(
                     catalog,
-                    AuthoredSnapshotSeed(
-                        SnapshotId("snapshot"),
-                        mapOf(resource to record),
-                        tokensFor(mapOf(resource to record), catalog.generation),
-                    ),
+                    AuthoringSeed(mapOf(resource to record)),
                 )
             val repository = RecordingRepository()
             val operations = DefaultTypeArgumentOperations(repository, store)
@@ -194,7 +178,7 @@ class TypeArgumentOperationsTest {
             operations.confirm(preview)
 
             val edit = requireNotNull(repository.edit)
-            assertTrue(edit.observations.any { it.identity == InputIdentity.Value(location(resource, "reward")) })
+            assertTrue(edit.expectations.any { InputIdentity.Value(location(resource, "reward")) in it.dependencies() })
             store.close()
         }
 
@@ -204,13 +188,9 @@ class TypeArgumentOperationsTest {
             val resource = ResourceId("dual")
             val original = dualRecord(TypeSelection.Complete(DUAL_COIN_GEM))
             val store =
-                InMemoryAuthoringSnapshotStore(
+                InMemoryAuthoringViewStore(
                     catalog,
-                    AuthoredSnapshotSeed(
-                        SnapshotId("snapshot"),
-                        mapOf(resource to original),
-                        tokensFor(mapOf(resource to original), catalog.generation),
-                    ),
+                    AuthoringSeed(mapOf(resource to original)),
                 )
             val repository = RecordingRepository()
             val operations = DefaultTypeArgumentOperations(repository, store)
@@ -244,13 +224,9 @@ class TypeArgumentOperationsTest {
             assertEquals(DataValue.Unfilled, pendingRecord.fields.getValue("second"))
 
             val pendingStore =
-                InMemoryAuthoringSnapshotStore(
+                InMemoryAuthoringViewStore(
                     catalog.retain(),
-                    AuthoredSnapshotSeed(
-                        SnapshotId("pending"),
-                        mapOf(resource to pendingRecord),
-                        tokensFor(mapOf(resource to pendingRecord), catalog.generation),
-                    ),
+                    AuthoringSeed(mapOf(resource to pendingRecord)),
                 )
             val complete = TypeSelection.Complete(DUAL_COIN_COIN)
             val completePreview =
@@ -271,13 +247,9 @@ class TypeArgumentOperationsTest {
             val resource = ResourceId("dual")
             val original = dualRecord(TypeSelection.Complete(DUAL_COIN_GEM))
             val store =
-                InMemoryAuthoringSnapshotStore(
+                InMemoryAuthoringViewStore(
                     catalog,
-                    AuthoredSnapshotSeed(
-                        SnapshotId("snapshot"),
-                        mapOf(resource to original),
-                        tokensFor(mapOf(resource to original), catalog.generation),
-                    ),
+                    AuthoringSeed(mapOf(resource to original)),
                 )
             val operations =
                 DefaultTypeArgumentOperations(
@@ -303,13 +275,9 @@ class TypeArgumentOperationsTest {
             val resource = ResourceId("dual")
             val original = dualRecord(TypeSelection.Complete(DUAL_COIN_GEM))
             val store =
-                InMemoryAuthoringSnapshotStore(
+                InMemoryAuthoringViewStore(
                     catalog,
-                    AuthoredSnapshotSeed(
-                        SnapshotId("snapshot"),
-                        mapOf(resource to original),
-                        tokensFor(mapOf(resource to original), catalog.generation),
-                    ),
+                    AuthoringSeed(mapOf(resource to original)),
                 )
             val repository = RecordingRepository()
             val operations = DefaultTypeArgumentOperations(repository, store)
@@ -331,7 +299,7 @@ class TypeArgumentOperationsTest {
                 ),
             )
             assertEquals(null, repository.edit)
-            assertIs<CommitResult.Rejected>(operations.confirm(preview.copy(observations = preview.observations.dropLast(1))))
+            assertIs<CommitResult.Rejected>(operations.confirm(preview.copy(expectations = preview.expectations.dropLast(1))))
             assertEquals(null, repository.edit)
 
             assertIs<CommitResult.Committed>(operations.confirm(preview))
@@ -364,13 +332,9 @@ class TypeArgumentOperationsTest {
                 target to AuthoringRecord(TypeSelection.Complete(GEM_USE), emptyMap()),
             )
         val store =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(
-                    SnapshotId("snapshot"),
-                    resources,
-                    tokensFor(resources, catalog.generation),
-                ),
+                AuthoringSeed(resources),
             )
         val pending =
             TypeSelection.Pending(
@@ -394,7 +358,7 @@ class TypeArgumentOperationsTest {
             ),
             preview.linkRepairs,
         )
-        assertTrue(preview.observations.any { it.identity == InputIdentity.Incoming(resource, RELATION) })
+        assertTrue(preview.expectations.any { InputIdentity.Incoming(resource, RELATION) in it.dependencies() })
         store.close()
     }
 }
@@ -404,13 +368,13 @@ private class RecordingRepository : AuthoringRepository {
 
     override suspend fun commit(edit: PreparedEdit): CommitResult {
         this.edit = edit
-        return CommitResult.Committed(SnapshotId("committed"), emptySet())
+        return CommitResult.Committed
     }
 }
 
 private class RepairCatalogLease(
     override val generation: CatalogGeneration = CatalogGeneration("catalog"),
-) : SnapshotCatalogLease {
+) : AuthoringCatalogLease {
     override val checked: CheckedCatalog = DefaultCheckedCatalog(generation, REPAIR_DEFINITIONS)
     override val nativeBindings: NativeBindingRegistry = FactoryNativeBindingRegistry(checked, emptyList())
     override val providers: OwnedProviderRegistry = EmptyProviders
@@ -424,7 +388,7 @@ private class RepairCatalogLease(
             AuthoringResourceDefinition(ResourceDefinitionId("reward"), REWARD),
         )
 
-    override fun retain(): SnapshotCatalogLease = RepairCatalogLease(generation)
+    override fun retain(): AuthoringCatalogLease = RepairCatalogLease(generation)
 
     override fun close() = Unit
 }

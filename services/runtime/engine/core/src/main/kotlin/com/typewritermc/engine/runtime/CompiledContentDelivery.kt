@@ -1,14 +1,14 @@
 package com.typewritermc.engine.runtime
 
-import com.typewritermc.engine.CompiledArtifactActivation
-import com.typewritermc.engine.CompiledArtifactPointer
-import com.typewritermc.engine.CompiledBlobPointer
-import com.typewritermc.engine.ContentDigest
-import com.typewritermc.engine.LoadedCompiledContent
+import com.typewritermc.authoring.PublicationId
+import com.typewritermc.engine.LoadedPublishedContent
+import com.typewritermc.engine.PublishedContentCodec
 import com.typewritermc.loader.api.HostedRuntimeHost
 import com.typewritermc.loader.api.RealmServiceAddress
 import com.typewritermc.loader.api.realmEventAddress
 import com.typewritermc.loader.api.realmRequestAddress
+import com.typewritermc.services.libs.communicator.client.Communicator
+import com.typewritermc.services.libs.communicator.contract.EventContract
 import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponseClassifier
@@ -17,72 +17,60 @@ import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
 import com.typewritermc.services.libs.communicator.contract.ResponseVariant
 import com.typewritermc.services.libs.communicator.contract.WatchMessage
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
+import com.typewritermc.services.libs.communicator.router.RouterResult
+import com.typewritermc.services.libs.communicator.router.communicatorRoutes
+import com.typewritermc.services.libs.communicator.skir.asPayloadCodec
 import com.typewritermc.services.libs.communicator.skir.skirWatchContract
-import com.typewritermc.services.libs.telemetry.ErrorSlug
+import com.typewritermc.services.libs.communicator.transfer.BoundedByteTransferAssembler
+import com.typewritermc.services.libs.communicator.transfer.BoundedTransferChunk
+import com.typewritermc.services.libs.communicator.transport.Payload
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import skirout.editor.v1.compiled_content.WatchCompiledContent
-import skirout.editor.v1.compiled_content.WatchCompiledContentRequest
-import skirout.editor.v1.compiled_content.WatchCompiledContentResponse
-import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
+import skirout.editor.v1.compiled_content.CompiledContentChanged
+import skirout.editor.v1.compiled_content.QueryPublishedContent
+import skirout.editor.v1.compiled_content.QueryPublishedContentRequest
+import skirout.editor.v1.compiled_content.QueryPublishedContentResponse
+import java.util.UUID
+import kotlin.time.Duration.Companion.seconds
+import skirout.editor.v1.compiled_content.PublishedContent as WirePublishedContent
 
-/**
- * Owns the subscription that brings compiled activations into an engine.
- *
- * [start] installs the application callback; [stop] must end delivery before activation resources are retired.
- * Delivery health describes this subscription separately from overall runtime health.
- */
 interface EngineContentDelivery {
-    /** Exposes delivery state without implying that the engine has assembled or executed the content. */
     val health: StateFlow<EngineContentDeliveryHealth>
 
-    /** Starts one delivery worker that invokes [apply] for each accepted activation. */
-    fun start(apply: suspend (LoadedCompiledContent) -> Unit)
+    fun start(apply: suspend (LoadedPublishedContent) -> Unit)
 
-    /** Stops delivery and waits until no callback can still use activation resources. */
     suspend fun stop()
 }
 
-/**
- * Reports whether content delivery is idle, watching, successfully applied, or failed.
- *
- * Active records the applied activation revision. This state alone does not establish that player execution or
- * facet reconciliation exists.
- */
 sealed interface EngineContentDeliveryHealth {
-    /** No session is available, or delivery has been stopped. */
     data object Idle : EngineContentDeliveryHealth
 
-    /** The delivery worker is subscribed or retrying its subscription. */
     data object Watching : EngineContentDeliveryHealth
 
-    /** The most recent activation was loaded and passed to the application callback. */
     data class Active(
-        val activationRevision: Long,
+        val publication: PublicationId,
     ) : EngineContentDeliveryHealth
 
-    /** A watch or activation attempt failed; the worker remains eligible for retry. */
     data class Failed(
         val message: String,
     ) : EngineContentDeliveryHealth
 }
 
-/**
- * Watches the Realm compiled content route through the host current messaging session.
- *
- * A session change cancels the previous watch. Activations are fetched and verified before invoking the callback;
- * failures are exposed through health and the watch is retried after a fixed delay. Start and stop require
- * serialized lifecycle access.
- */
+/** One worker fetches current descriptors after hints, reconnect, and periodic recovery. */
 class MessagingEngineContentDelivery(
     private val host: HostedRuntimeHost,
     private val realmId: String,
@@ -93,8 +81,8 @@ class MessagingEngineContentDelivery(
     override val health: StateFlow<EngineContentDeliveryHealth> = mutableHealth
     private var worker: Job? = null
 
-    override fun start(apply: suspend (LoadedCompiledContent) -> Unit) {
-        check(worker == null) { "Compiled content delivery is already active." }
+    override fun start(apply: suspend (LoadedPublishedContent) -> Unit) {
+        check(worker == null) { "Compiled content delivery is already active" }
         worker =
             scope.launch {
                 host.messaging.collectLatest { session ->
@@ -102,107 +90,146 @@ class MessagingEngineContentDelivery(
                         mutableHealth.value = EngineContentDeliveryHealth.Idle
                         return@collectLatest
                     }
-                    val address = RealmServiceAddress(realmId, session.organizationId)
-                    while (currentCoroutineContext().isActive) {
-                        mutableHealth.value = EngineContentDeliveryHealth.Watching
+                    coroutineScope {
+                        val address = RealmServiceAddress(realmId, session.organizationId)
+                        val hints = Channel<Unit>(Channel.CONFLATED)
+                        val contract = compiledContentHints()
+                        val router =
+                            session.communicator.createRouter(
+                                communicatorRoutes { eventAt(contract, address) { hints.trySend(Unit) } },
+                                this,
+                            )
                         try {
-                            session.communicator
-                                .watch(compiledContentWatch(address), address, WatchCompiledContentRequest())
-                                .collect { result ->
-                                    when (result) {
-                                        is CommunicationResult.Failure -> {
-                                            mutableHealth.value =
-                                                EngineContentDeliveryHealth.Failed(
-                                                    result.error.cause?.message
-                                                        ?: "Compiled content watch failed without a cause.",
-                                                )
-                                        }
-
-                                        is CommunicationResult.Success -> {
-                                            val activation = result.value.activation()
-                                            if (activation != null) {
-                                                apply(source.load(activation.toDomain()))
-                                                mutableHealth.value =
-                                                    EngineContentDeliveryHealth.Active(
-                                                        activation.activationRevision,
-                                                    )
-                                            }
-                                        }
+                            check(router.start() !is RouterResult.Failure) { "Could not subscribe to compiled content hints" }
+                            while (currentCoroutineContext().isActive) {
+                                mutableHealth.value = EngineContentDeliveryHealth.Watching
+                                try {
+                                    val content = fetchPublishedContent(session.communicator, address)
+                                    if (content != null) {
+                                        apply(source.load(content))
+                                        mutableHealth.value = EngineContentDeliveryHealth.Active(content.publication)
                                     }
+                                    withTimeoutOrNull(30.seconds) { hints.receive() }
+                                } catch (cancelled: CancellationException) {
+                                    throw cancelled
+                                } catch (failure: Exception) {
+                                    mutableHealth.value =
+                                        EngineContentDeliveryHealth.Failed(failure.message ?: "Compiled content delivery failed")
+                                    delay(1.seconds)
                                 }
-                        } catch (error: CancellationException) {
-                            throw error
-                        } catch (error: Exception) {
-                            mutableHealth.value =
-                                EngineContentDeliveryHealth.Failed(
-                                    error.message ?: "Compiled content delivery failed.",
-                                )
+                            }
+                        } finally {
+                            router.stop()
+                            hints.close()
                         }
-                        delay(RETRY_DELAY_MILLIS.milliseconds)
                     }
                 }
             }
     }
 
-    /**
-     * Cancels and joins the delivery worker, then resets health to idle.
-     *
-     * Await this before releasing resources used by the application callback.
-     */
     override suspend fun stop() {
         worker?.cancelAndJoin()
         worker = null
         mutableHealth.value = EngineContentDeliveryHealth.Idle
     }
-
-    private fun WatchMessage<WatchCompiledContentResponse, WatchCompiledContentResponse>.activation() =
-        when (this) {
-            is WatchMessage.Initial -> (value as? WatchCompiledContentResponse.InitialWrapper)?.value?.activation
-            is WatchMessage.Update -> (value as? WatchCompiledContentResponse.ActivatedWrapper)?.value
-        }
-
-    private companion object {
-        const val RETRY_DELAY_MILLIS = 1_000L
-    }
 }
 
-private fun compiledContentWatch(address: RealmServiceAddress) =
+internal suspend fun fetchPublishedContent(
+    communicator: Communicator,
+    address: RealmServiceAddress,
+): com.typewritermc.engine.PublishedContent? {
+    val id = UUID.randomUUID().toString()
+    val assembler = BoundedByteTransferAssembler(id)
+    var content: com.typewritermc.engine.PublishedContent? = null
+    withTimeout(30.seconds) {
+        communicator.watch(publishedContentQuery(address), address, QueryPublishedContentRequest(transferId = id)).first { result ->
+            when (result) {
+                is CommunicationResult.Failure -> {
+                    throw result.error.cause ?: IllegalStateException("Published content query failed")
+                }
+
+                is CommunicationResult.Success -> {
+                    val response =
+                        when (val message = result.value) {
+                            is WatchMessage.Initial -> message.value
+                            is WatchMessage.Update -> message.value
+                        }
+                    when (response) {
+                        is QueryPublishedContentResponse.ChunkWrapper -> {
+                            val chunk = response.value.transfer
+                            val bytes =
+                                assembler.accept(
+                                    BoundedTransferChunk(
+                                        chunk.transferId,
+                                        chunk.index,
+                                        chunk.chunkCount,
+                                        chunk.encodedSize,
+                                        chunk.sha256,
+                                        Payload.copyOf(chunk.payload.toByteArray()),
+                                    ),
+                                )
+                            if (bytes ==
+                                null
+                            ) {
+                                false
+                            } else {
+                                content =
+                                    PublishedContentCodec.decode(WirePublishedContent.serializer.fromBytes(okio.ByteString.of(*bytes)))
+                                true
+                            }
+                        }
+
+                        is QueryPublishedContentResponse.AbsentWrapper -> {
+                            true
+                        }
+
+                        else -> {
+                            error("Published content is unavailable")
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return content
+}
+
+private fun publishedContentQuery(address: RealmServiceAddress) =
     skirWatchContract(
-        method = WatchCompiledContent,
-        updateSerializer = WatchCompiledContentResponse.serializer,
-        name = OperationName.of("compiled.content.watch"),
-        requestAddress = realmRequestAddress("compiled.content.watch").subscribedAt(address),
-        updateAddress = realmEventAddress("compiled.content.watch"),
-        initialPolicy =
-            ResponsePolicy(
-                WatchCompiledContentResponse.createInternalError(),
-                compiledContentResponseClassifier,
-            ),
+        method = QueryPublishedContent,
+        updateSerializer = QueryPublishedContentResponse.serializer,
+        name = OperationName.of("editor.authoring.compiled.query"),
+        requestAddress = realmRequestAddress("editor.authoring.compiled.query").subscribedAt(address),
+        updateAddress = realmEventAddress("editor.authoring.compiled.query"),
+        updateAddressResolver = { realm, request ->
+            com.typewritermc.services.libs.communicator.address.MessageAddress.of(
+                realmEventAddress("editor.authoring.compiled.query").render(realm).value + "." + request.transferId,
+            )
+        },
+        initialPolicy = ResponsePolicy(QueryPublishedContentResponse.createInternalError(), compiledContentResponseClassifier),
         updateClassifier = compiledContentResponseClassifier,
-        failureSlug = ErrorSlug.of("compiled-content-watch-failed"),
+        failureSlug =
+            com.typewritermc.services.libs.telemetry.ErrorSlug
+                .of("compiled-content-query-failed"),
+    )
+
+private fun compiledContentHints() =
+    EventContract(
+        OperationName.of("editor.authoring.compiled.changed"),
+        realmEventAddress("editor.authoring.compiled.changed"),
+        CompiledContentChanged.serializer.asPayloadCodec(),
+        com.typewritermc.services.libs.telemetry.ErrorSlug
+            .of("compiled-content-hint-failed"),
     )
 
 private val compiledContentResponseClassifier =
-    ResponseClassifier<WatchCompiledContentResponse> { response ->
-        val outcome =
+    ResponseClassifier<QueryPublishedContentResponse> { response ->
+        ResponseClassification(
             when (response) {
-                is WatchCompiledContentResponse.InitialWrapper,
-                is WatchCompiledContentResponse.ActivatedWrapper,
-                -> ResponseOutcome.SUCCESS
-
-                is WatchCompiledContentResponse.InternalErrorWrapper -> ResponseOutcome.INTERNAL_ERROR
-
+                is QueryPublishedContentResponse.ChunkWrapper, is QueryPublishedContentResponse.AbsentWrapper -> ResponseOutcome.SUCCESS
+                is QueryPublishedContentResponse.InternalErrorWrapper -> ResponseOutcome.INTERNAL_ERROR
                 else -> ResponseOutcome.DOMAIN_ERROR
-            }
-        ResponseClassification(outcome, ResponseVariant.of(response.kind.name.lowercase()))
+            },
+            ResponseVariant.of(response.kind.name.lowercase()),
+        )
     }
-
-private fun skirout.editor.v1.compiled_content.CompiledContentActivation.toDomain() =
-    CompiledArtifactActivation(
-        activationRevision = activationRevision,
-        manifestDigest = ContentDigest(manifestDigest),
-        manifest = manifest.toDomain(),
-        artifacts = artifacts.map { CompiledArtifactPointer(ContentDigest(it.semanticDigest), it.blob.toDomain()) },
-    )
-
-private fun skirout.editor.v1.compiled_content.CompiledBlobPointer.toDomain() = CompiledBlobPointer(ContentDigest(digest), size)

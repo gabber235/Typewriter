@@ -37,7 +37,7 @@ class RealmCheckInputs(
         subject: DraftBinding,
     ): CheckEvaluation {
         val snapshotReads =
-            reads as? SnapshotReads
+            reads as? CapturedAuthoringReads
                 ?: return failed(
                     recipe,
                     EvaluationDiagnostic(
@@ -104,7 +104,7 @@ class RealmCheckInputs(
         recipe: CheckRecipe,
         subject: DraftBinding,
         tuple: InputTuple,
-        reads: SnapshotReads,
+        reads: CapturedAuthoringReads,
     ): Diagnostic {
         val targets =
             recipe.diagnostic.targets

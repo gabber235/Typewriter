@@ -5,6 +5,7 @@ import com.surrealdb.Transaction
 import com.typewritermc.authoring.LinkProjection
 import com.typewritermc.authoring.RelationProjectionDelta
 import com.typewritermc.authoring.ValuePath
+import com.typewritermc.realm.repository.utils.StructuredDatabaseCodec
 import com.typewritermc.realm.repository.utils.unifiedSurrealId
 import kotlinx.serialization.json.Json
 import java.util.UUID
@@ -23,7 +24,6 @@ internal interface DeclaredRelationStore {
 
     fun apply(
         delta: StoredRelationDelta,
-        snapshot: Long,
         transaction: Transaction,
     )
 }
@@ -42,7 +42,6 @@ internal class SurrealDeclaredRelationStore : DeclaredRelationStore {
 
     override fun apply(
         delta: StoredRelationDelta,
-        snapshot: Long,
         transaction: Transaction,
     ) {
         delta.removed.forEach { edge ->
@@ -56,18 +55,16 @@ internal class SurrealDeclaredRelationStore : DeclaredRelationStore {
             transaction
                 .query(
                     "UPDATE ONLY \$edge SET first_location = \$first_location ?? NONE, " +
-                        "second_location = \$second_location ?? NONE, " +
-                        "first_occurrence = \$first_occurrence, second_occurrence = \$second_occurrence, snapshot = \$snapshot;",
-                    edge.bindings(snapshot),
+                        "second_location = \$second_location ?? NONE;",
+                    edge.bindings(),
                 ).take(0)
         }
         delta.created.forEach { edge ->
             transaction
                 .query(
                     "RELATE ONLY \$first->\$edge->\$second CONTENT { contract: \$contract, " +
-                        "first_location: \$first_location ?? NONE, second_location: \$second_location ?? NONE, " +
-                        "first_occurrence: \$first_occurrence, second_occurrence: \$second_occurrence, snapshot: \$snapshot };",
-                    edge.bindings(snapshot),
+                        "first_location: \$first_location ?? NONE, second_location: \$second_location ?? NONE };",
+                    edge.bindings(),
                 ).take(0)
         }
     }
@@ -111,24 +108,18 @@ private fun LinkProjection.stored(id: String): StoredDeclaredEdge =
 private fun StoredDeclaredEdge.copyLocations(projection: LinkProjection): StoredDeclaredEdge =
     copy(sourceLocation = projection.firstLocation, targetLocation = projection.secondLocation)
 
-private fun StoredDeclaredEdge.bindings(snapshot: Long): Map<String, Any?> =
+private fun StoredDeclaredEdge.bindings(): Map<String, Any?> =
     mapOf(
         "edge" to RecordId("resource_relation", physicalId),
         "first" to source.unifiedSurrealId(),
         "second" to target.unifiedSurrealId(),
         "contract" to relation.value,
-        "first_location" to sourceLocation?.let { relationJson.encodeToString(ValuePath.serializer(), it) },
-        "second_location" to targetLocation?.let { relationJson.encodeToString(ValuePath.serializer(), it) },
-        "first_occurrence" to occurrenceKey(sourceLocation),
-        "second_occurrence" to occurrenceKey(targetLocation),
-        "snapshot" to snapshot,
+        "first_location" to sourceLocation?.let { relationDatabaseValues.encode(ValuePath.serializer(), it) },
+        "second_location" to targetLocation?.let { relationDatabaseValues.encode(ValuePath.serializer(), it) },
     )
 
-private fun StoredDeclaredEdge.occurrenceKey(path: ValuePath?): String =
-    path?.let { "location:${relationJson.encodeToString(ValuePath.serializer(), it)}" } ?: "edge:$physicalId"
-
 private fun com.surrealdb.Value.decodePath(): ValuePath? =
-    if (isNull || isNone) null else relationJson.decodeFromString(ValuePath.serializer(), getString())
+    if (isNull || isNone) null else relationDatabaseValues.decode(ValuePath.serializer(), this)
 
 private val relationJson =
     Json {
@@ -136,3 +127,5 @@ private val relationJson =
         explicitNulls = true
         classDiscriminator = "kind"
     }
+
+private val relationDatabaseValues = StructuredDatabaseCodec(relationJson)

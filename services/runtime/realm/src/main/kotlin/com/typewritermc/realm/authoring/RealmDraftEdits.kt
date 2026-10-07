@@ -2,7 +2,6 @@ package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.Availability
-import com.typewritermc.authoring.BatchId
 import com.typewritermc.authoring.BoundCollectionPath
 import com.typewritermc.authoring.BoundPath
 import com.typewritermc.authoring.CheckedWriteResult
@@ -36,16 +35,15 @@ import com.typewritermc.authoring.validateStructure
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
+import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.realm.checking.DefaultObservationRecorder
 import com.typewritermc.realm.checking.SnapshotReadCapability
-import com.typewritermc.realm.checking.SnapshotReads
 import com.typewritermc.realm.repository.AuthoringMutationPlan
 import com.typewritermc.realm.repository.AuthoringMutationPlanner
 import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.realm.repository.MutationPlanningResult
 import com.typewritermc.realm.repository.canonicalPreparedIntentDigest
-import com.typewritermc.realm.repository.mandatoryWriteInputs
-import com.typewritermc.realm.repository.mutationPlanWriteInputs
+import com.typewritermc.realm.repository.requiredExpectations
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.NativeBinding
@@ -76,7 +74,7 @@ internal sealed interface ParentMaterialization {
 
 internal fun interface ParentMaterializer {
     fun materialize(
-        catalog: SnapshotCatalogLease,
+        catalog: AuthoringCatalogLease,
         containing: TypeDefinitionId,
         field: com.typewritermc.types.catalog.ResolvedField,
         expected: TypeUse.Named,
@@ -85,7 +83,7 @@ internal fun interface ParentMaterializer {
 }
 
 internal class RealmDraftEdits(
-    private val snapshots: AuthoringSnapshotStore,
+    private val snapshots: AuthoringViewStore,
     private val repository: AuthoringRepository,
     private val parentMaterializer: ParentMaterializer = CatalogParentMaterializer,
     private val creation: InitializationRuntime? = null,
@@ -94,7 +92,7 @@ internal class RealmDraftEdits(
         id: EditPreparationId,
         block: suspend EditContext.() -> Unit,
     ): PreparedEditResult {
-        val lease = snapshots.retain(snapshot)
+        val lease = snapshots.retain(readContext)
         try {
             if (catalog != lease.root.catalog.generation) {
                 return PreparedEditResult.Rejected(listOf(ValueProblem(location, "catalog_changed")))
@@ -111,7 +109,7 @@ internal class RealmDraftEdits(
 }
 
 private class RealmEditContext(
-    private val lease: SnapshotLease,
+    private val lease: AuthoringLease,
     private val preparation: EditPreparationId,
     private val creation: InitializationRuntime?,
     private val parentMaterializer: ParentMaterializer,
@@ -132,12 +130,11 @@ private class RealmEditContext(
             lease.root.catalog.endpointBindings,
         )
     private var staged = original
-    private var reads = SnapshotReads(lease.originalView(), recorder, readContext = editReadContext)
+    private var reads = CapturedAuthoringReads(lease.originalView(), recorder, readContext = editReadContext)
 
-    override val snapshotReads: SnapshotReads
+    override val snapshotReads: CapturedAuthoringReads
         get() = reads
 
-    override val snapshot get() = reads.snapshot
     override val catalog get() = reads.catalog
     override val readContext: ReadContext get() = reads.readContext
 
@@ -295,13 +292,10 @@ private class RealmEditContext(
         if (problems.isNotEmpty()) return PreparedEditResult.Rejected(problems.distinct(), locatedFindings)
         val witness =
             PreparedEdit(
-                id = BatchId("pending"),
                 catalog = lease.root.catalog.generation,
-                snapshot = lease.root.id,
-                observations = emptyList(),
+                expectations = emptyList(),
                 intents = intents.toList(),
             )
-        mandatoryWriteInputs(witness, original).forEach(reads::observeInput)
         val planned = plan()
         if (planned is MutationPlanningResult.Rejected) {
             val choices =
@@ -311,11 +305,17 @@ private class RealmEditContext(
             if (choices.isNotEmpty()) return PreparedEditResult.NeedsInput(choices.toList(), locatedFindings)
             return PreparedEditResult.Rejected(planned.problems, locatedFindings)
         }
-        mutationPlanWriteInputs((planned as MutationPlanningResult.Accepted).plan, original).forEach(reads::observeInput)
-        val withEvidence = witness.copy(observations = recorder.captured())
-        val digest = canonicalPreparedIntentDigest(withEvidence)
-        val prepared = withEvidence.copy(id = BatchId("edit_$digest"))
-        return PreparedEditResult.Prepared(lease.root.id, prepared, locatedFindings)
+        val required =
+            lease.root.values.requiredExpectations(
+                witness,
+                original,
+                lease.root.catalog.relations.mapTo(linkedSetOf()) {
+                    it.id
+                },
+                (planned as MutationPlanningResult.Accepted).plan,
+            )
+        required.forEach(recorder::observe)
+        return PreparedEditResult.Prepared(witness.copy(expectations = recorder.captured()), locatedFindings)
     }
 
     private suspend fun write(
@@ -476,10 +476,8 @@ private class RealmEditContext(
         val prefix =
             canonicalPreparedIntentDigest(
                 PreparedEdit(
-                    id = BatchId("materialization"),
                     catalog = lease.root.catalog.generation,
-                    snapshot = lease.root.id,
-                    observations = recorder.captured(),
+                    expectations = recorder.captured(),
                     intents = intents.toList(),
                 ),
             )
@@ -504,16 +502,14 @@ private class RealmEditContext(
         }
         val changed = staged.filter { (id, value) -> original[id] != value }
         val removed = original.keys - staged.keys
-        reads = SnapshotReads(lease.stagedView(changed, removed), recorder, readContext = editReadContext)
+        reads = CapturedAuthoringReads(lease.stagedView(changed, removed), recorder, readContext = editReadContext)
     }
 
     private fun plan(): MutationPlanningResult =
         planner.plan(
             original,
             PreparedEdit(
-                BatchId("staged"),
                 lease.root.catalog.generation,
-                lease.root.id,
                 emptyList(),
                 intents,
             ),
@@ -522,7 +518,7 @@ private class RealmEditContext(
 
 private object CatalogParentMaterializer : ParentMaterializer {
     override fun materialize(
-        catalog: SnapshotCatalogLease,
+        catalog: AuthoringCatalogLease,
         containing: TypeDefinitionId,
         field: com.typewritermc.types.catalog.ResolvedField,
         expected: TypeUse.Named,
@@ -560,7 +556,7 @@ private object CatalogParentMaterializer : ParentMaterializer {
 
 private fun typeDefault(
     type: TypeUse,
-    catalog: SnapshotCatalogLease,
+    catalog: AuthoringCatalogLease,
     visiting: Set<TypeUse.Named>,
 ): DataValue {
     return when (type) {
@@ -622,7 +618,7 @@ private fun typeDefault(
 private fun recordDefault(
     type: TypeUse.Named,
     representation: ResolvedRepresentation.Record,
-    catalog: SnapshotCatalogLease,
+    catalog: AuthoringCatalogLease,
     visiting: Set<TypeUse.Named>,
 ): DataValue.Named {
     val descriptor = catalog.initialization.singleOrNull { it.definition == type.definition }

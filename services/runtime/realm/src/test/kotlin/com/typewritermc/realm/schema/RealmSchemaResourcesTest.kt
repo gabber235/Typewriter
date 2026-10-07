@@ -5,40 +5,21 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 
 val RealmSchemaResourcesTest by testSuite {
-    test("packaged Realm schema catalog exposes its dependency order") {
-        MigrationResources().loadRealmSchema().map(SchemaResource::path) shouldBe
+    test("Realm schema contains only authored resources, relations, and publication attempts") {
+        val schema = MigrationResources().loadRealmSchema()
+        schema.map(SchemaResource::path) shouldBe
             listOf(
                 "search/authoring_text.surql",
-                "search/authoring_search.surql",
                 "resource/resource.surql",
-                "resource/authoring_batch.surql",
-                "compile/compiled_artifact.surql",
-                "compile/compile_attempt_root.surql",
-                "compile/active_compiled_artifact_manifest.surql",
-                "compile/authoring_head.surql",
-                "compile/collaboration_head.surql",
+                "resource/resource_relation.surql",
                 "compile/publication_attempt.surql",
-                "compile/compile_attempt.surql",
             )
+        schema.sumOf { Regex("DEFINE TABLE").findAll(it.script).count() } shouldBe 3
     }
-
-    test("compile attempt roots use only the normalized projection relation") {
-        val schema = MigrationResources().loadRealmSchema().associateBy(SchemaResource::path)
-
-        schema.getValue("compile/compile_attempt.surql").script.contains("FIELD OVERWRITE roots") shouldBe false
-        schema.getValue("compile/compile_attempt_root.surql").script.contains("DEFINE TABLE OVERWRITE compile_attempt_root") shouldBe true
-    }
-
-    test("compiled artifact payloads remain blob owned") {
-        val schema = MigrationResources().loadRealmSchema().associateBy(SchemaResource::path)
-        val artifactSchema =
-            schema
-                .getValue("compile/compiled_artifact.surql")
-                .script
-                .substringBefore("DEFINE TABLE OVERWRITE compiled_artifact_manifest")
-
-        artifactSchema.contains("payload") shouldBe false
-        artifactSchema.contains("DEFINE FIELD OVERWRITE semantic_digest") shouldBe true
+    test("publication results and diagnostics use native objects") {
+        val schema = MigrationResources().loadRealmSchema().last().script
+        schema.contains("result ON publication_attempt TYPE option<object> FLEXIBLE") shouldBe true
+        schema.contains("findings.* ON publication_attempt TYPE object FLEXIBLE") shouldBe true
     }
 
     test("Realm schema catalog preserves declared dependency order") {

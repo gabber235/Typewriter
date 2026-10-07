@@ -311,7 +311,6 @@ _fixture({bool unfilled = false}) {
     page: page,
     catalog: checked,
     draft: AuthoredDraft(
-      snapshot: skir.SnapshotId(value: "realm:widgetbook"),
       generation: generation,
       resources: [
         skir.AuthoringResource(
@@ -321,8 +320,6 @@ _fixture({bool unfilled = false}) {
         ),
       ],
       links: const [],
-      observations: const [],
-      absentInputToken: skir.InputToken(value: "absent"),
       catalog: checked,
     ),
   );

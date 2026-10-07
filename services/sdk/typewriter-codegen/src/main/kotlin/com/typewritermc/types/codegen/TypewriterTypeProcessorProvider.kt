@@ -863,7 +863,6 @@ interface ${name}Check : com.typewritermc.checking.RealmCheckProvider
 open class ${name}Draft$draftParameters internal constructor(
     internal val binding: com.typewritermc.authoring.DraftBinding${if (draftArguments.isEmpty()) "" else ", $draftArguments"},
 )${if (resource) " : com.typewritermc.authoring.ResourceDraft" else " : com.typewritermc.authoring.DraftView"} {
-    override val snapshot get() = binding.snapshot
     override val catalog get() = binding.catalog
     override val readContext get() = binding.readContext
     override val location get() = binding.location

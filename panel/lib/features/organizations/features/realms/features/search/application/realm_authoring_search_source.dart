@@ -32,8 +32,7 @@ final class AuthoringSearchResultPayload {
       id.value;
 }
 
-final class RealmAuthoringSearchSource
-    implements SearchSource, SearchSelectorCompletionSource {
+final class RealmAuthoringSearchSource implements SearchSource {
   RealmAuthoringSearchSource({
     required this.ref,
     required this.organizationId,
@@ -96,12 +95,10 @@ final class RealmAuthoringSearchSource
       final response = await access.notifier.search(
         skir.SearchAuthoringRequest(
           generation: snapshot.generation,
-          snapshot: snapshot.snapshot,
-          query: encodeRealmSearchQuery(query),
+          query: encodeRealmSearchQuery(query).normalizedQuery,
           roots: roots,
           contexts: contexts.isNotEmpty ? contexts : [?contextResource],
           target: target,
-          facets: _validationFacets(query),
         ),
       );
       if (_disposed || revision != _revision) return;
@@ -110,23 +107,6 @@ final class RealmAuthoringSearchSource
       if (_disposed || revision != _revision) return;
       _publishError(["Realm search failed: $error"]);
     }
-  }
-
-  List<skir.SearchFacetRequest> _validationFacets(SearchQueryContext query) {
-    final values = <String, List<String>>{};
-    for (final selector in query.selectors) {
-      final value = selector.value;
-      if (value == null) continue;
-      values.putIfAbsent(selector.selectorId, () => []).add(value);
-    }
-    return [
-      for (final entry in values.entries)
-        skir.SearchFacetRequest(
-          facetId: skir.SearchFacetId(value: entry.key),
-          partial: null,
-          validate: entry.value,
-        ),
-    ];
   }
 
   void _publish(
@@ -160,22 +140,6 @@ final class RealmAuthoringSearchSource
                   severity: SearchErrorSeverity.error,
                   sourceLabel: "Realm",
                 ),
-            ],
-            selectorValidations: [
-              for (final facet in value.facets)
-                for (final accepted in facet.accepted)
-                  SearchSelectorValidation(
-                    selectorId: facet.facetId.value,
-                    value: accepted,
-                    status: SearchSelectorValidationStatus.accepted,
-                  ),
-              for (final facet in value.facets)
-                for (final rejected in facet.rejected)
-                  SearchSelectorValidation(
-                    selectorId: facet.facetId.value,
-                    value: rejected,
-                    status: SearchSelectorValidationStatus.rejected,
-                  ),
             ],
           ),
         );
@@ -215,11 +179,6 @@ final class RealmAuthoringSearchSource
           message: "Authoring resources do not provide a separate preview",
         ),
       );
-
-  @override
-  Future<SearchSelectorCompletionResult> completeSelector(
-    SearchSelectorCompletionRequest request,
-  ) async => const SearchSelectorCompletionResult();
 
   @override
   void dispose() {

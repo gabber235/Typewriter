@@ -11,8 +11,6 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1
     as capability;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
     as catalog;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/checking.dart"
-    as checking;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/diagnostic.dart"
     as diagnostic;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
@@ -256,67 +254,58 @@ void main() {
     },
   );
 
-  testWidgets(
-    "catalog adoption preserves an edit and applies the new local rule",
-    (tester) async {
-      final first = _numericFixture(
-        generation: "catalog:1",
-        snapshot: "realm:1",
-        minimum: 1,
-      );
-      await tester.pumpTestApp(child: _numericEditor(first));
-      await tester.enterText(find.byType(TextFormField), "3");
-      await tester.pump();
-      final evidence = first.draft.observations.toList(growable: false);
+  testWidgets("preparing after a catalog change applies the new local rule", (
+    tester,
+  ) async {
+    final first = _numericFixture(
+      generation: "catalog:1",
+      snapshot: "realm:1",
+      minimum: 1,
+    );
+    await tester.pumpTestApp(child: _numericEditor(first));
+    await tester.enterText(find.byType(TextFormField), "3");
+    await tester.pump();
+    final evidence = first.draft.expectations.toList(growable: false);
 
-      final second = _numericFixture(
-        generation: "catalog:2",
-        snapshot: "realm:2",
-        minimum: 10,
-      );
-      final adoption = first.draft.rebaseOnto(second.draft);
-      expect(adoption, isA<AuthoredDraftRebased>());
-      final rebound = (adoption as AuthoredDraftRebased).draft;
-
-      await tester.pumpTestApp(
-        child: _numericEditor((
-          resource: second.resource,
-          draft: rebound,
-          catalog: second.catalog,
-        )),
-      );
-      await tester.pump();
-
-      expect(find.text("Must be at least 10"), findsOneWidget);
-      expect(
-        rebound
-            .resource(second.resource)
-            ?.authoredField("repetitions")
-            ?.authoredInteger,
-        BigInt.from(3),
-      );
-      expect(rebound.intents, hasLength(1));
-      expect(
-        rebound.observations,
-        containsAll(
-          evidence.where(
-            (observation) =>
-                observation.identity is! checking.InputIdentity_catalogWrapper,
-          ),
+    final second = _numericFixture(
+      generation: "catalog:2",
+      snapshot: "realm:2",
+      minimum: 10,
+    );
+    final adoption = first.draft.rebaseOnto(second.draft);
+    expect(adoption, isA<AuthoredDraftRebaseFailed>());
+    final rebound = second.draft.fork();
+    rebound.set(
+      types.ValueLocation(
+        resource: second.resource,
+        path: types.ValuePath(
+          segments: [types.PathSegment.createField(name: "repetitions")],
         ),
-      );
-      expect(
-        rebound.observations
-            .where(
-              (observation) =>
-                  observation.identity is checking.InputIdentity_catalogWrapper,
-            )
-            .single
-            .identity,
-        checking.InputIdentity.wrapCatalog(second.draft.generation),
-      );
-    },
-  );
+      ),
+      types.DataValue.wrapInteger("3"),
+    );
+
+    await tester.pumpTestApp(
+      child: _numericEditor((
+        resource: second.resource,
+        draft: rebound,
+        catalog: second.catalog,
+      )),
+    );
+    await tester.pump();
+
+    expect(find.text("Must be at least 10"), findsOneWidget);
+    expect(
+      rebound
+          .resource(second.resource)
+          ?.authoredField("repetitions")
+          ?.authoredInteger,
+      BigInt.from(3),
+    );
+    expect(rebound.intents, hasLength(1));
+    expect(first.draft.expectations, evidence);
+    expect(rebound.generation, second.draft.generation);
+  });
 
   testWidgets("required numeric input saves Unfilled and can be repaired", (
     tester,
@@ -359,7 +348,7 @@ void main() {
   ) async {
     final first = _fixture();
     final completion = Completer<authoring.CommitPreparedEditResponse>();
-    final adoption = Completer<authoring.AuthoringSnapshot>();
+    final adoption = Completer<authoring.AuthoringState>();
     final commands = AuthoredResourceCommands(
       commit: (_) => completion.future,
       previewTypeArguments: ({required resource, required requested}) =>
@@ -372,7 +361,7 @@ void main() {
       reload: () async {},
       openAutosave: _openAutosave(
         commit: (_) => completion.future,
-        awaitSnapshot: (_) => adoption.future,
+        fetchCurrent: () => adoption.future,
       ),
     );
 
@@ -420,10 +409,7 @@ void main() {
 
     completion.complete(
       authoring.CommitPreparedEditResponse.wrapResult(
-        authoring.CommitResult.createCommitted(
-          snapshot: types.SnapshotId(value: "realm:2"),
-          changed: const [],
-        ),
+        authoring.CommitResult.committed,
       ),
     );
     await tester.pumpAndSettle();
@@ -441,8 +427,8 @@ void main() {
     final first = _fixture();
     final firstResponse = Completer<authoring.CommitPreparedEditResponse>();
     final secondResponse = Completer<authoring.CommitPreparedEditResponse>();
-    final snapshots =
-        <types.SnapshotId, Completer<authoring.AuthoringSnapshot>>{};
+    final snapshots = <String, Completer<authoring.AuthoringState>>{};
+    var fetchCount = 1;
     final submitted = <authoring.PreparedEdit>[];
     Future<authoring.CommitPreparedEditResponse> commit(
       authoring.PreparedEdit edit,
@@ -465,8 +451,9 @@ void main() {
       reload: () async {},
       openAutosave: _openAutosave(
         commit: commit,
-        awaitSnapshot: (snapshot) =>
-            snapshots.putIfAbsent(snapshot, Completer.new).future,
+        fetchCurrent: () => snapshots
+            .putIfAbsent("realm:${++fetchCount}", Completer.new)
+            .future,
       ),
     );
     await tester.pumpTestApp(
@@ -494,33 +481,27 @@ void main() {
 
     final second = _fixture(snapshot: "realm:2", title: "First");
     snapshots
-        .putIfAbsent(types.SnapshotId(value: "realm:2"), Completer.new)
+        .putIfAbsent("realm:2", Completer.new)
         .complete(_snapshotOf(second.draft));
     firstResponse.complete(
       authoring.CommitPreparedEditResponse.wrapResult(
-        authoring.CommitResult.createCommitted(
-          snapshot: types.SnapshotId(value: "realm:2"),
-          changed: const [],
-        ),
+        authoring.CommitResult.committed,
       ),
     );
     await tester.pump(AuthoredDraftAutosave.debounce);
     await tester.pump();
 
     expect(submitted, hasLength(2));
-    expect(submitted.last.snapshot, types.SnapshotId(value: "realm:2"));
+    expect(submitted.last.catalog, second.draft.generation);
     expect(submitted.last.intents, hasLength(1));
 
     final third = _fixture(snapshot: "realm:3", title: "Second");
     snapshots
-        .putIfAbsent(types.SnapshotId(value: "realm:3"), Completer.new)
+        .putIfAbsent("realm:3", Completer.new)
         .complete(_snapshotOf(third.draft));
     secondResponse.complete(
       authoring.CommitPreparedEditResponse.wrapResult(
-        authoring.CommitResult.createCommitted(
-          snapshot: types.SnapshotId(value: "realm:3"),
-          changed: const [],
-        ),
+        authoring.CommitResult.committed,
       ),
     );
     await tester.pumpAndSettle();
@@ -543,10 +524,7 @@ void main() {
       ) async {
         submissions++;
         return authoring.CommitPreparedEditResponse.wrapResult(
-          authoring.CommitResult.createCommitted(
-            snapshot: types.SnapshotId(value: "realm:${submissions + 1}"),
-            changed: const [],
-          ),
+          authoring.CommitResult.committed,
         );
       }
 
@@ -562,8 +540,9 @@ void main() {
         reload: () async {},
         openAutosave: _openAutosave(
           commit: commit,
-          awaitSnapshot: (snapshot) =>
-              Future.value(_snapshotOf(adopted[snapshot.value]!.draft)),
+          fetchCurrent: () => Future.value(
+            _snapshotOf(adopted["realm:${submissions + 1}"]!.draft),
+          ),
         ),
       );
       await tester.pumpTestApp(
@@ -644,93 +623,86 @@ void main() {
     },
   );
 
-  testWidgets("missing receipt adoption requires choosing the latest value", (
-    tester,
-  ) async {
-    var submissions = 0;
-    final first = _fixture();
-    final recovered = _fixture(snapshot: "realm:4", title: "After");
-    Future<authoring.CommitPreparedEditResponse> commit(
-      authoring.PreparedEdit _,
-    ) async {
-      submissions++;
-      return authoring.CommitPreparedEditResponse.wrapResult(
-        authoring.CommitResult.createCommitted(
-          snapshot: types.SnapshotId(
-            value: submissions == 1 ? "realm:2" : "realm:4",
-          ),
-          changed: const [],
+  testWidgets(
+    "an uncertain save keeps local edits until choosing current values",
+    (tester) async {
+      var submissions = 0;
+      final first = _fixture();
+      final recovered = _fixture(snapshot: "realm:4", title: "After");
+      Future<authoring.CommitPreparedEditResponse> commit(
+        authoring.PreparedEdit _,
+      ) async {
+        submissions++;
+        if (submissions == 1) throw StateError("The save response timed out");
+        return authoring.CommitPreparedEditResponse.wrapResult(
+          authoring.CommitResult.committed,
+        );
+      }
+
+      final commands = AuthoredResourceCommands(
+        commit: commit,
+        previewTypeArguments: ({required resource, required requested}) =>
+            throw UnimplementedError(),
+        commitTypeArguments: (_) => throw UnimplementedError(),
+        prepareCreation: (_) => throw UnimplementedError(),
+        invokeCommand: ({required capabilityId, required payload}) async =>
+            capability.CommandResult.unknown,
+        watchSearch: (_) => const Stream.empty(),
+        reload: () async {},
+        openAutosave: _openAutosave(
+          commit: commit,
+          fetchCurrent: () => Future.value(_snapshotOf(recovered.draft)),
         ),
       );
-    }
-
-    final commands = AuthoredResourceCommands(
-      commit: commit,
-      previewTypeArguments: ({required resource, required requested}) =>
-          throw UnimplementedError(),
-      commitTypeArguments: (_) => throw UnimplementedError(),
-      prepareCreation: (_) => throw UnimplementedError(),
-      invokeCommand: ({required capabilityId, required payload}) async =>
-          capability.CommandResult.unknown,
-      watchSearch: (_) => const Stream.empty(),
-      reload: () async {},
-      openAutosave: _openAutosave(
-        commit: commit,
-        awaitSnapshot: (snapshot) => snapshot.value == "realm:4"
-            ? Future.value(_snapshotOf(recovered.draft))
-            : Future.error(
-                StateError("The exact committed snapshot was skipped"),
+      var current = first;
+      late StateSetter rebuild;
+      await tester.pumpTestApp(
+        child: StatefulBuilder(
+          builder: (context, setState) {
+            rebuild = setState;
+            return Scaffold(
+              body: AuthoredResourceInspection(
+                resource: current.resource,
+                draft: current.draft,
+                catalog: current.catalog,
+                commands: commands,
+                role: catalog.PresentationRole.editor,
               ),
-      ),
-    );
-    var current = first;
-    late StateSetter rebuild;
-    await tester.pumpTestApp(
-      child: StatefulBuilder(
-        builder: (context, setState) {
-          rebuild = setState;
-          return Scaffold(
-            body: AuthoredResourceInspection(
-              resource: current.resource,
-              draft: current.draft,
-              catalog: current.catalog,
-              commands: commands,
-              role: catalog.PresentationRole.editor,
-            ),
-          );
-        },
-      ),
-    );
+            );
+          },
+        ),
+      );
 
-    await tester.enterText(find.byType(TextFormField), "First");
-    await tester.pump(AuthoredDraftAutosave.debounce);
-    await tester.pump();
-    expect(submissions, 1);
-    expect(find.text("Use latest"), findsOneWidget);
+      await tester.enterText(find.byType(TextFormField), "First");
+      await tester.pump(AuthoredDraftAutosave.debounce);
+      await tester.pump();
+      expect(submissions, 1);
+      expect(find.text("Use latest"), findsOneWidget);
 
-    await tester.enterText(find.byType(TextFormField), "Second");
-    await tester.pump(AuthoredDraftAutosave.debounce);
-    expect(submissions, 1);
+      await tester.enterText(find.byType(TextFormField), "Second");
+      await tester.pump(AuthoredDraftAutosave.debounce);
+      expect(submissions, 1);
 
-    final latest = _fixture(snapshot: "realm:3", title: "Latest");
-    rebuild(() => current = latest);
-    await tester.pump();
-    await tester.tap(find.text("Use latest"));
-    await tester.pumpAndSettle();
+      final latest = _fixture(snapshot: "realm:3", title: "Latest");
+      rebuild(() => current = latest);
+      await tester.pump();
+      await tester.tap(find.text("Use latest"));
+      await tester.pumpAndSettle();
 
-    expect(
-      tester.widget<TextFormField>(find.byType(TextFormField)).initialValue,
-      "Latest",
-    );
-    expect(submissions, 1);
+      expect(
+        tester.widget<TextFormField>(find.byType(TextFormField)).initialValue,
+        "Latest",
+      );
+      expect(submissions, 1);
 
-    await tester.enterText(find.byType(TextFormField), "After");
-    await tester.pump(AuthoredDraftAutosave.debounce);
-    await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextFormField), "After");
+      await tester.pump(AuthoredDraftAutosave.debounce);
+      await tester.pumpAndSettle();
 
-    expect(submissions, 2);
-    expect(find.text("Saved"), findsOneWidget);
-  });
+      expect(submissions, 2);
+      expect(find.text("Saved"), findsOneWidget);
+    },
+  );
 
   testWidgets("concurrent inspections own independent edit drafts", (
     tester,
@@ -801,8 +773,7 @@ _openAutosave({
     authoring.PreparedEdit edit,
   )
   commit,
-  Future<authoring.AuthoringSnapshot> Function(types.SnapshotId snapshot)?
-  awaitSnapshot,
+  Future<authoring.AuthoringState> Function()? fetchCurrent,
 }) =>
     ({
       required resource,
@@ -813,19 +784,17 @@ _openAutosave({
       baseline: baseline,
       policy: policy,
       commit: commit,
-      currentRecoveryRevision: () => 0,
-      awaitSnapshot: awaitSnapshot == null
-          ? (_, _) => Future.error(
-              StateError("No adopted snapshot was configured for this test"),
-            )
-          : (snapshot, _) => awaitSnapshot(snapshot),
+      fetchCurrent:
+          fetchCurrent ??
+          () => Future.error(
+            StateError("No current values were configured for this test"),
+          ),
       reload: () async {},
       onSettled: () {},
     );
 
-authoring.AuthoringSnapshot _snapshotOf(AuthoredDraft draft) =>
-    authoring.AuthoringSnapshot(
-      snapshot: draft.snapshot,
+authoring.AuthoringState _snapshotOf(AuthoredDraft draft) =>
+    authoring.AuthoringState(
       generation: draft.generation,
       resources: [
         for (final resource in draft.resources.entries)
@@ -837,11 +806,6 @@ authoring.AuthoringSnapshot _snapshotOf(AuthoredDraft draft) =>
       ],
       links: draft.links,
       findings: const [],
-      observations: draft.observations,
-      absentInputToken: draft.absentInputToken,
-      findingsToken: checking.FindingsToken(
-        value: "findings:${draft.snapshot.value}",
-      ),
     );
 
 ({types.ResourceId resource, AuthoredDraft draft, CheckedEditorCatalog catalog})
@@ -966,7 +930,6 @@ _emptyPageGraphFixture() {
     ],
   );
   final draft = AuthoredDraft(
-    snapshot: types.SnapshotId(value: "realm:page"),
     generation: generation,
     resources: [
       authoring.AuthoringResource(
@@ -976,8 +939,6 @@ _emptyPageGraphFixture() {
       ),
     ],
     links: const [],
-    observations: const [],
-    absentInputToken: types.InputToken(value: "absent"),
     catalog: checked,
   );
   return (resource: resource, draft: draft, catalog: checked);
@@ -1185,7 +1146,6 @@ _numericFixture({
     resource: resource,
     catalog: checked,
     draft: AuthoredDraft(
-      snapshot: types.SnapshotId(value: snapshot),
       generation: catalogGeneration,
       resources: [
         authoring.AuthoringResource(
@@ -1195,8 +1155,6 @@ _numericFixture({
         ),
       ],
       links: const [],
-      observations: const [],
-      absentInputToken: types.InputToken(value: "absent"),
       catalog: checked,
     ),
   );
@@ -1501,7 +1459,6 @@ _fixture({
     ],
   );
   final draft = AuthoredDraft(
-    snapshot: types.SnapshotId(value: snapshot),
     generation: generation,
     resources: [
       authoring.AuthoringResource(
@@ -1511,8 +1468,6 @@ _fixture({
       ),
     ],
     links: const [],
-    observations: const [],
-    absentInputToken: types.InputToken(value: "absent"),
     catalog: checked,
   );
   return (resource: resource, draft: draft, catalog: checked);

@@ -4,11 +4,11 @@ import build.skir.Serializer
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.AuthoringResourceDefinition
+import com.typewritermc.authoring.RelationProjectionDelta
 import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputToken
-import com.typewritermc.checking.SnapshotId
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.CatalogContributions
 import com.typewritermc.discovery.ContributionKey
@@ -37,19 +37,19 @@ import com.typewritermc.loader.api.artifact.SharedArtifactProvenance
 import com.typewritermc.loader.api.artifact.SharedArtifactRevision
 import com.typewritermc.loader.api.artifact.SharedCatalogRevision
 import com.typewritermc.loader.api.artifact.TransferId
-import com.typewritermc.realm.authoring.AuthoredSnapshotSeed
+import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.CreationEvaluator
-import com.typewritermc.realm.authoring.InMemoryAuthoringSnapshotStore
+import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.catalog.RealmCatalogIncarnation
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.catalog.installTestCatalog
 import com.typewritermc.realm.checking.tokensFor
 import com.typewritermc.realm.compiler.EngineImplementationInputs
 import com.typewritermc.realm.compiler.StagedEngineImplementationSource
-import com.typewritermc.realm.repository.SurrealAuthoringRepository
+import com.typewritermc.realm.repository.AuthoringMutationPlan
+import com.typewritermc.realm.repository.SurrealAuthoringStorage
 import com.typewritermc.realm.schema.RealmDatabaseProvider
 import com.typewritermc.realm.schema.SchemaMigrator
-import com.typewritermc.realm.search.AuthoringSearchIndexer
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
@@ -90,14 +90,14 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
-import skirout.editor.v1.authoring.QueryAuthoringSnapshotRequest
-import skirout.editor.v1.authoring.QueryAuthoringSnapshotResponse
+import skirout.editor.v1.authoring.QueryAuthoringStateRequest
+import skirout.editor.v1.authoring.QueryAuthoringStateResponse
 import skirout.editor.v1.catalog.CatalogFetchRequest
 import skirout.editor.v1.catalog.CatalogFetchResult
 import skirout.editor.v1.catalog.EditorCatalogWireSnapshot
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
-import skirout.editor.v1.authoring.AuthoringSnapshot as SkirAuthoringSnapshot
+import skirout.editor.v1.authoring.AuthoringState as SkirAuthoringState
 import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -332,10 +332,8 @@ val RealmLifecycleTest by testSuite {
                     this,
                     catalog = incarnation,
                     initialSeed =
-                        AuthoredSnapshotSeed(
-                            SnapshotId("realm:0"),
+                        AuthoringSeed(
                             resources,
-                            tokensFor(resources, incarnation.assembly.snapshot.generation),
                             mapOf(
                                 availableResource to ResourceDefinitionId("valid"),
                                 unavailableResource to ResourceDefinitionId("removed"),
@@ -367,17 +365,16 @@ val RealmLifecycleTest by testSuite {
                 val snapshotResult =
                     fixture.request(
                         session,
-                        "editor.authoring.snapshot.query",
-                        QueryAuthoringSnapshotRequest(
+                        "editor.authoring.state.query",
+                        QueryAuthoringStateRequest(
                             generation = SkirCatalogGeneration(value = incarnation.assembly.snapshot.generation.value),
-                            snapshot = null,
                             transferId = "lifecycle_snapshot",
                         ),
-                        QueryAuthoringSnapshotRequest.serializer,
-                        QueryAuthoringSnapshotResponse.serializer,
-                    ) as QueryAuthoringSnapshotResponse.ChunkWrapper
+                        QueryAuthoringStateRequest.serializer,
+                        QueryAuthoringStateResponse.serializer,
+                    ) as QueryAuthoringStateResponse.ChunkWrapper
                 val snapshot =
-                    SkirAuthoringSnapshot.serializer.fromBytes(
+                    SkirAuthoringState.serializer.fromBytes(
                         snapshotResult.value.transfer.payload
                             .toByteArray(),
                     )
@@ -444,7 +441,7 @@ private fun lifecycleIsolationCatalog(
 private class RealmLifecycleFixture(
     scope: kotlinx.coroutines.CoroutineScope,
     catalog: RealmCatalogIncarnation? = null,
-    initialSeed: AuthoredSnapshotSeed? = null,
+    initialSeed: AuthoringSeed? = null,
     catalogActivator: RealmCatalogActivator? = null,
 ) {
     private val telemetry = TelemetryTestHarness.create()
@@ -473,14 +470,14 @@ private class RealmLifecycleFixture(
                     onClose = { databaseOpen = false },
                     initialize = { database ->
                         if (initialSeed != null) {
-                            val seedStore = InMemoryAuthoringSnapshotStore(catalogs.captureCurrent(), initialSeed)
-                            SurrealAuthoringRepository(
-                                database,
-                                seedStore,
-                                catalog = catalogs::captureCurrent,
-                                searchIndexer = AuthoringSearchIndexer(),
+                            SurrealAuthoringStorage(database).persistAtomic(
+                                AuthoringMutationPlan(
+                                    initialSeed.resources,
+                                    emptySet(),
+                                    RelationProjectionDelta(emptyList(), emptyList(), emptyList()),
+                                    initialSeed.resourceDefinitions,
+                                ),
                             )
-                            seedStore.close()
                         }
                     },
                 ),

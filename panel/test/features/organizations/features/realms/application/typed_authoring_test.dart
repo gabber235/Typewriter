@@ -17,8 +17,7 @@ void main() {
           ),
         ],
       );
-      final snapshot = skir.AuthoringSnapshot(
-        snapshot: skir.SnapshotId(value: "realm:1"),
+      final snapshot = skir.AuthoringState(
         generation: skir.CatalogGeneration(value: "catalog:1"),
         resources: [
           skir.AuthoringResource(
@@ -29,19 +28,13 @@ void main() {
         ],
         links: const [],
         findings: const [],
-        observations: const [],
-        absentInputToken: skir.InputToken(value: "absent"),
-        findingsToken: skir.FindingsToken(value: "findings:1"),
       );
 
-      final draft = AuthoredDraft.fromSnapshot(snapshot);
+      final draft = AuthoredDraft.fromState(snapshot);
 
       expect(draft.resources.keys, [resource]);
       expect(draft.resource(resource), record);
-      expect(
-        draft.prepare(skir.BatchId(value: "batch:1")).snapshot,
-        snapshot.snapshot,
-      );
+      expect(draft.prepare().catalog, snapshot.generation);
     },
   );
 }

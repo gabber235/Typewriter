@@ -1,16 +1,17 @@
 package com.typewritermc.engine.runtime
 
+import com.typewritermc.authoring.PublicationId
+import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.engine.CompilationContext
 import com.typewritermc.engine.CompilationProjectionId
 import com.typewritermc.engine.CompilationRoot
-import com.typewritermc.engine.CompiledArtifactActivation
-import com.typewritermc.engine.CompiledArtifactManifest
-import com.typewritermc.engine.CompiledArtifactPointer
 import com.typewritermc.engine.CompiledArtifactReference
 import com.typewritermc.engine.CompiledBlobPointer
 import com.typewritermc.engine.CompiledPageShard
 import com.typewritermc.engine.CompiledResourceKey
 import com.typewritermc.engine.ContentDigest
+import com.typewritermc.engine.PublishedContent
+import com.typewritermc.engine.PublishedOutput
 import com.typewritermc.loader.api.artifact.ArtifactDigest
 import com.typewritermc.loader.api.artifact.BlobChunk
 import com.typewritermc.loader.api.artifact.BlobEndpoint
@@ -28,7 +29,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 val BlobCompiledArtifactSourceTest by testSuite {
-    test("loads a generic manifest and its opaque artifacts") {
+    test("loads a complete publication and its opaque artifacts") {
         runTest {
             val blobs = FakeBlobEndpoint()
             val shard = shard("a", "page")
@@ -36,8 +37,9 @@ val BlobCompiledArtifactSourceTest by testSuite {
 
             val loaded = BlobCompiledArtifactSource(blobs).load(activation)
 
-            loaded.activationRevision shouldBe 1
-            loaded.manifest.artifacts
+            loaded.descriptor.publication shouldBe PublicationId("publication:1")
+            loaded.descriptor.outputs
+                .map { it.reference }
                 .single()
                 .root.resource shouldBe ResourceId("page")
             Json.decodeFromString(
@@ -55,7 +57,7 @@ val BlobCompiledArtifactSourceTest by testSuite {
             val blobs = FakeBlobEndpoint()
             val shard = shard("b", "missing")
             val activation = activation(1, listOf(shard), blobs)
-            blobs.remove(activation.artifacts.single().blob)
+            blobs.remove(activation.outputs.single().blob)
 
             shouldThrow<IllegalStateException> { BlobCompiledArtifactSource(blobs).load(activation) }
         }
@@ -66,7 +68,7 @@ val BlobCompiledArtifactSourceTest by testSuite {
             val blobs = FakeBlobEndpoint()
             val shard = shard("c", "corrupt")
             val activation = activation(1, listOf(shard), blobs)
-            blobs.corrupt(activation.artifacts.single().blob)
+            blobs.corrupt(activation.outputs.single().blob)
 
             shouldThrow<IllegalArgumentException> { BlobCompiledArtifactSource(blobs).load(activation) }
         }
@@ -77,7 +79,7 @@ val BlobCompiledArtifactSourceTest by testSuite {
             val blobs = FakeBlobEndpoint()
             val shard = shard("d", "truncated")
             val activation = activation(1, listOf(shard), blobs)
-            blobs.truncate(activation.artifacts.single().blob)
+            blobs.truncate(activation.outputs.single().blob)
 
             shouldThrow<IllegalArgumentException> { BlobCompiledArtifactSource(blobs).load(activation) }
         }
@@ -100,37 +102,26 @@ private fun activation(
     revision: Long,
     shards: List<CompiledPageShard>,
     blobs: FakeBlobEndpoint,
-): CompiledArtifactActivation {
-    val references =
+): PublishedContent {
+    val outputs =
         shards.map { shard ->
-            CompiledArtifactReference(
-                root = CompilationRoot(CompilationProjectionId("typewriter.page"), shard.root.source),
-                formatRevision = shard.formatRevision,
-                mediaType = PageCompiledArtifactConsumer.PAGE_MEDIA_TYPE,
-                semanticDigest = shard.digest,
+            PublishedOutput(
+                CompiledArtifactReference(
+                    CompilationRoot(CompilationProjectionId("typewriter.page"), shard.root.source),
+                    shard.formatRevision,
+                    PageCompiledArtifactConsumer.PAGE_MEDIA_TYPE,
+                    shard.digest,
+                ),
+                blobs.put(Json.encodeToString(shard).encodeToByteArray()),
             )
         }
-    val manifest =
-        CompiledArtifactManifest(
-            formatRevision = 1,
-            digest = ContentDigest(revision.toString().repeat(64).take(64)),
-            sourceRevision = "realm:$revision",
-            catalogRevision = "catalog:1",
-            implementationToken = "implementation",
-            runtimeSignatures = emptySet<RuntimeMemberSignature>(),
-            artifacts = references,
-        )
-    return CompiledArtifactActivation(
-        activationRevision = revision,
-        manifestDigest = manifest.digest,
-        manifest = blobs.put(Json.encodeToString(manifest).encodeToByteArray()),
-        artifacts =
-            shards.map { shard ->
-                CompiledArtifactPointer(
-                    semanticDigest = shard.digest,
-                    blob = blobs.put(Json.encodeToString(shard).encodeToByteArray()),
-                )
-            },
+    return PublishedContent(
+        PublicationId("publication:$revision"),
+        2,
+        CatalogGeneration("catalog:1"),
+        "implementation",
+        emptySet(),
+        outputs,
     )
 }
 

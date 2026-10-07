@@ -2,7 +2,6 @@ package com.typewritermc.realm.routes
 
 import com.typewritermc.authoring.ArgumentSelection
 import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.BatchId
 import com.typewritermc.authoring.CheckExecutionId
 import com.typewritermc.authoring.CommitResult
 import com.typewritermc.authoring.PreparedEdit
@@ -16,15 +15,12 @@ import com.typewritermc.checking.CheckOutcome
 import com.typewritermc.checking.FindingStatus
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.checking.InputToken
-import com.typewritermc.checking.SnapshotId
-import com.typewritermc.realm.authoring.AuthoredSnapshotSeed
-import com.typewritermc.realm.authoring.AuthoringSnapshotDelta
-import com.typewritermc.realm.authoring.AuthoringSnapshotStore
-import com.typewritermc.realm.authoring.InMemoryAuthoringSnapshotStore
+import com.typewritermc.realm.authoring.AuthoringLease
+import com.typewritermc.realm.authoring.AuthoringSeed
+import com.typewritermc.realm.authoring.AuthoringViewDelta
+import com.typewritermc.realm.authoring.AuthoringViewStore
+import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
-import com.typewritermc.realm.authoring.SnapshotCommit
-import com.typewritermc.realm.authoring.SnapshotInstallResult
-import com.typewritermc.realm.authoring.SnapshotLease
 import com.typewritermc.realm.authoring.TypeArgumentChangePreview
 import com.typewritermc.realm.authoring.TypeArgumentOperations
 import com.typewritermc.realm.authoring.TypePreviewResult
@@ -52,9 +48,9 @@ import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.PreviewTypeArgumentChangeRequest
 import skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse
-import skirout.editor.v1.authoring.QueryAuthoringSnapshotRequest
-import skirout.editor.v1.authoring.QueryAuthoringSnapshotResponse
-import skirout.editor.v1.authoring.AuthoringSnapshot as SkirAuthoringSnapshot
+import skirout.editor.v1.authoring.QueryAuthoringStateRequest
+import skirout.editor.v1.authoring.QueryAuthoringStateResponse
+import skirout.editor.v1.authoring.AuthoringState as SkirAuthoringState
 import skirout.editor.v1.authoring.EditIntent as SkirEditIntent
 import skirout.editor.v1.authoring.TypePreviewResult as SkirTypePreviewResult
 import skirout.editor.v1.checking.CheckOutcome as SkirCheckOutcome
@@ -66,23 +62,15 @@ import skirout.editor.v1.type_catalog.FieldValue as SkirFieldValue
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 
 val AuthoringRoutesTest by testSuite {
-    test("snapshot query publishes original tokens and the shared absence sentinel") {
+    test("current state query returns current findings without revision tokens") {
         runTest {
             val catalogs = RealmCatalogStore().also { it.installTestCatalog("catalog") }
             val catalogIdentity = InputIdentity.Catalog(CatalogGeneration("catalog"))
             val tombstone = InputIdentity.Existence(ResourceId("removed"))
             val snapshots =
-                InMemoryAuthoringSnapshotStore(
+                InMemoryAuthoringViewStore(
                     catalogs.captureCurrent(),
-                    AuthoredSnapshotSeed(
-                        SnapshotId("snapshot"),
-                        emptyMap(),
-                        mapOf(
-                            catalogIdentity to InputToken("catalog_token"),
-                            RESOURCE_SELECTION_INPUT to InputToken("selection_token"),
-                            tombstone to InputToken("tombstone_token"),
-                        ),
-                    ),
+                    AuthoringSeed(emptyMap()),
                 )
             val missing = com.typewritermc.authoring.ValueLocation(ResourceId("resource"), com.typewritermc.authoring.ValuePath())
             val finding =
@@ -102,10 +90,9 @@ val AuthoringRoutesTest by testSuite {
                                 ),
                             incarnation = "catalog:1",
                             execution = CheckExecutionId("execution:1"),
-                            snapshot = SnapshotId("snapshot"),
                             catalog = CatalogGeneration("catalog"),
                         ),
-                    observations = emptyList(),
+                    expectations = emptyList(),
                     outcome = CheckOutcome.NeedsInput(listOf(missing)),
                     findings = emptyList(),
                     status = FindingStatus.Outdated,
@@ -120,25 +107,18 @@ val AuthoringRoutesTest by testSuite {
                     val response =
                         fixture
                             .request(
-                                "editor.authoring.snapshot.query",
-                                QueryAuthoringSnapshotRequest(
+                                "editor.authoring.state.query",
+                                QueryAuthoringStateRequest(
                                     generation = SkirCatalogGeneration(value = "catalog"),
-                                    snapshot = null,
                                     transferId = "snapshot_tokens",
                                 ),
-                                QueryAuthoringSnapshotRequest.serializer,
-                                QueryAuthoringSnapshotResponse.serializer,
+                                QueryAuthoringStateRequest.serializer,
+                                QueryAuthoringStateResponse.serializer,
                             ).decodeSnapshot()
 
-                    response.absentInputToken.value shouldBe "absent"
-                    response.observations
-                        .map { SkirAuthoringValueCodec.decode(it).getOrThrow() }
-                        .toSet() shouldBe
-                        setOf(
-                            com.typewritermc.checking.InputObservation(catalogIdentity, InputToken("catalog_token")),
-                            com.typewritermc.checking.InputObservation(RESOURCE_SELECTION_INPUT, InputToken("selection_token")),
-                            com.typewritermc.checking.InputObservation(tombstone, InputToken("tombstone_token")),
-                        )
+                    response.generation.value shouldBe "catalog"
+                    response.resources shouldBe emptyList()
+                    response.links shouldBe emptyList()
                     response.findings
                         .single()
                         .ticket.instance.rule.localIndex shouldBe 7
@@ -164,10 +144,8 @@ val AuthoringRoutesTest by testSuite {
             val repository = RecordingAuthoringRepository()
             val prepared =
                 PreparedEdit(
-                    id = BatchId("batch"),
                     catalog = CatalogGeneration("catalog"),
-                    snapshot = SnapshotId("snapshot"),
-                    observations = emptyList(),
+                    expectations = emptyList(),
                     intents = emptyList(),
                 )
             RouteFixture { contracts, _, _ ->
@@ -270,13 +248,9 @@ val AuthoringRoutesTest by testSuite {
             val resource = ResourceId("resource")
             val authored = record(name = "kept")
             val snapshots =
-                InMemoryAuthoringSnapshotStore(
+                InMemoryAuthoringViewStore(
                     catalog,
-                    AuthoredSnapshotSeed(
-                        SnapshotId("snapshot"),
-                        mapOf(resource to authored),
-                        tokensFor(mapOf(resource to authored), catalog.generation),
-                    ),
+                    AuthoringSeed(mapOf(resource to authored)),
                 )
             val requested =
                 TypeSelection.Pending(
@@ -302,9 +276,6 @@ val AuthoringRoutesTest by testSuite {
                             PreviewTypeArgumentChangeRequest(
                                 resource = SkirResourceId(value = resource.value),
                                 requested = SkirAuthoringValueCodec.encode(requested).getOrThrow(),
-                                snapshot =
-                                    skirout.editor.v1.type_catalog
-                                        .SnapshotId(value = "snapshot"),
                                 catalog = SkirCatalogGeneration(value = catalog.generation.value),
                             ),
                             PreviewTypeArgumentChangeRequest.serializer,
@@ -337,12 +308,10 @@ val AuthoringRoutesTest by testSuite {
                 )
             val resources = mapOf(unavailable to unavailableRecord, available to record(name = "book"))
             val snapshots =
-                InMemoryAuthoringSnapshotStore(
+                InMemoryAuthoringViewStore(
                     catalog,
-                    AuthoredSnapshotSeed(
-                        SnapshotId("snapshot"),
+                    AuthoringSeed(
                         resources,
-                        tokensFor(resources, catalog.generation),
                         mapOf(
                             unavailable to ResourceDefinitionId("removed_definition"),
                             available to ResourceDefinitionId("test"),
@@ -359,14 +328,13 @@ val AuthoringRoutesTest by testSuite {
                     val response =
                         fixture
                             .request(
-                                "editor.authoring.snapshot.query",
-                                QueryAuthoringSnapshotRequest(
+                                "editor.authoring.state.query",
+                                QueryAuthoringStateRequest(
                                     generation = SkirCatalogGeneration(value = catalog.generation.value),
-                                    snapshot = null,
                                     transferId = "snapshot_unavailable_resource",
                                 ),
-                                QueryAuthoringSnapshotRequest.serializer,
-                                QueryAuthoringSnapshotResponse.serializer,
+                                QueryAuthoringStateRequest.serializer,
+                                QueryAuthoringStateResponse.serializer,
                             ).decodeSnapshot()
 
                     response.resources.associate { it.id.value to it.definition.value } shouldBe
@@ -381,19 +349,17 @@ val AuthoringRoutesTest by testSuite {
     }
 }
 
-private fun QueryAuthoringSnapshotResponse.decodeSnapshot(): SkirAuthoringSnapshot {
-    val chunk = (this as QueryAuthoringSnapshotResponse.ChunkWrapper).value.transfer
-    return SkirAuthoringSnapshot.serializer.fromBytes(chunk.payload)
+private fun QueryAuthoringStateResponse.decodeSnapshot(): SkirAuthoringState {
+    val chunk = (this as QueryAuthoringStateResponse.ChunkWrapper).value.transfer
+    return SkirAuthoringState.serializer.fromBytes(chunk.payload)
 }
 
 private fun validPreparedEditWire() =
     SkirAuthoringOperationCodec
         .encode(
             PreparedEdit(
-                id = BatchId("batch"),
                 catalog = CatalogGeneration("catalog"),
-                snapshot = SnapshotId("snapshot"),
-                observations = emptyList(),
+                expectations = emptyList(),
                 intents = emptyList(),
             ),
         ).getOrThrow()
@@ -405,7 +371,7 @@ private fun duplicateWireFields(): List<SkirFieldValue> =
     )
 
 private class RecordingAuthoringRepository : AuthoringRepository {
-    val result = CommitResult.Committed(SnapshotId("snapshot_2"), emptySet())
+    val result = CommitResult.Committed
     var received: PreparedEdit? = null
 
     override suspend fun commit(edit: PreparedEdit): CommitResult {
@@ -420,7 +386,7 @@ private class RecordingTypeArgumentOperations : TypeArgumentOperations {
     override fun preview(
         resource: ResourceId,
         requested: TypeSelection,
-        snapshot: SnapshotLease,
+        snapshot: AuthoringLease,
     ): TypePreviewResult {
         this.requested = requested
         return TypePreviewResult.Ready(
@@ -428,8 +394,7 @@ private class RecordingTypeArgumentOperations : TypeArgumentOperations {
                 resource = resource,
                 next = requested,
                 catalog = snapshot.root.catalog.generation,
-                sourceSnapshot = snapshot.root.id,
-                observations = emptyList(),
+                expectations = emptyList(),
                 intents = listOf(TypeRepairIntent.ConfigureResource(resource, requested)),
                 linkRepairs = emptyList(),
                 clearedLocations = emptyList(),
@@ -437,20 +402,21 @@ private class RecordingTypeArgumentOperations : TypeArgumentOperations {
         )
     }
 
-    override suspend fun confirm(preview: TypeArgumentChangePreview): CommitResult =
-        CommitResult.Committed(SnapshotId("committed"), emptySet())
+    override suspend fun confirm(preview: TypeArgumentChangePreview): CommitResult = CommitResult.Committed
 }
 
-private data object MissingSnapshotStore : AuthoringSnapshotStore {
-    override fun <T> commitAndInstall(commit: () -> SnapshotCommit<T>): T = error("Not used")
+private data object MissingSnapshotStore : AuthoringViewStore {
+    override fun <T> read(block: (com.typewritermc.realm.authoring.AuthoringView) -> T): T = error("Not used")
 
-    override fun capture(): SnapshotLease = error("No snapshot")
+    override fun capture(): AuthoringLease = error("No current view")
 
-    override fun retain(id: SnapshotId): SnapshotLease = error("No snapshot")
+    override fun retain(context: com.typewritermc.authoring.ReadContext): AuthoringLease = error("No current view")
 
-    override fun install(delta: AuthoringSnapshotDelta): SnapshotInstallResult = error("Not used")
+    override fun prepare(delta: AuthoringViewDelta): com.typewritermc.realm.authoring.AuthoringView = error("Not used")
 
-    override fun currentToken(identity: InputIdentity): InputToken = error("Not used")
+    override fun install(view: com.typewritermc.realm.authoring.AuthoringView) = error("Not used")
+
+    override fun invalidate(reload: () -> AuthoringSeed) = error("Not used")
 
     override fun close() = Unit
 }

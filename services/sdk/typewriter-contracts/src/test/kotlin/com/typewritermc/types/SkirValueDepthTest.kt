@@ -7,9 +7,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import skirout.editor.v1.authoring.EditIntent
 import skirout.editor.v1.authoring.PreparedEdit
-import skirout.editor.v1.type_catalog.BatchId
 import skirout.editor.v1.type_catalog.CatalogGeneration
-import skirout.editor.v1.type_catalog.SnapshotId
 import skirout.editor.v1.type_catalog.ValueLocation
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
@@ -65,10 +63,8 @@ private fun wireValue(depth: Int): WireValue {
 
 private fun preparedEdit(value: WireValue): PreparedEdit =
     PreparedEdit(
-        id = BatchId(value = "depth"),
         catalog = CatalogGeneration(value = "catalog"),
-        snapshot = SnapshotId(value = "snapshot"),
-        observations = emptyList(),
+        expectations = emptyList(),
         intents = listOf(EditIntent.createSetValue(at = ValueLocation.partial(), value = value)),
     )
 

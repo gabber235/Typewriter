@@ -7,12 +7,11 @@ import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.RuntimeScope
 import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.loader.api.HostedRuntimeHost
-import com.typewritermc.realm.authoring.AuthoringSnapshotStore
+import com.typewritermc.realm.authoring.AuthoringCatalogLease
+import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.CreationCoordinator
 import com.typewritermc.realm.authoring.CreationEvaluator
-import com.typewritermc.realm.authoring.InMemoryAuthoringSnapshotStore
-import com.typewritermc.realm.authoring.SnapshotCatalogLease
-import com.typewritermc.realm.authoring.SurrealCreationReceiptStore
+import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.checking.RealmCheckRuntime
 import com.typewritermc.realm.compiler.AuthoringAcceptance
@@ -22,17 +21,15 @@ import com.typewritermc.realm.compiler.RegisteredCompiledArtifactStore
 import com.typewritermc.realm.compiler.SurrealPublicationAttemptStore
 import com.typewritermc.realm.compiler.SurrealRegisteredCompiledContentRepository
 import com.typewritermc.realm.repository.AuthoringRepository
-import com.typewritermc.realm.repository.SurrealAuthoringRepository
-import com.typewritermc.realm.repository.SurrealAuthoringSeedLoader
+import com.typewritermc.realm.repository.RealmAuthoringOwner
+import com.typewritermc.realm.repository.SurrealAuthoringStorage
 import com.typewritermc.realm.routes.CapabilityRealmPresentationSearchSource
 import com.typewritermc.realm.routes.EditorCheckEvents
-import com.typewritermc.realm.routes.EditorCompiledContentEvents
 import com.typewritermc.realm.routes.RealmAddress
 import com.typewritermc.realm.routes.RealmCapabilityInvocationSource
 import com.typewritermc.realm.routes.RealmRouteFactory
 import com.typewritermc.realm.routes.SnapshotRealmEditorCatalogSource
 import com.typewritermc.realm.schema.RealmDatabaseProvider
-import com.typewritermc.realm.search.AuthoringSearchIndexer
 import com.typewritermc.realm.search.SurrealAuthoringSearchRepository
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
 import com.typewritermc.services.libs.communicator.router.RouterResult
@@ -71,12 +68,12 @@ internal class Realm(
     private val facts: DeploymentFacts,
     private val creationEvaluator: CreationEvaluator,
     private val engine: EngineImplementationSource,
-    private val catalogActivator: RealmCatalogActivator = DurableRealmCatalogActivator,
+    private val catalogActivator: RealmCatalogActivator = DefaultRealmCatalogActivator,
 ) {
     private val lifecycle = Mutex()
     private val catalogInvalidations = RealmCatalogInvalidationProcess(catalogs, scope, telemetry)
     private var database: Surreal? = null
-    private var snapshots: AuthoringSnapshotStore? = null
+    private var snapshots: AuthoringViewStore? = null
     private var checks: RealmCheckRuntime? = null
     private var checkEvents: EditorCheckEvents? = null
     private var registrarScope: RealmRuntimeScope? = null
@@ -92,38 +89,25 @@ internal class Realm(
         try {
             database = connected
             val catalog = catalogs.captureCurrent()
-            val seed = requireNotNull(SurrealAuthoringSeedLoader(connected).loadFor(catalog))
-            val snapshotStore = InMemoryAuthoringSnapshotStore(catalog, seed)
+            val storage = SurrealAuthoringStorage(connected)
+            val seed = storage.readCoherent()
+            val snapshotStore = InMemoryAuthoringViewStore(catalog, seed)
             snapshots = snapshotStore
-            val searchIndexer = AuthoringSearchIndexer()
-            val authoring =
-                SurrealAuthoringRepository(
-                    database = connected,
-                    snapshots = snapshotStore,
-                    catalog = catalogs::captureCurrent,
-                    searchIndexer = searchIndexer,
-                )
+            val authoring = RealmAuthoringOwner(storage, snapshotStore)
             catalogs.captureCurrent().use { next ->
                 catalogActivator.activate(authoring, next)
             }
-            val checkEvents = EditorCheckEvents(snapshotStore, authoring, scope)
+            val checkEvents = EditorCheckEvents(snapshotStore, scope)
             this.checkEvents = checkEvents
             val checkRuntime = RealmCheckRuntime(snapshotStore, onFindingsChanged = checkEvents::publishChanged)
             checks = checkRuntime
             checkRuntime.reloadCatalog()
             val routedAuthoring = CheckingAuthoringRepository(authoring, checkRuntime, checkEvents)
-            val compiledContentEvents = EditorCompiledContentEvents()
-            val compiledContent =
-                SurrealRegisteredCompiledContentRepository(
-                    connected,
-                    compiledContentEvents::publishActivated,
-                    compiledContentEvents::publishBlocked,
-                )
+            val compiledContent = SurrealRegisteredCompiledContentRepository(connected)
             val publisher =
                 RealmPublicationCoordinator(
                     acceptance = AuthoringAcceptance(snapshotStore, checkRuntime),
                     attempts = SurrealPublicationAttemptStore(connected),
-                    content = compiledContent,
                     artifacts = RegisteredCompiledArtifactStore(host.sharedArtifacts),
                     engine = engine,
                 )
@@ -131,7 +115,6 @@ internal class Realm(
             val creation =
                 CreationCoordinator(
                     catalog = catalogs::captureCurrent,
-                    receipts = SurrealCreationReceiptStore(connected),
                     evaluator = creationEvaluator,
                 )
             val activeRegistrarScope = RealmRuntimeScope(scope, facts)
@@ -151,7 +134,6 @@ internal class Realm(
                     creation = creation,
                     presentationSearch = CapabilityRealmPresentationSearchSource(scope, catalogs),
                     capabilityInvocations = RealmCapabilityInvocationSource(catalogs),
-                    compiledContentEvents = compiledContentEvents,
                     checkEvents = checkEvents,
                 )
             val routesReady = CompletableDeferred<Unit>()
@@ -286,15 +268,15 @@ internal class Realm(
 
 internal fun interface RealmCatalogActivator {
     suspend fun activate(
-        repository: SurrealAuthoringRepository,
-        catalog: SnapshotCatalogLease,
+        repository: RealmAuthoringOwner,
+        catalog: AuthoringCatalogLease,
     )
 }
 
-private object DurableRealmCatalogActivator : RealmCatalogActivator {
+private object DefaultRealmCatalogActivator : RealmCatalogActivator {
     override suspend fun activate(
-        repository: SurrealAuthoringRepository,
-        catalog: SnapshotCatalogLease,
+        repository: RealmAuthoringOwner,
+        catalog: AuthoringCatalogLease,
     ) {
         repository.activateCatalog(catalog, install = {}, publish = {})
     }
@@ -305,12 +287,10 @@ private class CheckingAuthoringRepository(
     private val checks: RealmCheckRuntime,
     private val events: EditorCheckEvents,
 ) : AuthoringRepository {
-    override suspend fun replay(edit: com.typewritermc.authoring.PreparedEdit): CommitResult? = delegate.replay(edit)
-
     override suspend fun commit(edit: com.typewritermc.authoring.PreparedEdit): CommitResult =
         delegate.commit(edit).also { result ->
             if (result is CommitResult.Committed) {
-                checks.invalidate(result.changed)
+                checks.invalidateCurrent()
                 events.committed()
             }
         }

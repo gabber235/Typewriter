@@ -31,13 +31,13 @@ import com.typewritermc.authoring.boundPath
 import com.typewritermc.authoring.exactEditablePath
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputIdentity
-import com.typewritermc.checking.SnapshotId
 import com.typewritermc.configuration.CapturedDefault
 import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.realm.checking.EmptyProviders
+import com.typewritermc.realm.checking.dependencies
 import com.typewritermc.realm.checking.tokensFor
 import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.types.CollectionKind
@@ -149,21 +149,21 @@ class RealmDraftEditsTest {
                     ),
             )
         val store =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(SNAPSHOT, resources, tokensFor(resources, catalog.generation)),
+                AuthoringSeed(resources),
             )
         val edits = RealmDraftEdits(store, RecordingDraftRepository())
 
         val result =
             with(edits) {
-                draftView(parent, catalog.generation).prepareEdit(EditPreparationId("cascade_delete")) {
+                draftView(parent, store).prepareEdit(EditPreparationId("cascade_delete")) {
                     delete(parent)
                 }
             }
 
         val observations =
-            assertIs<PreparedEditResult.Prepared>(result).edit.observations.mapTo(hashSetOf()) { it.identity }
+            assertIs<PreparedEditResult.Prepared>(result).edit.expectations.flatMapTo(hashSetOf()) { it.dependencies() }
         assertTrue(InputIdentity.Existence(child) in observations)
         assertTrue(InputIdentity.Form(ValueLocation(child, ValuePath())) in observations)
         store.close()
@@ -181,7 +181,7 @@ class RealmDraftEditsTest {
 
         val result =
             with(edits) {
-                draftView(resource, catalog.generation).prepareEdit(EditPreparationId("test")) {
+                draftView(resource, store).prepareEdit(EditPreparationId("test")) {
                     val binding =
                         assertIs<Availability.Available<DraftBinding>>(
                             binding(boundPath<Any>(root, ROOT_USE)),
@@ -195,7 +195,7 @@ class RealmDraftEditsTest {
             DataValue.StringValue("edited"),
             assertIs<EditIntent.SetValue>(prepared.intents.last()).value,
         )
-        assertTrue(prepared.observations.any { it.identity == InputIdentity.Form(root) })
+        assertTrue(prepared.expectations.any { InputIdentity.Form(root) in it.dependencies() })
         store.close()
     }
 
@@ -209,7 +209,7 @@ class RealmDraftEditsTest {
 
         val result =
             with(edits) {
-                draftView(resource, catalog.generation).prepareEdit(EditPreparationId("test")) {
+                draftView(resource, store).prepareEdit(EditPreparationId("test")) {
                     val binding =
                         assertIs<Availability.Available<DraftBinding>>(
                             binding(boundPath<Any>(root, ROOT_USE)),
@@ -223,7 +223,7 @@ class RealmDraftEditsTest {
             DataValue.Unfilled,
             assertIs<EditIntent.SetValue>(prepared.intents.last()).value,
         )
-        assertTrue(prepared.observations.any { it.identity == InputIdentity.Form(root) })
+        assertTrue(prepared.expectations.any { InputIdentity.Form(root) in it.dependencies() })
         store.close()
     }
 
@@ -237,12 +237,12 @@ class RealmDraftEditsTest {
 
         val result =
             with(edits) {
-                draftView(resource, catalog.generation).prepareEdit(EditPreparationId("test")) {
+                draftView(resource, store).prepareEdit(EditPreparationId("test")) {
                     val binding =
                         assertIs<Availability.Available<DraftBinding>>(
                             binding(boundPath<Any>(root, ROOT_USE)),
                         ).value
-                    val foreign = binding.copy(readContext = ReadContext(SNAPSHOT, catalog.generation))
+                    val foreign = binding.copy(readContext = ReadContext(catalog.generation))
                     set(foreign.exactEditablePath(childValuePath(), TEXT_USE), "edited")
                 }
             }
@@ -279,7 +279,7 @@ class RealmDraftEditsTest {
 
         val result =
             with(edits) {
-                draftView(resource, catalog.generation).prepareEdit(EditPreparationId("test")) {
+                draftView(resource, store).prepareEdit(EditPreparationId("test")) {
                     val binding =
                         assertIs<Availability.Available<DraftBinding>>(
                             binding(boundPath<Any>(root, ROOT_USE)),
@@ -332,7 +332,7 @@ class RealmDraftEditsTest {
 
         val result =
             with(edits) {
-                draftView(resource, catalog.generation).prepareEdit(EditPreparationId("test")) {
+                draftView(resource, store).prepareEdit(EditPreparationId("test")) {
                     val binding =
                         assertIs<Availability.Available<DraftBinding>>(
                             binding(boundPath<Any>(root, genericUse)),
@@ -399,7 +399,7 @@ class RealmDraftEditsTest {
 
         val result =
             with(edits) {
-                draftView(resource, catalog.generation).prepareEdit(EditPreparationId("test")) {
+                draftView(resource, store).prepareEdit(EditPreparationId("test")) {
                     val binding =
                         assertIs<Availability.Available<DraftBinding>>(
                             binding(boundPath<Any>(root, genericUse)),
@@ -467,7 +467,7 @@ class RealmDraftEditsTest {
 
         val result =
             with(edits) {
-                draftView(resource, catalog.generation).prepareEdit(EditPreparationId("test")) {
+                draftView(resource, store).prepareEdit(EditPreparationId("test")) {
                     val binding =
                         assertIs<Availability.Available<DraftBinding>>(
                             binding(boundPath<Any>(root, deepRootUse)),
@@ -553,7 +553,7 @@ class RealmDraftEditsTest {
 
         val result =
             with(edits) {
-                draftView(resource, catalog.generation).prepareEdit(EditPreparationId("test")) {
+                draftView(resource, store).prepareEdit(EditPreparationId("test")) {
                     val binding =
                         assertIs<Availability.Available<DraftBinding>>(
                             binding(boundPath<Any>(root, mapRootUse)),
@@ -584,13 +584,9 @@ class RealmDraftEditsTest {
         val resource = ResourceId("draft")
         val record = draftRecord()
         val store =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(
-                    SNAPSHOT,
-                    mapOf(resource to record),
-                    tokensFor(mapOf(resource to record), catalog.generation),
-                ),
+                AuthoringSeed(mapOf(resource to record)),
             )
         val edits =
             RealmDraftEdits(
@@ -620,7 +616,7 @@ class RealmDraftEditsTest {
                             .Field("value"),
                 ),
             )
-        val view = draftView(resource, catalog.generation)
+        val view = draftView(resource, store)
 
         val result =
             with(edits) {
@@ -655,10 +651,9 @@ class RealmDraftEditsTest {
             prepared.intents,
         )
         assertTrue(
-            prepared.observations.any {
-                it.identity ==
-                    com.typewritermc.checking.InputIdentity
-                        .Value(value)
+            prepared.expectations.any {
+                com.typewritermc.authoring.EditExpectation
+                    .Value(value, null) == it
             },
         )
         store.close()
@@ -669,13 +664,9 @@ class RealmDraftEditsTest {
         val resource = ResourceId("draft")
         val record = draftRecord()
         val store =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(
-                    SNAPSHOT,
-                    mapOf(resource to record),
-                    tokensFor(mapOf(resource to record), catalog.generation),
-                ),
+                AuthoringSeed(mapOf(resource to record)),
             )
         val edits = RealmDraftEdits(store, RecordingDraftRepository())
         val value =
@@ -695,7 +686,7 @@ class RealmDraftEditsTest {
 
         val result =
             with(edits) {
-                draftView(resource, catalog.generation).prepareEdit(EditPreparationId("test")) {
+                draftView(resource, store).prepareEdit(EditPreparationId("test")) {
                     val rejected = assertIs<CheckedWriteResult.Rejected>(checkedSet(value, DataValue.StringValue("edited")))
                     assertTrue(rejected.problems.any { it.code == "item_missing" })
                     assertIs<CheckedWriteResult.Applied>(
@@ -776,7 +767,7 @@ class RealmDraftEditsTest {
 
         val result =
             with(edits) {
-                draftView(resource, catalog.generation).prepareEdit(EditPreparationId("test")) {
+                draftView(resource, store).prepareEdit(EditPreparationId("test")) {
                     val rejected = assertIs<CheckedWriteResult.Rejected>(checkedSet(nested, DataValue.StringValue("rejected")))
                     assertTrue(rejected.problems.any { it.code == "parent_needs_input" })
                     assertIs<CheckedWriteResult.Applied>(
@@ -795,13 +786,9 @@ class RealmDraftEditsTest {
         val resource = ResourceId("draft")
         val record = draftRecord()
         val store =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(
-                    SNAPSHOT,
-                    mapOf(resource to record),
-                    tokensFor(mapOf(resource to record), catalog.generation),
-                ),
+                AuthoringSeed(mapOf(resource to record)),
             )
         val edits = RealmDraftEdits(store, RecordingDraftRepository())
         val child = location(resource, "child")
@@ -817,7 +804,7 @@ class RealmDraftEditsTest {
 
         val result =
             with(edits) {
-                draftView(resource, catalog.generation).prepareEdit(EditPreparationId("test")) {
+                draftView(resource, store).prepareEdit(EditPreparationId("test")) {
                     checkedSet(value, DataValue.StringValue("edited"))
                 }
             }
@@ -901,7 +888,7 @@ class RealmDraftEditsTest {
 
         val result =
             with(edits) {
-                draftView(resource, catalog.generation).prepareEdit(EditPreparationId("test")) {
+                draftView(resource, store).prepareEdit(EditPreparationId("test")) {
                     assertIs<CheckedWriteResult.Applied>(checkedSet(value, DataValue.StringValue("edited")))
                 }
             }
@@ -960,7 +947,7 @@ class RealmDraftEditsTest {
 
         val result =
             with(edits) {
-                draftView(resource, catalog.generation).prepareEdit(EditPreparationId("test")) {
+                draftView(resource, store).prepareEdit(EditPreparationId("test")) {
                     assertIs<CheckedWriteResult.Applied>(checkedSet(value, DataValue.StringValue("edited")))
                 }
             }
@@ -973,7 +960,7 @@ class RealmDraftEditsTest {
         store.close()
     }
 
-    suspend fun dynamicParentMaterializationIsOrderedDurableAndReadable() {
+    suspend fun dynamicParentMaterializationIsOrderedAndReadable() {
         val initialization =
             listOf(
                 InitializationDescriptor(ROOT, InitializationMode.Creation, emptyList(), emptyList()),
@@ -984,11 +971,9 @@ class RealmDraftEditsTest {
         val record = draftRecord()
         val store = draftStore(catalog, resource, record)
         val evaluated = mutableListOf<InitializationRequest>()
-        val receipts = RecordingCreationReceiptStore()
         val creation =
             CreationCoordinator(
                 catalog = catalog::retain,
-                receipts = receipts,
                 evaluator =
                     CreationEvaluator { request, _ ->
                         evaluated += request
@@ -1033,7 +1018,7 @@ class RealmDraftEditsTest {
         val edits = RealmDraftEdits(store, RecordingDraftRepository(), creation = creation)
         val child = location(resource, "child")
         val value = childValueLocation(resource)
-        val view = draftView(resource, catalog.generation)
+        val view = draftView(resource, store)
 
         suspend fun prepare(): PreparedEditResult.Prepared =
             assertIs<PreparedEditResult.Prepared>(
@@ -1069,11 +1054,10 @@ class RealmDraftEditsTest {
                 it.location == childValueLocation(resource) && it.diagnostic.code == "native_default_capture_failed"
             },
         )
-        assertEquals(2, evaluated.size)
-        assertEquals(2, receipts.completed.size)
+        assertEquals(4, evaluated.size)
         assertTrue(evaluated[0].id.value.endsWith(":containing:0"))
         assertTrue(evaluated[1].id.value.endsWith(":containing:1"))
-        assertTrue(first.edit.observations.any { it.identity == InputIdentity.Value(ValueLocation(resource, ValuePath())) })
+        assertTrue(first.edit.expectations.any { InputIdentity.Value(ValueLocation(resource, ValuePath())) in it.dependencies() })
         val firstParent = assertIs<DataValue.Named>(assertIs<EditIntent.SetValue>(first.edit.intents[0]).value)
         val firstParentFields = assertIs<DataValue.Record>(firstParent.payload).fields
         assertEquals(DataValue.StringValue("field_default"), firstParentFields.getValue("value"))
@@ -1119,7 +1103,7 @@ class RealmDraftEditsTest {
 
         val result =
             with(edits) {
-                draftView(resource, catalog.generation).prepareEdit(EditPreparationId("dynamic_finding")) {
+                draftView(resource, store).prepareEdit(EditPreparationId("dynamic_finding")) {
                     checkedSet(childValueLocation(resource), DataValue.StringValue("edited"))
                 }
             }
@@ -1164,7 +1148,7 @@ class RealmDraftEditsTest {
 
         val result =
             with(edits) {
-                draftView(resource, catalog.generation).prepareEdit(EditPreparationId("dynamic_unfilled")) {
+                draftView(resource, store).prepareEdit(EditPreparationId("dynamic_unfilled")) {
                     val binding =
                         assertIs<Availability.Available<DraftBinding>>(
                             binding(boundPath<Any>(root, ROOT_USE)),
@@ -1206,7 +1190,7 @@ class RealmDraftEditsTest {
 
         suspend fun prepare(id: String): PreparedEditResult =
             with(edits) {
-                draftView(resource, catalog.generation).prepareEdit(EditPreparationId(id)) {
+                draftView(resource, store).prepareEdit(EditPreparationId(id)) {
                     val binding =
                         assertIs<Availability.Available<DraftBinding>>(
                             binding(boundPath<Any>(root, ROOT_USE)),
@@ -1231,23 +1215,8 @@ class RealmDraftEditsTest {
     }
 }
 
-private class RecordingCreationReceiptStore : CreationReceiptStore {
-    val completed = linkedMapOf<InitializationRequestId, CreationReceipt>()
-
-    override fun completed(
-        id: InitializationRequestId,
-        intentDigest: String,
-    ): PreparedCreation? = completed[id]?.also { require(it.intentDigest == intentDigest) }?.result
-
-    override fun save(receipt: CreationReceipt): PreparedCreation {
-        val current = completed.putIfAbsent(receipt.request, receipt)
-        require(current == null || current.intentDigest == receipt.intentDigest)
-        return current?.result ?: receipt.result
-    }
-}
-
 private class RecordingDraftRepository : AuthoringRepository {
-    override suspend fun commit(edit: PreparedEdit): CommitResult = CommitResult.Committed(SnapshotId("committed"), emptySet())
+    override suspend fun commit(edit: PreparedEdit): CommitResult = CommitResult.Committed
 }
 
 private class DraftCatalogLease(
@@ -1257,7 +1226,7 @@ private class DraftCatalogLease(
     private val initializationDescriptors: List<InitializationDescriptor> = defaultInitializationDescriptors,
     private val relationDefinitions: List<RelationContract> = emptyList(),
     private val bindingDefinitions: List<EndpointBindingTemplate> = emptyList(),
-) : SnapshotCatalogLease {
+) : AuthoringCatalogLease {
     override val checked: CheckedCatalog = DefaultCheckedCatalog(generation, definitions)
     override val nativeBindings: NativeBindingRegistry = FactoryNativeBindingRegistry(checked, emptyList())
     override val providers: OwnedProviderRegistry = EmptyProviders
@@ -1268,7 +1237,7 @@ private class DraftCatalogLease(
     override val resources: List<AuthoringResourceDefinition> =
         listOf(AuthoringResourceDefinition(ResourceDefinitionId("draft"), resourceRoot))
 
-    override fun retain(): SnapshotCatalogLease =
+    override fun retain(): AuthoringCatalogLease =
         DraftCatalogLease(
             generation,
             definitions,
@@ -1283,12 +1252,11 @@ private class DraftCatalogLease(
 
 private fun draftView(
     resource: ResourceId,
-    generation: CatalogGeneration,
+    store: InMemoryAuthoringViewStore,
 ): DraftView =
     object : DraftView {
-        override val snapshot = SNAPSHOT
-        override val catalog = generation
-        override val readContext = ReadContext(snapshot, catalog)
+        override val readContext = store.capture().use { it.root.readContext }
+        override val catalog = readContext.catalog
         override val location = ValueLocation(resource, ValuePath())
         override val actualType = Availability.Available(ROOT_USE)
     }
@@ -1303,17 +1271,13 @@ private fun draftRecord(): AuthoringRecord =
     )
 
 private fun draftStore(
-    catalog: SnapshotCatalogLease,
+    catalog: AuthoringCatalogLease,
     resource: ResourceId,
     record: AuthoringRecord,
-): InMemoryAuthoringSnapshotStore =
-    InMemoryAuthoringSnapshotStore(
+): InMemoryAuthoringViewStore =
+    InMemoryAuthoringViewStore(
         catalog,
-        AuthoredSnapshotSeed(
-            SNAPSHOT,
-            mapOf(resource to record),
-            tokensFor(mapOf(resource to record), catalog.generation),
-        ),
+        AuthoringSeed(mapOf(resource to record)),
     )
 
 private fun capturedParentMaterializer(): ParentMaterializer =
@@ -1359,7 +1323,6 @@ private fun location(
 private fun definition(name: String) = TypeDefinitionId(TypeId.Qualified("draft", name), 1)
 
 private val GENERATION = CatalogGeneration("draft_catalog")
-private val SNAPSHOT = SnapshotId("draft_snapshot")
 private val ROOT = definition("root")
 private val CHILD = definition("child")
 private val LIST = definition("list")
@@ -1458,8 +1421,8 @@ val RealmDraftEditsTestSuite by testSuite {
     test("parentMaterializationUsesCanonicalAuthoredScalarDefaults") {
         RealmDraftEditsTest().parentMaterializationUsesCanonicalAuthoredScalarDefaults()
     }
-    test("dynamicParentMaterializationIsOrderedDurableAndReadable") {
-        RealmDraftEditsTest().dynamicParentMaterializationIsOrderedDurableAndReadable()
+    test("dynamicParentMaterializationIsOrderedAndReadable") {
+        RealmDraftEditsTest().dynamicParentMaterializationIsOrderedAndReadable()
     }
     test("dynamicParentFindingsRemainVisibleAtTheirPreciseField") {
         RealmDraftEditsTest().dynamicParentFindingsRemainVisibleAtTheirPreciseField()

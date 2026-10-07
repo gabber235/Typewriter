@@ -27,17 +27,17 @@ import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputIdentity
-import com.typewritermc.checking.InputToken
 import com.typewritermc.checking.InspectionCompletion
-import com.typewritermc.checking.SnapshotId
 import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedProviderRegistry
+import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.realm.checking.EmptyProviders
-import com.typewritermc.realm.checking.SnapshotReads
-import com.typewritermc.realm.checking.tokensFor
+import com.typewritermc.realm.checking.dependencies
 import com.typewritermc.realm.repository.AuthoringRepository
+import com.typewritermc.realm.repository.conflicts
+import com.typewritermc.realm.repository.valueAt
 import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointBindingTemplate
@@ -99,13 +99,13 @@ class RealmGraphReadsTest {
                     ),
             )
         val store =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(SNAPSHOT, original, tokensFor(original, catalog.generation)),
+                AuthoringSeed(original),
             )
         val lease = store.capture()
         val selection = RelationSelection.Contracts(setOf(EDGE.id), TraversalDirection.Forward)
-        val reads = SnapshotReads(lease.originalView())
+        val reads = CapturedAuthoringReads(lease.originalView())
 
         val reachable =
             with(reads) {
@@ -125,10 +125,10 @@ class RealmGraphReadsTest {
         val unavailable = assertIs<UnresolvedLink.UnavailableTarget>(reachable.unresolved.single())
         assertEquals(ResourceId("missing_selected"), unavailable.target)
         assertIs<InspectionCompletion.Interrupted>(reachable.completion)
-        val dependencies = reads.observations().mapTo(linkedSetOf()) { it.identity }
+        val dependencies = reads.observations().flatMapTo(linkedSetOf()) { it.dependencies() }
         assertTrue(InputIdentity.Incoming(a, EDGE.id) in dependencies)
         assertTrue(
-            InputIdentity.Membership(
+            InputIdentity.Value(
                 ValueLocation(
                     a,
                     ValuePath(
@@ -150,7 +150,7 @@ class RealmGraphReadsTest {
         assertEquals(2, routes.paths.size)
         assertTrue(routes.paths.all { it.size == 2 })
 
-        val exactBudget = SnapshotReads(lease.originalView())
+        val exactBudget = CapturedAuthoringReads(lease.originalView())
         val oneRoute =
             with(exactBudget) {
                 RealmGraphReads.routes(
@@ -166,7 +166,7 @@ class RealmGraphReadsTest {
         assertEquals(1, oneRoute.paths.size)
         assertIs<InspectionCompletion.Complete>(oneRoute.completion)
 
-        val exactResourceBudget = SnapshotReads(lease.originalView())
+        val exactResourceBudget = CapturedAuthoringReads(lease.originalView())
         val exactResourceRoute =
             with(exactResourceBudget) {
                 RealmGraphReads.routes(
@@ -182,7 +182,7 @@ class RealmGraphReadsTest {
         assertEquals(1, exactResourceRoute.paths.size)
         assertIs<InspectionCompletion.Complete>(exactResourceRoute.completion)
 
-        val truncatedResourceBudget = SnapshotReads(lease.originalView())
+        val truncatedResourceBudget = CapturedAuthoringReads(lease.originalView())
         val truncatedResourceRoute =
             with(truncatedResourceBudget) {
                 RealmGraphReads.routes(
@@ -198,7 +198,7 @@ class RealmGraphReadsTest {
         assertTrue(truncatedResourceRoute.paths.isEmpty())
         assertIs<InspectionCompletion.Interrupted>(truncatedResourceRoute.completion)
 
-        val truncatedReads = SnapshotReads(lease.originalView())
+        val truncatedReads = CapturedAuthoringReads(lease.originalView())
         val truncatedRoutes =
             with(truncatedReads) {
                 RealmGraphReads.routes(
@@ -214,7 +214,7 @@ class RealmGraphReadsTest {
         assertEquals(1, truncatedRoutes.paths.size)
         assertIs<InspectionCompletion.Interrupted>(truncatedRoutes.completion)
 
-        val reverse = SnapshotReads(lease.originalView())
+        val reverse = CapturedAuthoringReads(lease.originalView())
         val incoming =
             with(reverse) {
                 RealmGraphReads.reachable(
@@ -228,7 +228,7 @@ class RealmGraphReadsTest {
             }
         assertEquals(setOf(b, c, d), incoming.resources.mapTo(linkedSetOf()) { it.id })
 
-        val bounded = SnapshotReads(lease.originalView())
+        val bounded = CapturedAuthoringReads(lease.originalView())
         val interrupted =
             with(bounded) {
                 RealmGraphReads.reachable(
@@ -243,7 +243,7 @@ class RealmGraphReadsTest {
         assertIs<InspectionCompletion.Interrupted>(interrupted.completion)
 
         val stagedRecord = graphRecord(a, listOf(c))
-        val stagedReads = SnapshotReads(lease.stagedView(mapOf(a to stagedRecord)))
+        val stagedReads = CapturedAuthoringReads(lease.stagedView(mapOf(a to stagedRecord)))
         val staged =
             with(stagedReads) {
                 RealmGraphReads.reachable(
@@ -269,9 +269,9 @@ class RealmGraphReadsTest {
                 stagedTarget to graphRecord(stagedTarget, emptyList()),
             )
         val store =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(SNAPSHOT, original, tokensFor(original, catalog.generation)),
+                AuthoringSeed(original),
             )
         val edits = RealmDraftEdits(store, GraphRepository())
         val selection = RelationSelection.Contracts(setOf(EDGE.id), TraversalDirection.Forward)
@@ -287,9 +287,8 @@ class RealmGraphReadsTest {
             )
         val view =
             object : DraftView {
-                override val snapshot = SNAPSHOT
                 override val catalog = GRAPH_GENERATION
-                override val readContext = ReadContext(snapshot, GRAPH_GENERATION)
+                override val readContext = store.capture().use { it.root.readContext }
                 override val location = ValueLocation(source, ValuePath())
                 override val actualType = Availability.Available(NODE_USE)
             }
@@ -335,8 +334,8 @@ class RealmGraphReadsTest {
                 }
             }
         val prepared = assertIs<PreparedEditResult.Prepared>(result).edit
-        assertTrue(prepared.observations.any { it.identity == InputIdentity.Incoming(source, EDGE.id) })
-        assertTrue(prepared.observations.any { it.identity == InputIdentity.Value(outgoing) })
+        assertTrue(prepared.expectations.any { InputIdentity.Incoming(source, EDGE.id) in it.dependencies() })
+        assertTrue(prepared.expectations.any { InputIdentity.Value(outgoing) in it.dependencies() })
         store.close()
     }
 
@@ -347,17 +346,12 @@ class RealmGraphReadsTest {
         val pending = graphRecord(target, emptyList()).copy(configuration = TypeSelection.Pending(graphDefinition("missing"), emptyList()))
         val resources = mapOf(source to graphRecord(source, listOf(target)), target to pending)
         val store =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(
-                    SNAPSHOT,
-                    resources,
-                    tokensFor(resources, catalog.generation),
-                    resources.keys.associateWith { ResourceDefinitionId("node") },
-                ),
+                AuthoringSeed(resources, resources.keys.associateWith { ResourceDefinitionId("node") }),
             )
         val lease = store.capture()
-        val reads = SnapshotReads(lease.originalView())
+        val reads = CapturedAuthoringReads(lease.originalView())
 
         val selection =
             with(reads) {
@@ -367,7 +361,7 @@ class RealmGraphReadsTest {
         assertTrue(selection.knownMatches.isEmpty())
         assertEquals(listOf(source), selection.undecided.map { it.resource })
         assertIs<InspectionCompletion.Complete>(selection.completion)
-        val identities = reads.observations().mapTo(linkedSetOf()) { it.identity }
+        val identities = reads.observations().flatMapTo(linkedSetOf()) { it.dependencies() }
         assertTrue(InputIdentity.Form(ValueLocation(target, ValuePath())) in identities)
         lease.close()
         store.close()
@@ -383,9 +377,9 @@ class RealmGraphReadsTest {
                 target to graphRecord(target, emptyList()),
             )
         val store =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(SNAPSHOT, resources, tokensFor(resources, catalog.generation)),
+                AuthoringSeed(resources),
             )
         val lease = store.capture()
         val selection =
@@ -394,7 +388,7 @@ class RealmGraphReadsTest {
                 TraversalDirection.Forward,
             )
 
-        val reachableReads = SnapshotReads(lease.originalView())
+        val reachableReads = CapturedAuthoringReads(lease.originalView())
         val reachable =
             with(reachableReads) {
                 RealmGraphReads.reachable(
@@ -410,7 +404,7 @@ class RealmGraphReadsTest {
                 .occurrence.endpoint,
         )
         assertIs<InspectionCompletion.Complete>(reachable.completion)
-        val dependencies = reachableReads.observations().mapTo(linkedSetOf()) { it.identity }
+        val dependencies = reachableReads.observations().flatMapTo(linkedSetOf()) { it.dependencies() }
         assertTrue(
             InputIdentity.Value(
                 ValueLocation(
@@ -425,7 +419,7 @@ class RealmGraphReadsTest {
             ) in dependencies,
         )
         assertTrue(
-            InputIdentity.Membership(
+            InputIdentity.Value(
                 ValueLocation(
                     source,
                     ValuePath(
@@ -438,7 +432,7 @@ class RealmGraphReadsTest {
             ) in dependencies,
         )
         assertTrue(
-            InputIdentity.Membership(
+            InputIdentity.Value(
                 ValueLocation(
                     source,
                     ValuePath(
@@ -480,7 +474,7 @@ class RealmGraphReadsTest {
         }
 
         val routes =
-            with(SnapshotReads(lease.originalView())) {
+            with(CapturedAuthoringReads(lease.originalView())) {
                 RealmGraphReads.routes(RouteQuery(setOf(source), target, selection, maxDepth = 1))
             }
         assertEquals(1, routes.paths.size)
@@ -494,7 +488,7 @@ class RealmGraphReadsTest {
         assertIs<InspectionCompletion.Complete>(routes.completion)
 
         val occurrences =
-            with(SnapshotReads(lease.originalView())) {
+            with(CapturedAuthoringReads(lease.originalView())) {
                 RealmGraphReads.occurrences(LinkInspectionQuery(setOf(source), selection))
             }
         assertEquals(1, occurrences.occurrences.size)
@@ -586,33 +580,21 @@ class RealmGraphReadsTest {
                             .Field("target"),
                 ),
             )
-        val changedTokens =
-            listOf(
-                InputIdentity.Value(ValueLocation(source, ValuePath())),
-                InputIdentity.Value(buttons),
-                InputIdentity.Membership(buttons),
-                InputIdentity.Order(buttons),
-                InputIdentity.Value(button),
-                InputIdentity.Form(button),
-                InputIdentity.Value(buttonTarget),
-                InputIdentity.Value(optional),
-                InputIdentity.Form(optional),
-                InputIdentity.Value(optionalTarget),
-            ).withIndex().associate { (index, identity) -> identity to InputToken("changed:$index") }
-        assertFalse(
-            tokensFor(resources, catalog.generation).getValue(InputIdentity.Membership(buttons)) ==
-                changedTokens.getValue(InputIdentity.Membership(buttons)),
-        )
+        val expected =
+            com.typewritermc.authoring.EditExpectation
+                .Value(buttons, resources.getValue(source).valueAt(buttons.path))
+        val actual =
+            com.typewritermc.realm.repository
+                .CapturedAuthoringValues(mapOf(source to changedSource), emptyList())
+        assertEquals(1, actual.conflicts(listOf(expected)).size)
         store.install(
-            AuthoringSnapshotDelta(
-                snapshot = SnapshotId("graph_snapshot_changed"),
-                upsertedResources = mapOf(source to changedSource),
-                inputTokens = changedTokens,
+            store.prepare(
+                AuthoringViewDelta(upsertedResources = mapOf(source to changedSource)),
             ),
         )
         val changedLease = store.capture()
         val changedUnresolved =
-            with(SnapshotReads(changedLease.originalView())) {
+            with(CapturedAuthoringReads(changedLease.originalView())) {
                 RealmGraphReads
                     .reachable(
                         ReachabilityQuery(
@@ -661,12 +643,12 @@ class RealmGraphReadsTest {
 }
 
 private class GraphRepository : AuthoringRepository {
-    override suspend fun commit(edit: PreparedEdit): CommitResult = CommitResult.Committed(SnapshotId("committed"), emptySet())
+    override suspend fun commit(edit: PreparedEdit): CommitResult = CommitResult.Committed
 }
 
 private class GraphCatalogLease(
     override val generation: CatalogGeneration = GRAPH_GENERATION,
-) : SnapshotCatalogLease {
+) : AuthoringCatalogLease {
     override val checked: CheckedCatalog = DefaultCheckedCatalog(generation, GRAPH_DEFINITIONS)
     override val nativeBindings: NativeBindingRegistry = FactoryNativeBindingRegistry(checked, emptyList())
     override val providers: OwnedProviderRegistry = EmptyProviders
@@ -676,7 +658,7 @@ private class GraphCatalogLease(
     override val resources: List<AuthoringResourceDefinition> =
         listOf(AuthoringResourceDefinition(ResourceDefinitionId("node"), NODE))
 
-    override fun retain(): SnapshotCatalogLease = GraphCatalogLease(generation)
+    override fun retain(): AuthoringCatalogLease = GraphCatalogLease(generation)
 
     override fun close() = Unit
 }
@@ -718,7 +700,6 @@ private fun graphRecord(
 private fun graphDefinition(name: String) = TypeDefinitionId(TypeId.Qualified("graph", name), 1)
 
 private val GRAPH_GENERATION = CatalogGeneration("graph_catalog")
-private val SNAPSHOT = SnapshotId("graph_snapshot")
 private val NODE = graphDefinition("node")
 private val EDGE_LINK = graphDefinition("edge_link")
 private val EDGE_LIST = graphDefinition("edge_list")

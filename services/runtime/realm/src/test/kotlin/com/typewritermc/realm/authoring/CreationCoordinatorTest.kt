@@ -18,120 +18,58 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.test.runTest
 import java.util.concurrent.atomic.AtomicInteger
 
-class CreationCoordinatorTest {
-    fun concurrentReplayUsesOneCapturedResultAcrossFlightCleanup() =
+val CreationCoordinatorTestSuite by testSuite {
+    test("each preparation evaluates defaults independently") {
         runTest {
-            val receipts = RecordingReceiptStore()
             val evaluations = AtomicInteger()
-            val entered = CompletableDeferred<Unit>()
             val release = CompletableDeferred<Unit>()
-            val result = prepared("winner")
             val coordinator =
                 CreationCoordinator(
                     catalog = { TestCatalogLease(CATALOG) },
-                    receipts = receipts,
                     evaluator =
                         CreationEvaluator { _, _ ->
-                            evaluations.incrementAndGet()
-                            entered.complete(Unit)
+                            val value = evaluations.incrementAndGet()
                             release.await()
-                            result
+                            prepared(value.toString())
                         },
                 )
             val request = request("shared")
             val callers = List(12) { async { coordinator.prepare(request) } }
-            entered.await()
-            val aroundCompletion = async { coordinator.prepare(request) }
             release.complete(Unit)
-
-            val results = callers.awaitAll() + aroundCompletion.await()
-
-            assertEquals(List(13) { result }, results)
-            assertEquals(1, evaluations.get())
-            assertEquals(result, coordinator.prepare(request))
-            assertEquals(1, evaluations.get())
+            val results = callers.awaitAll()
+            assertEquals(12, results.toSet().size)
+            assertEquals(12, evaluations.get())
+            assertEquals(prepared("13"), coordinator.prepare(request))
         }
-
-    fun sameRequestAndClientHashRejectChangedSuppliedPayload() =
+    }
+    test("changed supplied values are evaluated without a request registry") {
         runTest {
             val coordinator =
                 CreationCoordinator(
                     catalog = { TestCatalogLease(CATALOG) },
-                    receipts = RecordingReceiptStore(),
                     evaluator =
                         CreationEvaluator { request, _ ->
                             prepared((request.supplied.getValue("seed") as DataValue.StringValue).value)
                         },
                 )
-            val original = request("forged", "first")
-            val changed = request("forged", "second")
-
-            coordinator.prepare(original)
-
-            assertFailsWith<IllegalArgumentException> { coordinator.prepare(changed) }
+            assertEquals(prepared("first"), coordinator.prepare(request("shared", "first")))
+            assertEquals(prepared("second"), coordinator.prepare(request("shared", "second")))
         }
-
-    fun completedReceiptReplaysAfterCatalogChangeButFreshOldRequestIsRejected() =
+    }
+    test("an old request is rejected after catalog replacement") {
         runTest {
             var generation = CATALOG
             val coordinator =
                 CreationCoordinator(
                     catalog = { TestCatalogLease(generation) },
-                    receipts = RecordingReceiptStore(),
                     evaluator = CreationEvaluator { _, _ -> prepared("captured") },
                 )
-            val completed = request("completed")
-            val first = coordinator.prepare(completed)
+            val request = request("completed")
+            assertEquals(prepared("captured"), coordinator.prepare(request))
             generation = CatalogGeneration("next")
-
-            assertEquals(first, coordinator.prepare(completed))
-            assertEquals(
-                generation,
-                assertFailsWith<CreationCatalogChanged> { coordinator.prepare(request("fresh")) }.actual,
-            )
+            assertEquals(generation, assertFailsWith<CreationCatalogChanged> { coordinator.prepare(request) }.actual)
         }
-
-    fun sameRequestRejectsChangedOperationSeed() =
-        runTest {
-            val coordinator =
-                CreationCoordinator(
-                    catalog = { TestCatalogLease(CATALOG) },
-                    receipts = RecordingReceiptStore(),
-                    evaluator = CreationEvaluator { _, _ -> prepared("captured") },
-                )
-            val original = request("operation")
-            coordinator.prepare(original)
-
-            assertFailsWith<IllegalArgumentException> {
-                coordinator.prepare(original.copy(intentHash = "changed operation"))
-            }
-        }
-}
-
-private class RecordingReceiptStore : CreationReceiptStore {
-    private val receipts = linkedMapOf<InitializationRequestId, CreationReceipt>()
-
-    override fun completed(
-        id: InitializationRequestId,
-        intentDigest: String,
-    ): PreparedCreation? =
-        synchronized(receipts) {
-            val receipt = receipts[id] ?: return@synchronized null
-            require(receipt.intentDigest == intentDigest) { "Request identity was reused for another intent." }
-            receipt.result
-        }
-
-    override fun save(receipt: CreationReceipt): PreparedCreation =
-        synchronized(receipts) {
-            val existing = receipts[receipt.request]
-            if (existing != null) {
-                require(existing.intentDigest == receipt.intentDigest) { "Request identity was reused for another intent." }
-                existing.result
-            } else {
-                receipts[receipt.request] = receipt
-                receipt.result
-            }
-        }
+    }
 }
 
 private fun request(
@@ -156,18 +94,3 @@ private fun prepared(value: String) =
 
 private val CATALOG = CatalogGeneration("catalog")
 private val CREATION_TYPE = TypeDefinitionId(TypeId.Qualified("creation", "value"), 1)
-
-val CreationCoordinatorTestSuite by testSuite {
-    test("concurrentReplayUsesOneCapturedResultAcrossFlightCleanup") {
-        CreationCoordinatorTest().concurrentReplayUsesOneCapturedResultAcrossFlightCleanup()
-    }
-    test("sameRequestAndClientHashRejectChangedSuppliedPayload") {
-        CreationCoordinatorTest().sameRequestAndClientHashRejectChangedSuppliedPayload()
-    }
-    test("completedReceiptReplaysAfterCatalogChangeButFreshOldRequestIsRejected") {
-        CreationCoordinatorTest().completedReceiptReplaysAfterCatalogChangeButFreshOldRequestIsRejected()
-    }
-    test("sameRequestRejectsChangedOperationSeed") {
-        CreationCoordinatorTest().sameRequestRejectsChangedOperationSeed()
-    }
-}

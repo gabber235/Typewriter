@@ -4,7 +4,6 @@ import com.typewritermc.checking.DraftType
 import com.typewritermc.checking.InspectionCompletion
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.ResourceTypeMatch
-import com.typewritermc.checking.SnapshotId
 import com.typewritermc.checking.UndecidedCandidate
 import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.types.EndpointId
@@ -12,6 +11,7 @@ import com.typewritermc.types.RelationFamilyId
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeUse
+import kotlinx.serialization.Serializable
 
 interface GraphReads {
     context(reads: AuthoredReads)
@@ -33,6 +33,7 @@ interface GraphReads {
     fun follow(occurrence: LinkOccurrence): Availability<DraftBinding>
 }
 
+@Serializable
 enum class TraversalDirection { Forward, Reverse, Both }
 
 sealed interface RelationSelection {
@@ -150,7 +151,6 @@ private class BoundResourceDraft(
     }
 
     override val id: ResourceId = binding.location.resource
-    override val snapshot: SnapshotId = binding.snapshot
     override val catalog = binding.catalog
     override val readContext: ReadContext = binding.readContext
     override val location: ValueLocation = binding.location

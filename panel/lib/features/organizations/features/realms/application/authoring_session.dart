@@ -25,15 +25,10 @@ class AuthoringSession extends _$AuthoringSession {
   var _refreshRequested = false;
   var _catalogRefreshRequested = false;
   skir.CatalogGeneration? _latestInvalidatedGeneration;
-  Completer<skir.AuthoringSnapshot> _ready = Completer();
-  final Map<skir.SnapshotId, skir.AuthoringSnapshot> _adoptedSnapshots = {};
-  final Set<skir.SnapshotId> _observedSnapshotIds = {};
-  final Map<skir.SnapshotId, List<Completer<skir.AuthoringSnapshot>>>
-  _snapshotWaiters = {};
+  Completer<skir.AuthoringState> _ready = Completer();
   final Set<AuthoredDraftAutosave> _autosaves = {};
-  var _snapshotRecoveryRevision = 0;
 
-  Future<skir.AuthoringSnapshot> get ready {
+  Future<skir.AuthoringState> get ready {
     final snapshot = state.snapshot;
     return snapshot == null ? _ready.future : Future.value(snapshot);
   }
@@ -43,11 +38,6 @@ class AuthoringSession extends _$AuthoringSession {
     skir.RecordId organizationId,
     skir.RecordId realmId,
   ) {
-    _endSnapshotWaiters(
-      StateError("The authoring session changed before snapshot adoption"),
-    );
-    _adoptedSnapshots.clear();
-    _observedSnapshotIds.clear();
     final lifecycleRevision = ++_lifecycleRevision;
     _refreshing = null;
     _refreshRequested = false;
@@ -90,9 +80,6 @@ class AuthoringSession extends _$AuthoringSession {
         if (_lifecycleRevision == lifecycleRevision) {
           _lifecycleRevision++;
         }
-        _endSnapshotWaiters(
-          StateError("The authoring session closed before snapshot adoption"),
-        );
         for (final autosave in _autosaves.toList()) {
           autosave.close();
         }
@@ -204,7 +191,7 @@ class AuthoringSession extends _$AuthoringSession {
         catalog = await _fetchCatalog(organizationId, realmId);
       }
       if (!_isActive(lifecycleRevision)) return;
-      skir.AuthoringSnapshot snapshot;
+      skir.AuthoringState snapshot;
       try {
         snapshot = await repository.fetch(generation: catalog.generation);
       } on CatalogGenerationChanged {
@@ -217,15 +204,12 @@ class AuthoringSession extends _$AuthoringSession {
         snapshot: snapshot,
         catalog: CheckedEditorCatalog(catalog),
       );
-      _snapshotRecoveryRevision++;
-      _endUnavailableSnapshotWaiters(snapshot.snapshot);
       _rememberSnapshot(snapshot);
       if (!_ready.isCompleted) _ready.complete(snapshot);
     } on Object catch (error) {
       if (error is BoundedTransferCancelled && repository._isDisposed) return;
       if (!_isActive(lifecycleRevision)) return;
       state = state.copyWith(refreshing: false, failure: error);
-      _endSnapshotWaiters(error);
       if (!_ready.isCompleted) {
         _ready.completeError(error);
         _ready = Completer();
@@ -259,27 +243,10 @@ class AuthoringSession extends _$AuthoringSession {
 
   void _acceptChange(skir.AuthoringChanged change, int lifecycleRevision) {
     if (!_isActive(lifecycleRevision)) return;
-    final current = state.snapshot;
-    if (current == null) {
-      _scheduleRefresh(lifecycleRevision);
-      return;
-    }
-    switch (applyAuthoringChange(current, change)) {
-      case AuthoringDeltaApplied(:final snapshot):
-        state = state.copyWith(
-          snapshot: snapshot,
-          refreshing: false,
-          failure: null,
-        );
-        _rememberSnapshot(snapshot);
-      case AuthoringDeltaDuplicate():
-        return;
-      case AuthoringDeltaRecoveryRequired():
-        _scheduleRefresh(
-          lifecycleRevision,
-          catalog: change.generation != current.generation,
-        );
-    }
+    _scheduleRefresh(
+      lifecycleRevision,
+      catalog: change.generation != state.generation,
+    );
   }
 
   PreparedCommit<skir.CommitPreparedEditResponse> prepareCommit(
@@ -317,31 +284,6 @@ class AuthoringSession extends _$AuthoringSession {
     return completer.future.whenComplete(stop);
   }
 
-  int get snapshotRecoveryRevision => _snapshotRecoveryRevision;
-
-  Future<skir.AuthoringSnapshot> awaitSnapshot(
-    skir.SnapshotId snapshot, {
-    int? sinceRecovery,
-  }) {
-    final adopted = _adoptedSnapshots[snapshot];
-    if (adopted != null) return Future.value(adopted);
-    if (sinceRecovery != null && _snapshotRecoveryRevision != sinceRecovery) {
-      return Future.error(
-        StateError("The exact committed snapshot was skipped during recovery"),
-        StackTrace.current,
-      );
-    }
-    if (_observedSnapshotIds.contains(snapshot)) {
-      return Future.error(
-        StateError("The exact adopted snapshot is no longer available"),
-        StackTrace.current,
-      );
-    }
-    final completer = Completer<skir.AuthoringSnapshot>();
-    _snapshotWaiters.putIfAbsent(snapshot, () => []).add(completer);
-    return completer.future;
-  }
-
   AuthoredDraftAutosave openAutosave({
     required skir.ResourceId resource,
     required AuthoredDraft baseline,
@@ -364,9 +306,10 @@ class AuthoringSession extends _$AuthoringSession {
       baseline: baseline,
       policy: policy,
       commit: commit,
-      currentRecoveryRevision: () => _snapshotRecoveryRevision,
-      awaitSnapshot: (snapshot, sinceRecovery) =>
-          awaitSnapshot(snapshot, sinceRecovery: sinceRecovery),
+      fetchCurrent: () async {
+        await refresh();
+        return ready;
+      },
       reload: refresh,
       onSettled: () {
         if (autosave.detached && autosave.settled) {
@@ -380,18 +323,7 @@ class AuthoringSession extends _$AuthoringSession {
     return autosave;
   }
 
-  void _rememberSnapshot(skir.AuthoringSnapshot snapshot) {
-    _observedSnapshotIds.add(snapshot.snapshot);
-    _adoptedSnapshots[snapshot.snapshot] = snapshot;
-    while (_adoptedSnapshots.length > 8) {
-      _adoptedSnapshots.remove(_adoptedSnapshots.keys.first);
-    }
-    final waiters = _snapshotWaiters.remove(snapshot.snapshot);
-    if (waiters != null) {
-      for (final waiter in waiters) {
-        if (!waiter.isCompleted) waiter.complete(snapshot);
-      }
-    }
+  void _rememberSnapshot(skir.AuthoringState snapshot) {
     final baseline = state.draft;
     if (baseline != null) {
       for (final autosave in _autosaves) {
@@ -400,44 +332,16 @@ class AuthoringSession extends _$AuthoringSession {
     }
   }
 
-  void _endUnavailableSnapshotWaiters(skir.SnapshotId available) {
-    final unavailable = _snapshotWaiters.keys
-        .where((snapshot) => snapshot != available)
-        .toList();
-    for (final snapshot in unavailable) {
-      final waiters = _snapshotWaiters.remove(snapshot) ?? const [];
-      for (final waiter in waiters) {
-        if (!waiter.isCompleted) {
-          waiter.completeError(
-            StateError(
-              "The exact committed snapshot was skipped during recovery",
-            ),
-            StackTrace.current,
-          );
-        }
-      }
-    }
-  }
-
-  void _endSnapshotWaiters(Object error) {
-    final waiters = _snapshotWaiters.values.expand((items) => items).toList();
-    _snapshotWaiters.clear();
-    for (final waiter in waiters) {
-      if (!waiter.isCompleted) waiter.completeError(error, StackTrace.current);
-    }
-  }
-
   Future<void> commitDraft(
     AuthoredDraft draft, {
     required String conflictMessage,
   }) async {
-    final response = await commit(
-      draft.prepare(skir.BatchId(value: "panel:${uuid.v4()}")),
-    );
+    final response = await commit(draft.prepare());
     switch (response) {
       case skir.CommitPreparedEditResponse_resultWrapper(
-        value: skir.CommitResult_committedWrapper(),
+        value: skir.CommitResult.committed,
       ):
+        await refresh();
         return;
       case skir.CommitPreparedEditResponse_resultWrapper(
         value: skir.CommitResult_conflictWrapper(),
@@ -465,13 +369,12 @@ class AuthoringSession extends _$AuthoringSession {
       throw ApiException.badRequest("Authoring is not ready");
     }
     final draft = baseline.fork()..delete(resource);
-    final response = await commit(
-      draft.prepare(skir.BatchId(value: "panel:${uuid.v4()}")),
-    );
+    final response = await commit(draft.prepare());
     switch (response) {
       case skir.CommitPreparedEditResponse_resultWrapper(
-        value: skir.CommitResult_committedWrapper(),
+        value: skir.CommitResult.committed,
       ):
+        await refresh();
         return;
       case skir.CommitPreparedEditResponse_resultWrapper(
         value: skir.CommitResult_conflictWrapper(),
@@ -500,7 +403,6 @@ class AuthoringSession extends _$AuthoringSession {
       skir.PreviewTypeArgumentChangeRequest(
         resource: resource,
         requested: requested,
-        snapshot: snapshot.snapshot,
         catalog: snapshot.generation,
       ),
     );

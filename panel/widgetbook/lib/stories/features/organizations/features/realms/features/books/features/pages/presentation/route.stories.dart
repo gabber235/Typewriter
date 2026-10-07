@@ -45,7 +45,7 @@ final class _PageWorkspaceStoryState extends State<PageWorkspaceStory> {
           : skir.PresentationElement.createPageGraph(
               control: _fixture.control,
               direction: skir.PageGraphDirection.leftToRight,
-      ),
+            ),
       header: null,
     );
     return Scaffold(
@@ -329,16 +329,12 @@ _PageFixture _pageFixture() {
       secondLocation: _fieldPath("owner"),
     ),
   ];
-  final draft = AuthoredDraft.fromSnapshot(
-    skir.AuthoringSnapshot(
-      snapshot: skir.SnapshotId(value: "realm:page_story"),
+  final draft = AuthoredDraft.fromState(
+    skir.AuthoringState(
       generation: generation,
       resources: resources,
       links: links,
       findings: const [],
-      findingsToken: skir.FindingsToken(value: "findings:page_story"),
-      observations: const [],
-      absentInputToken: skir.InputToken(value: "absent"),
     ),
     catalog: catalog,
   );

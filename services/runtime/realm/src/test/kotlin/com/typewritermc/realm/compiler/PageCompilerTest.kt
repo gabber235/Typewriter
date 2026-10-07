@@ -6,14 +6,13 @@ import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.SnapshotId
 import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.engine.CompiledEdgeOrigin
 import com.typewritermc.engine.PageCompileResult
-import com.typewritermc.realm.authoring.AuthoredSnapshotSeed
-import com.typewritermc.realm.authoring.InMemoryAuthoringSnapshotStore
-import com.typewritermc.realm.authoring.SnapshotCatalogLease
+import com.typewritermc.realm.authoring.AuthoringCatalogLease
+import com.typewritermc.realm.authoring.AuthoringSeed
+import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.checking.EmptyProviders
 import com.typewritermc.realm.checking.tokensFor
 import com.typewritermc.types.CollectionKind
@@ -137,17 +136,12 @@ private fun fixture(
     resources: Map<ResourceId, AuthoringRecord>,
     snapshot: String = "snapshot_1",
     resourceDefinitions: Map<ResourceId, ResourceDefinitionId> = emptyMap(),
-): com.typewritermc.realm.authoring.SnapshotLease {
+): com.typewritermc.realm.authoring.AuthoringLease {
     val catalog = CompilerCatalogLease()
     val store =
-        InMemoryAuthoringSnapshotStore(
+        InMemoryAuthoringViewStore(
             catalog,
-            AuthoredSnapshotSeed(
-                SnapshotId(snapshot),
-                resources,
-                tokensFor(resources, catalog.generation),
-                resourceDefinitions,
-            ),
+            AuthoringSeed(resources, resourceDefinitions),
         )
     val captured = store.capture()
     store.close()
@@ -181,7 +175,7 @@ private fun childRecord(value: String) =
 
 private class CompilerCatalogLease private constructor(
     private val references: AtomicInteger,
-) : SnapshotCatalogLease {
+) : AuthoringCatalogLease {
     constructor() : this(AtomicInteger(1))
 
     override val generation = CatalogGeneration("compiler_catalog")
@@ -197,7 +191,7 @@ private class CompilerCatalogLease private constructor(
             AuthoringResourceDefinition(ResourceDefinitionId("child"), CHILD),
         )
 
-    override fun retain(): SnapshotCatalogLease {
+    override fun retain(): AuthoringCatalogLease {
         references.incrementAndGet()
         return CompilerCatalogLease(references)
     }

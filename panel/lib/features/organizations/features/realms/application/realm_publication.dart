@@ -18,53 +18,32 @@ RealmPublicationSource realmPublicationSource(
 
 @riverpod
 class RealmPublication extends _$RealmPublication {
-  skir.PublicationId? _publishing;
+  bool _publishing = false;
   late RealmPublicationSource _source;
 
   @override
-  Stream<skir.PublicationAttempt?> build(
+  Stream<skir.PublicationReport?> build(
     skir.RecordId organizationId,
     skir.RecordId realmId,
   ) async* {
     _source = ref.watch(
       realmPublicationSourceProvider(organizationId, realmId),
     );
-    _publishing = null;
+    _publishing = false;
     await for (final attempt in _source.watch()) {
-      if (_isTerminal(attempt.state) &&
-          _publishing?.value == attempt.id.value) {
-        _publishing = null;
-      }
       yield attempt.id.value.isEmpty ? null : attempt;
     }
   }
 
-  Future<skir.PublicationResult> publish({
-    required skir.PublicationId id,
-    required skir.AuthoringSnapshot authored,
-  }) async {
+  Future<skir.PublicationResult> publish() async {
     final current = state.value;
-    if (_publishing != null || (current != null && _isPending(current.state))) {
+    if (_publishing || (current != null && _isPending(current.state)))
       return skir.PublicationResult.publishing;
-    }
-    _publishing = id;
-    final request = skir.PublicationAttempt(
-      id: id,
-      capture: authored.snapshot,
-      catalog: authored.generation,
-      engineInputs: skir.EngineImplementationInputs.defaultInstance,
-      state: skir.PublicationState.checking,
-    );
+    _publishing = true;
     try {
-      final result = await _source.publish(request);
-      if (result != skir.PublicationResult.publishing &&
-          _publishing?.value == id.value) {
-        _publishing = null;
-      }
-      return result;
-    } on Object {
-      if (_publishing?.value == id.value) _publishing = null;
-      rethrow;
+      return await _source.publish();
+    } finally {
+      _publishing = false;
     }
   }
 }
@@ -73,8 +52,3 @@ bool _isPending(skir.PublicationState state) =>
     state == skir.PublicationState.checking ||
     state == skir.PublicationState.compiling ||
     state == skir.PublicationState.activating;
-
-bool _isTerminal(skir.PublicationState state) =>
-    state == skir.PublicationState.complete ||
-    state == skir.PublicationState.interrupted ||
-    state is skir.PublicationState_blockedWrapper;

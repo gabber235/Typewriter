@@ -180,14 +180,13 @@ final class ResourceCreationSession {
       request: effectiveRequest,
       prepared: prepared,
     );
-    final response = await access.notifier.commit(
-      draft.prepare(types.BatchId(value: "panel:${_uuid.v4()}")),
-    );
+    final response = await access.notifier.commit(draft.prepare());
     final CreatedAuthoringResource created;
     switch (response) {
       case authoring.CommitPreparedEditResponse_resultWrapper(
-        value: authoring.CommitResult_committedWrapper(),
+        value: authoring.CommitResult.committed,
       ):
+        await access.notifier.refresh();
         final adopted = await access.notifier.awaitResource(
           effectiveRequest.id,
         );

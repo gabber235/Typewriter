@@ -17,7 +17,7 @@ void main() {
 
     expect(fixture.controller.snapshot.status, SearchSourceStatus.ready);
     expect(fixture.session.requests, hasLength(1));
-    expect(fixture.session.requests.single.query.normalizedQuery, isEmpty);
+    expect(fixture.session.requests.single.query, isEmpty);
   });
 
   test(
@@ -34,7 +34,7 @@ void main() {
       await pumpEventQueue();
 
       expect(fixture.session.requests.length, greaterThanOrEqualTo(2));
-      expect(fixture.session.requests.last.query.normalizedQuery, "example");
+      expect(fixture.session.requests.last.query, "example");
       expect(fixture.controller.snapshot.status, SearchSourceStatus.ready);
     },
   );
@@ -95,10 +95,8 @@ final class _SearchSession extends AuthoringSession {
   ) async {
     requests.add(request);
     return skir.SearchAuthoringResponse.createSuccess(
-      snapshot: initial.snapshot!.snapshot,
       generation: initial.snapshot!.generation,
       hits: const [],
-      facets: const [],
       diagnostics: const [],
     );
   }
@@ -108,15 +106,11 @@ AuthoringSessionState _state() {
   final generation = skir.CatalogGeneration(value: "catalog:test");
   return AuthoringSessionState(
     catalog: receivedCheckedEditorCatalog(generation: generation),
-    snapshot: skir.AuthoringSnapshot(
-      snapshot: skir.SnapshotId(value: "snapshot:test"),
+    snapshot: skir.AuthoringState(
       generation: generation,
       resources: const [],
       links: const [],
       findings: const [],
-      observations: const [],
-      absentInputToken: skir.InputToken(value: "absent"),
-      findingsToken: skir.FindingsToken(value: "findings:test"),
     ),
   );
 }

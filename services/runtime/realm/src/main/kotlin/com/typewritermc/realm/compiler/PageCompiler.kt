@@ -11,7 +11,7 @@ import com.typewritermc.engine.CompiledResource
 import com.typewritermc.engine.CompiledResourceKey
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.engine.PageCompileResult
-import com.typewritermc.realm.authoring.AuthoredSnapshotRoot
+import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.RelationId
@@ -26,7 +26,7 @@ internal class PageCompiler(
 ) {
     fun compile(
         root: ResourceId,
-        snapshot: AuthoredSnapshotRoot,
+        snapshot: AuthoringView,
     ): PageCompileResult {
         val projected =
             ResourceValueMapper.project(
@@ -145,7 +145,6 @@ internal class PageCompiler(
                 buildString {
                     append("format:").append(formatRevision)
                     append("|catalog:").append(snapshot.catalog.generation.value)
-                    append("|snapshot:").append(snapshot.id.value)
                     append("|root:").append(root.value)
                     resources.forEach { (id, record) -> append("|resource:").append(id.value).append(':').append(record) }
                     projectedEdges.sortedWith(compareBy({ it.source.source.value }, { it.target.source.value })).forEach { edge ->
@@ -171,7 +170,7 @@ internal class PageCompiler(
 
 private fun com.typewritermc.authoring.AuthoringRecord.compile(
     id: ResourceId,
-    snapshot: AuthoredSnapshotRoot,
+    snapshot: AuthoringView,
     bindings: Map<com.typewritermc.types.TypeUse.Named, NativeBindingRequirement>,
 ): CompiledResource {
     val actual = (configuration as TypeSelection.Complete).use

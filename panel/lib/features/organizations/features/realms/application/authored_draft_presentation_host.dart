@@ -3,6 +3,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1
     as action;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring.dart"
     as authoring;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring_facts.dart"
+    as facts;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/binding.dart"
     as binding;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
@@ -28,7 +30,7 @@ final class AuthoredDraftAuthoringDocument
   Map<types.ResourceId, types.AuthoringRecord> get resources => draft.resources;
 
   @override
-  List<authoring.LinkProjection> get links => draft.links;
+  List<facts.LinkProjection> get links => draft.links;
 
   @override
   List<diagnostic_wire.InitializationDiagnostic> get initializationFindings =>

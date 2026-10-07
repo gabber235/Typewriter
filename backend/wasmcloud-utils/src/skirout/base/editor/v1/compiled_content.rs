@@ -130,159 +130,163 @@ impl CompiledBlobPointer {
 }
 
 // ==============================================================================
-// struct CompiledArtifactPointer
+// struct CompiledArtifactReference
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct CompiledArtifactPointer {
+pub struct CompiledArtifactReference {
+    pub root: CompilationRoot,
+    pub format_revision: i32,
+    pub media_type: String,
     pub semantic_digest: String,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CompiledArtifactReference>>,
+}
+
+impl CompiledArtifactReference {
+    pub fn default_ref() -> &'static CompiledArtifactReference {
+        static D: std::sync::LazyLock<CompiledArtifactReference> = std::sync::LazyLock::new(CompiledArtifactReference::default);
+        &D
+    }
+}
+
+impl CompiledArtifactReference {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CompiledArtifactReference> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<CompiledArtifactReference>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/compiled_content.skir",
+                    "CompiledArtifactReference",
+                    "",
+                    |x: &CompiledArtifactReference| &x._unrecognized,
+                    |x: &mut CompiledArtifactReference, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<CompiledArtifactReference> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(CompiledArtifactReference::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct PublishedOutput
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PublishedOutput {
+    pub reference: CompiledArtifactReference,
     pub blob: CompiledBlobPointer,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CompiledArtifactPointer>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PublishedOutput>>,
 }
 
-impl CompiledArtifactPointer {
-    pub fn default_ref() -> &'static CompiledArtifactPointer {
-        static D: std::sync::LazyLock<CompiledArtifactPointer> = std::sync::LazyLock::new(CompiledArtifactPointer::default);
+impl PublishedOutput {
+    pub fn default_ref() -> &'static PublishedOutput {
+        static D: std::sync::LazyLock<PublishedOutput> = std::sync::LazyLock::new(PublishedOutput::default);
         &D
     }
 }
 
-impl CompiledArtifactPointer {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CompiledArtifactPointer> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<CompiledArtifactPointer>> =
+impl PublishedOutput {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PublishedOutput> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<PublishedOutput>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::StructAdapter::new(
                     "editor/v1/compiled_content.skir",
-                    "CompiledArtifactPointer",
+                    "PublishedOutput",
                     "",
-                    |x: &CompiledArtifactPointer| &x._unrecognized,
-                    |x: &mut CompiledArtifactPointer, u| x._unrecognized = u,
+                    |x: &PublishedOutput| &x._unrecognized,
+                    |x: &mut PublishedOutput, u| x._unrecognized = u,
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<CompiledArtifactPointer> {
+    pub fn serializer() -> crate::skir_client::Serializer<PublishedOutput> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(CompiledArtifactPointer::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(PublishedOutput::_adapter())
     }
 }
 
 // ==============================================================================
-// struct CompiledContentActivation
+// struct PublishedContent
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct CompiledContentActivation {
-    pub activation_revision: i64,
-    pub manifest_digest: String,
-    pub manifest: CompiledBlobPointer,
-    pub artifacts: Vec<CompiledArtifactPointer>,
+pub struct PublishedContent {
+    pub publication: crate::skirout::base::editor::v1::type_catalog::PublicationId,
+    pub format_revision: i32,
+    pub catalog: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
+    pub implementation_token: String,
+    pub runtime_signatures: Vec<crate::skirout::base::editor::v1::publication::RuntimeMemberSignature>,
+    pub outputs: Vec<PublishedOutput>,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CompiledContentActivation>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PublishedContent>>,
 }
 
-impl CompiledContentActivation {
-    pub fn default_ref() -> &'static CompiledContentActivation {
-        static D: std::sync::LazyLock<CompiledContentActivation> = std::sync::LazyLock::new(CompiledContentActivation::default);
+impl PublishedContent {
+    pub fn default_ref() -> &'static PublishedContent {
+        static D: std::sync::LazyLock<PublishedContent> = std::sync::LazyLock::new(PublishedContent::default);
         &D
     }
 }
 
-impl CompiledContentActivation {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CompiledContentActivation> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<CompiledContentActivation>> =
+impl PublishedContent {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PublishedContent> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<PublishedContent>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::StructAdapter::new(
                     "editor/v1/compiled_content.skir",
-                    "CompiledContentActivation",
+                    "PublishedContent",
                     "",
-                    |x: &CompiledContentActivation| &x._unrecognized,
-                    |x: &mut CompiledContentActivation, u| x._unrecognized = u,
+                    |x: &PublishedContent| &x._unrecognized,
+                    |x: &mut PublishedContent, u| x._unrecognized = u,
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<CompiledContentActivation> {
+    pub fn serializer() -> crate::skir_client::Serializer<PublishedContent> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(CompiledContentActivation::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(PublishedContent::_adapter())
     }
 }
 
 // ==============================================================================
-// struct CompiledResourceState.Active
+// struct PublishedContentChunk
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct CompiledResourceState_Active {
-    pub manifest_id: String,
+pub struct PublishedContentChunk {
+    pub transfer: crate::skirout::base::kernel::v1::bounded_transfer::BoundedTransferChunk,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CompiledResourceState_Active>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PublishedContentChunk>>,
 }
 
-impl CompiledResourceState_Active {
-    pub fn default_ref() -> &'static CompiledResourceState_Active {
-        static D: std::sync::LazyLock<CompiledResourceState_Active> = std::sync::LazyLock::new(CompiledResourceState_Active::default);
+impl PublishedContentChunk {
+    pub fn default_ref() -> &'static PublishedContentChunk {
+        static D: std::sync::LazyLock<PublishedContentChunk> = std::sync::LazyLock::new(PublishedContentChunk::default);
         &D
     }
 }
 
-impl CompiledResourceState_Active {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CompiledResourceState_Active> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<CompiledResourceState_Active>> =
+impl PublishedContentChunk {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PublishedContentChunk> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<PublishedContentChunk>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::StructAdapter::new(
                     "editor/v1/compiled_content.skir",
-                    "CompiledResourceState.Active",
+                    "PublishedContentChunk",
                     "",
-                    |x: &CompiledResourceState_Active| &x._unrecognized,
-                    |x: &mut CompiledResourceState_Active, u| x._unrecognized = u,
+                    |x: &PublishedContentChunk| &x._unrecognized,
+                    |x: &mut PublishedContentChunk, u| x._unrecognized = u,
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<CompiledResourceState_Active> {
+    pub fn serializer() -> crate::skir_client::Serializer<PublishedContentChunk> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(CompiledResourceState_Active::_adapter())
-    }
-}
-
-// ==============================================================================
-// struct CompiledResourceState.Blocked
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct CompiledResourceState_Blocked {
-    pub last_active_manifest_id: Option<String>,
-    pub diagnostic_count: i32,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CompiledResourceState_Blocked>>,
-}
-
-impl CompiledResourceState_Blocked {
-    pub fn default_ref() -> &'static CompiledResourceState_Blocked {
-        static D: std::sync::LazyLock<CompiledResourceState_Blocked> = std::sync::LazyLock::new(CompiledResourceState_Blocked::default);
-        &D
-    }
-}
-
-impl CompiledResourceState_Blocked {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CompiledResourceState_Blocked> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<CompiledResourceState_Blocked>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/compiled_content.skir",
-                    "CompiledResourceState.Blocked",
-                    "",
-                    |x: &CompiledResourceState_Blocked| &x._unrecognized,
-                    |x: &mut CompiledResourceState_Blocked, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<CompiledResourceState_Blocked> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(CompiledResourceState_Blocked::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(PublishedContentChunk::_adapter())
     }
 }
 
@@ -294,8 +298,7 @@ impl CompiledResourceState_Blocked {
 pub enum CompiledResourceState {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<CompiledResourceState>>),
     NotCompiled,
-    Active(Box<CompiledResourceState_Active>),
-    Blocked(Box<CompiledResourceState_Blocked>),
+    Active(Box<crate::skirout::base::editor::v1::type_catalog::PublicationId>),
 }
 
 impl Default for CompiledResourceState {
@@ -313,7 +316,6 @@ impl CompiledResourceState {
                         CompiledResourceState::Unknown(_) => 0,
                         CompiledResourceState::NotCompiled => 1,
                         CompiledResourceState::Active(_) => 2,
-                        CompiledResourceState::Blocked(_) => 3,
                     },
                     |u| CompiledResourceState::Unknown(Some(u)),
                     |x: &CompiledResourceState| match x { CompiledResourceState::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -370,95 +372,12 @@ impl CompiledResourceStatus {
 }
 
 // ==============================================================================
-// struct CompiledResourceStateChange.Upsert
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct CompiledResourceStateChange_Upsert {
-    pub root: CompilationRoot,
-    pub state: CompiledResourceState,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CompiledResourceStateChange_Upsert>>,
-}
-
-impl CompiledResourceStateChange_Upsert {
-    pub fn default_ref() -> &'static CompiledResourceStateChange_Upsert {
-        static D: std::sync::LazyLock<CompiledResourceStateChange_Upsert> = std::sync::LazyLock::new(CompiledResourceStateChange_Upsert::default);
-        &D
-    }
-}
-
-impl CompiledResourceStateChange_Upsert {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CompiledResourceStateChange_Upsert> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<CompiledResourceStateChange_Upsert>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/compiled_content.skir",
-                    "CompiledResourceStateChange.Upsert",
-                    "",
-                    |x: &CompiledResourceStateChange_Upsert| &x._unrecognized,
-                    |x: &mut CompiledResourceStateChange_Upsert, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<CompiledResourceStateChange_Upsert> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(CompiledResourceStateChange_Upsert::_adapter())
-    }
-}
-
-// ==============================================================================
-// enum CompiledResourceStateChange
-// ==============================================================================
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum CompiledResourceStateChange {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<CompiledResourceStateChange>>),
-    Upsert(Box<CompiledResourceStateChange_Upsert>),
-    Remove(Box<CompilationRoot>),
-}
-
-impl Default for CompiledResourceStateChange {
-    fn default() -> Self {
-        CompiledResourceStateChange::Unknown(None)
-    }
-}
-
-impl CompiledResourceStateChange {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<CompiledResourceStateChange> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<CompiledResourceStateChange>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &CompiledResourceStateChange| match x {
-                        CompiledResourceStateChange::Unknown(_) => 0,
-                        CompiledResourceStateChange::Upsert(_) => 1,
-                        CompiledResourceStateChange::Remove(_) => 2,
-                    },
-                    |u| CompiledResourceStateChange::Unknown(Some(u)),
-                    |x: &CompiledResourceStateChange| match x { CompiledResourceStateChange::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "editor/v1/compiled_content.skir",
-                    "CompiledResourceStateChange",
-                    "",
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<CompiledResourceStateChange> {
-        initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(CompiledResourceStateChange::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct CompiledContentChanged
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CompiledContentChanged {
     pub generation: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
-    pub source_sequence: i64,
-    pub states: Vec<CompiledResourceStateChange>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CompiledContentChanged>>,
 }
@@ -491,160 +410,160 @@ impl CompiledContentChanged {
 }
 
 // ==============================================================================
-// struct WatchCompiledContentRequest
+// struct QueryPublishedContentRequest
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct WatchCompiledContentRequest {
+pub struct QueryPublishedContentRequest {
+    pub transfer_id: String,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<WatchCompiledContentRequest>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<QueryPublishedContentRequest>>,
 }
 
-impl WatchCompiledContentRequest {
-    pub fn default_ref() -> &'static WatchCompiledContentRequest {
-        static D: std::sync::LazyLock<WatchCompiledContentRequest> = std::sync::LazyLock::new(WatchCompiledContentRequest::default);
+impl QueryPublishedContentRequest {
+    pub fn default_ref() -> &'static QueryPublishedContentRequest {
+        static D: std::sync::LazyLock<QueryPublishedContentRequest> = std::sync::LazyLock::new(QueryPublishedContentRequest::default);
         &D
     }
 }
 
-impl WatchCompiledContentRequest {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<WatchCompiledContentRequest> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<WatchCompiledContentRequest>> =
+impl QueryPublishedContentRequest {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<QueryPublishedContentRequest> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<QueryPublishedContentRequest>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::StructAdapter::new(
                     "editor/v1/compiled_content.skir",
-                    "WatchCompiledContentRequest",
+                    "QueryPublishedContentRequest",
                     "",
-                    |x: &WatchCompiledContentRequest| &x._unrecognized,
-                    |x: &mut WatchCompiledContentRequest, u| x._unrecognized = u,
+                    |x: &QueryPublishedContentRequest| &x._unrecognized,
+                    |x: &mut QueryPublishedContentRequest, u| x._unrecognized = u,
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<WatchCompiledContentRequest> {
+    pub fn serializer() -> crate::skir_client::Serializer<QueryPublishedContentRequest> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(WatchCompiledContentRequest::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(QueryPublishedContentRequest::_adapter())
     }
 }
 
 // ==============================================================================
-// struct WatchCompiledContentResponse.Initial
+// struct QueryPublishedContentResponse.Absent
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct WatchCompiledContentResponse_Initial {
-    pub activation: Option<CompiledContentActivation>,
+pub struct QueryPublishedContentResponse_Absent {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<WatchCompiledContentResponse_Initial>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<QueryPublishedContentResponse_Absent>>,
 }
 
-impl WatchCompiledContentResponse_Initial {
-    pub fn default_ref() -> &'static WatchCompiledContentResponse_Initial {
-        static D: std::sync::LazyLock<WatchCompiledContentResponse_Initial> = std::sync::LazyLock::new(WatchCompiledContentResponse_Initial::default);
+impl QueryPublishedContentResponse_Absent {
+    pub fn default_ref() -> &'static QueryPublishedContentResponse_Absent {
+        static D: std::sync::LazyLock<QueryPublishedContentResponse_Absent> = std::sync::LazyLock::new(QueryPublishedContentResponse_Absent::default);
         &D
     }
 }
 
-impl WatchCompiledContentResponse_Initial {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<WatchCompiledContentResponse_Initial> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<WatchCompiledContentResponse_Initial>> =
+impl QueryPublishedContentResponse_Absent {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<QueryPublishedContentResponse_Absent> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<QueryPublishedContentResponse_Absent>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::StructAdapter::new(
                     "editor/v1/compiled_content.skir",
-                    "WatchCompiledContentResponse.Initial",
+                    "QueryPublishedContentResponse.Absent",
                     "",
-                    |x: &WatchCompiledContentResponse_Initial| &x._unrecognized,
-                    |x: &mut WatchCompiledContentResponse_Initial, u| x._unrecognized = u,
+                    |x: &QueryPublishedContentResponse_Absent| &x._unrecognized,
+                    |x: &mut QueryPublishedContentResponse_Absent, u| x._unrecognized = u,
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<WatchCompiledContentResponse_Initial> {
+    pub fn serializer() -> crate::skir_client::Serializer<QueryPublishedContentResponse_Absent> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(WatchCompiledContentResponse_Initial::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(QueryPublishedContentResponse_Absent::_adapter())
     }
 }
 
 // ==============================================================================
-// struct WatchCompiledContentResponse.Blocked
+// struct QueryPublishedContentResponse.Unavailable
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct WatchCompiledContentResponse_Blocked {
+pub struct QueryPublishedContentResponse_Unavailable {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<WatchCompiledContentResponse_Blocked>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<QueryPublishedContentResponse_Unavailable>>,
 }
 
-impl WatchCompiledContentResponse_Blocked {
-    pub fn default_ref() -> &'static WatchCompiledContentResponse_Blocked {
-        static D: std::sync::LazyLock<WatchCompiledContentResponse_Blocked> = std::sync::LazyLock::new(WatchCompiledContentResponse_Blocked::default);
+impl QueryPublishedContentResponse_Unavailable {
+    pub fn default_ref() -> &'static QueryPublishedContentResponse_Unavailable {
+        static D: std::sync::LazyLock<QueryPublishedContentResponse_Unavailable> = std::sync::LazyLock::new(QueryPublishedContentResponse_Unavailable::default);
         &D
     }
 }
 
-impl WatchCompiledContentResponse_Blocked {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<WatchCompiledContentResponse_Blocked> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<WatchCompiledContentResponse_Blocked>> =
+impl QueryPublishedContentResponse_Unavailable {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<QueryPublishedContentResponse_Unavailable> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<QueryPublishedContentResponse_Unavailable>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::StructAdapter::new(
                     "editor/v1/compiled_content.skir",
-                    "WatchCompiledContentResponse.Blocked",
+                    "QueryPublishedContentResponse.Unavailable",
                     "",
-                    |x: &WatchCompiledContentResponse_Blocked| &x._unrecognized,
-                    |x: &mut WatchCompiledContentResponse_Blocked, u| x._unrecognized = u,
+                    |x: &QueryPublishedContentResponse_Unavailable| &x._unrecognized,
+                    |x: &mut QueryPublishedContentResponse_Unavailable, u| x._unrecognized = u,
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<WatchCompiledContentResponse_Blocked> {
+    pub fn serializer() -> crate::skir_client::Serializer<QueryPublishedContentResponse_Unavailable> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(WatchCompiledContentResponse_Blocked::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(QueryPublishedContentResponse_Unavailable::_adapter())
     }
 }
 
 // ==============================================================================
-// enum WatchCompiledContentResponse
+// enum QueryPublishedContentResponse
 // ==============================================================================
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum WatchCompiledContentResponse {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<WatchCompiledContentResponse>>),
-    Initial(Box<WatchCompiledContentResponse_Initial>),
-    Activated(Box<CompiledContentActivation>),
-    Blocked(Box<WatchCompiledContentResponse_Blocked>),
+pub enum QueryPublishedContentResponse {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<QueryPublishedContentResponse>>),
+    Chunk(Box<PublishedContentChunk>),
+    Absent(Box<QueryPublishedContentResponse_Absent>),
+    Unavailable(Box<QueryPublishedContentResponse_Unavailable>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
-impl Default for WatchCompiledContentResponse {
+impl Default for QueryPublishedContentResponse {
     fn default() -> Self {
-        WatchCompiledContentResponse::Unknown(None)
+        QueryPublishedContentResponse::Unknown(None)
     }
 }
 
-impl WatchCompiledContentResponse {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<WatchCompiledContentResponse> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<WatchCompiledContentResponse>> =
+impl QueryPublishedContentResponse {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<QueryPublishedContentResponse> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<QueryPublishedContentResponse>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::EnumAdapter::new(
-                    |x: &WatchCompiledContentResponse| match x {
-                        WatchCompiledContentResponse::Unknown(_) => 0,
-                        WatchCompiledContentResponse::Initial(_) => 1,
-                        WatchCompiledContentResponse::Activated(_) => 2,
-                        WatchCompiledContentResponse::Blocked(_) => 3,
-                        WatchCompiledContentResponse::InternalError(_) => 4,
+                    |x: &QueryPublishedContentResponse| match x {
+                        QueryPublishedContentResponse::Unknown(_) => 0,
+                        QueryPublishedContentResponse::Chunk(_) => 1,
+                        QueryPublishedContentResponse::Absent(_) => 2,
+                        QueryPublishedContentResponse::Unavailable(_) => 3,
+                        QueryPublishedContentResponse::InternalError(_) => 4,
                     },
-                    |u| WatchCompiledContentResponse::Unknown(Some(u)),
-                    |x: &WatchCompiledContentResponse| match x { WatchCompiledContentResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    |u| QueryPublishedContentResponse::Unknown(Some(u)),
+                    |x: &QueryPublishedContentResponse| match x { QueryPublishedContentResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
                     "editor/v1/compiled_content.skir",
-                    "WatchCompiledContentResponse",
+                    "QueryPublishedContentResponse",
                     "",
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<WatchCompiledContentResponse> {
+    pub fn serializer() -> crate::skir_client::Serializer<QueryPublishedContentResponse> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(WatchCompiledContentResponse::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(QueryPublishedContentResponse::_adapter())
     }
 }
 
@@ -791,35 +710,38 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<CompiledArtifactPointer> = CompiledArtifactPointer::_adapter() as *const _ as *mut _;
-                (*a).add_field("semantic_digest", 0, crate::skir_client::Serializer::string(), "", |x: &CompiledArtifactPointer| &x.semantic_digest, |x: &mut CompiledArtifactPointer, v| x.semantic_digest = v);
-                (*a).add_field("blob", 1, crate::skir_client::internal::struct_serializer_from_static(CompiledBlobPointer::_adapter()), "", |x: &CompiledArtifactPointer| &x.blob, |x: &mut CompiledArtifactPointer, v| x.blob = v);
+                let a: *mut crate::skir_client::internal::StructAdapter<CompiledArtifactReference> = CompiledArtifactReference::_adapter() as *const _ as *mut _;
+                (*a).add_field("root", 0, crate::skir_client::internal::struct_serializer_from_static(CompilationRoot::_adapter()), "", |x: &CompiledArtifactReference| &x.root, |x: &mut CompiledArtifactReference, v| x.root = v);
+                (*a).add_field("format_revision", 1, crate::skir_client::Serializer::int32(), "", |x: &CompiledArtifactReference| &x.format_revision, |x: &mut CompiledArtifactReference, v| x.format_revision = v);
+                (*a).add_field("media_type", 2, crate::skir_client::Serializer::string(), "", |x: &CompiledArtifactReference| &x.media_type, |x: &mut CompiledArtifactReference, v| x.media_type = v);
+                (*a).add_field("semantic_digest", 3, crate::skir_client::Serializer::string(), "", |x: &CompiledArtifactReference| &x.semantic_digest, |x: &mut CompiledArtifactReference, v| x.semantic_digest = v);
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<CompiledContentActivation> = CompiledContentActivation::_adapter() as *const _ as *mut _;
-                (*a).add_field("activation_revision", 0, crate::skir_client::Serializer::int64(), "", |x: &CompiledContentActivation| &x.activation_revision, |x: &mut CompiledContentActivation, v| x.activation_revision = v);
-                (*a).add_field("manifest_digest", 1, crate::skir_client::Serializer::string(), "", |x: &CompiledContentActivation| &x.manifest_digest, |x: &mut CompiledContentActivation, v| x.manifest_digest = v);
-                (*a).add_field("manifest", 2, crate::skir_client::internal::struct_serializer_from_static(CompiledBlobPointer::_adapter()), "", |x: &CompiledContentActivation| &x.manifest, |x: &mut CompiledContentActivation, v| x.manifest = v);
-                (*a).add_field("artifacts", 3, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(CompiledArtifactPointer::_adapter())), "", |x: &CompiledContentActivation| &x.artifacts, |x: &mut CompiledContentActivation, v| x.artifacts = v);
+                let a: *mut crate::skir_client::internal::StructAdapter<PublishedOutput> = PublishedOutput::_adapter() as *const _ as *mut _;
+                (*a).add_field("reference", 0, crate::skir_client::internal::struct_serializer_from_static(CompiledArtifactReference::_adapter()), "", |x: &PublishedOutput| &x.reference, |x: &mut PublishedOutput, v| x.reference = v);
+                (*a).add_field("blob", 1, crate::skir_client::internal::struct_serializer_from_static(CompiledBlobPointer::_adapter()), "", |x: &PublishedOutput| &x.blob, |x: &mut PublishedOutput, v| x.blob = v);
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<CompiledResourceState_Active> = CompiledResourceState_Active::_adapter() as *const _ as *mut _;
-                (*a).add_field("manifest_id", 0, crate::skir_client::Serializer::string(), "", |x: &CompiledResourceState_Active| &x.manifest_id, |x: &mut CompiledResourceState_Active, v| x.manifest_id = v);
+                let a: *mut crate::skir_client::internal::StructAdapter<PublishedContent> = PublishedContent::_adapter() as *const _ as *mut _;
+                (*a).add_field("publication", 0, crate::skirout::base::editor::v1::type_catalog::PublicationId::serializer(), "", |x: &PublishedContent| &x.publication, |x: &mut PublishedContent, v| x.publication = v);
+                (*a).add_field("format_revision", 1, crate::skir_client::Serializer::int32(), "", |x: &PublishedContent| &x.format_revision, |x: &mut PublishedContent, v| x.format_revision = v);
+                (*a).add_field("catalog", 2, crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(), "", |x: &PublishedContent| &x.catalog, |x: &mut PublishedContent, v| x.catalog = v);
+                (*a).add_field("implementation_token", 3, crate::skir_client::Serializer::string(), "", |x: &PublishedContent| &x.implementation_token, |x: &mut PublishedContent, v| x.implementation_token = v);
+                (*a).add_field("runtime_signatures", 4, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::publication::RuntimeMemberSignature::serializer()), "", |x: &PublishedContent| &x.runtime_signatures, |x: &mut PublishedContent, v| x.runtime_signatures = v);
+                (*a).add_field("outputs", 5, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(PublishedOutput::_adapter())), "", |x: &PublishedContent| &x.outputs, |x: &mut PublishedContent, v| x.outputs = v);
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<CompiledResourceState_Blocked> = CompiledResourceState_Blocked::_adapter() as *const _ as *mut _;
-                (*a).add_field("last_active_manifest_id", 0, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &CompiledResourceState_Blocked| &x.last_active_manifest_id, |x: &mut CompiledResourceState_Blocked, v| x.last_active_manifest_id = v);
-                (*a).add_field("diagnostic_count", 1, crate::skir_client::Serializer::int32(), "", |x: &CompiledResourceState_Blocked| &x.diagnostic_count, |x: &mut CompiledResourceState_Blocked, v| x.diagnostic_count = v);
+                let a: *mut crate::skir_client::internal::StructAdapter<PublishedContentChunk> = PublishedContentChunk::_adapter() as *const _ as *mut _;
+                (*a).add_field("transfer", 0, crate::skirout::base::kernel::v1::bounded_transfer::BoundedTransferChunk::serializer(), "", |x: &PublishedContentChunk| &x.transfer, |x: &mut PublishedContentChunk, v| x.transfer = v);
                 (*a).finalize();
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<CompiledResourceState> = CompiledResourceState::_adapter() as *const _ as *mut _;
                 (*a).add_constant_variant("not_compiled", 1, 1, "", CompiledResourceState::NotCompiled);
-                (*a).add_wrapper_variant("active", 2, 2, crate::skir_client::internal::struct_serializer_from_static(CompiledResourceState_Active::_adapter()), "", |v| CompiledResourceState::Active(Box::new(v)), |x| match x { CompiledResourceState::Active(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("blocked", 3, 3, crate::skir_client::internal::struct_serializer_from_static(CompiledResourceState_Blocked::_adapter()), "", |v| CompiledResourceState::Blocked(Box::new(v)), |x| match x { CompiledResourceState::Blocked(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("active", 2, 2, crate::skirout::base::editor::v1::type_catalog::PublicationId::serializer(), "", |v| CompiledResourceState::Active(Box::new(v)), |x| match x { CompiledResourceState::Active(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {
@@ -829,43 +751,29 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<CompiledResourceStateChange_Upsert> = CompiledResourceStateChange_Upsert::_adapter() as *const _ as *mut _;
-                (*a).add_field("root", 0, crate::skir_client::internal::struct_serializer_from_static(CompilationRoot::_adapter()), "", |x: &CompiledResourceStateChange_Upsert| &x.root, |x: &mut CompiledResourceStateChange_Upsert, v| x.root = v);
-                (*a).add_field("state", 1, crate::skir_client::internal::enum_serializer_from_static(CompiledResourceState::_adapter()), "", |x: &CompiledResourceStateChange_Upsert| &x.state, |x: &mut CompiledResourceStateChange_Upsert, v| x.state = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<CompiledResourceStateChange> = CompiledResourceStateChange::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("upsert", 1, 1, crate::skir_client::internal::struct_serializer_from_static(CompiledResourceStateChange_Upsert::_adapter()), "", |v| CompiledResourceStateChange::Upsert(Box::new(v)), |x| match x { CompiledResourceStateChange::Upsert(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("remove", 2, 2, crate::skir_client::internal::struct_serializer_from_static(CompilationRoot::_adapter()), "", |v| CompiledResourceStateChange::Remove(Box::new(v)), |x| match x { CompiledResourceStateChange::Remove(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<CompiledContentChanged> = CompiledContentChanged::_adapter() as *const _ as *mut _;
                 (*a).add_field("generation", 0, crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(), "", |x: &CompiledContentChanged| &x.generation, |x: &mut CompiledContentChanged, v| x.generation = v);
-                (*a).add_field("source_sequence", 1, crate::skir_client::Serializer::int64(), "", |x: &CompiledContentChanged| &x.source_sequence, |x: &mut CompiledContentChanged, v| x.source_sequence = v);
-                (*a).add_field("states", 2, crate::skir_client::Serializer::array(crate::skir_client::internal::enum_serializer_from_static(CompiledResourceStateChange::_adapter())), "", |x: &CompiledContentChanged| &x.states, |x: &mut CompiledContentChanged, v| x.states = v);
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<WatchCompiledContentRequest> = WatchCompiledContentRequest::_adapter() as *const _ as *mut _;
+                let a: *mut crate::skir_client::internal::StructAdapter<QueryPublishedContentRequest> = QueryPublishedContentRequest::_adapter() as *const _ as *mut _;
+                (*a).add_field("transfer_id", 0, crate::skir_client::Serializer::string(), "", |x: &QueryPublishedContentRequest| &x.transfer_id, |x: &mut QueryPublishedContentRequest, v| x.transfer_id = v);
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<WatchCompiledContentResponse_Initial> = WatchCompiledContentResponse_Initial::_adapter() as *const _ as *mut _;
-                (*a).add_field("activation", 0, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(CompiledContentActivation::_adapter())), "", |x: &WatchCompiledContentResponse_Initial| &x.activation, |x: &mut WatchCompiledContentResponse_Initial, v| x.activation = v);
+                let a: *mut crate::skir_client::internal::StructAdapter<QueryPublishedContentResponse_Absent> = QueryPublishedContentResponse_Absent::_adapter() as *const _ as *mut _;
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<WatchCompiledContentResponse_Blocked> = WatchCompiledContentResponse_Blocked::_adapter() as *const _ as *mut _;
+                let a: *mut crate::skir_client::internal::StructAdapter<QueryPublishedContentResponse_Unavailable> = QueryPublishedContentResponse_Unavailable::_adapter() as *const _ as *mut _;
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<WatchCompiledContentResponse> = WatchCompiledContentResponse::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("initial", 1, 1, crate::skir_client::internal::struct_serializer_from_static(WatchCompiledContentResponse_Initial::_adapter()), "", |v| WatchCompiledContentResponse::Initial(Box::new(v)), |x| match x { WatchCompiledContentResponse::Initial(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("activated", 2, 2, crate::skir_client::internal::struct_serializer_from_static(CompiledContentActivation::_adapter()), "", |v| WatchCompiledContentResponse::Activated(Box::new(v)), |x| match x { WatchCompiledContentResponse::Activated(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("blocked", 3, 3, crate::skir_client::internal::struct_serializer_from_static(WatchCompiledContentResponse_Blocked::_adapter()), "", |v| WatchCompiledContentResponse::Blocked(Box::new(v)), |x| match x { WatchCompiledContentResponse::Blocked(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("internal_error", 4, 4, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| WatchCompiledContentResponse::InternalError(Box::new(v)), |x| match x { WatchCompiledContentResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
+                let a: *mut crate::skir_client::internal::EnumAdapter<QueryPublishedContentResponse> = QueryPublishedContentResponse::_adapter() as *const _ as *mut _;
+                (*a).add_wrapper_variant("chunk", 1, 1, crate::skir_client::internal::struct_serializer_from_static(PublishedContentChunk::_adapter()), "", |v| QueryPublishedContentResponse::Chunk(Box::new(v)), |x| match x { QueryPublishedContentResponse::Chunk(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("absent", 2, 2, crate::skir_client::internal::struct_serializer_from_static(QueryPublishedContentResponse_Absent::_adapter()), "", |v| QueryPublishedContentResponse::Absent(Box::new(v)), |x| match x { QueryPublishedContentResponse::Absent(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("unavailable", 3, 3, crate::skir_client::internal::struct_serializer_from_static(QueryPublishedContentResponse_Unavailable::_adapter()), "", |v| QueryPublishedContentResponse::Unavailable(Box::new(v)), |x| match x { QueryPublishedContentResponse::Unavailable(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("internal_error", 4, 4, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| QueryPublishedContentResponse::InternalError(Box::new(v)), |x| match x { QueryPublishedContentResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {
@@ -892,13 +800,13 @@ fn initialize_module_serializers() {
 // Methods
 // ==============================================================================
 
-pub fn watch_compiled_content_method() -> &'static crate::skir_client::Method<WatchCompiledContentRequest, WatchCompiledContentResponse> {
-    static METHOD: std::sync::LazyLock<crate::skir_client::Method<WatchCompiledContentRequest, WatchCompiledContentResponse>> = std::sync::LazyLock::new(|| {
+pub fn query_published_content_method() -> &'static crate::skir_client::Method<QueryPublishedContentRequest, QueryPublishedContentResponse> {
+    static METHOD: std::sync::LazyLock<crate::skir_client::Method<QueryPublishedContentRequest, QueryPublishedContentResponse>> = std::sync::LazyLock::new(|| {
         crate::skir_client::Method {
-            name: "WatchCompiledContent".to_string(),
+            name: "QueryPublishedContent".to_string(),
             number: 920004_i64,
-            request_serializer: WatchCompiledContentRequest::serializer(),
-            response_serializer: WatchCompiledContentResponse::serializer(),
+            request_serializer: QueryPublishedContentRequest::serializer(),
+            response_serializer: QueryPublishedContentResponse::serializer(),
             doc: "".to_string(),
         }
     });

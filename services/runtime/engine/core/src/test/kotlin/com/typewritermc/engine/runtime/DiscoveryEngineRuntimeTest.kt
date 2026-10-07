@@ -1,14 +1,15 @@
 package com.typewritermc.engine.runtime
 
+import com.typewritermc.authoring.PublicationId
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.GeneratedProviderDeployment
 import com.typewritermc.discovery.GeneratedProviderLoader
 import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.RuntimeScope
-import com.typewritermc.engine.CompiledArtifactManifest
 import com.typewritermc.engine.ContentDigest
-import com.typewritermc.engine.LoadedCompiledContent
+import com.typewritermc.engine.LoadedPublishedContent
+import com.typewritermc.engine.PublishedContent
 import com.typewritermc.types.FactoryNativeBindingRegistry
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import de.infix.testBalloon.framework.core.testSuite
@@ -49,18 +50,18 @@ val DiscoveryEngineRuntimeTest by testSuite {
         }
     }
 
-    test("compiled content activation revisions remain monotonic") {
+    test("applies each fetched publication once without ordering its identity") {
         runTest {
             val revisions = mutableListOf<Long>()
             val fixture = runtime(emptyList(), revisions)
             fixture.runtime.activate()
 
             fixture.runtime.applyContent(content(1, '1')) shouldBe
-                ContentApplicationResult.Applied(1, ContentDigest("1".repeat(64)))
+                ContentApplicationResult.Applied(PublicationId("publication:1"))
             fixture.runtime.applyContent(content(1, '2')) shouldBe
-                ContentApplicationResult.Ignored(1, ContentDigest("1".repeat(64)))
+                ContentApplicationResult.Unchanged(PublicationId("publication:1"))
             fixture.runtime.applyContent(content(2, '3')) shouldBe
-                ContentApplicationResult.Applied(2, ContentDigest("3".repeat(64)))
+                ContentApplicationResult.Applied(PublicationId("publication:2"))
             revisions shouldContainExactly listOf(1L, 2L)
             fixture.runtime.stop()
         }
@@ -84,13 +85,12 @@ val DiscoveryEngineRuntimeTest by testSuite {
             shouldThrow<IllegalArgumentException> {
                 gateway.apply(
                     active.copy(
-                        activationRevision = 2,
-                        manifest = active.manifest.copy(formatRevision = 3),
+                        descriptor = active.descriptor.copy(formatRevision = 3),
                     ),
                 )
             }
 
-            gateway.snapshot.value?.manifest shouldBe active.manifest
+            gateway.snapshot.value?.descriptor shouldBe active.descriptor
         }
     }
 
@@ -107,7 +107,7 @@ val DiscoveryEngineRuntimeTest by testSuite {
 
             revisions shouldContainExactly listOf(1L)
             fixture.runtime.applyContent(content(2, '8')) shouldBe
-                ContentApplicationResult.Applied(2, ContentDigest("8".repeat(64)))
+                ContentApplicationResult.Applied(PublicationId("publication:2"))
             revisions shouldContainExactly listOf(1L, 2L)
             fixture.runtime.stop()
         }
@@ -120,7 +120,7 @@ val DiscoveryEngineRuntimeTest by testSuite {
             fixture.runtime.activate()
 
             fixture.runtime.applyContent(content(1, '9', implementationToken = "primary implementation")) shouldBe
-                ContentApplicationResult.Applied(1, ContentDigest("9".repeat(64)))
+                ContentApplicationResult.Applied(PublicationId("publication:1"))
             revisions shouldContainExactly listOf(1L)
             fixture.runtime.stop()
         }
@@ -153,7 +153,15 @@ private fun TestScope.runtime(
             implementationToken = "implementation",
             enforceImplementationCompatibility = enforceImplementationCompatibility,
             runtimeSignatures = emptySet(),
-            contentGateway = revisions?.let { values -> EngineContentGateway { values += it.activationRevision } },
+            contentGateway =
+                revisions?.let { values ->
+                    EngineContentGateway {
+                        values +=
+                            it.descriptor.publication.value
+                                .substringAfter(":")
+                                .toLong()
+                    }
+                },
         ),
         deployment,
     )
@@ -163,23 +171,18 @@ private fun content(
     revision: Long,
     digestCharacter: Char,
     implementationToken: String = "implementation",
-): LoadedCompiledContent {
-    val digest = ContentDigest(digestCharacter.toString().repeat(64))
-    return LoadedCompiledContent(
-        activationRevision = revision,
-        manifest =
-            CompiledArtifactManifest(
-                formatRevision = 2,
-                digest = digest,
-                sourceRevision = "realm:$revision",
-                catalogRevision = "catalog:1",
-                implementationToken = implementationToken,
-                runtimeSignatures = emptySet(),
-                artifacts = emptyList(),
-            ),
-        artifacts = emptyList(),
+): LoadedPublishedContent =
+    LoadedPublishedContent(
+        PublishedContent(
+            PublicationId("publication:$revision"),
+            2,
+            CatalogGeneration("catalog:1"),
+            implementationToken,
+            emptySet(),
+            emptyList(),
+        ),
+        emptyList(),
     )
-}
 
 private data class RuntimeFixture(
     val runtime: ReloadableEngineRuntime,

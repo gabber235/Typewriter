@@ -14,15 +14,14 @@ import com.typewritermc.checking.CheckOutcome
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.checking.InputToken
 import com.typewritermc.checking.ResourceTypeMatch
-import com.typewritermc.checking.SnapshotId
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.configuration.RuleId
 import com.typewritermc.configuration.RuleOrigin
-import com.typewritermc.realm.authoring.AuthoredSnapshotSeed
-import com.typewritermc.realm.authoring.AuthoringSnapshotDelta
-import com.typewritermc.realm.authoring.InMemoryAuthoringSnapshotStore
+import com.typewritermc.realm.authoring.AuthoringSeed
+import com.typewritermc.realm.authoring.AuthoringViewDelta
+import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ParameterKey
 import com.typewritermc.types.RepresentationTemplate
@@ -36,7 +35,7 @@ import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
 import de.infix.testBalloon.framework.core.testSuite
 
-val SnapshotReadsTest by testSuite {
+val CapturedAuthoringReadsTest by testSuite {
     test("projection reads preserve partial bindings and exact value evidence") {
         val catalog = TestCatalogLease(definitions = listOf(TEST_DEFINITION, LIST_DEFINITION, REPRESENTATION_DEFINITION))
         val resource = ResourceId("projection")
@@ -56,12 +55,12 @@ val SnapshotReadsTest by testSuite {
             )
         val resources = mapOf(resource to authored)
         val store =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(SnapshotId("projection_snapshot"), resources, tokensFor(resources, catalog.generation)),
+                AuthoringSeed(resources),
             )
         val lease = store.capture()
-        val reads = SnapshotReads(lease.originalView())
+        val reads = CapturedAuthoringReads(lease.originalView())
 
         assertIs<com.typewritermc.authoring.DraftExpectation.PartialRoot>(
             assertIs<Availability.Available<com.typewritermc.authoring.DraftBinding>>(
@@ -77,9 +76,9 @@ val SnapshotReadsTest by testSuite {
                 TEXT_USE,
             ),
         )
-        assertTrue(reads.observations().any { it.identity == InputIdentity.Form(root) })
-        assertTrue(reads.observations().any { it.identity == InputIdentity.Value(nullValue) })
-        assertTrue(reads.observations().any { it.identity == InputIdentity.Value(representation) })
+        assertTrue(reads.observations().any { InputIdentity.Form(root) in it.dependencies() })
+        assertTrue(reads.observations().any { InputIdentity.Value(nullValue) in it.dependencies() })
+        assertTrue(reads.observations().any { InputIdentity.Value(representation) in it.dependencies() })
 
         lease.close()
         store.close()
@@ -95,12 +94,12 @@ val SnapshotReadsTest by testSuite {
             )
         val resources = mapOf(resource to record)
         val store =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(SnapshotId("s0"), resources, tokensFor(resources, catalog.generation)),
+                AuthoringSeed(resources),
             )
         val lease = store.capture()
-        val reads = SnapshotReads(lease.originalView())
+        val reads = CapturedAuthoringReads(lease.originalView())
 
         val nullChild =
             ValueLocation(resource, ValuePath(listOf(PathSegment.Field("nullParent"), PathSegment.Field("child"))))
@@ -148,12 +147,10 @@ val SnapshotReadsTest by testSuite {
                     ),
             )
         val store =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(
-                    SnapshotId("s0"),
+                AuthoringSeed(
                     resources,
-                    tokensFor(resources, catalog.generation),
                     mapOf(
                         available to ResourceDefinitionId("test"),
                         unavailable to ResourceDefinitionId("removed_definition"),
@@ -161,7 +158,7 @@ val SnapshotReadsTest by testSuite {
                 ),
             )
         val lease = store.capture()
-        val reads = SnapshotReads(lease.originalView())
+        val reads = CapturedAuthoringReads(lease.originalView())
 
         val selected = reads.select(TypedSelection(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE))))
 
@@ -192,13 +189,13 @@ val SnapshotReadsTest by testSuite {
             )
         val resources = mapOf(resource to record)
         val store =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(SnapshotId("s0"), resources, tokensFor(resources, catalog.generation)),
+                AuthoringSeed(resources),
             )
         val lease = store.capture()
 
-        val found = SnapshotReads(lease.originalView()).discoverResources(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE)))
+        val found = CapturedAuthoringReads(lease.originalView()).discoverResources(TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE)))
 
         assertEquals(listOf(resource), found.map { it.location.resource })
         assertIs<com.typewritermc.authoring.DraftExpectation.PartialRoot>(found.single().expected)
@@ -219,14 +216,14 @@ val SnapshotReadsTest by testSuite {
             )
         val resources = mapOf(complete to completeRecord, pending to pendingRecord)
         val store =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(SnapshotId("s0"), resources, tokensFor(resources, catalog.generation)),
+                AuthoringSeed(resources),
             )
         val lease = store.capture()
 
         val result =
-            SnapshotReads(lease.originalView()).select(
+            CapturedAuthoringReads(lease.originalView()).select(
                 TypedSelection(TestDraftType(ResourceTypeMatch.Application(TypeUse.Named(TEST_TYPE)))),
             )
 
@@ -260,14 +257,14 @@ val SnapshotReadsTest by testSuite {
                 number to AuthoringRecord(TypeSelection.Complete(numberUse), emptyMap()),
             )
         val store =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(SnapshotId("s0"), resources, tokensFor(resources, catalog.generation)),
+                AuthoringSeed(resources),
             )
         val lease = store.capture()
 
         val selected =
-            SnapshotReads(lease.originalView()).select(
+            CapturedAuthoringReads(lease.originalView()).select(
                 TypedSelection(TestDraftType(ResourceTypeMatch.Application(textUse))),
             )
 
@@ -306,17 +303,17 @@ val SnapshotReadsTest by testSuite {
                     ),
             )
         val store =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(SnapshotId("s0"), resources, tokensFor(resources, catalog.generation)),
+                AuthoringSeed(resources),
             )
         val lease = store.capture()
         val root = ValueLocation(resource, ValuePath())
 
-        val matching = SnapshotReads(lease.originalView()).binding(boundPath<Any>(root, textUse))
-        val mismatched = SnapshotReads(lease.originalView()).binding(boundPath<Any>(root, numberUse))
+        val matching = CapturedAuthoringReads(lease.originalView()).binding(boundPath<Any>(root, textUse))
+        val mismatched = CapturedAuthoringReads(lease.originalView()).binding(boundPath<Any>(root, numberUse))
         val unresolvedBinding =
-            SnapshotReads(lease.originalView()).binding(
+            CapturedAuthoringReads(lease.originalView()).binding(
                 boundPath<Any>(ValueLocation(unresolved, ValuePath()), textUse),
             )
 
@@ -332,16 +329,12 @@ val SnapshotReadsTest by testSuite {
         val resource = ResourceId("page")
         val authored = record(numbers = listOf("a" to 1, "b" to 2))
         val store =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(
-                    SnapshotId("s0"),
-                    mapOf(resource to authored),
-                    tokensFor(mapOf(resource to authored), catalog.generation),
-                ),
+                AuthoringSeed(mapOf(resource to authored)),
             )
         val lease = store.capture()
-        val reads = SnapshotReads(lease.originalView())
+        val reads = CapturedAuthoringReads(lease.originalView())
 
         val expanded =
             reads.expand(
@@ -362,7 +355,7 @@ val SnapshotReadsTest by testSuite {
             ),
             expanded,
         )
-        assertTrue(reads.observations().any { it.identity == InputIdentity.Membership(location(resource, "numbers")) })
+        assertTrue(reads.observations().any { InputIdentity.Value(location(resource, "numbers")) in it.dependencies() })
 
         lease.close()
         store.close()
@@ -371,19 +364,12 @@ val SnapshotReadsTest by testSuite {
     test("graphReadIncompletenessOverridesMissingInputs") {
         val catalog = TestCatalogLease()
         val store =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(
-                    SnapshotId("s0"),
-                    emptyMap(),
-                    mapOf(
-                        com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT to InputToken("selection"),
-                        InputIdentity.Catalog(catalog.generation) to InputToken("catalog"),
-                    ),
-                ),
+                AuthoringSeed(emptyMap()),
             )
         val lease = store.capture()
-        val reads = SnapshotReads(lease.originalView())
+        val reads = CapturedAuthoringReads(lease.originalView())
         reads.resourceBinding(ResourceId("missing"))
         reads.recordIncomplete("graph traversal limit exceeded")
 
@@ -402,23 +388,19 @@ val SnapshotReadsTest by testSuite {
         val count = location(resource, "count")
         val initial = record(name = "alpha", count = 1)
         val store =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(
-                    SnapshotId("s0"),
-                    mapOf(resource to initial),
-                    tokensFor(mapOf(resource to initial), catalog.generation),
-                ),
+                AuthoringSeed(mapOf(resource to initial)),
             )
         val nameId = CheckInstanceId(RuleId(RuleOrigin(TEST_TYPE, 0), 0), name)
         val countId = CheckInstanceId(RuleId(RuleOrigin(TEST_TYPE, 1), 0), count)
         val index = DefaultReverseDependencyIndex()
         val incremental = linkedMapOf<CheckInstanceId, Boolean>()
 
-        fun evaluate(id: CheckInstanceId): Pair<Boolean, List<com.typewritermc.checking.InputObservation>> {
+        fun evaluate(id: CheckInstanceId): Pair<Boolean, List<com.typewritermc.authoring.EditExpectation>> {
             val lease = store.capture()
             return lease.use {
-                val reads = SnapshotReads(it.originalView())
+                val reads = CapturedAuthoringReads(it.originalView())
                 val accepted =
                     when (id) {
                         nameId -> reads.read(boundPath<String>(name, TEXT_USE)).available().startsWith("a")
@@ -442,19 +424,8 @@ val SnapshotReadsTest by testSuite {
                 record(name = "alpha", count = 20) to name,
             )
         edits.forEachIndexed { edit, (next, changedLocation) ->
-            val changed =
-                store
-                    .install(
-                        AuthoringSnapshotDelta(
-                            snapshot = SnapshotId("s${edit + 1}"),
-                            upsertedResources = mapOf(resource to next),
-                            inputTokens =
-                                mapOf(
-                                    InputIdentity.Value(root) to InputToken("root:${edit + 1}"),
-                                    InputIdentity.Value(changedLocation) to InputToken("field:${edit + 1}"),
-                                ),
-                        ),
-                    ).changed
+            store.install(store.prepare(AuthoringViewDelta(upsertedResources = mapOf(resource to next))))
+            val changed = setOf(InputIdentity.Value(changedLocation))
             index.affectedBy(changed).forEach { id ->
                 val (value, observations) = evaluate(id)
                 incremental[id] = value

@@ -3,13 +3,13 @@ package com.typewritermc.engine.runtime
 import com.typewritermc.elements.Cue
 import com.typewritermc.elements.Element
 import com.typewritermc.engine.CompilationProjectionId
-import com.typewritermc.engine.CompiledArtifactManifest
 import com.typewritermc.engine.CompiledArtifactReference
 import com.typewritermc.engine.CompiledPageShard
 import com.typewritermc.engine.CompiledResourceKey
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.engine.LoadedCompiledArtifact
-import com.typewritermc.engine.LoadedCompiledContent
+import com.typewritermc.engine.LoadedPublishedContent
+import com.typewritermc.engine.PublishedContent
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.catalog.CheckedCatalog
@@ -20,11 +20,10 @@ import kotlinx.serialization.json.Json
 /**
  * Accepts loaded compiled content at the engine content boundary.
  *
- * Successful return means the implementation applied its own content contract. Ordering and stale revision
- * rejection belong to the runtime invoking this gateway.
+ * Successful return means the implementation applied its own content contract. The delivery owner serializes current state fetches and application.
  */
 fun interface EngineContentGateway {
-    suspend fun apply(content: LoadedCompiledContent)
+    suspend fun apply(content: LoadedPublishedContent)
 }
 
 /** Typed identity for one independently contributed engine content facet. */
@@ -51,12 +50,12 @@ class EngineContentBuilder {
         require(values.put(facet, value) == null) { "Engine content facet ${facet.id} was contributed more than once." }
     }
 
-    internal fun build(manifest: CompiledArtifactManifest): EngineContentSnapshot = EngineContentSnapshot(manifest, values.toMap())
+    internal fun build(descriptor: PublishedContent): EngineContentSnapshot = EngineContentSnapshot(descriptor, values.toMap())
 }
 
 /** Publishes all registered content facets after every consumer assembles successfully. */
 data class EngineContentSnapshot(
-    val manifest: CompiledArtifactManifest,
+    val descriptor: PublishedContent,
     private val facets: Map<EngineContentFacet<*>, Any>,
 ) {
     @Suppress("UNCHECKED_CAST")
@@ -129,36 +128,27 @@ class AssemblingEngineContentGateway(
     private val mutableSnapshot = MutableStateFlow<EngineContentSnapshot?>(null)
     val snapshot: StateFlow<EngineContentSnapshot?> = mutableSnapshot
 
-    override suspend fun apply(content: LoadedCompiledContent) {
-        require(content.manifest.formatRevision == 2) {
-            "Unsupported compiled content format ${content.manifest.formatRevision}."
+    override suspend fun apply(content: LoadedPublishedContent) {
+        require(content.descriptor.formatRevision == 2) {
+            "Unsupported compiled content format ${content.descriptor.formatRevision}."
         }
         val target = EngineContentBuilder()
         consumers.contribute(content, target)
-        mutableSnapshot.value = target.build(content.manifest)
+        mutableSnapshot.value = target.build(content.descriptor)
     }
 }
 
 private val json = Json { ignoreUnknownKeys = true }
 
-/**
- * Distinguishes newly applied content, a stale activation, and runtimes without a content gateway.
- *
- * Ignored reports the current activation and manifest, not the rejected incoming revision.
- */
+/** Reports whether the complete publication was installed or was already current. */
 sealed interface ContentApplicationResult {
-    /** The gateway accepted the incoming activation and it became the current content. */
     data class Applied(
-        val activationRevision: Long,
-        val manifest: ContentDigest,
+        val publication: com.typewritermc.authoring.PublicationId,
     ) : ContentApplicationResult
 
-    /** The activation was stale or repeated; the current content remains authoritative. */
-    data class Ignored(
-        val activationRevision: Long,
-        val currentManifest: ContentDigest,
+    data class Unchanged(
+        val publication: com.typewritermc.authoring.PublicationId,
     ) : ContentApplicationResult
 
-    /** No content gateway is configured, so the activation could not be applied. */
     data object Unsupported : ContentApplicationResult
 }

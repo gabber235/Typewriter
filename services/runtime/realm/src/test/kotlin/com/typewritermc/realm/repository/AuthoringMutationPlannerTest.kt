@@ -2,7 +2,6 @@ package com.typewritermc.realm.repository
 
 import com.typewritermc.authoring.ArgumentSelection
 import com.typewritermc.authoring.AuthoringRecord
-import com.typewritermc.authoring.BatchId
 import com.typewritermc.authoring.ConnectIntent
 import com.typewritermc.authoring.CounterpartChoice
 import com.typewritermc.authoring.EditIntent
@@ -19,7 +18,6 @@ import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputIdentity
-import com.typewritermc.checking.SnapshotId
 import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.types.CollectionKind
@@ -540,18 +538,14 @@ class AuthoringMutationPlannerTest {
                             ),
                         metadataChanged = emptyList(),
                     ),
-                changedInputs = emptySet(),
             )
 
-        val evidence = mandatoryWriteInputs(edit, before) + mutationPlanWriteInputs(plan, before)
-
-        assertTrue(InputIdentity.Value(sourceLocation) in evidence)
-        assertTrue(InputIdentity.Form(containing) in evidence)
-        assertTrue(InputIdentity.Membership(containing) in evidence)
-        assertTrue(InputIdentity.Order(containing) in evidence)
-        assertTrue(InputIdentity.Incoming(source, null) in evidence)
-        assertTrue(InputIdentity.Incoming(target, null) in evidence)
-        assertTrue(InputIdentity.Value(generatedLink) !in evidence)
+        val values = CapturedAuthoringValues(before, emptyList())
+        val evidence = values.requiredExpectations(edit, before, setOf(nestedContract().id), plan)
+        assertTrue(evidence.any { it is com.typewritermc.authoring.EditExpectation.Value && it.at == sourceLocation })
+        assertTrue(evidence.any { it is com.typewritermc.authoring.EditExpectation.Configuration && it.at == containing })
+        assertTrue(evidence.any { it is com.typewritermc.authoring.EditExpectation.Links && it.resource == source })
+        assertTrue(evidence.any { it is com.typewritermc.authoring.EditExpectation.Links && it.resource == target })
     }
 
     fun proposedCollectionOccurrenceConnectsItsDirectScalarCounterpart() {
@@ -1410,14 +1404,7 @@ private fun relation(
     ),
 )
 
-private fun edit(vararg intents: EditIntent) =
-    PreparedEdit(
-        BatchId("batch"),
-        GENERATION,
-        SnapshotId("snapshot"),
-        emptyList(),
-        intents.toList(),
-    )
+private fun edit(vararg intents: EditIntent) = PreparedEdit(GENERATION, emptyList(), intents.toList())
 
 private fun occurrence(
     endpoint: EndpointId,

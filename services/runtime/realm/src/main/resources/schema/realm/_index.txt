@@ -1,11 +1,4 @@
 search/authoring_text.surql
-search/authoring_search.surql
 resource/resource.surql
-resource/authoring_batch.surql
-compile/compiled_artifact.surql
-compile/compile_attempt_root.surql
-compile/active_compiled_artifact_manifest.surql
-compile/authoring_head.surql
-compile/collaboration_head.surql
+resource/resource_relation.surql
 compile/publication_attempt.surql
-compile/compile_attempt.surql

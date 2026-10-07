@@ -1,168 +1,150 @@
 package com.typewritermc.realm.compiler
 
 import com.surrealdb.Surreal
+import com.typewritermc.authoring.DiagnosticId
 import com.typewritermc.authoring.PublicationId
+import com.typewritermc.checking.CatalogGeneration
+import com.typewritermc.checking.Diagnostic
+import com.typewritermc.checking.DiagnosticSeverity
+import com.typewritermc.checking.InputToken
+import com.typewritermc.configuration.RuleOrigin
 import com.typewritermc.engine.CompilationProjectionId
 import com.typewritermc.engine.CompilationRoot
-import com.typewritermc.engine.CompileDiagnostic
-import com.typewritermc.engine.CompileDiagnosticSeverity
-import com.typewritermc.engine.CompiledArtifact
-import com.typewritermc.engine.CompiledArtifactActivation
-import com.typewritermc.engine.CompiledArtifactManifest
-import com.typewritermc.engine.CompiledArtifactPointer
+import com.typewritermc.engine.CompiledArtifactReference
 import com.typewritermc.engine.CompiledBlobPointer
 import com.typewritermc.engine.ContentDigest
+import com.typewritermc.engine.PublishedContent
+import com.typewritermc.engine.PublishedOutput
+import com.typewritermc.realm.checking.TEST_TYPE
+import com.typewritermc.realm.schema.MigrationResources
+import com.typewritermc.realm.schema.openTestDatabase
 import com.typewritermc.types.ResourceId
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 
 val RegisteredCompiledContentRepositoryTest by testSuite {
-    test("replacement manifest persists preserved and newly compiled artifact rows") {
-        Surreal().use { database ->
-            database.connect("memory")
-            database.useNs("test").useDb("test")
-            database.query(
-                """
-                DEFINE TABLE resource SCHEMALESS;
-                DEFINE TABLE authoring_head SCHEMALESS;
-                UPSERT ONLY authoring_head:current SET revision = 1;
-                DEFINE TABLE compiled_artifact SCHEMALESS;
-                DEFINE TABLE compiled_artifact_manifest SCHEMALESS;
-                DEFINE TABLE active_compiled_artifact_manifest SCHEMALESS;
-                DEFINE TABLE compile_attempt SCHEMALESS;
-                DEFINE TABLE compile_attempt_root SCHEMALESS TYPE RELATION IN compile_attempt OUT resource;
-                """.trimIndent(),
-            )
-            val repository = SurrealRegisteredCompiledContentRepository(database)
-            val preserved = 'a'.artifact("preserved")
-            val firstManifest = 'c'.manifest("1", listOf(preserved))
-
-            repository.publish(
-                PublicationId("first"),
-                firstManifest,
-                listOf(preserved),
-                firstManifest.activation(1, preserved),
-            ) shouldBe true
-
-            database.query("UPSERT ONLY authoring_head:current SET revision = 2;")
-            val replacement = 'b'.artifact("replacement")
-            val secondManifest = 'd'.manifest("2", listOf(preserved, replacement))
-
-            repository.publish(
-                PublicationId("second"),
-                secondManifest,
-                listOf(replacement),
-                secondManifest.activation(2, preserved, replacement),
-            ) shouldBe true
-
-            database
-                .query(
-                    "SELECT VALUE array::len(artifacts) FROM ONLY \$manifest;",
-                    mapOf("manifest" to com.surrealdb.RecordId("compiled_artifact_manifest", secondManifest.digest.value)),
-                ).take(0)
-                .getLong() shouldBe 2L
-        }
-    }
-
-    test("stale blocked attempts are discarded when the authoring head advanced") {
-        Surreal().use { database ->
-            database.connect("memory")
-            database.useNs("test").useDb("test")
-            database.query(
-                """
-                DEFINE TABLE resource SCHEMAFULL TYPE NORMAL;
-                DEFINE TABLE authoring_head SCHEMAFULL TYPE NORMAL;
-                DEFINE FIELD revision ON authoring_head TYPE int;
-                UPSERT ONLY authoring_head:current SET revision = 2;
-                DEFINE TABLE compile_attempt SCHEMAFULL TYPE NORMAL;
-                DEFINE FIELD source_revision ON compile_attempt TYPE string;
-                DEFINE FIELD catalog_revision ON compile_attempt TYPE string;
-                DEFINE FIELD compiler_format ON compile_attempt TYPE int;
-                DEFINE FIELD status ON compile_attempt TYPE string;
-                DEFINE FIELD diagnostics ON compile_attempt TYPE string;
-                DEFINE FIELD artifact_manifest ON compile_attempt TYPE option<record>;
-                DEFINE FIELD started_at ON compile_attempt TYPE datetime DEFAULT time::now();
-                DEFINE FIELD completed_at ON compile_attempt TYPE datetime DEFAULT time::now();
-                DEFINE TABLE compile_attempt_root SCHEMAFULL TYPE RELATION IN compile_attempt OUT resource;
-                DEFINE FIELD projection ON compile_attempt_root TYPE string;
-                """.trimIndent(),
-            )
-
-            var blockedNotifications = 0
-            val repository =
-                SurrealRegisteredCompiledContentRepository(
-                    database = database,
-                    onBlocked = { blockedNotifications++ },
-                )
-            val root = CompilationRoot(CompilationProjectionId("test.projection"), ResourceId("root"))
-
-            repository.recordBlocked(
-                sourceRevision = "1",
-                catalogRevision = "catalog",
-                roots = listOf(root),
-                diagnostics =
-                    listOf(
-                        CompileDiagnostic(
-                            code = "blocked",
-                            message = "blocked",
-                            severity = CompileDiagnosticSeverity.ERROR,
-                        ),
+    test("selection replaces the complete set and empty results remove every previous root") {
+        publicationDatabase().use { database ->
+            val attempts = SurrealPublicationAttemptStore(database)
+            val results = SurrealRegisteredCompiledContentRepository(database)
+            val first = testPublishedContent("first", "a")
+            attempts.start(first.publication, first.catalog, testEngineInputs())
+            attempts.phase(first.publication, PublicationState.Activating)
+            attempts.install(first)
+            results.selected() shouldBe first
+            val second = testPublishedContent("second", "b")
+            attempts.start(second.publication, second.catalog, testEngineInputs())
+            attempts.phase(second.publication, PublicationState.Activating)
+            attempts.install(second)
+            results.selected() shouldBe second
+            results
+                .states(
+                    setOf(
+                        first.outputs
+                            .single()
+                            .reference.root,
                     ),
-            ) shouldBe false
-
-            blockedNotifications shouldBe 0
+                ).values
+                .single() shouldBe RegisteredCompiledState.NotCompiled
+            val empty = second.copy(publication = PublicationId("empty"), outputs = emptyList())
+            attempts.start(empty.publication, empty.catalog, testEngineInputs())
+            attempts.phase(empty.publication, PublicationState.Activating)
+            attempts.install(empty)
+            results.selected() shouldBe empty
             database
-                .query("SELECT * FROM compile_attempt;")
+                .query("SELECT id FROM publication_attempt WHERE selected = true;")
                 .take(0)
                 .getArray()
-                .len() shouldBe 0
+                .len() shouldBe 1
+        }
+    }
+    test("a failed installation rolls back clearing the previous selection") {
+        publicationDatabase().use { database ->
+            val attempts = SurrealPublicationAttemptStore(database)
+            val results = SurrealRegisteredCompiledContentRepository(database)
+            val first = testPublishedContent("first", "a")
+            attempts.start(first.publication, first.catalog, testEngineInputs())
+            attempts.phase(first.publication, PublicationState.Activating)
+            attempts.install(first)
+            val next = testPublishedContent("next", "b")
+            attempts.start(next.publication, next.catalog, testEngineInputs())
+            shouldThrow<IllegalStateException> { attempts.install(next) }
+            results.selected() shouldBe first
+        }
+    }
+    test("blocked findings remain structured and preserve the selected result") {
+        publicationDatabase().use { database ->
+            val attempts = SurrealPublicationAttemptStore(database)
+            val results = SurrealRegisteredCompiledContentRepository(database)
+            val finding =
+                Diagnostic(
+                    DiagnosticId("broken"),
+                    RuleOrigin(TEST_TYPE, 0),
+                    "broken",
+                    "A nested value is missing",
+                    DiagnosticSeverity.Error,
+                    null,
+                    emptyList(),
+                )
+            val id = PublicationId("blocked")
+            attempts.start(id, CatalogGeneration("catalog"), testEngineInputs())
+            attempts.blocked(id, listOf(finding))
+            results.latestReport()?.findings shouldBe listOf(finding)
+            database
+                .query("SELECT VALUE findings FROM ONLY publication_attempt:blocked;")
+                .take(0)
+                .getArray()
+                .single()
+                .isObject shouldBe
+                true
+            results.selected() shouldBe null
+        }
+    }
+    test("restart interrupts unfinished attempts without changing a completed selected attempt") {
+        publicationDatabase().use { database ->
+            val attempts = SurrealPublicationAttemptStore(database)
+            val results = SurrealRegisteredCompiledContentRepository(database)
+            val first = testPublishedContent("first", "a")
+            attempts.start(first.publication, first.catalog, testEngineInputs())
+            attempts.phase(first.publication, PublicationState.Activating)
+            attempts.install(first)
+            attempts.start(PublicationId("unfinished"), first.catalog, testEngineInputs())
+            SurrealPublicationAttemptStore(database).interruptUnfinished()
+            results.selected() shouldBe first
+            database.query("SELECT VALUE state FROM ONLY publication_attempt:unfinished;").take(0).getString() shouldBe "interrupted"
+            database.query("SELECT VALUE state FROM ONLY publication_attempt:first;").take(0).getString() shouldBe "complete"
         }
     }
 }
 
-private fun Char.artifact(resource: String) =
-    CompiledArtifact(
-        root = CompilationRoot(CompilationProjectionId("test.projection"), ResourceId(resource)),
-        formatRevision = 1,
-        mediaType = "application/vnd.typewriter.test",
-        inputFingerprint = ContentDigest(toString().repeat(64)),
-        semanticDigest = ContentDigest(toString().repeat(64)),
-        payload = byteArrayOf(code.toByte()),
+internal fun publicationDatabase(): Surreal =
+    Surreal().apply {
+        openTestDatabase("publication_test")
+        MigrationResources().loadRealmSchema().forEach { query(it.script).take(0) }
+    }
+
+internal fun testEngineInputs() = EngineImplementationInputs(emptySet(), InputToken("implementation"))
+
+internal fun testPublishedContent(
+    id: String,
+    resource: String,
+): PublishedContent =
+    PublishedContent(
+        PublicationId(id),
+        2,
+        CatalogGeneration("catalog"),
+        "implementation",
+        emptySet(),
+        listOf(
+            PublishedOutput(
+                CompiledArtifactReference(
+                    CompilationRoot(CompilationProjectionId("test"), ResourceId(resource)),
+                    1,
+                    "application/test",
+                    ContentDigest("a".repeat(64)),
+                ),
+                CompiledBlobPointer(ContentDigest("b".repeat(64)), 1),
+            ),
+        ),
     )
-
-private fun Char.manifest(
-    sourceRevision: String,
-    artifacts: List<CompiledArtifact>,
-) = CompiledArtifactManifest(
-    formatRevision = 1,
-    digest = ContentDigest(toString().repeat(64)),
-    sourceRevision = sourceRevision,
-    catalogRevision = "catalog",
-    implementationToken = "implementation",
-    runtimeSignatures = emptySet(),
-    artifacts =
-        artifacts.map { artifact ->
-            com.typewritermc.engine.CompiledArtifactReference(
-                root = artifact.root,
-                formatRevision = artifact.formatRevision,
-                mediaType = artifact.mediaType,
-                semanticDigest = artifact.semanticDigest,
-            )
-        },
-)
-
-private fun CompiledArtifactManifest.activation(
-    revision: Long,
-    vararg artifacts: CompiledArtifact,
-) = CompiledArtifactActivation(
-    activationRevision = revision,
-    manifestDigest = digest,
-    manifest = CompiledBlobPointer(ContentDigest('e'.toString().repeat(64)), 1),
-    artifacts =
-        artifacts.map { artifact ->
-            CompiledArtifactPointer(
-                semanticDigest = artifact.semanticDigest,
-                blob = CompiledBlobPointer(ContentDigest(artifact.semanticDigest.value), 1),
-            )
-        },
-)

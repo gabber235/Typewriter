@@ -107,8 +107,7 @@ final class RealmPublicationSourceFamily extends $Family
 final realmPublicationProvider = RealmPublicationFamily._();
 
 final class RealmPublicationProvider
-    extends
-        $StreamNotifierProvider<RealmPublication, skir.PublicationAttempt?> {
+    extends $StreamNotifierProvider<RealmPublication, skir.PublicationReport?> {
   RealmPublicationProvider._({
     required RealmPublicationFamily super.from,
     required (skir.RecordId, skir.RecordId) super.argument,
@@ -145,15 +144,15 @@ final class RealmPublicationProvider
   }
 }
 
-String _$realmPublicationHash() => r'fe10f9865cc1808345114b8e240d2202e04b88a5';
+String _$realmPublicationHash() => r'd90c55ffb43765e4cb15b303286cebd37dae8053';
 
 final class RealmPublicationFamily extends $Family
     with
         $ClassFamilyOverride<
           RealmPublication,
-          AsyncValue<skir.PublicationAttempt?>,
-          skir.PublicationAttempt?,
-          Stream<skir.PublicationAttempt?>,
+          AsyncValue<skir.PublicationReport?>,
+          skir.PublicationReport?,
+          Stream<skir.PublicationReport?>,
           (skir.RecordId, skir.RecordId)
         > {
   RealmPublicationFamily._()
@@ -178,12 +177,12 @@ final class RealmPublicationFamily extends $Family
 }
 
 abstract class _$RealmPublication
-    extends $StreamNotifier<skir.PublicationAttempt?> {
+    extends $StreamNotifier<skir.PublicationReport?> {
   late final _$args = ref.$arg as (skir.RecordId, skir.RecordId);
   skir.RecordId get organizationId => _$args.$1;
   skir.RecordId get realmId => _$args.$2;
 
-  Stream<skir.PublicationAttempt?> build(
+  Stream<skir.PublicationReport?> build(
     skir.RecordId organizationId,
     skir.RecordId realmId,
   );
@@ -193,17 +192,17 @@ abstract class _$RealmPublication
     final ref =
         this.ref
             as $Ref<
-              AsyncValue<skir.PublicationAttempt?>,
-              skir.PublicationAttempt?
+              AsyncValue<skir.PublicationReport?>,
+              skir.PublicationReport?
             >;
     final element =
         ref.element
             as $ClassProviderElement<
               AnyNotifier<
-                AsyncValue<skir.PublicationAttempt?>,
-                skir.PublicationAttempt?
+                AsyncValue<skir.PublicationReport?>,
+                skir.PublicationReport?
               >,
-              AsyncValue<skir.PublicationAttempt?>,
+              AsyncValue<skir.PublicationReport?>,
               Object?,
               Object?
             >;

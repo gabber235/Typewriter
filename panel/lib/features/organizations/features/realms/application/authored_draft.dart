@@ -4,10 +4,10 @@ import "package:crypto/crypto.dart";
 import "package:skir_client/skir_client.dart" show ByteString;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring.dart"
     as authoring;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring_facts.dart"
+    as facts;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
     as catalog_wire;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/checking.dart"
-    as checking;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/diagnostic.dart"
     as diagnostic_wire;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
@@ -21,43 +21,35 @@ import "package:uuid/uuid.dart";
 
 final class AuthoredDraft {
   AuthoredDraft({
-    required this.snapshot,
     required this.generation,
     required Iterable<authoring.AuthoringResource> resources,
-    required Iterable<authoring.LinkProjection> links,
-    required Iterable<checking.InputObservation> observations,
-    required this.absentInputToken,
+    required Iterable<facts.LinkProjection> links,
     this.catalog,
   }) : _resources = {
          for (final resource in resources) resource.id: resource.content,
        },
        _links = List.of(links),
-       _original = {
-         for (final observation in observations)
-           observation.identity: observation,
-       };
+       _baselineResources = {
+         for (final resource in resources) resource.id: resource.content,
+       },
+       _baselineLinks = List.of(links);
 
-  factory AuthoredDraft.fromSnapshot(
-    authoring.AuthoringSnapshot source, {
+  factory AuthoredDraft.fromState(
+    authoring.AuthoringState source, {
     CheckedEditorCatalog? catalog,
   }) => AuthoredDraft(
-    snapshot: source.snapshot,
     generation: source.generation,
     resources: source.resources,
     links: source.links,
-    observations: source.observations,
-    absentInputToken: source.absentInputToken,
     catalog: catalog,
   );
-
-  final types.SnapshotId snapshot;
   final types.CatalogGeneration generation;
-  final types.InputToken absentInputToken;
   final CheckedEditorCatalog? catalog;
   final Map<types.ResourceId, types.AuthoringRecord> _resources;
-  final List<authoring.LinkProjection> _links;
-  final Map<checking.InputIdentity, checking.InputObservation> _original;
-  final Map<checking.InputIdentity, checking.InputObservation> _observed = {};
+  final List<facts.LinkProjection> _links;
+  final Map<types.ResourceId, types.AuthoringRecord> _baselineResources;
+  final List<facts.LinkProjection> _baselineLinks;
+  final Map<Object, facts.EditExpectation> _observed = {};
   final List<authoring.EditIntent> _intents = [];
   final List<diagnostic_wire.InitializationDiagnostic> _initializationFindings =
       [];
@@ -69,21 +61,20 @@ final class AuthoredDraft {
   Map<types.ResourceId, types.AuthoringRecord> get resources =>
       Map.unmodifiable(_resources);
 
-  List<authoring.LinkProjection> get links => List.unmodifiable(_links);
+  List<facts.LinkProjection> get links => List.unmodifiable(_links);
 
-  List<checking.InputObservation> get observations =>
+  List<facts.EditExpectation> get expectations =>
       List.unmodifiable(_observed.values);
 
   List<diagnostic_wire.InitializationDiagnostic> get initializationFindings =>
       List.unmodifiable(_initializationFindings);
 
   void observeExpressionReads(Iterable<PortableExpressionRead> reads) {
-    _observeCatalog();
     for (final read in reads) {
       final location = read.location;
       if (location == null) continue;
       _observePath(location);
-      _observe(checking.InputIdentity.createValue(at: location));
+      _observe(_value(at: location));
     }
   }
 
@@ -100,7 +91,6 @@ final class AuthoredDraft {
 
   AuthoredDraft fork() {
     final branch = AuthoredDraft(
-      snapshot: snapshot,
       generation: generation,
       resources: [
         for (final entry in _resources.entries)
@@ -113,10 +103,14 @@ final class AuthoredDraft {
           ),
       ],
       links: _links,
-      observations: _original.values,
-      absentInputToken: absentInputToken,
       catalog: catalog,
     );
+    branch._baselineResources
+      ..clear()
+      ..addAll(_baselineResources);
+    branch._baselineLinks
+      ..clear()
+      ..addAll(_baselineLinks);
     branch._observed.addAll(_observed);
     branch._intents.addAll(_intents);
     branch._initializationFindings.addAll(_initializationFindings);
@@ -125,50 +119,20 @@ final class AuthoredDraft {
   }
 
   AuthoredDraftRebase rebaseOnto(AuthoredDraft baseline) {
-    for (final observation in _observed.values) {
-      if (observation.identity is checking.InputIdentity_catalogWrapper) {
-        continue;
-      }
-      final actual =
-          baseline._original[observation.identity]?.token ??
-          baseline.absentInputToken;
-      if (actual != observation.token) {
-        return AuthoredDraftRebaseConflict(
-          identity: observation.identity,
-          expected: observation.token,
-          actual: actual,
-        );
-      }
+    if (generation != baseline.generation)
+      return const AuthoredDraftRebaseFailed("The editor catalog changed");
+    for (final expected in _observed.values) {
+      final actual = baseline._actual(expected);
+      if (!_sameExpectation(actual, expected))
+        return AuthoredDraftRebaseConflict(expected: expected, actual: actual);
     }
-    final next = AuthoredDraft(
-      snapshot: baseline.snapshot,
-      generation: baseline.generation,
-      resources: [
-        for (final entry in baseline._resources.entries)
-          authoring.AuthoringResource(
-            id: entry.key,
-            definition:
-                baseline.catalog
-                    ?.resourceDefinition(entry.value.configuration)
-                    ?.id ??
-                catalog_wire.ResourceDefinitionId.defaultInstance,
-            content: entry.value,
-          ),
-      ],
-      links: baseline._links,
-      observations: baseline._original.values,
-      absentInputToken: baseline.absentInputToken,
-      catalog: baseline.catalog,
-    );
+    final next = baseline.fork();
     for (final intent in _intents) {
       final failure = next._replay(intent);
       if (failure != null) return AuthoredDraftRebaseFailed(failure);
     }
-    for (final observation in _observed.values) {
-      if (observation.identity is checking.InputIdentity_catalogWrapper) {
-        continue;
-      }
-      next._observed[observation.identity] = observation;
+    for (final expected in _observed.values) {
+      next._observed[_factKey(expected)] = expected;
     }
     return AuthoredDraftRebased(next);
   }
@@ -176,44 +140,45 @@ final class AuthoredDraft {
   AuthoredDraftRebase rebaseTailOnto(
     AuthoredDraft baseline, {
     required int acceptedIntentCount,
-    required Iterable<checking.InputIdentity> acceptedChanges,
   }) {
-    if (acceptedIntentCount < 0 || acceptedIntentCount > _intents.length) {
+    if (generation != baseline.generation)
+      return const AuthoredDraftRebaseFailed("The editor catalog changed");
+    if (acceptedIntentCount < 0 || acceptedIntentCount > _intents.length)
       return const AuthoredDraftRebaseFailed(
         "The accepted edit prefix no longer matches the local draft",
       );
+    final accepted = AuthoredDraft(
+      generation: generation,
+      resources: [
+        for (final entry in _baselineResources.entries)
+          authoring.AuthoringResource(
+            id: entry.key,
+            definition: catalog_wire.ResourceDefinitionId.defaultInstance,
+            content: entry.value,
+          ),
+      ],
+      links: _baselineLinks,
+      catalog: catalog,
+    );
+    for (final intent in _intents.take(acceptedIntentCount)) {
+      final failure = accepted._replay(intent);
+      if (failure != null) return AuthoredDraftRebaseFailed(failure);
     }
-    final accepted = acceptedChanges.toSet();
-    for (final observation in _observed.values) {
-      if (observation.identity is checking.InputIdentity_catalogWrapper) {
-        continue;
-      }
-      final actual =
-          baseline._original[observation.identity]?.token ??
-          baseline.absentInputToken;
-      if (actual != observation.token &&
-          !accepted.contains(observation.identity)) {
-        return AuthoredDraftRebaseConflict(
-          identity: observation.identity,
-          expected: observation.token,
-          actual: actual,
-        );
-      }
+    for (final expected in _observed.values) {
+      final afterSave = accepted._actual(expected, original: false);
+      final actual = baseline._actual(expected);
+      if (!_sameExpectation(actual, afterSave))
+        return AuthoredDraftRebaseConflict(expected: afterSave, actual: actual);
     }
     final next = baseline.fork();
     for (final intent in _intents.skip(acceptedIntentCount)) {
       final failure = next._replay(intent);
       if (failure != null) return AuthoredDraftRebaseFailed(failure);
     }
-    for (final observation in _observed.values) {
-      if (observation.identity is checking.InputIdentity_catalogWrapper) {
-        continue;
-      }
-      next._observed[observation.identity] = checking.InputObservation(
-        identity: observation.identity,
-        token:
-            baseline._original[observation.identity]?.token ??
-            baseline.absentInputToken,
+    for (final expected in _observed.values) {
+      next._observed[_factKey(expected)] = accepted._actual(
+        expected,
+        original: false,
       );
     }
     next._initializationFindings.addAll(_initializationFindings);
@@ -221,20 +186,17 @@ final class AuthoredDraft {
     return AuthoredDraftRebased(next);
   }
 
-  authoring.PreparedEdit prepare(types.BatchId id) => authoring.PreparedEdit(
-    id: id,
+  authoring.PreparedEdit prepare() => authoring.PreparedEdit(
     catalog: generation,
-    snapshot: snapshot,
-    observations: observations,
+    expectations: expectations,
     intents: intents,
   );
 
   types.AuthoringRecord? resource(types.ResourceId id) => _resources[id];
 
   PortablePathResult<types.DataValue> read(types.ValueLocation location) {
-    _observeCatalog();
     _observePath(location);
-    _observe(checking.InputIdentity.createValue(at: location));
+    _observe(_value(at: location));
     final record = _resources[location.resource];
     if (record == null) {
       return const PortablePathUnavailable("The resource is absent");
@@ -263,8 +225,7 @@ final class AuthoredDraft {
       );
     }
     final originalIntents = _intents.length;
-    final originalObserved =
-        Map<checking.InputIdentity, checking.InputObservation>.from(_observed);
+    final originalObserved = Map<Object, facts.EditExpectation>.from(_observed);
     PortablePathResult<types.AuthoringRecord> rollback(
       PortablePathResult<types.AuthoringRecord> result,
     ) {
@@ -281,9 +242,8 @@ final class AuthoredDraft {
       return rollback(materialized);
     }
     final writableRecord = _resources[location.resource]!;
-    _observeCatalog();
     _observePath(location);
-    _observe(checking.InputIdentity.createValue(at: location));
+    _observe(_value(at: location));
     final updated = writableRecord.replaceAt(location.path, value);
     if (updated case PortablePathValue(value: final stagedRecord)) {
       _resources[location.resource] = stagedRecord;
@@ -313,9 +273,8 @@ final class AuthoredDraft {
       _materializationOperations[plan.location] =
           working._materializationOperations[plan.location]!;
       working
-        .._observeCatalog()
         .._observePath(plan.containing)
-        .._observe(checking.InputIdentity.createValue(at: plan.containing));
+        .._observe(_value(at: plan.containing));
       final containing = await prepare(plan.request);
       if (!baseline.matches(this)) {
         return const PortablePathUnavailable(
@@ -462,8 +421,7 @@ final class AuthoredDraft {
     types.ItemId? after,
     types.ListItem item,
   ) {
-    _observeCatalog();
-    _observeCollection(location, order: true);
+    _observeCollection(location);
     return _updateCollection(
       location,
       (items) {
@@ -535,8 +493,7 @@ final class AuthoredDraft {
     types.ValueLocation location,
     types.ItemId item,
   ) {
-    _observeCatalog();
-    _observeCollection(location, order: true);
+    _observeCollection(location);
     return _updateCollection(location, (items) {
       if (items.every((candidate) => candidate.id != item)) return null;
       return items.where((candidate) => candidate.id != item).toList();
@@ -548,8 +505,7 @@ final class AuthoredDraft {
     types.ItemId item,
     types.ItemId? after,
   ) {
-    _observeCatalog();
-    _observeCollection(location, order: true);
+    _observeCollection(location);
     return _updateCollection(location, (items) {
       if (item == after || items.every((candidate) => candidate.id != item)) {
         return null;
@@ -570,10 +526,8 @@ final class AuthoredDraft {
     types.ValueLocation location,
     Iterable<types.MapRow> rows,
   ) {
-    final previous = Map<checking.InputIdentity, checking.InputObservation>.of(
-      _observed,
-    );
-    _observeCollection(location, order: false);
+    final previous = Map<Object, facts.EditExpectation>.of(_observed);
+    _observeCollection(location);
     final result = setPayload(
       location,
       types.DataValue.createMapValue(rows: rows),
@@ -623,9 +577,7 @@ final class AuthoredDraft {
   }
 
   void create(types.ResourceId id, types.AuthoringRecord record) {
-    _observeCatalog();
-    _observe(checking.InputIdentity.createExistence(resource: id));
-    _observe(_resourceSelection);
+    _observe(_exists(resource: id));
     _resources[id] = record;
     _intents.add(
       authoring.EditIntent.createCreateResource(id: id, record: record),
@@ -646,12 +598,10 @@ final class AuthoredDraft {
   }
 
   void delete(types.ResourceId id) {
-    _observeCatalog();
-    _observe(checking.InputIdentity.createExistence(resource: id));
-    _observe(checking.InputIdentity.createForm(at: _root(id)));
+    _observe(_exists(resource: id));
+    _observe(_configuration(at: _root(id)));
     _observeIncoming(id, null);
     _observeDeletionRelations(id);
-    _observe(_resourceSelection);
     _resources.remove(id);
     _links.removeWhere((link) => link.first == id || link.second == id);
     _intents.add(authoring.EditIntent.createDeleteResource(id: id));
@@ -662,10 +612,9 @@ final class AuthoredDraft {
     types.ResourceId target, {
     authoring.CounterpartChoice? counterpart,
   }) {
-    _observeCatalog();
     _observeRelationPath(source.id.location);
-    _observe(checking.InputIdentity.createExistence(resource: target));
-    _observe(checking.InputIdentity.createForm(at: _root(target)));
+    _observe(_exists(resource: target));
+    _observe(_configuration(at: _root(target)));
     _observeIncoming(source.source, null);
     _observeIncoming(target, null);
     _observeRelationsForEndpoint(source.id.endpoint, source.source, target);
@@ -674,10 +623,8 @@ final class AuthoredDraft {
         _observeRelationPath(value.id.location);
       case authoring.CounterpartChoice_newWrapper(:final value):
         _observePath(value.containing);
-        _observe(checking.InputIdentity.createForm(at: value.containing));
-        _observe(checking.InputIdentity.createValue(at: value.containing));
-        _observe(checking.InputIdentity.createMembership(at: value.containing));
-        _observe(checking.InputIdentity.createOrder(at: value.containing));
+        _observe(_configuration(at: value.containing));
+        _observe(_value(at: value.containing));
       case null:
       case authoring.CounterpartChoice_unknown():
     }
@@ -741,7 +688,6 @@ final class AuthoredDraft {
     types.ResourceId? source,
     types.ResourceId? target,
   }) {
-    _observeCatalog();
     _observeRelationPath(occurrence.location);
     final actualSource = source ?? occurrence.location.resource;
     final projected = _links.where((link) {
@@ -833,9 +779,11 @@ final class AuthoredDraft {
         .where((link) => _projectionContainsOccurrence(link, source.id))
         .firstOrNull;
     if (previous != null) {
+      _observeRelationProjection(previous);
       final previousTarget = previous.first == source.source
           ? previous.second
           : previous.first;
+      _observeIncoming(previousTarget, null);
       final previousOpposite = previous.first == source.source
           ? previous.secondLocation
           : previous.firstLocation;
@@ -889,7 +837,7 @@ final class AuthoredDraft {
     );
     final sourceIsFirst = relation.first.id == source.id.endpoint;
     _links.add(
-      authoring.LinkProjection(
+      facts.LinkProjection(
         contract: relation.id,
         first: sourceIsFirst ? source.source : target,
         second: sourceIsFirst ? target : source.source,
@@ -1114,7 +1062,7 @@ final class AuthoredDraft {
   }
 
   bool _projectionContainsOccurrence(
-    authoring.LinkProjection link,
+    facts.LinkProjection link,
     authoring.LinkOccurrenceId occurrence,
   ) {
     final relation = catalog?.snapshot.relations
@@ -1130,9 +1078,9 @@ final class AuthoredDraft {
   }
 
   void retag(types.ValueLocation location, types.NamedTypeUse type) {
-    _observeCatalog();
+    _observe(_value(at: location));
     _observePath(location);
-    _observe(checking.InputIdentity.createForm(at: location));
+    _observe(_configuration(at: location));
     _observeIncoming(location.resource, null);
     _intents.add(authoring.EditIntent.createRetag(at: location, type: type));
   }
@@ -1143,9 +1091,11 @@ final class AuthoredDraft {
   ) {
     final current = _resources[resource];
     if (current == null) return;
-    _observeCatalog();
-    _observe(checking.InputIdentity.createExistence(resource: resource));
-    _observe(checking.InputIdentity.createForm(at: _root(resource)));
+    _observe(
+      facts.EditExpectation.createResource(id: resource, expected: null),
+    );
+    _observe(_exists(resource: resource));
+    _observe(_configuration(at: _root(resource)));
     _observeIncoming(resource, null);
     _resources[resource] = types.AuthoringRecord(
       configuration: configuration,
@@ -1191,42 +1141,43 @@ final class AuthoredDraft {
     };
   }
 
-  void _observeCollection(types.ValueLocation location, {required bool order}) {
+  void _observeCollection(types.ValueLocation location) {
     _observePath(location);
-    _observe(checking.InputIdentity.createForm(at: location));
-    _observe(checking.InputIdentity.createMembership(at: location));
-    if (order) _observe(checking.InputIdentity.createOrder(at: location));
-  }
-
-  void _observeCatalog() {
-    _observe(checking.InputIdentity.wrapCatalog(generation));
+    _observe(_configuration(at: location));
+    _observe(_value(at: location));
   }
 
   void _observePath(types.ValueLocation location) {
-    _observe(
-      checking.InputIdentity.createExistence(resource: location.resource),
-    );
+    _observe(_exists(resource: location.resource));
     var current = _root(location.resource);
-    _observe(checking.InputIdentity.createForm(at: current));
+    _observe(_configuration(at: current));
     for (final segment in location.path.segments) {
       if (segment is types.PathSegment_itemWrapper) {
-        _observe(checking.InputIdentity.createMembership(at: current));
+        _observe(_value(at: current));
       }
       current = types.ValueLocation(
         resource: current.resource,
         path: types.ValuePath(segments: [...current.path.segments, segment]),
       );
-      _observe(checking.InputIdentity.createForm(at: current));
+      _observe(_configuration(at: current));
     }
   }
 
   void _observeIncoming(types.ResourceId resource, types.RelationId? relation) {
-    _observe(
-      checking.InputIdentity.createIncoming(
-        resource: resource,
-        relation: relation,
-      ),
-    );
+    final contracts = relation == null
+        ? catalog?.snapshot.relations.map((value) => value.id) ??
+              const <types.RelationId>[]
+        : [relation];
+    for (final contract in contracts) {
+      _observe(
+        facts.EditExpectation.createLinks(
+          resource: resource,
+          contract: contract,
+          direction: facts.TraversalDirection.both,
+          expected: const [],
+        ),
+      );
+    }
   }
 
   void _observeRelationsForEndpoint(
@@ -1279,8 +1230,11 @@ final class AuthoredDraft {
       }
     }
     for (final resource in deleting) {
-      _observe(checking.InputIdentity.createExistence(resource: resource));
-      _observe(checking.InputIdentity.createForm(at: _root(resource)));
+      _observe(
+        facts.EditExpectation.createResource(id: resource, expected: null),
+      );
+      _observe(_exists(resource: resource));
+      _observe(_configuration(at: _root(resource)));
       _observeIncoming(resource, null);
     }
     for (final link in _links.where(
@@ -1292,7 +1246,7 @@ final class AuthoredDraft {
     }
   }
 
-  void _observeRelationProjection(authoring.LinkProjection link) {
+  void _observeRelationProjection(facts.LinkProjection link) {
     _observeIncoming(link.first, link.contract);
     _observeIncoming(link.second, link.contract);
     if (link.firstLocation case final path?) {
@@ -1309,29 +1263,95 @@ final class AuthoredDraft {
 
   void _observeRelationPath(types.ValueLocation location) {
     _observePath(location);
-    _observe(checking.InputIdentity.createValue(at: location));
+    _observe(_value(at: location));
     final segments = location.path.segments.toList();
     if (segments.lastOrNull is types.PathSegment_itemWrapper) {
       final parent = types.ValueLocation(
         resource: location.resource,
         path: types.ValuePath(segments: segments.take(segments.length - 1)),
       );
-      _observe(checking.InputIdentity.createForm(at: parent));
-      _observe(checking.InputIdentity.createMembership(at: parent));
-      _observe(checking.InputIdentity.createOrder(at: parent));
+      _observe(_configuration(at: parent));
+      _observe(_value(at: parent));
     }
   }
 
-  void _observe(checking.InputIdentity identity) {
-    _observed.putIfAbsent(
-      identity,
-      () =>
-          _original[identity] ??
-          checking.InputObservation(
-            identity: identity,
-            token: absentInputToken,
-          ),
-    );
+  void _observe(facts.EditExpectation expected) {
+    _observed.putIfAbsent(_factKey(expected), () => _actual(expected));
+  }
+
+  facts.EditExpectation _actual(
+    facts.EditExpectation expected, {
+    bool original = true,
+  }) {
+    final resources = original ? _baselineResources : _resources;
+    final links = original ? _baselineLinks : _links;
+    types.DataValue? value(types.ValueLocation at) {
+      final record = resources[at.resource];
+      if (record == null) return null;
+      if (at.path.segments.isEmpty)
+        return types.DataValue.createRecord(fields: record.fields);
+      return switch (record.readAt(at.path)) {
+        PortablePathValue(:final value) => value,
+        _ => null,
+      };
+    }
+
+    return switch (expected) {
+      facts.EditExpectation_valueWrapper(value: final expected) =>
+        facts.EditExpectation.createValue(
+          at: expected.at,
+          expected: value(expected.at),
+        ),
+      facts.EditExpectation_resourceWrapper(:final value) =>
+        facts.EditExpectation.createResource(
+          id: value.id,
+          expected: resources[value.id],
+        ),
+      facts.EditExpectation_resourceExistsWrapper(:final value) =>
+        facts.EditExpectation.createResourceExists(
+          id: value.id,
+          expected: resources.containsKey(value.id),
+        ),
+      facts.EditExpectation_configurationWrapper(value: final config) =>
+        facts.EditExpectation.createConfiguration(
+          at: config.at,
+          expected: config.at.path.segments.isEmpty
+              ? resources[config.at.resource]?.configuration
+              : switch (value(config.at)) {
+                  types.DataValue_namedWrapper(:final value) =>
+                    types.TypeSelection.wrapComplete(value.actualType),
+                  _ => null,
+                },
+        ),
+      facts.EditExpectation_resourceIdsWrapper() =>
+        facts.EditExpectation.wrapResourceIds(
+          resources.keys.toList()..sort((a, b) => a.value.compareTo(b.value)),
+        ),
+      facts.EditExpectation_linksWrapper(:final value) =>
+        facts.EditExpectation.createLinks(
+          resource: value.resource,
+          contract: value.contract,
+          direction: value.direction,
+          expected: links
+              .where(
+                (link) =>
+                    link.contract == value.contract &&
+                    switch (value.direction) {
+                      facts.TraversalDirection.forward =>
+                        link.first == value.resource,
+                      facts.TraversalDirection.reverse =>
+                        link.second == value.resource,
+                      facts.TraversalDirection.both =>
+                        link.first == value.resource ||
+                            link.second == value.resource,
+                      _ => false,
+                    },
+              )
+              .toSet()
+              .toList(),
+        ),
+      _ => throw StateError("Unknown edit expectation"),
+    };
   }
 
   PortablePathResult<types.AuthoringRecord> _materializeParents(
@@ -1387,9 +1407,8 @@ final class AuthoredDraft {
                 "The parent field needs prepared initialization",
               );
             }
-            _observeCatalog();
             _observePath(location);
-            _observe(checking.InputIdentity.createValue(at: location));
+            _observe(_value(at: location));
             final updated = record.replaceAt(location.path, parent);
             if (updated case PortablePathValue(value: final stagedRecord)) {
               _resources[target.resource] = stagedRecord;
@@ -1772,14 +1791,12 @@ final class AuthoredDraftRebaseFailed extends AuthoredDraftRebase {
 
 final class AuthoredDraftRebaseConflict extends AuthoredDraftRebase {
   const AuthoredDraftRebaseConflict({
-    required this.identity,
     required this.expected,
     required this.actual,
   });
 
-  final checking.InputIdentity identity;
-  final types.InputToken expected;
-  final types.InputToken actual;
+  final facts.EditExpectation expected;
+  final facts.EditExpectation actual;
 }
 
 final class _ParentInitialization {
@@ -1828,8 +1845,8 @@ final class _DraftState {
   );
 
   final Map<types.ResourceId, types.AuthoringRecord> resources;
-  final List<authoring.LinkProjection> links;
-  final Map<checking.InputIdentity, checking.InputObservation> observed;
+  final List<facts.LinkProjection> links;
+  final Map<Object, facts.EditExpectation> observed;
   final List<authoring.EditIntent> intents;
   final List<diagnostic_wire.InitializationDiagnostic> initializationFindings;
 
@@ -1859,9 +1876,142 @@ bool _listsEqual<T>(List<T> first, List<T> second) {
   return true;
 }
 
-final _resourceSelection = checking.InputIdentity.createSelection(
-  value: "realm.resources",
-);
+facts.EditExpectation _value({required types.ValueLocation at}) =>
+    facts.EditExpectation.createValue(at: at, expected: null);
+facts.EditExpectation _configuration({required types.ValueLocation at}) =>
+    facts.EditExpectation.createConfiguration(at: at, expected: null);
+facts.EditExpectation _exists({required types.ResourceId resource}) =>
+    facts.EditExpectation.createResourceExists(id: resource, expected: false);
+Object _factKey(facts.EditExpectation expected) => switch (expected) {
+  facts.EditExpectation_valueWrapper(:final value) => ("value", value.at),
+  facts.EditExpectation_resourceWrapper(:final value) => ("resource", value.id),
+  facts.EditExpectation_resourceExistsWrapper(:final value) => (
+    "exists",
+    value.id,
+  ),
+  facts.EditExpectation_configurationWrapper(:final value) => (
+    "configuration",
+    value.at,
+  ),
+  facts.EditExpectation_resourceIdsWrapper() => "resources",
+  facts.EditExpectation_linksWrapper(:final value) => (
+    "links",
+    value.resource,
+    value.contract,
+    value.direction,
+  ),
+  _ => throw StateError("Unknown edit expectation"),
+};
+bool _sameExpectation(
+  facts.EditExpectation first,
+  facts.EditExpectation second,
+) {
+  if (first is facts.EditExpectation_linksWrapper &&
+      second is facts.EditExpectation_linksWrapper) {
+    return _factKey(first) == _factKey(second) &&
+        first.value.expected.toSet().length ==
+            second.value.expected.toSet().length &&
+        first.value.expected.toSet().containsAll(second.value.expected);
+  }
+  if (first is facts.EditExpectation_resourceIdsWrapper &&
+      second is facts.EditExpectation_resourceIdsWrapper)
+    return first.value.toSet().length == second.value.toSet().length &&
+        first.value.toSet().containsAll(second.value);
+  if (_factKey(first) != _factKey(second)) return false;
+  if (first is facts.EditExpectation_valueWrapper &&
+      second is facts.EditExpectation_valueWrapper) {
+    return _sameExpectedValue(first.value.expected, second.value.expected);
+  }
+  if (first is facts.EditExpectation_resourceWrapper &&
+      second is facts.EditExpectation_resourceWrapper) {
+    final left = first.value.expected;
+    final right = second.value.expected;
+    if (left == null || right == null) return left == right;
+    return left.configuration == right.configuration &&
+        _sameExpectedFields(left.fields, right.fields);
+  }
+  return first == second;
+}
+
+bool _sameExpectedFields(
+  Iterable<types.FieldValue> first,
+  Iterable<types.FieldValue> second,
+) {
+  final left = {for (final field in first) field.name: field.value};
+  final right = {for (final field in second) field.name: field.value};
+  return left.length == right.length &&
+      left.entries.every(
+        (entry) =>
+            right.containsKey(entry.key) &&
+            _sameExpectedValue(entry.value, right[entry.key]),
+      );
+}
+
+bool _sameExpectedValue(types.DataValue? first, types.DataValue? second) {
+  if (first == null || second == null) return first == second;
+  return switch ((first, second)) {
+    (
+      types.DataValue_recordWrapper(value: final left),
+      types.DataValue_recordWrapper(value: final right),
+    ) =>
+      _sameExpectedFields(left.fields, right.fields),
+    (
+      types.DataValue_namedWrapper(value: final left),
+      types.DataValue_namedWrapper(value: final right),
+    ) =>
+      left.actualType == right.actualType &&
+          _sameExpectedValue(left.payload, right.payload),
+    (
+      types.DataValue_listValueWrapper(value: final left),
+      types.DataValue_listValueWrapper(value: final right),
+    ) =>
+      _sameExpectedItems(left.items, right.items),
+    (
+      types.DataValue_setValueWrapper(value: final left),
+      types.DataValue_setValueWrapper(value: final right),
+    ) =>
+      _sameExpectedItems(left.items, right.items),
+    (
+      types.DataValue_mapValueWrapper(value: final left),
+      types.DataValue_mapValueWrapper(value: final right),
+    ) =>
+      left.rows.length == right.rows.length &&
+          Iterable<int>.generate(left.rows.length).every(
+            (index) =>
+                left.rows.elementAt(index).id ==
+                    right.rows.elementAt(index).id &&
+                _sameExpectedValue(
+                  left.rows.elementAt(index).key,
+                  right.rows.elementAt(index).key,
+                ) &&
+                _sameExpectedValue(
+                  left.rows.elementAt(index).value,
+                  right.rows.elementAt(index).value,
+                ),
+          ),
+    (
+      types.DataValue_floatWrapper(value: final left),
+      types.DataValue_floatWrapper(value: final right),
+    ) =>
+      left == right && left.isNegative == right.isNegative ||
+          left.isNaN && right.isNaN,
+    _ => first == second,
+  };
+}
+
+bool _sameExpectedItems(
+  Iterable<types.ListItem> first,
+  Iterable<types.ListItem> second,
+) =>
+    first.length == second.length &&
+    Iterable<int>.generate(first.length).every(
+      (index) =>
+          first.elementAt(index).id == second.elementAt(index).id &&
+          _sameExpectedValue(
+            first.elementAt(index).value,
+            second.elementAt(index).value,
+          ),
+    );
 
 types.ValueLocation _root(types.ResourceId resource) => types.ValueLocation(
   resource: resource,

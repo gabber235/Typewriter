@@ -17,7 +17,6 @@ import com.typewritermc.checking.DiagnosticTemplate
 import com.typewritermc.checking.RealmCheckProvider
 import com.typewritermc.checking.RealmChecks
 import com.typewritermc.checking.ResourceTypeMatch
-import com.typewritermc.checking.SnapshotId
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.checking.check
 import com.typewritermc.configuration.ConfigurationRecipe
@@ -43,12 +42,13 @@ import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
 import com.typewritermc.presentation.ExpressionNode
-import com.typewritermc.realm.authoring.AuthoredSnapshotSeed
-import com.typewritermc.realm.authoring.AuthoringSnapshotDelta
-import com.typewritermc.realm.authoring.InMemoryAuthoringSnapshotStore
+import com.typewritermc.realm.authoring.AuthoringSeed
+import com.typewritermc.realm.authoring.AuthoringViewDelta
+import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
 import com.typewritermc.realm.compiler.AcceptanceResult
 import com.typewritermc.realm.compiler.AuthoringAcceptance
+import com.typewritermc.realm.repository.conflicts
 import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.DeclarationOwner
@@ -88,16 +88,20 @@ val RealmCheckRuntimeTest by testSuite {
     test("capturedSetupFailureReleasesTheRetainedSnapshot") {
         val catalog = TestCatalogLease()
         val store =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(SnapshotId("s0"), emptyMap(), tokensFor(emptyMap(), catalog.generation)),
+                AuthoringSeed(emptyMap()),
             )
         val runtime = RealmCheckRuntime(store)
 
         assertFailsWith<IllegalArgumentException> {
             kotlinx.coroutines.runBlocking {
                 runtime.evaluateCapture(
-                    CheckAdmissionTarget.CapturedAcceptance(SnapshotId("s0"), CatalogGeneration("wrong")),
+                    CheckAdmissionTarget.CapturedAcceptance(
+                        store.capture().use {
+                            it.root.copy(catalog = TestCatalogLease(generation = CatalogGeneration("wrong")))
+                        },
+                    ),
                 )
             }
         }
@@ -122,9 +126,9 @@ val RealmCheckRuntimeTest by testSuite {
         val providers = TestCheckProviders(owned, failOnRetain = 2)
         val catalog = TestCatalogLease(providers = providers)
         val store =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(SnapshotId("s0"), emptyMap(), tokensFor(emptyMap(), catalog.generation)),
+                AuthoringSeed(emptyMap()),
             )
         val runtime = RealmCheckRuntime(store)
 
@@ -148,9 +152,9 @@ val RealmCheckRuntimeTest by testSuite {
         val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(TEST_TYPE, 10), provider)))
         val catalog = TestCatalogLease(providers = providers)
         val base =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(SnapshotId("s0"), emptyMap(), tokensFor(emptyMap(), catalog.generation)),
+                AuthoringSeed(emptyMap()),
             )
         val store = BlockingCaptureStore(base, blockedCall = 2)
         val runtime = RealmCheckRuntime(store)
@@ -194,9 +198,9 @@ val RealmCheckRuntimeTest by testSuite {
             val first = ResourceId("first")
             val initial = record(name = "bad")
             val store =
-                InMemoryAuthoringSnapshotStore(
+                InMemoryAuthoringViewStore(
                     catalog,
-                    AuthoredSnapshotSeed(SnapshotId("s0"), mapOf(first to initial), tokensFor(mapOf(first to initial), catalog.generation)),
+                    AuthoringSeed(mapOf(first to initial)),
                 )
             val runtime = RealmCheckRuntime(store, StandardTestDispatcher(testScheduler))
             runtime.reloadCatalog()
@@ -214,14 +218,11 @@ val RealmCheckRuntimeTest by testSuite {
                     .filterKeys { it !is com.typewritermc.checking.InputIdentity.Catalog }
             val addition =
                 store.install(
-                    AuthoringSnapshotDelta(
-                        snapshot = SnapshotId("s1"),
-                        upsertedResources = mapOf(second to added),
-                        inputTokens = addedTokens,
+                    store.prepare(
+                        AuthoringViewDelta(upsertedResources = mapOf(second to added)),
                     ),
                 )
-            assertTrue(RESOURCE_SELECTION_INPUT in addition.changed)
-            runtime.invalidate(addition.changed)
+            runtime.invalidateCurrent()
             advanceUntilIdle()
             runtime.drain()
             assertEquals(3, runtime.findings().size)
@@ -231,21 +232,11 @@ val RealmCheckRuntimeTest by testSuite {
             val edited = record(name = "valid")
             val edit =
                 store.install(
-                    AuthoringSnapshotDelta(
-                        snapshot = SnapshotId("s2"),
-                        upsertedResources = mapOf(second to edited),
-                        inputTokens =
-                            mapOf(
-                                com.typewritermc.checking.InputIdentity
-                                    .Value(ValueLocation(second, ValuePath())) to
-                                    com.typewritermc.checking.InputToken("edited:root"),
-                                com.typewritermc.checking.InputIdentity
-                                    .Value(location(second, "name")) to
-                                    com.typewritermc.checking.InputToken("edited:name"),
-                            ),
+                    store.prepare(
+                        AuthoringViewDelta(upsertedResources = mapOf(second to edited)),
                     ),
                 )
-            runtime.invalidate(edit.changed)
+            runtime.invalidateCurrent()
             advanceUntilIdle()
             runtime.drain()
             assertEquals(3, runtime.findings().size)
@@ -255,25 +246,11 @@ val RealmCheckRuntimeTest by testSuite {
             val secondRoot = ValueLocation(second, ValuePath())
             val removal =
                 store.install(
-                    AuthoringSnapshotDelta(
-                        snapshot = SnapshotId("s3"),
-                        removedResources = setOf(second),
-                        inputTokens =
-                            mapOf(
-                                com.typewritermc.checking.InputIdentity
-                                    .Existence(second) to
-                                    com.typewritermc.checking.InputToken("removed:existence"),
-                                com.typewritermc.checking.InputIdentity
-                                    .Form(secondRoot) to
-                                    com.typewritermc.checking.InputToken("removed:form"),
-                                com.typewritermc.checking.InputIdentity
-                                    .Value(secondRoot) to
-                                    com.typewritermc.checking.InputToken("removed:value"),
-                                RESOURCE_SELECTION_INPUT to com.typewritermc.checking.InputToken("removed:selection"),
-                            ),
+                    store.prepare(
+                        AuthoringViewDelta(removedResources = setOf(second)),
                     ),
                 )
-            runtime.invalidate(removal.changed)
+            runtime.invalidateCurrent()
             advanceUntilIdle()
             runtime.drain()
             assertEquals(2, runtime.findings().size)
@@ -299,18 +276,9 @@ val RealmCheckRuntimeTest by testSuite {
         val providers = TestCheckProviders(listOf(OwnedCheck(PROVIDER_ORIGIN, RuleOrigin(TEST_TYPE, 6), provider)))
         val catalog = TestCatalogLease(providers = providers)
         val store =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(
-                    SnapshotId("s0"),
-                    emptyMap(),
-                    mapOf(
-                        RESOURCE_SELECTION_INPUT to com.typewritermc.checking.InputToken("selection"),
-                        com.typewritermc.checking.InputIdentity
-                            .Catalog(catalog.generation) to
-                            com.typewritermc.checking.InputToken("catalog"),
-                    ),
-                ),
+                AuthoringSeed(emptyMap()),
             )
         val worker = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
         val closer = Executors.newSingleThreadExecutor()
@@ -354,17 +322,13 @@ val RealmCheckRuntimeTest by testSuite {
             val catalog = TestCatalogLease(providers = providers)
             val authored = record(name = "valid")
             val store =
-                InMemoryAuthoringSnapshotStore(
+                InMemoryAuthoringViewStore(
                     catalog,
-                    AuthoredSnapshotSeed(
-                        SnapshotId("s0"),
-                        mapOf(resource to authored),
-                        tokensFor(mapOf(resource to authored), catalog.generation),
-                    ),
+                    AuthoringSeed(mapOf(resource to authored)),
                 )
             val evaluator =
                 SelectionPredicateEvaluator { _, _, reads ->
-                    (reads as SnapshotReads).recordIncomplete("graph traversal limit exceeded")
+                    (reads as CapturedAuthoringReads).recordIncomplete("graph traversal limit exceeded")
                     Availability.Available(true)
                 }
             val runtime = RealmCheckRuntime(store, StandardTestDispatcher(testScheduler), selectionPredicates = evaluator)
@@ -410,13 +374,9 @@ val RealmCheckRuntimeTest by testSuite {
             val resource = ResourceId("element")
             val authored = record(name = "")
             val store =
-                InMemoryAuthoringSnapshotStore(
+                InMemoryAuthoringViewStore(
                     catalog,
-                    AuthoredSnapshotSeed(
-                        SnapshotId("s0"),
-                        mapOf(resource to authored),
-                        tokensFor(mapOf(resource to authored), catalog.generation),
-                    ),
+                    AuthoringSeed(mapOf(resource to authored)),
                 )
             val runtime = RealmCheckRuntime(store, StandardTestDispatcher(testScheduler))
 
@@ -429,7 +389,7 @@ val RealmCheckRuntimeTest by testSuite {
             assertEquals(location(resource, "name"), current.ticket.instance.location)
             assertEquals(listOf("name_empty"), current.findings.map { it.code })
 
-            val captured = runtime.evaluateCapture(CheckAdmissionTarget.CapturedAcceptance(SnapshotId("s0"), catalog.generation))
+            val captured = runtime.evaluateCapture(CheckAdmissionTarget.CapturedAcceptance(store.capture().use { it.root }))
             assertTrue(captured.complete)
             assertEquals(
                 listOf("name_empty"),
@@ -461,13 +421,9 @@ val RealmCheckRuntimeTest by testSuite {
             val catalog = TestCatalogLease(providers = providers, nativeBindingFactories = listOf(TestResourceNativeBindingFactory))
             val authored = record(name = "ready")
             val store =
-                InMemoryAuthoringSnapshotStore(
+                InMemoryAuthoringViewStore(
                     catalog,
-                    AuthoredSnapshotSeed(
-                        SnapshotId("s0"),
-                        mapOf(resource to authored),
-                        tokensFor(mapOf(resource to authored), catalog.generation),
-                    ),
+                    AuthoringSeed(mapOf(resource to authored)),
                 )
             val runtime = RealmCheckRuntime(store, StandardTestDispatcher(testScheduler))
 
@@ -535,13 +491,9 @@ val RealmCheckRuntimeTest by testSuite {
                 )
             val catalog = TestCatalogLease(definitions = DUPLICATE_DEFINITIONS)
             val store =
-                InMemoryAuthoringSnapshotStore(
+                InMemoryAuthoringViewStore(
                     catalog,
-                    AuthoredSnapshotSeed(
-                        SnapshotId("s0"),
-                        mapOf(resource to authored),
-                        tokensFor(mapOf(resource to authored), catalog.generation),
-                    ),
+                    AuthoringSeed(mapOf(resource to authored)),
                 )
             val runtime = RealmCheckRuntime(store, StandardTestDispatcher(testScheduler))
 
@@ -586,13 +538,9 @@ val RealmCheckRuntimeTest by testSuite {
                     configuration = TypeSelection.Pending(TEST_TYPE, emptyList()),
                 )
             val store =
-                InMemoryAuthoringSnapshotStore(
+                InMemoryAuthoringViewStore(
                     catalog,
-                    AuthoredSnapshotSeed(
-                        SnapshotId("s0"),
-                        mapOf(resource to authored),
-                        tokensFor(mapOf(resource to authored), catalog.generation),
-                    ),
+                    AuthoringSeed(mapOf(resource to authored)),
                 )
             val runtime = RealmCheckRuntime(store, StandardTestDispatcher(testScheduler))
 
@@ -632,13 +580,9 @@ val RealmCheckRuntimeTest by testSuite {
             val resource = ResourceId("element")
             val authored = record(name = "valid")
             val store =
-                InMemoryAuthoringSnapshotStore(
+                InMemoryAuthoringViewStore(
                     catalog,
-                    AuthoredSnapshotSeed(
-                        SnapshotId("s0"),
-                        mapOf(resource to authored),
-                        tokensFor(mapOf(resource to authored), catalog.generation),
-                    ),
+                    AuthoringSeed(mapOf(resource to authored)),
                 )
             val runtime =
                 RealmCheckRuntime(
@@ -657,7 +601,7 @@ val RealmCheckRuntimeTest by testSuite {
             assertIs<com.typewritermc.checking.CheckOutcome.Incomplete>(discovery.outcome)
             assertEquals(listOf("check_discovery_incomplete"), discovery.findings.map { it.code })
 
-            val captured = runtime.evaluateCapture(CheckAdmissionTarget.CapturedAcceptance(SnapshotId("s0"), catalog.generation))
+            val captured = runtime.evaluateCapture(CheckAdmissionTarget.CapturedAcceptance(store.capture().use { it.root }))
             assertFalse(captured.complete)
             assertTrue(captured.results.any { it.ticket.instance.location == location(resource, "name") })
             assertTrue(
@@ -695,13 +639,9 @@ val RealmCheckRuntimeTest by testSuite {
         val catalog = TestCatalogLease(providers = providers)
         val authored = record(name = "valid")
         val store =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(
-                    SnapshotId("s0"),
-                    mapOf(resource to authored),
-                    tokensFor(mapOf(resource to authored), catalog.generation),
-                ),
+                AuthoringSeed(mapOf(resource to authored)),
             )
         val worker = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
         val waiter = Executors.newSingleThreadExecutor()
@@ -711,25 +651,11 @@ val RealmCheckRuntimeTest by testSuite {
 
         val removal =
             store.install(
-                AuthoringSnapshotDelta(
-                    snapshot = SnapshotId("s1"),
-                    removedResources = setOf(resource),
-                    inputTokens =
-                        mapOf(
-                            RESOURCE_SELECTION_INPUT to com.typewritermc.checking.InputToken("selection:removed"),
-                            com.typewritermc.checking.InputIdentity
-                                .Existence(resource) to
-                                com.typewritermc.checking.InputToken("existence:removed"),
-                            com.typewritermc.checking.InputIdentity
-                                .Form(ValueLocation(resource, ValuePath())) to
-                                com.typewritermc.checking.InputToken("form:removed"),
-                            com.typewritermc.checking.InputIdentity
-                                .Value(ValueLocation(resource, ValuePath())) to
-                                com.typewritermc.checking.InputToken("value:removed"),
-                        ),
+                store.prepare(
+                    AuthoringViewDelta(removedResources = setOf(resource)),
                 ),
             )
-        runtime.invalidate(removal.changed)
+        runtime.invalidateCurrent()
         val drained = waiter.submit { kotlinx.coroutines.runBlocking { runtime.drain() } }
         Thread.sleep(50)
 
@@ -776,13 +702,9 @@ val RealmCheckRuntimeTest by testSuite {
         val catalog = TestCatalogLease(providers = providers)
         val initial = record(name = "first")
         val store =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(
-                    SnapshotId("s0"),
-                    mapOf(resource to initial),
-                    tokensFor(mapOf(resource to initial), catalog.generation),
-                ),
+                AuthoringSeed(mapOf(resource to initial)),
             )
         val worker = Executors.newFixedThreadPool(2).asCoroutineDispatcher()
         val waiter = Executors.newSingleThreadExecutor()
@@ -795,41 +717,21 @@ val RealmCheckRuntimeTest by testSuite {
         val firstEdit = record(name = "second")
         val firstChange =
             store.install(
-                AuthoringSnapshotDelta(
-                    snapshot = SnapshotId("s1"),
-                    upsertedResources = mapOf(resource to firstEdit),
-                    inputTokens =
-                        mapOf(
-                            com.typewritermc.checking.InputIdentity
-                                .Value(ValueLocation(resource, ValuePath())) to
-                                com.typewritermc.checking.InputToken("second:root"),
-                            com.typewritermc.checking.InputIdentity
-                                .Value(location(resource, "name")) to
-                                com.typewritermc.checking.InputToken("second:name"),
-                        ),
+                store.prepare(
+                    AuthoringViewDelta(upsertedResources = mapOf(resource to firstEdit)),
                 ),
             )
-        runtime.invalidate(firstChange.changed)
+        runtime.invalidateCurrent()
         assertTrue(blocked.await(5, TimeUnit.SECONDS))
 
         val secondEdit = record(name = "third")
         val secondChange =
             store.install(
-                AuthoringSnapshotDelta(
-                    snapshot = SnapshotId("s2"),
-                    upsertedResources = mapOf(resource to secondEdit),
-                    inputTokens =
-                        mapOf(
-                            com.typewritermc.checking.InputIdentity
-                                .Value(ValueLocation(resource, ValuePath())) to
-                                com.typewritermc.checking.InputToken("third:root"),
-                            com.typewritermc.checking.InputIdentity
-                                .Value(location(resource, "name")) to
-                                com.typewritermc.checking.InputToken("third:name"),
-                        ),
+                store.prepare(
+                    AuthoringViewDelta(upsertedResources = mapOf(resource to secondEdit)),
                 ),
             )
-        runtime.invalidate(secondChange.changed)
+        runtime.invalidateCurrent()
         assertTrue(replacement.await(5, TimeUnit.SECONDS))
         val drained = waiter.submit { kotlinx.coroutines.runBlocking { runtime.drain() } }
         Thread.sleep(50)
@@ -862,13 +764,9 @@ val RealmCheckRuntimeTest by testSuite {
         val resource = ResourceId("page")
         val initial = record(name = "old")
         val store =
-            InMemoryAuthoringSnapshotStore(
+            InMemoryAuthoringViewStore(
                 catalog,
-                AuthoredSnapshotSeed(
-                    SnapshotId("s0"),
-                    mapOf(resource to initial),
-                    tokensFor(mapOf(resource to initial), catalog.generation),
-                ),
+                AuthoringSeed(mapOf(resource to initial)),
             )
         val dependencies = BlockingFirstReplaceIndex()
         val worker = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
@@ -877,25 +775,11 @@ val RealmCheckRuntimeTest by testSuite {
         kotlinx.coroutines.runBlocking { runtime.reloadCatalog() }
         assertTrue(dependencies.entered.await(5, TimeUnit.SECONDS))
 
-        val changed =
-            store
-                .install(
-                    AuthoringSnapshotDelta(
-                        snapshot = SnapshotId("s1"),
-                        upsertedResources = mapOf(resource to record(name = "new")),
-                        inputTokens =
-                            mapOf(
-                                com.typewritermc.checking.InputIdentity
-                                    .Value(ValueLocation(resource, ValuePath())) to
-                                    com.typewritermc.checking.InputToken("new:root"),
-                                com.typewritermc.checking.InputIdentity
-                                    .Value(location(resource, "name")) to
-                                    com.typewritermc.checking.InputToken("new:name"),
-                            ),
-                    ),
-                ).changed
-        val invalidated = invalidator.submit { runtime.invalidate(changed) }
-        Thread.sleep(50)
+        val invalidated =
+            invalidator.submit {
+                store.install(store.prepare(AuthoringViewDelta(upsertedResources = mapOf(resource to record(name = "new")))))
+                runtime.invalidateCurrent()
+            }
         assertFalse(invalidated.isDone)
 
         dependencies.release.countDown()
@@ -903,7 +787,15 @@ val RealmCheckRuntimeTest by testSuite {
         kotlinx.coroutines.runBlocking { runtime.drain() }
 
         assertTrue(executions.get() >= 2)
-        assertTrue(runtime.findings().all { it.ticket.snapshot == SnapshotId("s1") })
+        assertTrue(
+            runtime.findings().all { finding ->
+                store.capture().use {
+                    it.root.values
+                        .conflicts(finding.expectations)
+                        .isEmpty()
+                }
+            },
+        )
         runtime.close()
         worker.close()
         invalidator.shutdownNow()
@@ -1019,7 +911,7 @@ private class BlockingFirstReplaceIndex : ReverseDependencyIndex {
 
     override fun replace(
         instance: CheckInstanceId,
-        observations: List<com.typewritermc.checking.InputObservation>,
+        observations: List<com.typewritermc.authoring.EditExpectation>,
     ) {
         if (first.compareAndSet(true, false)) {
             entered.countDown()
@@ -1034,14 +926,14 @@ private class BlockingFirstReplaceIndex : ReverseDependencyIndex {
 }
 
 private class BlockingCaptureStore(
-    private val delegate: com.typewritermc.realm.authoring.AuthoringSnapshotStore,
+    private val delegate: com.typewritermc.realm.authoring.AuthoringViewStore,
     private val blockedCall: Int,
-) : com.typewritermc.realm.authoring.AuthoringSnapshotStore by delegate {
+) : com.typewritermc.realm.authoring.AuthoringViewStore by delegate {
     private val calls = AtomicInteger()
     val entered = CountDownLatch(1)
     val release = CountDownLatch(1)
 
-    override fun capture(): com.typewritermc.realm.authoring.SnapshotLease {
+    override fun capture(): com.typewritermc.realm.authoring.AuthoringLease {
         if (calls.incrementAndGet() == blockedCall) {
             entered.countDown()
             release.await()
@@ -1082,12 +974,12 @@ private class TestCheckProviders(
 }
 
 private suspend fun capturedAcceptance(
-    store: com.typewritermc.realm.authoring.AuthoringSnapshotStore,
+    store: com.typewritermc.realm.authoring.AuthoringViewStore,
     runtime: RealmCheckRuntime,
     generation: CatalogGeneration,
 ): AcceptanceResult {
     val acceptance = AuthoringAcceptance(store, runtime)
-    val capture = acceptance.retain(SnapshotId("s0"), generation)
+    val capture = acceptance.capture()
     return try {
         acceptance.evaluate(capture)
     } finally {

@@ -8,11 +8,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @JvmInline @Serializable
-value class SnapshotId(
-    val value: String,
-)
-
-@JvmInline @Serializable
 value class CatalogGeneration(
     val value: String,
 )
@@ -73,9 +68,3 @@ sealed interface InputIdentity {
         val generation: CatalogGeneration,
     ) : InputIdentity
 }
-
-@Serializable
-data class InputObservation(
-    val identity: InputIdentity,
-    val token: InputToken,
-)

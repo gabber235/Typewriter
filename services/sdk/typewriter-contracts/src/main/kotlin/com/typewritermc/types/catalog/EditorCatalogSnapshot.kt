@@ -12,8 +12,8 @@ import com.typewritermc.presentation.RoleFallback
 import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.RelationContract
-import com.typewritermc.types.TypeDisplay
 import com.typewritermc.types.TypeDefinition
+import com.typewritermc.types.TypeDisplay
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.skir.SkirTypeCodec

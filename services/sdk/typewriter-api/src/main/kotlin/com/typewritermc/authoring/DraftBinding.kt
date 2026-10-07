@@ -1,7 +1,6 @@
 package com.typewritermc.authoring
 
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.SnapshotId
 import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeTemplate
@@ -9,7 +8,6 @@ import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedType
 
 class ReadContext(
-    val snapshot: SnapshotId,
     val catalog: CatalogGeneration,
 )
 
@@ -24,7 +22,6 @@ sealed interface DraftExpectation {
 }
 
 data class DraftBinding(
-    val snapshot: SnapshotId,
     val catalog: CatalogGeneration,
     val readContext: ReadContext,
     val location: ValueLocation,

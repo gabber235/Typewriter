@@ -6,6 +6,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1
     as action;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring.dart"
     as authoring;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring_facts.dart"
+    as facts;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/binding.dart"
     as binding;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
@@ -2056,7 +2058,7 @@ final class _TestAuthoringDocument implements PortableAuthoringDocument {
       types.CatalogGeneration(value: "catalog:test");
 
   @override
-  List<authoring.LinkProjection> get links => const [];
+  List<facts.LinkProjection> get links => const [];
 
   @override
   List<diagnostic.InitializationDiagnostic> get initializationFindings =>

@@ -4,12 +4,12 @@ import "package:flutter_test/flutter_test.dart";
 import "package:skir_client/skir_client.dart" show ByteString;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring.dart"
     as authoring;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring_facts.dart"
+    as facts;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/binding.dart"
     as binding;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
     as catalog;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/checking.dart"
-    as checking;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/diagnostic.dart"
     as diagnostic;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
@@ -32,7 +32,7 @@ void main() {
     final rejected = fixture.draft.stageExpressionEdit([read], (_) => false);
     expect(rejected, isFalse);
     expect(fixture.draft.intents, isEmpty);
-    expect(fixture.draft.observations, isEmpty);
+    expect(fixture.draft.expectations, isEmpty);
 
     final accepted = fixture.draft.stageExpressionEdit(
       [read],
@@ -42,7 +42,7 @@ void main() {
     );
     expect(accepted, isTrue);
     expect(fixture.draft.intents, hasLength(1));
-    expect(fixture.draft.observations, contains(fixture.titleObservation));
+    expect(fixture.draft.expectations, contains(fixture.titleObservation));
   });
 
   test("staged reads retain the first original observation", () {
@@ -60,11 +60,11 @@ void main() {
       (read as PortablePathValue<types.DataValue>).value,
       types.DataValue.wrapStringValue("changed"),
     );
-    expect(draft.observations, contains(fixture.titleObservation));
+    expect(draft.expectations, contains(fixture.titleObservation));
     expect(
-      draft.observations.where(
+      draft.expectations.where(
         (observation) =>
-            observation.identity == fixture.titleObservation.identity,
+            _factKey(observation) == _factKey(fixture.titleObservation),
       ),
       hasLength(1),
     );
@@ -72,19 +72,16 @@ void main() {
 
   test("prepares one immutable server verified edit request", () {
     final fixture = _fixture();
-    final batch = types.BatchId(value: "batch:stable");
     fixture.draft.set(
       fixture.title,
       types.DataValue.wrapStringValue("changed"),
     );
 
-    final prepared = fixture.draft.prepare(batch);
+    final prepared = fixture.draft.prepare();
     fixture.draft.set(fixture.title, types.DataValue.wrapStringValue("later"));
 
-    expect(prepared.id, batch);
     expect(prepared.catalog, fixture.draft.generation);
-    expect(prepared.snapshot, fixture.draft.snapshot);
-    expect(prepared.observations, contains(fixture.titleObservation));
+    expect(prepared.expectations, contains(fixture.titleObservation));
     expect(prepared.intents, hasLength(1));
   });
 
@@ -118,12 +115,12 @@ void main() {
   test("forks preserve staged history and isolate later changes", () {
     final fixture = _fixture();
     fixture.draft.set(fixture.title, types.DataValue.wrapStringValue("first"));
-    final evidence = fixture.draft.observations.toList(growable: false);
+    final evidence = fixture.draft.expectations.toList(growable: false);
     final branch = fixture.draft.fork()
       ..set(fixture.title, types.DataValue.wrapStringValue("second"));
 
     expect(branch.intents, hasLength(2));
-    expect(branch.observations, containsAll(evidence));
+    expect(branch.expectations, containsAll(evidence));
     expect(
       (branch.read(fixture.title) as PortablePathValue<types.DataValue>).value,
       types.DataValue.wrapStringValue("second"),
@@ -215,9 +212,7 @@ void main() {
       _ => null,
     };
     expect(pageBook?.target.resource, fixture.book);
-    final encoded = authoring.PreparedEdit.serializer.toBytes(
-      staged.prepare(types.BatchId(value: "batch:page")),
-    );
+    final encoded = authoring.PreparedEdit.serializer.toBytes(staged.prepare());
     final decoded = authoring.PreparedEdit.serializer.fromBytes(encoded);
     expect(decoded.intents, hasLength(3));
     final pageBookLocation = types.ValueLocation(
@@ -225,22 +220,21 @@ void main() {
       path: _fieldPath("book"),
     );
     expect(
-      decoded.observations.map((observation) => observation.identity),
-      containsAll([
-        checking.InputIdentity.createExistence(resource: fixture.page),
-        checking.InputIdentity.createForm(
-          at: types.ValueLocation(
-            resource: fixture.page,
-            path: types.ValuePath(segments: const []),
+      decoded.expectations.map((observation) => _factKey(observation)),
+      containsAll(
+        [
+          ("exists", fixture.page),
+          (
+            "configuration",
+            types.ValueLocation(
+              resource: fixture.page,
+              path: types.ValuePath(segments: const []),
+            ),
           ),
-        ),
-        checking.InputIdentity.createForm(at: pageBookLocation),
-        checking.InputIdentity.createValue(at: pageBookLocation),
-        checking.InputIdentity.createIncoming(
-          resource: fixture.page,
-          relation: null,
-        ),
-      ]),
+          ("configuration", pageBookLocation),
+          ("value", pageBookLocation),
+        ].toSet(),
+      ),
     );
   });
 
@@ -307,274 +301,192 @@ void main() {
     );
   });
 
-  test("catalog adoption preserves values and captures fresh evidence", () {
+  test("a catalog change requires preparing against the new catalog", () {
     final fixture = _fixture();
-    fixture.draft.set(
-      fixture.title,
-      types.DataValue.wrapStringValue("changed"),
-    );
-    final nextToken = fixture.titleObservation.token;
-    final nextSnapshot = authoring.AuthoringSnapshot(
-      snapshot: types.SnapshotId(value: "realm:2"),
-      generation: types.CatalogGeneration(value: "catalog:2"),
+    fixture.draft.set(fixture.title, types.DataValue.wrapStringValue("edit"));
+    final next = authoring.AuthoringState(
+      generation: types.CatalogGeneration(value: "replacement"),
       resources: fixture.snapshot.resources,
       links: fixture.snapshot.links,
-      findings: const [],
-      observations: [
-        checking.InputObservation(
-          identity: fixture.titleObservation.identity,
-          token: nextToken,
-        ),
-      ],
-      absentInputToken: fixture.absent,
-      findingsToken: checking.FindingsToken(value: "findings:2"),
+      findings: fixture.snapshot.findings,
     );
-
-    final result = fixture.draft.rebaseOnto(
-      AuthoredDraft.fromSnapshot(nextSnapshot),
-    );
-
-    expect(result, isA<AuthoredDraftRebased>());
-    final rebound = (result as AuthoredDraftRebased).draft;
     expect(
-      (rebound.read(fixture.title) as PortablePathValue<types.DataValue>).value,
-      types.DataValue.wrapStringValue("changed"),
-    );
-    expect(rebound.generation.value, "catalog:2");
-    expect(
-      rebound.observations
-          .singleWhere(
-            (observation) =>
-                observation.identity == fixture.titleObservation.identity,
-          )
-          .token,
-      nextToken,
+      fixture.draft.rebaseOnto(AuthoredDraft.fromState(next)),
+      isA<AuthoredDraftRebaseFailed>(),
     );
   });
 
-  test("catalog adoption rejects a changed pending write input", () {
+  test(
+    "independent field changes and restored expected values remain compatible",
+    () {
+      final fixture = _fixture();
+      fixture.draft.set(fixture.title, types.DataValue.wrapStringValue("edit"));
+      final next = _stateWithFields(fixture.snapshot, {
+        "description": types.DataValue.wrapStringValue("other edit"),
+      });
+      expect(
+        fixture.draft.rebaseOnto(AuthoredDraft.fromState(next)),
+        isA<AuthoredDraftRebased>(),
+      );
+      final changed = _stateWithFields(next, {
+        "title": types.DataValue.wrapStringValue("Story"),
+      });
+      expect(
+        fixture.draft.rebaseOnto(AuthoredDraft.fromState(changed)),
+        isA<AuthoredDraftRebaseConflict>(),
+      );
+      final restored = _stateWithFields(changed, {
+        "title": types.DataValue.wrapStringValue("original"),
+      });
+      expect(
+        fixture.draft.rebaseOnto(AuthoredDraft.fromState(restored)),
+        isA<AuthoredDraftRebased>(),
+      );
+    },
+  );
+
+  test("record field order is irrelevant while collection identities and order remain guarded", () {
     final fixture = _fixture();
-    fixture.draft.set(
-      fixture.title,
-      types.DataValue.wrapStringValue("changed"),
+    final root = types.ValueLocation(
+      resource: fixture.resource,
+      path: types.ValuePath(segments: const []),
     );
-    final nextSnapshot = authoring.AuthoringSnapshot(
-      snapshot: types.SnapshotId(value: "realm:2"),
-      generation: types.CatalogGeneration(value: "catalog:2"),
-      resources: fixture.snapshot.resources,
+    fixture.draft.read(root);
+    fixture.draft.set(fixture.title, types.DataValue.wrapStringValue("edit"));
+    final resource = fixture.snapshot.resources.single;
+    final reordered = authoring.AuthoringState(
+      generation: fixture.snapshot.generation,
       links: fixture.snapshot.links,
       findings: const [],
-      observations: [
-        checking.InputObservation(
-          identity: fixture.titleObservation.identity,
-          token: types.InputToken(value: "title:2"),
+      resources: [
+        authoring.AuthoringResource(
+          id: resource.id,
+          definition: resource.definition,
+          content: types.AuthoringRecord(
+            configuration: resource.content.configuration,
+            fields: resource.content.fields.toList().reversed,
+          ),
         ),
       ],
-      absentInputToken: fixture.absent,
-      findingsToken: checking.FindingsToken(value: "findings:2"),
     );
-
-    final result = fixture.draft.rebaseOnto(
-      AuthoredDraft.fromSnapshot(nextSnapshot),
-    );
-
-    expect(result, isA<AuthoredDraftRebaseConflict>());
     expect(
-      (result as AuthoredDraftRebaseConflict).identity,
-      fixture.titleObservation.identity,
+      fixture.draft.rebaseOnto(AuthoredDraft.fromState(reordered)),
+      isA<AuthoredDraftRebased>(),
+    );
+    final changed = _stateWithFields(reordered, {
+      "items": types.DataValue.createNamed(
+        actualType: fixture.listType,
+        payload: types.DataValue.createListValue(
+          items: [
+            types.ListItem(
+              id: types.ItemId(value: "replacement"),
+              value: types.DataValue.wrapStringValue("first"),
+            ),
+          ],
+        ),
+      ),
+    });
+    expect(
+      fixture.draft.rebaseOnto(AuthoredDraft.fromState(changed)),
+      isA<AuthoredDraftRebaseConflict>(),
     );
   });
 
-  test("catalog adoption rejects a changed tracked read input", () {
+  test("changed tracked reads reject a dependent edit", () {
     final fixture = _fixture();
     final input = types.ValueLocation(
       resource: fixture.resource,
-      path: types.ValuePath(
-        segments: [types.PathSegment.createField(name: "computedInput")],
-      ),
+      path: _fieldPath("computedInput"),
     );
     fixture.draft
       ..read(input)
       ..set(fixture.title, types.DataValue.wrapStringValue("computed"));
-    final nextSnapshot = authoring.AuthoringSnapshot(
-      snapshot: types.SnapshotId(value: "realm:2"),
-      generation: types.CatalogGeneration(value: "catalog:2"),
-      resources: fixture.snapshot.resources,
-      links: fixture.snapshot.links,
-      findings: const [],
-      observations: [
-        fixture.titleObservation,
-        checking.InputObservation(
-          identity: checking.InputIdentity.createValue(at: input),
-          token: types.InputToken(value: "computed:2"),
-        ),
-      ],
-      absentInputToken: fixture.absent,
-      findingsToken: checking.FindingsToken(value: "findings:2"),
-    );
-
-    final result = fixture.draft.rebaseOnto(
-      AuthoredDraft.fromSnapshot(nextSnapshot),
-    );
-
-    expect(result, isA<AuthoredDraftRebaseConflict>());
-    expect(
-      (result as AuthoredDraftRebaseConflict).identity,
-      checking.InputIdentity.createValue(at: input),
-    );
+    final changed = _stateWithFields(fixture.snapshot, {
+      "computedInput": types.DataValue.wrapStringValue("new"),
+    });
+    final conflict = fixture.draft.rebaseOnto(
+      AuthoredDraft.fromState(changed),
+    ) as AuthoredDraftRebaseConflict;
+    expect(_factKey(conflict.expected), ("value", input));
   });
 
-  test("accepted prefix adoption preserves a conflicting tail read", () {
+  test("accepted prefix recovery preserves a conflicting tail read", () {
     final fixture = _fixture();
     final input = types.ValueLocation(
       resource: fixture.resource,
-      path: types.ValuePath(
-        segments: [types.PathSegment.createField(name: "computedInput")],
-      ),
+      path: _fieldPath("computedInput"),
     );
     fixture.draft.set(fixture.title, types.DataValue.wrapStringValue("prefix"));
-    final acceptedIntentCount = fixture.draft.intents.length;
-    final read = PortableExpressionRead(
-      types.ExpressionBindingId(value: "configured_value"),
-      input.path,
-      location: input,
-    );
-    fixture.draft.stageExpressionEdit(
-      [read],
-      (branch) =>
-          branch.set(fixture.title, types.DataValue.wrapStringValue("computed"))
-              is PortablePathValue,
-    );
-    final original = fixture.snapshot.resources.single;
-    final exactSnapshot = authoring.AuthoringSnapshot(
-      snapshot: types.SnapshotId(value: "realm:2"),
-      generation: fixture.snapshot.generation,
-      resources: [
-        authoring.AuthoringResource(
-          id: original.id,
-          definition: original.definition,
-          content: types.AuthoringRecord(
-            configuration: original.content.configuration,
-            fields: [
-              for (final field in original.content.fields)
-                switch (field.name) {
-                  "title" => types.FieldValue(
-                    name: field.name,
-                    value: types.DataValue.wrapStringValue("prefix"),
-                  ),
-                  _ => field,
-                },
-            ],
-          ),
-        ),
-      ],
-      links: fixture.snapshot.links,
-      findings: const [],
-      observations: [
-        checking.InputObservation(
-          identity: fixture.titleObservation.identity,
-          token: types.InputToken(value: "title:2"),
-        ),
-        checking.InputObservation(
-          identity: checking.InputIdentity.createValue(at: input),
-          token: types.InputToken(value: "computed:2"),
-        ),
-      ],
-      absentInputToken: fixture.absent,
-      findingsToken: checking.FindingsToken(value: "findings:2"),
-    );
-
-    final result = fixture.draft.rebaseTailOnto(
-      AuthoredDraft.fromSnapshot(exactSnapshot),
-      acceptedIntentCount: acceptedIntentCount,
-      acceptedChanges: [fixture.titleObservation.identity],
-    );
-
-    expect(result, isA<AuthoredDraftRebaseConflict>());
-    expect(
-      (result as AuthoredDraftRebaseConflict).identity,
-      checking.InputIdentity.createValue(at: input),
-    );
-  });
-
-  test("tail reads stay tracked after accepted prefix adoption", () {
-    final fixture = _fixture();
-    final input = types.ValueLocation(
-      resource: fixture.resource,
-      path: types.ValuePath(
-        segments: [types.PathSegment.createField(name: "computedInput")],
-      ),
-    );
-    fixture.draft.set(fixture.title, types.DataValue.wrapStringValue("prefix"));
-    final acceptedIntentCount = fixture.draft.intents.length;
+    final count = fixture.draft.intents.length;
     fixture.draft.stageExpressionEdit(
       [
         PortableExpressionRead(
-          types.ExpressionBindingId(value: "configured_value"),
+          types.ExpressionBindingId(value: "read"),
           input.path,
           location: input,
         ),
       ],
       (branch) =>
-          branch.set(fixture.title, types.DataValue.wrapStringValue("computed"))
+          branch.set(fixture.title, types.DataValue.wrapStringValue("tail"))
               is PortablePathValue,
     );
-    authoring.AuthoringSnapshot snapshot(
-      String id,
-      types.InputToken inputToken,
-    ) => authoring.AuthoringSnapshot(
-      snapshot: types.SnapshotId(value: id),
-      generation: fixture.snapshot.generation,
-      resources: fixture.snapshot.resources,
-      links: fixture.snapshot.links,
-      findings: const [],
-      observations: [
-        fixture.titleObservation,
-        checking.InputObservation(
-          identity: checking.InputIdentity.createValue(at: input),
-          token: inputToken,
-        ),
-      ],
-      absentInputToken: fixture.absent,
-      findingsToken: checking.FindingsToken(value: "findings:$id"),
-    );
-
-    final adopted = fixture.draft.rebaseTailOnto(
-      AuthoredDraft.fromSnapshot(snapshot("realm:2", fixture.absent)),
-      acceptedIntentCount: acceptedIntentCount,
-      acceptedChanges: [fixture.titleObservation.identity],
-    );
-    expect(adopted, isA<AuthoredDraftRebased>());
-    final later = (adopted as AuthoredDraftRebased).draft.rebaseOnto(
-      AuthoredDraft.fromSnapshot(
-        snapshot("realm:3", types.InputToken(value: "computed:3")),
-      ),
-    );
-
-    expect(later, isA<AuthoredDraftRebaseConflict>());
-    expect(
-      (later as AuthoredDraftRebaseConflict).identity,
-      checking.InputIdentity.createValue(at: input),
-    );
+    final changed = _stateWithFields(fixture.snapshot, {
+      "title": types.DataValue.wrapStringValue("prefix"),
+      "computedInput": types.DataValue.wrapStringValue("other edit"),
+    });
+    final conflict = fixture.draft.rebaseTailOnto(
+      AuthoredDraft.fromState(changed),
+      acceptedIntentCount: count,
+    ) as AuthoredDraftRebaseConflict;
+    expect(_factKey(conflict.expected), ("value", input));
   });
 
-  test("missing input identities use the supplied absence token", () {
+  test("tail reads remain tracked after recovering a committed prefix", () {
     final fixture = _fixture();
-    final location = types.ValueLocation(
+    final input = types.ValueLocation(
       resource: fixture.resource,
-      path: types.ValuePath(
-        segments: [types.PathSegment.createField(name: "count")],
-      ),
+      path: _fieldPath("computedInput"),
     );
+    fixture.draft.set(fixture.title, types.DataValue.wrapStringValue("prefix"));
+    final count = fixture.draft.intents.length;
+    fixture.draft.stageExpressionEdit(
+      [
+        PortableExpressionRead(
+          types.ExpressionBindingId(value: "read"),
+          input.path,
+          location: input,
+        ),
+      ],
+      (branch) =>
+          branch.set(fixture.title, types.DataValue.wrapStringValue("tail"))
+              is PortablePathValue,
+    );
+    final saved = _stateWithFields(fixture.snapshot, {
+      "title": types.DataValue.wrapStringValue("prefix"),
+    });
+    final rebased = fixture.draft.rebaseTailOnto(
+      AuthoredDraft.fromState(saved),
+      acceptedIntentCount: count,
+    ) as AuthoredDraftRebased;
+    final changed = _stateWithFields(saved, {
+      "computedInput": types.DataValue.wrapStringValue("new"),
+    });
+    final conflict = rebased.draft.rebaseOnto(
+      AuthoredDraft.fromState(changed),
+    ) as AuthoredDraftRebaseConflict;
+    expect(_factKey(conflict.expected), ("value", input));
+  });
 
-    fixture.draft.set(location, types.DataValue.wrapInteger("3"));
-
-    final identity = checking.InputIdentity.createValue(at: location);
+  test("a missing value is an explicit null expectation", () {
+    final fixture = _fixture();
+    final at = types.ValueLocation(
+      resource: fixture.resource,
+      path: _fieldPath("count"),
+    );
+    fixture.draft.set(at, types.DataValue.wrapInteger("3"));
     expect(
-      fixture.draft.observations
-          .singleWhere((observation) => observation.identity == identity)
-          .token,
-      fixture.absent,
+      fixture.draft.expectations,
+      contains(facts.EditExpectation.createValue(at: at, expected: null)),
     );
   });
 
@@ -707,7 +619,7 @@ void main() {
     expect(fixture.draft.intents, isEmpty);
   });
 
-  test("writes capture catalog and every ancestor witness", () {
+  test("writes capture existence and configuration at every ancestor", () {
     final fixture = _fixture();
 
     fixture.draft.set(
@@ -715,24 +627,24 @@ void main() {
       types.DataValue.wrapStringValue("changed"),
     );
 
-    final identities = fixture.draft.observations
-        .map((observation) => observation.identity)
+    final identities = fixture.draft.expectations
+        .map((observation) => _factKey(observation))
         .toSet();
     expect(
       identities,
-      containsAll([
-        checking.InputIdentity.wrapCatalog(
-          types.CatalogGeneration(value: "catalog:1"),
-        ),
-        checking.InputIdentity.createExistence(resource: fixture.resource),
-        checking.InputIdentity.createForm(
-          at: types.ValueLocation(
-            resource: fixture.resource,
-            path: types.ValuePath(segments: const []),
+      containsAll(
+        [
+          ("exists", fixture.resource),
+          (
+            "configuration",
+            types.ValueLocation(
+              resource: fixture.resource,
+              path: types.ValuePath(segments: const []),
+            ),
           ),
-        ),
-        checking.InputIdentity.createValue(at: fixture.title),
-      ]),
+          ("value", fixture.title),
+        ].toSet(),
+      ),
     );
   });
 
@@ -808,10 +720,7 @@ void main() {
         roleFallbacks: const [],
       ),
     );
-    final draft = AuthoredDraft.fromSnapshot(
-      fixture.snapshot,
-      catalog: checked,
-    );
+    final draft = AuthoredDraft.fromState(fixture.snapshot, catalog: checked);
     final source = authoring.LinkOccurrence(
       id: authoring.LinkOccurrenceId(
         endpoint: endpoint,
@@ -823,28 +732,19 @@ void main() {
 
     draft.connect(source, target);
 
-    final identities = draft.observations
-        .map((observation) => observation.identity)
+    final identities = draft.expectations
+        .map((observation) => _factKey(observation))
         .toSet();
     expect(
       identities,
-      containsAll([
-        checking.InputIdentity.createValue(at: fixture.title),
-        checking.InputIdentity.createExistence(resource: target),
-        checking.InputIdentity.createIncoming(
-          resource: fixture.resource,
-          relation: relation,
-        ),
-        checking.InputIdentity.createIncoming(
-          resource: target,
-          relation: relation,
-        ),
-        checking.InputIdentity.createIncoming(
-          resource: fixture.resource,
-          relation: null,
-        ),
-        checking.InputIdentity.createIncoming(resource: target, relation: null),
-      ]),
+      containsAll(
+        [
+          ("value", fixture.title),
+          ("exists", target),
+          ("links", fixture.resource, relation),
+          ("links", target, relation),
+        ].toSet(),
+      ),
     );
     expect(
       draft.intents.single,
@@ -883,17 +783,19 @@ void main() {
 
     fixture.draft.connect(source, target);
 
-    final identities = fixture.draft.observations
-        .map((observation) => observation.identity)
+    final identities = fixture.draft.expectations
+        .map((observation) => _factKey(observation))
         .toSet();
     expect(
       identities,
-      containsAll([
-        checking.InputIdentity.createValue(at: item),
-        checking.InputIdentity.createForm(at: containing),
-        checking.InputIdentity.createMembership(at: containing),
-        checking.InputIdentity.createOrder(at: containing),
-      ]),
+      containsAll(
+        [
+          ("value", item),
+          ("configuration", containing),
+          ("value", containing),
+          ("value", containing),
+        ].toSet(),
+      ),
     );
   });
 
@@ -934,17 +836,19 @@ void main() {
       counterpart: authoring.CounterpartChoice.wrapExisting(counterpart),
     );
 
-    final identities = fixture.draft.observations
-        .map((observation) => observation.identity)
+    final identities = fixture.draft.expectations
+        .map((observation) => _factKey(observation))
         .toSet();
     expect(
       identities,
-      containsAll([
-        checking.InputIdentity.createValue(at: counterpartLocation),
-        checking.InputIdentity.createForm(at: fixture.items),
-        checking.InputIdentity.createMembership(at: fixture.items),
-        checking.InputIdentity.createOrder(at: fixture.items),
-      ]),
+      containsAll(
+        [
+          ("value", counterpartLocation),
+          ("configuration", fixture.items),
+          ("value", fixture.items),
+          ("value", fixture.items),
+        ].toSet(),
+      ),
     );
   });
 
@@ -973,17 +877,19 @@ void main() {
 
     fixture.draft.disconnect(occurrence);
 
-    final identities = fixture.draft.observations
-        .map((observation) => observation.identity)
+    final identities = fixture.draft.expectations
+        .map((observation) => _factKey(observation))
         .toSet();
     expect(
       identities,
-      containsAll([
-        checking.InputIdentity.createValue(at: item),
-        checking.InputIdentity.createForm(at: fixture.items),
-        checking.InputIdentity.createMembership(at: fixture.items),
-        checking.InputIdentity.createOrder(at: fixture.items),
-      ]),
+      containsAll(
+        [
+          ("value", item),
+          ("configuration", fixture.items),
+          ("value", fixture.items),
+          ("value", fixture.items),
+        ].toSet(),
+      ),
     );
   });
 
@@ -1001,6 +907,14 @@ void main() {
         );
 
       expect(fixture.draft.links.single.second.value, "resource:original");
+      expect(
+        branch.expectations.map(_factKey),
+        contains((
+          "links",
+          fixture.originalOpposite.resource,
+          fixture.draft.links.single.contract,
+        )),
+      );
       expect(branch.links, hasLength(1));
       expect(branch.links.single.first, fixture.occurrence.source);
       expect(branch.links.single.second, fixture.newTarget);
@@ -1059,8 +973,8 @@ void main() {
     final deleted = fixture.occurrence.target.resource;
     final relation = fixture.draft.links.single.contract;
     final branch = fixture.draft.fork()..delete(deleted);
-    final identities = branch.observations
-        .map((observation) => observation.identity)
+    final identities = branch.expectations
+        .map((observation) => _factKey(observation))
         .toSet();
 
     expect(branch.resource(deleted), isNull);
@@ -1071,47 +985,25 @@ void main() {
     );
     expect(
       identities,
-      containsAll([
-        checking.InputIdentity.createIncoming(
-          resource: fixture.occurrence.source,
-          relation: null,
-        ),
-        checking.InputIdentity.createIncoming(
-          resource: fixture.occurrence.source,
-          relation: relation,
-        ),
-        checking.InputIdentity.createIncoming(
-          resource: deleted,
-          relation: null,
-        ),
-        checking.InputIdentity.createIncoming(
-          resource: deleted,
-          relation: relation,
-        ),
-        checking.InputIdentity.createExistence(
-          resource: fixture.occurrence.source,
-        ),
-        checking.InputIdentity.createForm(
-          at: types.ValueLocation(
-            resource: fixture.occurrence.source,
-            path: types.ValuePath(segments: const []),
+      containsAll(
+        [
+          ("links", fixture.occurrence.source, relation),
+
+          ("links", deleted, relation),
+          ("exists", fixture.occurrence.source),
+          (
+            "configuration",
+            types.ValueLocation(
+              resource: fixture.occurrence.source,
+              path: types.ValuePath(segments: const []),
+            ),
           ),
-        ),
-        checking.InputIdentity.createForm(at: fixture.occurrence.id.location),
-        checking.InputIdentity.createValue(at: fixture.occurrence.id.location),
-      ]),
-    );
-    expect(
-      identities,
-      isNot(
-        contains(
-          checking.InputIdentity.createIncoming(
-            resource: fixture.newTarget,
-            relation: relation,
-          ),
-        ),
+          ("configuration", fixture.occurrence.id.location),
+          ("value", fixture.occurrence.id.location),
+        ].toSet(),
       ),
     );
+    expect(identities, isNot(contains(("links", fixture.newTarget, relation))));
   });
 
   test("cascade deletion observes an undeclared counterpart resource", () {
@@ -1121,21 +1013,24 @@ void main() {
     );
     final cascaded = fixture.occurrence.target.resource;
     final branch = fixture.draft.fork()..delete(fixture.occurrence.source);
-    final identities = branch.observations
-        .map((observation) => observation.identity)
+    final identities = branch.expectations
+        .map((observation) => _factKey(observation))
         .toSet();
 
     expect(
       identities,
-      containsAll([
-        checking.InputIdentity.createExistence(resource: cascaded),
-        checking.InputIdentity.createForm(
-          at: types.ValueLocation(
-            resource: cascaded,
-            path: types.ValuePath(segments: const []),
+      containsAll(
+        [
+          ("exists", cascaded),
+          (
+            "configuration",
+            types.ValueLocation(
+              resource: cascaded,
+              path: types.ValuePath(segments: const []),
+            ),
           ),
-        ),
-      ]),
+        ].toSet(),
+      ),
     );
   });
 
@@ -1195,21 +1090,20 @@ void main() {
       payload.value.fields.singleWhere((field) => field.name == "bold").value,
       types.DataValue.wrapBoolean(true),
     );
-    final identities = fixture.draft.observations
-        .map((observation) => observation.identity)
+    final identities = fixture.draft.expectations
+        .map((observation) => _factKey(observation))
         .toSet();
     expect(
       identities,
-      contains(
-        checking.InputIdentity.createForm(
-          at: types.ValueLocation(
-            resource: fixture.repetitions.resource,
-            path: types.ValuePath(
-              segments: [types.PathSegment.createField(name: "style")],
-            ),
+      contains((
+        "configuration",
+        types.ValueLocation(
+          resource: fixture.repetitions.resource,
+          path: types.ValuePath(
+            segments: [types.PathSegment.createField(name: "style")],
           ),
         ),
-      ),
+      )),
     );
   });
 
@@ -1290,16 +1184,16 @@ void main() {
       types.DataValue.wrapBoolean(true),
     );
     expect(
-      fixture.draft.observations,
+      fixture.draft.expectations,
       contains(
-        checking.InputObservation(
-          identity: checking.InputIdentity.createValue(
-            at: types.ValueLocation(
-              resource: fixture.repetitions.resource,
-              path: types.ValuePath(segments: const []),
-            ),
+        facts.EditExpectation.createValue(
+          at: types.ValueLocation(
+            resource: fixture.repetitions.resource,
+            path: types.ValuePath(segments: const []),
           ),
-          token: types.InputToken(value: "token:parent:value"),
+          expected: types.DataValue.createRecord(
+            fields: fixture.snapshot.resources.single.content.fields,
+          ),
         ),
       ),
     );
@@ -1372,11 +1266,13 @@ void main() {
 
       expect(result, isA<PortablePathValue<types.AuthoringRecord>>());
       expect(
-        fixture.draft.observations,
+        fixture.draft.expectations,
         contains(
-          checking.InputObservation(
-            identity: checking.InputIdentity.createValue(at: root),
-            token: types.InputToken(value: "token:parent:value"),
+          facts.EditExpectation.createValue(
+            at: root,
+            expected: types.DataValue.createRecord(
+              fields: fixture.snapshot.resources.single.content.fields,
+            ),
           ),
         ),
       );
@@ -1728,7 +1624,7 @@ void main() {
 
     expect(result, isA<PortablePathUnavailable<types.AuthoringRecord>>());
     expect(fixture.draft.intents, isEmpty);
-    expect(fixture.draft.observations, isEmpty);
+    expect(fixture.draft.expectations, isEmpty);
     expect(
       (fixture.draft.read(style) as PortablePathValue<types.DataValue>).value,
       types.DataValue.unfilled,
@@ -1805,6 +1701,7 @@ void main() {
   AuthoredDraft draft,
   types.ValueLocation bold,
   types.ValueLocation repetitions,
+  authoring.AuthoringState snapshot,
 })
 _parentFixture({
   required bool capturedStyle,
@@ -2091,8 +1988,7 @@ _parentFixture({
     roleFallbacks: const [],
   );
   final resource = types.ResourceId(value: "resource:parent");
-  final snapshot = authoring.AuthoringSnapshot(
-    snapshot: types.SnapshotId(value: "realm:parent"),
+  final snapshot = authoring.AuthoringState(
     generation: catalogSnapshot.generation,
     resources: [
       authoring.AuthoringResource(
@@ -2108,19 +2004,6 @@ _parentFixture({
     ],
     links: const [],
     findings: const [],
-    observations: [
-      checking.InputObservation(
-        identity: checking.InputIdentity.createValue(
-          at: types.ValueLocation(
-            resource: resource,
-            path: types.ValuePath(segments: const []),
-          ),
-        ),
-        token: types.InputToken(value: "token:parent:value"),
-      ),
-    ],
-    absentInputToken: types.InputToken(value: "absent"),
-    findingsToken: checking.FindingsToken(value: "findings:parent"),
   );
   types.ValueLocation location(String field) => types.ValueLocation(
     resource: resource,
@@ -2132,12 +2015,13 @@ _parentFixture({
     ),
   );
   return (
-    draft: AuthoredDraft.fromSnapshot(
+    draft: AuthoredDraft.fromState(
       snapshot,
       catalog: CheckedEditorCatalog(catalogSnapshot),
     ),
     bold: location("bold"),
     repetitions: location("repetitions"),
+    snapshot: snapshot,
   );
 }
 
@@ -2425,8 +2309,7 @@ _pageCreationFixture() {
       ),
     ],
   );
-  final authored = authoring.AuthoringSnapshot(
-    snapshot: types.SnapshotId(value: "realm:page creation"),
+  final authored = authoring.AuthoringState(
     generation: generation,
     resources: [
       authoring.AuthoringResource(
@@ -2437,12 +2320,9 @@ _pageCreationFixture() {
     ],
     links: const [],
     findings: const [],
-    observations: const [],
-    absentInputToken: types.InputToken(value: "absent"),
-    findingsToken: checking.FindingsToken(value: "findings"),
   );
   return (
-    draft: AuthoredDraft.fromSnapshot(
+    draft: AuthoredDraft.fromState(
       authored,
       catalog: CheckedEditorCatalog(snapshot),
     ),
@@ -2523,8 +2403,7 @@ _relationFixture({
         ),
     ],
   );
-  final snapshot = authoring.AuthoringSnapshot(
-    snapshot: fixture.snapshot.snapshot,
+  final snapshot = authoring.AuthoringState(
     generation: fixture.snapshot.generation,
     resources: [
       authoring.AuthoringResource(
@@ -2560,7 +2439,7 @@ _relationFixture({
         ),
     ],
     links: [
-      authoring.LinkProjection(
+      facts.LinkProjection(
         contract: relation,
         first: fixture.resource,
         second: originalTarget,
@@ -2569,9 +2448,6 @@ _relationFixture({
       ),
     ],
     findings: fixture.snapshot.findings,
-    observations: fixture.snapshot.observations,
-    absentInputToken: fixture.snapshot.absentInputToken,
-    findingsToken: fixture.snapshot.findingsToken,
   );
   final selection = types.NamedTypeTemplate(
     definition: fixture.listType.definition,
@@ -2614,7 +2490,7 @@ _relationFixture({
     ),
   );
   return (
-    draft: AuthoredDraft.fromSnapshot(snapshot, catalog: checked),
+    draft: AuthoredDraft.fromState(snapshot, catalog: checked),
     occurrence: authoring.LinkOccurrence(
       id: authoring.LinkOccurrenceId(
         endpoint: endpoint,
@@ -2803,8 +2679,7 @@ _collectionRepairFixture() {
     roleFallbacks: const [],
   );
   final resource = types.ResourceId(value: "resource:collection-repair");
-  final snapshot = authoring.AuthoringSnapshot(
-    snapshot: types.SnapshotId(value: "realm:collection-repair"),
+  final snapshot = authoring.AuthoringState(
     generation: catalogSnapshot.generation,
     resources: [
       authoring.AuthoringResource(
@@ -2821,9 +2696,6 @@ _collectionRepairFixture() {
     ],
     links: const [],
     findings: const [],
-    observations: const [],
-    absentInputToken: types.InputToken(value: "absent"),
-    findingsToken: checking.FindingsToken(value: "findings:collection-repair"),
   );
   types.ValueLocation location(String field) => types.ValueLocation(
     resource: resource,
@@ -2832,7 +2704,7 @@ _collectionRepairFixture() {
     ),
   );
   return (
-    draft: AuthoredDraft.fromSnapshot(
+    draft: AuthoredDraft.fromState(
       snapshot,
       catalog: CheckedEditorCatalog(catalogSnapshot),
     ),
@@ -2850,9 +2722,9 @@ _collectionRepairFixture() {
   types.ValueLocation items,
   types.ItemId firstItem,
   types.NamedTypeUse listType,
-  checking.InputObservation titleObservation,
+  facts.EditExpectation titleObservation,
   types.InputToken absent,
-  authoring.AuthoringSnapshot snapshot,
+  authoring.AuthoringState snapshot,
 })
 _fixture() {
   final resource = types.ResourceId(value: "resource:1");
@@ -2902,13 +2774,12 @@ _fixture() {
       ),
     ],
   );
-  final titleObservation = checking.InputObservation(
-    identity: checking.InputIdentity.createValue(at: title),
-    token: types.InputToken(value: "title:1"),
+  final titleObservation = facts.EditExpectation.createValue(
+    at: title,
+    expected: types.DataValue.wrapStringValue("original"),
   );
   final absent = types.InputToken(value: "absent");
-  final snapshot = authoring.AuthoringSnapshot(
-    snapshot: types.SnapshotId(value: "realm:1"),
+  final snapshot = authoring.AuthoringState(
     generation: types.CatalogGeneration(value: "catalog:1"),
     resources: [
       authoring.AuthoringResource(
@@ -2919,12 +2790,9 @@ _fixture() {
     ],
     links: const [],
     findings: const [],
-    observations: [titleObservation],
-    absentInputToken: absent,
-    findingsToken: checking.FindingsToken(value: "findings:1"),
   );
   return (
-    draft: AuthoredDraft.fromSnapshot(snapshot),
+    draft: AuthoredDraft.fromState(snapshot),
     resource: resource,
     title: title,
     items: items,
@@ -2933,5 +2801,55 @@ _fixture() {
     titleObservation: titleObservation,
     absent: absent,
     snapshot: snapshot,
+  );
+}
+
+Object _factKey(facts.EditExpectation fact) => switch (fact) {
+  facts.EditExpectation_valueWrapper(value: final value) => ("value", value.at),
+  facts.EditExpectation_configurationWrapper(value: final value) => (
+    "configuration",
+    value.at,
+  ),
+  facts.EditExpectation_resourceExistsWrapper(value: final value) => (
+    "exists",
+    value.id,
+  ),
+  facts.EditExpectation_resourceWrapper(value: final value) => (
+    "resource",
+    value.id,
+  ),
+  facts.EditExpectation_resourceIdsWrapper() => "resourceIds",
+  facts.EditExpectation_linksWrapper(value: final value) => (
+    "links",
+    value.resource,
+    value.contract,
+  ),
+  _ => throw StateError("Unknown expectation"),
+};
+authoring.AuthoringState _stateWithFields(
+  authoring.AuthoringState state,
+  Map<String, types.DataValue> changes,
+) {
+  final resource = state.resources.single;
+  final fields = {
+    for (final field in resource.content.fields) field.name: field.value,
+  }..addAll(changes);
+  return authoring.AuthoringState(
+    generation: state.generation,
+    links: state.links,
+    findings: state.findings,
+    resources: [
+      authoring.AuthoringResource(
+        id: resource.id,
+        definition: resource.definition,
+        content: types.AuthoringRecord(
+          configuration: resource.content.configuration,
+          fields: [
+            for (final entry in fields.entries)
+              types.FieldValue(name: entry.key, value: entry.value),
+          ],
+        ),
+      ),
+    ],
   );
 }

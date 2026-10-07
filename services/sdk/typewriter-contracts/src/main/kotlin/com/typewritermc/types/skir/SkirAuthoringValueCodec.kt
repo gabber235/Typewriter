@@ -5,37 +5,25 @@ import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.InitializationDiagnostic
 import com.typewritermc.authoring.LinkOccurrence
 import com.typewritermc.authoring.LinkOccurrenceId
-import com.typewritermc.authoring.SelectionId
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.ValueProblem
-import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.InputIdentity
-import com.typewritermc.checking.InputObservation
-import com.typewritermc.checking.InputToken
 import com.typewritermc.types.EndpointId
 import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.LinkTarget
-import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import skirout.editor.v1.authoring.LinkOccurrence as SkirLinkOccurrence
 import skirout.editor.v1.authoring.LinkOccurrenceId as SkirLinkOccurrenceId
-import skirout.editor.v1.checking.InputIdentity as SkirInputIdentity
-import skirout.editor.v1.checking.InputObservation as SkirInputObservation
 import skirout.editor.v1.diagnostic.InitializationDiagnostic as SkirInitializationDiagnostic
 import skirout.editor.v1.diagnostic.ValueProblem as SkirValueProblem
 import skirout.editor.v1.type_catalog.ArgumentSelection as SkirArgumentSelection
 import skirout.editor.v1.type_catalog.AuthoringRecord as SkirAuthoringRecord
-import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 import skirout.editor.v1.type_catalog.EndpointId as SkirEndpointId
 import skirout.editor.v1.type_catalog.FieldOwner as SkirFieldOwner
 import skirout.editor.v1.type_catalog.FieldValue as SkirFieldValue
-import skirout.editor.v1.type_catalog.InputToken as SkirInputToken
 import skirout.editor.v1.type_catalog.LinkTarget as SkirLinkTarget
-import skirout.editor.v1.type_catalog.RelationId as SkirRelationId
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
-import skirout.editor.v1.type_catalog.SelectionId as SkirSelectionId
 import skirout.editor.v1.type_catalog.TypeSelection as SkirTypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation as SkirValueLocation
 import skirout.editor.v1.type_catalog.ValuePath as SkirValuePath
@@ -66,16 +54,6 @@ object SkirAuthoringValueCodec {
 
     fun decode(value: SkirLinkOccurrenceId): SkirConversionResult<LinkOccurrenceId> =
         captureSkirConversion { decodeLinkOccurrenceId(value) }
-
-    fun encode(value: InputIdentity): SkirConversionResult<SkirInputIdentity> = captureSkirConversion { encodeInputIdentity(value) }
-
-    fun decode(value: SkirInputIdentity): SkirConversionResult<InputIdentity> = captureSkirConversion { decodeInputIdentity(value) }
-
-    fun encode(value: InputObservation): SkirConversionResult<SkirInputObservation> =
-        captureSkirConversion { encodeInputObservation(value) }
-
-    fun decode(value: SkirInputObservation): SkirConversionResult<InputObservation> =
-        captureSkirConversion { decodeInputObservation(value) }
 
     fun encode(value: InitializationDiagnostic): SkirConversionResult<SkirInitializationDiagnostic> =
         captureSkirConversion { encodeInitializationDiagnostic(value) }
@@ -183,98 +161,6 @@ internal fun ConversionScope.decodeLinkOccurrence(value: SkirLinkOccurrence): Li
         source = decodeResourceId(value.source),
         target = decodeLinkTarget(value.target),
     )
-
-internal fun ConversionScope.encodeInputObservation(value: InputObservation): SkirInputObservation =
-    SkirInputObservation(
-        identity = encodeInputIdentity(value.identity),
-        token = SkirInputToken(value = value.token.value),
-    )
-
-internal fun ConversionScope.decodeInputObservation(value: SkirInputObservation): InputObservation =
-    InputObservation(
-        identity = decodeInputIdentity(value.identity),
-        token = InputToken(requireText(value.token.value, "Input token")),
-    )
-
-internal fun ConversionScope.encodeInputIdentity(value: InputIdentity): SkirInputIdentity =
-    when (value) {
-        is InputIdentity.Value -> {
-            SkirInputIdentity.createValue(at = encodeValueLocation(value.at))
-        }
-
-        is InputIdentity.Existence -> {
-            SkirInputIdentity.createExistence(resource = encodeResourceId(value.resource))
-        }
-
-        is InputIdentity.Form -> {
-            SkirInputIdentity.createForm(at = encodeValueLocation(value.at))
-        }
-
-        is InputIdentity.Membership -> {
-            SkirInputIdentity.createMembership(at = encodeValueLocation(value.at))
-        }
-
-        is InputIdentity.Order -> {
-            SkirInputIdentity.createOrder(at = encodeValueLocation(value.at))
-        }
-
-        is InputIdentity.Selection -> {
-            SkirInputIdentity.SelectionWrapper(SkirSelectionId(value = value.query.value))
-        }
-
-        is InputIdentity.Incoming -> {
-            SkirInputIdentity.createIncoming(
-                resource = encodeResourceId(value.resource),
-                relation = value.relation?.let { SkirRelationId(value = it.value) },
-            )
-        }
-
-        is InputIdentity.Catalog -> {
-            SkirInputIdentity.CatalogWrapper(SkirCatalogGeneration(value = value.generation.value))
-        }
-    }
-
-internal fun ConversionScope.decodeInputIdentity(value: SkirInputIdentity): InputIdentity =
-    when (value) {
-        is SkirInputIdentity.ValueWrapper -> {
-            InputIdentity.Value(decodeValueLocation(value.value.at))
-        }
-
-        is SkirInputIdentity.ExistenceWrapper -> {
-            InputIdentity.Existence(decodeResourceId(value.value.resource))
-        }
-
-        is SkirInputIdentity.FormWrapper -> {
-            InputIdentity.Form(decodeValueLocation(value.value.at))
-        }
-
-        is SkirInputIdentity.MembershipWrapper -> {
-            InputIdentity.Membership(decodeValueLocation(value.value.at))
-        }
-
-        is SkirInputIdentity.OrderWrapper -> {
-            InputIdentity.Order(decodeValueLocation(value.value.at))
-        }
-
-        is SkirInputIdentity.SelectionWrapper -> {
-            InputIdentity.Selection(SelectionId(requireText(value.value.value, "Selection identity")))
-        }
-
-        is SkirInputIdentity.IncomingWrapper -> {
-            InputIdentity.Incoming(
-                resource = decodeResourceId(value.value.resource),
-                relation = value.value.relation?.let { RelationId(requireText(it.value, "Relation identity")) },
-            )
-        }
-
-        is SkirInputIdentity.CatalogWrapper -> {
-            InputIdentity.Catalog(CatalogGeneration(requireText(value.value.value, "Catalog generation")))
-        }
-
-        else -> {
-            fail("Unknown Skir input identity variant.")
-        }
-    }
 
 internal fun ConversionScope.encodeInitializationDiagnostic(value: InitializationDiagnostic): SkirInitializationDiagnostic =
     SkirInitializationDiagnostic(

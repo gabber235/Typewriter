@@ -6,8 +6,7 @@ final class AuthoredDraftAutosave extends ChangeNotifier {
     required AuthoredDraft baseline,
     required this.policy,
     required this._commit,
-    required this._awaitSnapshot,
-    required this._currentRecoveryRevision,
+    required this._fetchCurrent,
     required this._reload,
     required this._onSettled,
   }) : _draft = baseline.fork();
@@ -18,12 +17,7 @@ final class AuthoredDraftAutosave extends ChangeNotifier {
   final EditorCommitPolicy policy;
   final Future<skir.CommitPreparedEditResponse> Function(skir.PreparedEdit edit)
   _commit;
-  final Future<skir.AuthoringSnapshot> Function(
-    skir.SnapshotId snapshot,
-    int sinceRecovery,
-  )
-  _awaitSnapshot;
-  final int Function() _currentRecoveryRevision;
+  final Future<skir.AuthoringState> Function() _fetchCurrent;
   final Future<void> Function() _reload;
   final VoidCallback _onSettled;
 
@@ -38,7 +32,8 @@ final class AuthoredDraftAutosave extends ChangeNotifier {
   bool _detached = false;
   bool _flushRequested = false;
   bool _closed = false;
-  bool _acceptedPrefixNeedsRecovery = false;
+  int? _savedPrefix;
+  bool _uncertain = false;
 
   AuthoredDraft get draft => _draft;
   String? get status => _status;
@@ -65,7 +60,7 @@ final class AuthoredDraftAutosave extends ChangeNotifier {
   void stage(AuthoredDraft draft) {
     if (_closed) return;
     _draft = draft;
-    if (!_acceptedPrefixNeedsRecovery) {
+    if (_savedPrefix == null && !_uncertain) {
       _status = null;
       if (_blocked && _pending == null) _blocked = false;
     }
@@ -74,13 +69,9 @@ final class AuthoredDraftAutosave extends ChangeNotifier {
   }
 
   void acceptBaseline(AuthoredDraft baseline) {
-    if (_closed ||
-        (baseline.snapshot == _draft.snapshot &&
-            baseline.generation == _draft.generation)) {
-      return;
-    }
+    if (_closed) return;
     _latestBaseline = baseline;
-    if (_active != null || _acceptedPrefixNeedsRecovery) {
+    if (_active != null || _uncertain) {
       _pendingBaseline = baseline;
       return;
     }
@@ -137,7 +128,8 @@ final class AuthoredDraftAutosave extends ChangeNotifier {
     _pendingBaseline = null;
     _draft = latest.fork();
     _blocked = false;
-    _acceptedPrefixNeedsRecovery = false;
+    _savedPrefix = null;
+    _uncertain = false;
     _status = "Local changes discarded. Using the latest Realm value";
     _notify();
     _releaseIfSettled();
@@ -156,7 +148,8 @@ final class AuthoredDraftAutosave extends ChangeNotifier {
     _latestBaseline = baseline;
     _draft = baseline.fork();
     _blocked = false;
-    _acceptedPrefixNeedsRecovery = false;
+    _savedPrefix = null;
+    _uncertain = false;
     _status = "Local edits discarded";
     _notify();
     _releaseIfSettled();
@@ -171,9 +164,8 @@ final class AuthoredDraftAutosave extends ChangeNotifier {
 
   Future<void> _saveBatch() async {
     final batch = _pending ??= _AuthoredSaveBatch(
-      prepared: _draft.prepare(skir.BatchId(value: "panel:${uuid.v4()}")),
+      prepared: _draft.prepare(),
       acceptedIntentCount: _draft.intents.length,
-      recoveryRevision: _currentRecoveryRevision(),
     );
     _status = "Saving";
     _notify();
@@ -181,16 +173,16 @@ final class AuthoredDraftAutosave extends ChangeNotifier {
       final response = await _commit(batch.prepared);
       switch (response) {
         case skir.CommitPreparedEditResponse_resultWrapper(
-          value: skir.CommitResult_committedWrapper(:final value),
+          value: skir.CommitResult.committed,
         ):
-          await _acceptCommitted(batch, value.snapshot, value.changed);
+          await _acceptCommitted(batch);
         case skir.CommitPreparedEditResponse_resultWrapper(
           value: skir.CommitResult_conflictWrapper(),
         ):
           _pending = null;
           _blocked = true;
           _status = "The resource changed before this edit was saved";
-          await _reload();
+          await _refreshAfterRejection();
         case skir.CommitPreparedEditResponse_resultWrapper(
           value: skir.CommitResult_rejectedWrapper(),
         ):
@@ -203,79 +195,100 @@ final class AuthoredDraftAutosave extends ChangeNotifier {
           _pending = null;
           _blocked = true;
           _status = "The editor catalog changed";
-          await _reload();
+          await _refreshAfterRejection();
         default:
+          _pending = null;
           _blocked = true;
-          _status = "The save result is unavailable. Retry the same edit";
+          _uncertain = true;
+          _status = "The save result is unknown. Fetching current Realm values. Your local edit remains available";
+          await _reload();
       }
     } on Object {
+      _pending = null;
       _blocked = true;
-      _status = "The save did not complete. Retry the same edit";
+      _uncertain = true;
+      _status = "The save result is unknown. Your local edit remains available for comparison with current Realm values";
+      try {
+        await _reload();
+      } on Object {}
     } finally {
       _applyPendingBaseline();
       _notify();
     }
   }
 
-  Future<void> _acceptCommitted(
-    _AuthoredSaveBatch batch,
-    skir.SnapshotId snapshot,
-    Iterable<skir.InputIdentity> changed,
-  ) async {
+  Future<void> _acceptCommitted(_AuthoredSaveBatch batch) async {
     try {
-      final adopted = await _awaitSnapshot(snapshot, batch.recoveryRevision);
-      final baseline = AuthoredDraft.fromSnapshot(
+      final adopted = await _fetchCurrent();
+      final baseline = AuthoredDraft.fromState(
         adopted,
         catalog: _draft.catalog,
       );
-      switch (_draft.rebaseTailOnto(
-        baseline,
-        acceptedIntentCount: batch.acceptedIntentCount,
-        acceptedChanges: changed,
-      )) {
-        case AuthoredDraftRebased(:final draft):
-          _draft = draft;
-          _pending = null;
-          _blocked = false;
-          _acceptedPrefixNeedsRecovery = false;
-          _status = dirty ? "Saved. More changes are pending" : "Saved";
-        case AuthoredDraftRebaseFailed(:final message):
-          _pending = null;
-          _blocked = true;
-          _status =
-              "The saved edit was accepted, but later changes need attention: $message";
-        case AuthoredDraftRebaseConflict():
-          _pending = null;
-          _blocked = true;
-          _status = "The saved edit was accepted, but later changes conflict with the adopted value";
-      }
+      _adoptSavedBaseline(baseline, batch.acceptedIntentCount);
     } on Object {
       _pending = null;
       _blocked = true;
-      _acceptedPrefixNeedsRecovery = true;
-      _status = "The edit was saved, but its exact adopted snapshot is unavailable. Later changes remain local";
+      _savedPrefix = batch.acceptedIntentCount;
+      _status = "The edit was saved, but current Realm values are unavailable. Later changes remain local";
     }
     if (!_blocked && dirty && policy == EditorCommitPolicy.autosaveChanges) {
       schedule();
     }
   }
 
+  Future<void> _refreshAfterRejection() async {
+    try {
+      await _reload();
+    } on Object {
+      _status = "$_status. Current Realm values are unavailable";
+    }
+  }
+
+  void _adoptSavedBaseline(AuthoredDraft baseline, int acceptedIntentCount) {
+    _savedPrefix = acceptedIntentCount;
+    switch (_draft.rebaseTailOnto(
+      baseline,
+      acceptedIntentCount: acceptedIntentCount,
+    )) {
+      case AuthoredDraftRebased(:final draft):
+        _draft = draft;
+        _pending = null;
+        _blocked = false;
+        _savedPrefix = null;
+        _status = dirty ? "Saved. More changes are pending" : "Saved";
+      case AuthoredDraftRebaseFailed(:final message):
+        _pending = null;
+        _blocked = true;
+        _status =
+            "The saved edit was accepted, but later changes need attention: $message";
+      case AuthoredDraftRebaseConflict():
+        _pending = null;
+        _blocked = true;
+        _status = "The saved edit was accepted, but later changes conflict with the adopted value";
+    }
+    _notify();
+  }
+
   void _applyPendingBaseline() {
     final pendingBaseline = _pendingBaseline;
     _pendingBaseline = null;
-    if (pendingBaseline != null &&
-        !_acceptedPrefixNeedsRecovery &&
-        _pending == null) {
+    if (pendingBaseline != null && !_uncertain && _pending == null) {
       _adoptBaseline(pendingBaseline);
     }
   }
 
   void _adoptBaseline(AuthoredDraft baseline) {
+    if (_savedPrefix case final acceptedIntentCount?) {
+      _adoptSavedBaseline(baseline, acceptedIntentCount);
+      if (!_blocked && dirty && policy == EditorCommitPolicy.autosaveChanges)
+        schedule();
+      return;
+    }
     if (!dirty) {
       _draft = baseline.fork();
       _pending = null;
       _blocked = false;
-      _acceptedPrefixNeedsRecovery = false;
+      _savedPrefix = null;
       _status = null;
       _notify();
       return;
@@ -285,7 +298,7 @@ final class AuthoredDraftAutosave extends ChangeNotifier {
         _draft = draft;
         _pending = null;
         _blocked = false;
-        _acceptedPrefixNeedsRecovery = false;
+        _savedPrefix = null;
         _status = "The Realm changed. Your local edits remain";
         if (policy == EditorCommitPolicy.autosaveChanges) schedule();
       case AuthoredDraftRebaseFailed(:final message):
@@ -321,10 +334,8 @@ final class _AuthoredSaveBatch {
   const _AuthoredSaveBatch({
     required this.prepared,
     required this.acceptedIntentCount,
-    required this.recoveryRevision,
   });
 
   final skir.PreparedEdit prepared;
   final int acceptedIntentCount;
-  final int recoveryRevision;
 }

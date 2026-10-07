@@ -1,13 +1,13 @@
 package com.typewritermc.realm.routes
 
 import com.typewritermc.engine.CompilationRoot
-import com.typewritermc.realm.compiler.RegisteredCompiledContentRepository
+import com.typewritermc.realm.compiler.PublicationResults
 import com.typewritermc.realm.compiler.RegisteredCompiledState
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 
 /** Returns all requested compiled root states through one repository snapshot query. */
 internal class EditorCompiledResourceStatusRoutes(
-    private val repository: RegisteredCompiledContentRepository,
+    private val repository: PublicationResults,
     private val contracts: EditorContracts,
 ) {
     fun register(builder: CommunicatorRoutesBuilder) =
@@ -48,15 +48,9 @@ private fun RegisteredCompiledState.toWire(root: CompilationRoot) =
                 }
 
                 is RegisteredCompiledState.Active -> {
-                    skirout.editor.v1.compiled_content.CompiledResourceState.createActive(
-                        manifestId = manifestId,
-                    )
-                }
-
-                is RegisteredCompiledState.Blocked -> {
-                    skirout.editor.v1.compiled_content.CompiledResourceState.createBlocked(
-                        lastActiveManifestId = lastActiveManifestId,
-                        diagnosticCount = diagnosticCount,
+                    skirout.editor.v1.compiled_content.CompiledResourceState.ActiveWrapper(
+                        skirout.editor.v1.type_catalog
+                            .PublicationId(value = publication.value),
                     )
                 }
             },

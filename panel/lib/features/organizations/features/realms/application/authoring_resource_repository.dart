@@ -1,11 +1,7 @@
 part of "authoring_session.dart";
 
 final class AuthoringResourceRepository {
-  AuthoringResourceRepository(this.session, this.organization, this.realm) {
-    _changeTransfers = AuthoringChangedTransferAssembler(
-      onExpired: (_) => _invalidations.add(null),
-    );
-  }
+  AuthoringResourceRepository(this.session, this.organization, this.realm);
 
   final ResourceRepositories session;
   final skir.RecordId organization;
@@ -14,7 +10,6 @@ final class AuthoringResourceRepository {
     sync: true,
   );
   final _invalidations = StreamController<void>.broadcast(sync: true);
-  late final AuthoringChangedTransferAssembler _changeTransfers;
   final Completer<void> _disposed = Completer<void>();
 
   Stream<skir.AuthoringChanged> get changes => _changes.stream;
@@ -53,40 +48,35 @@ final class AuthoringResourceRepository {
     );
   }
 
-  Future<skir.AuthoringSnapshot> fetch({
+  Future<skir.AuthoringState> fetch({
     required skir.CatalogGeneration generation,
-    skir.SnapshotId? snapshot,
   }) async {
     session.checkActive();
     final transferId = uuid.v4();
-    final request = skir.QueryAuthoringSnapshotRequest(
+    final request = skir.QueryAuthoringStateRequest(
       generation: generation,
-      snapshot: snapshot,
       transferId: transferId,
     );
     final responses = session.transport.watchRequest(
-      address.request("editor.authoring.snapshot.query"),
+      address.request("editor.authoring.state.query"),
       boundedTransferUpdateSubject(
-        address.event("editor.authoring.snapshot.query"),
+        address.event("editor.authoring.state.query"),
         transferId,
       ),
-      skir.QueryAuthoringSnapshotRequest.serializer.toBytes(request),
-      skir.QueryAuthoringSnapshotResponse.serializer,
+      skir.QueryAuthoringStateRequest.serializer.toBytes(request),
+      skir.QueryAuthoringStateResponse.serializer,
     );
-    final assembler = AuthoringSnapshotTransferAssembler();
+    final assembler = AuthoringStateTransferAssembler();
     final result = await assembler.assemble(
       responses.map(
         (response) => switch (response) {
-          skir.QueryAuthoringSnapshotResponse_chunkWrapper(:final value) =>
-            value,
-          skir.QueryAuthoringSnapshotResponse_catalogChangedWrapper(
+          skir.QueryAuthoringStateResponse_chunkWrapper(:final value) => value,
+          skir.QueryAuthoringStateResponse_catalogChangedWrapper(
             :final value,
           ) =>
             throw CatalogGenerationChanged(value.actualGeneration),
-          skir.QueryAuthoringSnapshotResponse_unavailableWrapper(
-            :final value,
-          ) =>
-            throw AuthoringSnapshotTransferUnavailable(value),
+          skir.QueryAuthoringStateResponse_unavailableWrapper(:final value) =>
+            throw AuthoringStateTransferUnavailable(value),
           _ => throw ApiException.internalServerError(),
         },
       ),
@@ -132,8 +122,8 @@ final class AuthoringResourceRepository {
     address.request("editor.authoring.edit.commit"),
     skir.PreparedEdit.serializer.toBytes(edit),
     skir.CommitPreparedEditResponse.serializer,
-    submissionId: edit.id.value,
-    replay: SubmissionReplay.identicalRequest,
+    submissionId: uuid.v4(),
+    replay: SubmissionReplay.unsupported,
     label: "Save Realm changes",
     resources: {
       for (final resource in _editedResources(edit))
@@ -141,7 +131,7 @@ final class AuthoringResourceRepository {
     },
     classify: (response) => switch (response) {
       skir.CommitPreparedEditResponse_resultWrapper(
-        value: skir.CommitResult_committedWrapper(),
+        value: skir.CommitResult.committed,
       ) =>
         MutationResponseDisposition.confirmed,
       skir.CommitPreparedEditResponse_internalErrorWrapper() ||
@@ -158,14 +148,13 @@ final class AuthoringResourceRepository {
     address.request("editor.authoring.type.commit"),
     skir.TypeArgumentChangePreview.serializer.toBytes(preview),
     skir.CommitTypeArgumentChangeResponse.serializer,
-    submissionId:
-        "type:${preview.sourceSnapshot.value}:${preview.resource.value}:${preview.next}",
-    replay: SubmissionReplay.identicalRequest,
+    submissionId: uuid.v4(),
+    replay: SubmissionReplay.unsupported,
     label: "Apply type argument repair",
     resources: {(organization, realm, preview.resource)},
     classify: (response) => switch (response) {
       skir.CommitTypeArgumentChangeResponse_resultWrapper(
-        value: skir.CommitResult_committedWrapper(),
+        value: skir.CommitResult.committed,
       ) =>
         MutationResponseDisposition.confirmed,
       skir.CommitTypeArgumentChangeResponse_internalErrorWrapper() ||
@@ -179,11 +168,7 @@ final class AuthoringResourceRepository {
   void _acceptAuthoringMessage(NatsMessage message) {
     if (_isDisposed) return;
     try {
-      final result = skir.AuthoringChangedTransferResult.serializer.fromBytes(
-        message.payload,
-      );
-      final changed = _changeTransfers.accept(result);
-      if (changed != null) _changes.add(changed);
+      _changes.add(skir.AuthoringChanged.serializer.fromBytes(message.payload));
     } on Object {
       _invalidations.add(null);
     }
@@ -205,7 +190,6 @@ final class AuthoringResourceRepository {
     if (_isDisposed) return;
     _isDisposed = true;
     _disposed.complete();
-    _changeTransfers.clear();
     unawaited(_authoringMessages?.cancel());
     unawaited(_lifecycle?.cancel());
     unawaited(_authoringSubscription?.unsubscribe());

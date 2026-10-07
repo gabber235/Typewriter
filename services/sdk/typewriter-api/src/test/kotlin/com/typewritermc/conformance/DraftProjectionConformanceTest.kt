@@ -21,7 +21,6 @@ import com.typewritermc.authoring.mapDraftProjection
 import com.typewritermc.authoring.nativeReadProjection
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.PartialSelection
-import com.typewritermc.checking.SnapshotId
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.library.TagDefinition
@@ -47,11 +46,9 @@ val DraftProjectionConformanceTest by testSuite {
         val root = ValueLocation(resource, ValuePath())
         val placement = root.field("placement")
         val placementUse = com.typewritermc.authoring.GraphPlacementDefinition.use
-        val snapshot = SnapshotId("shared evidence")
         val generation = CatalogGeneration("draft catalog")
         val original =
             FixtureDraftReads(
-                snapshot,
                 generation,
                 mapOf(
                     placement to
@@ -70,10 +67,9 @@ val DraftProjectionConformanceTest by testSuite {
                     placement.field("y") to DataValue.Unfilled,
                 ),
             )
-        val staged = FixtureDraftReads(snapshot, generation, original.values)
+        val staged = FixtureDraftReads(generation, original.values)
         val binding =
             DraftBinding(
-                snapshot,
                 generation,
                 original.readContext,
                 root,
@@ -98,7 +94,6 @@ val DraftProjectionConformanceTest by testSuite {
         val listUse = TypeUse.Named(StandardTypes.list, listOf(INT_USE))
         val reads =
             FixtureDraftReads(
-                SnapshotId("list snapshot"),
                 CatalogGeneration("list catalog"),
                 mapOf(
                     root to DataValue.Named(listUse, DataValue.ListValue(listOf(ListItem(first, DataValue.Integer(BigInteger.TEN))))),
@@ -113,7 +108,7 @@ val DraftProjectionConformanceTest by testSuite {
             draft.items() shouldBe Availability.Available(listOf(first))
             draft.item(first) shouldBe Availability.Available(10)
         }
-        val newer = FixtureDraftReads(reads.snapshot, reads.catalog, reads.values, mapOf(root to listOf(first)))
+        val newer = FixtureDraftReads(reads.catalog, reads.values, mapOf(root to listOf(first)))
         with(newer) {
             (draft.items() as Availability.Failed).diagnostic.code shouldBe "read_context_mismatch"
             (draft.item(first) as Availability.Failed).diagnostic.code shouldBe "read_context_mismatch"
@@ -132,7 +127,6 @@ val DraftProjectionConformanceTest by testSuite {
         val uniqueKey = DataValue.Named(keyUse, DataValue.Record(mapOf("code" to DataValue.StringValue("unique"))))
         val reads =
             FixtureDraftReads(
-                SnapshotId("map snapshot"),
                 CatalogGeneration("map catalog"),
                 mapOf(
                     root to
@@ -182,7 +176,6 @@ val DraftProjectionConformanceTest by testSuite {
 private class FixtureKeyDraft(
     private val binding: DraftBinding,
 ) : DraftView {
-    override val snapshot = binding.snapshot
     override val catalog = binding.catalog
     override val readContext = binding.readContext
     override val location = binding.location
@@ -190,12 +183,11 @@ private class FixtureKeyDraft(
 }
 
 private class FixtureDraftReads(
-    override val snapshot: SnapshotId,
     override val catalog: CatalogGeneration,
     val values: Map<ValueLocation, DataValue>,
     private val collectionMembers: Map<ValueLocation, List<ItemId>> = emptyMap(),
 ) : AuthoredReads {
-    override val readContext = ReadContext(snapshot, catalog)
+    override val readContext = ReadContext(catalog)
 
     override fun <T> read(path: BoundPath<T>): Availability<T> {
         val value = values[path.location] ?: return Availability.Unavailable(listOf(path.location))
@@ -232,7 +224,6 @@ private class FixtureDraftReads(
         val named = value as? DataValue.Named ?: return failed("expected_named_binding", path.location)
         return Availability.Available(
             DraftBinding(
-                snapshot,
                 catalog,
                 readContext,
                 path.location,

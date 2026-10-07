@@ -21,15 +21,15 @@ import com.typewritermc.services.libs.communicator.skir.asPayloadCodec
 import com.typewritermc.services.libs.communicator.skir.skirUnaryContract
 import com.typewritermc.services.libs.communicator.skir.skirWatchContract
 import com.typewritermc.services.libs.telemetry.ErrorSlug
-import skirout.editor.v1.authoring.AuthoringChangedTransferResult
+import skirout.editor.v1.authoring.AuthoringChanged
 import skirout.editor.v1.authoring.CommitPreparedEdit
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
 import skirout.editor.v1.authoring.CommitTypeArgumentChange
 import skirout.editor.v1.authoring.CommitTypeArgumentChangeResponse
 import skirout.editor.v1.authoring.PreviewTypeArgumentChange
 import skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse
-import skirout.editor.v1.authoring.QueryAuthoringSnapshot
-import skirout.editor.v1.authoring.QueryAuthoringSnapshotResponse
+import skirout.editor.v1.authoring.QueryAuthoringState
+import skirout.editor.v1.authoring.QueryAuthoringStateResponse
 import skirout.editor.v1.authoring.SearchAuthoring
 import skirout.editor.v1.authoring.SearchAuthoringResponse
 import skirout.editor.v1.capability.CommandResult
@@ -45,8 +45,9 @@ import skirout.editor.v1.catalog.WatchEditorCatalog
 import skirout.editor.v1.compiled_content.CompiledContentChanged
 import skirout.editor.v1.compiled_content.QueryCompiledResourceStatus
 import skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse
-import skirout.editor.v1.compiled_content.WatchCompiledContent
-import skirout.editor.v1.compiled_content.WatchCompiledContentResponse
+import skirout.editor.v1.compiled_content.QueryPublishedContent
+import skirout.editor.v1.compiled_content.QueryPublishedContentResponse
+import skirout.editor.v1.publication.PublicationReport
 import skirout.editor.v1.publication.PublishAuthoring
 import skirout.editor.v1.publication.PublishAuthoringResponse
 import skirout.editor.v1.publication.WatchPublication
@@ -120,14 +121,14 @@ internal class EditorContracts(
                 diagnostics = emptyList(),
             ),
         )
-    val queryAuthoringSnapshot =
+    val queryAuthoringState =
         watch(
-            QueryAuthoringSnapshot,
-            QueryAuthoringSnapshotResponse.serializer,
-            "editor.authoring.snapshot.query",
-            QueryAuthoringSnapshotResponse.createInternalError(),
+            QueryAuthoringState,
+            QueryAuthoringStateResponse.serializer,
+            "editor.authoring.state.query",
+            QueryAuthoringStateResponse.createInternalError(),
             updateAddressResolver = { realm, request ->
-                scopedUpdateAddress("editor.authoring.snapshot.query", realm, request.transferId)
+                scopedUpdateAddress("editor.authoring.state.query", realm, request.transferId)
             },
         )
     val commitPreparedEdit =
@@ -158,23 +159,17 @@ internal class EditorContracts(
         EventContract(
             OperationName.of("editor.authoring.changed"),
             updateAddress("editor.authoring.changed"),
-            AuthoringChangedTransferResult.serializer.asPayloadCodec(),
+            AuthoringChanged.serializer.asPayloadCodec(),
             ErrorSlug.of("editor-authoring-changed-failed"),
         )
-    val watchCompiledContent =
+    val queryPublishedContent =
         watch(
-            WatchCompiledContent,
-            WatchCompiledContentResponse.serializer,
-            "editor.authoring.compiled.watch",
-            WatchCompiledContentResponse.createInternalError(),
+            QueryPublishedContent,
+            QueryPublishedContentResponse.serializer,
+            "editor.authoring.compiled.query",
+            QueryPublishedContentResponse.createInternalError(),
             responseClassifier(),
-        )
-    val compiledContentActivated =
-        EventContract(
-            OperationName.of("editor.authoring.compiled.activated"),
-            updateAddress("editor.authoring.compiled.activated"),
-            WatchCompiledContentResponse.serializer.asPayloadCodec(),
-            ErrorSlug.of("editor-authoring-compiled-activated-failed"),
+            updateAddressResolver = { realm, request -> scopedUpdateAddress("editor.authoring.compiled.query", realm, request.transferId) },
         )
     val compiledContentChanged =
         EventContract(
@@ -198,9 +193,9 @@ internal class EditorContracts(
     val watchPublication =
         watch(
             WatchPublication,
-            skirout.editor.v1.publication.PublicationAttempt.serializer,
+            PublicationReport.serializer,
             "editor.authoring.publication.watch",
-            skirout.editor.v1.publication.PublicationAttempt
+            PublicationReport
                 .partial(),
             responseClassifier(ResponseOutcome.INTERNAL_ERROR),
             responseClassifier(ResponseOutcome.SUCCESS),

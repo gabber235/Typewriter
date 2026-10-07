@@ -21,7 +21,7 @@ internal class RealmExpressionRuntime(
         reads: AuthoredReads,
     ): Availability<Boolean> {
         val snapshot =
-            reads as? SnapshotReads
+            reads as? CapturedAuthoringReads
                 ?: return Availability.Failed(
                     EvaluationDiagnostic(
                         code = "untracked_expression_reads",

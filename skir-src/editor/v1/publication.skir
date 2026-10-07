@@ -1,7 +1,5 @@
-import {
-  CheckInstanceId,
-  InputObservation,
-} from "editor/v1/checking.skir";
+import { EditExpectation } from "editor/v1/authoring_facts.skir";
+import { CheckInstanceId } from "editor/v1/checking.skir";
 import { Diagnostic } from "editor/v1/diagnostic.skir";
 import {
   CatalogGeneration,
@@ -12,7 +10,6 @@ import {
   PublicationId,
   RuntimeMemberId,
   ScriptCapabilityId,
-  SnapshotId,
   TypeDefinition,
   TypeDefinitionId,
   TypeTemplate,
@@ -69,10 +66,9 @@ enum PublicationState(811600007) {
 
 struct PublicationAttempt(811600008) {
   id: PublicationId = 0;
-  capture: SnapshotId = 1;
-  catalog: CatalogGeneration = 2;
-  engine_inputs: EngineImplementationInputs = 3;
-  state: PublicationState = 4;
+  catalog: CatalogGeneration = 1;
+  engine_inputs: EngineImplementationInputs = 2;
+  state: PublicationState = 3;
 }
 
 struct CheckCoverage(811600009) {
@@ -80,35 +76,35 @@ struct CheckCoverage(811600009) {
   completed: [CheckInstanceId] = 1;
 }
 
-struct CapturedAuthoringSnapshot(811600010) {
-  root: SnapshotId = 0;
-  catalog: CatalogGeneration = 1;
-}
-
-struct AcceptedSnapshot(811600011) {
-  capture: CapturedAuthoringSnapshot = 0;
+struct AcceptedAuthoring(811600010) {
+  catalog: CatalogGeneration = 0;
   required_coverage: CheckCoverage = 1;
-  evidence: [InputObservation] = 2;
+  evidence: [EditExpectation] = 2;
   binding_requirements: [NativeBindingRequirement] = 3;
 }
 
-enum PublicationResult(811600012) {
+enum PublicationResult(811600011) {
   publishing = 1;
   activated: struct {
     publication: PublicationId = 0;
-    manifest: string = 1;
   } = 2;
   blocked: [Diagnostic] = 3;
   interrupted: PublicationId = 4;
 }
 
 method PublishAuthoring(
-  PublicationAttempt
+  struct {}
 ): enum {
   result: PublicationResult = 1;
   internal_error: InternalError = 2;
 } = 920020;
 
+struct PublicationReport(811600012) {
+  id: PublicationId = 0;
+  state: PublicationState = 1;
+  findings: [Diagnostic] = 2;
+}
+
 method WatchPublication(
   struct {}
-): PublicationAttempt = 920021;
+): PublicationReport = 920021;

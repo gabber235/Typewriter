@@ -3,17 +3,15 @@ part of "authoring_session.dart";
 @freezed
 abstract class AuthoringSessionState with _$AuthoringSessionState {
   const factory AuthoringSessionState({
-    skir.AuthoringSnapshot? snapshot,
+    skir.AuthoringState? snapshot,
     CheckedEditorCatalog? catalog,
     @Default(false) bool refreshing,
     Object? failure,
   }) = _AuthoringSessionState;
 }
 
-extension AuthoringSnapshotView on AuthoringSessionState {
+extension AuthoringStateView on AuthoringSessionState {
   skir.CatalogGeneration? get generation => snapshot?.generation;
-
-  skir.SnapshotId? get snapshotId => snapshot?.snapshot;
 
   Map<skir.ResourceId, skir.AuthoringResource> get resources => {
     for (final resource
@@ -33,6 +31,6 @@ extension AuthoringSnapshotView on AuthoringSessionState {
     final checked = catalog;
     if (source == null || checked == null) return null;
     if (source.generation != checked.snapshot.generation) return null;
-    return AuthoredDraft.fromSnapshot(source, catalog: checked);
+    return AuthoredDraft.fromState(source, catalog: checked);
   }
 }

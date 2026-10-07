@@ -1,5 +1,5 @@
 use wasmcloud_utils::skir::base::editor::v1::{
-    authoring, binding, catalog, checking,
+    authoring, authoring_facts as facts, binding, catalog, checking,
     expression::{CollectionExpression, ExpressionCall, ExpressionNode, ExpressionRead},
     presentation::{
         AxisChild, AxisChildrenElement, AxisChildrenLayout, BoundControl, ChildrenElement,
@@ -344,7 +344,7 @@ fn collection_expressions_preserve_fold_bindings_and_optional_body() {
 }
 
 #[test]
-fn snapshot_bound_lifecycle_contracts_round_trip_with_typed_evidence() {
+fn current_state_lifecycle_contracts_round_trip_with_expected_values() {
     let catalog_snapshot = catalog::EditorCatalogWireSnapshot {
         role_fallbacks: vec![catalog::RoleFallback {
             role: catalog::PresentationRole::ReferenceOption,
@@ -369,52 +369,30 @@ fn snapshot_bound_lifecycle_contracts_round_trip_with_typed_evidence() {
         },
         ..Default::default()
     };
-    let observation = checking::InputObservation {
-        identity: checking::InputIdentity::Value(Box::new(checking::ValueInputIdentity {
-            at: location.clone(),
-            _unrecognized: None,
-        })),
-        token: wasmcloud_utils::skir::base::editor::v1::type_catalog::InputToken {
-            value: "input:7".to_owned(),
-            _unrecognized: None,
-        },
+    let expectation = facts::EditExpectation::Value(Box::new(facts::EditExpectation_Value {
+        at: location.clone(),
+        expected: Some(DataValue::StringValue("original".to_owned())),
         _unrecognized: None,
-    };
-    let snapshot = authoring::AuthoringSnapshot {
-        snapshot: wasmcloud_utils::skir::base::editor::v1::type_catalog::SnapshotId {
-            value: "snapshot:9".to_owned(),
-            _unrecognized: None,
-        },
+    }));
+    let current = authoring::AuthoringState {
         generation: wasmcloud_utils::skir::base::editor::v1::type_catalog::CatalogGeneration {
             value: "catalog:4".to_owned(),
             _unrecognized: None,
         },
-        observations: vec![observation.clone()],
-        absent_input_token: wasmcloud_utils::skir::base::editor::v1::type_catalog::InputToken {
-            value: "absent".to_owned(),
-            _unrecognized: None,
-        },
+        findings: vec![checking::FindingSet {
+            expectations: vec![expectation.clone()],
+            ..Default::default()
+        }],
         ..Default::default()
     };
-    let snapshot_bytes = authoring::AuthoringSnapshot::serializer().to_bytes(&snapshot);
-    let decoded_snapshot = authoring::AuthoringSnapshot::serializer()
-        .from_bytes(&snapshot_bytes, UnrecognizedValues::Drop)
-        .expect("snapshot input evidence must decode");
-    assert_eq!(decoded_snapshot, snapshot);
+    let bytes = authoring::AuthoringState::serializer().to_bytes(&current);
+    let decoded = authoring::AuthoringState::serializer()
+        .from_bytes(&bytes, UnrecognizedValues::Drop)
+        .expect("current state with shared findings evidence must decode");
+    assert_eq!(decoded, current);
     let prepared = authoring::PreparedEdit {
-        id: wasmcloud_utils::skir::base::editor::v1::type_catalog::BatchId {
-            value: "batch:one".to_owned(),
-            _unrecognized: None,
-        },
-        catalog: wasmcloud_utils::skir::base::editor::v1::type_catalog::CatalogGeneration {
-            value: "catalog:4".to_owned(),
-            _unrecognized: None,
-        },
-        snapshot: wasmcloud_utils::skir::base::editor::v1::type_catalog::SnapshotId {
-            value: "snapshot:9".to_owned(),
-            _unrecognized: None,
-        },
-        observations: vec![observation.clone()],
+        catalog: current.generation.clone(),
+        expectations: vec![expectation.clone()],
         intents: vec![authoring::EditIntent::SetValue(Box::new(
             authoring::SetValueIntent {
                 at: location.clone(),
@@ -424,11 +402,11 @@ fn snapshot_bound_lifecycle_contracts_round_trip_with_typed_evidence() {
         ))],
         _unrecognized: None,
     };
-    let prepared_bytes = authoring::PreparedEdit::serializer().to_bytes(&prepared);
-    let prepared_decoded = authoring::PreparedEdit::serializer()
-        .from_bytes(&prepared_bytes, UnrecognizedValues::Drop)
-        .expect("prepared edit must decode");
-    assert_eq!(prepared_decoded, prepared);
+    let bytes = authoring::PreparedEdit::serializer().to_bytes(&prepared);
+    let decoded = authoring::PreparedEdit::serializer()
+        .from_bytes(&bytes, UnrecognizedValues::Drop)
+        .expect("prepared expected value edit must decode");
+    assert_eq!(decoded, prepared);
 
     let initialization = catalog::InitializationRequest {
         id: wasmcloud_utils::skir::base::editor::v1::type_catalog::InitializationRequestId {
@@ -465,10 +443,9 @@ fn snapshot_bound_lifecycle_contracts_round_trip_with_typed_evidence() {
     }));
     let repair = authoring::TypeArgumentChangePreview {
         catalog: prepared.catalog.clone(),
-        source_snapshot: prepared.snapshot.clone(),
         resource: location.resource.clone(),
         next: pending.clone(),
-        observations: vec![observation],
+        expectations: vec![expectation],
         intents: vec![
             authoring::TypeRepairIntent::ConfigureResource(Box::new(
                 authoring::ResourceConfigurationIntent {
@@ -494,7 +471,6 @@ fn snapshot_bound_lifecycle_contracts_round_trip_with_typed_evidence() {
             value: "publication:one".to_owned(),
             _unrecognized: None,
         },
-        capture: prepared.snapshot,
         catalog: prepared.catalog,
         engine_inputs: publication::EngineImplementationInputs {
             token: wasmcloud_utils::skir::base::editor::v1::type_catalog::InputToken {
@@ -641,13 +617,9 @@ fn complete_authoring_intent_vocabulary_and_preview_identity_round_trip() {
             value: "catalog:wire".to_owned(),
             _unrecognized: None,
         },
-        source_snapshot: wasmcloud_utils::skir::base::editor::v1::type_catalog::SnapshotId {
-            value: "snapshot:wire".to_owned(),
-            _unrecognized: None,
-        },
         resource,
         next: TypeSelection::Complete(Box::new(named(declared(RESOURCE_ID), vec![]))),
-        observations: vec![],
+        expectations: vec![],
         intents: vec![],
         link_repairs: vec![],
         cleared_locations: vec![location],
@@ -658,4 +630,64 @@ fn complete_authoring_intent_vocabulary_and_preview_identity_round_trip() {
         .from_bytes(&bytes, UnrecognizedValues::Drop)
         .expect("preview identity must decode");
     assert_eq!(decoded, preview);
+}
+
+#[test]
+fn all_expected_fact_variants_preserve_native_values_and_absence() {
+    let resource = ResourceId {
+        value: "resource:one".to_owned(),
+        _unrecognized: None,
+    };
+    let at = wasmcloud_utils::skir::base::editor::v1::type_catalog::ValueLocation {
+        resource: resource.clone(),
+        ..Default::default()
+    };
+    let expectations = vec![
+        facts::EditExpectation::Value(Box::new(facts::EditExpectation_Value {
+            at: at.clone(),
+            expected: None,
+            _unrecognized: None,
+        })),
+        facts::EditExpectation::Value(Box::new(facts::EditExpectation_Value {
+            at: at.clone(),
+            expected: Some(DataValue::Null),
+            _unrecognized: None,
+        })),
+        facts::EditExpectation::Resource(Box::new(facts::EditExpectation_Resource {
+            id: resource.clone(),
+            expected: Some(AuthoringRecord::default()),
+            _unrecognized: None,
+        })),
+        facts::EditExpectation::ResourceExists(Box::new(facts::EditExpectation_ResourceExists {
+            id: resource.clone(),
+            expected: true,
+            _unrecognized: None,
+        })),
+        facts::EditExpectation::Configuration(Box::new(facts::EditExpectation_Configuration {
+            at,
+            expected: Some(TypeSelection::Complete(Box::new(named(
+                declared(RESOURCE_ID),
+                vec![],
+            )))),
+            _unrecognized: None,
+        })),
+        facts::EditExpectation::Links(Box::new(facts::EditExpectation_Links {
+            resource: resource.clone(),
+            direction: facts::TraversalDirection::Reverse,
+            expected: vec![facts::LinkProjection {
+                first: resource.clone(),
+                ..Default::default()
+            }],
+            ..Default::default()
+        })),
+        facts::EditExpectation::ResourceIds(vec![resource]),
+    ];
+    assert_ne!(expectations[0], expectations[1]);
+    for expectation in expectations {
+        let bytes = facts::EditExpectation::serializer().to_bytes(&expectation);
+        let decoded = facts::EditExpectation::serializer()
+            .from_bytes(&bytes, UnrecognizedValues::Drop)
+            .expect("all expected facts must decode");
+        assert_eq!(decoded, expectation);
+    }
 }

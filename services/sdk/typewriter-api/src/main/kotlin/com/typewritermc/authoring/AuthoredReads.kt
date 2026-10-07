@@ -2,7 +2,6 @@ package com.typewritermc.authoring
 
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.PartialSelection
-import com.typewritermc.checking.SnapshotId
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.expression.EvaluationDiagnostic
 
@@ -21,7 +20,6 @@ sealed interface Availability<out T> {
 }
 
 interface AuthoredReads {
-    val snapshot: SnapshotId
     val catalog: CatalogGeneration
     val readContext: ReadContext
 

@@ -7,7 +7,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
-  test("publication retains its captured snapshot and rejects another pending request", () async {
+  test("publication reports server transitions and rejects another pending request", () async {
     final source = _PublicationSource();
     final container = ProviderContainer.test(
       overrides: [
@@ -20,22 +20,21 @@ void main() {
     final provider = realmPublicationProvider(_organization, _realm);
     final subscription = container.listen(provider, (_, _) {});
     await _waitUntil(() => source.hasListener);
-    source.emit(skir.PublicationAttempt.defaultInstance);
+    source.emit(skir.PublicationReport.defaultInstance);
     await _waitUntil(() => container.read(provider).hasValue);
 
     final notifier = container.read(provider.notifier);
-    final first = await notifier.publish(
-      id: skir.PublicationId(value: "publication:first"),
-      authored: _snapshot("realm:1"),
+    final first = await notifier.publish();
+    source.emit(_attempt(skir.PublicationState.checking));
+    await _waitUntil(
+      () =>
+          container.read(provider).value?.state ==
+          skir.PublicationState.checking,
     );
-    final second = await notifier.publish(
-      id: skir.PublicationId(value: "publication:second"),
-      authored: _snapshot("realm:2"),
-    );
+    final second = await notifier.publish();
     expect(first, skir.PublicationResult.publishing);
     expect(second, skir.PublicationResult.publishing);
     expect(source.requests, hasLength(1));
-    expect(source.requests.single.capture.value, "realm:1");
 
     for (final state in [
       skir.PublicationState.checking,
@@ -50,12 +49,8 @@ void main() {
           container.read(provider).value?.state ==
           skir.PublicationState.complete,
     );
-    expect(container.read(provider).value?.capture.value, "realm:1");
 
-    await notifier.publish(
-      id: skir.PublicationId(value: "publication:blocked"),
-      authored: _snapshot("realm:2"),
-    );
+    await notifier.publish();
     source.emit(
       _attempt(
         skir.PublicationState.wrapBlocked([skir.Diagnostic.defaultInstance]),
@@ -106,10 +101,7 @@ void main() {
       final delayed = Completer<skir.PublicationResult>();
       source.nextResult = delayed.future;
       final notifier = container.read(provider.notifier);
-      final first = notifier.publish(
-        id: skir.PublicationId(value: "publication:new"),
-        authored: _snapshot("realm:1"),
-      );
+      final first = notifier.publish();
       await _waitUntil(() => source.requests.length == 1);
       source.emit(
         _attempt(
@@ -120,10 +112,7 @@ void main() {
       );
       await Future<void>.delayed(Duration.zero);
 
-      final second = await notifier.publish(
-        id: skir.PublicationId(value: "publication:second"),
-        authored: _snapshot("realm:2"),
-      );
+      final second = await notifier.publish();
       expect(second, skir.PublicationResult.publishing);
       expect(source.requests, hasLength(1));
 
@@ -150,53 +139,38 @@ void main() {
 final _organization = recordId("organization:org1");
 final _realm = recordId("service:realm1");
 
-skir.AuthoringSnapshot _snapshot(String id) => skir.AuthoringSnapshot(
-  snapshot: skir.SnapshotId(value: id),
-  generation: skir.CatalogGeneration(value: "catalog:1"),
-  resources: const [],
-  links: const [],
-  findings: const [],
-  observations: const [],
-  absentInputToken: skir.InputToken(value: "absent"),
-  findingsToken: skir.FindingsToken(value: "findings:empty"),
-);
-
-skir.PublicationAttempt _attempt(
+skir.PublicationReport _attempt(
   skir.PublicationState state, {
   String id = "publication:first",
   String snapshot = "realm:1",
-}) => skir.PublicationAttempt(
+}) => skir.PublicationReport(
   id: skir.PublicationId(value: id),
-  capture: skir.SnapshotId(value: snapshot),
-  catalog: skir.CatalogGeneration(value: "catalog:1"),
-  engineInputs: skir.EngineImplementationInputs.defaultInstance,
+  findings: const [],
   state: state,
 );
 
 final class _PublicationSource implements RealmPublicationSource {
-  final controller = StreamController<skir.PublicationAttempt>.broadcast(
+  final controller = StreamController<skir.PublicationReport>.broadcast(
     sync: true,
   );
-  final requests = <skir.PublicationAttempt>[];
+  final requests = <skir.PublicationReport>[];
   Future<skir.PublicationResult>? nextResult;
 
   bool get hasListener => controller.hasListener;
 
-  void emit(skir.PublicationAttempt attempt) => controller.add(attempt);
+  void emit(skir.PublicationReport attempt) => controller.add(attempt);
 
   Future<void> close() => controller.close();
 
   @override
-  Future<skir.PublicationResult> publish(
-    skir.PublicationAttempt request,
-  ) async {
-    requests.add(request);
+  Future<skir.PublicationResult> publish() async {
+    requests.add(skir.PublicationReport.defaultInstance);
     return await (nextResult ??
         Future.value(skir.PublicationResult.publishing));
   }
 
   @override
-  Stream<skir.PublicationAttempt> watch() => controller.stream;
+  Stream<skir.PublicationReport> watch() => controller.stream;
 }
 
 Future<void> _waitUntil(bool Function() predicate) async {

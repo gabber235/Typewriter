@@ -18,7 +18,7 @@ void main() {
       CreatedAuthoringResource? created;
 
       final staged = stageResourceCreation(
-        baseline: AuthoredDraft.fromSnapshot(
+        baseline: AuthoredDraft.fromState(
           fixture.snapshot,
           catalog: fixture.catalog,
         ),
@@ -101,6 +101,9 @@ final class _CreationSession extends AuthoringSession {
   );
 
   @override
+  Future<void> refresh({bool catalog = false}) async {}
+
+  @override
   Future<skir.PreparedCreation> prepareCreation(
     skir.InitializationRequest request,
   ) async {
@@ -112,10 +115,7 @@ final class _CreationSession extends AuthoringSession {
   Future<skir.CommitPreparedEditResponse> commit(skir.PreparedEdit edit) async {
     committed = edit;
     return skir.CommitPreparedEditResponse.wrapResult(
-      skir.CommitResult.createCommitted(
-        snapshot: skir.SnapshotId(value: "snapshot:committed"),
-        changed: const [],
-      ),
+      skir.CommitResult.committed,
     );
   }
 
@@ -139,7 +139,7 @@ final class _CreationFixture {
 
   final skir.RecordId organization;
   final skir.RecordId realm;
-  final skir.AuthoringSnapshot snapshot;
+  final skir.AuthoringState snapshot;
   final CheckedEditorCatalog catalog;
   final skir.TypeSelection pending;
   final ResourceCreationRequest request;
@@ -213,15 +213,11 @@ _CreationFixture _fixture() {
       ),
     ],
   );
-  final snapshot = skir.AuthoringSnapshot(
-    snapshot: skir.SnapshotId(value: "snapshot:creation"),
+  final snapshot = skir.AuthoringState(
     generation: generation,
     resources: const [],
     links: const [],
     findings: const [],
-    observations: const [],
-    absentInputToken: skir.InputToken(value: "input:absent"),
-    findingsToken: skir.FindingsToken(value: "findings:creation"),
   );
   return _CreationFixture(
     organization: recordId("organization:test"),

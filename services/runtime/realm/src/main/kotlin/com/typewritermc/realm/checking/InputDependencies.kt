@@ -1,38 +1,62 @@
 package com.typewritermc.realm.checking
 
+import com.typewritermc.authoring.EditExpectation
+import com.typewritermc.authoring.ValueLocation
+import com.typewritermc.authoring.ValuePath
 import com.typewritermc.checking.InputIdentity
-import com.typewritermc.checking.InputObservation
-import com.typewritermc.checking.InputToken
+import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
 
 interface ObservationRecorder {
-    fun observe(
-        identity: InputIdentity,
-        token: InputToken,
-    )
+    fun observe(expectation: EditExpectation)
 
-    fun captured(): List<InputObservation>
+    fun captured(): List<EditExpectation>
 }
 
 class DefaultObservationRecorder : ObservationRecorder {
-    private val observations = linkedMapOf<InputIdentity, InputToken>()
+    private val expectations = linkedSetOf<EditExpectation>()
 
-    override fun observe(
-        identity: InputIdentity,
-        token: InputToken,
-    ) {
-        val previous = observations.putIfAbsent(identity, token)
-        check(previous == null || previous == token) {
-            "One check execution observed two versions of the same authored input."
-        }
+    override fun observe(expectation: EditExpectation) {
+        expectations += expectation
     }
 
-    override fun captured(): List<InputObservation> = observations.map { (identity, token) -> InputObservation(identity, token) }
+    override fun captured(): List<EditExpectation> = expectations.toList()
 }
+
+internal fun EditExpectation.dependencies(): Set<InputIdentity> =
+    when (this) {
+        is EditExpectation.Value -> {
+            setOf(InputIdentity.Value(at))
+        }
+
+        is EditExpectation.Configuration -> {
+            setOf(InputIdentity.Form(at))
+        }
+
+        is EditExpectation.ResourceExists -> {
+            setOf(InputIdentity.Existence(id))
+        }
+
+        is EditExpectation.Resource -> {
+            setOf(
+                InputIdentity.Existence(id),
+                InputIdentity.Form(ValueLocation(id, ValuePath())),
+                InputIdentity.Value(ValueLocation(id, ValuePath())),
+            )
+        }
+
+        is EditExpectation.ResourceIds -> {
+            setOf(RESOURCE_SELECTION_INPUT)
+        }
+
+        is EditExpectation.Links -> {
+            setOf(InputIdentity.Incoming(resource, contract))
+        }
+    }
 
 interface ReverseDependencyIndex {
     fun replace(
         instance: CheckInstanceId,
-        observations: List<InputObservation>,
+        observations: List<EditExpectation>,
     )
 
     fun affectedBy(changed: Set<InputIdentity>): Set<CheckInstanceId>
@@ -47,10 +71,10 @@ class DefaultReverseDependencyIndex : ReverseDependencyIndex {
 
     override fun replace(
         instance: CheckInstanceId,
-        observations: List<InputObservation>,
+        observations: List<EditExpectation>,
     ) = synchronized(lock) {
         retireLocked(instance)
-        val inputs = observations.mapTo(linkedSetOf(), InputObservation::identity)
+        val inputs = observations.flatMapTo(linkedSetOf()) { it.dependencies() }
         if (inputs.isEmpty()) return@synchronized
         byInstance[instance] = inputs
         inputs.forEach { input -> byInput.getOrPut(input, ::linkedSetOf).add(instance) }

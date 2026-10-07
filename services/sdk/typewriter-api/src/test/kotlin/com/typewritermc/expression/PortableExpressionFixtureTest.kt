@@ -10,7 +10,6 @@ import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.PartialSelection
-import com.typewritermc.checking.SnapshotId
 import com.typewritermc.checking.TypedSelection
 import com.typewritermc.presentation.ExpressionNode
 import com.typewritermc.types.DataValue
@@ -234,9 +233,8 @@ private fun ValueLocation.fixtureKey(): String {
 }
 
 private object FixtureReads : AuthoredReads {
-    override val snapshot = SnapshotId("expression fixture")
     override val catalog = CatalogGeneration("expression fixture")
-    override val readContext = com.typewritermc.authoring.ReadContext(snapshot, catalog)
+    override val readContext = com.typewritermc.authoring.ReadContext(catalog)
 
     override fun <T> read(path: BoundPath<T>): Availability<T> = error("Fixture expressions use ExpressionValueReader.")
 

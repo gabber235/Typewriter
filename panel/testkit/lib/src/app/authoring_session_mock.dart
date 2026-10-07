@@ -27,11 +27,7 @@ class AuthoringSessionMock extends AuthoringSession {
   Future<skir.CommitPreparedEditResponse> commit(skir.PreparedEdit edit) async {
     await onApply?.call(edit.intents.toList(growable: false));
     return skir.CommitPreparedEditResponse.wrapResult(
-      skir.CommitResult.createCommitted(
-        snapshot:
-            state.snapshot?.snapshot ?? skir.SnapshotId(value: "fixture:1"),
-        changed: const [],
-      ),
+      skir.CommitResult.committed,
     );
   }
 }
@@ -70,8 +66,7 @@ AuthoringSessionState _fixtureState({
   );
   return AuthoringSessionState(
     catalog: receivedCheckedEditorCatalog(generation: generation),
-    snapshot: skir.AuthoringSnapshot(
-      snapshot: skir.SnapshotId(value: "fixture:1"),
+    snapshot: skir.AuthoringState(
       generation: generation,
       resources: [
         for (final book in books) _bookResource(book),
@@ -79,9 +74,6 @@ AuthoringSessionState _fixtureState({
       ],
       links: const [],
       findings: const [],
-      observations: const [],
-      absentInputToken: skir.InputToken(value: "absent"),
-      findingsToken: skir.FindingsToken(value: "fixture:findings"),
     ),
   );
 }

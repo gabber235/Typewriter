@@ -2131,44 +2131,6 @@ impl CatalogGeneration {
 }
 
 // ==============================================================================
-// struct SnapshotId
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct SnapshotId {
-    pub value: String,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SnapshotId>>,
-}
-
-impl SnapshotId {
-    pub fn default_ref() -> &'static SnapshotId {
-        static D: std::sync::LazyLock<SnapshotId> = std::sync::LazyLock::new(SnapshotId::default);
-        &D
-    }
-}
-
-impl SnapshotId {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<SnapshotId> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<SnapshotId>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/type_catalog.skir",
-                    "SnapshotId",
-                    "",
-                    |x: &SnapshotId| &x._unrecognized,
-                    |x: &mut SnapshotId, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<SnapshotId> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(SnapshotId::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct InputToken
 // ==============================================================================
 
@@ -2678,44 +2640,6 @@ impl RelativeFieldPattern {
     pub fn serializer() -> crate::skir_client::Serializer<RelativeFieldPattern> {
         initialize_module_serializers();
         crate::skir_client::internal::struct_serializer_from_static(RelativeFieldPattern::_adapter())
-    }
-}
-
-// ==============================================================================
-// struct BatchId
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct BatchId {
-    pub value: String,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<BatchId>>,
-}
-
-impl BatchId {
-    pub fn default_ref() -> &'static BatchId {
-        static D: std::sync::LazyLock<BatchId> = std::sync::LazyLock::new(BatchId::default);
-        &D
-    }
-}
-
-impl BatchId {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<BatchId> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<BatchId>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/type_catalog.skir",
-                    "BatchId",
-                    "",
-                    |x: &BatchId| &x._unrecognized,
-                    |x: &mut BatchId, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<BatchId> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(BatchId::_adapter())
     }
 }
 
@@ -4247,11 +4171,6 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<SnapshotId> = SnapshotId::_adapter() as *const _ as *mut _;
-                (*a).add_field("value", 0, crate::skir_client::Serializer::string(), "", |x: &SnapshotId| &x.value, |x: &mut SnapshotId, v| x.value = v);
-                (*a).finalize();
-            }
-            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<InputToken> = InputToken::_adapter() as *const _ as *mut _;
                 (*a).add_field("value", 0, crate::skir_client::Serializer::string(), "", |x: &InputToken| &x.value, |x: &mut InputToken, v| x.value = v);
                 (*a).finalize();
@@ -4323,11 +4242,6 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<RelativeFieldPattern> = RelativeFieldPattern::_adapter() as *const _ as *mut _;
                 (*a).add_field("segments", 0, crate::skir_client::Serializer::array(crate::skir_client::internal::enum_serializer_from_static(FieldPatternSegment::_adapter())), "", |x: &RelativeFieldPattern| &x.segments, |x: &mut RelativeFieldPattern, v| x.segments = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<BatchId> = BatchId::_adapter() as *const _ as *mut _;
-                (*a).add_field("value", 0, crate::skir_client::Serializer::string(), "", |x: &BatchId| &x.value, |x: &mut BatchId, v| x.value = v);
                 (*a).finalize();
             }
             unsafe {

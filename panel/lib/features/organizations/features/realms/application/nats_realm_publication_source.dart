@@ -4,9 +4,9 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 abstract interface class RealmPublicationSource {
-  Future<skir.PublicationResult> publish(skir.PublicationAttempt request);
+  Future<skir.PublicationResult> publish();
 
-  Stream<skir.PublicationAttempt> watch();
+  Stream<skir.PublicationReport> watch();
 }
 
 final class NatsRealmPublicationSource implements RealmPublicationSource {
@@ -23,12 +23,12 @@ final class NatsRealmPublicationSource implements RealmPublicationSource {
   final RealmServiceAddress _address;
 
   @override
-  Future<skir.PublicationResult> publish(
-    skir.PublicationAttempt request,
-  ) async {
+  Future<skir.PublicationResult> publish() async {
     final response = await ref.requestSkir(
       _address.request("editor.authoring.publish"),
-      skir.PublicationAttempt.serializer.toBytes(request),
+      skir.PublishAuthoringRequest.serializer.toBytes(
+        skir.PublishAuthoringRequest(),
+      ),
       skir.PublishAuthoringResponse.serializer,
     );
     return switch (response) {
@@ -38,13 +38,13 @@ final class NatsRealmPublicationSource implements RealmPublicationSource {
   }
 
   @override
-  Stream<skir.PublicationAttempt> watch() => ref.watchRequest(
+  Stream<skir.PublicationReport> watch() => ref.watchRequest(
     subject: _address.request("editor.authoring.publication.watch"),
     listenSubject: _address.event("editor.authoring.publication.watch"),
     requestBytes: skir.WatchPublicationRequest.serializer.toBytes(
       skir.WatchPublicationRequest(),
     ),
-    serializer: skir.PublicationAttempt.serializer,
+    serializer: skir.PublicationReport.serializer,
     transformer: (_, response) => response,
   );
 }

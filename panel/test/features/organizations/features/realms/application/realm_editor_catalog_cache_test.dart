@@ -19,8 +19,7 @@ void main() {
   test("matching catalog and authored snapshot expose one draft", () {
     final generation = skir.CatalogGeneration(value: "catalog:7");
     final resource = skir.ResourceId(value: "book:1");
-    final snapshot = skir.AuthoringSnapshot(
-      snapshot: skir.SnapshotId(value: "realm:3"),
+    final snapshot = skir.AuthoringState(
       generation: generation,
       resources: [
         skir.AuthoringResource(
@@ -34,30 +33,23 @@ void main() {
       ],
       links: const [],
       findings: const [],
-      observations: const [],
-      absentInputToken: skir.InputToken(value: "absent"),
-      findingsToken: skir.FindingsToken(value: "findings:3"),
     );
     final state = AuthoringSessionState(
       snapshot: snapshot,
       catalog: CheckedEditorCatalog(_catalog(generation: generation)),
     );
 
-    expect(state.snapshotId, snapshot.snapshot);
-    expect(state.draft?.snapshot, snapshot.snapshot);
+    expect(state.snapshot, snapshot);
+    expect(state.draft?.generation, snapshot.generation);
     expect(state.draft?.resources.keys, contains(resource));
   });
 
   test("a catalog from another generation cannot form an authored draft", () {
-    final snapshot = skir.AuthoringSnapshot(
-      snapshot: skir.SnapshotId(value: "realm:3"),
+    final snapshot = skir.AuthoringState(
       generation: skir.CatalogGeneration(value: "catalog:7"),
       resources: const [],
       links: const [],
       findings: const [],
-      observations: const [],
-      absentInputToken: skir.InputToken(value: "absent"),
-      findingsToken: skir.FindingsToken(value: "findings:3"),
     );
     final state = AuthoringSessionState(
       snapshot: snapshot,

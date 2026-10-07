@@ -1,26 +1,24 @@
 import {
+  EditExpectation,
+  ExpectationConflict,
+  LinkProjection,
+  TraversalDirection,
+} from "editor/v1/authoring_facts.skir";
+import {
   PreparedCreation,
   ResourceDefinitionId,
 } from "editor/v1/catalog.skir";
-import {
-  FindingSet,
-  FindingsToken,
-  InputIdentity,
-  InputObservation,
-} from "editor/v1/checking.skir";
+import { FindingSet } from "editor/v1/checking.skir";
 import {
   DeclarationDiagnostic,
   Diagnostic,
   ValueProblem,
 } from "editor/v1/diagnostic.skir";
-import { RealmSearchQuery } from "editor/v1/search.skir";
 import {
   AuthoringRecord,
-  BatchId,
   CatalogGeneration,
   DataValue,
   EndpointId,
-  InputToken,
   ItemId,
   LinkTarget,
   ListItem,
@@ -28,7 +26,6 @@ import {
   RelationFamilyId,
   RelationId,
   ResourceId,
-  SnapshotId,
   TypeDefinitionId,
   TypeSelection,
   ValueLocation,
@@ -55,78 +52,64 @@ struct LinkOccurrence(812200003) {
   target: LinkTarget = 2;
 }
 
-struct LinkProjection(812200004) {
-  contract: RelationId = 0;
-  first: ResourceId = 1;
-  second: ResourceId = 2;
-  first_location: ValuePath? = 3;
-  second_location: ValuePath? = 4;
-}
-
-struct RelationProjectionDelta(812200005) {
+struct RelationProjectionDelta(812200004) {
   removals: [LinkProjection] = 0;
   created: [LinkProjection] = 1;
   metadata_changed: [LinkProjection] = 2;
 }
 
-enum TraversalDirection(812200006) {
-  forward = 1;
-  reverse = 2;
-  both = 3;
-}
-
-struct FamilyRelationSelection(812200007) {
+struct FamilyRelationSelection(812200005) {
   id: RelationFamilyId = 0;
   direction: TraversalDirection = 1;
 }
 
-struct ContractRelationSelection(812200008) {
+struct ContractRelationSelection(812200006) {
   ids: [RelationId] = 0;
   direction: TraversalDirection = 1;
 }
 
-struct AllRelationSelection(812200009) {
+struct AllRelationSelection(812200007) {
   direction: TraversalDirection = 0;
 }
 
-enum RelationSelection(812200010) {
+enum RelationSelection(812200008) {
   family: FamilyRelationSelection = 1;
   contracts: ContractRelationSelection = 2;
   all: AllRelationSelection = 3;
 }
 
-struct TraversalBudget(812200011) {
+struct TraversalBudget(812200009) {
   max_resources: int64 = 0;
   max_links: int64 = 1;
   max_routes: int64 = 2;
   max_steps: int64 = 3;
 }
 
-struct GraphEndpoint(812200012) {
+struct GraphEndpoint(812200010) {
   resource: ResourceId = 0;
   endpoint: EndpointId = 1;
   path: ValuePath? = 2;
 }
 
-struct GraphStep(812200013) {
+struct GraphStep(812200011) {
   relation: RelationId = 0;
   from: GraphEndpoint = 1;
   to: GraphEndpoint = 2;
 }
 
-enum UnresolvedLink(812200014) {
+enum UnresolvedLink(812200012) {
   unfilled: LinkOccurrenceId = 1;
   unavailable_target: LinkOccurrenceId = 2;
 }
 
-struct PresentationSubject(812200015) {
+struct PresentationSubject(812200013) {
   resource: ResourceId = 0;
   definition: ResourceDefinitionId = 1;
   content: AuthoringRecord = 2;
   descriptor: DataValue = 3;
 }
 
-enum PresentationSubjectChange(812200016) {
+enum PresentationSubjectChange(812200014) {
   upsert: struct {
     resource: ResourceId = 0;
     subject: PresentationSubject = 1;
@@ -134,90 +117,86 @@ enum PresentationSubjectChange(812200016) {
   remove: ResourceId = 2;
 }
 
-struct AuthoringDiagnostic(812200017) {
+struct AuthoringDiagnostic(812200015) {
   code: string = 0;
   message: string = 1;
   resource: ResourceId? = 2;
   path: ValuePath? = 3;
 }
 
-struct AuthoringInvalid(812200018) {
+struct AuthoringInvalid(812200016) {
   diagnostics: [AuthoringDiagnostic] = 0;
 }
 
-struct CatalogChanged(812200019) {
+struct CatalogChanged(812200017) {
   actual_generation: CatalogGeneration = 0;
 }
 
-struct AuthoringSnapshot(812200020) {
-  snapshot: SnapshotId = 0;
-  generation: CatalogGeneration = 1;
-  resources: [AuthoringResource] = 2;
-  links: [LinkProjection] = 3;
-  findings: [FindingSet] = 4;
-  observations: [InputObservation] = 5;
-  absent_input_token: InputToken = 6;
-  findings_token: FindingsToken = 7;
+struct AuthoringState(812200018) {
+  generation: CatalogGeneration = 0;
+  resources: [AuthoringResource] = 1;
+  links: [LinkProjection] = 2;
+  findings: [FindingSet] = 3;
 }
 
-struct SetValueIntent(812200021) {
+struct SetValueIntent(812200019) {
   at: ValueLocation = 0;
   value: DataValue = 1;
 }
 
-struct InsertIntent(812200022) {
+struct InsertIntent(812200020) {
   at: ValueLocation = 0;
   after: ItemId? = 1;
   item: ListItem = 2;
 }
 
-struct RemoveIntent(812200023) {
+struct RemoveIntent(812200021) {
   at: ValueLocation = 0;
   item: ItemId = 1;
 }
 
-struct MoveIntent(812200024) {
+struct MoveIntent(812200022) {
   at: ValueLocation = 0;
   item: ItemId = 1;
   after: ItemId? = 2;
 }
 
-struct CreateResourceIntent(812200025) {
+struct CreateResourceIntent(812200023) {
   id: ResourceId = 0;
   record: AuthoringRecord = 1;
 }
 
-struct DeleteResourceIntent(812200026) {
+struct DeleteResourceIntent(812200024) {
   id: ResourceId = 0;
 }
 
-struct NewCounterpartChoice(812200027) {
+struct NewCounterpartChoice(812200025) {
   containing: ValueLocation = 0;
   prepared: PreparedCreation = 1;
 }
 
-enum CounterpartChoice(812200028) {
+enum CounterpartChoice(812200026) {
   existing: LinkOccurrence = 1;
   new: NewCounterpartChoice = 2;
 }
 
-struct ConnectIntent(812200029) {
+struct ConnectIntent(812200027) {
   source: LinkOccurrence = 0;
   target: ResourceId = 1;
   counterpart: CounterpartChoice? = 2;
 }
 
-struct RetagIntent(812200030) {
+struct RetagIntent(812200028) {
   at: ValueLocation = 0;
   type: NamedTypeUse = 1;
 }
 
-struct ResourceConfigurationIntent(812200031) {
+struct ResourceConfigurationIntent(812200029) {
   resource: ResourceId = 0;
   configuration: TypeSelection = 1;
 }
 
-enum EditIntent(812200032) {
+enum EditIntent(812200030) {
   create_resource: CreateResourceIntent = 1;
   delete_resource: DeleteResourceIntent = 2;
   set_value: SetValueIntent = 3;
@@ -230,192 +209,123 @@ enum EditIntent(812200032) {
   configure_resource: ResourceConfigurationIntent = 10;
 }
 
-struct PreparedEdit(812200033) {
-  id: BatchId = 0;
-  catalog: CatalogGeneration = 1;
-  snapshot: SnapshotId = 2;
-  observations: [InputObservation] = 3;
-  intents: [EditIntent] = 4;
+struct PreparedEdit(812200031) {
+  catalog: CatalogGeneration = 0;
+  expectations: [EditExpectation] = 1;
+  intents: [EditIntent] = 2;
 }
 
-struct PreparedEditReady(812200034) {
-  snapshot: SnapshotId = 0;
-  edit: PreparedEdit = 1;
+struct PreparedEditReady(812200032) {
+  edit: PreparedEdit = 0;
 }
 
-enum PreparedEditResult(812200035) {
+enum PreparedEditResult(812200033) {
   prepared: PreparedEditReady = 1;
   needs_input: [ValueLocation] = 2;
   rejected: [ValueProblem] = 3;
 }
 
-struct InputConflict(812200036) {
-  input: InputIdentity = 0;
-  expected: InputToken = 1;
-  actual: InputToken? = 2;
-}
-
-struct CommitSuccess(812200037) {
-  snapshot: SnapshotId = 0;
-  changed: [InputIdentity] = 1;
-}
-
-enum CommitResult(812200038) {
-  committed: CommitSuccess = 1;
-  conflict: [InputConflict] = 2;
+enum CommitResult(812200034) {
+  committed = 1;
+  conflict: [ExpectationConflict] = 2;
   rejected: [ValueProblem] = 3;
   catalog_changed: CatalogGeneration = 4;
 }
 
-enum AuthoringOperation(812200039) {
+enum AuthoringOperation(812200035) {
   commit_prepared: PreparedEdit = 1;
 }
 
-enum AuthoringResourceChange(812200040) {
-  upsert: AuthoringResource = 1;
-  remove: ResourceId = 2;
+struct AuthoringChanged(812200036) {
+  generation: CatalogGeneration = 0;
 }
 
-struct AuthoringChanged(812200041) {
-  previous_snapshot: SnapshotId = 0;
-  snapshot: SnapshotId = 1;
-  generation: CatalogGeneration = 2;
-  batch: BatchId = 3;
-  resources: [AuthoringResourceChange] = 4;
-  relations: RelationProjectionDelta = 5;
-  previous_findings: FindingsToken = 6;
-  findings_token: FindingsToken = 7;
-  findings: AuthoringFindingsReplacement? = 8;
-  changed_observations: [InputObservation] = 9;
-}
-
-enum TypeRepairIntent(812200042) {
+enum TypeRepairIntent(812200037) {
   retag: RetagIntent = 1;
   clear: ValueLocation = 2;
   configure_resource: ResourceConfigurationIntent = 3;
 }
 
-enum LinkRepairIntent(812200043) {
+enum LinkRepairIntent(812200038) {
   clear: LinkOccurrenceId = 1;
   remove: LinkOccurrenceId = 2;
 }
 
-struct TypeArgumentChangePreview(812200044) {
+struct TypeArgumentChangePreview(812200039) {
   catalog: CatalogGeneration = 0;
-  source_snapshot: SnapshotId = 1;
-  resource: ResourceId = 2;
-  next: TypeSelection = 3;
-  observations: [InputObservation] = 4;
-  intents: [TypeRepairIntent] = 5;
-  link_repairs: [LinkRepairIntent] = 6;
-  cleared_locations: [ValueLocation] = 7;
+  resource: ResourceId = 1;
+  next: TypeSelection = 2;
+  expectations: [EditExpectation] = 3;
+  intents: [TypeRepairIntent] = 4;
+  link_repairs: [LinkRepairIntent] = 5;
+  cleared_locations: [ValueLocation] = 6;
 }
 
-struct ArgumentLocation(812200045) {
+struct ArgumentLocation(812200040) {
   index: int32 = 0;
 }
 
-enum TypePreviewResult(812200046) {
+enum TypePreviewResult(812200041) {
   ready: TypeArgumentChangePreview = 1;
   invalid_arguments: [DeclarationDiagnostic] = 2;
   incomplete: [ArgumentLocation] = 3;
   rejected: [ValueProblem] = 4;
 }
 
-struct SearchFacetId(812200047) {
-  value: string = 0;
-}
-
-struct SearchFacetRequest(812200048) {
-  facet_id: SearchFacetId = 0;
-  partial: string? = 1;
-  validate: [string] = 2;
-}
-
-struct SearchFacetResult(812200049) {
-  facet_id: SearchFacetId = 0;
-  suggestions: [string] = 1;
-  accepted: [string] = 2;
-  rejected: [string] = 3;
-}
-
-struct AuthoringSearchHit(812200050) {
+struct AuthoringSearchHit(812200042) {
   resource: ResourceId = 0;
   definition: ResourceDefinitionId = 1;
   subject: PresentationSubject = 2;
   context: PortableValue = 3;
 }
 
-struct AuthoringSearchSnapshot(812200051) {
-  snapshot: SnapshotId = 0;
-  generation: CatalogGeneration = 1;
-  hits: [AuthoringSearchHit] = 2;
-  facets: [SearchFacetResult] = 3;
-  diagnostics: [Diagnostic] = 4;
+struct AuthoringSearchResult(812200043) {
+  generation: CatalogGeneration = 0;
+  hits: [AuthoringSearchHit] = 1;
+  diagnostics: [Diagnostic] = 2;
 }
 
-enum CollectionProjectionSource(812200052) {
+enum CollectionProjectionSource(812200044) {
   resource_id = 1;
   content: ValuePath = 2;
   literal: DataValue = 3;
 }
 
-struct CollectionProjectionField(812200053) {
+struct CollectionProjectionField(812200045) {
   target: ValuePath = 0;
   source: CollectionProjectionSource = 1;
 }
 
-struct CollectionProjectionDefinition(812200054) {
+struct CollectionProjectionDefinition(812200046) {
   source_id: string = 0;
   root: TypeDefinitionId = 1;
   row_type: NamedTypeUse = 2;
   fields: [CollectionProjectionField] = 3;
 }
 
-struct AuthoringSnapshotTransferChunk(812200055) {
+struct AuthoringStateTransferChunk(812200047) {
   generation: CatalogGeneration = 0;
-  snapshot: SnapshotId = 1;
-  transfer: BoundedTransferChunk = 2;
+  transfer: BoundedTransferChunk = 1;
 }
 
-enum AuthoringTransferUnavailableReason(812200056) {
+enum AuthoringTransferUnavailableReason(812200048) {
   encoded_size_limit = 1;
 }
 
-struct AuthoringTransferUnavailable(812200057) {
+struct AuthoringTransferUnavailable(812200049) {
   generation: CatalogGeneration = 0;
-  snapshot: SnapshotId = 1;
-  reason: AuthoringTransferUnavailableReason = 2;
-  encoded_size: int64 = 3;
-  max_encoded_size: int64 = 4;
+  reason: AuthoringTransferUnavailableReason = 1;
+  encoded_size: int64 = 2;
+  max_encoded_size: int64 = 3;
 }
 
-struct AuthoringChangedTransferChunk(812200058) {
-  generation: CatalogGeneration = 0;
-  previous_snapshot: SnapshotId = 1;
-  snapshot: SnapshotId = 2;
-  previous_findings: FindingsToken = 3;
-  findings_token: FindingsToken = 4;
-  transfer: BoundedTransferChunk = 5;
-}
-
-enum AuthoringChangedTransferResult(812200059) {
-  chunk: AuthoringChangedTransferChunk = 1;
-  unavailable: AuthoringTransferUnavailable = 2;
-}
-
-struct AuthoringFindingsReplacement(812200060) {
-  findings: [FindingSet] = 0;
-}
-
-method QueryAuthoringSnapshot(
+method QueryAuthoringState(
   struct {
     generation: CatalogGeneration = 0;
-    snapshot: SnapshotId? = 1;
-    transfer_id: string = 2;
+    transfer_id: string = 1;
   }
 ): enum {
-  chunk: AuthoringSnapshotTransferChunk = 1;
+  chunk: AuthoringStateTransferChunk = 1;
   catalog_changed: CatalogChanged = 2;
   unavailable: AuthoringTransferUnavailable = 3;
   internal_error: InternalError = 4;
@@ -424,15 +334,13 @@ method QueryAuthoringSnapshot(
 method SearchAuthoring(
   struct {
     generation: CatalogGeneration = 0;
-    snapshot: SnapshotId = 1;
-    query: RealmSearchQuery = 2;
-    roots: [TypeDefinitionId] = 3;
-    contexts: [ResourceId] = 4;
-    target: NamedTypeUse? = 5;
-    facets: [SearchFacetRequest] = 6;
+    query: string = 1;
+    roots: [TypeDefinitionId] = 2;
+    contexts: [ResourceId] = 3;
+    target: NamedTypeUse? = 4;
   }
 ): enum {
-  success: AuthoringSearchSnapshot = 1;
+  success: AuthoringSearchResult = 1;
   invalid: AuthoringInvalid = 2;
   catalog_changed: CatalogChanged = 3;
   internal_error: InternalError = 4;
@@ -449,8 +357,7 @@ method PreviewTypeArgumentChange(
   struct {
     resource: ResourceId = 0;
     requested: TypeSelection = 1;
-    snapshot: SnapshotId = 2;
-    catalog: CatalogGeneration = 3;
+    catalog: CatalogGeneration = 2;
   }
 ): enum {
   result: TypePreviewResult = 1;

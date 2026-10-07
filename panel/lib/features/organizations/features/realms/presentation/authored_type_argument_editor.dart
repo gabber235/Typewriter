@@ -590,7 +590,7 @@ final class _AuthoredTypeArgumentEditorState
     if (!mounted) return;
     final message = switch (response) {
       authoring.CommitTypeArgumentChangeResponse_resultWrapper(
-        value: authoring.CommitResult_committedWrapper(),
+        value: authoring.CommitResult.committed,
       ) =>
         "Type arguments updated",
       authoring.CommitTypeArgumentChangeResponse_resultWrapper(

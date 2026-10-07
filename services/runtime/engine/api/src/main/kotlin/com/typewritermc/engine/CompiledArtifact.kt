@@ -1,5 +1,7 @@
 package com.typewritermc.engine
 
+import com.typewritermc.authoring.PublicationId
+import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.scripting.RuntimeMemberSignature
 import com.typewritermc.types.ResourceId
 import kotlinx.serialization.Serializable
@@ -38,7 +40,7 @@ data class CompiledArtifact(
     }
 }
 
-/** References an immutable artifact from a compiled manifest. */
+/** References an immutable artifact from a published output. */
 @Serializable
 data class CompiledArtifactReference(
     val root: CompilationRoot,
@@ -47,58 +49,40 @@ data class CompiledArtifactReference(
     val semanticDigest: ContentDigest,
 )
 
-/** Lists the immutable artifact descriptors active for one source revision. */
+/** Pairs a compiled root descriptor with its verified opaque payload location. */
 @Serializable
-data class CompiledArtifactManifest(
-    val formatRevision: Int,
-    val digest: ContentDigest,
-    val sourceRevision: String,
-    val catalogRevision: String,
-    val implementationToken: String,
-    val runtimeSignatures: Set<RuntimeMemberSignature>,
-    val artifacts: List<CompiledArtifactReference>,
-) {
-    init {
-        require(artifacts.map(CompiledArtifactReference::root).distinct().size == artifacts.size) {
-            "Compiled artifact manifests must not contain duplicate roots."
-        }
-    }
-}
-
-/** Points to the serialized manifest and each opaque artifact payload for one activation. */
-@Serializable
-data class CompiledArtifactActivation(
-    val activationRevision: Long,
-    val manifestDigest: ContentDigest,
-    val manifest: CompiledBlobPointer,
-    val artifacts: List<CompiledArtifactPointer>,
-) {
-    init {
-        require(activationRevision > 0) { "Compiled artifact activation revisions must be positive." }
-        require(artifacts.map(CompiledArtifactPointer::semanticDigest).distinct().size == artifacts.size) {
-            "Compiled artifact activations must not contain duplicate artifacts."
-        }
-    }
-}
-
-/** Points to one immutable opaque artifact payload. */
-@Serializable
-data class CompiledArtifactPointer(
-    val semanticDigest: ContentDigest,
+data class PublishedOutput(
+    val reference: CompiledArtifactReference,
     val blob: CompiledBlobPointer,
 )
 
-/** Carries a verified payload and its manifest descriptor to a registered runtime consumer. */
+/** Describes the complete output set selected by one successful publication. */
+@Serializable
+data class PublishedContent(
+    val publication: PublicationId,
+    val formatRevision: Int,
+    val catalog: CatalogGeneration,
+    val implementationToken: String,
+    val runtimeSignatures: Set<RuntimeMemberSignature>,
+    val outputs: List<PublishedOutput>,
+) {
+    init {
+        require(outputs.map { it.reference.root }.distinct().size == outputs.size) {
+            "Published content must not contain duplicate roots."
+        }
+    }
+}
+
+/** Carries a complete descriptor and verified payloads to the registered engine consumers. */
+data class LoadedPublishedContent(
+    val descriptor: PublishedContent,
+    val artifacts: List<LoadedCompiledArtifact>,
+)
+
+/** Carries a verified payload and its published descriptor to a registered runtime consumer. */
 data class LoadedCompiledArtifact(
     val reference: CompiledArtifactReference,
     val payload: ByteArray,
-)
-
-/** Generic loaded activation. Payload meaning remains behind consumer registration. */
-data class LoadedCompiledContent(
-    val activationRevision: Long,
-    val manifest: CompiledArtifactManifest,
-    val artifacts: List<LoadedCompiledArtifact>,
 )
 
 /** Represents the result of compiling one registered root. */

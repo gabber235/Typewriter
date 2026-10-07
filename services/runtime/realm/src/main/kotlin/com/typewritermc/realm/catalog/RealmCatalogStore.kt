@@ -11,7 +11,7 @@ import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.discovery.RetainedOwnedProviderRegistry
 import com.typewritermc.presentation.CollectionProjectionSpec
-import com.typewritermc.realm.authoring.SnapshotCatalogLease
+import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RelationContract
@@ -33,7 +33,7 @@ data class RealmCatalogIncarnation(
     }
 }
 
-interface RealmCatalogLease : SnapshotCatalogLease {
+interface RealmCatalogLease : AuthoringCatalogLease {
     val editorSnapshot: EditorCatalogSnapshot
     val capabilities: List<RealmCapabilityProvider>
     val collectionProjections: List<CollectionProjectionSpec>

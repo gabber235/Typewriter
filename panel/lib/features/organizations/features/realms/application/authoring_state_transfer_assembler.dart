@@ -4,13 +4,12 @@ import "package:typewriter_panel/infrastructure/messaging/bounded_transfer_assem
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 
-final class AuthoringSnapshotTransferAssembler {
+final class AuthoringStateTransferAssembler {
   final BoundedTransferAssembler _bytes = BoundedTransferAssembler();
   skir.CatalogGeneration? _generation;
-  skir.SnapshotId? _snapshot;
 
-  Future<skir.AuthoringSnapshot> assemble(
-    Stream<skir.AuthoringSnapshotTransferChunk> chunks, {
+  Future<skir.AuthoringState> assemble(
+    Stream<skir.AuthoringStateTransferChunk> chunks, {
     Duration timeout = defaultBoundedTransferTimeout,
     Future<void>? cancelled,
   }) async {
@@ -22,13 +21,11 @@ final class AuthoringSnapshotTransferAssembler {
     return _decodeAndValidate(encoded);
   }
 
-  BoundedTransferPart _part(skir.AuthoringSnapshotTransferChunk chunk) {
+  BoundedTransferPart _part(skir.AuthoringStateTransferChunk chunk) {
     final generation = _generation;
-    final snapshot = _snapshot;
-    if (generation == null && snapshot == null) {
+    if (generation == null) {
       _generation = chunk.generation;
-      _snapshot = chunk.snapshot;
-    } else if (generation != chunk.generation || snapshot != chunk.snapshot) {
+    } else if (generation != chunk.generation) {
       throw const BoundedTransferRejected(
         "The authored snapshot identity changed between chunks",
       );
@@ -44,10 +41,10 @@ final class AuthoringSnapshotTransferAssembler {
     );
   }
 
-  skir.AuthoringSnapshot _decodeAndValidate(Uint8List encoded) {
+  skir.AuthoringState _decodeAndValidate(Uint8List encoded) {
     try {
-      final value = skir.AuthoringSnapshot.serializer.fromBytes(encoded);
-      if (value.generation != _generation || value.snapshot != _snapshot) {
+      final value = skir.AuthoringState.serializer.fromBytes(encoded);
+      if (value.generation != _generation) {
         throw const BoundedTransferRejected(
           "The decoded authored snapshot identity differs from its transfer",
         );
@@ -63,8 +60,8 @@ final class AuthoringSnapshotTransferAssembler {
   }
 }
 
-final class AuthoringSnapshotTransferUnavailable implements Exception {
-  const AuthoringSnapshotTransferUnavailable(this.value);
+final class AuthoringStateTransferUnavailable implements Exception {
+  const AuthoringStateTransferUnavailable(this.value);
 
   final skir.AuthoringTransferUnavailable value;
 

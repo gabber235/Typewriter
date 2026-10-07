@@ -1,5 +1,6 @@
 package com.typewritermc.realm.checking
 
+import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.checking.CheckOutcome
 import com.typewritermc.checking.FindingStatus
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
@@ -12,7 +13,6 @@ import skirout.editor.v1.checking.FindingSet as SkirFindingSet
 import skirout.editor.v1.checking.FindingStatus as SkirFindingStatus
 import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 import skirout.editor.v1.type_catalog.CheckExecutionId as SkirCheckExecutionId
-import skirout.editor.v1.type_catalog.SnapshotId as SkirSnapshotId
 
 internal fun FindingSet.toWire(): SkirFindingSet =
     SkirFindingSet(
@@ -25,10 +25,9 @@ internal fun FindingSet.toWire(): SkirFindingSet =
                     ),
                 incarnation = ticket.incarnation,
                 execution = SkirCheckExecutionId(value = ticket.execution.value),
-                snapshot = SkirSnapshotId(value = ticket.snapshot.value),
                 catalog = SkirCatalogGeneration(value = ticket.catalog.value),
             ),
-        observations = observations.map { SkirAuthoringValueCodec.encode(it).getOrThrow() },
+        expectations = expectations.map { SkirAuthoringOperationCodec.encode(it).getOrThrow() },
         outcome = outcome.toWire(),
         findings = findings.map { SkirTypeCodec.encode(it).getOrThrow() },
         status =

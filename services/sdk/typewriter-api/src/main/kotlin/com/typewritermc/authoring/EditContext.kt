@@ -1,74 +1,81 @@
 package com.typewritermc.authoring
 
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.InputIdentity
-import com.typewritermc.checking.InputObservation
-import com.typewritermc.checking.InputToken
-import com.typewritermc.checking.SnapshotId
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeUse
+import kotlinx.serialization.Serializable
 
 data class PreparedEdit(
-    val id: BatchId,
     val catalog: CatalogGeneration,
-    val snapshot: SnapshotId,
-    val observations: List<InputObservation>,
+    val expectations: List<EditExpectation>,
     val intents: List<EditIntent>,
 )
 
+@Serializable
 sealed interface EditIntent {
+    @Serializable
     data class CreateResource(
         val id: ResourceId,
         val record: AuthoringRecord,
     ) : EditIntent
 
+    @Serializable
     data class DeleteResource(
         val id: ResourceId,
     ) : EditIntent
 
+    @Serializable
     data class SetValue(
         val at: ValueLocation,
         val value: DataValue,
     ) : EditIntent
 
+    @Serializable
     data class Insert(
         val at: ValueLocation,
         val after: ItemId?,
         val item: ListItem,
     ) : EditIntent
 
+    @Serializable
     data class Remove(
         val at: ValueLocation,
         val item: ItemId,
     ) : EditIntent
 
+    @Serializable
     data class Move(
         val at: ValueLocation,
         val item: ItemId,
         val after: ItemId?,
     ) : EditIntent
 
+    @Serializable
     data class ConnectRelation(
         val intent: ConnectIntent,
     ) : EditIntent
 
+    @Serializable
     data class DisconnectRelation(
         val occurrence: LinkOccurrenceId,
     ) : EditIntent
 
+    @Serializable
     data class Retag(
         val at: ValueLocation,
         val type: TypeUse.Named,
     ) : EditIntent
 
+    @Serializable
     data class ConfigureResource(
         val resource: ResourceId,
         val configuration: TypeSelection,
     ) : EditIntent
 }
 
+@Serializable
 data class ConnectIntent(
     val source: LinkOccurrence,
     val target: ResourceId,
@@ -97,11 +104,14 @@ fun <Value> DraftBinding.exactEditablePath(
     expected: TypeUse,
 ): EditablePath<Value> = EditablePath(this, relative, expected)
 
+@Serializable
 sealed interface CounterpartChoice {
+    @Serializable
     data class Existing(
         val occurrence: LinkOccurrence,
     ) : CounterpartChoice
 
+    @Serializable
     data class New(
         val containing: ValueLocation,
         val prepared: PreparedCreation,
@@ -167,7 +177,6 @@ sealed interface PreparedEditResult {
     val initializationFindings: List<LocatedInitializationDiagnostic>
 
     data class Prepared(
-        val snapshot: SnapshotId,
         val edit: PreparedEdit,
         override val initializationFindings: List<LocatedInitializationDiagnostic> = emptyList(),
     ) : PreparedEditResult
@@ -184,13 +193,10 @@ sealed interface PreparedEditResult {
 }
 
 sealed interface CommitResult {
-    data class Committed(
-        val snapshot: SnapshotId,
-        val changed: Set<InputIdentity>,
-    ) : CommitResult
+    data object Committed : CommitResult
 
     data class Conflict(
-        val inputs: List<InputConflict>,
+        val values: List<ExpectationConflict>,
     ) : CommitResult
 
     data class Rejected(
@@ -201,9 +207,3 @@ sealed interface CommitResult {
         val actual: CatalogGeneration,
     ) : CommitResult
 }
-
-data class InputConflict(
-    val input: InputIdentity,
-    val expected: InputToken,
-    val actual: InputToken?,
-)

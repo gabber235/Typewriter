@@ -18,12 +18,11 @@ import com.typewritermc.checking.CheckRecipe
 import com.typewritermc.checking.DiagnosticSeverity
 import com.typewritermc.checking.DiagnosticTemplate
 import com.typewritermc.checking.RegisteredPredicate
-import com.typewritermc.checking.SnapshotId
 import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.configuration.RuleOrigin
-import com.typewritermc.realm.authoring.AuthoredSnapshotSeed
-import com.typewritermc.realm.authoring.InMemoryAuthoringSnapshotStore
+import com.typewritermc.realm.authoring.AuthoringSeed
+import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.FieldDeclaration
@@ -111,7 +110,7 @@ val RealmCheckInputsTest by testSuite {
             )
         val store = store(catalog, resource, record)
         val lease = store.capture()
-        val reads = SnapshotReads(lease.originalView())
+        val reads = CapturedAuthoringReads(lease.originalView())
 
         val result = with(reads) { RealmCheckInputs().evaluate(recipe, binding(catalog, resource)) }
 
@@ -149,7 +148,7 @@ val RealmCheckInputsTest by testSuite {
             )
         val store = store(catalog, resource, record)
         val lease = store.capture()
-        val reads = SnapshotReads(lease.originalView())
+        val reads = CapturedAuthoringReads(lease.originalView())
 
         val result = with(reads) { RealmCheckInputs().evaluate(recipe, binding(catalog, resource)) }
 
@@ -181,7 +180,7 @@ val RealmCheckInputsTest by testSuite {
             )
         val store = store(catalog, resource, record)
         val lease = store.capture()
-        val reads = SnapshotReads(lease.originalView(), limits = SnapshotReadLimits(maxCheckTuples = 1))
+        val reads = CapturedAuthoringReads(lease.originalView(), limits = SnapshotReadLimits(maxCheckTuples = 1))
 
         with(reads) { RealmCheckInputs().evaluate(recipe, binding(catalog, resource)) }
 
@@ -227,9 +226,8 @@ private fun binding(
 ): DraftBinding {
     val checked = (catalog.checked.resolve(TypeUse.Named(TEST_TYPE)) as Resolution.Ready).value
     return DraftBinding(
-        SnapshotId("s0"),
         catalog.generation,
-        ReadContext(SnapshotId("s0"), catalog.generation),
+        ReadContext(catalog.generation),
         ValueLocation(resource, ValuePath()),
         DraftExpectation.Complete(checked),
         TypeSelection.Complete(TypeUse.Named(TEST_TYPE)),
@@ -240,11 +238,11 @@ private fun store(
     catalog: TestCatalogLease,
     resource: ResourceId,
     record: AuthoringRecord,
-): InMemoryAuthoringSnapshotStore {
+): InMemoryAuthoringViewStore {
     val resources = mapOf(resource to record)
-    return InMemoryAuthoringSnapshotStore(
+    return InMemoryAuthoringViewStore(
         catalog,
-        AuthoredSnapshotSeed(SnapshotId("s0"), resources, tokensFor(resources, catalog.generation)),
+        AuthoringSeed(resources),
     )
 }
 

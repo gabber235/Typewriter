@@ -313,7 +313,7 @@ $AuthoringSessionStateCopyWith<$Res> get state {
 /// @nodoc
 mixin _$AuthoringSessionState implements DiagnosticableTreeMixin {
 
- skir.AuthoringSnapshot? get snapshot; CheckedEditorCatalog? get catalog; bool get refreshing; Object? get failure;
+ skir.AuthoringState? get snapshot; CheckedEditorCatalog? get catalog; bool get refreshing; Object? get failure;
 /// Create a copy of AuthoringSessionState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -356,7 +356,7 @@ abstract mixin class $AuthoringSessionStateCopyWith<$Res>  {
   factory $AuthoringSessionStateCopyWith(AuthoringSessionState value, $Res Function(AuthoringSessionState) _then) = _$AuthoringSessionStateCopyWithImpl;
 @useResult
 $Res call({
- skir.AuthoringSnapshot? snapshot, CheckedEditorCatalog? catalog, bool refreshing, Object? failure
+ skir.AuthoringState? snapshot, CheckedEditorCatalog? catalog, bool refreshing, Object? failure
 });
 
 
@@ -376,7 +376,7 @@ class _$AuthoringSessionStateCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') @override $Res call({Object? snapshot = freezed,Object? catalog = freezed,Object? refreshing = null,Object? failure = freezed,}) {
   return _then(AuthoringSessionState(
 snapshot: freezed == snapshot ? _self.snapshot : snapshot // ignore: cast_nullable_to_non_nullable
-as skir.AuthoringSnapshot?,catalog: freezed == catalog ? _self.catalog : catalog // ignore: cast_nullable_to_non_nullable
+as skir.AuthoringState?,catalog: freezed == catalog ? _self.catalog : catalog // ignore: cast_nullable_to_non_nullable
 as CheckedEditorCatalog?,refreshing: null == refreshing ? _self.refreshing : refreshing // ignore: cast_nullable_to_non_nullable
 as bool,failure: freezed == failure ? _self.failure : failure ,
   ));
@@ -463,7 +463,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.AuthoringSnapshot? snapshot,  CheckedEditorCatalog? catalog,  bool refreshing,  Object? failure)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.AuthoringState? snapshot,  CheckedEditorCatalog? catalog,  bool refreshing,  Object? failure)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AuthoringSessionState() when $default != null:
 return $default(_that.snapshot,_that.catalog,_that.refreshing,_that.failure);case _:
@@ -484,7 +484,7 @@ return $default(_that.snapshot,_that.catalog,_that.refreshing,_that.failure);cas
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.AuthoringSnapshot? snapshot,  CheckedEditorCatalog? catalog,  bool refreshing,  Object? failure)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.AuthoringState? snapshot,  CheckedEditorCatalog? catalog,  bool refreshing,  Object? failure)  $default,) {final _that = this;
 switch (_that) {
 case _AuthoringSessionState():
 return $default(_that.snapshot,_that.catalog,_that.refreshing,_that.failure);case _:
@@ -504,7 +504,7 @@ return $default(_that.snapshot,_that.catalog,_that.refreshing,_that.failure);cas
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.AuthoringSnapshot? snapshot,  CheckedEditorCatalog? catalog,  bool refreshing,  Object? failure)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.AuthoringState? snapshot,  CheckedEditorCatalog? catalog,  bool refreshing,  Object? failure)?  $default,) {final _that = this;
 switch (_that) {
 case _AuthoringSessionState() when $default != null:
 return $default(_that.snapshot,_that.catalog,_that.refreshing,_that.failure);case _:
@@ -522,7 +522,7 @@ class _AuthoringSessionState with DiagnosticableTreeMixin implements AuthoringSe
   const _AuthoringSessionState({this.snapshot, this.catalog, this.refreshing = false, this.failure});
   
 
-@override final  skir.AuthoringSnapshot? snapshot;
+@override final  skir.AuthoringState? snapshot;
 @override final  CheckedEditorCatalog? catalog;
 @override@JsonKey() final  bool refreshing;
 @override final  Object? failure;
@@ -565,7 +565,7 @@ abstract mixin class _$AuthoringSessionStateCopyWith<$Res> implements $Authoring
   factory _$AuthoringSessionStateCopyWith(_AuthoringSessionState value, $Res Function(_AuthoringSessionState) _then) = __$AuthoringSessionStateCopyWithImpl;
 @override @useResult
 $Res call({
- skir.AuthoringSnapshot? snapshot, CheckedEditorCatalog? catalog, bool refreshing, Object? failure
+ skir.AuthoringState? snapshot, CheckedEditorCatalog? catalog, bool refreshing, Object? failure
 });
 
 
@@ -585,7 +585,7 @@ class __$AuthoringSessionStateCopyWithImpl<$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? snapshot = freezed,Object? catalog = freezed,Object? refreshing = null,Object? failure = freezed,}) {
   return _then(_AuthoringSessionState(
 snapshot: freezed == snapshot ? _self.snapshot : snapshot // ignore: cast_nullable_to_non_nullable
-as skir.AuthoringSnapshot?,catalog: freezed == catalog ? _self.catalog : catalog // ignore: cast_nullable_to_non_nullable
+as skir.AuthoringState?,catalog: freezed == catalog ? _self.catalog : catalog // ignore: cast_nullable_to_non_nullable
 as CheckedEditorCatalog?,refreshing: null == refreshing ? _self.refreshing : refreshing // ignore: cast_nullable_to_non_nullable
 as bool,failure: freezed == failure ? _self.failure : failure ,
   ));

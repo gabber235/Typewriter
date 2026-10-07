@@ -6,8 +6,6 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1
     as binding;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
     as catalog;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/checking.dart"
-    as checking;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
     as expression;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/presentation.dart"
@@ -15,6 +13,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
     as types;
 import "package:typewriter_panel/typewriter_panel.dart";
+
+import "../../../../../support/test_utils.dart";
 
 void main() {
   test("offers existing and new nested counterpart locations", () {
@@ -221,8 +221,8 @@ Widget _linkControl(
 }) {
   final root = types.ExpressionBindingId(value: "configured_value");
   final record = fixture.draft.resource(fixture.source.resource)!;
-  return MaterialApp(
-    home: Scaffold(
+  return testApp(
+    child: Scaffold(
       body: PortablePresentationNodeRenderer(
         node: presentation.PresentationNode(
           nodeId: "link",
@@ -489,8 +489,7 @@ _fixture() {
           types.FieldValue(name: "wrapper", value: wrapperValue),
         ],
       );
-  final authored = authoring.AuthoringSnapshot(
-    snapshot: types.SnapshotId(value: "realm:links"),
+  final authored = authoring.AuthoringState(
     generation: generation,
     resources: [
       authoring.AuthoringResource(
@@ -524,13 +523,10 @@ _fixture() {
     ],
     links: const [],
     findings: const [],
-    observations: const [],
-    absentInputToken: types.InputToken(value: "absent"),
-    findingsToken: checking.FindingsToken(value: "findings:links"),
   );
   final checked = CheckedEditorCatalog(snapshot);
   return (
-    draft: AuthoredDraft.fromSnapshot(authored, catalog: checked),
+    draft: AuthoredDraft.fromState(authored, catalog: checked),
     catalog: checked,
     source: types.ValueLocation(resource: source, path: _fieldPath("source")),
     existingTarget: existingTarget,

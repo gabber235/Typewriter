@@ -6959,115 +6959,6 @@ class CatalogGeneration private constructor(
     }
 }
 
-sealed interface SnapshotId_OrMutable {
-    val value: kotlin.String;
-
-    fun toFrozen(): skirout.editor.v1.type_catalog.SnapshotId;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class SnapshotId private constructor(
-    override val value: kotlin.String,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.SnapshotId>? =
-        null,
-): skirout.editor.v1.type_catalog.SnapshotId_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        value: kotlin.String,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.SnapshotId>? =
-            null,
-    ): this(
-        value,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        value = this.value,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        value: kotlin.String =
-            this.value,
-    ) = skirout.editor.v1.type_catalog.SnapshotId(
-        value,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.type_catalog.SnapshotId && this.value == other.value);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.value).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.SnapshotIdSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [SnapshotId]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var value: kotlin.String =
-            "",
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.SnapshotId>? =
-            null,
-    ): skirout.editor.v1.type_catalog.SnapshotId_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.type_catalog.SnapshotId(
-            value = this.value,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.type_catalog.SnapshotId(
-                "",
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [SnapshotId].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            value: kotlin.String =
-                "",
-        ) = skirout.editor.v1.type_catalog.SnapshotId(
-            value = value,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [SnapshotId] instances. */
-        val serializer get() = _SerializerRegistry.SnapshotIdSerializer;
-
-        /** Describes the [SnapshotId] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.SnapshotIdSerializerImpl.typeDescriptor;
-    }
-}
-
 sealed interface InputToken_OrMutable {
     val value: kotlin.String;
 
@@ -8675,115 +8566,6 @@ class RelativeFieldPattern private constructor(
 
         /** Describes the [RelativeFieldPattern] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = _SerializerRegistry.RelativeFieldPatternSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface BatchId_OrMutable {
-    val value: kotlin.String;
-
-    fun toFrozen(): skirout.editor.v1.type_catalog.BatchId;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class BatchId private constructor(
-    override val value: kotlin.String,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.BatchId>? =
-        null,
-): skirout.editor.v1.type_catalog.BatchId_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        value: kotlin.String,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.BatchId>? =
-            null,
-    ): this(
-        value,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        value = this.value,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        value: kotlin.String =
-            this.value,
-    ) = skirout.editor.v1.type_catalog.BatchId(
-        value,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.type_catalog.BatchId && this.value == other.value);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.value).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.BatchIdSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [BatchId]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var value: kotlin.String =
-            "",
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.BatchId>? =
-            null,
-    ): skirout.editor.v1.type_catalog.BatchId_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.type_catalog.BatchId(
-            value = this.value,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.type_catalog.BatchId(
-                "",
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [BatchId].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            value: kotlin.String =
-                "",
-        ) = skirout.editor.v1.type_catalog.BatchId(
-            value = value,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [BatchId] instances. */
-        val serializer get() = _SerializerRegistry.BatchIdSerializer;
-
-        /** Describes the [BatchId] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.BatchIdSerializerImpl.typeDescriptor;
     }
 }
 
@@ -12844,18 +12626,6 @@ private object _SerializerRegistry {
 
     val AuthoringRecordSerializer = build.skir.internal.makeSerializer(AuthoringRecordSerializerImpl);
 
-    val BatchIdSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/type_catalog.skir:BatchId",
-        doc = "",
-        defaultInstance = skirout.editor.v1.type_catalog.BatchId.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.type_catalog.BatchId.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val BatchIdSerializer = build.skir.internal.makeSerializer(BatchIdSerializerImpl);
-
     val CanonicalValueHashSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/type_catalog.skir:CanonicalValueHash",
         doc = "",
@@ -13825,18 +13595,6 @@ private object _SerializerRegistry {
 
     val SequenceResolvedRepresentationSerializer = build.skir.internal.makeSerializer(SequenceResolvedRepresentationSerializerImpl);
 
-    val SnapshotIdSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/type_catalog.skir:SnapshotId",
-        doc = "",
-        defaultInstance = skirout.editor.v1.type_catalog.SnapshotId.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.type_catalog.SnapshotId.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val SnapshotIdSerializer = build.skir.internal.makeSerializer(SnapshotIdSerializerImpl);
-
     val TypeCatalogSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/type_catalog.skir:TypeCatalog",
         doc = "",
@@ -14058,17 +13816,6 @@ private object _SerializerRegistry {
             { mut, v -> mut.fields = v },
         );
         AuthoringRecordSerializerImpl.finalizeStruct();
-
-        BatchIdSerializerImpl.addField(
-            "value",
-            "value",
-            0,
-            build.skir.Serializers.string,
-            "",
-            { it.value },
-            { mut, v -> mut.value = v },
-        );
-        BatchIdSerializerImpl.finalizeStruct();
 
         CanonicalValueHashSerializerImpl.addField(
             "value",
@@ -15760,17 +15507,6 @@ private object _SerializerRegistry {
             { mut, v -> mut.kind = v },
         );
         SequenceResolvedRepresentationSerializerImpl.finalizeStruct();
-
-        SnapshotIdSerializerImpl.addField(
-            "value",
-            "value",
-            0,
-            build.skir.Serializers.string,
-            "",
-            { it.value },
-            { mut, v -> mut.value = v },
-        );
-        SnapshotIdSerializerImpl.finalizeStruct();
 
         TypeCatalogSerializerImpl.addField(
             "definitions",

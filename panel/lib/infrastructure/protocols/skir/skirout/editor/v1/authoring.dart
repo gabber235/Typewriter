@@ -14,10 +14,10 @@
 import "dart:core" as _core;
 import "package:skir_client/skir_client.dart" as _skir;
 
+import "./authoring_facts.dart" as _lib_editor_v1_authoring_facts;
 import "./catalog.dart" as _lib_editor_v1_catalog;
 import "./checking.dart" as _lib_editor_v1_checking;
 import "./diagnostic.dart" as _lib_editor_v1_diagnostic;
-import "./search.dart" as _lib_editor_v1_search;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 import "./typed_value.dart" as _lib_editor_v1_typed_value;
 import "../../kernel/v1/bounded_transfer.dart" as _lib_kernel_v1_bounded_transfer;
@@ -546,246 +546,13 @@ final class LinkOccurrence_mutable implements LinkOccurrence_orMutable {
 }
 
 // -----------------------------------------------------------------------------
-// struct LinkProjection
-// -----------------------------------------------------------------------------
-
-sealed class LinkProjection_orMutable {
-  _lib_editor_v1_type_catalog.RelationId_orMutable get contract;
-  _lib_editor_v1_type_catalog.ResourceId_orMutable get first;
-  _lib_editor_v1_type_catalog.ResourceId_orMutable get second;
-  _lib_editor_v1_type_catalog.ValuePath_orMutable? get firstLocation;
-  _lib_editor_v1_type_catalog.ValuePath_orMutable? get secondLocation;
-
-  LinkProjection toFrozen();
-}
-
-/// Deeply immutable.
-final class LinkProjection implements LinkProjection_orMutable {
-  @_core.override
-  final _lib_editor_v1_type_catalog.RelationId contract;
-  @_core.override
-  final _lib_editor_v1_type_catalog.ResourceId first;
-  @_core.override
-  final _lib_editor_v1_type_catalog.ResourceId second;
-  @_core.override
-  final _lib_editor_v1_type_catalog.ValuePath? firstLocation;
-  @_core.override
-  final _lib_editor_v1_type_catalog.ValuePath? secondLocation;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory LinkProjection({
-    required _lib_editor_v1_type_catalog.RelationId_orMutable contract,
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable first,
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable second,
-    required _lib_editor_v1_type_catalog.ValuePath_orMutable? firstLocation,
-    required _lib_editor_v1_type_catalog.ValuePath_orMutable? secondLocation,
-  }) => LinkProjection._(
-    contract.toFrozen(),
-    first.toFrozen(),
-    second.toFrozen(),
-    (firstLocation != null) ? firstLocation.toFrozen() : null,
-    (secondLocation != null) ? secondLocation.toFrozen() : null,
-  );
-
-  LinkProjection._(
-    this.contract,
-    this.first,
-    this.second,
-    this.firstLocation,
-    this.secondLocation,
-  );
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = LinkProjection._(
-    _lib_editor_v1_type_catalog.RelationId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
-    null,
-    null,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static LinkProjection_mutable mutable() => LinkProjection_mutable._(
-    _lib_editor_v1_type_catalog.RelationId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
-    null,
-    null,
-  );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  LinkProjection toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  LinkProjection_mutable toMutable() => LinkProjection_mutable._(
-    this.contract,
-    this.first,
-    this.second,
-    this.firstLocation,
-    this.secondLocation,
-  );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! LinkProjection) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.contract,
-    this.first,
-    this.second,
-    this.firstLocation,
-    this.secondLocation,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `LinkProjection` instances.
-  static _skir.StructSerializer<LinkProjection, LinkProjection_mutable> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "contract",
-        "contract",
-        0,
-        _lib_editor_v1_type_catalog.RelationId.serializer,
-        "",
-        (it) => it.contract,
-        (it, v) => it.contract = v,
-      );
-      _serializerBuilder.addField(
-        "first",
-        "first",
-        1,
-        _lib_editor_v1_type_catalog.ResourceId.serializer,
-        "",
-        (it) => it.first,
-        (it, v) => it.first = v,
-      );
-      _serializerBuilder.addField(
-        "second",
-        "second",
-        2,
-        _lib_editor_v1_type_catalog.ResourceId.serializer,
-        "",
-        (it) => it.second,
-        (it, v) => it.second = v,
-      );
-      _serializerBuilder.addField(
-        "first_location",
-        "firstLocation",
-        3,
-        _skir.Serializers.optional(
-          _lib_editor_v1_type_catalog.ValuePath.serializer,
-        ),
-        "",
-        (it) => it.firstLocation,
-        (it, v) => it.firstLocation = v,
-      );
-      _serializerBuilder.addField(
-        "second_location",
-        "secondLocation",
-        4,
-        _skir.Serializers.optional(
-          _lib_editor_v1_type_catalog.ValuePath.serializer,
-        ),
-        "",
-        (it) => it.secondLocation,
-        (it, v) => it.secondLocation = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/authoring.skir:LinkProjection",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (LinkProjection_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [LinkProjection].
-final class LinkProjection_mutable implements LinkProjection_orMutable {
-  _lib_editor_v1_type_catalog.RelationId_orMutable contract;
-  _lib_editor_v1_type_catalog.ResourceId_orMutable first;
-  _lib_editor_v1_type_catalog.ResourceId_orMutable second;
-  _lib_editor_v1_type_catalog.ValuePath_orMutable? firstLocation;
-  _lib_editor_v1_type_catalog.ValuePath_orMutable? secondLocation;
-  _skir.internal__UnrecognizedFields? _u;
-
-  LinkProjection_mutable._(
-    this.contract,
-    this.first,
-    this.second,
-    this.firstLocation,
-    this.secondLocation,
-  );
-
-  /// If the value of [contract] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [contract] and returns it.
-  _lib_editor_v1_type_catalog.RelationId_mutable get mutableContract {
-    final value = this.contract;
-    if (value is _lib_editor_v1_type_catalog.RelationId_mutable) {
-      return value;
-    } else {
-      return this.contract = (value as _lib_editor_v1_type_catalog.RelationId).toMutable();
-    }
-  }
-
-  /// If the value of [first] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [first] and returns it.
-  _lib_editor_v1_type_catalog.ResourceId_mutable get mutableFirst {
-    final value = this.first;
-    if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
-      return value;
-    } else {
-      return this.first = (value as _lib_editor_v1_type_catalog.ResourceId).toMutable();
-    }
-  }
-
-  /// If the value of [second] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [second] and returns it.
-  _lib_editor_v1_type_catalog.ResourceId_mutable get mutableSecond {
-    final value = this.second;
-    if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
-      return value;
-    } else {
-      return this.second = (value as _lib_editor_v1_type_catalog.ResourceId).toMutable();
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  LinkProjection toFrozen() => LinkProjection(
-    contract: this.contract,
-    first: this.first,
-    second: this.second,
-    firstLocation: this.firstLocation,
-    secondLocation: this.secondLocation,
-  ).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
 // struct RelationProjectionDelta
 // -----------------------------------------------------------------------------
 
 sealed class RelationProjectionDelta_orMutable {
-  _core.Iterable<LinkProjection_orMutable> get removals;
-  _core.Iterable<LinkProjection_orMutable> get created;
-  _core.Iterable<LinkProjection_orMutable> get metadataChanged;
+  _core.Iterable<_lib_editor_v1_authoring_facts.LinkProjection_orMutable> get removals;
+  _core.Iterable<_lib_editor_v1_authoring_facts.LinkProjection_orMutable> get created;
+  _core.Iterable<_lib_editor_v1_authoring_facts.LinkProjection_orMutable> get metadataChanged;
 
   RelationProjectionDelta toFrozen();
 }
@@ -793,17 +560,17 @@ sealed class RelationProjectionDelta_orMutable {
 /// Deeply immutable.
 final class RelationProjectionDelta implements RelationProjectionDelta_orMutable {
   @_core.override
-  final _core.Iterable<LinkProjection> removals;
+  final _core.Iterable<_lib_editor_v1_authoring_facts.LinkProjection> removals;
   @_core.override
-  final _core.Iterable<LinkProjection> created;
+  final _core.Iterable<_lib_editor_v1_authoring_facts.LinkProjection> created;
   @_core.override
-  final _core.Iterable<LinkProjection> metadataChanged;
+  final _core.Iterable<_lib_editor_v1_authoring_facts.LinkProjection> metadataChanged;
   _skir.internal__UnrecognizedFields? _u;
 
   factory RelationProjectionDelta({
-    required _core.Iterable<LinkProjection_orMutable> removals,
-    required _core.Iterable<LinkProjection_orMutable> created,
-    required _core.Iterable<LinkProjection_orMutable> metadataChanged,
+    required _core.Iterable<_lib_editor_v1_authoring_facts.LinkProjection_orMutable> removals,
+    required _core.Iterable<_lib_editor_v1_authoring_facts.LinkProjection_orMutable> created,
+    required _core.Iterable<_lib_editor_v1_authoring_facts.LinkProjection_orMutable> metadataChanged,
   }) => RelationProjectionDelta._(
     _skir.internal__frozenMappedCopy(removals, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(created, (it) => it.toFrozen()),
@@ -870,7 +637,7 @@ final class RelationProjectionDelta implements RelationProjectionDelta_orMutable
         "removals",
         0,
         _skir.Serializers.iterable(
-          LinkProjection.serializer,
+          _lib_editor_v1_authoring_facts.LinkProjection.serializer,
         ),
         "",
         (it) => it.removals,
@@ -881,7 +648,7 @@ final class RelationProjectionDelta implements RelationProjectionDelta_orMutable
         "created",
         1,
         _skir.Serializers.iterable(
-          LinkProjection.serializer,
+          _lib_editor_v1_authoring_facts.LinkProjection.serializer,
         ),
         "",
         (it) => it.created,
@@ -892,7 +659,7 @@ final class RelationProjectionDelta implements RelationProjectionDelta_orMutable
         "metadataChanged",
         2,
         _skir.Serializers.iterable(
-          LinkProjection.serializer,
+          _lib_editor_v1_authoring_facts.LinkProjection.serializer,
         ),
         "",
         (it) => it.metadataChanged,
@@ -916,9 +683,9 @@ final class RelationProjectionDelta implements RelationProjectionDelta_orMutable
 
 /// Mutable version of [RelationProjectionDelta].
 final class RelationProjectionDelta_mutable implements RelationProjectionDelta_orMutable {
-  _core.Iterable<LinkProjection_orMutable> removals;
-  _core.Iterable<LinkProjection_orMutable> created;
-  _core.Iterable<LinkProjection_orMutable> metadataChanged;
+  _core.Iterable<_lib_editor_v1_authoring_facts.LinkProjection_orMutable> removals;
+  _core.Iterable<_lib_editor_v1_authoring_facts.LinkProjection_orMutable> created;
+  _core.Iterable<_lib_editor_v1_authoring_facts.LinkProjection_orMutable> metadataChanged;
   _skir.internal__UnrecognizedFields? _u;
 
   RelationProjectionDelta_mutable._(
@@ -929,9 +696,9 @@ final class RelationProjectionDelta_mutable implements RelationProjectionDelta_o
 
   /// If the value of [removals] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [removals] and returns it.
-  _core.List<LinkProjection_orMutable> get mutableRemovals {
+  _core.List<_lib_editor_v1_authoring_facts.LinkProjection_orMutable> get mutableRemovals {
     final value = this.removals;
-    if (value is _skir.internal__MutableList<LinkProjection_orMutable>) {
+    if (value is _skir.internal__MutableList<_lib_editor_v1_authoring_facts.LinkProjection_orMutable>) {
       return value;
     } else {
       return this.removals = _skir.internal__MutableList([...value]);
@@ -940,9 +707,9 @@ final class RelationProjectionDelta_mutable implements RelationProjectionDelta_o
 
   /// If the value of [created] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [created] and returns it.
-  _core.List<LinkProjection_orMutable> get mutableCreated {
+  _core.List<_lib_editor_v1_authoring_facts.LinkProjection_orMutable> get mutableCreated {
     final value = this.created;
-    if (value is _skir.internal__MutableList<LinkProjection_orMutable>) {
+    if (value is _skir.internal__MutableList<_lib_editor_v1_authoring_facts.LinkProjection_orMutable>) {
       return value;
     } else {
       return this.created = _skir.internal__MutableList([...value]);
@@ -951,9 +718,9 @@ final class RelationProjectionDelta_mutable implements RelationProjectionDelta_o
 
   /// If the value of [metadataChanged] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [metadataChanged] and returns it.
-  _core.List<LinkProjection_orMutable> get mutableMetadataChanged {
+  _core.List<_lib_editor_v1_authoring_facts.LinkProjection_orMutable> get mutableMetadataChanged {
     final value = this.metadataChanged;
-    if (value is _skir.internal__MutableList<LinkProjection_orMutable>) {
+    if (value is _skir.internal__MutableList<_lib_editor_v1_authoring_facts.LinkProjection_orMutable>) {
       return value;
     } else {
       return this.metadataChanged = _skir.internal__MutableList([...value]);
@@ -970,123 +737,12 @@ final class RelationProjectionDelta_mutable implements RelationProjectionDelta_o
 }
 
 // -----------------------------------------------------------------------------
-// enum TraversalDirection
-// -----------------------------------------------------------------------------
-
-/// To switch on the variants:
-///   ```
-///   switch (e) {
-///     case TraversalDirection_unknown(): { ... }
-///     case TraversalDirection.forward: { ... }
-///     case TraversalDirection.reverse: { ... }
-///     case TraversalDirection.both: { ... }
-///   }
-///   ```
-///
-/// Deeply immutable.
-sealed class TraversalDirection {
-  /// Constant indicating an unknown `TraversalDirection`.
-  /// Default value for fields of type `TraversalDirection`.
-  static const TraversalDirection unknown = TraversalDirection_unknown._instance;
-
-  static const forward = _TraversalDirection_consts.forwardConst;
-  static const reverse = _TraversalDirection_consts.reverseConst;
-  static const both = _TraversalDirection_consts.bothConst;
-
-  /// Returns the kind of variant held by this TraversalDirection.
-  TraversalDirection_kind get kind;
-
-  /// Serializer for `TraversalDirection` instances.
-  static _skir.EnumSerializer<TraversalDirection> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(
-        1,
-        "forward",
-        "forward",
-        "",
-        forward,
-      );
-      _serializerBuilder.addConstantVariant(
-        2,
-        "reverse",
-        "reverse",
-        "",
-        reverse,
-      );
-      _serializerBuilder.addConstantVariant(
-        3,
-        "both",
-        "both",
-        "",
-        both,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/authoring.skir:TraversalDirection",
-    doc: "",
-    unknownInstance: TraversalDirection_unknown._instance,
-    enumInstance: TraversalDirection.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: TraversalDirection_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
-}
-
-/// The kind of variant held by a `TraversalDirection`.
-enum TraversalDirection_kind {
-  unknown(0),
-  forwardConst(1),
-  reverseConst(2),
-  bothConst(3);
-
-  final _core.int _ordinal;
-
-  const TraversalDirection_kind(this._ordinal);
-}
-
-final class TraversalDirection_unknown implements TraversalDirection {
-  static const _instance = TraversalDirection_unknown._();
-
-  final _skir.internal__UnrecognizedVariant? _u;
-
-  const TraversalDirection_unknown._() : _u = null;
-  TraversalDirection_unknown._unrecognized(this._u);
-
-  @_core.override
-  TraversalDirection_kind get kind => TraversalDirection_kind.unknown;
-  @_core.override
-  _core.bool operator ==(other) => other is TraversalDirection_unknown;
-  @_core.override
-  _core.int get hashCode => 8118964;
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, TraversalDirection.serializer);
-}
-
-enum _TraversalDirection_consts implements TraversalDirection {
-  forwardConst(TraversalDirection_kind.forwardConst),
-  reverseConst(TraversalDirection_kind.reverseConst),
-  bothConst(TraversalDirection_kind.bothConst);
-
-  @_core.override
-  final TraversalDirection_kind kind;
-
-  const _TraversalDirection_consts(this.kind);
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, TraversalDirection.serializer);
-}
-
-// -----------------------------------------------------------------------------
 // struct FamilyRelationSelection
 // -----------------------------------------------------------------------------
 
 sealed class FamilyRelationSelection_orMutable {
   _lib_editor_v1_type_catalog.RelationFamilyId_orMutable get id;
-  TraversalDirection get direction;
+  _lib_editor_v1_authoring_facts.TraversalDirection get direction;
 
   FamilyRelationSelection toFrozen();
 }
@@ -1096,12 +752,12 @@ final class FamilyRelationSelection implements FamilyRelationSelection_orMutable
   @_core.override
   final _lib_editor_v1_type_catalog.RelationFamilyId id;
   @_core.override
-  final TraversalDirection direction;
+  final _lib_editor_v1_authoring_facts.TraversalDirection direction;
   _skir.internal__UnrecognizedFields? _u;
 
   factory FamilyRelationSelection({
     required _lib_editor_v1_type_catalog.RelationFamilyId_orMutable id,
-    required TraversalDirection direction,
+    required _lib_editor_v1_authoring_facts.TraversalDirection direction,
   }) => FamilyRelationSelection._(
     id.toFrozen(),
     direction,
@@ -1115,14 +771,14 @@ final class FamilyRelationSelection implements FamilyRelationSelection_orMutable
   /// Default instance with all fields set to their default values.
   static final defaultInstance = FamilyRelationSelection._(
     _lib_editor_v1_type_catalog.RelationFamilyId.defaultInstance,
-    TraversalDirection.unknown,
+    _lib_editor_v1_authoring_facts.TraversalDirection.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static FamilyRelationSelection_mutable mutable() => FamilyRelationSelection_mutable._(
     _lib_editor_v1_type_catalog.RelationFamilyId.defaultInstance,
-    TraversalDirection.unknown,
+    _lib_editor_v1_authoring_facts.TraversalDirection.unknown,
   );
 
   /// Returns this instance (no-op).
@@ -1170,7 +826,7 @@ final class FamilyRelationSelection implements FamilyRelationSelection_orMutable
         "direction",
         "direction",
         1,
-        TraversalDirection.serializer,
+        _lib_editor_v1_authoring_facts.TraversalDirection.serializer,
         "",
         (it) => it.direction,
         (it, v) => it.direction = v,
@@ -1194,7 +850,7 @@ final class FamilyRelationSelection implements FamilyRelationSelection_orMutable
 /// Mutable version of [FamilyRelationSelection].
 final class FamilyRelationSelection_mutable implements FamilyRelationSelection_orMutable {
   _lib_editor_v1_type_catalog.RelationFamilyId_orMutable id;
-  TraversalDirection direction;
+  _lib_editor_v1_authoring_facts.TraversalDirection direction;
   _skir.internal__UnrecognizedFields? _u;
 
   FamilyRelationSelection_mutable._(
@@ -1227,7 +883,7 @@ final class FamilyRelationSelection_mutable implements FamilyRelationSelection_o
 
 sealed class ContractRelationSelection_orMutable {
   _core.Iterable<_lib_editor_v1_type_catalog.RelationId_orMutable> get ids;
-  TraversalDirection get direction;
+  _lib_editor_v1_authoring_facts.TraversalDirection get direction;
 
   ContractRelationSelection toFrozen();
 }
@@ -1237,12 +893,12 @@ final class ContractRelationSelection implements ContractRelationSelection_orMut
   @_core.override
   final _core.Iterable<_lib_editor_v1_type_catalog.RelationId> ids;
   @_core.override
-  final TraversalDirection direction;
+  final _lib_editor_v1_authoring_facts.TraversalDirection direction;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ContractRelationSelection({
     required _core.Iterable<_lib_editor_v1_type_catalog.RelationId_orMutable> ids,
-    required TraversalDirection direction,
+    required _lib_editor_v1_authoring_facts.TraversalDirection direction,
   }) => ContractRelationSelection._(
     _skir.internal__frozenMappedCopy(ids, (it) => it.toFrozen()),
     direction,
@@ -1256,14 +912,14 @@ final class ContractRelationSelection implements ContractRelationSelection_orMut
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ContractRelationSelection._(
     _skir.KeyedIterable.empty,
-    TraversalDirection.unknown,
+    _lib_editor_v1_authoring_facts.TraversalDirection.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static ContractRelationSelection_mutable mutable() => ContractRelationSelection_mutable._(
     _skir.KeyedIterable.empty,
-    TraversalDirection.unknown,
+    _lib_editor_v1_authoring_facts.TraversalDirection.unknown,
   );
 
   /// Returns this instance (no-op).
@@ -1313,7 +969,7 @@ final class ContractRelationSelection implements ContractRelationSelection_orMut
         "direction",
         "direction",
         1,
-        TraversalDirection.serializer,
+        _lib_editor_v1_authoring_facts.TraversalDirection.serializer,
         "",
         (it) => it.direction,
         (it, v) => it.direction = v,
@@ -1337,7 +993,7 @@ final class ContractRelationSelection implements ContractRelationSelection_orMut
 /// Mutable version of [ContractRelationSelection].
 final class ContractRelationSelection_mutable implements ContractRelationSelection_orMutable {
   _core.Iterable<_lib_editor_v1_type_catalog.RelationId_orMutable> ids;
-  TraversalDirection direction;
+  _lib_editor_v1_authoring_facts.TraversalDirection direction;
   _skir.internal__UnrecognizedFields? _u;
 
   ContractRelationSelection_mutable._(
@@ -1369,7 +1025,7 @@ final class ContractRelationSelection_mutable implements ContractRelationSelecti
 // -----------------------------------------------------------------------------
 
 sealed class AllRelationSelection_orMutable {
-  TraversalDirection get direction;
+  _lib_editor_v1_authoring_facts.TraversalDirection get direction;
 
   AllRelationSelection toFrozen();
 }
@@ -1377,11 +1033,11 @@ sealed class AllRelationSelection_orMutable {
 /// Deeply immutable.
 final class AllRelationSelection implements AllRelationSelection_orMutable {
   @_core.override
-  final TraversalDirection direction;
+  final _lib_editor_v1_authoring_facts.TraversalDirection direction;
   _skir.internal__UnrecognizedFields? _u;
 
   factory AllRelationSelection({
-    required TraversalDirection direction,
+    required _lib_editor_v1_authoring_facts.TraversalDirection direction,
   }) => AllRelationSelection._(
     direction,
   );
@@ -1392,13 +1048,13 @@ final class AllRelationSelection implements AllRelationSelection_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = AllRelationSelection._(
-    TraversalDirection.unknown,
+    _lib_editor_v1_authoring_facts.TraversalDirection.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static AllRelationSelection_mutable mutable() => AllRelationSelection_mutable._(
-    TraversalDirection.unknown,
+    _lib_editor_v1_authoring_facts.TraversalDirection.unknown,
   );
 
   /// Returns this instance (no-op).
@@ -1435,7 +1091,7 @@ final class AllRelationSelection implements AllRelationSelection_orMutable {
         "direction",
         "direction",
         0,
-        TraversalDirection.serializer,
+        _lib_editor_v1_authoring_facts.TraversalDirection.serializer,
         "",
         (it) => it.direction,
         (it, v) => it.direction = v,
@@ -1458,7 +1114,7 @@ final class AllRelationSelection implements AllRelationSelection_orMutable {
 
 /// Mutable version of [AllRelationSelection].
 final class AllRelationSelection_mutable implements AllRelationSelection_orMutable {
-  TraversalDirection direction;
+  _lib_editor_v1_authoring_facts.TraversalDirection direction;
   _skir.internal__UnrecognizedFields? _u;
 
   AllRelationSelection_mutable._(
@@ -1500,7 +1156,7 @@ sealed class RelationSelection {
   /// Same as `wrapFamily(FamilyRelationSelection(...))`.
   factory RelationSelection.createFamily({
     required _lib_editor_v1_type_catalog.RelationFamilyId_orMutable id,
-    required TraversalDirection direction,
+    required _lib_editor_v1_authoring_facts.TraversalDirection direction,
   }) => RelationSelection.wrapFamily(
     FamilyRelationSelection(
       id: id,
@@ -1516,7 +1172,7 @@ sealed class RelationSelection {
   /// Same as `wrapContracts(ContractRelationSelection(...))`.
   factory RelationSelection.createContracts({
     required _core.Iterable<_lib_editor_v1_type_catalog.RelationId_orMutable> ids,
-    required TraversalDirection direction,
+    required _lib_editor_v1_authoring_facts.TraversalDirection direction,
   }) => RelationSelection.wrapContracts(
     ContractRelationSelection(
       ids: ids,
@@ -1531,7 +1187,7 @@ sealed class RelationSelection {
 
   /// Same as `wrapAll(AllRelationSelection(...))`.
   factory RelationSelection.createAll({
-    required TraversalDirection direction,
+    required _lib_editor_v1_authoring_facts.TraversalDirection direction,
   }) => RelationSelection.wrapAll(
     AllRelationSelection(
       direction: direction,
@@ -3286,119 +2942,83 @@ final class CatalogChanged_mutable implements CatalogChanged_orMutable {
 }
 
 // -----------------------------------------------------------------------------
-// struct AuthoringSnapshot
+// struct AuthoringState
 // -----------------------------------------------------------------------------
 
-sealed class AuthoringSnapshot_orMutable {
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable get snapshot;
+sealed class AuthoringState_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
   _core.Iterable<AuthoringResource_orMutable> get resources;
-  _core.Iterable<LinkProjection_orMutable> get links;
+  _core.Iterable<_lib_editor_v1_authoring_facts.LinkProjection_orMutable> get links;
   _core.Iterable<_lib_editor_v1_checking.FindingSet_orMutable> get findings;
-  _core.Iterable<_lib_editor_v1_checking.InputObservation_orMutable> get observations;
-  _lib_editor_v1_type_catalog.InputToken_orMutable get absentInputToken;
-  _lib_editor_v1_checking.FindingsToken_orMutable get findingsToken;
 
-  AuthoringSnapshot toFrozen();
+  AuthoringState toFrozen();
 }
 
 /// Deeply immutable.
-final class AuthoringSnapshot implements AuthoringSnapshot_orMutable {
-  @_core.override
-  final _lib_editor_v1_type_catalog.SnapshotId snapshot;
+final class AuthoringState implements AuthoringState_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.CatalogGeneration generation;
   @_core.override
   final _core.Iterable<AuthoringResource> resources;
   @_core.override
-  final _core.Iterable<LinkProjection> links;
+  final _core.Iterable<_lib_editor_v1_authoring_facts.LinkProjection> links;
   @_core.override
   final _core.Iterable<_lib_editor_v1_checking.FindingSet> findings;
-  @_core.override
-  final _core.Iterable<_lib_editor_v1_checking.InputObservation> observations;
-  @_core.override
-  final _lib_editor_v1_type_catalog.InputToken absentInputToken;
-  @_core.override
-  final _lib_editor_v1_checking.FindingsToken findingsToken;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory AuthoringSnapshot({
-    required _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot,
+  factory AuthoringState({
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
     required _core.Iterable<AuthoringResource_orMutable> resources,
-    required _core.Iterable<LinkProjection_orMutable> links,
+    required _core.Iterable<_lib_editor_v1_authoring_facts.LinkProjection_orMutable> links,
     required _core.Iterable<_lib_editor_v1_checking.FindingSet_orMutable> findings,
-    required _core.Iterable<_lib_editor_v1_checking.InputObservation_orMutable> observations,
-    required _lib_editor_v1_type_catalog.InputToken_orMutable absentInputToken,
-    required _lib_editor_v1_checking.FindingsToken_orMutable findingsToken,
-  }) => AuthoringSnapshot._(
-    snapshot.toFrozen(),
+  }) => AuthoringState._(
     generation.toFrozen(),
     _skir.internal__frozenMappedCopy(resources, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(links, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(findings, (it) => it.toFrozen()),
-    _skir.internal__frozenMappedCopy(observations, (it) => it.toFrozen()),
-    absentInputToken.toFrozen(),
-    findingsToken.toFrozen(),
   );
 
-  AuthoringSnapshot._(
-    this.snapshot,
+  AuthoringState._(
     this.generation,
     this.resources,
     this.links,
     this.findings,
-    this.observations,
-    this.absentInputToken,
-    this.findingsToken,
   );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = AuthoringSnapshot._(
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
+  static final defaultInstance = AuthoringState._(
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-    _lib_editor_v1_type_catalog.InputToken.defaultInstance,
-    _lib_editor_v1_checking.FindingsToken.defaultInstance,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static AuthoringSnapshot_mutable mutable() => AuthoringSnapshot_mutable._(
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
+  static AuthoringState_mutable mutable() => AuthoringState_mutable._(
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-    _lib_editor_v1_type_catalog.InputToken.defaultInstance,
-    _lib_editor_v1_checking.FindingsToken.defaultInstance,
   );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  AuthoringSnapshot toFrozen() => this;
+  AuthoringState toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  AuthoringSnapshot_mutable toMutable() => AuthoringSnapshot_mutable._(
-    this.snapshot,
+  AuthoringState_mutable toMutable() => AuthoringState_mutable._(
     this.generation,
     this.resources,
     this.links,
     this.findings,
-    this.observations,
-    this.absentInputToken,
-    this.findingsToken,
   );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! AuthoringSnapshot) return false;
+    if (other is! AuthoringState) return false;
     return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
@@ -3406,35 +3026,22 @@ final class AuthoringSnapshot implements AuthoringSnapshot_orMutable {
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
   _core.List get _equality_proxy => [
-    this.snapshot,
     this.generation,
     this.resources,
     this.links,
     this.findings,
-    this.observations,
-    this.absentInputToken,
-    this.findingsToken,
   ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `AuthoringSnapshot` instances.
-  static _skir.StructSerializer<AuthoringSnapshot, AuthoringSnapshot_mutable> get serializer {
+  /// Serializer for `AuthoringState` instances.
+  static _skir.StructSerializer<AuthoringState, AuthoringState_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
-        "snapshot",
-        "snapshot",
+        "generation",
+        "generation",
         0,
-        _lib_editor_v1_type_catalog.SnapshotId.serializer,
-        "",
-        (it) => it.snapshot,
-        (it, v) => it.snapshot = v,
-      );
-      _serializerBuilder.addField(
-        "generation",
-        "generation",
-        1,
         _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
         "",
         (it) => it.generation,
@@ -3443,7 +3050,7 @@ final class AuthoringSnapshot implements AuthoringSnapshot_orMutable {
       _serializerBuilder.addField(
         "resources",
         "resources",
-        2,
+        1,
         _skir.Serializers.iterable(
           AuthoringResource.serializer,
         ),
@@ -3454,9 +3061,9 @@ final class AuthoringSnapshot implements AuthoringSnapshot_orMutable {
       _serializerBuilder.addField(
         "links",
         "links",
-        3,
+        2,
         _skir.Serializers.iterable(
-          LinkProjection.serializer,
+          _lib_editor_v1_authoring_facts.LinkProjection.serializer,
         ),
         "",
         (it) => it.links,
@@ -3465,7 +3072,7 @@ final class AuthoringSnapshot implements AuthoringSnapshot_orMutable {
       _serializerBuilder.addField(
         "findings",
         "findings",
-        4,
+        3,
         _skir.Serializers.iterable(
           _lib_editor_v1_checking.FindingSet.serializer,
         ),
@@ -3473,84 +3080,36 @@ final class AuthoringSnapshot implements AuthoringSnapshot_orMutable {
         (it) => it.findings,
         (it, v) => it.findings = v,
       );
-      _serializerBuilder.addField(
-        "observations",
-        "observations",
-        5,
-        _skir.Serializers.iterable(
-          _lib_editor_v1_checking.InputObservation.serializer,
-        ),
-        "",
-        (it) => it.observations,
-        (it, v) => it.observations = v,
-      );
-      _serializerBuilder.addField(
-        "absent_input_token",
-        "absentInputToken",
-        6,
-        _lib_editor_v1_type_catalog.InputToken.serializer,
-        "",
-        (it) => it.absentInputToken,
-        (it, v) => it.absentInputToken = v,
-      );
-      _serializerBuilder.addField(
-        "findings_token",
-        "findingsToken",
-        7,
-        _lib_editor_v1_checking.FindingsToken.serializer,
-        "",
-        (it) => it.findingsToken,
-        (it, v) => it.findingsToken = v,
-      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/authoring.skir:AuthoringSnapshot",
+    recordId: "editor/v1/authoring.skir:AuthoringState",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (AuthoringSnapshot_mutable it) => it.toFrozen(),
+    toFrozen: (AuthoringState_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [AuthoringSnapshot].
-final class AuthoringSnapshot_mutable implements AuthoringSnapshot_orMutable {
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot;
+/// Mutable version of [AuthoringState].
+final class AuthoringState_mutable implements AuthoringState_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation;
   _core.Iterable<AuthoringResource_orMutable> resources;
-  _core.Iterable<LinkProjection_orMutable> links;
+  _core.Iterable<_lib_editor_v1_authoring_facts.LinkProjection_orMutable> links;
   _core.Iterable<_lib_editor_v1_checking.FindingSet_orMutable> findings;
-  _core.Iterable<_lib_editor_v1_checking.InputObservation_orMutable> observations;
-  _lib_editor_v1_type_catalog.InputToken_orMutable absentInputToken;
-  _lib_editor_v1_checking.FindingsToken_orMutable findingsToken;
   _skir.internal__UnrecognizedFields? _u;
 
-  AuthoringSnapshot_mutable._(
-    this.snapshot,
+  AuthoringState_mutable._(
     this.generation,
     this.resources,
     this.links,
     this.findings,
-    this.observations,
-    this.absentInputToken,
-    this.findingsToken,
   );
-
-  /// If the value of [snapshot] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [snapshot] and returns it.
-  _lib_editor_v1_type_catalog.SnapshotId_mutable get mutableSnapshot {
-    final value = this.snapshot;
-    if (value is _lib_editor_v1_type_catalog.SnapshotId_mutable) {
-      return value;
-    } else {
-      return this.snapshot = (value as _lib_editor_v1_type_catalog.SnapshotId).toMutable();
-    }
-  }
 
   /// If the value of [generation] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
@@ -3576,9 +3135,9 @@ final class AuthoringSnapshot_mutable implements AuthoringSnapshot_orMutable {
 
   /// If the value of [links] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [links] and returns it.
-  _core.List<LinkProjection_orMutable> get mutableLinks {
+  _core.List<_lib_editor_v1_authoring_facts.LinkProjection_orMutable> get mutableLinks {
     final value = this.links;
-    if (value is _skir.internal__MutableList<LinkProjection_orMutable>) {
+    if (value is _skir.internal__MutableList<_lib_editor_v1_authoring_facts.LinkProjection_orMutable>) {
       return value;
     } else {
       return this.links = _skir.internal__MutableList([...value]);
@@ -3596,50 +3155,13 @@ final class AuthoringSnapshot_mutable implements AuthoringSnapshot_orMutable {
     }
   }
 
-  /// If the value of [observations] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [observations] and returns it.
-  _core.List<_lib_editor_v1_checking.InputObservation_orMutable> get mutableObservations {
-    final value = this.observations;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_checking.InputObservation_orMutable>) {
-      return value;
-    } else {
-      return this.observations = _skir.internal__MutableList([...value]);
-    }
-  }
-
-  /// If the value of [absentInputToken] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [absentInputToken] and returns it.
-  _lib_editor_v1_type_catalog.InputToken_mutable get mutableAbsentInputToken {
-    final value = this.absentInputToken;
-    if (value is _lib_editor_v1_type_catalog.InputToken_mutable) {
-      return value;
-    } else {
-      return this.absentInputToken = (value as _lib_editor_v1_type_catalog.InputToken).toMutable();
-    }
-  }
-
-  /// If the value of [findingsToken] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [findingsToken] and returns it.
-  _lib_editor_v1_checking.FindingsToken_mutable get mutableFindingsToken {
-    final value = this.findingsToken;
-    if (value is _lib_editor_v1_checking.FindingsToken_mutable) {
-      return value;
-    } else {
-      return this.findingsToken = (value as _lib_editor_v1_checking.FindingsToken).toMutable();
-    }
-  }
-
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  AuthoringSnapshot toFrozen() => AuthoringSnapshot(
-    snapshot: this.snapshot,
+  AuthoringState toFrozen() => AuthoringState(
     generation: this.generation,
     resources: this.resources,
     links: this.links,
     findings: this.findings,
-    observations: this.observations,
-    absentInputToken: this.absentInputToken,
-    findingsToken: this.findingsToken,
   ).._u = this._u;
 }
 
@@ -5799,10 +5321,8 @@ final class EditIntent_configureResourceWrapper extends _EditIntent_wrapper {
 // -----------------------------------------------------------------------------
 
 sealed class PreparedEdit_orMutable {
-  _lib_editor_v1_type_catalog.BatchId_orMutable get id;
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get catalog;
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable get snapshot;
-  _core.Iterable<_lib_editor_v1_checking.InputObservation_orMutable> get observations;
+  _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation> get expectations;
   _core.Iterable<EditIntent> get intents;
 
   PreparedEdit toFrozen();
@@ -5811,44 +5331,32 @@ sealed class PreparedEdit_orMutable {
 /// Deeply immutable.
 final class PreparedEdit implements PreparedEdit_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.BatchId id;
-  @_core.override
   final _lib_editor_v1_type_catalog.CatalogGeneration catalog;
   @_core.override
-  final _lib_editor_v1_type_catalog.SnapshotId snapshot;
-  @_core.override
-  final _core.Iterable<_lib_editor_v1_checking.InputObservation> observations;
+  final _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation> expectations;
   @_core.override
   final _core.Iterable<EditIntent> intents;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PreparedEdit({
-    required _lib_editor_v1_type_catalog.BatchId_orMutable id,
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog,
-    required _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot,
-    required _core.Iterable<_lib_editor_v1_checking.InputObservation_orMutable> observations,
+    required _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation> expectations,
     required _core.Iterable<EditIntent> intents,
   }) => PreparedEdit._(
-    id.toFrozen(),
     catalog.toFrozen(),
-    snapshot.toFrozen(),
-    _skir.internal__frozenMappedCopy(observations, (it) => it.toFrozen()),
+    _skir.internal__frozenCopy(expectations),
     _skir.internal__frozenCopy(intents),
   );
 
   PreparedEdit._(
-    this.id,
     this.catalog,
-    this.snapshot,
-    this.observations,
+    this.expectations,
     this.intents,
   );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PreparedEdit._(
-    _lib_editor_v1_type_catalog.BatchId.defaultInstance,
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
   );
@@ -5856,9 +5364,7 @@ final class PreparedEdit implements PreparedEdit_orMutable {
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static PreparedEdit_mutable mutable() => PreparedEdit_mutable._(
-    _lib_editor_v1_type_catalog.BatchId.defaultInstance,
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
   );
@@ -5870,10 +5376,8 @@ final class PreparedEdit implements PreparedEdit_orMutable {
 
   /// Returns a mutable shallow copy of this instance.
   PreparedEdit_mutable toMutable() => PreparedEdit_mutable._(
-    this.id,
     this.catalog,
-    this.snapshot,
-    this.observations,
+    this.expectations,
     this.intents,
   );
 
@@ -5888,10 +5392,8 @@ final class PreparedEdit implements PreparedEdit_orMutable {
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
   _core.List get _equality_proxy => [
-    this.id,
     this.catalog,
-    this.snapshot,
-    this.observations,
+    this.expectations,
     this.intents,
   ];
 
@@ -5902,47 +5404,29 @@ final class PreparedEdit implements PreparedEdit_orMutable {
   static _skir.StructSerializer<PreparedEdit, PreparedEdit_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
-        "id",
-        "id",
+        "catalog",
+        "catalog",
         0,
-        _lib_editor_v1_type_catalog.BatchId.serializer,
-        "",
-        (it) => it.id,
-        (it, v) => it.id = v,
-      );
-      _serializerBuilder.addField(
-        "catalog",
-        "catalog",
-        1,
         _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
         "",
         (it) => it.catalog,
         (it, v) => it.catalog = v,
       );
       _serializerBuilder.addField(
-        "snapshot",
-        "snapshot",
-        2,
-        _lib_editor_v1_type_catalog.SnapshotId.serializer,
-        "",
-        (it) => it.snapshot,
-        (it, v) => it.snapshot = v,
-      );
-      _serializerBuilder.addField(
-        "observations",
-        "observations",
-        3,
+        "expectations",
+        "expectations",
+        1,
         _skir.Serializers.iterable(
-          _lib_editor_v1_checking.InputObservation.serializer,
+          _lib_editor_v1_authoring_facts.EditExpectation.serializer,
         ),
         "",
-        (it) => it.observations,
-        (it, v) => it.observations = v,
+        (it) => it.expectations,
+        (it, v) => it.expectations = v,
       );
       _serializerBuilder.addField(
         "intents",
         "intents",
-        4,
+        2,
         _skir.Serializers.iterable(
           EditIntent.serializer,
         ),
@@ -5968,31 +5452,16 @@ final class PreparedEdit implements PreparedEdit_orMutable {
 
 /// Mutable version of [PreparedEdit].
 final class PreparedEdit_mutable implements PreparedEdit_orMutable {
-  _lib_editor_v1_type_catalog.BatchId_orMutable id;
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog;
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot;
-  _core.Iterable<_lib_editor_v1_checking.InputObservation_orMutable> observations;
+  _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation> expectations;
   _core.Iterable<EditIntent> intents;
   _skir.internal__UnrecognizedFields? _u;
 
   PreparedEdit_mutable._(
-    this.id,
     this.catalog,
-    this.snapshot,
-    this.observations,
+    this.expectations,
     this.intents,
   );
-
-  /// If the value of [id] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
-  _lib_editor_v1_type_catalog.BatchId_mutable get mutableId {
-    final value = this.id;
-    if (value is _lib_editor_v1_type_catalog.BatchId_mutable) {
-      return value;
-    } else {
-      return this.id = (value as _lib_editor_v1_type_catalog.BatchId).toMutable();
-    }
-  }
 
   /// If the value of [catalog] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [catalog] and returns it.
@@ -6005,25 +5474,14 @@ final class PreparedEdit_mutable implements PreparedEdit_orMutable {
     }
   }
 
-  /// If the value of [snapshot] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [snapshot] and returns it.
-  _lib_editor_v1_type_catalog.SnapshotId_mutable get mutableSnapshot {
-    final value = this.snapshot;
-    if (value is _lib_editor_v1_type_catalog.SnapshotId_mutable) {
+  /// If the value of [expectations] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [expectations] and returns it.
+  _core.List<_lib_editor_v1_authoring_facts.EditExpectation> get mutableExpectations {
+    final value = this.expectations;
+    if (value is _skir.internal__MutableList<_lib_editor_v1_authoring_facts.EditExpectation>) {
       return value;
     } else {
-      return this.snapshot = (value as _lib_editor_v1_type_catalog.SnapshotId).toMutable();
-    }
-  }
-
-  /// If the value of [observations] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [observations] and returns it.
-  _core.List<_lib_editor_v1_checking.InputObservation_orMutable> get mutableObservations {
-    final value = this.observations;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_checking.InputObservation_orMutable>) {
-      return value;
-    } else {
-      return this.observations = _skir.internal__MutableList([...value]);
+      return this.expectations = _skir.internal__MutableList([...value]);
     }
   }
 
@@ -6041,10 +5499,8 @@ final class PreparedEdit_mutable implements PreparedEdit_orMutable {
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   PreparedEdit toFrozen() => PreparedEdit(
-    id: this.id,
     catalog: this.catalog,
-    snapshot: this.snapshot,
-    observations: this.observations,
+    expectations: this.expectations,
     intents: this.intents,
   ).._u = this._u;
 }
@@ -6054,7 +5510,6 @@ final class PreparedEdit_mutable implements PreparedEdit_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class PreparedEditReady_orMutable {
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable get snapshot;
   PreparedEdit_orMutable get edit;
 
   PreparedEditReady toFrozen();
@@ -6063,34 +5518,27 @@ sealed class PreparedEditReady_orMutable {
 /// Deeply immutable.
 final class PreparedEditReady implements PreparedEditReady_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.SnapshotId snapshot;
-  @_core.override
   final PreparedEdit edit;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PreparedEditReady({
-    required _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot,
     required PreparedEdit_orMutable edit,
   }) => PreparedEditReady._(
-    snapshot.toFrozen(),
     edit.toFrozen(),
   );
 
   PreparedEditReady._(
-    this.snapshot,
     this.edit,
   );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PreparedEditReady._(
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
     PreparedEdit.defaultInstance,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static PreparedEditReady_mutable mutable() => PreparedEditReady_mutable._(
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
     PreparedEdit.defaultInstance,
   );
 
@@ -6101,7 +5549,6 @@ final class PreparedEditReady implements PreparedEditReady_orMutable {
 
   /// Returns a mutable shallow copy of this instance.
   PreparedEditReady_mutable toMutable() => PreparedEditReady_mutable._(
-    this.snapshot,
     this.edit,
   );
 
@@ -6116,7 +5563,6 @@ final class PreparedEditReady implements PreparedEditReady_orMutable {
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
   _core.List get _equality_proxy => [
-    this.snapshot,
     this.edit,
   ];
 
@@ -6127,18 +5573,9 @@ final class PreparedEditReady implements PreparedEditReady_orMutable {
   static _skir.StructSerializer<PreparedEditReady, PreparedEditReady_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
-        "snapshot",
-        "snapshot",
+        "edit",
+        "edit",
         0,
-        _lib_editor_v1_type_catalog.SnapshotId.serializer,
-        "",
-        (it) => it.snapshot,
-        (it, v) => it.snapshot = v,
-      );
-      _serializerBuilder.addField(
-        "edit",
-        "edit",
-        1,
         PreparedEdit.serializer,
         "",
         (it) => it.edit,
@@ -6162,25 +5599,12 @@ final class PreparedEditReady implements PreparedEditReady_orMutable {
 
 /// Mutable version of [PreparedEditReady].
 final class PreparedEditReady_mutable implements PreparedEditReady_orMutable {
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot;
   PreparedEdit_orMutable edit;
   _skir.internal__UnrecognizedFields? _u;
 
   PreparedEditReady_mutable._(
-    this.snapshot,
     this.edit,
   );
-
-  /// If the value of [snapshot] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [snapshot] and returns it.
-  _lib_editor_v1_type_catalog.SnapshotId_mutable get mutableSnapshot {
-    final value = this.snapshot;
-    if (value is _lib_editor_v1_type_catalog.SnapshotId_mutable) {
-      return value;
-    } else {
-      return this.snapshot = (value as _lib_editor_v1_type_catalog.SnapshotId).toMutable();
-    }
-  }
 
   /// If the value of [edit] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [edit] and returns it.
@@ -6196,7 +5620,6 @@ final class PreparedEditReady_mutable implements PreparedEditReady_orMutable {
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   PreparedEditReady toFrozen() => PreparedEditReady(
-    snapshot: this.snapshot,
     edit: this.edit,
   ).._u = this._u;
 }
@@ -6228,11 +5651,9 @@ sealed class PreparedEditResult {
 
   /// Same as `wrapPrepared(PreparedEditReady(...))`.
   factory PreparedEditResult.createPrepared({
-    required _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot,
     required PreparedEdit_orMutable edit,
   }) => PreparedEditResult.wrapPrepared(
     PreparedEditReady(
-      snapshot: snapshot,
       edit: edit,
     )
   );
@@ -6377,325 +5798,6 @@ final class PreparedEditResult_rejectedWrapper extends _PreparedEditResult_wrapp
 }
 
 // -----------------------------------------------------------------------------
-// struct InputConflict
-// -----------------------------------------------------------------------------
-
-sealed class InputConflict_orMutable {
-  _lib_editor_v1_checking.InputIdentity get input;
-  _lib_editor_v1_type_catalog.InputToken_orMutable get expected;
-  _lib_editor_v1_type_catalog.InputToken_orMutable? get actual;
-
-  InputConflict toFrozen();
-}
-
-/// Deeply immutable.
-final class InputConflict implements InputConflict_orMutable {
-  @_core.override
-  final _lib_editor_v1_checking.InputIdentity input;
-  @_core.override
-  final _lib_editor_v1_type_catalog.InputToken expected;
-  @_core.override
-  final _lib_editor_v1_type_catalog.InputToken? actual;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory InputConflict({
-    required _lib_editor_v1_checking.InputIdentity input,
-    required _lib_editor_v1_type_catalog.InputToken_orMutable expected,
-    required _lib_editor_v1_type_catalog.InputToken_orMutable? actual,
-  }) => InputConflict._(
-    input,
-    expected.toFrozen(),
-    (actual != null) ? actual.toFrozen() : null,
-  );
-
-  InputConflict._(
-    this.input,
-    this.expected,
-    this.actual,
-  );
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = InputConflict._(
-    _lib_editor_v1_checking.InputIdentity.unknown,
-    _lib_editor_v1_type_catalog.InputToken.defaultInstance,
-    null,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static InputConflict_mutable mutable() => InputConflict_mutable._(
-    _lib_editor_v1_checking.InputIdentity.unknown,
-    _lib_editor_v1_type_catalog.InputToken.defaultInstance,
-    null,
-  );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  InputConflict toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  InputConflict_mutable toMutable() => InputConflict_mutable._(
-    this.input,
-    this.expected,
-    this.actual,
-  );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! InputConflict) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.input,
-    this.expected,
-    this.actual,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `InputConflict` instances.
-  static _skir.StructSerializer<InputConflict, InputConflict_mutable> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "input",
-        "input",
-        0,
-        _lib_editor_v1_checking.InputIdentity.serializer,
-        "",
-        (it) => it.input,
-        (it, v) => it.input = v,
-      );
-      _serializerBuilder.addField(
-        "expected",
-        "expected",
-        1,
-        _lib_editor_v1_type_catalog.InputToken.serializer,
-        "",
-        (it) => it.expected,
-        (it, v) => it.expected = v,
-      );
-      _serializerBuilder.addField(
-        "actual",
-        "actual",
-        2,
-        _skir.Serializers.optional(
-          _lib_editor_v1_type_catalog.InputToken.serializer,
-        ),
-        "",
-        (it) => it.actual,
-        (it, v) => it.actual = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/authoring.skir:InputConflict",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (InputConflict_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [InputConflict].
-final class InputConflict_mutable implements InputConflict_orMutable {
-  _lib_editor_v1_checking.InputIdentity input;
-  _lib_editor_v1_type_catalog.InputToken_orMutable expected;
-  _lib_editor_v1_type_catalog.InputToken_orMutable? actual;
-  _skir.internal__UnrecognizedFields? _u;
-
-  InputConflict_mutable._(
-    this.input,
-    this.expected,
-    this.actual,
-  );
-
-  /// If the value of [expected] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [expected] and returns it.
-  _lib_editor_v1_type_catalog.InputToken_mutable get mutableExpected {
-    final value = this.expected;
-    if (value is _lib_editor_v1_type_catalog.InputToken_mutable) {
-      return value;
-    } else {
-      return this.expected = (value as _lib_editor_v1_type_catalog.InputToken).toMutable();
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  InputConflict toFrozen() => InputConflict(
-    input: this.input,
-    expected: this.expected,
-    actual: this.actual,
-  ).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// struct CommitSuccess
-// -----------------------------------------------------------------------------
-
-sealed class CommitSuccess_orMutable {
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable get snapshot;
-  _core.Iterable<_lib_editor_v1_checking.InputIdentity> get changed;
-
-  CommitSuccess toFrozen();
-}
-
-/// Deeply immutable.
-final class CommitSuccess implements CommitSuccess_orMutable {
-  @_core.override
-  final _lib_editor_v1_type_catalog.SnapshotId snapshot;
-  @_core.override
-  final _core.Iterable<_lib_editor_v1_checking.InputIdentity> changed;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory CommitSuccess({
-    required _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot,
-    required _core.Iterable<_lib_editor_v1_checking.InputIdentity> changed,
-  }) => CommitSuccess._(
-    snapshot.toFrozen(),
-    _skir.internal__frozenCopy(changed),
-  );
-
-  CommitSuccess._(
-    this.snapshot,
-    this.changed,
-  );
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = CommitSuccess._(
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
-    _skir.KeyedIterable.empty,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static CommitSuccess_mutable mutable() => CommitSuccess_mutable._(
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
-    _skir.KeyedIterable.empty,
-  );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  CommitSuccess toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  CommitSuccess_mutable toMutable() => CommitSuccess_mutable._(
-    this.snapshot,
-    this.changed,
-  );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! CommitSuccess) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.snapshot,
-    this.changed,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `CommitSuccess` instances.
-  static _skir.StructSerializer<CommitSuccess, CommitSuccess_mutable> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "snapshot",
-        "snapshot",
-        0,
-        _lib_editor_v1_type_catalog.SnapshotId.serializer,
-        "",
-        (it) => it.snapshot,
-        (it, v) => it.snapshot = v,
-      );
-      _serializerBuilder.addField(
-        "changed",
-        "changed",
-        1,
-        _skir.Serializers.iterable(
-          _lib_editor_v1_checking.InputIdentity.serializer,
-        ),
-        "",
-        (it) => it.changed,
-        (it, v) => it.changed = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/authoring.skir:CommitSuccess",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (CommitSuccess_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [CommitSuccess].
-final class CommitSuccess_mutable implements CommitSuccess_orMutable {
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot;
-  _core.Iterable<_lib_editor_v1_checking.InputIdentity> changed;
-  _skir.internal__UnrecognizedFields? _u;
-
-  CommitSuccess_mutable._(
-    this.snapshot,
-    this.changed,
-  );
-
-  /// If the value of [snapshot] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [snapshot] and returns it.
-  _lib_editor_v1_type_catalog.SnapshotId_mutable get mutableSnapshot {
-    final value = this.snapshot;
-    if (value is _lib_editor_v1_type_catalog.SnapshotId_mutable) {
-      return value;
-    } else {
-      return this.snapshot = (value as _lib_editor_v1_type_catalog.SnapshotId).toMutable();
-    }
-  }
-
-  /// If the value of [changed] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [changed] and returns it.
-  _core.List<_lib_editor_v1_checking.InputIdentity> get mutableChanged {
-    final value = this.changed;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_checking.InputIdentity>) {
-      return value;
-    } else {
-      return this.changed = _skir.internal__MutableList([...value]);
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  CommitSuccess toFrozen() => CommitSuccess(
-    snapshot: this.snapshot,
-    changed: this.changed,
-  ).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
 // enum CommitResult
 // -----------------------------------------------------------------------------
 
@@ -6703,7 +5805,7 @@ final class CommitSuccess_mutable implements CommitSuccess_orMutable {
 ///   ```
 ///   switch (e) {
 ///     case CommitResult_unknown(): { ... }
-///     case CommitResult_committed(:var value): { ... }
+///     case CommitResult.committed: { ... }
 ///     case CommitResult_conflict(:var value): { ... }
 ///     case CommitResult_rejected(:var value): { ... }
 ///     case CommitResult_catalogChanged(:var value): { ... }
@@ -6716,25 +5818,11 @@ sealed class CommitResult {
   /// Default value for fields of type `CommitResult`.
   static const CommitResult unknown = CommitResult_unknown._instance;
 
-  /// Create a 'committed' variant wrapping around the given value.
-  factory CommitResult.wrapCommitted(
-    CommitSuccess value
-  ) => CommitResult_committedWrapper._(value);
-
-  /// Same as `wrapCommitted(CommitSuccess(...))`.
-  factory CommitResult.createCommitted({
-    required _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot,
-    required _core.Iterable<_lib_editor_v1_checking.InputIdentity> changed,
-  }) => CommitResult.wrapCommitted(
-    CommitSuccess(
-      snapshot: snapshot,
-      changed: changed,
-    )
-  );
+  static const committed = _CommitResult_consts.committedConst;
 
   /// Create a 'conflict' variant wrapping around the given value.
   factory CommitResult.wrapConflict(
-    _core.Iterable<InputConflict> value
+    _core.Iterable<_lib_editor_v1_authoring_facts.ExpectationConflict> value
   ) => CommitResult_conflictWrapper._(value);
 
   /// Create a 'rejected' variant wrapping around the given value.
@@ -6762,22 +5850,19 @@ sealed class CommitResult {
   /// Serializer for `CommitResult` instances.
   static _skir.EnumSerializer<CommitResult> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addWrapperVariant(
+      _serializerBuilder.addConstantVariant(
         1,
         "committed",
-        "wrapCommitted",
-        CommitSuccess.serializer,
+        "committed",
         "",
-        CommitResult_committedWrapper._,
-        (it) => it.value,
-        ordinal: CommitResult_kind.committedWrapper._ordinal,
+        committed,
       );
       _serializerBuilder.addWrapperVariant(
         2,
         "conflict",
         "wrapConflict",
         _skir.Serializers.iterable(
-          InputConflict.serializer,
+          _lib_editor_v1_authoring_facts.ExpectationConflict.serializer,
         ),
         "",
         CommitResult_conflictWrapper._,
@@ -6825,7 +5910,7 @@ sealed class CommitResult {
 /// The kind of variant held by a `CommitResult`.
 enum CommitResult_kind {
   unknown(0),
-  committedWrapper(1),
+  committedConst(1),
   conflictWrapper(2),
   rejectedWrapper(3),
   catalogChangedWrapper(4);
@@ -6853,6 +5938,18 @@ final class CommitResult_unknown implements CommitResult {
   _core.String toString() => _skir.internal__stringify(this, CommitResult.serializer);
 }
 
+enum _CommitResult_consts implements CommitResult {
+  committedConst(CommitResult_kind.committedConst);
+
+  @_core.override
+  final CommitResult_kind kind;
+
+  const _CommitResult_consts(this.kind);
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, CommitResult.serializer);
+}
+
 sealed class _CommitResult_wrapper implements CommitResult {
   _core.dynamic get value;
 
@@ -6869,17 +5966,8 @@ sealed class _CommitResult_wrapper implements CommitResult {
   _core.String toString() => _skir.internal__stringify(this, CommitResult.serializer);
 }
 
-final class CommitResult_committedWrapper extends _CommitResult_wrapper {
-  final CommitSuccess value;
-
-  CommitResult_committedWrapper._(this.value);
-
-  @_core.override
-  CommitResult_kind get kind => CommitResult_kind.committedWrapper;
-}
-
 final class CommitResult_conflictWrapper extends _CommitResult_wrapper {
-  final _core.Iterable<InputConflict> value;
+  final _core.Iterable<_lib_editor_v1_authoring_facts.ExpectationConflict> value;
 
   CommitResult_conflictWrapper._(this.value);
 
@@ -6930,17 +6018,13 @@ sealed class AuthoringOperation {
 
   /// Same as `wrapCommitPrepared(PreparedEdit(...))`.
   factory AuthoringOperation.createCommitPrepared({
-    required _lib_editor_v1_type_catalog.BatchId_orMutable id,
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog,
-    required _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot,
-    required _core.Iterable<_lib_editor_v1_checking.InputObservation_orMutable> observations,
+    required _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation> expectations,
     required _core.Iterable<EditIntent> intents,
   }) => AuthoringOperation.wrapCommitPrepared(
     PreparedEdit(
-      id: id,
       catalog: catalog,
-      snapshot: snapshot,
-      observations: observations,
+      expectations: expectations,
       intents: intents,
     )
   );
@@ -7031,176 +6115,11 @@ final class AuthoringOperation_commitPreparedWrapper extends _AuthoringOperation
 }
 
 // -----------------------------------------------------------------------------
-// enum AuthoringResourceChange
-// -----------------------------------------------------------------------------
-
-/// To switch on the variants:
-///   ```
-///   switch (e) {
-///     case AuthoringResourceChange_unknown(): { ... }
-///     case AuthoringResourceChange_upsert(:var value): { ... }
-///     case AuthoringResourceChange_remove(:var value): { ... }
-///   }
-///   ```
-///
-/// Deeply immutable.
-sealed class AuthoringResourceChange {
-  /// Constant indicating an unknown `AuthoringResourceChange`.
-  /// Default value for fields of type `AuthoringResourceChange`.
-  static const AuthoringResourceChange unknown = AuthoringResourceChange_unknown._instance;
-
-  /// Create a 'upsert' variant wrapping around the given value.
-  factory AuthoringResourceChange.wrapUpsert(
-    AuthoringResource value
-  ) => AuthoringResourceChange_upsertWrapper._(value);
-
-  /// Same as `wrapUpsert(AuthoringResource(...))`.
-  factory AuthoringResourceChange.createUpsert({
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable id,
-    required _lib_editor_v1_catalog.ResourceDefinitionId_orMutable definition,
-    required _lib_editor_v1_type_catalog.AuthoringRecord_orMutable content,
-  }) => AuthoringResourceChange.wrapUpsert(
-    AuthoringResource(
-      id: id,
-      definition: definition,
-      content: content,
-    )
-  );
-
-  /// Create a 'remove' variant wrapping around the given value.
-  factory AuthoringResourceChange.wrapRemove(
-    _lib_editor_v1_type_catalog.ResourceId value
-  ) => AuthoringResourceChange_removeWrapper._(value);
-
-  /// Same as `wrapRemove(_lib_editor_v1_type_catalog.ResourceId(...))`.
-  factory AuthoringResourceChange.createRemove({
-    required _core.String value,
-  }) => AuthoringResourceChange.wrapRemove(
-    _lib_editor_v1_type_catalog.ResourceId(
-      value: value,
-    )
-  );
-
-  /// Returns the kind of variant held by this AuthoringResourceChange.
-  AuthoringResourceChange_kind get kind;
-
-  /// Serializer for `AuthoringResourceChange` instances.
-  static _skir.EnumSerializer<AuthoringResourceChange> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addWrapperVariant(
-        1,
-        "upsert",
-        "wrapUpsert",
-        AuthoringResource.serializer,
-        "",
-        AuthoringResourceChange_upsertWrapper._,
-        (it) => it.value,
-        ordinal: AuthoringResourceChange_kind.upsertWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        2,
-        "remove",
-        "wrapRemove",
-        _lib_editor_v1_type_catalog.ResourceId.serializer,
-        "",
-        AuthoringResourceChange_removeWrapper._,
-        (it) => it.value,
-        ordinal: AuthoringResourceChange_kind.removeWrapper._ordinal,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/authoring.skir:AuthoringResourceChange",
-    doc: "",
-    unknownInstance: AuthoringResourceChange_unknown._instance,
-    enumInstance: AuthoringResourceChange.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: AuthoringResourceChange_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
-}
-
-/// The kind of variant held by a `AuthoringResourceChange`.
-enum AuthoringResourceChange_kind {
-  unknown(0),
-  upsertWrapper(1),
-  removeWrapper(2);
-
-  final _core.int _ordinal;
-
-  const AuthoringResourceChange_kind(this._ordinal);
-}
-
-final class AuthoringResourceChange_unknown implements AuthoringResourceChange {
-  static const _instance = AuthoringResourceChange_unknown._();
-
-  final _skir.internal__UnrecognizedVariant? _u;
-
-  const AuthoringResourceChange_unknown._() : _u = null;
-  AuthoringResourceChange_unknown._unrecognized(this._u);
-
-  @_core.override
-  AuthoringResourceChange_kind get kind => AuthoringResourceChange_kind.unknown;
-  @_core.override
-  _core.bool operator ==(other) => other is AuthoringResourceChange_unknown;
-  @_core.override
-  _core.int get hashCode => 8118964;
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, AuthoringResourceChange.serializer);
-}
-
-sealed class _AuthoringResourceChange_wrapper implements AuthoringResourceChange {
-  _core.dynamic get value;
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (other is! _AuthoringResourceChange_wrapper) return false;
-    return kind == other.kind && value == other.value;
-  }
-
-  @_core.override
-  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, AuthoringResourceChange.serializer);
-}
-
-final class AuthoringResourceChange_upsertWrapper extends _AuthoringResourceChange_wrapper {
-  final AuthoringResource value;
-
-  AuthoringResourceChange_upsertWrapper._(this.value);
-
-  @_core.override
-  AuthoringResourceChange_kind get kind => AuthoringResourceChange_kind.upsertWrapper;
-}
-
-final class AuthoringResourceChange_removeWrapper extends _AuthoringResourceChange_wrapper {
-  final _lib_editor_v1_type_catalog.ResourceId value;
-
-  AuthoringResourceChange_removeWrapper._(this.value);
-
-  @_core.override
-  AuthoringResourceChange_kind get kind => AuthoringResourceChange_kind.removeWrapper;
-}
-
-// -----------------------------------------------------------------------------
 // struct AuthoringChanged
 // -----------------------------------------------------------------------------
 
 sealed class AuthoringChanged_orMutable {
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable get previousSnapshot;
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable get snapshot;
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
-  _lib_editor_v1_type_catalog.BatchId_orMutable get batch;
-  _core.Iterable<AuthoringResourceChange> get resources;
-  RelationProjectionDelta_orMutable get relations;
-  _lib_editor_v1_checking.FindingsToken_orMutable get previousFindings;
-  _lib_editor_v1_checking.FindingsToken_orMutable get findingsToken;
-  AuthoringFindingsReplacement_orMutable? get findings;
-  _core.Iterable<_lib_editor_v1_checking.InputObservation_orMutable> get changedObservations;
 
   AuthoringChanged toFrozen();
 }
@@ -7208,91 +6127,28 @@ sealed class AuthoringChanged_orMutable {
 /// Deeply immutable.
 final class AuthoringChanged implements AuthoringChanged_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.SnapshotId previousSnapshot;
-  @_core.override
-  final _lib_editor_v1_type_catalog.SnapshotId snapshot;
-  @_core.override
   final _lib_editor_v1_type_catalog.CatalogGeneration generation;
-  @_core.override
-  final _lib_editor_v1_type_catalog.BatchId batch;
-  @_core.override
-  final _core.Iterable<AuthoringResourceChange> resources;
-  @_core.override
-  final RelationProjectionDelta relations;
-  @_core.override
-  final _lib_editor_v1_checking.FindingsToken previousFindings;
-  @_core.override
-  final _lib_editor_v1_checking.FindingsToken findingsToken;
-  @_core.override
-  final AuthoringFindingsReplacement? findings;
-  @_core.override
-  final _core.Iterable<_lib_editor_v1_checking.InputObservation> changedObservations;
   _skir.internal__UnrecognizedFields? _u;
 
   factory AuthoringChanged({
-    required _lib_editor_v1_type_catalog.SnapshotId_orMutable previousSnapshot,
-    required _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot,
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
-    required _lib_editor_v1_type_catalog.BatchId_orMutable batch,
-    required _core.Iterable<AuthoringResourceChange> resources,
-    required RelationProjectionDelta_orMutable relations,
-    required _lib_editor_v1_checking.FindingsToken_orMutable previousFindings,
-    required _lib_editor_v1_checking.FindingsToken_orMutable findingsToken,
-    required AuthoringFindingsReplacement_orMutable? findings,
-    required _core.Iterable<_lib_editor_v1_checking.InputObservation_orMutable> changedObservations,
   }) => AuthoringChanged._(
-    previousSnapshot.toFrozen(),
-    snapshot.toFrozen(),
     generation.toFrozen(),
-    batch.toFrozen(),
-    _skir.internal__frozenCopy(resources),
-    relations.toFrozen(),
-    previousFindings.toFrozen(),
-    findingsToken.toFrozen(),
-    (findings != null) ? findings.toFrozen() : null,
-    _skir.internal__frozenMappedCopy(changedObservations, (it) => it.toFrozen()),
   );
 
   AuthoringChanged._(
-    this.previousSnapshot,
-    this.snapshot,
     this.generation,
-    this.batch,
-    this.resources,
-    this.relations,
-    this.previousFindings,
-    this.findingsToken,
-    this.findings,
-    this.changedObservations,
   );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = AuthoringChanged._(
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    _lib_editor_v1_type_catalog.BatchId.defaultInstance,
-    _skir.KeyedIterable.empty,
-    RelationProjectionDelta.defaultInstance,
-    _lib_editor_v1_checking.FindingsToken.defaultInstance,
-    _lib_editor_v1_checking.FindingsToken.defaultInstance,
-    null,
-    _skir.KeyedIterable.empty,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static AuthoringChanged_mutable mutable() => AuthoringChanged_mutable._(
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    _lib_editor_v1_type_catalog.BatchId.defaultInstance,
-    _skir.KeyedIterable.empty,
-    RelationProjectionDelta.defaultInstance,
-    _lib_editor_v1_checking.FindingsToken.defaultInstance,
-    _lib_editor_v1_checking.FindingsToken.defaultInstance,
-    null,
-    _skir.KeyedIterable.empty,
   );
 
   /// Returns this instance (no-op).
@@ -7302,16 +6158,7 @@ final class AuthoringChanged implements AuthoringChanged_orMutable {
 
   /// Returns a mutable shallow copy of this instance.
   AuthoringChanged_mutable toMutable() => AuthoringChanged_mutable._(
-    this.previousSnapshot,
-    this.snapshot,
     this.generation,
-    this.batch,
-    this.resources,
-    this.relations,
-    this.previousFindings,
-    this.findingsToken,
-    this.findings,
-    this.changedObservations,
   );
 
   @_core.override
@@ -7325,16 +6172,7 @@ final class AuthoringChanged implements AuthoringChanged_orMutable {
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
   _core.List get _equality_proxy => [
-    this.previousSnapshot,
-    this.snapshot,
     this.generation,
-    this.batch,
-    this.resources,
-    this.relations,
-    this.previousFindings,
-    this.findingsToken,
-    this.findings,
-    this.changedObservations,
   ];
 
   @_core.override
@@ -7344,100 +6182,13 @@ final class AuthoringChanged implements AuthoringChanged_orMutable {
   static _skir.StructSerializer<AuthoringChanged, AuthoringChanged_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
-        "previous_snapshot",
-        "previousSnapshot",
+        "generation",
+        "generation",
         0,
-        _lib_editor_v1_type_catalog.SnapshotId.serializer,
-        "",
-        (it) => it.previousSnapshot,
-        (it, v) => it.previousSnapshot = v,
-      );
-      _serializerBuilder.addField(
-        "snapshot",
-        "snapshot",
-        1,
-        _lib_editor_v1_type_catalog.SnapshotId.serializer,
-        "",
-        (it) => it.snapshot,
-        (it, v) => it.snapshot = v,
-      );
-      _serializerBuilder.addField(
-        "generation",
-        "generation",
-        2,
         _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
         "",
         (it) => it.generation,
         (it, v) => it.generation = v,
-      );
-      _serializerBuilder.addField(
-        "batch",
-        "batch",
-        3,
-        _lib_editor_v1_type_catalog.BatchId.serializer,
-        "",
-        (it) => it.batch,
-        (it, v) => it.batch = v,
-      );
-      _serializerBuilder.addField(
-        "resources",
-        "resources",
-        4,
-        _skir.Serializers.iterable(
-          AuthoringResourceChange.serializer,
-        ),
-        "",
-        (it) => it.resources,
-        (it, v) => it.resources = v,
-      );
-      _serializerBuilder.addField(
-        "relations",
-        "relations",
-        5,
-        RelationProjectionDelta.serializer,
-        "",
-        (it) => it.relations,
-        (it, v) => it.relations = v,
-      );
-      _serializerBuilder.addField(
-        "previous_findings",
-        "previousFindings",
-        6,
-        _lib_editor_v1_checking.FindingsToken.serializer,
-        "",
-        (it) => it.previousFindings,
-        (it, v) => it.previousFindings = v,
-      );
-      _serializerBuilder.addField(
-        "findings_token",
-        "findingsToken",
-        7,
-        _lib_editor_v1_checking.FindingsToken.serializer,
-        "",
-        (it) => it.findingsToken,
-        (it, v) => it.findingsToken = v,
-      );
-      _serializerBuilder.addField(
-        "findings",
-        "findings",
-        8,
-        _skir.Serializers.optional(
-          AuthoringFindingsReplacement.serializer,
-        ),
-        "",
-        (it) => it.findings,
-        (it, v) => it.findings = v,
-      );
-      _serializerBuilder.addField(
-        "changed_observations",
-        "changedObservations",
-        9,
-        _skir.Serializers.iterable(
-          _lib_editor_v1_checking.InputObservation.serializer,
-        ),
-        "",
-        (it) => it.changedObservations,
-        (it, v) => it.changedObservations = v,
       );
       _serializerBuilder.finalize();
     }
@@ -7457,52 +6208,12 @@ final class AuthoringChanged implements AuthoringChanged_orMutable {
 
 /// Mutable version of [AuthoringChanged].
 final class AuthoringChanged_mutable implements AuthoringChanged_orMutable {
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable previousSnapshot;
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot;
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation;
-  _lib_editor_v1_type_catalog.BatchId_orMutable batch;
-  _core.Iterable<AuthoringResourceChange> resources;
-  RelationProjectionDelta_orMutable relations;
-  _lib_editor_v1_checking.FindingsToken_orMutable previousFindings;
-  _lib_editor_v1_checking.FindingsToken_orMutable findingsToken;
-  AuthoringFindingsReplacement_orMutable? findings;
-  _core.Iterable<_lib_editor_v1_checking.InputObservation_orMutable> changedObservations;
   _skir.internal__UnrecognizedFields? _u;
 
   AuthoringChanged_mutable._(
-    this.previousSnapshot,
-    this.snapshot,
     this.generation,
-    this.batch,
-    this.resources,
-    this.relations,
-    this.previousFindings,
-    this.findingsToken,
-    this.findings,
-    this.changedObservations,
   );
-
-  /// If the value of [previousSnapshot] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [previousSnapshot] and returns it.
-  _lib_editor_v1_type_catalog.SnapshotId_mutable get mutablePreviousSnapshot {
-    final value = this.previousSnapshot;
-    if (value is _lib_editor_v1_type_catalog.SnapshotId_mutable) {
-      return value;
-    } else {
-      return this.previousSnapshot = (value as _lib_editor_v1_type_catalog.SnapshotId).toMutable();
-    }
-  }
-
-  /// If the value of [snapshot] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [snapshot] and returns it.
-  _lib_editor_v1_type_catalog.SnapshotId_mutable get mutableSnapshot {
-    final value = this.snapshot;
-    if (value is _lib_editor_v1_type_catalog.SnapshotId_mutable) {
-      return value;
-    } else {
-      return this.snapshot = (value as _lib_editor_v1_type_catalog.SnapshotId).toMutable();
-    }
-  }
 
   /// If the value of [generation] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
@@ -7515,85 +6226,10 @@ final class AuthoringChanged_mutable implements AuthoringChanged_orMutable {
     }
   }
 
-  /// If the value of [batch] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [batch] and returns it.
-  _lib_editor_v1_type_catalog.BatchId_mutable get mutableBatch {
-    final value = this.batch;
-    if (value is _lib_editor_v1_type_catalog.BatchId_mutable) {
-      return value;
-    } else {
-      return this.batch = (value as _lib_editor_v1_type_catalog.BatchId).toMutable();
-    }
-  }
-
-  /// If the value of [resources] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [resources] and returns it.
-  _core.List<AuthoringResourceChange> get mutableResources {
-    final value = this.resources;
-    if (value is _skir.internal__MutableList<AuthoringResourceChange>) {
-      return value;
-    } else {
-      return this.resources = _skir.internal__MutableList([...value]);
-    }
-  }
-
-  /// If the value of [relations] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [relations] and returns it.
-  RelationProjectionDelta_mutable get mutableRelations {
-    final value = this.relations;
-    if (value is RelationProjectionDelta_mutable) {
-      return value;
-    } else {
-      return this.relations = (value as RelationProjectionDelta).toMutable();
-    }
-  }
-
-  /// If the value of [previousFindings] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [previousFindings] and returns it.
-  _lib_editor_v1_checking.FindingsToken_mutable get mutablePreviousFindings {
-    final value = this.previousFindings;
-    if (value is _lib_editor_v1_checking.FindingsToken_mutable) {
-      return value;
-    } else {
-      return this.previousFindings = (value as _lib_editor_v1_checking.FindingsToken).toMutable();
-    }
-  }
-
-  /// If the value of [findingsToken] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [findingsToken] and returns it.
-  _lib_editor_v1_checking.FindingsToken_mutable get mutableFindingsToken {
-    final value = this.findingsToken;
-    if (value is _lib_editor_v1_checking.FindingsToken_mutable) {
-      return value;
-    } else {
-      return this.findingsToken = (value as _lib_editor_v1_checking.FindingsToken).toMutable();
-    }
-  }
-
-  /// If the value of [changedObservations] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [changedObservations] and returns it.
-  _core.List<_lib_editor_v1_checking.InputObservation_orMutable> get mutableChangedObservations {
-    final value = this.changedObservations;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_checking.InputObservation_orMutable>) {
-      return value;
-    } else {
-      return this.changedObservations = _skir.internal__MutableList([...value]);
-    }
-  }
-
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   AuthoringChanged toFrozen() => AuthoringChanged(
-    previousSnapshot: this.previousSnapshot,
-    snapshot: this.snapshot,
     generation: this.generation,
-    batch: this.batch,
-    resources: this.resources,
-    relations: this.relations,
-    previousFindings: this.previousFindings,
-    findingsToken: this.findingsToken,
-    findings: this.findings,
-    changedObservations: this.changedObservations,
   ).._u = this._u;
 }
 
@@ -7952,10 +6588,9 @@ final class LinkRepairIntent_removeWrapper extends _LinkRepairIntent_wrapper {
 
 sealed class TypeArgumentChangePreview_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get catalog;
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable get sourceSnapshot;
   _lib_editor_v1_type_catalog.ResourceId_orMutable get resource;
   _lib_editor_v1_type_catalog.TypeSelection get next;
-  _core.Iterable<_lib_editor_v1_checking.InputObservation_orMutable> get observations;
+  _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation> get expectations;
   _core.Iterable<TypeRepairIntent> get intents;
   _core.Iterable<LinkRepairIntent> get linkRepairs;
   _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable> get clearedLocations;
@@ -7968,13 +6603,11 @@ final class TypeArgumentChangePreview implements TypeArgumentChangePreview_orMut
   @_core.override
   final _lib_editor_v1_type_catalog.CatalogGeneration catalog;
   @_core.override
-  final _lib_editor_v1_type_catalog.SnapshotId sourceSnapshot;
-  @_core.override
   final _lib_editor_v1_type_catalog.ResourceId resource;
   @_core.override
   final _lib_editor_v1_type_catalog.TypeSelection next;
   @_core.override
-  final _core.Iterable<_lib_editor_v1_checking.InputObservation> observations;
+  final _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation> expectations;
   @_core.override
   final _core.Iterable<TypeRepairIntent> intents;
   @_core.override
@@ -7985,19 +6618,17 @@ final class TypeArgumentChangePreview implements TypeArgumentChangePreview_orMut
 
   factory TypeArgumentChangePreview({
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog,
-    required _lib_editor_v1_type_catalog.SnapshotId_orMutable sourceSnapshot,
     required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
     required _lib_editor_v1_type_catalog.TypeSelection next,
-    required _core.Iterable<_lib_editor_v1_checking.InputObservation_orMutable> observations,
+    required _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation> expectations,
     required _core.Iterable<TypeRepairIntent> intents,
     required _core.Iterable<LinkRepairIntent> linkRepairs,
     required _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable> clearedLocations,
   }) => TypeArgumentChangePreview._(
     catalog.toFrozen(),
-    sourceSnapshot.toFrozen(),
     resource.toFrozen(),
     next,
-    _skir.internal__frozenMappedCopy(observations, (it) => it.toFrozen()),
+    _skir.internal__frozenCopy(expectations),
     _skir.internal__frozenCopy(intents),
     _skir.internal__frozenCopy(linkRepairs),
     _skir.internal__frozenMappedCopy(clearedLocations, (it) => it.toFrozen()),
@@ -8005,10 +6636,9 @@ final class TypeArgumentChangePreview implements TypeArgumentChangePreview_orMut
 
   TypeArgumentChangePreview._(
     this.catalog,
-    this.sourceSnapshot,
     this.resource,
     this.next,
-    this.observations,
+    this.expectations,
     this.intents,
     this.linkRepairs,
     this.clearedLocations,
@@ -8017,7 +6647,6 @@ final class TypeArgumentChangePreview implements TypeArgumentChangePreview_orMut
   /// Default instance with all fields set to their default values.
   static final defaultInstance = TypeArgumentChangePreview._(
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
     _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
     _lib_editor_v1_type_catalog.TypeSelection.unknown,
     _skir.KeyedIterable.empty,
@@ -8030,7 +6659,6 @@ final class TypeArgumentChangePreview implements TypeArgumentChangePreview_orMut
   /// Fields are initialized to their default values.
   static TypeArgumentChangePreview_mutable mutable() => TypeArgumentChangePreview_mutable._(
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
     _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
     _lib_editor_v1_type_catalog.TypeSelection.unknown,
     _skir.KeyedIterable.empty,
@@ -8047,10 +6675,9 @@ final class TypeArgumentChangePreview implements TypeArgumentChangePreview_orMut
   /// Returns a mutable shallow copy of this instance.
   TypeArgumentChangePreview_mutable toMutable() => TypeArgumentChangePreview_mutable._(
     this.catalog,
-    this.sourceSnapshot,
     this.resource,
     this.next,
-    this.observations,
+    this.expectations,
     this.intents,
     this.linkRepairs,
     this.clearedLocations,
@@ -8068,10 +6695,9 @@ final class TypeArgumentChangePreview implements TypeArgumentChangePreview_orMut
 
   _core.List get _equality_proxy => [
     this.catalog,
-    this.sourceSnapshot,
     this.resource,
     this.next,
-    this.observations,
+    this.expectations,
     this.intents,
     this.linkRepairs,
     this.clearedLocations,
@@ -8093,18 +6719,9 @@ final class TypeArgumentChangePreview implements TypeArgumentChangePreview_orMut
         (it, v) => it.catalog = v,
       );
       _serializerBuilder.addField(
-        "source_snapshot",
-        "sourceSnapshot",
+        "resource",
+        "resource",
         1,
-        _lib_editor_v1_type_catalog.SnapshotId.serializer,
-        "",
-        (it) => it.sourceSnapshot,
-        (it, v) => it.sourceSnapshot = v,
-      );
-      _serializerBuilder.addField(
-        "resource",
-        "resource",
-        2,
         _lib_editor_v1_type_catalog.ResourceId.serializer,
         "",
         (it) => it.resource,
@@ -8113,27 +6730,27 @@ final class TypeArgumentChangePreview implements TypeArgumentChangePreview_orMut
       _serializerBuilder.addField(
         "next",
         "next",
-        3,
+        2,
         _lib_editor_v1_type_catalog.TypeSelection.serializer,
         "",
         (it) => it.next,
         (it, v) => it.next = v,
       );
       _serializerBuilder.addField(
-        "observations",
-        "observations",
-        4,
+        "expectations",
+        "expectations",
+        3,
         _skir.Serializers.iterable(
-          _lib_editor_v1_checking.InputObservation.serializer,
+          _lib_editor_v1_authoring_facts.EditExpectation.serializer,
         ),
         "",
-        (it) => it.observations,
-        (it, v) => it.observations = v,
+        (it) => it.expectations,
+        (it, v) => it.expectations = v,
       );
       _serializerBuilder.addField(
         "intents",
         "intents",
-        5,
+        4,
         _skir.Serializers.iterable(
           TypeRepairIntent.serializer,
         ),
@@ -8144,7 +6761,7 @@ final class TypeArgumentChangePreview implements TypeArgumentChangePreview_orMut
       _serializerBuilder.addField(
         "link_repairs",
         "linkRepairs",
-        6,
+        5,
         _skir.Serializers.iterable(
           LinkRepairIntent.serializer,
         ),
@@ -8155,7 +6772,7 @@ final class TypeArgumentChangePreview implements TypeArgumentChangePreview_orMut
       _serializerBuilder.addField(
         "cleared_locations",
         "clearedLocations",
-        7,
+        6,
         _skir.Serializers.iterable(
           _lib_editor_v1_type_catalog.ValueLocation.serializer,
         ),
@@ -8182,10 +6799,9 @@ final class TypeArgumentChangePreview implements TypeArgumentChangePreview_orMut
 /// Mutable version of [TypeArgumentChangePreview].
 final class TypeArgumentChangePreview_mutable implements TypeArgumentChangePreview_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog;
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable sourceSnapshot;
   _lib_editor_v1_type_catalog.ResourceId_orMutable resource;
   _lib_editor_v1_type_catalog.TypeSelection next;
-  _core.Iterable<_lib_editor_v1_checking.InputObservation_orMutable> observations;
+  _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation> expectations;
   _core.Iterable<TypeRepairIntent> intents;
   _core.Iterable<LinkRepairIntent> linkRepairs;
   _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable> clearedLocations;
@@ -8193,10 +6809,9 @@ final class TypeArgumentChangePreview_mutable implements TypeArgumentChangePrevi
 
   TypeArgumentChangePreview_mutable._(
     this.catalog,
-    this.sourceSnapshot,
     this.resource,
     this.next,
-    this.observations,
+    this.expectations,
     this.intents,
     this.linkRepairs,
     this.clearedLocations,
@@ -8213,17 +6828,6 @@ final class TypeArgumentChangePreview_mutable implements TypeArgumentChangePrevi
     }
   }
 
-  /// If the value of [sourceSnapshot] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [sourceSnapshot] and returns it.
-  _lib_editor_v1_type_catalog.SnapshotId_mutable get mutableSourceSnapshot {
-    final value = this.sourceSnapshot;
-    if (value is _lib_editor_v1_type_catalog.SnapshotId_mutable) {
-      return value;
-    } else {
-      return this.sourceSnapshot = (value as _lib_editor_v1_type_catalog.SnapshotId).toMutable();
-    }
-  }
-
   /// If the value of [resource] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
   _lib_editor_v1_type_catalog.ResourceId_mutable get mutableResource {
@@ -8235,14 +6839,14 @@ final class TypeArgumentChangePreview_mutable implements TypeArgumentChangePrevi
     }
   }
 
-  /// If the value of [observations] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [observations] and returns it.
-  _core.List<_lib_editor_v1_checking.InputObservation_orMutable> get mutableObservations {
-    final value = this.observations;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_checking.InputObservation_orMutable>) {
+  /// If the value of [expectations] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [expectations] and returns it.
+  _core.List<_lib_editor_v1_authoring_facts.EditExpectation> get mutableExpectations {
+    final value = this.expectations;
+    if (value is _skir.internal__MutableList<_lib_editor_v1_authoring_facts.EditExpectation>) {
       return value;
     } else {
-      return this.observations = _skir.internal__MutableList([...value]);
+      return this.expectations = _skir.internal__MutableList([...value]);
     }
   }
 
@@ -8283,10 +6887,9 @@ final class TypeArgumentChangePreview_mutable implements TypeArgumentChangePrevi
   @_core.override
   TypeArgumentChangePreview toFrozen() => TypeArgumentChangePreview(
     catalog: this.catalog,
-    sourceSnapshot: this.sourceSnapshot,
     resource: this.resource,
     next: this.next,
-    observations: this.observations,
+    expectations: this.expectations,
     intents: this.intents,
     linkRepairs: this.linkRepairs,
     clearedLocations: this.clearedLocations,
@@ -8430,20 +7033,18 @@ sealed class TypePreviewResult {
   /// Same as `wrapReady(TypeArgumentChangePreview(...))`.
   factory TypePreviewResult.createReady({
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog,
-    required _lib_editor_v1_type_catalog.SnapshotId_orMutable sourceSnapshot,
     required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
     required _lib_editor_v1_type_catalog.TypeSelection next,
-    required _core.Iterable<_lib_editor_v1_checking.InputObservation_orMutable> observations,
+    required _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation> expectations,
     required _core.Iterable<TypeRepairIntent> intents,
     required _core.Iterable<LinkRepairIntent> linkRepairs,
     required _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable> clearedLocations,
   }) => TypePreviewResult.wrapReady(
     TypeArgumentChangePreview(
       catalog: catalog,
-      sourceSnapshot: sourceSnapshot,
       resource: resource,
       next: next,
-      observations: observations,
+      expectations: expectations,
       intents: intents,
       linkRepairs: linkRepairs,
       clearedLocations: clearedLocations,
@@ -8614,516 +7215,6 @@ final class TypePreviewResult_rejectedWrapper extends _TypePreviewResult_wrapper
 
   @_core.override
   TypePreviewResult_kind get kind => TypePreviewResult_kind.rejectedWrapper;
-}
-
-// -----------------------------------------------------------------------------
-// struct SearchFacetId
-// -----------------------------------------------------------------------------
-
-sealed class SearchFacetId_orMutable {
-  _core.String get value;
-
-  SearchFacetId toFrozen();
-}
-
-/// Deeply immutable.
-final class SearchFacetId implements SearchFacetId_orMutable {
-  @_core.override
-  final _core.String value;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory SearchFacetId({
-    required _core.String value,
-  }) => SearchFacetId._(
-    value,
-  );
-
-  SearchFacetId._(
-    this.value,
-  );
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = SearchFacetId._(
-    "",
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static SearchFacetId_mutable mutable() => SearchFacetId_mutable._(
-    "",
-  );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  SearchFacetId toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  SearchFacetId_mutable toMutable() => SearchFacetId_mutable._(
-    this.value,
-  );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! SearchFacetId) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.value,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `SearchFacetId` instances.
-  static _skir.StructSerializer<SearchFacetId, SearchFacetId_mutable> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "value",
-        "value",
-        0,
-        _skir.Serializers.string,
-        "",
-        (it) => it.value,
-        (it, v) => it.value = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/authoring.skir:SearchFacetId",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (SearchFacetId_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [SearchFacetId].
-final class SearchFacetId_mutable implements SearchFacetId_orMutable {
-  _core.String value;
-  _skir.internal__UnrecognizedFields? _u;
-
-  SearchFacetId_mutable._(
-    this.value,
-  );
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  SearchFacetId toFrozen() => SearchFacetId(
-    value: this.value,
-  ).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// struct SearchFacetRequest
-// -----------------------------------------------------------------------------
-
-sealed class SearchFacetRequest_orMutable {
-  SearchFacetId_orMutable get facetId;
-  _core.String? get partial;
-  _core.Iterable<_core.String> get validate;
-
-  SearchFacetRequest toFrozen();
-}
-
-/// Deeply immutable.
-final class SearchFacetRequest implements SearchFacetRequest_orMutable {
-  @_core.override
-  final SearchFacetId facetId;
-  @_core.override
-  final _core.String? partial;
-  @_core.override
-  final _core.Iterable<_core.String> validate;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory SearchFacetRequest({
-    required SearchFacetId_orMutable facetId,
-    required _core.String? partial,
-    required _core.Iterable<_core.String> validate,
-  }) => SearchFacetRequest._(
-    facetId.toFrozen(),
-    partial,
-    _skir.internal__frozenCopy(validate),
-  );
-
-  SearchFacetRequest._(
-    this.facetId,
-    this.partial,
-    this.validate,
-  );
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = SearchFacetRequest._(
-    SearchFacetId.defaultInstance,
-    null,
-    _skir.KeyedIterable.empty,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static SearchFacetRequest_mutable mutable() => SearchFacetRequest_mutable._(
-    SearchFacetId.defaultInstance,
-    null,
-    _skir.KeyedIterable.empty,
-  );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  SearchFacetRequest toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  SearchFacetRequest_mutable toMutable() => SearchFacetRequest_mutable._(
-    this.facetId,
-    this.partial,
-    this.validate,
-  );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! SearchFacetRequest) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.facetId,
-    this.partial,
-    this.validate,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `SearchFacetRequest` instances.
-  static _skir.StructSerializer<SearchFacetRequest, SearchFacetRequest_mutable> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "facet_id",
-        "facetId",
-        0,
-        SearchFacetId.serializer,
-        "",
-        (it) => it.facetId,
-        (it, v) => it.facetId = v,
-      );
-      _serializerBuilder.addField(
-        "partial",
-        "partial",
-        1,
-        _skir.Serializers.optional(
-          _skir.Serializers.string,
-        ),
-        "",
-        (it) => it.partial,
-        (it, v) => it.partial = v,
-      );
-      _serializerBuilder.addField(
-        "validate",
-        "validate",
-        2,
-        _skir.Serializers.iterable(
-          _skir.Serializers.string,
-        ),
-        "",
-        (it) => it.validate,
-        (it, v) => it.validate = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/authoring.skir:SearchFacetRequest",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (SearchFacetRequest_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [SearchFacetRequest].
-final class SearchFacetRequest_mutable implements SearchFacetRequest_orMutable {
-  SearchFacetId_orMutable facetId;
-  _core.String? partial;
-  _core.Iterable<_core.String> validate;
-  _skir.internal__UnrecognizedFields? _u;
-
-  SearchFacetRequest_mutable._(
-    this.facetId,
-    this.partial,
-    this.validate,
-  );
-
-  /// If the value of [facetId] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [facetId] and returns it.
-  SearchFacetId_mutable get mutableFacetId {
-    final value = this.facetId;
-    if (value is SearchFacetId_mutable) {
-      return value;
-    } else {
-      return this.facetId = (value as SearchFacetId).toMutable();
-    }
-  }
-
-  /// If the value of [validate] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [validate] and returns it.
-  _core.List<_core.String> get mutableValidate {
-    final value = this.validate;
-    if (value is _skir.internal__MutableList<_core.String>) {
-      return value;
-    } else {
-      return this.validate = _skir.internal__MutableList([...value]);
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  SearchFacetRequest toFrozen() => SearchFacetRequest(
-    facetId: this.facetId,
-    partial: this.partial,
-    validate: this.validate,
-  ).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// struct SearchFacetResult
-// -----------------------------------------------------------------------------
-
-sealed class SearchFacetResult_orMutable {
-  SearchFacetId_orMutable get facetId;
-  _core.Iterable<_core.String> get suggestions;
-  _core.Iterable<_core.String> get accepted;
-  _core.Iterable<_core.String> get rejected;
-
-  SearchFacetResult toFrozen();
-}
-
-/// Deeply immutable.
-final class SearchFacetResult implements SearchFacetResult_orMutable {
-  @_core.override
-  final SearchFacetId facetId;
-  @_core.override
-  final _core.Iterable<_core.String> suggestions;
-  @_core.override
-  final _core.Iterable<_core.String> accepted;
-  @_core.override
-  final _core.Iterable<_core.String> rejected;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory SearchFacetResult({
-    required SearchFacetId_orMutable facetId,
-    required _core.Iterable<_core.String> suggestions,
-    required _core.Iterable<_core.String> accepted,
-    required _core.Iterable<_core.String> rejected,
-  }) => SearchFacetResult._(
-    facetId.toFrozen(),
-    _skir.internal__frozenCopy(suggestions),
-    _skir.internal__frozenCopy(accepted),
-    _skir.internal__frozenCopy(rejected),
-  );
-
-  SearchFacetResult._(
-    this.facetId,
-    this.suggestions,
-    this.accepted,
-    this.rejected,
-  );
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = SearchFacetResult._(
-    SearchFacetId.defaultInstance,
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static SearchFacetResult_mutable mutable() => SearchFacetResult_mutable._(
-    SearchFacetId.defaultInstance,
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-  );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  SearchFacetResult toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  SearchFacetResult_mutable toMutable() => SearchFacetResult_mutable._(
-    this.facetId,
-    this.suggestions,
-    this.accepted,
-    this.rejected,
-  );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! SearchFacetResult) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.facetId,
-    this.suggestions,
-    this.accepted,
-    this.rejected,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `SearchFacetResult` instances.
-  static _skir.StructSerializer<SearchFacetResult, SearchFacetResult_mutable> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "facet_id",
-        "facetId",
-        0,
-        SearchFacetId.serializer,
-        "",
-        (it) => it.facetId,
-        (it, v) => it.facetId = v,
-      );
-      _serializerBuilder.addField(
-        "suggestions",
-        "suggestions",
-        1,
-        _skir.Serializers.iterable(
-          _skir.Serializers.string,
-        ),
-        "",
-        (it) => it.suggestions,
-        (it, v) => it.suggestions = v,
-      );
-      _serializerBuilder.addField(
-        "accepted",
-        "accepted",
-        2,
-        _skir.Serializers.iterable(
-          _skir.Serializers.string,
-        ),
-        "",
-        (it) => it.accepted,
-        (it, v) => it.accepted = v,
-      );
-      _serializerBuilder.addField(
-        "rejected",
-        "rejected",
-        3,
-        _skir.Serializers.iterable(
-          _skir.Serializers.string,
-        ),
-        "",
-        (it) => it.rejected,
-        (it, v) => it.rejected = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/authoring.skir:SearchFacetResult",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (SearchFacetResult_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [SearchFacetResult].
-final class SearchFacetResult_mutable implements SearchFacetResult_orMutable {
-  SearchFacetId_orMutable facetId;
-  _core.Iterable<_core.String> suggestions;
-  _core.Iterable<_core.String> accepted;
-  _core.Iterable<_core.String> rejected;
-  _skir.internal__UnrecognizedFields? _u;
-
-  SearchFacetResult_mutable._(
-    this.facetId,
-    this.suggestions,
-    this.accepted,
-    this.rejected,
-  );
-
-  /// If the value of [facetId] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [facetId] and returns it.
-  SearchFacetId_mutable get mutableFacetId {
-    final value = this.facetId;
-    if (value is SearchFacetId_mutable) {
-      return value;
-    } else {
-      return this.facetId = (value as SearchFacetId).toMutable();
-    }
-  }
-
-  /// If the value of [suggestions] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [suggestions] and returns it.
-  _core.List<_core.String> get mutableSuggestions {
-    final value = this.suggestions;
-    if (value is _skir.internal__MutableList<_core.String>) {
-      return value;
-    } else {
-      return this.suggestions = _skir.internal__MutableList([...value]);
-    }
-  }
-
-  /// If the value of [accepted] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [accepted] and returns it.
-  _core.List<_core.String> get mutableAccepted {
-    final value = this.accepted;
-    if (value is _skir.internal__MutableList<_core.String>) {
-      return value;
-    } else {
-      return this.accepted = _skir.internal__MutableList([...value]);
-    }
-  }
-
-  /// If the value of [rejected] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [rejected] and returns it.
-  _core.List<_core.String> get mutableRejected {
-    final value = this.rejected;
-    if (value is _skir.internal__MutableList<_core.String>) {
-      return value;
-    } else {
-      return this.rejected = _skir.internal__MutableList([...value]);
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  SearchFacetResult toFrozen() => SearchFacetResult(
-    facetId: this.facetId,
-    suggestions: this.suggestions,
-    accepted: this.accepted,
-    rejected: this.rejected,
-  ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -9345,70 +7436,54 @@ final class AuthoringSearchHit_mutable implements AuthoringSearchHit_orMutable {
 }
 
 // -----------------------------------------------------------------------------
-// struct AuthoringSearchSnapshot
+// struct AuthoringSearchResult
 // -----------------------------------------------------------------------------
 
-sealed class AuthoringSearchSnapshot_orMutable {
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable get snapshot;
+sealed class AuthoringSearchResult_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
   _core.Iterable<AuthoringSearchHit_orMutable> get hits;
-  _core.Iterable<SearchFacetResult_orMutable> get facets;
   _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable> get diagnostics;
 
-  AuthoringSearchSnapshot toFrozen();
+  AuthoringSearchResult toFrozen();
 }
 
 /// Deeply immutable.
-final class AuthoringSearchSnapshot implements AuthoringSearchSnapshot_orMutable {
-  @_core.override
-  final _lib_editor_v1_type_catalog.SnapshotId snapshot;
+final class AuthoringSearchResult implements AuthoringSearchResult_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.CatalogGeneration generation;
   @_core.override
   final _core.Iterable<AuthoringSearchHit> hits;
   @_core.override
-  final _core.Iterable<SearchFacetResult> facets;
-  @_core.override
   final _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic> diagnostics;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory AuthoringSearchSnapshot({
-    required _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot,
+  factory AuthoringSearchResult({
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
     required _core.Iterable<AuthoringSearchHit_orMutable> hits,
-    required _core.Iterable<SearchFacetResult_orMutable> facets,
     required _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable> diagnostics,
-  }) => AuthoringSearchSnapshot._(
-    snapshot.toFrozen(),
+  }) => AuthoringSearchResult._(
     generation.toFrozen(),
     _skir.internal__frozenMappedCopy(hits, (it) => it.toFrozen()),
-    _skir.internal__frozenMappedCopy(facets, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(diagnostics, (it) => it.toFrozen()),
   );
 
-  AuthoringSearchSnapshot._(
-    this.snapshot,
+  AuthoringSearchResult._(
     this.generation,
     this.hits,
-    this.facets,
     this.diagnostics,
   );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = AuthoringSearchSnapshot._(
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
+  static final defaultInstance = AuthoringSearchResult._(
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static AuthoringSearchSnapshot_mutable mutable() => AuthoringSearchSnapshot_mutable._(
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
+  static AuthoringSearchResult_mutable mutable() => AuthoringSearchResult_mutable._(
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
   );
@@ -9416,21 +7491,19 @@ final class AuthoringSearchSnapshot implements AuthoringSearchSnapshot_orMutable
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  AuthoringSearchSnapshot toFrozen() => this;
+  AuthoringSearchResult toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  AuthoringSearchSnapshot_mutable toMutable() => AuthoringSearchSnapshot_mutable._(
-    this.snapshot,
+  AuthoringSearchResult_mutable toMutable() => AuthoringSearchResult_mutable._(
     this.generation,
     this.hits,
-    this.facets,
     this.diagnostics,
   );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! AuthoringSearchSnapshot) return false;
+    if (other is! AuthoringSearchResult) return false;
     return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
@@ -9438,32 +7511,21 @@ final class AuthoringSearchSnapshot implements AuthoringSearchSnapshot_orMutable
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
   _core.List get _equality_proxy => [
-    this.snapshot,
     this.generation,
     this.hits,
-    this.facets,
     this.diagnostics,
   ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `AuthoringSearchSnapshot` instances.
-  static _skir.StructSerializer<AuthoringSearchSnapshot, AuthoringSearchSnapshot_mutable> get serializer {
+  /// Serializer for `AuthoringSearchResult` instances.
+  static _skir.StructSerializer<AuthoringSearchResult, AuthoringSearchResult_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
-        "snapshot",
-        "snapshot",
+        "generation",
+        "generation",
         0,
-        _lib_editor_v1_type_catalog.SnapshotId.serializer,
-        "",
-        (it) => it.snapshot,
-        (it, v) => it.snapshot = v,
-      );
-      _serializerBuilder.addField(
-        "generation",
-        "generation",
-        1,
         _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
         "",
         (it) => it.generation,
@@ -9472,7 +7534,7 @@ final class AuthoringSearchSnapshot implements AuthoringSearchSnapshot_orMutable
       _serializerBuilder.addField(
         "hits",
         "hits",
-        2,
+        1,
         _skir.Serializers.iterable(
           AuthoringSearchHit.serializer,
         ),
@@ -9481,20 +7543,9 @@ final class AuthoringSearchSnapshot implements AuthoringSearchSnapshot_orMutable
         (it, v) => it.hits = v,
       );
       _serializerBuilder.addField(
-        "facets",
-        "facets",
-        3,
-        _skir.Serializers.iterable(
-          SearchFacetResult.serializer,
-        ),
-        "",
-        (it) => it.facets,
-        (it, v) => it.facets = v,
-      );
-      _serializerBuilder.addField(
         "diagnostics",
         "diagnostics",
-        4,
+        2,
         _skir.Serializers.iterable(
           _lib_editor_v1_diagnostic.Diagnostic.serializer,
         ),
@@ -9508,43 +7559,28 @@ final class AuthoringSearchSnapshot implements AuthoringSearchSnapshot_orMutable
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/authoring.skir:AuthoringSearchSnapshot",
+    recordId: "editor/v1/authoring.skir:AuthoringSearchResult",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (AuthoringSearchSnapshot_mutable it) => it.toFrozen(),
+    toFrozen: (AuthoringSearchResult_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [AuthoringSearchSnapshot].
-final class AuthoringSearchSnapshot_mutable implements AuthoringSearchSnapshot_orMutable {
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot;
+/// Mutable version of [AuthoringSearchResult].
+final class AuthoringSearchResult_mutable implements AuthoringSearchResult_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation;
   _core.Iterable<AuthoringSearchHit_orMutable> hits;
-  _core.Iterable<SearchFacetResult_orMutable> facets;
   _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable> diagnostics;
   _skir.internal__UnrecognizedFields? _u;
 
-  AuthoringSearchSnapshot_mutable._(
-    this.snapshot,
+  AuthoringSearchResult_mutable._(
     this.generation,
     this.hits,
-    this.facets,
     this.diagnostics,
   );
-
-  /// If the value of [snapshot] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [snapshot] and returns it.
-  _lib_editor_v1_type_catalog.SnapshotId_mutable get mutableSnapshot {
-    final value = this.snapshot;
-    if (value is _lib_editor_v1_type_catalog.SnapshotId_mutable) {
-      return value;
-    } else {
-      return this.snapshot = (value as _lib_editor_v1_type_catalog.SnapshotId).toMutable();
-    }
-  }
 
   /// If the value of [generation] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
@@ -9568,17 +7604,6 @@ final class AuthoringSearchSnapshot_mutable implements AuthoringSearchSnapshot_o
     }
   }
 
-  /// If the value of [facets] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [facets] and returns it.
-  _core.List<SearchFacetResult_orMutable> get mutableFacets {
-    final value = this.facets;
-    if (value is _skir.internal__MutableList<SearchFacetResult_orMutable>) {
-      return value;
-    } else {
-      return this.facets = _skir.internal__MutableList([...value]);
-    }
-  }
-
   /// If the value of [diagnostics] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [diagnostics] and returns it.
   _core.List<_lib_editor_v1_diagnostic.Diagnostic_orMutable> get mutableDiagnostics {
@@ -9592,11 +7617,9 @@ final class AuthoringSearchSnapshot_mutable implements AuthoringSearchSnapshot_o
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  AuthoringSearchSnapshot toFrozen() => AuthoringSearchSnapshot(
-    snapshot: this.snapshot,
+  AuthoringSearchResult toFrozen() => AuthoringSearchResult(
     generation: this.generation,
     hits: this.hits,
-    facets: this.facets,
     diagnostics: this.diagnostics,
   ).._u = this._u;
 }
@@ -10118,74 +8141,65 @@ final class CollectionProjectionDefinition_mutable implements CollectionProjecti
 }
 
 // -----------------------------------------------------------------------------
-// struct AuthoringSnapshotTransferChunk
+// struct AuthoringStateTransferChunk
 // -----------------------------------------------------------------------------
 
-sealed class AuthoringSnapshotTransferChunk_orMutable {
+sealed class AuthoringStateTransferChunk_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable get snapshot;
   _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable get transfer;
 
-  AuthoringSnapshotTransferChunk toFrozen();
+  AuthoringStateTransferChunk toFrozen();
 }
 
 /// Deeply immutable.
-final class AuthoringSnapshotTransferChunk implements AuthoringSnapshotTransferChunk_orMutable {
+final class AuthoringStateTransferChunk implements AuthoringStateTransferChunk_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.CatalogGeneration generation;
-  @_core.override
-  final _lib_editor_v1_type_catalog.SnapshotId snapshot;
   @_core.override
   final _lib_kernel_v1_bounded_transfer.BoundedTransferChunk transfer;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory AuthoringSnapshotTransferChunk({
+  factory AuthoringStateTransferChunk({
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
-    required _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot,
     required _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable transfer,
-  }) => AuthoringSnapshotTransferChunk._(
+  }) => AuthoringStateTransferChunk._(
     generation.toFrozen(),
-    snapshot.toFrozen(),
     transfer.toFrozen(),
   );
 
-  AuthoringSnapshotTransferChunk._(
+  AuthoringStateTransferChunk._(
     this.generation,
-    this.snapshot,
     this.transfer,
   );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = AuthoringSnapshotTransferChunk._(
+  static final defaultInstance = AuthoringStateTransferChunk._(
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
     _lib_kernel_v1_bounded_transfer.BoundedTransferChunk.defaultInstance,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static AuthoringSnapshotTransferChunk_mutable mutable() => AuthoringSnapshotTransferChunk_mutable._(
+  static AuthoringStateTransferChunk_mutable mutable() => AuthoringStateTransferChunk_mutable._(
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
     _lib_kernel_v1_bounded_transfer.BoundedTransferChunk.defaultInstance,
   );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  AuthoringSnapshotTransferChunk toFrozen() => this;
+  AuthoringStateTransferChunk toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  AuthoringSnapshotTransferChunk_mutable toMutable() => AuthoringSnapshotTransferChunk_mutable._(
+  AuthoringStateTransferChunk_mutable toMutable() => AuthoringStateTransferChunk_mutable._(
     this.generation,
-    this.snapshot,
     this.transfer,
   );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! AuthoringSnapshotTransferChunk) return false;
+    if (other is! AuthoringStateTransferChunk) return false;
     return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
@@ -10194,15 +8208,14 @@ final class AuthoringSnapshotTransferChunk implements AuthoringSnapshotTransferC
 
   _core.List get _equality_proxy => [
     this.generation,
-    this.snapshot,
     this.transfer,
   ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `AuthoringSnapshotTransferChunk` instances.
-  static _skir.StructSerializer<AuthoringSnapshotTransferChunk, AuthoringSnapshotTransferChunk_mutable> get serializer {
+  /// Serializer for `AuthoringStateTransferChunk` instances.
+  static _skir.StructSerializer<AuthoringStateTransferChunk, AuthoringStateTransferChunk_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "generation",
@@ -10214,18 +8227,9 @@ final class AuthoringSnapshotTransferChunk implements AuthoringSnapshotTransferC
         (it, v) => it.generation = v,
       );
       _serializerBuilder.addField(
-        "snapshot",
-        "snapshot",
+        "transfer",
+        "transfer",
         1,
-        _lib_editor_v1_type_catalog.SnapshotId.serializer,
-        "",
-        (it) => it.snapshot,
-        (it, v) => it.snapshot = v,
-      );
-      _serializerBuilder.addField(
-        "transfer",
-        "transfer",
-        2,
         _lib_kernel_v1_bounded_transfer.BoundedTransferChunk.serializer,
         "",
         (it) => it.transfer,
@@ -10237,26 +8241,24 @@ final class AuthoringSnapshotTransferChunk implements AuthoringSnapshotTransferC
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/authoring.skir:AuthoringSnapshotTransferChunk",
+    recordId: "editor/v1/authoring.skir:AuthoringStateTransferChunk",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (AuthoringSnapshotTransferChunk_mutable it) => it.toFrozen(),
+    toFrozen: (AuthoringStateTransferChunk_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [AuthoringSnapshotTransferChunk].
-final class AuthoringSnapshotTransferChunk_mutable implements AuthoringSnapshotTransferChunk_orMutable {
+/// Mutable version of [AuthoringStateTransferChunk].
+final class AuthoringStateTransferChunk_mutable implements AuthoringStateTransferChunk_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation;
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot;
   _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable transfer;
   _skir.internal__UnrecognizedFields? _u;
 
-  AuthoringSnapshotTransferChunk_mutable._(
+  AuthoringStateTransferChunk_mutable._(
     this.generation,
-    this.snapshot,
     this.transfer,
   );
 
@@ -10268,17 +8270,6 @@ final class AuthoringSnapshotTransferChunk_mutable implements AuthoringSnapshotT
       return value;
     } else {
       return this.generation = (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
-    }
-  }
-
-  /// If the value of [snapshot] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [snapshot] and returns it.
-  _lib_editor_v1_type_catalog.SnapshotId_mutable get mutableSnapshot {
-    final value = this.snapshot;
-    if (value is _lib_editor_v1_type_catalog.SnapshotId_mutable) {
-      return value;
-    } else {
-      return this.snapshot = (value as _lib_editor_v1_type_catalog.SnapshotId).toMutable();
     }
   }
 
@@ -10295,9 +8286,8 @@ final class AuthoringSnapshotTransferChunk_mutable implements AuthoringSnapshotT
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  AuthoringSnapshotTransferChunk toFrozen() => AuthoringSnapshotTransferChunk(
+  AuthoringStateTransferChunk toFrozen() => AuthoringStateTransferChunk(
     generation: this.generation,
-    snapshot: this.snapshot,
     transfer: this.transfer,
   ).._u = this._u;
 }
@@ -10397,7 +8387,6 @@ enum _AuthoringTransferUnavailableReason_consts implements AuthoringTransferUnav
 
 sealed class AuthoringTransferUnavailable_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable get snapshot;
   AuthoringTransferUnavailableReason get reason;
   _core.int get encodedSize;
   _core.int get maxEncodedSize;
@@ -10410,8 +8399,6 @@ final class AuthoringTransferUnavailable implements AuthoringTransferUnavailable
   @_core.override
   final _lib_editor_v1_type_catalog.CatalogGeneration generation;
   @_core.override
-  final _lib_editor_v1_type_catalog.SnapshotId snapshot;
-  @_core.override
   final AuthoringTransferUnavailableReason reason;
   @_core.override
   final _core.int encodedSize;
@@ -10421,13 +8408,11 @@ final class AuthoringTransferUnavailable implements AuthoringTransferUnavailable
 
   factory AuthoringTransferUnavailable({
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
-    required _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot,
     required AuthoringTransferUnavailableReason reason,
     required _core.int encodedSize,
     required _core.int maxEncodedSize,
   }) => AuthoringTransferUnavailable._(
     generation.toFrozen(),
-    snapshot.toFrozen(),
     reason,
     encodedSize,
     maxEncodedSize,
@@ -10435,7 +8420,6 @@ final class AuthoringTransferUnavailable implements AuthoringTransferUnavailable
 
   AuthoringTransferUnavailable._(
     this.generation,
-    this.snapshot,
     this.reason,
     this.encodedSize,
     this.maxEncodedSize,
@@ -10444,7 +8428,6 @@ final class AuthoringTransferUnavailable implements AuthoringTransferUnavailable
   /// Default instance with all fields set to their default values.
   static final defaultInstance = AuthoringTransferUnavailable._(
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
     AuthoringTransferUnavailableReason.unknown,
     0,
     0,
@@ -10454,7 +8437,6 @@ final class AuthoringTransferUnavailable implements AuthoringTransferUnavailable
   /// Fields are initialized to their default values.
   static AuthoringTransferUnavailable_mutable mutable() => AuthoringTransferUnavailable_mutable._(
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
     AuthoringTransferUnavailableReason.unknown,
     0,
     0,
@@ -10468,7 +8450,6 @@ final class AuthoringTransferUnavailable implements AuthoringTransferUnavailable
   /// Returns a mutable shallow copy of this instance.
   AuthoringTransferUnavailable_mutable toMutable() => AuthoringTransferUnavailable_mutable._(
     this.generation,
-    this.snapshot,
     this.reason,
     this.encodedSize,
     this.maxEncodedSize,
@@ -10486,7 +8467,6 @@ final class AuthoringTransferUnavailable implements AuthoringTransferUnavailable
 
   _core.List get _equality_proxy => [
     this.generation,
-    this.snapshot,
     this.reason,
     this.encodedSize,
     this.maxEncodedSize,
@@ -10508,18 +8488,9 @@ final class AuthoringTransferUnavailable implements AuthoringTransferUnavailable
         (it, v) => it.generation = v,
       );
       _serializerBuilder.addField(
-        "snapshot",
-        "snapshot",
+        "reason",
+        "reason",
         1,
-        _lib_editor_v1_type_catalog.SnapshotId.serializer,
-        "",
-        (it) => it.snapshot,
-        (it, v) => it.snapshot = v,
-      );
-      _serializerBuilder.addField(
-        "reason",
-        "reason",
-        2,
         AuthoringTransferUnavailableReason.serializer,
         "",
         (it) => it.reason,
@@ -10528,7 +8499,7 @@ final class AuthoringTransferUnavailable implements AuthoringTransferUnavailable
       _serializerBuilder.addField(
         "encoded_size",
         "encodedSize",
-        3,
+        2,
         _skir.Serializers.int64,
         "",
         (it) => it.encodedSize,
@@ -10537,7 +8508,7 @@ final class AuthoringTransferUnavailable implements AuthoringTransferUnavailable
       _serializerBuilder.addField(
         "max_encoded_size",
         "maxEncodedSize",
-        4,
+        3,
         _skir.Serializers.int64,
         "",
         (it) => it.maxEncodedSize,
@@ -10562,7 +8533,6 @@ final class AuthoringTransferUnavailable implements AuthoringTransferUnavailable
 /// Mutable version of [AuthoringTransferUnavailable].
 final class AuthoringTransferUnavailable_mutable implements AuthoringTransferUnavailable_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation;
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot;
   AuthoringTransferUnavailableReason reason;
   _core.int encodedSize;
   _core.int maxEncodedSize;
@@ -10570,7 +8540,6 @@ final class AuthoringTransferUnavailable_mutable implements AuthoringTransferUna
 
   AuthoringTransferUnavailable_mutable._(
     this.generation,
-    this.snapshot,
     this.reason,
     this.encodedSize,
     this.maxEncodedSize,
@@ -10587,22 +8556,10 @@ final class AuthoringTransferUnavailable_mutable implements AuthoringTransferUna
     }
   }
 
-  /// If the value of [snapshot] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [snapshot] and returns it.
-  _lib_editor_v1_type_catalog.SnapshotId_mutable get mutableSnapshot {
-    final value = this.snapshot;
-    if (value is _lib_editor_v1_type_catalog.SnapshotId_mutable) {
-      return value;
-    } else {
-      return this.snapshot = (value as _lib_editor_v1_type_catalog.SnapshotId).toMutable();
-    }
-  }
-
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   AuthoringTransferUnavailable toFrozen() => AuthoringTransferUnavailable(
     generation: this.generation,
-    snapshot: this.snapshot,
     reason: this.reason,
     encodedSize: this.encodedSize,
     maxEncodedSize: this.maxEncodedSize,
@@ -10610,649 +8567,65 @@ final class AuthoringTransferUnavailable_mutable implements AuthoringTransferUna
 }
 
 // -----------------------------------------------------------------------------
-// struct AuthoringChangedTransferChunk
+// struct QueryAuthoringStateRequest
 // -----------------------------------------------------------------------------
 
-sealed class AuthoringChangedTransferChunk_orMutable {
+sealed class QueryAuthoringStateRequest_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable get previousSnapshot;
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable get snapshot;
-  _lib_editor_v1_checking.FindingsToken_orMutable get previousFindings;
-  _lib_editor_v1_checking.FindingsToken_orMutable get findingsToken;
-  _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable get transfer;
-
-  AuthoringChangedTransferChunk toFrozen();
-}
-
-/// Deeply immutable.
-final class AuthoringChangedTransferChunk implements AuthoringChangedTransferChunk_orMutable {
-  @_core.override
-  final _lib_editor_v1_type_catalog.CatalogGeneration generation;
-  @_core.override
-  final _lib_editor_v1_type_catalog.SnapshotId previousSnapshot;
-  @_core.override
-  final _lib_editor_v1_type_catalog.SnapshotId snapshot;
-  @_core.override
-  final _lib_editor_v1_checking.FindingsToken previousFindings;
-  @_core.override
-  final _lib_editor_v1_checking.FindingsToken findingsToken;
-  @_core.override
-  final _lib_kernel_v1_bounded_transfer.BoundedTransferChunk transfer;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory AuthoringChangedTransferChunk({
-    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
-    required _lib_editor_v1_type_catalog.SnapshotId_orMutable previousSnapshot,
-    required _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot,
-    required _lib_editor_v1_checking.FindingsToken_orMutable previousFindings,
-    required _lib_editor_v1_checking.FindingsToken_orMutable findingsToken,
-    required _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable transfer,
-  }) => AuthoringChangedTransferChunk._(
-    generation.toFrozen(),
-    previousSnapshot.toFrozen(),
-    snapshot.toFrozen(),
-    previousFindings.toFrozen(),
-    findingsToken.toFrozen(),
-    transfer.toFrozen(),
-  );
-
-  AuthoringChangedTransferChunk._(
-    this.generation,
-    this.previousSnapshot,
-    this.snapshot,
-    this.previousFindings,
-    this.findingsToken,
-    this.transfer,
-  );
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = AuthoringChangedTransferChunk._(
-    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
-    _lib_editor_v1_checking.FindingsToken.defaultInstance,
-    _lib_editor_v1_checking.FindingsToken.defaultInstance,
-    _lib_kernel_v1_bounded_transfer.BoundedTransferChunk.defaultInstance,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static AuthoringChangedTransferChunk_mutable mutable() => AuthoringChangedTransferChunk_mutable._(
-    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
-    _lib_editor_v1_checking.FindingsToken.defaultInstance,
-    _lib_editor_v1_checking.FindingsToken.defaultInstance,
-    _lib_kernel_v1_bounded_transfer.BoundedTransferChunk.defaultInstance,
-  );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  AuthoringChangedTransferChunk toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  AuthoringChangedTransferChunk_mutable toMutable() => AuthoringChangedTransferChunk_mutable._(
-    this.generation,
-    this.previousSnapshot,
-    this.snapshot,
-    this.previousFindings,
-    this.findingsToken,
-    this.transfer,
-  );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! AuthoringChangedTransferChunk) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.generation,
-    this.previousSnapshot,
-    this.snapshot,
-    this.previousFindings,
-    this.findingsToken,
-    this.transfer,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `AuthoringChangedTransferChunk` instances.
-  static _skir.StructSerializer<AuthoringChangedTransferChunk, AuthoringChangedTransferChunk_mutable> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "generation",
-        "generation",
-        0,
-        _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
-        "",
-        (it) => it.generation,
-        (it, v) => it.generation = v,
-      );
-      _serializerBuilder.addField(
-        "previous_snapshot",
-        "previousSnapshot",
-        1,
-        _lib_editor_v1_type_catalog.SnapshotId.serializer,
-        "",
-        (it) => it.previousSnapshot,
-        (it, v) => it.previousSnapshot = v,
-      );
-      _serializerBuilder.addField(
-        "snapshot",
-        "snapshot",
-        2,
-        _lib_editor_v1_type_catalog.SnapshotId.serializer,
-        "",
-        (it) => it.snapshot,
-        (it, v) => it.snapshot = v,
-      );
-      _serializerBuilder.addField(
-        "previous_findings",
-        "previousFindings",
-        3,
-        _lib_editor_v1_checking.FindingsToken.serializer,
-        "",
-        (it) => it.previousFindings,
-        (it, v) => it.previousFindings = v,
-      );
-      _serializerBuilder.addField(
-        "findings_token",
-        "findingsToken",
-        4,
-        _lib_editor_v1_checking.FindingsToken.serializer,
-        "",
-        (it) => it.findingsToken,
-        (it, v) => it.findingsToken = v,
-      );
-      _serializerBuilder.addField(
-        "transfer",
-        "transfer",
-        5,
-        _lib_kernel_v1_bounded_transfer.BoundedTransferChunk.serializer,
-        "",
-        (it) => it.transfer,
-        (it, v) => it.transfer = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/authoring.skir:AuthoringChangedTransferChunk",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (AuthoringChangedTransferChunk_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [AuthoringChangedTransferChunk].
-final class AuthoringChangedTransferChunk_mutable implements AuthoringChangedTransferChunk_orMutable {
-  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation;
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable previousSnapshot;
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot;
-  _lib_editor_v1_checking.FindingsToken_orMutable previousFindings;
-  _lib_editor_v1_checking.FindingsToken_orMutable findingsToken;
-  _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable transfer;
-  _skir.internal__UnrecognizedFields? _u;
-
-  AuthoringChangedTransferChunk_mutable._(
-    this.generation,
-    this.previousSnapshot,
-    this.snapshot,
-    this.previousFindings,
-    this.findingsToken,
-    this.transfer,
-  );
-
-  /// If the value of [generation] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
-  _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableGeneration {
-    final value = this.generation;
-    if (value is _lib_editor_v1_type_catalog.CatalogGeneration_mutable) {
-      return value;
-    } else {
-      return this.generation = (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
-    }
-  }
-
-  /// If the value of [previousSnapshot] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [previousSnapshot] and returns it.
-  _lib_editor_v1_type_catalog.SnapshotId_mutable get mutablePreviousSnapshot {
-    final value = this.previousSnapshot;
-    if (value is _lib_editor_v1_type_catalog.SnapshotId_mutable) {
-      return value;
-    } else {
-      return this.previousSnapshot = (value as _lib_editor_v1_type_catalog.SnapshotId).toMutable();
-    }
-  }
-
-  /// If the value of [snapshot] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [snapshot] and returns it.
-  _lib_editor_v1_type_catalog.SnapshotId_mutable get mutableSnapshot {
-    final value = this.snapshot;
-    if (value is _lib_editor_v1_type_catalog.SnapshotId_mutable) {
-      return value;
-    } else {
-      return this.snapshot = (value as _lib_editor_v1_type_catalog.SnapshotId).toMutable();
-    }
-  }
-
-  /// If the value of [previousFindings] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [previousFindings] and returns it.
-  _lib_editor_v1_checking.FindingsToken_mutable get mutablePreviousFindings {
-    final value = this.previousFindings;
-    if (value is _lib_editor_v1_checking.FindingsToken_mutable) {
-      return value;
-    } else {
-      return this.previousFindings = (value as _lib_editor_v1_checking.FindingsToken).toMutable();
-    }
-  }
-
-  /// If the value of [findingsToken] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [findingsToken] and returns it.
-  _lib_editor_v1_checking.FindingsToken_mutable get mutableFindingsToken {
-    final value = this.findingsToken;
-    if (value is _lib_editor_v1_checking.FindingsToken_mutable) {
-      return value;
-    } else {
-      return this.findingsToken = (value as _lib_editor_v1_checking.FindingsToken).toMutable();
-    }
-  }
-
-  /// If the value of [transfer] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [transfer] and returns it.
-  _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_mutable get mutableTransfer {
-    final value = this.transfer;
-    if (value is _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_mutable) {
-      return value;
-    } else {
-      return this.transfer = (value as _lib_kernel_v1_bounded_transfer.BoundedTransferChunk).toMutable();
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  AuthoringChangedTransferChunk toFrozen() => AuthoringChangedTransferChunk(
-    generation: this.generation,
-    previousSnapshot: this.previousSnapshot,
-    snapshot: this.snapshot,
-    previousFindings: this.previousFindings,
-    findingsToken: this.findingsToken,
-    transfer: this.transfer,
-  ).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// enum AuthoringChangedTransferResult
-// -----------------------------------------------------------------------------
-
-/// To switch on the variants:
-///   ```
-///   switch (e) {
-///     case AuthoringChangedTransferResult_unknown(): { ... }
-///     case AuthoringChangedTransferResult_chunk(:var value): { ... }
-///     case AuthoringChangedTransferResult_unavailable(:var value): { ... }
-///   }
-///   ```
-///
-/// Deeply immutable.
-sealed class AuthoringChangedTransferResult {
-  /// Constant indicating an unknown `AuthoringChangedTransferResult`.
-  /// Default value for fields of type `AuthoringChangedTransferResult`.
-  static const AuthoringChangedTransferResult unknown = AuthoringChangedTransferResult_unknown._instance;
-
-  /// Create a 'chunk' variant wrapping around the given value.
-  factory AuthoringChangedTransferResult.wrapChunk(
-    AuthoringChangedTransferChunk value
-  ) => AuthoringChangedTransferResult_chunkWrapper._(value);
-
-  /// Same as `wrapChunk(AuthoringChangedTransferChunk(...))`.
-  factory AuthoringChangedTransferResult.createChunk({
-    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
-    required _lib_editor_v1_type_catalog.SnapshotId_orMutable previousSnapshot,
-    required _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot,
-    required _lib_editor_v1_checking.FindingsToken_orMutable previousFindings,
-    required _lib_editor_v1_checking.FindingsToken_orMutable findingsToken,
-    required _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable transfer,
-  }) => AuthoringChangedTransferResult.wrapChunk(
-    AuthoringChangedTransferChunk(
-      generation: generation,
-      previousSnapshot: previousSnapshot,
-      snapshot: snapshot,
-      previousFindings: previousFindings,
-      findingsToken: findingsToken,
-      transfer: transfer,
-    )
-  );
-
-  /// Create a 'unavailable' variant wrapping around the given value.
-  factory AuthoringChangedTransferResult.wrapUnavailable(
-    AuthoringTransferUnavailable value
-  ) => AuthoringChangedTransferResult_unavailableWrapper._(value);
-
-  /// Same as `wrapUnavailable(AuthoringTransferUnavailable(...))`.
-  factory AuthoringChangedTransferResult.createUnavailable({
-    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
-    required _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot,
-    required AuthoringTransferUnavailableReason reason,
-    required _core.int encodedSize,
-    required _core.int maxEncodedSize,
-  }) => AuthoringChangedTransferResult.wrapUnavailable(
-    AuthoringTransferUnavailable(
-      generation: generation,
-      snapshot: snapshot,
-      reason: reason,
-      encodedSize: encodedSize,
-      maxEncodedSize: maxEncodedSize,
-    )
-  );
-
-  /// Returns the kind of variant held by this AuthoringChangedTransferResult.
-  AuthoringChangedTransferResult_kind get kind;
-
-  /// Serializer for `AuthoringChangedTransferResult` instances.
-  static _skir.EnumSerializer<AuthoringChangedTransferResult> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addWrapperVariant(
-        1,
-        "chunk",
-        "wrapChunk",
-        AuthoringChangedTransferChunk.serializer,
-        "",
-        AuthoringChangedTransferResult_chunkWrapper._,
-        (it) => it.value,
-        ordinal: AuthoringChangedTransferResult_kind.chunkWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        2,
-        "unavailable",
-        "wrapUnavailable",
-        AuthoringTransferUnavailable.serializer,
-        "",
-        AuthoringChangedTransferResult_unavailableWrapper._,
-        (it) => it.value,
-        ordinal: AuthoringChangedTransferResult_kind.unavailableWrapper._ordinal,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/authoring.skir:AuthoringChangedTransferResult",
-    doc: "",
-    unknownInstance: AuthoringChangedTransferResult_unknown._instance,
-    enumInstance: AuthoringChangedTransferResult.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: AuthoringChangedTransferResult_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
-}
-
-/// The kind of variant held by a `AuthoringChangedTransferResult`.
-enum AuthoringChangedTransferResult_kind {
-  unknown(0),
-  chunkWrapper(1),
-  unavailableWrapper(2);
-
-  final _core.int _ordinal;
-
-  const AuthoringChangedTransferResult_kind(this._ordinal);
-}
-
-final class AuthoringChangedTransferResult_unknown implements AuthoringChangedTransferResult {
-  static const _instance = AuthoringChangedTransferResult_unknown._();
-
-  final _skir.internal__UnrecognizedVariant? _u;
-
-  const AuthoringChangedTransferResult_unknown._() : _u = null;
-  AuthoringChangedTransferResult_unknown._unrecognized(this._u);
-
-  @_core.override
-  AuthoringChangedTransferResult_kind get kind => AuthoringChangedTransferResult_kind.unknown;
-  @_core.override
-  _core.bool operator ==(other) => other is AuthoringChangedTransferResult_unknown;
-  @_core.override
-  _core.int get hashCode => 8118964;
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, AuthoringChangedTransferResult.serializer);
-}
-
-sealed class _AuthoringChangedTransferResult_wrapper implements AuthoringChangedTransferResult {
-  _core.dynamic get value;
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (other is! _AuthoringChangedTransferResult_wrapper) return false;
-    return kind == other.kind && value == other.value;
-  }
-
-  @_core.override
-  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, AuthoringChangedTransferResult.serializer);
-}
-
-final class AuthoringChangedTransferResult_chunkWrapper extends _AuthoringChangedTransferResult_wrapper {
-  final AuthoringChangedTransferChunk value;
-
-  AuthoringChangedTransferResult_chunkWrapper._(this.value);
-
-  @_core.override
-  AuthoringChangedTransferResult_kind get kind => AuthoringChangedTransferResult_kind.chunkWrapper;
-}
-
-final class AuthoringChangedTransferResult_unavailableWrapper extends _AuthoringChangedTransferResult_wrapper {
-  final AuthoringTransferUnavailable value;
-
-  AuthoringChangedTransferResult_unavailableWrapper._(this.value);
-
-  @_core.override
-  AuthoringChangedTransferResult_kind get kind => AuthoringChangedTransferResult_kind.unavailableWrapper;
-}
-
-// -----------------------------------------------------------------------------
-// struct AuthoringFindingsReplacement
-// -----------------------------------------------------------------------------
-
-sealed class AuthoringFindingsReplacement_orMutable {
-  _core.Iterable<_lib_editor_v1_checking.FindingSet_orMutable> get findings;
-
-  AuthoringFindingsReplacement toFrozen();
-}
-
-/// Deeply immutable.
-final class AuthoringFindingsReplacement implements AuthoringFindingsReplacement_orMutable {
-  @_core.override
-  final _core.Iterable<_lib_editor_v1_checking.FindingSet> findings;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory AuthoringFindingsReplacement({
-    required _core.Iterable<_lib_editor_v1_checking.FindingSet_orMutable> findings,
-  }) => AuthoringFindingsReplacement._(
-    _skir.internal__frozenMappedCopy(findings, (it) => it.toFrozen()),
-  );
-
-  AuthoringFindingsReplacement._(
-    this.findings,
-  );
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = AuthoringFindingsReplacement._(
-    _skir.KeyedIterable.empty,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static AuthoringFindingsReplacement_mutable mutable() => AuthoringFindingsReplacement_mutable._(
-    _skir.KeyedIterable.empty,
-  );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  AuthoringFindingsReplacement toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  AuthoringFindingsReplacement_mutable toMutable() => AuthoringFindingsReplacement_mutable._(
-    this.findings,
-  );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! AuthoringFindingsReplacement) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.findings,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `AuthoringFindingsReplacement` instances.
-  static _skir.StructSerializer<AuthoringFindingsReplacement, AuthoringFindingsReplacement_mutable> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "findings",
-        "findings",
-        0,
-        _skir.Serializers.iterable(
-          _lib_editor_v1_checking.FindingSet.serializer,
-        ),
-        "",
-        (it) => it.findings,
-        (it, v) => it.findings = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/authoring.skir:AuthoringFindingsReplacement",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (AuthoringFindingsReplacement_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [AuthoringFindingsReplacement].
-final class AuthoringFindingsReplacement_mutable implements AuthoringFindingsReplacement_orMutable {
-  _core.Iterable<_lib_editor_v1_checking.FindingSet_orMutable> findings;
-  _skir.internal__UnrecognizedFields? _u;
-
-  AuthoringFindingsReplacement_mutable._(
-    this.findings,
-  );
-
-  /// If the value of [findings] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [findings] and returns it.
-  _core.List<_lib_editor_v1_checking.FindingSet_orMutable> get mutableFindings {
-    final value = this.findings;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_checking.FindingSet_orMutable>) {
-      return value;
-    } else {
-      return this.findings = _skir.internal__MutableList([...value]);
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  AuthoringFindingsReplacement toFrozen() => AuthoringFindingsReplacement(
-    findings: this.findings,
-  ).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
-// struct QueryAuthoringSnapshotRequest
-// -----------------------------------------------------------------------------
-
-sealed class QueryAuthoringSnapshotRequest_orMutable {
-  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable? get snapshot;
   _core.String get transferId;
 
-  QueryAuthoringSnapshotRequest toFrozen();
+  QueryAuthoringStateRequest toFrozen();
 }
 
 /// Deeply immutable.
-final class QueryAuthoringSnapshotRequest implements QueryAuthoringSnapshotRequest_orMutable {
+final class QueryAuthoringStateRequest implements QueryAuthoringStateRequest_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.CatalogGeneration generation;
-  @_core.override
-  final _lib_editor_v1_type_catalog.SnapshotId? snapshot;
   @_core.override
   final _core.String transferId;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory QueryAuthoringSnapshotRequest({
+  factory QueryAuthoringStateRequest({
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
-    required _lib_editor_v1_type_catalog.SnapshotId_orMutable? snapshot,
     required _core.String transferId,
-  }) => QueryAuthoringSnapshotRequest._(
+  }) => QueryAuthoringStateRequest._(
     generation.toFrozen(),
-    (snapshot != null) ? snapshot.toFrozen() : null,
     transferId,
   );
 
-  QueryAuthoringSnapshotRequest._(
+  QueryAuthoringStateRequest._(
     this.generation,
-    this.snapshot,
     this.transferId,
   );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = QueryAuthoringSnapshotRequest._(
+  static final defaultInstance = QueryAuthoringStateRequest._(
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    null,
     "",
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static QueryAuthoringSnapshotRequest_mutable mutable() => QueryAuthoringSnapshotRequest_mutable._(
+  static QueryAuthoringStateRequest_mutable mutable() => QueryAuthoringStateRequest_mutable._(
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    null,
     "",
   );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  QueryAuthoringSnapshotRequest toFrozen() => this;
+  QueryAuthoringStateRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  QueryAuthoringSnapshotRequest_mutable toMutable() => QueryAuthoringSnapshotRequest_mutable._(
+  QueryAuthoringStateRequest_mutable toMutable() => QueryAuthoringStateRequest_mutable._(
     this.generation,
-    this.snapshot,
     this.transferId,
   );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! QueryAuthoringSnapshotRequest) return false;
+    if (other is! QueryAuthoringStateRequest) return false;
     return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
   }
 
@@ -11261,15 +8634,14 @@ final class QueryAuthoringSnapshotRequest implements QueryAuthoringSnapshotReque
 
   _core.List get _equality_proxy => [
     this.generation,
-    this.snapshot,
     this.transferId,
   ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `QueryAuthoringSnapshotRequest` instances.
-  static _skir.StructSerializer<QueryAuthoringSnapshotRequest, QueryAuthoringSnapshotRequest_mutable> get serializer {
+  /// Serializer for `QueryAuthoringStateRequest` instances.
+  static _skir.StructSerializer<QueryAuthoringStateRequest, QueryAuthoringStateRequest_mutable> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "generation",
@@ -11281,20 +8653,9 @@ final class QueryAuthoringSnapshotRequest implements QueryAuthoringSnapshotReque
         (it, v) => it.generation = v,
       );
       _serializerBuilder.addField(
-        "snapshot",
-        "snapshot",
-        1,
-        _skir.Serializers.optional(
-          _lib_editor_v1_type_catalog.SnapshotId.serializer,
-        ),
-        "",
-        (it) => it.snapshot,
-        (it, v) => it.snapshot = v,
-      );
-      _serializerBuilder.addField(
         "transfer_id",
         "transferId",
-        2,
+        1,
         _skir.Serializers.string,
         "",
         (it) => it.transferId,
@@ -11306,26 +8667,24 @@ final class QueryAuthoringSnapshotRequest implements QueryAuthoringSnapshotReque
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/authoring.skir:QueryAuthoringSnapshotRequest",
+    recordId: "editor/v1/authoring.skir:QueryAuthoringStateRequest",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (QueryAuthoringSnapshotRequest_mutable it) => it.toFrozen(),
+    toFrozen: (QueryAuthoringStateRequest_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [QueryAuthoringSnapshotRequest].
-final class QueryAuthoringSnapshotRequest_mutable implements QueryAuthoringSnapshotRequest_orMutable {
+/// Mutable version of [QueryAuthoringStateRequest].
+final class QueryAuthoringStateRequest_mutable implements QueryAuthoringStateRequest_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation;
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable? snapshot;
   _core.String transferId;
   _skir.internal__UnrecognizedFields? _u;
 
-  QueryAuthoringSnapshotRequest_mutable._(
+  QueryAuthoringStateRequest_mutable._(
     this.generation,
-    this.snapshot,
     this.transferId,
   );
 
@@ -11342,82 +8701,77 @@ final class QueryAuthoringSnapshotRequest_mutable implements QueryAuthoringSnaps
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  QueryAuthoringSnapshotRequest toFrozen() => QueryAuthoringSnapshotRequest(
+  QueryAuthoringStateRequest toFrozen() => QueryAuthoringStateRequest(
     generation: this.generation,
-    snapshot: this.snapshot,
     transferId: this.transferId,
   ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
-// enum QueryAuthoringSnapshotResponse
+// enum QueryAuthoringStateResponse
 // -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
-///     case QueryAuthoringSnapshotResponse_unknown(): { ... }
-///     case QueryAuthoringSnapshotResponse_chunk(:var value): { ... }
-///     case QueryAuthoringSnapshotResponse_catalogChanged(:var value): { ... }
-///     case QueryAuthoringSnapshotResponse_unavailable(:var value): { ... }
-///     case QueryAuthoringSnapshotResponse_internalError(:var value): { ... }
+///     case QueryAuthoringStateResponse_unknown(): { ... }
+///     case QueryAuthoringStateResponse_chunk(:var value): { ... }
+///     case QueryAuthoringStateResponse_catalogChanged(:var value): { ... }
+///     case QueryAuthoringStateResponse_unavailable(:var value): { ... }
+///     case QueryAuthoringStateResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
 ///
 /// Deeply immutable.
-sealed class QueryAuthoringSnapshotResponse {
-  /// Constant indicating an unknown `QueryAuthoringSnapshotResponse`.
-  /// Default value for fields of type `QueryAuthoringSnapshotResponse`.
-  static const QueryAuthoringSnapshotResponse unknown = QueryAuthoringSnapshotResponse_unknown._instance;
+sealed class QueryAuthoringStateResponse {
+  /// Constant indicating an unknown `QueryAuthoringStateResponse`.
+  /// Default value for fields of type `QueryAuthoringStateResponse`.
+  static const QueryAuthoringStateResponse unknown = QueryAuthoringStateResponse_unknown._instance;
 
   /// Create a 'chunk' variant wrapping around the given value.
-  factory QueryAuthoringSnapshotResponse.wrapChunk(
-    AuthoringSnapshotTransferChunk value
-  ) => QueryAuthoringSnapshotResponse_chunkWrapper._(value);
+  factory QueryAuthoringStateResponse.wrapChunk(
+    AuthoringStateTransferChunk value
+  ) => QueryAuthoringStateResponse_chunkWrapper._(value);
 
-  /// Same as `wrapChunk(AuthoringSnapshotTransferChunk(...))`.
-  factory QueryAuthoringSnapshotResponse.createChunk({
+  /// Same as `wrapChunk(AuthoringStateTransferChunk(...))`.
+  factory QueryAuthoringStateResponse.createChunk({
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
-    required _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot,
     required _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable transfer,
-  }) => QueryAuthoringSnapshotResponse.wrapChunk(
-    AuthoringSnapshotTransferChunk(
+  }) => QueryAuthoringStateResponse.wrapChunk(
+    AuthoringStateTransferChunk(
       generation: generation,
-      snapshot: snapshot,
       transfer: transfer,
     )
   );
 
   /// Create a 'catalog_changed' variant wrapping around the given value.
-  factory QueryAuthoringSnapshotResponse.wrapCatalogChanged(
+  factory QueryAuthoringStateResponse.wrapCatalogChanged(
     CatalogChanged value
-  ) => QueryAuthoringSnapshotResponse_catalogChangedWrapper._(value);
+  ) => QueryAuthoringStateResponse_catalogChangedWrapper._(value);
 
   /// Same as `wrapCatalogChanged(CatalogChanged(...))`.
-  factory QueryAuthoringSnapshotResponse.createCatalogChanged({
+  factory QueryAuthoringStateResponse.createCatalogChanged({
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable actualGeneration,
-  }) => QueryAuthoringSnapshotResponse.wrapCatalogChanged(
+  }) => QueryAuthoringStateResponse.wrapCatalogChanged(
     CatalogChanged(
       actualGeneration: actualGeneration,
     )
   );
 
   /// Create a 'unavailable' variant wrapping around the given value.
-  factory QueryAuthoringSnapshotResponse.wrapUnavailable(
+  factory QueryAuthoringStateResponse.wrapUnavailable(
     AuthoringTransferUnavailable value
-  ) => QueryAuthoringSnapshotResponse_unavailableWrapper._(value);
+  ) => QueryAuthoringStateResponse_unavailableWrapper._(value);
 
   /// Same as `wrapUnavailable(AuthoringTransferUnavailable(...))`.
-  factory QueryAuthoringSnapshotResponse.createUnavailable({
+  factory QueryAuthoringStateResponse.createUnavailable({
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
-    required _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot,
     required AuthoringTransferUnavailableReason reason,
     required _core.int encodedSize,
     required _core.int maxEncodedSize,
-  }) => QueryAuthoringSnapshotResponse.wrapUnavailable(
+  }) => QueryAuthoringStateResponse.wrapUnavailable(
     AuthoringTransferUnavailable(
       generation: generation,
-      snapshot: snapshot,
       reason: reason,
       encodedSize: encodedSize,
       maxEncodedSize: maxEncodedSize,
@@ -11425,30 +8779,30 @@ sealed class QueryAuthoringSnapshotResponse {
   );
 
   /// Create a 'internal_error' variant wrapping around the given value.
-  factory QueryAuthoringSnapshotResponse.wrapInternalError(
+  factory QueryAuthoringStateResponse.wrapInternalError(
     _lib_kernel_v1_errors.InternalError value
-  ) => QueryAuthoringSnapshotResponse_internalErrorWrapper._(value);
+  ) => QueryAuthoringStateResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory QueryAuthoringSnapshotResponse.createInternalError() => QueryAuthoringSnapshotResponse.wrapInternalError(
+  factory QueryAuthoringStateResponse.createInternalError() => QueryAuthoringStateResponse.wrapInternalError(
     _lib_kernel_v1_errors.InternalError()
   );
 
-  /// Returns the kind of variant held by this QueryAuthoringSnapshotResponse.
-  QueryAuthoringSnapshotResponse_kind get kind;
+  /// Returns the kind of variant held by this QueryAuthoringStateResponse.
+  QueryAuthoringStateResponse_kind get kind;
 
-  /// Serializer for `QueryAuthoringSnapshotResponse` instances.
-  static _skir.EnumSerializer<QueryAuthoringSnapshotResponse> get serializer {
+  /// Serializer for `QueryAuthoringStateResponse` instances.
+  static _skir.EnumSerializer<QueryAuthoringStateResponse> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addWrapperVariant(
         1,
         "chunk",
         "wrapChunk",
-        AuthoringSnapshotTransferChunk.serializer,
+        AuthoringStateTransferChunk.serializer,
         "",
-        QueryAuthoringSnapshotResponse_chunkWrapper._,
+        QueryAuthoringStateResponse_chunkWrapper._,
         (it) => it.value,
-        ordinal: QueryAuthoringSnapshotResponse_kind.chunkWrapper._ordinal,
+        ordinal: QueryAuthoringStateResponse_kind.chunkWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         2,
@@ -11456,9 +8810,9 @@ sealed class QueryAuthoringSnapshotResponse {
         "wrapCatalogChanged",
         CatalogChanged.serializer,
         "",
-        QueryAuthoringSnapshotResponse_catalogChangedWrapper._,
+        QueryAuthoringStateResponse_catalogChangedWrapper._,
         (it) => it.value,
-        ordinal: QueryAuthoringSnapshotResponse_kind.catalogChangedWrapper._ordinal,
+        ordinal: QueryAuthoringStateResponse_kind.catalogChangedWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
@@ -11466,9 +8820,9 @@ sealed class QueryAuthoringSnapshotResponse {
         "wrapUnavailable",
         AuthoringTransferUnavailable.serializer,
         "",
-        QueryAuthoringSnapshotResponse_unavailableWrapper._,
+        QueryAuthoringStateResponse_unavailableWrapper._,
         (it) => it.value,
-        ordinal: QueryAuthoringSnapshotResponse_kind.unavailableWrapper._ordinal,
+        ordinal: QueryAuthoringStateResponse_kind.unavailableWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         4,
@@ -11476,9 +8830,9 @@ sealed class QueryAuthoringSnapshotResponse {
         "wrapInternalError",
         _lib_kernel_v1_errors.InternalError.serializer,
         "",
-        QueryAuthoringSnapshotResponse_internalErrorWrapper._,
+        QueryAuthoringStateResponse_internalErrorWrapper._,
         (it) => it.value,
-        ordinal: QueryAuthoringSnapshotResponse_kind.internalErrorWrapper._ordinal,
+        ordinal: QueryAuthoringStateResponse_kind.internalErrorWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -11486,18 +8840,18 @@ sealed class QueryAuthoringSnapshotResponse {
   }
 
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/authoring.skir:QueryAuthoringSnapshotResponse",
+    recordId: "editor/v1/authoring.skir:QueryAuthoringStateResponse",
     doc: "",
-    unknownInstance: QueryAuthoringSnapshotResponse_unknown._instance,
-    enumInstance: QueryAuthoringSnapshotResponse.unknown,
+    unknownInstance: QueryAuthoringStateResponse_unknown._instance,
+    enumInstance: QueryAuthoringStateResponse.unknown,
     getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: QueryAuthoringSnapshotResponse_unknown._unrecognized,
+    wrapUnrecognized: QueryAuthoringStateResponse_unknown._unrecognized,
     getUnrecognized: (it) => it._u,
   );
 }
 
-/// The kind of variant held by a `QueryAuthoringSnapshotResponse`.
-enum QueryAuthoringSnapshotResponse_kind {
+/// The kind of variant held by a `QueryAuthoringStateResponse`.
+enum QueryAuthoringStateResponse_kind {
   unknown(0),
   chunkWrapper(1),
   catalogChangedWrapper(2),
@@ -11506,33 +8860,33 @@ enum QueryAuthoringSnapshotResponse_kind {
 
   final _core.int _ordinal;
 
-  const QueryAuthoringSnapshotResponse_kind(this._ordinal);
+  const QueryAuthoringStateResponse_kind(this._ordinal);
 }
 
-final class QueryAuthoringSnapshotResponse_unknown implements QueryAuthoringSnapshotResponse {
-  static const _instance = QueryAuthoringSnapshotResponse_unknown._();
+final class QueryAuthoringStateResponse_unknown implements QueryAuthoringStateResponse {
+  static const _instance = QueryAuthoringStateResponse_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
 
-  const QueryAuthoringSnapshotResponse_unknown._() : _u = null;
-  QueryAuthoringSnapshotResponse_unknown._unrecognized(this._u);
+  const QueryAuthoringStateResponse_unknown._() : _u = null;
+  QueryAuthoringStateResponse_unknown._unrecognized(this._u);
 
   @_core.override
-  QueryAuthoringSnapshotResponse_kind get kind => QueryAuthoringSnapshotResponse_kind.unknown;
+  QueryAuthoringStateResponse_kind get kind => QueryAuthoringStateResponse_kind.unknown;
   @_core.override
-  _core.bool operator ==(other) => other is QueryAuthoringSnapshotResponse_unknown;
+  _core.bool operator ==(other) => other is QueryAuthoringStateResponse_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, QueryAuthoringSnapshotResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, QueryAuthoringStateResponse.serializer);
 }
 
-sealed class _QueryAuthoringSnapshotResponse_wrapper implements QueryAuthoringSnapshotResponse {
+sealed class _QueryAuthoringStateResponse_wrapper implements QueryAuthoringStateResponse {
   _core.dynamic get value;
 
   @_core.override
   _core.bool operator ==(other) {
-    if (other is! _QueryAuthoringSnapshotResponse_wrapper) return false;
+    if (other is! _QueryAuthoringStateResponse_wrapper) return false;
     return kind == other.kind && value == other.value;
   }
 
@@ -11540,43 +8894,43 @@ sealed class _QueryAuthoringSnapshotResponse_wrapper implements QueryAuthoringSn
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, QueryAuthoringSnapshotResponse.serializer);
+  _core.String toString() => _skir.internal__stringify(this, QueryAuthoringStateResponse.serializer);
 }
 
-final class QueryAuthoringSnapshotResponse_chunkWrapper extends _QueryAuthoringSnapshotResponse_wrapper {
-  final AuthoringSnapshotTransferChunk value;
+final class QueryAuthoringStateResponse_chunkWrapper extends _QueryAuthoringStateResponse_wrapper {
+  final AuthoringStateTransferChunk value;
 
-  QueryAuthoringSnapshotResponse_chunkWrapper._(this.value);
+  QueryAuthoringStateResponse_chunkWrapper._(this.value);
 
   @_core.override
-  QueryAuthoringSnapshotResponse_kind get kind => QueryAuthoringSnapshotResponse_kind.chunkWrapper;
+  QueryAuthoringStateResponse_kind get kind => QueryAuthoringStateResponse_kind.chunkWrapper;
 }
 
-final class QueryAuthoringSnapshotResponse_catalogChangedWrapper extends _QueryAuthoringSnapshotResponse_wrapper {
+final class QueryAuthoringStateResponse_catalogChangedWrapper extends _QueryAuthoringStateResponse_wrapper {
   final CatalogChanged value;
 
-  QueryAuthoringSnapshotResponse_catalogChangedWrapper._(this.value);
+  QueryAuthoringStateResponse_catalogChangedWrapper._(this.value);
 
   @_core.override
-  QueryAuthoringSnapshotResponse_kind get kind => QueryAuthoringSnapshotResponse_kind.catalogChangedWrapper;
+  QueryAuthoringStateResponse_kind get kind => QueryAuthoringStateResponse_kind.catalogChangedWrapper;
 }
 
-final class QueryAuthoringSnapshotResponse_unavailableWrapper extends _QueryAuthoringSnapshotResponse_wrapper {
+final class QueryAuthoringStateResponse_unavailableWrapper extends _QueryAuthoringStateResponse_wrapper {
   final AuthoringTransferUnavailable value;
 
-  QueryAuthoringSnapshotResponse_unavailableWrapper._(this.value);
+  QueryAuthoringStateResponse_unavailableWrapper._(this.value);
 
   @_core.override
-  QueryAuthoringSnapshotResponse_kind get kind => QueryAuthoringSnapshotResponse_kind.unavailableWrapper;
+  QueryAuthoringStateResponse_kind get kind => QueryAuthoringStateResponse_kind.unavailableWrapper;
 }
 
-final class QueryAuthoringSnapshotResponse_internalErrorWrapper extends _QueryAuthoringSnapshotResponse_wrapper {
+final class QueryAuthoringStateResponse_internalErrorWrapper extends _QueryAuthoringStateResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
-  QueryAuthoringSnapshotResponse_internalErrorWrapper._(this.value);
+  QueryAuthoringStateResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  QueryAuthoringSnapshotResponse_kind get kind => QueryAuthoringSnapshotResponse_kind.internalErrorWrapper;
+  QueryAuthoringStateResponse_kind get kind => QueryAuthoringStateResponse_kind.internalErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -11585,12 +8939,10 @@ final class QueryAuthoringSnapshotResponse_internalErrorWrapper extends _QueryAu
 
 sealed class SearchAuthoringRequest_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable get snapshot;
-  _lib_editor_v1_search.RealmSearchQuery_orMutable get query;
+  _core.String get query;
   _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinitionId_orMutable> get roots;
   _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable> get contexts;
   _lib_editor_v1_type_catalog.NamedTypeUse_orMutable? get target;
-  _core.Iterable<SearchFacetRequest_orMutable> get facets;
 
   SearchAuthoringRequest toFrozen();
 }
@@ -11600,68 +8952,54 @@ final class SearchAuthoringRequest implements SearchAuthoringRequest_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.CatalogGeneration generation;
   @_core.override
-  final _lib_editor_v1_type_catalog.SnapshotId snapshot;
-  @_core.override
-  final _lib_editor_v1_search.RealmSearchQuery query;
+  final _core.String query;
   @_core.override
   final _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinitionId> roots;
   @_core.override
   final _core.Iterable<_lib_editor_v1_type_catalog.ResourceId> contexts;
   @_core.override
   final _lib_editor_v1_type_catalog.NamedTypeUse? target;
-  @_core.override
-  final _core.Iterable<SearchFacetRequest> facets;
   _skir.internal__UnrecognizedFields? _u;
 
   factory SearchAuthoringRequest({
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
-    required _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot,
-    required _lib_editor_v1_search.RealmSearchQuery_orMutable query,
+    required _core.String query,
     required _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinitionId_orMutable> roots,
     required _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable> contexts,
     required _lib_editor_v1_type_catalog.NamedTypeUse_orMutable? target,
-    required _core.Iterable<SearchFacetRequest_orMutable> facets,
   }) => SearchAuthoringRequest._(
     generation.toFrozen(),
-    snapshot.toFrozen(),
-    query.toFrozen(),
+    query,
     _skir.internal__frozenMappedCopy(roots, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(contexts, (it) => it.toFrozen()),
     (target != null) ? target.toFrozen() : null,
-    _skir.internal__frozenMappedCopy(facets, (it) => it.toFrozen()),
   );
 
   SearchAuthoringRequest._(
     this.generation,
-    this.snapshot,
     this.query,
     this.roots,
     this.contexts,
     this.target,
-    this.facets,
   );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = SearchAuthoringRequest._(
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
-    _lib_editor_v1_search.RealmSearchQuery.defaultInstance,
+    "",
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     null,
-    _skir.KeyedIterable.empty,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static SearchAuthoringRequest_mutable mutable() => SearchAuthoringRequest_mutable._(
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
-    _lib_editor_v1_search.RealmSearchQuery.defaultInstance,
+    "",
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     null,
-    _skir.KeyedIterable.empty,
   );
 
   /// Returns this instance (no-op).
@@ -11672,12 +9010,10 @@ final class SearchAuthoringRequest implements SearchAuthoringRequest_orMutable {
   /// Returns a mutable shallow copy of this instance.
   SearchAuthoringRequest_mutable toMutable() => SearchAuthoringRequest_mutable._(
     this.generation,
-    this.snapshot,
     this.query,
     this.roots,
     this.contexts,
     this.target,
-    this.facets,
   );
 
   @_core.override
@@ -11692,12 +9028,10 @@ final class SearchAuthoringRequest implements SearchAuthoringRequest_orMutable {
 
   _core.List get _equality_proxy => [
     this.generation,
-    this.snapshot,
     this.query,
     this.roots,
     this.contexts,
     this.target,
-    this.facets,
   ];
 
   @_core.override
@@ -11716,19 +9050,10 @@ final class SearchAuthoringRequest implements SearchAuthoringRequest_orMutable {
         (it, v) => it.generation = v,
       );
       _serializerBuilder.addField(
-        "snapshot",
-        "snapshot",
+        "query",
+        "query",
         1,
-        _lib_editor_v1_type_catalog.SnapshotId.serializer,
-        "",
-        (it) => it.snapshot,
-        (it, v) => it.snapshot = v,
-      );
-      _serializerBuilder.addField(
-        "query",
-        "query",
-        2,
-        _lib_editor_v1_search.RealmSearchQuery.serializer,
+        _skir.Serializers.string,
         "",
         (it) => it.query,
         (it, v) => it.query = v,
@@ -11736,7 +9061,7 @@ final class SearchAuthoringRequest implements SearchAuthoringRequest_orMutable {
       _serializerBuilder.addField(
         "roots",
         "roots",
-        3,
+        2,
         _skir.Serializers.iterable(
           _lib_editor_v1_type_catalog.TypeDefinitionId.serializer,
         ),
@@ -11747,7 +9072,7 @@ final class SearchAuthoringRequest implements SearchAuthoringRequest_orMutable {
       _serializerBuilder.addField(
         "contexts",
         "contexts",
-        4,
+        3,
         _skir.Serializers.iterable(
           _lib_editor_v1_type_catalog.ResourceId.serializer,
         ),
@@ -11758,24 +9083,13 @@ final class SearchAuthoringRequest implements SearchAuthoringRequest_orMutable {
       _serializerBuilder.addField(
         "target",
         "target",
-        5,
+        4,
         _skir.Serializers.optional(
           _lib_editor_v1_type_catalog.NamedTypeUse.serializer,
         ),
         "",
         (it) => it.target,
         (it, v) => it.target = v,
-      );
-      _serializerBuilder.addField(
-        "facets",
-        "facets",
-        6,
-        _skir.Serializers.iterable(
-          SearchFacetRequest.serializer,
-        ),
-        "",
-        (it) => it.facets,
-        (it, v) => it.facets = v,
       );
       _serializerBuilder.finalize();
     }
@@ -11796,22 +9110,18 @@ final class SearchAuthoringRequest implements SearchAuthoringRequest_orMutable {
 /// Mutable version of [SearchAuthoringRequest].
 final class SearchAuthoringRequest_mutable implements SearchAuthoringRequest_orMutable {
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation;
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot;
-  _lib_editor_v1_search.RealmSearchQuery_orMutable query;
+  _core.String query;
   _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinitionId_orMutable> roots;
   _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable> contexts;
   _lib_editor_v1_type_catalog.NamedTypeUse_orMutable? target;
-  _core.Iterable<SearchFacetRequest_orMutable> facets;
   _skir.internal__UnrecognizedFields? _u;
 
   SearchAuthoringRequest_mutable._(
     this.generation,
-    this.snapshot,
     this.query,
     this.roots,
     this.contexts,
     this.target,
-    this.facets,
   );
 
   /// If the value of [generation] is already mutable, returns it as-is.
@@ -11822,28 +9132,6 @@ final class SearchAuthoringRequest_mutable implements SearchAuthoringRequest_orM
       return value;
     } else {
       return this.generation = (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
-    }
-  }
-
-  /// If the value of [snapshot] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [snapshot] and returns it.
-  _lib_editor_v1_type_catalog.SnapshotId_mutable get mutableSnapshot {
-    final value = this.snapshot;
-    if (value is _lib_editor_v1_type_catalog.SnapshotId_mutable) {
-      return value;
-    } else {
-      return this.snapshot = (value as _lib_editor_v1_type_catalog.SnapshotId).toMutable();
-    }
-  }
-
-  /// If the value of [query] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [query] and returns it.
-  _lib_editor_v1_search.RealmSearchQuery_mutable get mutableQuery {
-    final value = this.query;
-    if (value is _lib_editor_v1_search.RealmSearchQuery_mutable) {
-      return value;
-    } else {
-      return this.query = (value as _lib_editor_v1_search.RealmSearchQuery).toMutable();
     }
   }
 
@@ -11869,27 +9157,14 @@ final class SearchAuthoringRequest_mutable implements SearchAuthoringRequest_orM
     }
   }
 
-  /// If the value of [facets] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [facets] and returns it.
-  _core.List<SearchFacetRequest_orMutable> get mutableFacets {
-    final value = this.facets;
-    if (value is _skir.internal__MutableList<SearchFacetRequest_orMutable>) {
-      return value;
-    } else {
-      return this.facets = _skir.internal__MutableList([...value]);
-    }
-  }
-
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   SearchAuthoringRequest toFrozen() => SearchAuthoringRequest(
     generation: this.generation,
-    snapshot: this.snapshot,
     query: this.query,
     roots: this.roots,
     contexts: this.contexts,
     target: this.target,
-    facets: this.facets,
   ).._u = this._u;
 }
 
@@ -11916,22 +9191,18 @@ sealed class SearchAuthoringResponse {
 
   /// Create a 'success' variant wrapping around the given value.
   factory SearchAuthoringResponse.wrapSuccess(
-    AuthoringSearchSnapshot value
+    AuthoringSearchResult value
   ) => SearchAuthoringResponse_successWrapper._(value);
 
-  /// Same as `wrapSuccess(AuthoringSearchSnapshot(...))`.
+  /// Same as `wrapSuccess(AuthoringSearchResult(...))`.
   factory SearchAuthoringResponse.createSuccess({
-    required _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot,
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
     required _core.Iterable<AuthoringSearchHit_orMutable> hits,
-    required _core.Iterable<SearchFacetResult_orMutable> facets,
     required _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable> diagnostics,
   }) => SearchAuthoringResponse.wrapSuccess(
-    AuthoringSearchSnapshot(
-      snapshot: snapshot,
+    AuthoringSearchResult(
       generation: generation,
       hits: hits,
-      facets: facets,
       diagnostics: diagnostics,
     )
   );
@@ -11984,7 +9255,7 @@ sealed class SearchAuthoringResponse {
         1,
         "success",
         "wrapSuccess",
-        AuthoringSearchSnapshot.serializer,
+        AuthoringSearchResult.serializer,
         "",
         SearchAuthoringResponse_successWrapper._,
         (it) => it.value,
@@ -12084,7 +9355,7 @@ sealed class _SearchAuthoringResponse_wrapper implements SearchAuthoringResponse
 }
 
 final class SearchAuthoringResponse_successWrapper extends _SearchAuthoringResponse_wrapper {
-  final AuthoringSearchSnapshot value;
+  final AuthoringSearchResult value;
 
   SearchAuthoringResponse_successWrapper._(this.value);
 
@@ -12265,7 +9536,6 @@ final class CommitPreparedEditResponse_internalErrorWrapper extends _CommitPrepa
 sealed class PreviewTypeArgumentChangeRequest_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable get resource;
   _lib_editor_v1_type_catalog.TypeSelection get requested;
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable get snapshot;
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get catalog;
 
   PreviewTypeArgumentChangeRequest toFrozen();
@@ -12278,27 +9548,22 @@ final class PreviewTypeArgumentChangeRequest implements PreviewTypeArgumentChang
   @_core.override
   final _lib_editor_v1_type_catalog.TypeSelection requested;
   @_core.override
-  final _lib_editor_v1_type_catalog.SnapshotId snapshot;
-  @_core.override
   final _lib_editor_v1_type_catalog.CatalogGeneration catalog;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PreviewTypeArgumentChangeRequest({
     required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
     required _lib_editor_v1_type_catalog.TypeSelection requested,
-    required _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot,
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog,
   }) => PreviewTypeArgumentChangeRequest._(
     resource.toFrozen(),
     requested,
-    snapshot.toFrozen(),
     catalog.toFrozen(),
   );
 
   PreviewTypeArgumentChangeRequest._(
     this.resource,
     this.requested,
-    this.snapshot,
     this.catalog,
   );
 
@@ -12306,7 +9571,6 @@ final class PreviewTypeArgumentChangeRequest implements PreviewTypeArgumentChang
   static final defaultInstance = PreviewTypeArgumentChangeRequest._(
     _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
     _lib_editor_v1_type_catalog.TypeSelection.unknown,
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
   );
 
@@ -12315,7 +9579,6 @@ final class PreviewTypeArgumentChangeRequest implements PreviewTypeArgumentChang
   static PreviewTypeArgumentChangeRequest_mutable mutable() => PreviewTypeArgumentChangeRequest_mutable._(
     _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
     _lib_editor_v1_type_catalog.TypeSelection.unknown,
-    _lib_editor_v1_type_catalog.SnapshotId.defaultInstance,
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
   );
 
@@ -12328,7 +9591,6 @@ final class PreviewTypeArgumentChangeRequest implements PreviewTypeArgumentChang
   PreviewTypeArgumentChangeRequest_mutable toMutable() => PreviewTypeArgumentChangeRequest_mutable._(
     this.resource,
     this.requested,
-    this.snapshot,
     this.catalog,
   );
 
@@ -12345,7 +9607,6 @@ final class PreviewTypeArgumentChangeRequest implements PreviewTypeArgumentChang
   _core.List get _equality_proxy => [
     this.resource,
     this.requested,
-    this.snapshot,
     this.catalog,
   ];
 
@@ -12374,18 +9635,9 @@ final class PreviewTypeArgumentChangeRequest implements PreviewTypeArgumentChang
         (it, v) => it.requested = v,
       );
       _serializerBuilder.addField(
-        "snapshot",
-        "snapshot",
+        "catalog",
+        "catalog",
         2,
-        _lib_editor_v1_type_catalog.SnapshotId.serializer,
-        "",
-        (it) => it.snapshot,
-        (it, v) => it.snapshot = v,
-      );
-      _serializerBuilder.addField(
-        "catalog",
-        "catalog",
-        3,
         _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
         "",
         (it) => it.catalog,
@@ -12411,14 +9663,12 @@ final class PreviewTypeArgumentChangeRequest implements PreviewTypeArgumentChang
 final class PreviewTypeArgumentChangeRequest_mutable implements PreviewTypeArgumentChangeRequest_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable resource;
   _lib_editor_v1_type_catalog.TypeSelection requested;
-  _lib_editor_v1_type_catalog.SnapshotId_orMutable snapshot;
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog;
   _skir.internal__UnrecognizedFields? _u;
 
   PreviewTypeArgumentChangeRequest_mutable._(
     this.resource,
     this.requested,
-    this.snapshot,
     this.catalog,
   );
 
@@ -12430,17 +9680,6 @@ final class PreviewTypeArgumentChangeRequest_mutable implements PreviewTypeArgum
       return value;
     } else {
       return this.resource = (value as _lib_editor_v1_type_catalog.ResourceId).toMutable();
-    }
-  }
-
-  /// If the value of [snapshot] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [snapshot] and returns it.
-  _lib_editor_v1_type_catalog.SnapshotId_mutable get mutableSnapshot {
-    final value = this.snapshot;
-    if (value is _lib_editor_v1_type_catalog.SnapshotId_mutable) {
-      return value;
-    } else {
-      return this.snapshot = (value as _lib_editor_v1_type_catalog.SnapshotId).toMutable();
     }
   }
 
@@ -12460,7 +9699,6 @@ final class PreviewTypeArgumentChangeRequest_mutable implements PreviewTypeArgum
   PreviewTypeArgumentChangeRequest toFrozen() => PreviewTypeArgumentChangeRequest(
     resource: this.resource,
     requested: this.requested,
-    snapshot: this.snapshot,
     catalog: this.catalog,
   ).._u = this._u;
 }
@@ -12744,14 +9982,14 @@ final class CommitTypeArgumentChangeResponse_internalErrorWrapper extends _Commi
 }
 
 final _skir.Method<
-  QueryAuthoringSnapshotRequest,
-  QueryAuthoringSnapshotResponse
-> queryAuthoringSnapshotMethod =
+  QueryAuthoringStateRequest,
+  QueryAuthoringStateResponse
+> queryAuthoringStateMethod =
   _skir.Method(
-    "QueryAuthoringSnapshot",
+    "QueryAuthoringState",
     920010,
-    QueryAuthoringSnapshotRequest.serializer,
-    QueryAuthoringSnapshotResponse.serializer,
+    QueryAuthoringStateRequest.serializer,
+    QueryAuthoringStateResponse.serializer,
     "",
   );
 

@@ -1,21 +1,22 @@
 package com.typewritermc.authoring.skir
 
-import com.typewritermc.authoring.BatchId
 import com.typewritermc.authoring.CommitResult
 import com.typewritermc.authoring.ConnectIntent
 import com.typewritermc.authoring.CounterpartChoice
+import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.EditIntent
 import com.typewritermc.authoring.InitializationRequest
 import com.typewritermc.authoring.InitializationRequestId
-import com.typewritermc.authoring.InputConflict
 import com.typewritermc.authoring.ItemId
+import com.typewritermc.authoring.LinkProjection
 import com.typewritermc.authoring.PreparedCreation
 import com.typewritermc.authoring.PreparedEdit
+import com.typewritermc.authoring.TraversalDirection
 import com.typewritermc.authoring.ValueProblem
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.checking.SnapshotId
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ListItem
+import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
@@ -27,26 +28,35 @@ import skirout.editor.v1.authoring.CommitResult as SkirCommitResult
 import skirout.editor.v1.authoring.ConnectIntent as SkirConnectIntent
 import skirout.editor.v1.authoring.CounterpartChoice as SkirCounterpartChoice
 import skirout.editor.v1.authoring.EditIntent as SkirEditIntent
-import skirout.editor.v1.authoring.InputConflict as SkirInputConflict
 import skirout.editor.v1.authoring.NewCounterpartChoice as SkirNewCounterpartChoice
 import skirout.editor.v1.authoring.PreparedEdit as SkirPreparedEdit
+import skirout.editor.v1.authoring_facts.EditExpectation as SkirEditExpectation
+import skirout.editor.v1.authoring_facts.ExpectationConflict as SkirExpectationConflict
+import skirout.editor.v1.authoring_facts.LinkProjection as SkirLinkProjection
+import skirout.editor.v1.authoring_facts.TraversalDirection as SkirTraversalDirection
 import skirout.editor.v1.catalog.InitializationRequest as SkirInitializationRequest
 import skirout.editor.v1.catalog.PreparedCreation as SkirPreparedCreation
 import skirout.editor.v1.diagnostic.ValueProblem as SkirValueProblem
-import skirout.editor.v1.type_catalog.BatchId as SkirBatchId
 import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue as SkirDataValue
 import skirout.editor.v1.type_catalog.FieldValue as SkirFieldValue
 import skirout.editor.v1.type_catalog.InitializationRequestId as SkirInitializationRequestId
-import skirout.editor.v1.type_catalog.InputToken as SkirInputToken
 import skirout.editor.v1.type_catalog.ItemId as SkirItemId
 import skirout.editor.v1.type_catalog.ListItem as SkirListItem
 import skirout.editor.v1.type_catalog.NamedTypeUse as SkirNamedTypeUse
+import skirout.editor.v1.type_catalog.RelationId as SkirRelationId
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
-import skirout.editor.v1.type_catalog.SnapshotId as SkirSnapshotId
 import skirout.editor.v1.type_catalog.TypeUse as SkirTypeUse
 
 object SkirAuthoringOperationCodec {
+    fun encode(value: EditExpectation): SkirConversionResult<SkirEditExpectation> = captureOperationConversion { encodeExpectation(value) }
+
+    fun decode(value: SkirEditExpectation): SkirConversionResult<EditExpectation> = captureOperationConversion { decodeExpectation(value) }
+
+    fun encode(value: LinkProjection): SkirConversionResult<SkirLinkProjection> = captureOperationConversion { encodeProjection(value) }
+
+    fun decode(value: SkirLinkProjection): SkirConversionResult<LinkProjection> = captureOperationConversion { decodeProjection(value) }
+
     fun encode(value: PreparedEdit): SkirConversionResult<SkirPreparedEdit> = captureOperationConversion { encodePreparedEdit(value) }
 
     fun decode(value: SkirPreparedEdit): SkirConversionResult<PreparedEdit> = captureOperationConversion { decodePreparedEdit(value) }
@@ -68,32 +78,153 @@ object SkirAuthoringOperationCodec {
 
 private fun OperationConversionScope.encodePreparedEdit(value: PreparedEdit): SkirPreparedEdit =
     SkirPreparedEdit(
-        id = SkirBatchId(value = value.id.value),
         catalog = SkirCatalogGeneration(value = value.catalog.value),
-        snapshot = SkirSnapshotId(value = value.snapshot.value),
-        observations =
-            value.observations.mapIndexed {
-                index,
-                observation,
-                ->
-                at("observation $index") { convert(SkirAuthoringValueCodec.encode(observation)) }
-            },
+        expectations = value.expectations.map { encodeExpectation(it) },
         intents = value.intents.mapIndexed { index, intent -> at("intent $index") { encodeIntent(intent) } },
     )
 
 private fun OperationConversionScope.decodePreparedEdit(value: SkirPreparedEdit): PreparedEdit =
     PreparedEdit(
-        id = BatchId(requireText(value.id.value, "Batch identity")),
         catalog = CatalogGeneration(requireText(value.catalog.value, "Catalog generation")),
-        snapshot = SnapshotId(requireText(value.snapshot.value, "Snapshot identity")),
-        observations =
-            value.observations.mapIndexed {
-                index,
-                observation,
-                ->
-                at("observation $index") { convert(SkirAuthoringValueCodec.decode(observation)) }
+        expectations =
+            value.expectations.map {
+                decodeExpectation(it)
             },
         intents = value.intents.mapIndexed { index, intent -> at("intent $index") { decodeIntent(intent) } },
+    )
+
+private fun OperationConversionScope.encodeExpectation(value: EditExpectation): SkirEditExpectation =
+    when (value) {
+        is EditExpectation.Value -> {
+            SkirEditExpectation.createValue(
+                at = convert(SkirAuthoringValueCodec.encode(value.at)),
+                expected =
+                    value.expected?.let {
+                        convert(SkirDataValueCodec.encode(it))
+                    },
+            )
+        }
+
+        is EditExpectation.Resource -> {
+            SkirEditExpectation.createResource(
+                id = SkirResourceId(value = value.id.value),
+                expected =
+                    value.expected?.let {
+                        convert(SkirAuthoringValueCodec.encode(it))
+                    },
+            )
+        }
+
+        is EditExpectation.ResourceExists -> {
+            SkirEditExpectation.createResourceExists(id = SkirResourceId(value = value.id.value), expected = value.expected)
+        }
+
+        is EditExpectation.Configuration -> {
+            SkirEditExpectation.createConfiguration(
+                at = convert(SkirAuthoringValueCodec.encode(value.at)),
+                expected =
+                    value.expected?.let {
+                        convert(SkirAuthoringValueCodec.encode(it))
+                    },
+            )
+        }
+
+        is EditExpectation.ResourceIds -> {
+            SkirEditExpectation.ResourceIdsWrapper(value.expected.sortedBy { it.value }.map { SkirResourceId(value = it.value) })
+        }
+
+        is EditExpectation.Links -> {
+            SkirEditExpectation.createLinks(
+                resource = SkirResourceId(value = value.resource.value),
+                contract = SkirRelationId(value = value.contract.value),
+                direction =
+                    when (value.direction) {
+                        TraversalDirection.Forward -> SkirTraversalDirection.FORWARD
+                        TraversalDirection.Reverse -> SkirTraversalDirection.REVERSE
+                        TraversalDirection.Both -> SkirTraversalDirection.BOTH
+                    },
+                expected = value.expected.sortedBy { it.toString() }.map { encodeProjection(it) },
+            )
+        }
+    }
+
+private fun OperationConversionScope.decodeExpectation(value: SkirEditExpectation): EditExpectation =
+    when (value) {
+        is SkirEditExpectation.ValueWrapper -> {
+            EditExpectation.Value(
+                convert(SkirAuthoringValueCodec.decode(value.value.at)),
+                value.value.expected?.let {
+                    convert(SkirDataValueCodec.decode(it))
+                },
+            )
+        }
+
+        is SkirEditExpectation.ResourceWrapper -> {
+            EditExpectation.Resource(
+                ResourceId(requireText(value.value.id.value, "Resource identity")),
+                value.value.expected?.let {
+                    convert(SkirAuthoringValueCodec.decode(it))
+                },
+            )
+        }
+
+        is SkirEditExpectation.ResourceExistsWrapper -> {
+            EditExpectation.ResourceExists(ResourceId(requireText(value.value.id.value, "Resource identity")), value.value.expected)
+        }
+
+        is SkirEditExpectation.ConfigurationWrapper -> {
+            EditExpectation.Configuration(
+                convert(SkirAuthoringValueCodec.decode(value.value.at)),
+                value.value.expected?.let {
+                    convert(SkirAuthoringValueCodec.decode(it))
+                },
+            )
+        }
+
+        is SkirEditExpectation.ResourceIdsWrapper -> {
+            EditExpectation.ResourceIds(value.value.mapTo(linkedSetOf()) { ResourceId(requireText(it.value, "Resource identity")) })
+        }
+
+        is SkirEditExpectation.LinksWrapper -> {
+            EditExpectation.Links(
+                ResourceId(requireText(value.value.resource.value, "Resource identity")),
+                RelationId(requireText(value.value.contract.value, "Relation identity")),
+                when (value.value.direction) {
+                    SkirTraversalDirection.FORWARD -> TraversalDirection.Forward
+                    SkirTraversalDirection.REVERSE -> TraversalDirection.Reverse
+                    SkirTraversalDirection.BOTH -> TraversalDirection.Both
+                    else -> fail("Unknown traversal direction")
+                },
+                value.value.expected.mapTo(linkedSetOf()) { decodeProjection(it) },
+            )
+        }
+
+        else -> {
+            fail("Unknown edit expectation")
+        }
+    }
+
+private fun OperationConversionScope.encodeProjection(value: LinkProjection): SkirLinkProjection =
+    SkirLinkProjection(
+        contract = SkirRelationId(value = value.contract.value),
+        first = SkirResourceId(value = value.first.value),
+        second = SkirResourceId(value = value.second.value),
+        firstLocation =
+            value.firstLocation?.let {
+                convert(SkirAuthoringValueCodec.encode(it))
+            },
+        secondLocation = value.secondLocation?.let { convert(SkirAuthoringValueCodec.encode(it)) },
+    )
+
+private fun OperationConversionScope.decodeProjection(value: SkirLinkProjection): LinkProjection =
+    LinkProjection(
+        RelationId(requireText(value.contract.value, "Relation identity")),
+        ResourceId(requireText(value.first.value, "Resource identity")),
+        ResourceId(requireText(value.second.value, "Resource identity")),
+        value.firstLocation?.let {
+            convert(SkirAuthoringValueCodec.decode(it))
+        },
+        value.secondLocation?.let { convert(SkirAuthoringValueCodec.decode(it)) },
     )
 
 private fun OperationConversionScope.encodeIntent(value: EditIntent): SkirEditIntent =
@@ -286,21 +417,14 @@ private fun OperationConversionScope.decodeConnect(value: SkirConnectIntent): Co
 
 private fun OperationConversionScope.encodeCommitResult(value: CommitResult): SkirCommitResult =
     when (value) {
-        is CommitResult.Committed -> {
-            SkirCommitResult.createCommitted(
-                snapshot = SkirSnapshotId(value = value.snapshot.value),
-                changed = value.changed.map { convert(SkirAuthoringValueCodec.encode(it)) },
-            )
+        CommitResult.Committed -> {
+            SkirCommitResult.COMMITTED
         }
 
         is CommitResult.Conflict -> {
             SkirCommitResult.ConflictWrapper(
-                value.inputs.map { conflict ->
-                    SkirInputConflict(
-                        input = convert(SkirAuthoringValueCodec.encode(conflict.input)),
-                        expected = SkirInputToken(value = conflict.expected.value),
-                        actual = conflict.actual?.let { SkirInputToken(value = it.value) },
-                    )
+                value.values.map { conflict ->
+                    SkirExpectationConflict(expected = encodeExpectation(conflict.expected), actual = encodeExpectation(conflict.actual))
                 },
             )
         }

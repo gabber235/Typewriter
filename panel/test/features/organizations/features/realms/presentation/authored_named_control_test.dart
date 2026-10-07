@@ -10,6 +10,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1
     as types;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+import "../../../../../support/test_utils.dart";
+
 void main() {
   testWidgets(
     "renders a nested named payload and preserves its actual type on write",
@@ -17,8 +19,8 @@ void main() {
       binding.BindingRef? writtenReference;
       types.DataValue? writtenValue;
 
-      Widget host(bool visible) => MaterialApp(
-        home: Scaffold(
+      Widget host(bool visible) => testApp(
+        child: Scaffold(
           body: PortablePresentationNodeRenderer(
             node: _rootPresentation(),
             scope: PortablePresentationScope(
@@ -82,8 +84,8 @@ void main() {
       header: null,
     );
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
+      testApp(
+        child: Scaffold(
           body: PortablePresentationNodeRenderer(
             node: disabled,
             scope: PortablePresentationScope(

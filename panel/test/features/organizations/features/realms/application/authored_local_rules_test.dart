@@ -207,7 +207,6 @@ _nestedRuleFixture({bool collection = false}) {
     arguments: const [],
   );
   final draft = AuthoredDraft(
-    snapshot: types.SnapshotId(value: "snapshot:nested_rules"),
     generation: generation,
     resources: [
       authoring.AuthoringResource(
@@ -243,8 +242,6 @@ _nestedRuleFixture({bool collection = false}) {
       ),
     ],
     links: const [],
-    observations: const [],
-    absentInputToken: types.InputToken(value: "absent"),
     catalog: checked,
   );
   return (resource: resource, draft: draft, catalog: checked);

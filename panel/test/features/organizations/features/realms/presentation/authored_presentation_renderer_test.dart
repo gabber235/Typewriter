@@ -7,8 +7,6 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1
     as binding;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
     as catalog;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/checking.dart"
-    as checking;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
     as expression;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/presentation.dart"
@@ -305,8 +303,7 @@ void main() {
           roleFallbacks: const [],
         ),
       );
-      final snapshot = authoring.AuthoringSnapshot(
-        snapshot: types.SnapshotId(value: "realm:named"),
+      final snapshot = authoring.AuthoringState(
         generation: generation,
         resources: [
           authoring.AuthoringResource(
@@ -328,11 +325,8 @@ void main() {
         ],
         links: const [],
         findings: const [],
-        findingsToken: checking.FindingsToken(value: "findings:named"),
-        observations: const [],
-        absentInputToken: types.InputToken(value: "absent"),
       );
-      final draft = AuthoredDraft.fromSnapshot(snapshot, catalog: checked);
+      final draft = AuthoredDraft.fromState(snapshot, catalog: checked);
       types.DataValue? written;
       final reference = binding.BindingRef(
         bindingId: _rootBinding,
