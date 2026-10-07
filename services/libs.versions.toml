@@ -20,7 +20,7 @@ okio = "3.6.0"
 
 nats = "0.9.1"
 cryptography = "0.6.0"
-surrealdb-server = "3.2.4"
+surrealdb-server = "3.3.0"
 surrealdb-embedded = "3.1.5"
 surrealdb-java-sdk = "2.1.2"
 
