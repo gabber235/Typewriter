@@ -69,6 +69,42 @@ class BoundedByteTransferEncoder(
     }
 }
 
+/** Assembles one bounded response and verifies its declared size and digest. */
+class BoundedByteTransferAssembler(
+    private val transferId: String,
+    private val limits: BoundedTransferLimits = BoundedTransferLimits(),
+) {
+    private var metadata: BoundedTransferChunk? = null
+    private val parts = mutableMapOf<Int, ByteArray>()
+
+    fun accept(chunk: BoundedTransferChunk): ByteArray? {
+        require(chunk.transferId == transferId) { "Transfer identity does not match request" }
+        require(chunk.chunkCount in 1..limits.maxChunks && chunk.index in 0 until chunk.chunkCount)
+        require(chunk.encodedSize in 0..minOf(limits.maxEncodedSize, Int.MAX_VALUE.toLong()))
+        val bytes = chunk.payload.toByteArray()
+        require(bytes.size <= limits.chunkSize)
+        val first = metadata
+        require(
+            first == null ||
+                (first.chunkCount == chunk.chunkCount && first.encodedSize == chunk.encodedSize && first.sha256 == chunk.sha256),
+        ) {
+            "Transfer metadata changed during assembly"
+        }
+        metadata = first ?: chunk.copy(payload = Payload.copyOf(byteArrayOf()))
+        val prior = parts[chunk.index]
+        require(prior == null || prior.contentEquals(bytes)) { "Transfer chunk changed during assembly" }
+        parts[chunk.index] = bytes
+        require(parts.values.sumOf { it.size.toLong() } <= chunk.encodedSize)
+        if (parts.size != chunk.chunkCount) return null
+        val complete = java.io.ByteArrayOutputStream(chunk.encodedSize.toInt())
+        repeat(chunk.chunkCount) { complete.write(parts.getValue(it)) }
+        val result = complete.toByteArray()
+        require(result.size.toLong() == chunk.encodedSize)
+        require(MessageDigest.getInstance("SHA-256").digest(result).toHex() == chunk.sha256) { "Transfer digest verification failed" }
+        return result
+    }
+}
+
 const val DEFAULT_BOUNDED_TRANSFER_CHUNK_SIZE = 512 * 1024
 const val DEFAULT_BOUNDED_TRANSFER_MAX_CHUNKS = 64
 

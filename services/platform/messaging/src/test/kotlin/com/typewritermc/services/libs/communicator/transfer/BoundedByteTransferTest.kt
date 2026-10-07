@@ -1,6 +1,8 @@
 package com.typewritermc.services.libs.communicator.transfer
 
+import com.typewritermc.services.libs.communicator.transport.Payload
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
 
@@ -43,6 +45,39 @@ class BoundedByteTransferTest {
 }
 
 val BoundedByteTransferTestSuite by testSuite {
+    test("assembles out of order and accepts identical duplicates") {
+        val limits = BoundedTransferLimits(3, 3)
+        val bytes = byteArrayOf(1, 2, 3, 4, 5, 6, 7)
+        val chunks = (BoundedByteTransferEncoder(limits) { "request" }.encode(bytes) as BoundedTransferPlan.Ready).chunks
+        val assembler = BoundedByteTransferAssembler("request", limits)
+        assembler.accept(chunks[2]) shouldBe null
+        assembler.accept(chunks[2]) shouldBe null
+        assembler.accept(chunks[0]) shouldBe null
+        assembler.accept(chunks[1]) shouldBe bytes
+    }
+    test("rejects another request and changed transfer metadata") {
+        val limits = BoundedTransferLimits(2, 2)
+        val chunks = (BoundedByteTransferEncoder(limits) { "request" }.encode(byteArrayOf(1, 2, 3)) as BoundedTransferPlan.Ready).chunks
+        val assembler = BoundedByteTransferAssembler("request", limits)
+        shouldThrow<IllegalArgumentException> { assembler.accept(chunks[0].copy(transferId = "other")) }
+        assembler.accept(chunks[0]) shouldBe null
+        shouldThrow<IllegalArgumentException> { assembler.accept(chunks[1].copy(sha256 = "bad")) }
+        shouldThrow<IllegalArgumentException> { assembler.accept(chunks[0].copy(payload = Payload.copyOf(byteArrayOf(2, 1)))) }
+    }
+    test("rejects oversized parts and corrupt complete payloads") {
+        val limits = BoundedTransferLimits(2, 2)
+        val chunk =
+            (
+                BoundedByteTransferEncoder(
+                    limits,
+                ) { "request" }.encode(byteArrayOf(1, 2)) as BoundedTransferPlan.Ready
+            ).chunks.single()
+        shouldThrow<IllegalArgumentException> { BoundedByteTransferAssembler("request", limits).accept(chunk.copy(encodedSize = 5)) }
+        shouldThrow<IllegalArgumentException> {
+            BoundedByteTransferAssembler("request", limits).accept(chunk.copy(payload = Payload.copyOf(byteArrayOf(2, 1))))
+        }
+        shouldThrow<IllegalArgumentException> { BoundedByteTransferAssembler("request", limits).accept(chunk.copy(index = 1)) }
+    }
     test("chunksAndHashesOneCompletePayload") { BoundedByteTransferTest().chunksAndHashesOneCompletePayload() }
     test("rejectsBeforeProducingAnyChunkAboveTheBound") {
         BoundedByteTransferTest().rejectsBeforeProducingAnyChunkAboveTheBound()
