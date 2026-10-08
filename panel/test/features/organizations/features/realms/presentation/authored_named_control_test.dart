@@ -39,7 +39,7 @@ void main() {
       );
 
       await tester.pumpWidget(host(true));
-      expect(find.byIcon(Icons.auto_awesome), findsOneWidget);
+      expect(find.text("Custom style"), findsOneWidget);
       expect(find.text("Original"), findsOneWidget);
 
       await tester.enterText(
@@ -58,7 +58,7 @@ void main() {
 
       await tester.pumpWidget(host(false));
       await tester.pump();
-      expect(find.byIcon(Icons.auto_awesome), findsNothing);
+      expect(find.text("Custom style"), findsNothing);
     },
   );
 
@@ -199,16 +199,26 @@ presentation.NamedControl _control() => presentation.NamedControl(
                   path: _fieldPath("visible"),
                 ),
                 whenTrue: presentation.PresentationNode(
-                  nodeId: "style.icon",
+                  nodeId: "style.visible",
                   properties:
                       presentation.PresentationProperties.defaultInstance,
-                  element: presentation.PresentationElement.createIcon(
-                    name: expression.ExpressionNode.wrapLiteral(
-                      types.DataValue.wrapStringValue("auto_awesome"),
+                  element: presentation.PresentationElement.createText(
+                    value: expression.ExpressionNode.wrapLiteral(
+                      types.DataValue.wrapStringValue("Custom style"),
                     ),
-                    semanticLabel: null,
                     color: null,
-                    size: null,
+                    fontSize: null,
+                    fontWeight: null,
+                    fontItalic: null,
+                    fontOpticalSize: null,
+                    fontSlant: null,
+                    fontWidth: null,
+                    textAlignment: null,
+                    lineHeight: null,
+                    letterSpacing: null,
+                    decoration: null,
+                    semanticLabel: null,
+                    paragraph: presentation.TextParagraph.defaultInstance,
                   ),
                   header: null,
                 ),

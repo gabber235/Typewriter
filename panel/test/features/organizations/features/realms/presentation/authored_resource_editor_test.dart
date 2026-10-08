@@ -509,7 +509,7 @@ void main() {
     );
     await tester.pumpTestApp(child: _numericEditor(empty));
     await tester.enterText(find.byType(TextFormField), "7");
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(
       empty.draft
           .resource(empty.resource)

@@ -158,7 +158,7 @@ void main() {
     );
 
     await tester.enterText(find.byType(TextFormField), "7");
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     final named = switch (written) {
       final types.DataValue_namedWrapper value => value,
@@ -276,10 +276,8 @@ void main() {
       ),
     );
 
-    expect(find.text("Choose a value"), findsOneWidget);
-    await tester.tap(find.byType(DropdownButtonFormField<bool?>));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text("On").last);
+    expect(written, isNull);
+    await tester.tap(find.text("On"));
     await tester.pump();
 
     expect(written, types.DataValue.wrapBoolean(true));
@@ -450,8 +448,7 @@ void main() {
     );
 
     final input = find.byType(TextFormField);
-    expect(input, findsOneWidget);
-    await tester.enterText(input, "1250");
+    await tester.enterText(input, "1250ms");
     expect(
       written.last,
       types.DataValue.createDuration(
@@ -461,7 +458,12 @@ void main() {
     await tester.enterText(input, "");
     expect(written.last, types.DataValue.unfilled);
     await tester.enterText(input, "12x");
-    expect(find.text("12x"), findsNothing);
+    expect(written, [
+      types.DataValue.createDuration(
+        value: kernel.Duration(milliseconds: 1250),
+      ),
+      types.DataValue.unfilled,
+    ]);
   });
 
   testWidgets("an Unfilled byte sequence distinguishes empty from missing", (
@@ -695,13 +697,18 @@ void main() {
       written.add,
     );
 
-    expect(find.text("Choose a date and time"), findsOneWidget);
     expect(written, isEmpty);
-    await tester.tap(find.text("Choose a date and time"));
+    await tester.tap(find.byTooltip("Open picker"));
     await tester.pumpAndSettle();
-    await tester.tap(find.text("OK"));
+    expect(written, isEmpty);
+    await tester.tap(find.byTooltip("Close picker"));
     await tester.pumpAndSettle();
-    expect(written.last, isA<types.DataValue_timestampWrapper>());
+    expect(written, isEmpty);
+    await tester.enterText(find.byType(TextFormField), "01:02:03");
+    await tester.pumpAndSettle();
+    final timestamp =
+        (written.single as types.DataValue_timestampWrapper).value;
+    expect([timestamp.hour, timestamp.minute, timestamp.second], [1, 2, 3]);
   });
 
   testWidgets("a date before 1970 remains editable", (tester) async {
@@ -719,11 +726,18 @@ void main() {
       written.add,
     );
 
-    await tester.tap(find.byType(ListTile));
+    await tester.tap(find.byTooltip("Open picker"));
     await tester.pumpAndSettle();
-    expect(find.byType(DatePickerDialog), findsOneWidget);
     expect(tester.takeException(), isNull);
     expect(written, isEmpty);
+    await tester.tap(find.byTooltip("Close picker"));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField), "1900-06-16");
+    await tester.pumpAndSettle();
+    expect(
+      written.single,
+      types.DataValue.wrapTimestamp(DateTime.utc(1900, 6, 16)),
+    );
   });
 
   testWidgets("connection layers report unresolved declared anchors", (

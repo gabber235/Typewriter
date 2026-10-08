@@ -107,7 +107,7 @@ void main() {
     final decodedConnect =
         (decoded as authoring.EditIntent_connectRelationWrapper).value;
     final decodedCounterpart =
-        (decodedConnect.counterpart as authoring.CounterpartChoice_newWrapper)
+        (decodedConnect.counterpart! as authoring.CounterpartChoice_newWrapper)
             .value;
     expect(
       [
@@ -128,13 +128,13 @@ void main() {
     final fixture = _fixture();
     await tester.pumpWidget(_linkControl(fixture));
 
-    await tester.tap(find.text("Choose"));
+    await tester.tap(find.byTooltip("Choose linked resource"));
     await tester.pumpAndSettle();
-    await tester.tap(find.text("Cancel"));
+    await tester.tap(find.byTooltip("Close"));
     await tester.pumpAndSettle();
     expect(fixture.draft.intents, isEmpty);
 
-    await tester.tap(find.text("Choose"));
+    await tester.tap(find.byTooltip("Choose linked resource"));
     await tester.pumpAndSettle();
     await tester.tap(
       find.byKey(
@@ -152,6 +152,13 @@ void main() {
       intent.value.counterpart,
       isA<authoring.CounterpartChoice_existingWrapper>(),
     );
+    final counterpart =
+        (intent.value.counterpart! as authoring.CounterpartChoice_existingWrapper)
+            .value;
+    expect(intent.value.target, fixture.existingTarget);
+    expect(counterpart.id.location.resource, fixture.existingTarget);
+    expect(counterpart.id.location.path, fixture.nestedLinkPath);
+    expect(fixture.draft.links.single.secondLocation, fixture.nestedLinkPath);
   });
 
   testWidgets("link input prepares and chooses a new nested counterpart", (
@@ -182,7 +189,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text("Choose"));
+    await tester.tap(find.byTooltip("Choose linked resource"));
     await tester.pumpAndSettle();
     await tester.tap(
       find.byKey(
@@ -197,10 +204,18 @@ void main() {
             as authoring.EditIntent_connectRelationWrapper;
     final counterpart = intent.value.counterpart;
     expect(counterpart, isA<authoring.CounterpartChoice_newWrapper>());
+    final created =
+        (counterpart! as authoring.CounterpartChoice_newWrapper).value;
+    expect(created.prepared, prepared);
+    expect(intent.value.target, fixture.emptyTarget);
     expect(
-      (counterpart! as authoring.CounterpartChoice_newWrapper).value.prepared,
-      prepared,
+      created.containing,
+      types.ValueLocation(
+        resource: fixture.emptyTarget,
+        path: _fieldPath("wrapper"),
+      ),
     );
+    expect(fixture.draft.links.single.secondLocation, fixture.nestedLinkPath);
   });
 }
 
