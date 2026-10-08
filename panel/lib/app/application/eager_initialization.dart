@@ -16,10 +16,10 @@ class EagerInitialization extends ConsumerWidget {
 
   /// Converts an asynchronous dependency into either its value or a boundary
   /// widget. A null value is valid and therefore remains distinct from an
-  /// error or loading state.
-  (T?, Widget?) require<T>(AsyncValue<T> value) {
+  /// error or loading state. Retry recomputes the owner of the failed dependency.
+  (T?, Widget?) require<T>(AsyncValue<T> value, VoidCallback retry) {
     if (value.hasError) {
-      return (null, _Error(value.error!));
+      return (null, _Error(value.error!, retry));
     }
     if (value.isLoading) {
       return (null, const _Loading());
@@ -29,19 +29,26 @@ class EagerInitialization extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final (_, otelWidget) = require(ref.watch(panelTelemetryProvider));
+    final (_, otelWidget) = require(
+      ref.watch(panelTelemetryProvider),
+      () => ref.invalidate(panelTelemetryProvider),
+    );
     if (otelWidget != null) {
       return otelWidget;
     }
 
     // Fetch sentinel credentials before authentication checks
-    final (_, sentinelWidget) = require(ref.watch(sentinelCredentialsProvider));
+    final (_, sentinelWidget) = require(
+      ref.watch(sentinelCredentialsProvider),
+      () => ref.invalidate(sentinelCredentialsProvider),
+    );
     if (sentinelWidget != null) {
       return sentinelWidget;
     }
 
     final (isAuthenticated, authenticatedWidget) = require(
       ref.watch(isAuthenticatedProvider),
+      () => ref.invalidate(authProvider),
     );
     if (authenticatedWidget != null) {
       return authenticatedWidget;
@@ -50,7 +57,10 @@ class EagerInitialization extends ConsumerWidget {
       return child;
     }
 
-    final (token, accessWidget) = require(ref.watch(accessTokenProvider));
+    final (token, accessWidget) = require(
+      ref.watch(accessTokenProvider),
+      () => ref.invalidate(authProvider),
+    );
     if (accessWidget != null) {
       return accessWidget;
     }
@@ -58,7 +68,10 @@ class EagerInitialization extends ConsumerWidget {
       return child;
     }
 
-    final (_, authUserInfoWidget) = require(ref.watch(authUserInfoProvider));
+    final (_, authUserInfoWidget) = require(
+      ref.watch(authUserInfoProvider),
+      () => ref.invalidate(authProvider),
+    );
     if (authUserInfoWidget != null) {
       return authUserInfoWidget;
     }
@@ -82,19 +95,23 @@ class _Loading extends HookWidget {
   }
 }
 
-class _Error extends HookConsumerWidget {
-  const _Error(this.error);
+class _Error extends StatelessWidget {
+  const _Error(this.error, this.retry);
   final Object error;
+  final VoidCallback retry;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return MaterialApp(
       title: "Typewriter",
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
       builder: (context, child) => Responsive(child: child!),
       home: Scaffold(
-        body: ErrorScreen(message: "$error", child: SignOutButton()),
+        body: ErrorScreen(
+          message: "$error",
+          child: ElevatedButton(onPressed: retry, child: const Text("Retry")),
+        ),
       ),
     );
   }
