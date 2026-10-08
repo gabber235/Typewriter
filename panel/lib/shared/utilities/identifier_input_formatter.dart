@@ -1,4 +1,4 @@
-import "package:flutter/services.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 const identifierMinimumLength = 3;
 const identifierPattern = r"^[a-z0-9]+(_[a-z0-9]+)*$";

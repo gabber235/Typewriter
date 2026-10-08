@@ -1,4 +1,4 @@
-import "dart:collection";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 sealed class PortableRegexNormalization {
   const PortableRegexNormalization();

@@ -1,6 +1,3 @@
-import "dart:math";
-
-import "package:collection/collection.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Collection operations used by panel presentation and data assembly.

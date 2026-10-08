@@ -1,17 +1,6 @@
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring.dart"
-    as authoring;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/binding.dart"
-    as binding;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as catalog;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
-    as expression;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/presentation.dart"
-    as presentation;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../../../support/test_utils.dart";
@@ -21,20 +10,20 @@ void main() {
     tester,
   ) async {
     final fixture = _fixture();
-    final node = presentation.PresentationNode(
+    final node = skir.PresentationNode(
       nodeId: "lookup",
-      properties: presentation.PresentationProperties.defaultInstance,
-      element: presentation.PresentationElement.createCollectionLookup(
+      properties: skir.PresentationProperties.defaultInstance,
+      element: skir.PresentationElement.createCollectionLookup(
         sourceId: "tags",
-        key: binding.BindingRef(
+        key: skir.BindingRef(
           bindingId: _lookupBinding,
-          path: types.ValuePath(segments: const []),
+          path: skir.ValuePath(segments: const []),
         ),
         found: _textNode("found", _read(_rowBinding, "name")),
         missing: _textNode(
           "missing",
-          expression.ExpressionNode.wrapLiteral(
-            types.DataValue.wrapStringValue("Missing"),
+          skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapStringValue("Missing"),
           ),
         ),
         loading: null,
@@ -54,48 +43,48 @@ void main() {
       final fixture = _fixture(cycle: true);
       final rootSlot = _slotNode("root.slot", "graph.root");
       final childSlot = _slotNode("child.slot", "graph.child");
-      final node = presentation.PresentationNode(
+      final node = skir.PresentationNode(
         nodeId: "graph",
-        properties: presentation.PresentationProperties.defaultInstance,
-        element: presentation.PresentationElement.createCollectionGraph(
+        properties: skir.PresentationProperties.defaultInstance,
+        element: skir.PresentationElement.createCollectionGraph(
           sourceId: "tags",
-          roots: expression.ExpressionNode.createCollection(
-            operation: types.OperationId(value: "typewriter.collection.map"),
-            input: expression.ExpressionNode.createRead(
+          roots: skir.ExpressionNode.createCollection(
+            operation: skir.OperationId(value: "typewriter.collection.map"),
+            input: skir.ExpressionNode.createRead(
               binding: _rootsBinding,
-              path: types.ValuePath(segments: const []),
+              path: skir.ValuePath(segments: const []),
             ),
-            bindings: [types.ExpressionBindingId(value: "root.link")],
+            bindings: [skir.ExpressionBindingId(value: "root.link")],
             arguments: const [],
-            body: expression.ExpressionNode.createCall(
-              operation: types.OperationId(value: "typewriter.link.target"),
+            body: skir.ExpressionNode.createCall(
+              operation: skir.OperationId(value: "typewriter.link.target"),
               arguments: [
-                expression.ExpressionNode.createRead(
-                  binding: types.ExpressionBindingId(value: "root.link"),
-                  path: types.ValuePath(segments: const []),
+                skir.ExpressionNode.createRead(
+                  binding: skir.ExpressionBindingId(value: "root.link"),
+                  path: skir.ValuePath(segments: const []),
                 ),
               ],
             ),
           ),
           rootSequence: _sequence(rootSlot),
           relationId: "next",
-          direction: presentation.CollectionGraphDirection.forward,
+          direction: skir.CollectionGraphDirection.forward,
           maximumDepth: 8,
-          node: presentation.PresentationNode(
+          node: skir.PresentationNode(
             nodeId: "graph.node",
-            properties: presentation.PresentationProperties.defaultInstance,
-            element: presentation.PresentationElement.wrapChildren(
-              presentation.ChildrenElement.createColumn(
+            properties: skir.PresentationProperties.defaultInstance,
+            element: skir.PresentationElement.wrapChildren(
+              skir.ChildrenElement.createColumn(
                 children: [
-                  presentation.AxisChild.wrapFixed(
+                  skir.AxisChild.wrapFixed(
                     _textNode("graph.name", _read(_rowBinding, "name")),
                   ),
-                  presentation.AxisChild.wrapFixed(childSlot),
+                  skir.AxisChild.wrapFixed(childSlot),
                 ],
-                layout: presentation.AxisChildrenLayout(
+                layout: skir.AxisChildrenLayout(
                   spacing: 0,
-                  mainAxisAlignment: presentation.MainAxisAlignment.start,
-                  crossAxisAlignment: presentation.CrossAxisAlignment.start,
+                  mainAxisAlignment: skir.MainAxisAlignment.start,
+                  crossAxisAlignment: skir.CrossAxisAlignment.start,
                 ),
               ),
             ),
@@ -112,14 +101,14 @@ void main() {
         tester,
         node,
         fixture.scope.withValues({
-          _rootsBinding: types.DataValue.createSetValue(
+          _rootsBinding: skir.DataValue.createSetValue(
             items: [
-              types.ListItem(
-                id: types.ItemId(value: "selected.tag"),
-                value: types.DataValue.createLink(
-                  endpoint: types.EndpointId(value: "book.tags"),
-                  target: types.LinkTarget(
-                    resource: types.ResourceId(value: "tag:one"),
+              skir.ListItem(
+                id: skir.ItemId(value: "selected.tag"),
+                value: skir.DataValue.createLink(
+                  endpoint: skir.EndpointId(value: "book.tags"),
+                  target: skir.LinkTarget(
+                    resource: skir.ResourceId(value: "tag:one"),
                     opposite: null,
                   ),
                 ),
@@ -138,20 +127,20 @@ void main() {
     tester,
   ) async {
     final fixture = _fixture(projected: true);
-    final node = presentation.PresentationNode(
+    final node = skir.PresentationNode(
       nodeId: "lookup.projected",
-      properties: presentation.PresentationProperties.defaultInstance,
-      element: presentation.PresentationElement.createCollectionLookup(
+      properties: skir.PresentationProperties.defaultInstance,
+      element: skir.PresentationElement.createCollectionLookup(
         sourceId: "tags",
-        key: binding.BindingRef(
+        key: skir.BindingRef(
           bindingId: _lookupBinding,
-          path: types.ValuePath(segments: const []),
+          path: skir.ValuePath(segments: const []),
         ),
         found: _textNode("projected.name", _read(_rowBinding, "name")),
         missing: _textNode(
           "projected.missing",
-          expression.ExpressionNode.wrapLiteral(
-            types.DataValue.wrapStringValue("Missing"),
+          skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapStringValue("Missing"),
           ),
         ),
         loading: null,
@@ -169,20 +158,20 @@ void main() {
     tester,
   ) async {
     final fixture = _fixture();
-    final node = presentation.PresentationNode(
+    final node = skir.PresentationNode(
       nodeId: "lookup.unfinished",
-      properties: presentation.PresentationProperties.defaultInstance,
-      element: presentation.PresentationElement.createCollectionLookup(
+      properties: skir.PresentationProperties.defaultInstance,
+      element: skir.PresentationElement.createCollectionLookup(
         sourceId: "tags",
-        key: binding.BindingRef(
+        key: skir.BindingRef(
           bindingId: _lookupBinding,
-          path: types.ValuePath(segments: const []),
+          path: skir.ValuePath(segments: const []),
         ),
         found: _textNode("unfinished.found", _read(_rowBinding, "name")),
         missing: _textNode(
           "unfinished.missing",
-          expression.ExpressionNode.wrapLiteral(
-            types.DataValue.wrapStringValue("Choose a tag"),
+          skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapStringValue("Choose a tag"),
           ),
         ),
         loading: null,
@@ -193,7 +182,7 @@ void main() {
     await _pump(
       tester,
       node,
-      fixture.scope.withValues({_lookupBinding: types.DataValue.unfilled}),
+      fixture.scope.withValues({_lookupBinding: skir.DataValue.unfilled}),
     );
 
     expect(find.text("Choose a tag"), findsOneWidget);
@@ -204,18 +193,18 @@ void main() {
     tester,
   ) async {
     final fixture = _fixture();
-    final node = presentation.PresentationNode(
+    final node = skir.PresentationNode(
       nodeId: "graph.unfinished",
-      properties: presentation.PresentationProperties.defaultInstance,
-      element: presentation.PresentationElement.createCollectionGraph(
+      properties: skir.PresentationProperties.defaultInstance,
+      element: skir.PresentationElement.createCollectionGraph(
         sourceId: "tags",
-        roots: expression.ExpressionNode.createRead(
+        roots: skir.ExpressionNode.createRead(
           binding: _rootsBinding,
-          path: types.ValuePath(segments: const []),
+          path: skir.ValuePath(segments: const []),
         ),
         rootSequence: _sequence(_slotNode("unfinished.root", "graph.root")),
         relationId: "next",
-        direction: presentation.CollectionGraphDirection.forward,
+        direction: skir.CollectionGraphDirection.forward,
         maximumDepth: 8,
         node: _textNode("unfinished.node", _read(_rowBinding, "name")),
         childrenBindingId: _childrenBinding,
@@ -228,7 +217,7 @@ void main() {
     await _pump(
       tester,
       node,
-      fixture.scope.withValues({_rootsBinding: types.DataValue.unfilled}),
+      fixture.scope.withValues({_rootsBinding: skir.DataValue.unfilled}),
     );
 
     expect(
@@ -239,20 +228,20 @@ void main() {
 
   testWidgets("duplicate projected keys report ambiguity", (tester) async {
     final fixture = _fixture(projected: true, duplicateKey: true);
-    final node = presentation.PresentationNode(
+    final node = skir.PresentationNode(
       nodeId: "lookup.duplicate",
-      properties: presentation.PresentationProperties.defaultInstance,
-      element: presentation.PresentationElement.createCollectionLookup(
+      properties: skir.PresentationProperties.defaultInstance,
+      element: skir.PresentationElement.createCollectionLookup(
         sourceId: "tags",
-        key: binding.BindingRef(
+        key: skir.BindingRef(
           bindingId: _lookupBinding,
-          path: types.ValuePath(segments: const []),
+          path: skir.ValuePath(segments: const []),
         ),
         found: _textNode("duplicate.found", _read(_rowBinding, "name")),
         missing: _textNode(
           "duplicate.missing",
-          expression.ExpressionNode.wrapLiteral(
-            types.DataValue.wrapStringValue("Missing"),
+          skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapStringValue("Missing"),
           ),
         ),
         loading: null,
@@ -277,90 +266,89 @@ void main() {
   });
 }
 
-({PortablePresentationScope scope, presentation.PresentationNode node})
+({PortablePresentationScope scope, skir.PresentationNode node})
 _nestedMaterialFixture() {
   final base = _fixture();
   final original = base.scope.catalog!.snapshot;
   final record = base.scope.authoring!.resources.values.first;
   final type = switch (record.configuration) {
-    types.TypeSelection_completeWrapper(:final value) => value.definition,
+    skir.TypeSelection_completeWrapper(:final value) => value.definition,
     _ => throw StateError("The nested collection fixture must be complete"),
   };
-  final nestedProvider = types.PresentationId(
+  final nestedProvider = skir.PresentationId(
     namespace: "test",
     name: "nested.collections",
   );
-  final nestedDefinition = presentation.PresentationCollectionDefinition(
+  final nestedDefinition = skir.PresentationCollectionDefinition(
     sourceId: "tags",
-    rowType: types.TypeTemplate.createNamed(
+    rowType: skir.TypeTemplate.createNamed(
       definition: type,
       arguments: const [],
     ),
     rowBindingId: _rowBinding,
     key: _read(_rowBinding, "name"),
-    selectability: expression.ExpressionNode.wrapLiteral(
-      types.DataValue.wrapBoolean(true),
+    selectability: skir.ExpressionNode.wrapLiteral(
+      skir.DataValue.wrapBoolean(true),
     ),
     relations: const [],
-    projection: presentation.PresentationCollectionProjection(
-      root: types.NamedTypeTemplate(definition: type, arguments: const []),
+    projection: skir.PresentationCollectionProjection(
+      root: skir.NamedTypeTemplate(definition: type, arguments: const []),
       resourceBindingId: _resourceBinding,
       fields: [
-        presentation.PresentationCollectionProjectionField(
-          target: types.ValuePath(
-            segments: [types.PathSegment.createField(name: "name")],
+        skir.PresentationCollectionProjectionField(
+          target: skir.ValuePath(
+            segments: [skir.PathSegment.createField(name: "name")],
           ),
-          source:
-              presentation.PresentationCollectionProjectionValue.createContent(
-                segments: [types.PathSegment.createField(name: "name")],
-              ),
+          source: skir.PresentationCollectionProjectionValue.createContent(
+            segments: [skir.PathSegment.createField(name: "name")],
+          ),
         ),
       ],
     ),
     resources: null,
   );
-  final nestedLayout = presentation.PresentationNode(
+  final nestedLayout = skir.PresentationNode(
     nodeId: "nested.lookup",
-    properties: presentation.PresentationProperties.defaultInstance,
-    element: presentation.PresentationElement.createCollectionLookup(
+    properties: skir.PresentationProperties.defaultInstance,
+    element: skir.PresentationElement.createCollectionLookup(
       sourceId: "tags",
-      key: binding.BindingRef(
+      key: skir.BindingRef(
         bindingId: _nestedLookupBinding,
-        path: types.ValuePath(segments: const []),
+        path: skir.ValuePath(segments: const []),
       ),
       found: _textNode("nested.found", _read(_rowBinding, "name")),
       missing: _textNode(
         "nested.missing",
-        expression.ExpressionNode.wrapLiteral(
-          types.DataValue.wrapStringValue("Missing"),
+        skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue("Missing"),
         ),
       ),
       loading: null,
     ),
     header: null,
   );
-  final nestedMaterial = catalog.PresentationMaterial(
+  final nestedMaterial = skir.PresentationMaterial(
     provider: nestedProvider,
-    target: catalog.PresentationTarget.createNamed(
+    target: skir.PresentationTarget.createNamed(
       definition: type,
       arguments: const [],
     ),
-    role: catalog.PresentationRole.inspector,
+    role: skir.PresentationRole.inspector,
     layout: nestedLayout,
-    dependencies: presentation.PresentationDependencies(
+    dependencies: skir.PresentationDependencies(
       types: const [],
       presentations: const [],
       conversions: const [],
       capabilities: const [],
       collections: [nestedDefinition],
     ),
-    subject: types.TypeTemplate.createNamed(
+    subject: skir.TypeTemplate.createNamed(
       definition: type,
       arguments: const [],
     ),
   );
   final checked = CheckedEditorCatalog(
-    catalog.EditorCatalogWireSnapshot(
+    skir.EditorCatalogWireSnapshot(
       generation: original.generation,
       types: original.types,
       relations: original.relations,
@@ -385,7 +373,7 @@ _nestedMaterialFixture() {
       bindings: {
         ...base.scope.bindings,
         _nestedLookupBinding: PortableExpressionBinding(
-          value: types.DataValue.wrapStringValue("Alpha"),
+          value: skir.DataValue.wrapStringValue("Alpha"),
         ),
       },
       budget: base.scope.budget,
@@ -395,10 +383,10 @@ _nestedMaterialFixture() {
       resource: resource,
       material: base.material,
     ),
-    node: presentation.PresentationNode(
+    node: skir.PresentationNode(
       nodeId: "outer.invocation",
-      properties: presentation.PresentationProperties.defaultInstance,
-      element: presentation.PresentationElement.createInvocation(
+      properties: skir.PresentationProperties.defaultInstance,
+      element: skir.PresentationElement.createInvocation(
         presentationId: nestedProvider,
         arguments: const [],
       ),
@@ -407,7 +395,7 @@ _nestedMaterialFixture() {
   );
 }
 
-({PortablePresentationScope scope, catalog.PresentationMaterial material})
+({PortablePresentationScope scope, skir.PresentationMaterial material})
 _fixture({
   bool cycle = false,
   bool projected = false,
@@ -415,27 +403,27 @@ _fixture({
 }) {
   final type = _definition("Tag");
   final list = _definition("List");
-  final listParameter = types.ParameterKey(owner: list, index: 0);
-  final listOfText = types.NamedTypeUse(
+  final listParameter = skir.ParameterKey(owner: list, index: 0);
+  final listOfText = skir.NamedTypeUse(
     definition: list,
-    arguments: [types.TypeUse.wrapScalar(types.ScalarKind.text)],
+    arguments: [skir.TypeUse.wrapScalar(skir.ScalarKind.text)],
   );
-  final listOfTextTemplate = types.TypeTemplate.createNamed(
+  final listOfTextTemplate = skir.TypeTemplate.createNamed(
     definition: list,
-    arguments: [types.TypeTemplate.wrapScalar(types.ScalarKind.text)],
+    arguments: [skir.TypeTemplate.wrapScalar(skir.ScalarKind.text)],
   );
-  final generation = types.CatalogGeneration(value: "catalog:collections");
-  final published = catalog.PublishedType(
+  final generation = skir.CatalogGeneration(value: "catalog:collections");
+  final published = skir.PublishedType(
     display: null,
-    definition: types.TypeDefinition(
+    definition: skir.TypeDefinition(
       id: type,
       parameters: const [],
-      representation: types.RepresentationTemplate.createRecord(
+      representation: skir.RepresentationTemplate.createRecord(
         fields: [
           _field(
             type,
             "name",
-            types.TypeTemplate.wrapScalar(types.ScalarKind.text),
+            skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
           ),
           _field(type, "next", listOfTextTemplate),
         ],
@@ -443,48 +431,48 @@ _fixture({
       ),
       parents: const [],
     ),
-    status: catalog.DeclarationStatus.ready,
+    status: skir.DeclarationStatus.ready,
     effectiveFields: [
       _effective(
         type,
         "name",
-        types.TypeTemplate.wrapScalar(types.ScalarKind.text),
+        skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
       ),
       _effective(type, "next", listOfTextTemplate),
     ],
     ancestorTemplates: const [],
   );
   final checked = CheckedEditorCatalog(
-    catalog.EditorCatalogWireSnapshot(
+    skir.EditorCatalogWireSnapshot(
       generation: generation,
       types: [
         published,
-        catalog.PublishedType(
+        skir.PublishedType(
           display: null,
-          definition: types.TypeDefinition(
+          definition: skir.TypeDefinition(
             id: list,
             parameters: [
-              types.TypeParameter(
+              skir.TypeParameter(
                 key: listParameter,
                 name: "T",
                 bounds: const [],
               ),
             ],
-            representation: types.RepresentationTemplate.createSequence(
-              item: types.TypeTemplate.wrapParameter(listParameter),
-              kind: types.CollectionKind.list,
+            representation: skir.RepresentationTemplate.createSequence(
+              item: skir.TypeTemplate.wrapParameter(listParameter),
+              kind: skir.CollectionKind.list,
             ),
             parents: const [],
           ),
-          status: catalog.DeclarationStatus.ready,
+          status: skir.DeclarationStatus.ready,
           effectiveFields: const [],
           ancestorTemplates: const [],
         ),
       ],
       relations: const [],
       resourceDefinitions: [
-        catalog.AuthoringResourceDefinition(
-          id: catalog.ResourceDefinitionId(value: "test.tag"),
+        skir.AuthoringResourceDefinition(
+          id: skir.ResourceDefinitionId(value: "test.tag"),
           root: type,
           navigationHandler: "",
         ),
@@ -500,9 +488,9 @@ _fixture({
       roleFallbacks: const [],
     ),
   );
-  final one = types.ResourceId(value: "tag:one");
-  final two = types.ResourceId(value: "tag:two");
-  final snapshot = authoring.AuthoringState(
+  final one = skir.ResourceId(value: "tag:one");
+  final two = skir.ResourceId(value: "tag:two");
+  final snapshot = skir.AuthoringState(
     generation: generation,
     resources: [
       _resource(one, type, listOfText, "Alpha", [two]),
@@ -518,44 +506,40 @@ _fixture({
     findings: const [],
   );
   final draft = AuthoredDraft.fromState(snapshot, catalog: checked);
-  final definition = presentation.PresentationCollectionDefinition(
+  final definition = skir.PresentationCollectionDefinition(
     sourceId: "tags",
-    rowType: types.TypeTemplate.createNamed(
+    rowType: skir.TypeTemplate.createNamed(
       definition: type,
       arguments: const [],
     ),
     rowBindingId: _rowBinding,
     key: projected
         ? _read(_rowBinding, "name")
-        : expression.ExpressionNode.createRead(
+        : skir.ExpressionNode.createRead(
             binding: _resourceBinding,
-            path: types.ValuePath(segments: const []),
+            path: skir.ValuePath(segments: const []),
           ),
-    selectability: expression.ExpressionNode.wrapLiteral(
-      types.DataValue.wrapBoolean(true),
+    selectability: skir.ExpressionNode.wrapLiteral(
+      skir.DataValue.wrapBoolean(true),
     ),
     relations: [
-      presentation.PresentationCollectionRelationDefinition(
+      skir.PresentationCollectionRelationDefinition(
         relationId: "next",
         targets: _read(_rowBinding, "next"),
       ),
     ],
     projection: projected
-        ? presentation.PresentationCollectionProjection(
-            root: types.NamedTypeTemplate(
-              definition: type,
-              arguments: const [],
-            ),
+        ? skir.PresentationCollectionProjection(
+            root: skir.NamedTypeTemplate(definition: type, arguments: const []),
             resourceBindingId: _resourceBinding,
             fields: [
-              presentation.PresentationCollectionProjectionField(
-                target: types.ValuePath(
-                  segments: [types.PathSegment.createField(name: "name")],
+              skir.PresentationCollectionProjectionField(
+                target: skir.ValuePath(
+                  segments: [skir.PathSegment.createField(name: "name")],
                 ),
                 source:
-                    presentation
-                        .PresentationCollectionProjectionValue.createContent(
-                      segments: [types.PathSegment.createField(name: "name")],
+                    skir.PresentationCollectionProjectionValue.createContent(
+                      segments: [skir.PathSegment.createField(name: "name")],
                     ),
               ),
             ],
@@ -563,30 +547,30 @@ _fixture({
         : null,
     resources: projected
         ? null
-        : presentation.PresentationResourceCollection(
+        : skir.PresentationResourceCollection(
             root: type,
             resourceBindingId: _resourceBinding,
             appearance: null,
           ),
   );
-  final provider = types.PresentationId(namespace: "test", name: "collections");
-  final target = catalog.PresentationTarget.createNamed(
+  final provider = skir.PresentationId(namespace: "test", name: "collections");
+  final target = skir.PresentationTarget.createNamed(
     definition: type,
     arguments: const [],
   );
-  final material = catalog.PresentationMaterial(
+  final material = skir.PresentationMaterial(
     provider: provider,
     target: target,
-    role: catalog.PresentationRole.inspector,
+    role: skir.PresentationRole.inspector,
     layout: _slotNode("material", "unused"),
-    dependencies: presentation.PresentationDependencies(
+    dependencies: skir.PresentationDependencies(
       types: const [],
       presentations: const [],
       conversions: const [],
       capabilities: const [],
       collections: [definition],
     ),
-    subject: types.TypeTemplate.createNamed(
+    subject: skir.TypeTemplate.createNamed(
       definition: type,
       arguments: const [],
     ),
@@ -596,7 +580,7 @@ _fixture({
     scope: PortablePresentationScope(
       bindings: {
         _lookupBinding: PortableExpressionBinding(
-          value: types.DataValue.wrapStringValue(
+          value: skir.DataValue.wrapStringValue(
             projected ? "Alpha" : one.value,
           ),
         ),
@@ -604,10 +588,7 @@ _fixture({
           value: _values([one], listOfText),
         ),
       },
-      budget: expression.EvaluationBudget(
-        maxSteps: 1000,
-        maxCollectionItems: 1000,
-      ),
+      budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 1000),
       setBinding: (_, _) {},
       authoring: AuthoredDraftAuthoringDocument(draft),
       catalog: checked,
@@ -616,127 +597,124 @@ _fixture({
   );
 }
 
-authoring.AuthoringResource _resource(
-  types.ResourceId id,
-  types.TypeDefinitionId type,
-  types.NamedTypeUse listType,
+skir.AuthoringResource _resource(
+  skir.ResourceId id,
+  skir.TypeDefinitionId type,
+  skir.NamedTypeUse listType,
   String name,
-  List<types.ResourceId> next,
-) => authoring.AuthoringResource(
+  List<skir.ResourceId> next,
+) => skir.AuthoringResource(
   id: id,
-  definition: catalog.ResourceDefinitionId(value: "test.tag"),
-  content: types.AuthoringRecord(
-    configuration: types.TypeSelection.createComplete(
+  definition: skir.ResourceDefinitionId(value: "test.tag"),
+  content: skir.AuthoringRecord(
+    configuration: skir.TypeSelection.createComplete(
       definition: type,
       arguments: const [],
     ),
     fields: [
-      types.FieldValue(
+      skir.FieldValue(
         name: "name",
-        value: types.DataValue.wrapStringValue(name),
+        value: skir.DataValue.wrapStringValue(name),
       ),
-      types.FieldValue(name: "next", value: _values(next, listType)),
+      skir.FieldValue(name: "next", value: _values(next, listType)),
     ],
   ),
 );
 
-types.DataValue _values(
-  List<types.ResourceId> values,
-  types.NamedTypeUse listType,
-) => types.DataValue.createNamed(
+skir.DataValue _values(
+  List<skir.ResourceId> values,
+  skir.NamedTypeUse listType,
+) => skir.DataValue.createNamed(
   actualType: listType,
-  payload: types.DataValue.createListValue(
+  payload: skir.DataValue.createListValue(
     items: [
       for (final indexed in values.indexed)
-        types.ListItem(
-          id: types.ItemId(value: "item:${indexed.$1}"),
-          value: types.DataValue.wrapStringValue(indexed.$2.value),
+        skir.ListItem(
+          id: skir.ItemId(value: "item:${indexed.$1}"),
+          value: skir.DataValue.wrapStringValue(indexed.$2.value),
         ),
     ],
   ),
 );
 
-types.FieldDeclaration _field(
-  types.TypeDefinitionId type,
+skir.FieldDeclaration _field(
+  skir.TypeDefinitionId type,
   String name,
-  types.TypeTemplate fieldType,
-) => types.FieldDeclaration(
-  owner: types.FieldOwner(definition: type, name: name),
+  skir.TypeTemplate fieldType,
+) => skir.FieldDeclaration(
+  owner: skir.FieldOwner(definition: type, name: name),
   type: fieldType,
   overrides: const [],
   hasConstructorDefault: false,
 );
 
-catalog.EffectiveFieldTemplate _effective(
-  types.TypeDefinitionId type,
+skir.EffectiveFieldTemplate _effective(
+  skir.TypeDefinitionId type,
   String name,
-  types.TypeTemplate fieldType,
-) => catalog.EffectiveFieldTemplate(
+  skir.TypeTemplate fieldType,
+) => skir.EffectiveFieldTemplate(
   key: name,
-  owner: types.FieldOwner(definition: type, name: name),
+  owner: skir.FieldOwner(definition: type, name: name),
   type: fieldType,
   rules: const [],
 );
 
-expression.ExpressionNode _read(types.ExpressionBindingId id, String field) =>
-    expression.ExpressionNode.createRead(
+skir.ExpressionNode _read(skir.ExpressionBindingId id, String field) =>
+    skir.ExpressionNode.createRead(
       binding: id,
-      path: types.ValuePath(
-        segments: [types.PathSegment.createField(name: field)],
+      path: skir.ValuePath(
+        segments: [skir.PathSegment.createField(name: field)],
       ),
     );
 
-presentation.PresentationNode _textNode(
-  String id,
-  expression.ExpressionNode value,
-) => presentation.PresentationNode(
-  nodeId: id,
-  properties: presentation.PresentationProperties.defaultInstance,
-  element: presentation.PresentationElement.createText(
-    value: value,
-    color: null,
-    fontSize: null,
-    fontWeight: null,
-    fontItalic: null,
-    fontOpticalSize: null,
-    fontSlant: null,
-    fontWidth: null,
-    textAlignment: null,
-    lineHeight: null,
-    letterSpacing: null,
-    decoration: null,
-    semanticLabel: null,
-    paragraph: presentation.TextParagraph.defaultInstance,
-  ),
-  header: null,
-);
-
-presentation.PresentationNode _slotNode(String id, String slot) =>
-    presentation.PresentationNode(
+skir.PresentationNode _textNode(String id, skir.ExpressionNode value) =>
+    skir.PresentationNode(
       nodeId: id,
-      properties: presentation.PresentationProperties.defaultInstance,
-      element: presentation.PresentationElement.createSlot(slotId: slot),
+      properties: skir.PresentationProperties.defaultInstance,
+      element: skir.PresentationElement.createText(
+        value: value,
+        color: null,
+        fontSize: null,
+        fontWeight: null,
+        fontItalic: null,
+        fontOpticalSize: null,
+        fontSlant: null,
+        fontWidth: null,
+        textAlignment: null,
+        lineHeight: null,
+        letterSpacing: null,
+        decoration: null,
+        semanticLabel: null,
+        paragraph: skir.TextParagraph.defaultInstance,
+      ),
       header: null,
     );
 
-presentation.SequencePresentation _sequence(
-  presentation.PresentationNode item,
-) => presentation.SequencePresentation(
-  item: item,
-  empty: null,
-  separator: null,
-  layout: presentation.SequenceLayout.wrapChildren(
-    presentation.ChildrenLayout.createColumn(
-      spacing: 0,
-      mainAxisAlignment: presentation.MainAxisAlignment.start,
-      crossAxisAlignment: presentation.CrossAxisAlignment.start,
-    ),
-  ),
-);
+skir.PresentationNode _slotNode(String id, String slot) =>
+    skir.PresentationNode(
+      nodeId: id,
+      properties: skir.PresentationProperties.defaultInstance,
+      element: skir.PresentationElement.createSlot(slotId: slot),
+      header: null,
+    );
+
+skir.SequencePresentation _sequence(skir.PresentationNode item) =>
+    skir.SequencePresentation(
+      item: item,
+      empty: null,
+      separator: null,
+      layout: skir.SequenceLayout.wrapChildren(
+        skir.ChildrenLayout.createColumn(
+          spacing: 0,
+          mainAxisAlignment: skir.MainAxisAlignment.start,
+          crossAxisAlignment: skir.CrossAxisAlignment.start,
+        ),
+      ),
+    );
 
 Future<void> _pump(
   WidgetTester tester,
-  presentation.PresentationNode node,
+  skir.PresentationNode node,
   PortablePresentationScope scope,
 ) => tester.pumpTestApp(
   child: Builder(
@@ -746,21 +724,19 @@ Future<void> _pump(
   ),
 );
 
-types.TypeDefinitionId _definition(String name) => types.TypeDefinitionId(
-  typeId: types.TypeId.wrapQualified(
-    types.QualifiedTypeId(namespace: "test", name: name),
+skir.TypeDefinitionId _definition(String name) => skir.TypeDefinitionId(
+  typeId: skir.TypeId.wrapQualified(
+    skir.QualifiedTypeId(namespace: "test", name: name),
   ),
   revision: 1,
 );
 
-final _rowBinding = types.ExpressionBindingId(value: "collection.row");
-final _resourceBinding = types.ExpressionBindingId(
-  value: "collection.resource",
-);
-final _lookupBinding = types.ExpressionBindingId(value: "lookup.key");
-final _nestedLookupBinding = types.ExpressionBindingId(
+final _rowBinding = skir.ExpressionBindingId(value: "collection.row");
+final _resourceBinding = skir.ExpressionBindingId(value: "collection.resource");
+final _lookupBinding = skir.ExpressionBindingId(value: "lookup.key");
+final _nestedLookupBinding = skir.ExpressionBindingId(
   value: "lookup.nested.key",
 );
-final _rootsBinding = types.ExpressionBindingId(value: "graph.roots");
-final _childrenBinding = types.ExpressionBindingId(value: "graph.children");
-final _childBinding = types.ExpressionBindingId(value: "graph.child");
+final _rootsBinding = skir.ExpressionBindingId(value: "graph.roots");
+final _childrenBinding = skir.ExpressionBindingId(value: "graph.children");
+final _childBinding = skir.ExpressionBindingId(value: "graph.child");

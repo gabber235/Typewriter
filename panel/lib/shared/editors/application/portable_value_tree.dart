@@ -1,4 +1,4 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 
 sealed class PortablePathResult<T> {

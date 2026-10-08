@@ -1,4 +1,4 @@
-import "package:flutter/material.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Geometry helpers for laid out render boxes.
 extension RenderBoxX on RenderBox {

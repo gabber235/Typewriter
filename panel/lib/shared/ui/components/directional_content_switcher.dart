@@ -1,4 +1,4 @@
-import "package:flutter/material.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Switches keyed content with a slide direction derived from index changes.
 ///

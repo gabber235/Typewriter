@@ -1,4 +1,3 @@
-import "package:flutter/material.dart" hide Page;
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;

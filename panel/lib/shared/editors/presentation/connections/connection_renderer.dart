@@ -8,7 +8,7 @@ part of "portable_connections.dart";
 /// in this node's scope, then the anchor surface maps each visible alignment
 /// and offset into the connection layer's coordinates. This keeps geometry
 /// collection separate from connection path resolution.
-extension PresentationAnchorLayoutRendering on PresentationAnchorLayout {
+extension PresentationAnchorLayoutRendering on skir.PresentationAnchorLayout {
   Widget render(BuildContext context, PortablePresentationScope scope) {
     final resolved = <_ResolvedAnchorPoint>[];
     final diagnostics = <String>[];
@@ -34,7 +34,7 @@ extension PresentationAnchorLayoutRendering on PresentationAnchorLayout {
 /// The layer owns connections declared at this level. It can resolve anchors
 /// in its child subtree and explicitly exported anchors from one nested layer,
 /// but nested layers remain independent owners of their own connections.
-extension ConnectionLayerLayoutRendering on ConnectionLayerLayout {
+extension ConnectionLayerLayoutRendering on skir.ConnectionLayerLayout {
   Widget render(BuildContext context, PortablePresentationScope scope) =>
       _ConnectionLayerSurface(
         connections: connections.toList(growable: false),
@@ -43,7 +43,7 @@ extension ConnectionLayerLayoutRendering on ConnectionLayerLayout {
       );
 }
 
-extension on PresentationAnchorPoint {
+extension on skir.PresentationAnchorPoint {
   /// Resolves visibility and expression driven offset without touching layout.
   ///
   /// Invisible anchors remain in the resolved model as hidden points, which
@@ -54,7 +54,7 @@ extension on PresentationAnchorPoint {
   ) {
     final visible = switch (visibleIf) {
       null => PortableExpressionAvailable(
-        types.DataValue.wrapBoolean(true),
+        skir.DataValue.wrapBoolean(true),
         const [],
       ),
       final expression => scope.evaluate(expression),
@@ -63,7 +63,7 @@ extension on PresentationAnchorPoint {
       return _ConnectionResult.failure(visible.diagnostics);
     }
     final visibleValue = visible.valueOrNull;
-    if (visibleValue is! types.DataValue_booleanWrapper) {
+    if (visibleValue is! skir.DataValue_booleanWrapper) {
       return _ConnectionResult.failure([
         "Anchor visibility must evaluate to boolean",
       ]);
@@ -97,7 +97,7 @@ extension on PresentationAnchorPoint {
   }
 }
 
-extension on PresentationOffset {
+extension on skir.PresentationOffset {
   _ConnectionResult<Offset> _resolve(PortablePresentationScope scope) {
     final xValue = scope.evaluate(x);
     final yValue = scope.evaluate(y);
@@ -116,11 +116,11 @@ extension on PresentationOffset {
   }
 }
 
-extension on types.DataValue? {
+extension on skir.DataValue? {
   double? get _connectionNumber => switch (this) {
-    types.DataValue_floatWrapper(:final value) => value,
-    types.DataValue_integerWrapper(:final value) => double.tryParse(value),
-    types.DataValue_decimalWrapper(:final value) => double.tryParse(value),
+    skir.DataValue_floatWrapper(:final value) => value,
+    skir.DataValue_integerWrapper(:final value) => double.tryParse(value),
+    skir.DataValue_decimalWrapper(:final value) => double.tryParse(value),
     _ => null,
   };
 }
@@ -142,7 +142,7 @@ final class _ResolvedAnchorPoint {
 
   final String id;
   final List<String> groupIds;
-  final PresentationAnchorAlignment alignment;
+  final skir.PresentationAnchorAlignment alignment;
   final Offset offset;
   final bool exportToParent;
   final bool visible;
@@ -151,34 +151,36 @@ final class _ResolvedAnchorPoint {
     final start = direction == TextDirection.ltr ? 0.0 : size.width;
     final end = direction == TextDirection.ltr ? size.width : 0.0;
     final aligned = switch (alignment.kind) {
-      PresentationAnchorAlignment_kind.topStartConst => Offset(start, 0),
-      PresentationAnchorAlignment_kind.topCenterConst => Offset(
+      skir.PresentationAnchorAlignment_kind.topStartConst => Offset(start, 0),
+      skir.PresentationAnchorAlignment_kind.topCenterConst => Offset(
         size.width / 2,
         0,
       ),
-      PresentationAnchorAlignment_kind.topEndConst => Offset(end, 0),
-      PresentationAnchorAlignment_kind.centerStartConst => Offset(
+      skir.PresentationAnchorAlignment_kind.topEndConst => Offset(end, 0),
+      skir.PresentationAnchorAlignment_kind.centerStartConst => Offset(
         start,
         size.height / 2,
       ),
-      PresentationAnchorAlignment_kind.centerConst => size.center(Offset.zero),
-      PresentationAnchorAlignment_kind.centerEndConst => Offset(
+      skir.PresentationAnchorAlignment_kind.centerConst => size.center(
+        Offset.zero,
+      ),
+      skir.PresentationAnchorAlignment_kind.centerEndConst => Offset(
         end,
         size.height / 2,
       ),
-      PresentationAnchorAlignment_kind.bottomStartConst => Offset(
+      skir.PresentationAnchorAlignment_kind.bottomStartConst => Offset(
         start,
         size.height,
       ),
-      PresentationAnchorAlignment_kind.bottomCenterConst => Offset(
+      skir.PresentationAnchorAlignment_kind.bottomCenterConst => Offset(
         size.width / 2,
         size.height,
       ),
-      PresentationAnchorAlignment_kind.bottomEndConst => Offset(
+      skir.PresentationAnchorAlignment_kind.bottomEndConst => Offset(
         end,
         size.height,
       ),
-      PresentationAnchorAlignment_kind.unknown => size.center(Offset.zero),
+      skir.PresentationAnchorAlignment_kind.unknown => size.center(Offset.zero),
     };
     final logicalOffset = direction == TextDirection.ltr
         ? offset

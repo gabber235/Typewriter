@@ -1,9 +1,6 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as catalog;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as type_catalog;
-import "package:typewriter_panel/typewriter_panel.dart"
-    show CheckedEditorCatalog;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Installs a local catalog asset whose types were made effective by its owner.
 ///
@@ -11,9 +8,9 @@ import "package:typewriter_panel/typewriter_panel.dart"
 /// resolve inheritance, substitute generic arguments, collect declarations,
 /// or derive effective fields. Callers must supply the same final wire shape
 /// that a checked catalog snapshot would contain.
-extension TrustedLocalEditorCatalog on catalog.EditorCatalogWireSnapshot {
+extension TrustedLocalEditorCatalog on skir.EditorCatalogWireSnapshot {
   CheckedEditorCatalog asTrustedLocalCatalog() {
-    final typesById = <type_catalog.TypeDefinitionId, catalog.PublishedType>{};
+    final typesById = <skir.TypeDefinitionId, skir.PublishedType>{};
     for (final published in types) {
       final id = published.definition.id;
       if (typesById.containsKey(id)) {
@@ -42,7 +39,7 @@ extension TrustedLocalEditorCatalog on catalog.EditorCatalogWireSnapshot {
       }
     }
 
-    final presentationIds = <type_catalog.PresentationId>{};
+    final presentationIds = <skir.PresentationId>{};
     for (final descriptor in presentations) {
       if (!presentationIds.add(descriptor.id)) {
         throw ArgumentError.value(

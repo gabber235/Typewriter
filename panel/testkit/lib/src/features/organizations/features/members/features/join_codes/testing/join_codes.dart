@@ -1,12 +1,10 @@
-import "dart:async";
-
-import "package:faker/faker.dart";
-import "package:flutter_animate/flutter_animate.dart";
-// ignore: depend_on_referenced_packages, implementation_imports
-import "package:riverpod/src/framework.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/typewriter_panel.dart" hide random;
+import "package:typewriter_panel/typewriter_panel.dart";
+import "package:faker/faker.dart";
+
+// ignore: depend_on_referenced_packages, implementation_imports
+
 import "package:typewriter_testkit/src/shared/testing/testing.dart";
 
 // ============================================================================
@@ -39,7 +37,7 @@ OrganizationJoinCode generateRandomJoinCode({
       : JoinCodeAutoAccept();
 
   return OrganizationJoinCode(
-    code: recordId("organization_join_code:${generateCode(20)}"),
+    code: skir.recordId("organization_join_code:${generateCode(20)}"),
     createdAt: faker.date.dateTime(minYear: 2024, maxYear: 2025),
     expiresAt: expiresAt,
     singleUse: singleUse,

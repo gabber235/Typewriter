@@ -1,4 +1,3 @@
-import "package:flutter/widgets.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// One backend owned projection that can participate in a shared inspection.

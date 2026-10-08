@@ -1,5 +1,3 @@
-import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -38,9 +36,9 @@ Widget bookUseCase(BuildContext context) {
         tags: [directTag, inheritedTag],
       ),
       organizationIdProvider.overrideWithValue(
-        recordId("organization:widgetbook"),
+        skir.recordId("organization:widgetbook"),
       ),
-      realmIdProvider.overrideWithValue(recordId("service:widgetbook")),
+      realmIdProvider.overrideWithValue(skir.recordId("service:widgetbook")),
       ...tagsProviderOverrides(tags: [directTag, inheritedTag]),
       canonicalBooksProvider.overrideWith(() => _BookStoryBooks([book])),
     ],
@@ -88,9 +86,9 @@ Widget mixedBookSelectionStory({bool initiallySelected = true}) {
     overrides: [
       ...authoringSessionMockOverrides(books: books, tags: [lore, quest]),
       organizationIdProvider.overrideWithValue(
-        recordId("organization:widgetbook"),
+        skir.recordId("organization:widgetbook"),
       ),
-      realmIdProvider.overrideWithValue(recordId("service:widgetbook")),
+      realmIdProvider.overrideWithValue(skir.recordId("service:widgetbook")),
       ...tagsProviderOverrides(tags: [lore, quest]),
       canonicalBooksProvider.overrideWith(() => _BookStoryBooks(books)),
     ],

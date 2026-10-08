@@ -1,5 +1,3 @@
-import "dart:async";
-
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Base for decorators that transform child snapshots while preserving source

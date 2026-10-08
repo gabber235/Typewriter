@@ -13,7 +13,7 @@ part of 'authoring_session.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$AuthoringSessionAccess implements DiagnosticableTreeMixin {
+mixin _$AuthoringSessionAccess {
 
  AuthoringSession get notifier; AuthoringSessionState get state;
 /// Create a copy of AuthoringSessionAccess
@@ -23,13 +23,6 @@ mixin _$AuthoringSessionAccess implements DiagnosticableTreeMixin {
 $AuthoringSessionAccessCopyWith<AuthoringSessionAccess> get copyWith => _$AuthoringSessionAccessCopyWithImpl<AuthoringSessionAccess>(this as AuthoringSessionAccess, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as AuthoringSessionAccess;
-  properties
-    ..add(DiagnosticsProperty('type', 'AuthoringSessionAccess'))
-    ..add(DiagnosticsProperty('notifier', _this.notifier))..add(DiagnosticsProperty('state', _this.state));
-}
 
 @override
 bool operator ==(Object other) {
@@ -45,7 +38,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as AuthoringSessionAccess;
   return 'AuthoringSessionAccess(notifier: ${_this.notifier}, state: ${_this.state})';
 }
@@ -228,7 +221,7 @@ return $default(_that.notifier,_that.state);case _:
 /// @nodoc
 
 
-class _AuthoringSessionAccess with DiagnosticableTreeMixin implements AuthoringSessionAccess {
+class _AuthoringSessionAccess implements AuthoringSessionAccess {
   const _AuthoringSessionAccess({required this.notifier, required this.state});
   
 
@@ -242,12 +235,6 @@ class _AuthoringSessionAccess with DiagnosticableTreeMixin implements AuthoringS
 _$AuthoringSessionAccessCopyWith<_AuthoringSessionAccess> get copyWith => __$AuthoringSessionAccessCopyWithImpl<_AuthoringSessionAccess>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'AuthoringSessionAccess'))
-    ..add(DiagnosticsProperty('notifier', notifier))..add(DiagnosticsProperty('state', state));
-}
 
 @override
 bool operator ==(Object other) {
@@ -261,7 +248,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'AuthoringSessionAccess(notifier: $notifier, state: $state)';
 }
 
@@ -311,7 +298,7 @@ $AuthoringSessionStateCopyWith<$Res> get state {
 }
 
 /// @nodoc
-mixin _$AuthoringSessionState implements DiagnosticableTreeMixin {
+mixin _$AuthoringSessionState {
 
  skir.AuthoringState? get snapshot; CheckedEditorCatalog? get catalog; bool get refreshing; Object? get failure;
 /// Create a copy of AuthoringSessionState
@@ -321,13 +308,6 @@ mixin _$AuthoringSessionState implements DiagnosticableTreeMixin {
 $AuthoringSessionStateCopyWith<AuthoringSessionState> get copyWith => _$AuthoringSessionStateCopyWithImpl<AuthoringSessionState>(this as AuthoringSessionState, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as AuthoringSessionState;
-  properties
-    ..add(DiagnosticsProperty('type', 'AuthoringSessionState'))
-    ..add(DiagnosticsProperty('snapshot', _this.snapshot))..add(DiagnosticsProperty('catalog', _this.catalog))..add(DiagnosticsProperty('refreshing', _this.refreshing))..add(DiagnosticsProperty('failure', _this.failure));
-}
 
 @override
 bool operator ==(Object other) {
@@ -343,7 +323,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as AuthoringSessionState;
   return 'AuthoringSessionState(snapshot: ${_this.snapshot}, catalog: ${_this.catalog}, refreshing: ${_this.refreshing}, failure: ${_this.failure})';
 }
@@ -518,7 +498,7 @@ return $default(_that.snapshot,_that.catalog,_that.refreshing,_that.failure);cas
 /// @nodoc
 
 
-class _AuthoringSessionState with DiagnosticableTreeMixin implements AuthoringSessionState {
+class _AuthoringSessionState implements AuthoringSessionState {
   const _AuthoringSessionState({this.snapshot, this.catalog, this.refreshing = false, this.failure});
   
 
@@ -534,12 +514,6 @@ class _AuthoringSessionState with DiagnosticableTreeMixin implements AuthoringSe
 _$AuthoringSessionStateCopyWith<_AuthoringSessionState> get copyWith => __$AuthoringSessionStateCopyWithImpl<_AuthoringSessionState>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'AuthoringSessionState'))
-    ..add(DiagnosticsProperty('snapshot', snapshot))..add(DiagnosticsProperty('catalog', catalog))..add(DiagnosticsProperty('refreshing', refreshing))..add(DiagnosticsProperty('failure', failure));
-}
 
 @override
 bool operator ==(Object other) {
@@ -553,7 +527,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'AuthoringSessionState(snapshot: $snapshot, catalog: $catalog, refreshing: $refreshing, failure: $failure)';
 }
 

@@ -1,7 +1,3 @@
-import "dart:math" as math;
-
-import "package:collection/collection.dart";
-import "package:flutter/material.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Converts lane assignments into pixel geometry and visible elements.
@@ -167,7 +163,7 @@ class TimelinePlacementEngine {
 
     final startX = viewport.frameToPixel(frameOffset + element.startFrame);
     final endX = viewport.frameToPixel(frameOffset + element.endFrame + 1);
-    final width = math.max(style.minSegmentWidth, endX - startX);
+    final width = max(style.minSegmentWidth, endX - startX);
 
     return Rect.fromLTWH(startX, y, width, height);
   }
@@ -218,8 +214,8 @@ class TimelinePlacementEngine {
   }
 
   double _laneHeight({required TimelineStyle style, required int laneCount}) {
-    final safeLaneCount = math.max(0, laneCount);
-    final gaps = math.max(0, safeLaneCount - 1);
+    final safeLaneCount = max(0, laneCount);
+    final gaps = max(0, safeLaneCount - 1);
     return safeLaneCount * style.laneHeight + gaps * style.laneGap;
   }
 }

@@ -1,39 +1,26 @@
-import "dart:async";
-
-import "package:flutter/foundation.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/action.dart"
-    as action;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/binding.dart"
-    as binding;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as catalog_wire;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
-    as expression;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/presentation.dart"
-    as presentation;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   test("document freezes caller owned containers", () {
-    final bindings = <types.ExpressionBindingId, PortablePresentationBinding>{
+    final bindings = <skir.ExpressionBindingId, PortablePresentationBinding>{
       _bindingId: PortablePresentationBinding(
         schema: PortablePresentationBindingSchema.complete(_textType),
-        value: types.DataValue.wrapStringValue("first"),
+        value: skir.DataValue.wrapStringValue("first"),
       ),
     };
-    final active = <types.PresentationId>{_presentationId};
-    final slots = <String, presentation.PresentationNode>{
-      "main": presentation.PresentationNode.defaultInstance,
+    final active = <skir.PresentationId>{_presentationId};
+    final slots = <String, skir.PresentationNode>{
+      "main": skir.PresentationNode.defaultInstance,
     };
 
     final document = PortablePresentationDocument(
       catalog: _emptyCatalog(),
-      root: presentation.PresentationNode.defaultInstance,
+      root: skir.PresentationNode.defaultInstance,
       bindings: bindings,
-      budget: expression.EvaluationBudget.defaultInstance,
+      budget: skir.EvaluationBudget.defaultInstance,
       activePresentations: active,
       slots: slots,
     );
@@ -49,7 +36,7 @@ void main() {
 
   test("rejects duplicate binding identities", () {
     final bindingValue = _binding(
-      read: (_) => types.DataValue.wrapStringValue("value"),
+      read: (_) => skir.DataValue.wrapStringValue("value"),
     );
 
     expect(
@@ -59,15 +46,13 @@ void main() {
   });
 
   test("validates scalar writes before the backend decoder", () async {
-    var value = types.DataValue.wrapInteger("1");
+    var value = skir.DataValue.wrapInteger("1");
     var writes = 0;
     final host = _host(
       bindings: [
         _binding(
-          use: types.TypeUse.wrapScalar(
-            types.ScalarKind.createInteger(
-              width: types.IntegerWidth.signedEight,
-            ),
+          use: skir.TypeUse.wrapScalar(
+            skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedEight),
           ),
           read: (_) => value,
           write: (_, next) {
@@ -82,24 +67,24 @@ void main() {
 
     final rejected = await host.write(
       _rootReference,
-      types.DataValue.wrapInteger("128"),
+      skir.DataValue.wrapInteger("128"),
     );
     expect(rejected, isA<PortablePresentationWriteRejected>());
     expect(writes, 0);
 
     final accepted = await host.write(
       _rootReference,
-      types.DataValue.wrapInteger("127"),
+      skir.DataValue.wrapInteger("127"),
     );
     expect(accepted, isA<PortablePresentationWriteApplied>());
     expect(writes, 1);
-    expect(host.read(_rootReference), types.DataValue.wrapInteger("127"));
+    expect(host.read(_rootReference), skir.DataValue.wrapInteger("127"));
   });
 
   test(
     "local value actions evaluate current bindings and use checked writes",
     () async {
-      var value = types.DataValue.wrapStringValue("first");
+      var value = skir.DataValue.wrapStringValue("first");
       var writes = 0;
       final host = _host(
         bindings: [
@@ -114,15 +99,15 @@ void main() {
         ],
       );
       addTearDown(host.dispose);
-      final uppercase = action.EditorAction.wrapLocal(
-        action.LocalEditorAction.createSetValue(
+      final uppercase = skir.EditorAction.wrapLocal(
+        skir.LocalEditorAction.createSetValue(
           target: _rootReference,
-          value: expression.ExpressionNode.createCall(
-            operation: types.OperationId(value: "typewriter.text.upper"),
+          value: skir.ExpressionNode.createCall(
+            operation: skir.OperationId(value: "typewriter.text.upper"),
             arguments: [
-              expression.ExpressionNode.createRead(
+              skir.ExpressionNode.createRead(
                 binding: _bindingId,
-                path: types.ValuePath(segments: const []),
+                path: skir.ValuePath(segments: const []),
               ),
             ],
           ),
@@ -134,14 +119,14 @@ void main() {
       );
       expect(
         host.read(_rootReference),
-        types.DataValue.wrapStringValue("FIRST"),
+        skir.DataValue.wrapStringValue("FIRST"),
       );
       expect(writes, 1);
-      final invalid = action.EditorAction.wrapLocal(
-        action.LocalEditorAction.createSetValue(
+      final invalid = skir.EditorAction.wrapLocal(
+        skir.LocalEditorAction.createSetValue(
           target: _rootReference,
-          value: expression.ExpressionNode.wrapLiteral(
-            types.DataValue.wrapBoolean(true),
+          value: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapBoolean(true),
           ),
         ),
       );
@@ -156,16 +141,16 @@ void main() {
   test("local value actions cannot mutate observational bindings", () async {
     final host = _host(
       bindings: [
-        _binding(read: (_) => types.DataValue.wrapStringValue("original")),
+        _binding(read: (_) => skir.DataValue.wrapStringValue("original")),
       ],
     );
     addTearDown(host.dispose);
     final result = await host.execute(
-      action.EditorAction.wrapLocal(
-        action.LocalEditorAction.createSetValue(
+      skir.EditorAction.wrapLocal(
+        skir.LocalEditorAction.createSetValue(
           target: _rootReference,
-          value: expression.ExpressionNode.wrapLiteral(
-            types.DataValue.wrapStringValue("changed"),
+          value: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapStringValue("changed"),
           ),
         ),
       ),
@@ -173,16 +158,16 @@ void main() {
     expect(result, isA<PortablePresentationWriteRejected>());
     expect(
       host.read(_rootReference),
-      types.DataValue.wrapStringValue("original"),
+      skir.DataValue.wrapStringValue("original"),
     );
   });
 
   test("accepts nullable scalar roots without a named wrapper", () async {
-    var value = types.DataValue.wrapStringValue("value");
+    var value = skir.DataValue.wrapStringValue("value");
     final host = _host(
       bindings: [
         _binding(
-          use: types.TypeUse.createNullable(value: _textType),
+          use: skir.TypeUse.createNullable(value: _textType),
           read: (_) => value,
           write: (_, next) {
             value = next;
@@ -194,38 +179,32 @@ void main() {
     addTearDown(host.dispose);
 
     expect(
-      await host.write(_rootReference, types.DataValue.null_),
+      await host.write(_rootReference, skir.DataValue.null_),
       isA<PortablePresentationWriteApplied>(),
     );
-    expect(host.read(_rootReference), types.DataValue.null_);
+    expect(host.read(_rootReference), skir.DataValue.null_);
   });
 
   test("refreshes from its owner and detaches when disposed", () {
-    final owner = ValueNotifier(types.DataValue.wrapStringValue("first"));
+    final owner = ValueNotifier(skir.DataValue.wrapStringValue("first"));
     final host = _host(
       bindings: [_binding(read: (_) => owner.value, owner: owner)],
     );
 
-    expect(host.read(_rootReference), types.DataValue.wrapStringValue("first"));
-    owner.value = types.DataValue.wrapStringValue("second");
-    expect(
-      host.read(_rootReference),
-      types.DataValue.wrapStringValue("second"),
-    );
+    expect(host.read(_rootReference), skir.DataValue.wrapStringValue("first"));
+    owner.value = skir.DataValue.wrapStringValue("second");
+    expect(host.read(_rootReference), skir.DataValue.wrapStringValue("second"));
 
     host.dispose();
-    owner.value = types.DataValue.wrapStringValue("third");
-    expect(
-      host.read(_rootReference),
-      types.DataValue.wrapStringValue("second"),
-    );
+    owner.value = skir.DataValue.wrapStringValue("third");
+    expect(host.read(_rootReference), skir.DataValue.wrapStringValue("second"));
     owner.dispose();
   });
 
   test("rejects writes to a read only backend binding", () async {
     final host = _host(
       bindings: [
-        _binding(read: (_) => types.DataValue.wrapStringValue("value")),
+        _binding(read: (_) => skir.DataValue.wrapStringValue("value")),
       ],
     );
     addTearDown(host.dispose);
@@ -233,7 +212,7 @@ void main() {
     expect(
       await host.write(
         _rootReference,
-        types.DataValue.wrapStringValue("changed"),
+        skir.DataValue.wrapStringValue("changed"),
       ),
       isA<PortablePresentationWriteRejected>(),
     );
@@ -242,25 +221,22 @@ void main() {
   test("uses the concrete named value while resolving nested fields", () {
     final message = _definition("Message");
     final textMessage = _definition("TextMessage");
-    final textOwner = types.FieldOwner(definition: textMessage, name: "text");
+    final textOwner = skir.FieldOwner(definition: textMessage, name: "text");
     final catalog = _checkedCatalog([
       _publishedType(message, abstract: true),
       _publishedType(
         textMessage,
         parents: [_namedTemplate(message)],
         fields: [
-          _field(
-            textOwner,
-            types.TypeTemplate.wrapScalar(types.ScalarKind.text),
-          ),
+          _field(textOwner, skir.TypeTemplate.wrapScalar(skir.ScalarKind.text)),
         ],
       ),
     ]);
-    final declared = types.NamedTypeUse(
+    final declared = skir.NamedTypeUse(
       definition: message,
       arguments: const [],
     );
-    final actual = types.NamedTypeUse(
+    final actual = skir.NamedTypeUse(
       definition: textMessage,
       arguments: const [],
     );
@@ -268,14 +244,14 @@ void main() {
       catalog: catalog,
       bindings: [
         _binding(
-          use: types.TypeUse.wrapNamed(declared),
-          read: (_) => types.DataValue.createNamed(
+          use: skir.TypeUse.wrapNamed(declared),
+          read: (_) => skir.DataValue.createNamed(
             actualType: actual,
-            payload: types.DataValue.createRecord(
+            payload: skir.DataValue.createRecord(
               fields: [
-                types.FieldValue(
+                skir.FieldValue(
                   name: "text",
-                  value: types.DataValue.wrapStringValue("hello"),
+                  value: skir.DataValue.wrapStringValue("hello"),
                 ),
               ],
             ),
@@ -287,10 +263,10 @@ void main() {
 
     expect(
       host.expectedType(
-        binding.BindingRef(
+        skir.BindingRef(
           bindingId: _bindingId,
-          path: types.ValuePath(
-            segments: [types.PathSegment.createField(name: "text")],
+          path: skir.ValuePath(
+            segments: [skir.PathSegment.createField(name: "text")],
           ),
         ),
       ),
@@ -303,8 +279,8 @@ void main() {
     final coin = _definition("CoinReward");
     final item = _definition("ItemReward");
     final variable = _definition("Variable");
-    final parameter = types.ParameterKey(owner: variable, index: 0);
-    final valueOwner = types.FieldOwner(definition: variable, name: "value");
+    final parameter = skir.ParameterKey(owner: variable, index: 0);
+    final valueOwner = skir.FieldOwner(definition: variable, name: "value");
     final catalog = _checkedCatalog([
       _publishedType(reward, abstract: true),
       _publishedType(coin, parents: [_namedTemplate(reward)]),
@@ -312,33 +288,33 @@ void main() {
       _publishedType(
         variable,
         parameters: [
-          types.TypeParameter(
+          skir.TypeParameter(
             key: parameter,
             name: "T",
-            bounds: [types.TypeTemplate.wrapNamed(_namedTemplate(reward))],
+            bounds: [skir.TypeTemplate.wrapNamed(_namedTemplate(reward))],
           ),
         ],
         fields: [
-          _field(valueOwner, types.TypeTemplate.wrapParameter(parameter)),
+          _field(valueOwner, skir.TypeTemplate.wrapParameter(parameter)),
         ],
       ),
     ]);
-    final declared = types.NamedTypeUse(
+    final declared = skir.NamedTypeUse(
       definition: variable,
       arguments: [
-        types.TypeUse.createNamed(definition: reward, arguments: const []),
+        skir.TypeUse.createNamed(definition: reward, arguments: const []),
       ],
     );
-    final actual = types.NamedTypeUse(
+    final actual = skir.NamedTypeUse(
       definition: variable,
       arguments: [
-        types.TypeUse.createNamed(definition: coin, arguments: const []),
+        skir.TypeUse.createNamed(definition: coin, arguments: const []),
       ],
     );
-    final current = types.DataValue.createNamed(
+    final current = skir.DataValue.createNamed(
       actualType: actual,
-      payload: types.DataValue.createRecord(
-        fields: [types.FieldValue(name: "value", value: _namedValue(coin))],
+      payload: skir.DataValue.createRecord(
+        fields: [skir.FieldValue(name: "value", value: _namedValue(coin))],
       ),
     );
     var writes = 0;
@@ -346,7 +322,7 @@ void main() {
       catalog: catalog,
       bindings: [
         _binding(
-          use: types.TypeUse.wrapNamed(declared),
+          use: skir.TypeUse.wrapNamed(declared),
           read: (_) => current,
           write: (_, _) {
             writes++;
@@ -356,16 +332,16 @@ void main() {
       ],
     );
     addTearDown(host.dispose);
-    final valueReference = binding.BindingRef(
+    final valueReference = skir.BindingRef(
       bindingId: _bindingId,
-      path: types.ValuePath(
-        segments: [types.PathSegment.createField(name: "value")],
+      path: skir.ValuePath(
+        segments: [skir.PathSegment.createField(name: "value")],
       ),
     );
 
     expect(
       host.expectedType(valueReference),
-      types.TypeUse.createNamed(definition: coin, arguments: const []),
+      skir.TypeUse.createNamed(definition: coin, arguments: const []),
     );
     expect(
       await host.write(valueReference, _namedValue(item)),
@@ -384,7 +360,7 @@ void main() {
     final host = _host(
       bindings: [
         _binding(
-          read: (_) => types.DataValue.wrapStringValue("value"),
+          read: (_) => skir.DataValue.wrapStringValue("value"),
           write: (_, _) => completion.future,
         ),
       ],
@@ -392,7 +368,7 @@ void main() {
 
     final pending = host.write(
       _rootReference,
-      types.DataValue.wrapStringValue("changed"),
+      skir.DataValue.wrapStringValue("changed"),
     );
     host.dispose();
     completion.complete(const PortablePresentationWriteResult.applied());
@@ -404,12 +380,12 @@ void main() {
     final completion = Completer<PortablePresentationWriteResult>();
     final host = _host(
       bindings: [
-        _binding(read: (_) => types.DataValue.wrapStringValue("value")),
+        _binding(read: (_) => skir.DataValue.wrapStringValue("value")),
       ],
       executeAction: (_) => completion.future,
     );
 
-    final pending = host.execute(action.EditorAction.unknown);
+    final pending = host.execute(skir.EditorAction.unknown);
     host.dispose();
     completion.complete(const PortablePresentationWriteResult.applied());
 
@@ -422,7 +398,7 @@ void main() {
     final host = _host(
       bindings: [
         _binding(
-          read: (_) => types.DataValue.wrapStringValue("value"),
+          read: (_) => skir.DataValue.wrapStringValue("value"),
           write: (_, _) {
             writes++;
             return const PortablePresentationWriteResult.applied();
@@ -439,12 +415,12 @@ void main() {
     expect(
       await disposedHost.write(
         _rootReference,
-        types.DataValue.wrapStringValue("changed"),
+        skir.DataValue.wrapStringValue("changed"),
       ),
       isA<PortablePresentationWriteRejected>(),
     );
     expect(
-      await disposedHost.execute(action.EditorAction.unknown),
+      await disposedHost.execute(skir.EditorAction.unknown),
       isA<PortablePresentationWriteRejected>(),
     );
     expect(writes, 0);
@@ -455,21 +431,19 @@ void main() {
 EditorSourcePresentationHost _host({
   required Iterable<EditorSourcePresentationBinding> bindings,
   CheckedEditorCatalog? catalog,
-  FutureOr<PortablePresentationWriteResult> Function(
-    action.EditorAction action,
-  )?
+  FutureOr<PortablePresentationWriteResult> Function(skir.EditorAction action)?
   executeAction,
 }) => EditorSourcePresentationHost(
   catalog: catalog ?? _emptyCatalog(),
-  root: () => presentation.PresentationNode.defaultInstance,
+  root: () => skir.PresentationNode.defaultInstance,
   bindings: bindings,
-  budget: expression.EvaluationBudget(maxSteps: 256, maxCollectionItems: 32),
+  budget: skir.EvaluationBudget(maxSteps: 256, maxCollectionItems: 32),
   executeAction: executeAction,
 );
 
 EditorSourcePresentationBinding _binding({
   required PortableBindingReader read,
-  types.TypeUse? use,
+  skir.TypeUse? use,
   PortableBindingWriter? write,
   Listenable? owner,
 }) => EditorSourcePresentationBinding(
@@ -480,54 +454,53 @@ EditorSourcePresentationBinding _binding({
   owner: owner,
 );
 
-CheckedEditorCatalog _emptyCatalog() => CheckedEditorCatalog(
-  catalog_wire.EditorCatalogWireSnapshot.defaultInstance,
-);
+CheckedEditorCatalog _emptyCatalog() =>
+    CheckedEditorCatalog(skir.EditorCatalogWireSnapshot.defaultInstance);
 
-final _bindingId = types.ExpressionBindingId(value: "value");
-final _presentationId = types.PresentationId(
+final _bindingId = skir.ExpressionBindingId(value: "value");
+final _presentationId = skir.PresentationId(
   namespace: "test",
   name: "presentation",
 );
-final _textType = types.TypeUse.wrapScalar(types.ScalarKind.text);
-final _rootReference = binding.BindingRef(
+final _textType = skir.TypeUse.wrapScalar(skir.ScalarKind.text);
+final _rootReference = skir.BindingRef(
   bindingId: _bindingId,
-  path: types.ValuePath(segments: const []),
+  path: skir.ValuePath(segments: const []),
 );
 
-types.TypeDefinitionId _definition(String name) => types.TypeDefinitionId(
-  typeId: types.TypeId.createQualified(namespace: "host.test", name: name),
+skir.TypeDefinitionId _definition(String name) => skir.TypeDefinitionId(
+  typeId: skir.TypeId.createQualified(namespace: "host.test", name: name),
   revision: 1,
 );
 
-types.NamedTypeTemplate _namedTemplate(types.TypeDefinitionId definition) =>
-    types.NamedTypeTemplate(definition: definition, arguments: const []);
+skir.NamedTypeTemplate _namedTemplate(skir.TypeDefinitionId definition) =>
+    skir.NamedTypeTemplate(definition: definition, arguments: const []);
 
-catalog_wire.EffectiveFieldTemplate _field(
-  types.FieldOwner owner,
-  types.TypeTemplate type,
-) => catalog_wire.EffectiveFieldTemplate(
+skir.EffectiveFieldTemplate _field(
+  skir.FieldOwner owner,
+  skir.TypeTemplate type,
+) => skir.EffectiveFieldTemplate(
   key: owner.name,
   owner: owner,
   type: type,
   rules: const [],
 );
 
-catalog_wire.PublishedType _publishedType(
-  types.TypeDefinitionId definition, {
+skir.PublishedType _publishedType(
+  skir.TypeDefinitionId definition, {
   bool abstract = false,
-  List<types.TypeParameter> parameters = const [],
-  List<types.NamedTypeTemplate> parents = const [],
-  List<catalog_wire.EffectiveFieldTemplate> fields = const [],
-}) => catalog_wire.PublishedType(
+  List<skir.TypeParameter> parameters = const [],
+  List<skir.NamedTypeTemplate> parents = const [],
+  List<skir.EffectiveFieldTemplate> fields = const [],
+}) => skir.PublishedType(
   display: null,
-  definition: types.TypeDefinition(
+  definition: skir.TypeDefinition(
     id: definition,
     parameters: parameters,
-    representation: types.RepresentationTemplate.createRecord(
+    representation: skir.RepresentationTemplate.createRecord(
       fields: [
         for (final field in fields)
-          types.FieldDeclaration(
+          skir.FieldDeclaration(
             owner: field.owner,
             type: field.type,
             overrides: const [],
@@ -538,38 +511,37 @@ catalog_wire.PublishedType _publishedType(
     ),
     parents: parents,
   ),
-  status: catalog_wire.DeclarationStatus.ready,
+  status: skir.DeclarationStatus.ready,
   effectiveFields: fields,
   ancestorTemplates: parents,
 );
 
-CheckedEditorCatalog _checkedCatalog(
-  List<catalog_wire.PublishedType> published,
-) => CheckedEditorCatalog(
-  catalog_wire.EditorCatalogWireSnapshot(
-    generation: _hostCatalogGeneration,
-    types: published,
-    relations: const [],
-    resourceDefinitions: const [],
-    presentations: const [],
-    presentationMaterials: const [],
-    configuration: const [],
-    diagnostics: const [],
-    initialization: const [],
-    endpointBindings: const [],
-    capabilities: const [],
-    recommendations: const [],
-    roleFallbacks: const [],
-  ),
-);
+CheckedEditorCatalog _checkedCatalog(List<skir.PublishedType> published) =>
+    CheckedEditorCatalog(
+      skir.EditorCatalogWireSnapshot(
+        generation: _hostCatalogGeneration,
+        types: published,
+        relations: const [],
+        resourceDefinitions: const [],
+        presentations: const [],
+        presentationMaterials: const [],
+        configuration: const [],
+        diagnostics: const [],
+        initialization: const [],
+        endpointBindings: const [],
+        capabilities: const [],
+        recommendations: const [],
+        roleFallbacks: const [],
+      ),
+    );
 
-final _hostCatalogGeneration = types.CatalogGeneration(value: "host:test");
+final _hostCatalogGeneration = skir.CatalogGeneration(value: "host:test");
 
-types.DataValue _namedValue(types.TypeDefinitionId definition) =>
-    types.DataValue.createNamed(
-      actualType: types.NamedTypeUse(
+skir.DataValue _namedValue(skir.TypeDefinitionId definition) =>
+    skir.DataValue.createNamed(
+      actualType: skir.NamedTypeUse(
         definition: definition,
         arguments: const [],
       ),
-      payload: types.DataValue.createRecord(fields: const []),
+      payload: skir.DataValue.createRecord(fields: const []),
     );

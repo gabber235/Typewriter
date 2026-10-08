@@ -1,8 +1,3 @@
-import "dart:math" as math;
-
-import "package:flutter/material.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Adds drag to a caller rendered keyframe while preserving its visual child.
@@ -63,14 +58,14 @@ class TimelineKeyframeSurface extends HookConsumerWidget {
             duration: const Duration(milliseconds: 160),
             width: style.keyframeSize,
             height: style.keyframeSize,
-            transform: Matrix4.rotationZ(math.pi / 4),
+            transform: Matrix4.rotationZ(pi / 4),
             decoration: BoxDecoration(
               color: fillColor,
               border: Border.all(color: outlineColor, width: outlineWidth),
               borderRadius: BorderRadius.circular(2),
             ),
             child: Transform.rotate(
-              angle: -math.pi / 4,
+              angle: -pi / 4,
               child: Center(child: IgnorePointer(child: child)),
             ),
           ),

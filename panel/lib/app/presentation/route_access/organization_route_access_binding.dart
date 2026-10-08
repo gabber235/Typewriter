@@ -1,9 +1,4 @@
-import "package:freezed_annotation/freezed_annotation.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/app/application/router/access/access.dart";
-import "package:typewriter_panel/features/auth/application/application.dart";
-import "package:typewriter_panel/features/organizations/application/application.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/converters.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 part "organization_route_access_binding.freezed.dart";
 

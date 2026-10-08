@@ -1,7 +1,6 @@
-import "dart:async";
-
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
@@ -10,8 +9,8 @@ void main() {
       required String id,
       required DateTime expiresAt,
     }) => UserJoinRequest(
-      requestId: recordId("request_to_join:$id"),
-      organizationId: recordId("organization:$id"),
+      requestId: skir.recordId("request_to_join:$id"),
+      organizationId: skir.recordId("organization:$id"),
       organizationName: "Organization $id",
       organizationLogoUrl: "https://example.com/$id.png",
       requestedAt: DateTime.utc(2024),

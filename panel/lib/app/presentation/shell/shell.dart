@@ -3,6 +3,7 @@ library;
 export "app_overlay.dart";
 export "app_required.dart";
 export "custom_appbar.dart";
+export "custom_appbar_layout.dart";
 export "nats_connection.dart";
 export "panes.dart";
 export "sidebar.dart";

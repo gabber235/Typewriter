@@ -91,14 +91,11 @@ final class _RenderHierarchySurface extends RenderBox
     );
     final itemSpacings = branching
         ? _effectiveHierarchyItemSpacings(_layout)
-        : List<double>.filled(
-            math.max(0, children.length - 1),
-            _layout.itemSpacing,
-          );
+        : List<double>.filled(max(0, children.length - 1), _layout.itemSpacing);
     final indentation = branching ? _layout.indentation : 0.0;
     final boundedWidth = constraints.hasBoundedWidth;
     final contentMaximum = boundedWidth
-        ? math.max(0.0, constraints.maxWidth - indentation)
+        ? max(0.0, constraints.maxWidth - indentation)
         : double.infinity;
     final looseConstraints = BoxConstraints(maxWidth: contentMaximum);
     for (final child in children) {
@@ -106,12 +103,13 @@ final class _RenderHierarchySurface extends RenderBox
     }
     final naturalContentWidth = children
         .map((child) => child.size.width)
-        .fold(0.0, math.max);
+        .fold(0.0, max);
     final width = constraints.constrainWidth(
       boundedWidth ? constraints.maxWidth : indentation + naturalContentWidth,
     );
-    final contentWidth = math.max(0.0, width - indentation);
-    if (_layout.crossAxisAlignment == CrossAxisAlignment_kind.stretchConst) {
+    final contentWidth = max(0.0, width - indentation);
+    if (_layout.crossAxisAlignment ==
+        skir.CrossAxisAlignment_kind.stretchConst) {
       final stretched = BoxConstraints.tightFor(width: contentWidth);
       for (final child in children) {
         child.layout(stretched, parentUsesSize: true);

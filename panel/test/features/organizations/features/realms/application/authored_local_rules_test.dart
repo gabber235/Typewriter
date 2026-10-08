@@ -1,14 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring.dart"
-    as authoring;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as catalog;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/diagnostic.dart"
-    as diagnostic;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
-    as expression;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
@@ -19,22 +11,19 @@ void main() {
       draft: fixture.draft,
       catalog: fixture.catalog,
       resource: fixture.resource,
-      budget: expression.EvaluationBudget(
-        maxSteps: 100,
-        maxCollectionItems: 100,
-      ),
+      budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
     );
 
     expect(projection.diagnostics, hasLength(1));
     expect(projection.diagnostics.single.code, "positive");
     expect(
       projection.diagnostics.single.location,
-      types.ValueLocation(
+      skir.ValueLocation(
         resource: fixture.resource,
-        path: types.ValuePath(
+        path: skir.ValuePath(
           segments: [
-            types.PathSegment.createField(name: "placement"),
-            types.PathSegment.createField(name: "width"),
+            skir.PathSegment.createField(name: "placement"),
+            skir.PathSegment.createField(name: "width"),
           ],
         ),
       ),
@@ -48,55 +37,52 @@ void main() {
       draft: fixture.draft,
       catalog: fixture.catalog,
       resource: fixture.resource,
-      budget: expression.EvaluationBudget(
-        maxSteps: 100,
-        maxCollectionItems: 100,
-      ),
+      budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
     );
 
     expect(projection.diagnostics, hasLength(1));
     expect(projection.diagnostics.single.code, "positive");
     expect(projection.diagnostics.single.location.path.segments, [
-      types.PathSegment.createField(name: "placements"),
-      types.PathSegment.createItem(id: types.ItemId(value: "first")),
-      types.PathSegment.createField(name: "width"),
+      skir.PathSegment.createField(name: "placements"),
+      skir.PathSegment.createItem(id: skir.ItemId(value: "first")),
+      skir.PathSegment.createField(name: "width"),
     ]);
   });
 }
 
-({types.ResourceId resource, AuthoredDraft draft, CheckedEditorCatalog catalog})
+({skir.ResourceId resource, AuthoredDraft draft, CheckedEditorCatalog catalog})
 _nestedRuleFixture({bool collection = false}) {
-  final generation = types.CatalogGeneration(value: "catalog:nested_rules");
+  final generation = skir.CatalogGeneration(value: "catalog:nested_rules");
   final tag = _definition("Tag");
   final placement = _definition("GraphPlacement");
   final placementList = _definition("GraphPlacementList");
   final rootFieldName = collection ? "placements" : "placement";
-  final placementOwner = types.FieldOwner(definition: tag, name: rootFieldName);
-  final widthOwner = types.FieldOwner(definition: placement, name: "width");
-  final placementTemplate = types.TypeTemplate.createNamed(
+  final placementOwner = skir.FieldOwner(definition: tag, name: rootFieldName);
+  final widthOwner = skir.FieldOwner(definition: placement, name: "width");
+  final placementTemplate = skir.TypeTemplate.createNamed(
     definition: placement,
     arguments: const [],
   );
-  final placementListTemplate = types.TypeTemplate.createNamed(
+  final placementListTemplate = skir.TypeTemplate.createNamed(
     definition: placementList,
     arguments: const [],
   );
-  final integer = types.TypeTemplate.wrapScalar(
-    types.ScalarKind.createInteger(width: types.IntegerWidth.signedThirtyTwo),
+  final integer = skir.TypeTemplate.wrapScalar(
+    skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedThirtyTwo),
   );
-  final ruleOrigin = types.RuleOrigin(
+  final ruleOrigin = skir.RuleOrigin(
     owner: collection ? tag : placement,
     ordinal: 0,
   );
-  final ruleId = types.RuleId(origin: ruleOrigin, localIndex: 0);
+  final ruleId = skir.RuleId(origin: ruleOrigin, localIndex: 0);
   final checked = CheckedEditorCatalog(
-    catalog.EditorCatalogWireSnapshot(
+    skir.EditorCatalogWireSnapshot(
       generation: generation,
       types: [
         _publishedRecord(
           definition: tag,
           fields: [
-            types.FieldDeclaration(
+            skir.FieldDeclaration(
               owner: placementOwner,
               type: collection ? placementListTemplate : placementTemplate,
               overrides: const [],
@@ -104,7 +90,7 @@ _nestedRuleFixture({bool collection = false}) {
             ),
           ],
           effectiveFields: [
-            catalog.EffectiveFieldTemplate(
+            skir.EffectiveFieldTemplate(
               key: rootFieldName,
               owner: placementOwner,
               type: collection ? placementListTemplate : placementTemplate,
@@ -115,7 +101,7 @@ _nestedRuleFixture({bool collection = false}) {
         _publishedRecord(
           definition: placement,
           fields: [
-            types.FieldDeclaration(
+            skir.FieldDeclaration(
               owner: widthOwner,
               type: integer,
               overrides: const [],
@@ -123,7 +109,7 @@ _nestedRuleFixture({bool collection = false}) {
             ),
           ],
           effectiveFields: [
-            catalog.EffectiveFieldTemplate(
+            skir.EffectiveFieldTemplate(
               key: "width",
               owner: widthOwner,
               type: integer,
@@ -132,18 +118,18 @@ _nestedRuleFixture({bool collection = false}) {
           ],
         ),
         if (collection)
-          catalog.PublishedType(
+          skir.PublishedType(
             display: null,
-            definition: types.TypeDefinition(
+            definition: skir.TypeDefinition(
               id: placementList,
               parameters: const [],
-              representation: types.RepresentationTemplate.createSequence(
+              representation: skir.RepresentationTemplate.createSequence(
                 item: placementTemplate,
-                kind: types.CollectionKind.list,
+                kind: skir.CollectionKind.list,
               ),
               parents: const [],
             ),
-            status: catalog.DeclarationStatus.ready,
+            status: skir.DeclarationStatus.ready,
             effectiveFields: const [],
             ancestorTemplates: const [],
           ),
@@ -153,40 +139,40 @@ _nestedRuleFixture({bool collection = false}) {
       presentations: const [],
       presentationMaterials: const [],
       configuration: [
-        catalog.ConfigurationRecipe(
+        skir.ConfigurationRecipe(
           origin: ruleOrigin,
-          relativePath: types.RelativeFieldPattern(
+          relativePath: skir.RelativeFieldPattern(
             segments: collection
                 ? [
-                    types.FieldPatternSegment.createField(name: "placements"),
-                    types.FieldPatternSegment.items,
-                    types.FieldPatternSegment.createField(name: "width"),
+                    skir.FieldPatternSegment.createField(name: "placements"),
+                    skir.FieldPatternSegment.items,
+                    skir.FieldPatternSegment.createField(name: "width"),
                   ]
-                : [types.FieldPatternSegment.createField(name: "width")],
+                : [skir.FieldPatternSegment.createField(name: "width")],
           ),
-          representationCondition: catalog.RepresentationKind.integer,
+          representationCondition: skir.RepresentationKind.integer,
           rules: [
-            catalog.OwnedRule(
+            skir.OwnedRule(
               id: ruleId,
-              descriptor: catalog.RuleDescriptor(
-                predicate: expression.ExpressionNode.createCall(
-                  operation: types.OperationId(
+              descriptor: skir.RuleDescriptor(
+                predicate: skir.ExpressionNode.createCall(
+                  operation: skir.OperationId(
                     value: "typewriter.rule.positive",
                   ),
                   arguments: [
-                    expression.ExpressionNode.createRead(
-                      binding: types.ExpressionBindingId(
+                    skir.ExpressionNode.createRead(
+                      binding: skir.ExpressionBindingId(
                         value: "configured_value",
                       ),
-                      path: types.ValuePath(segments: const []),
+                      path: skir.ValuePath(segments: const []),
                     ),
                   ],
                 ),
               ),
-              diagnostic: diagnostic.DiagnosticTemplate(
+              diagnostic: skir.DiagnosticTemplate(
                 code: "positive",
                 message: "Must be positive",
-                severity: diagnostic.DiagnosticSeverity.error,
+                severity: skir.DiagnosticSeverity.error,
                 targets: const [],
               ),
             ),
@@ -201,35 +187,35 @@ _nestedRuleFixture({bool collection = false}) {
       roleFallbacks: const [],
     ),
   );
-  final resource = types.ResourceId(value: "tag:nested_rules");
-  final placementUse = types.NamedTypeUse(
+  final resource = skir.ResourceId(value: "tag:nested_rules");
+  final placementUse = skir.NamedTypeUse(
     definition: placement,
     arguments: const [],
   );
   final draft = AuthoredDraft(
     generation: generation,
     resources: [
-      authoring.AuthoringResource(
+      skir.AuthoringResource(
         id: resource,
-        definition: catalog.ResourceDefinitionId(value: "test.tag"),
-        content: types.AuthoringRecord(
-          configuration: types.TypeSelection.createComplete(
+        definition: skir.ResourceDefinitionId(value: "test.tag"),
+        content: skir.AuthoringRecord(
+          configuration: skir.TypeSelection.createComplete(
             definition: tag,
             arguments: const [],
           ),
           fields: [
-            types.FieldValue(
+            skir.FieldValue(
               name: rootFieldName,
               value: collection
-                  ? types.DataValue.createNamed(
-                      actualType: types.NamedTypeUse(
+                  ? skir.DataValue.createNamed(
+                      actualType: skir.NamedTypeUse(
                         definition: placementList,
                         arguments: const [],
                       ),
-                      payload: types.DataValue.createListValue(
+                      payload: skir.DataValue.createListValue(
                         items: [
-                          types.ListItem(
-                            id: types.ItemId(value: "first"),
+                          skir.ListItem(
+                            id: skir.ItemId(value: "first"),
                             value: _placementValue(placementUse),
                           ),
                         ],
@@ -247,40 +233,40 @@ _nestedRuleFixture({bool collection = false}) {
   return (resource: resource, draft: draft, catalog: checked);
 }
 
-types.DataValue _placementValue(types.NamedTypeUse use) =>
-    types.DataValue.createNamed(
+skir.DataValue _placementValue(skir.NamedTypeUse use) =>
+    skir.DataValue.createNamed(
       actualType: use,
-      payload: types.DataValue.createRecord(
+      payload: skir.DataValue.createRecord(
         fields: [
-          types.FieldValue(
+          skir.FieldValue(
             name: "width",
-            value: types.DataValue.wrapInteger("0"),
+            value: skir.DataValue.wrapInteger("0"),
           ),
         ],
       ),
     );
 
-types.TypeDefinitionId _definition(String name) => types.TypeDefinitionId(
-  typeId: types.TypeId.createQualified(namespace: "test", name: name),
+skir.TypeDefinitionId _definition(String name) => skir.TypeDefinitionId(
+  typeId: skir.TypeId.createQualified(namespace: "test", name: name),
   revision: 1,
 );
 
-catalog.PublishedType _publishedRecord({
-  required types.TypeDefinitionId definition,
-  required List<types.FieldDeclaration> fields,
-  required List<catalog.EffectiveFieldTemplate> effectiveFields,
-}) => catalog.PublishedType(
+skir.PublishedType _publishedRecord({
+  required skir.TypeDefinitionId definition,
+  required List<skir.FieldDeclaration> fields,
+  required List<skir.EffectiveFieldTemplate> effectiveFields,
+}) => skir.PublishedType(
   display: null,
-  definition: types.TypeDefinition(
+  definition: skir.TypeDefinition(
     id: definition,
     parameters: const [],
-    representation: types.RepresentationTemplate.createRecord(
+    representation: skir.RepresentationTemplate.createRecord(
       fields: fields,
       abstract_: false,
     ),
     parents: const [],
   ),
-  status: catalog.DeclarationStatus.ready,
+  status: skir.DeclarationStatus.ready,
   effectiveFields: effectiveFields,
   ancestorTemplates: const [],
 );

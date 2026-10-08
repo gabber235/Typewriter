@@ -1,6 +1,6 @@
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
@@ -18,7 +18,7 @@ void main() {
         ),
         child: BulkJoinRequestActions(
           selectedCount: 1,
-          selectedIds: {recordId("request_to_join:request")},
+          selectedIds: {skir.recordId("request_to_join:request")},
           onClearSelection: () => clears++,
           onDecline: () async => declines++,
         ),
@@ -42,8 +42,8 @@ void main() {
   ) async {
     var bulkDeclines = 0;
     final request = OrganizationJoinRequest(
-      requestId: recordId("request_to_join:selected"),
-      userId: recordId("user:selected"),
+      requestId: skir.recordId("request_to_join:selected"),
+      userId: skir.recordId("user:selected"),
       userName: "Selected",
       userEmail: "selected@example.com",
       requestedAt: DateTime.now(),

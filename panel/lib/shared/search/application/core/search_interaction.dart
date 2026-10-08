@@ -1,12 +1,5 @@
 // ignore_for_file: prefer_initializing_formals
 
-import "dart:async";
-
-import "package:flutter/foundation.dart";
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:freezed_annotation/freezed_annotation.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "search_interaction.freezed.dart";

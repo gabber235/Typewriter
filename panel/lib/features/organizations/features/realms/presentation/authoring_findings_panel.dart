@@ -1,8 +1,6 @@
-import "package:flutter/material.dart";
-import "package:typewriter_panel/app/presentation/theme/typewriter_theme_access.dart";
-import "package:typewriter_panel/features/organizations/features/realms/application/authored_findings.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/diagnostic.dart"
-    as diagnostic;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
 
 class AuthoringFindingsPanel extends StatelessWidget {
   const AuthoringFindingsPanel({required this.findings, super.key});
@@ -35,13 +33,13 @@ class _FindingRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final color = switch (finding.diagnostic.severity) {
-      diagnostic.DiagnosticSeverity.error => colors.error,
-      diagnostic.DiagnosticSeverity.warning => colors.tertiary,
+      skir.DiagnosticSeverity.error => colors.error,
+      skir.DiagnosticSeverity.warning => colors.tertiary,
       _ => colors.primary,
     };
     final icon = switch (finding.diagnostic.severity) {
-      diagnostic.DiagnosticSeverity.error => Icons.error_outline,
-      diagnostic.DiagnosticSeverity.warning => Icons.warning_amber_outlined,
+      skir.DiagnosticSeverity.error => Icons.error_outline,
+      skir.DiagnosticSeverity.warning => Icons.warning_amber_outlined,
       _ => Icons.info_outline,
     };
     return Opacity(

@@ -1,7 +1,6 @@
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../../../../../../../../../../../support/test_utils.dart";
@@ -12,7 +11,7 @@ void main() {
   ) async {
     await tester.pumpTestApp(
       overrides: [
-        realmIdProvider.overrideWithValue(recordId("service:test")),
+        realmIdProvider.overrideWithValue(skir.recordId("service:test")),
         realmConnectionProvider.overrideWith(
           (ref) => Future.value(RealmConnectionState.offline),
         ),
@@ -40,7 +39,7 @@ void main() {
   testWidgets("registers realm mode shortcuts while online", (tester) async {
     await tester.pumpTestApp(
       overrides: [
-        realmIdProvider.overrideWithValue(recordId("service:test")),
+        realmIdProvider.overrideWithValue(skir.recordId("service:test")),
         realmConnectionProvider.overrideWith(
           (ref) => Future.value(RealmConnectionState.online),
         ),

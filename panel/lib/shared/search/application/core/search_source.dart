@@ -1,5 +1,3 @@
-import "dart:async";
-
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Produces the result tree and actions consumed by the search UI.

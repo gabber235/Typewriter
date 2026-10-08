@@ -1,6 +1,6 @@
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
@@ -17,7 +17,7 @@ void main() {
 
     var removedSelection = 0;
     final member = OrganizationMember(
-      userId: recordId("user:member"),
+      userId: skir.recordId("user:member"),
       roles: const [],
       joinedAt: DateTime.utc(2024),
       name: "Member",

@@ -1,17 +1,5 @@
-import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/action.dart"
-    as portable_action;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/binding.dart"
-    as portable_binding;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as portable_catalog;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
-    as portable_expression;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/presentation.dart"
-    as portable_presentation;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as portable_types;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
@@ -222,11 +210,11 @@ final class _MockOwnerHost extends ChangeNotifier
   _MockOwnerHost(this.owner)
     : _document = PortablePresentationDocument(
         catalog: CheckedEditorCatalog(
-          portable_catalog.EditorCatalogWireSnapshot.defaultInstance,
+          skir.EditorCatalogWireSnapshot.defaultInstance,
         ),
-        root: portable_presentation.PresentationNode.defaultInstance,
+        root: skir.PresentationNode.defaultInstance,
         bindings: const {},
-        budget: portable_expression.EvaluationBudget.defaultInstance,
+        budget: skir.EvaluationBudget.defaultInstance,
       );
 
   final EditOwner owner;
@@ -247,27 +235,24 @@ final class _MockOwnerHost extends ChangeNotifier
 
   @override
   Future<PortablePresentationWriteResult> execute(
-    portable_action.EditorAction editorAction,
+    skir.EditorAction editorAction,
   ) async => const PortablePresentationWriteResult.rejected(
     "This test host has no actions",
   );
 
   @override
-  portable_types.TypeUse? expectedType(portable_binding.BindingRef reference) =>
-      null;
+  skir.TypeUse? expectedType(skir.BindingRef reference) => null;
 
   @override
-  portable_types.ValueLocation? location(
-    portable_binding.BindingRef reference,
-  ) => null;
+  skir.ValueLocation? location(skir.BindingRef reference) => null;
 
   @override
-  portable_types.DataValue? read(portable_binding.BindingRef reference) => null;
+  skir.DataValue? read(skir.BindingRef reference) => null;
 
   @override
   Future<PortablePresentationWriteResult> write(
-    portable_binding.BindingRef reference,
-    portable_types.DataValue value,
+    skir.BindingRef reference,
+    skir.DataValue value,
   ) async => const PortablePresentationWriteResult.rejected(
     "This test host has no bindings",
   );

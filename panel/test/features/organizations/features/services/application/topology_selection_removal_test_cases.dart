@@ -10,7 +10,7 @@ void _testTopologySelectionRemoval() {
         harness = await _Harness.create();
         final container = harness.container;
         addTearDown(harness.dispose);
-        final engineId = recordId("engine_instance:paper");
+        final engineId = skir.recordId("engine_instance:paper");
         final topology =
             (container.read(
               organizationTopologyControllerProvider(_organizationId).notifier,

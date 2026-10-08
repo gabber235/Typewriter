@@ -1,5 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter_animate/flutter_animate.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Renders a selectable grid card with an optional badge and title.

@@ -1,6 +1,3 @@
-import "package:flutter/scheduler.dart";
-import "package:flutter/widgets.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Composes the selected resources into one inspector presentation graph.

@@ -1,8 +1,4 @@
-import "dart:async";
-
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -220,8 +216,8 @@ _CreationFixture _fixture() {
     findings: const [],
   );
   return _CreationFixture(
-    organization: recordId("organization:test"),
-    realm: recordId("realm:test"),
+    organization: skir.recordId("organization:test"),
+    realm: skir.recordId("realm:test"),
     snapshot: snapshot,
     catalog: CheckedEditorCatalog(wire),
     pending: pending,

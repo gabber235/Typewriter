@@ -1,9 +1,3 @@
-import "dart:async";
-import "dart:convert";
-
-import "package:flutter/foundation.dart";
-import "package:http/http.dart" as http;
-import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -24,8 +18,8 @@ NatsClientFactory natsClientFactory(Ref ref) => NatsCoreClient.connect;
 
 /// Owns the HTTP client used by panel infrastructure requests.
 @Riverpod(keepAlive: true)
-http.Client panelHttpClient(Ref ref) {
-  final client = http.Client();
+Client panelHttpClient(Ref ref) {
+  final client = Client();
   ref.onDispose(client.close);
   return client;
 }

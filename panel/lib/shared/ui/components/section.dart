@@ -1,4 +1,3 @@
-import "package:flutter/material.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Groups related content in a themed, clipped surface card.

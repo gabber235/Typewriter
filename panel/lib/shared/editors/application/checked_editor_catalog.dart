@@ -1,15 +1,11 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as catalog;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/presentation.dart"
-    as presentation;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 
 final class AppliedEditorField {
   const AppliedEditorField({required this.template, required this.type});
 
-  final catalog.EffectiveFieldTemplate template;
-  final types.TypeUse? type;
+  final skir.EffectiveFieldTemplate template;
+  final skir.TypeUse? type;
 
   bool get isAvailable => type != null;
 }
@@ -21,9 +17,9 @@ final class AppliedEndpointBinding {
     required this.target,
   });
 
-  final catalog.EndpointBindingTemplate template;
-  final types.NamedTypeUse? containingResource;
-  final types.TypeUse? target;
+  final skir.EndpointBindingTemplate template;
+  final skir.NamedTypeUse? containingResource;
+  final skir.TypeUse? target;
 
   bool get isAvailable => containingResource != null && target != null;
 }
@@ -40,16 +36,16 @@ final class SelectedEditorPresentation extends EditorPresentationSelection {
     required this.material,
   });
 
-  final catalog.PresentationRole requestedRole;
-  final catalog.PresentationRole resolvedRole;
-  final catalog.PresentationDescriptor descriptor;
-  final catalog.PresentationMaterial material;
+  final skir.PresentationRole requestedRole;
+  final skir.PresentationRole resolvedRole;
+  final skir.PresentationDescriptor descriptor;
+  final skir.PresentationMaterial material;
 }
 
 final class MissingEditorPresentation extends EditorPresentationSelection {
   const MissingEditorPresentation(this.requestedRole);
 
-  final catalog.PresentationRole requestedRole;
+  final skir.PresentationRole requestedRole;
 }
 
 final class ConflictingEditorPresentation extends EditorPresentationSelection {
@@ -58,8 +54,8 @@ final class ConflictingEditorPresentation extends EditorPresentationSelection {
     required this.candidates,
   });
 
-  final catalog.PresentationRole role;
-  final List<types.PresentationId> candidates;
+  final skir.PresentationRole role;
+  final List<skir.PresentationId> candidates;
 }
 
 final class UnavailableEditorPresentation extends EditorPresentationSelection {
@@ -68,8 +64,8 @@ final class UnavailableEditorPresentation extends EditorPresentationSelection {
     required this.presentation,
   });
 
-  final catalog.PresentationRole role;
-  final types.PresentationId presentation;
+  final skir.PresentationRole role;
+  final skir.PresentationId presentation;
 }
 
 sealed class EditorFieldPresentationSelection {
@@ -80,14 +76,14 @@ final class SelectedEditorFieldPresentation
     extends EditorFieldPresentationSelection {
   const SelectedEditorFieldPresentation(this.presentation);
 
-  final types.PresentationId presentation;
+  final skir.PresentationId presentation;
 }
 
 final class ConflictingEditorFieldPresentation
     extends EditorFieldPresentationSelection {
   const ConflictingEditorFieldPresentation(this.presentations);
 
-  final List<types.PresentationId> presentations;
+  final List<skir.PresentationId> presentations;
 }
 
 final class CheckedEditorCatalog {
@@ -97,97 +93,95 @@ final class CheckedEditorCatalog {
           published.definition.id: published,
       };
 
-  final catalog.EditorCatalogWireSnapshot snapshot;
-  final Map<types.TypeDefinitionId, catalog.PublishedType> _types;
+  final skir.EditorCatalogWireSnapshot snapshot;
+  final Map<skir.TypeDefinitionId, skir.PublishedType> _types;
 
-  catalog.PublishedType? published(types.TypeDefinitionId id) => _types[id];
+  skir.PublishedType? published(skir.TypeDefinitionId id) => _types[id];
 
-  catalog.TypeDisplay? typeDisplay(types.TypeDefinitionId id) =>
+  skir.TypeDisplay? typeDisplay(skir.TypeDefinitionId id) =>
       _types[id]?.display;
 
-  catalog.TypeDisplay? selectionDisplay(types.TypeSelection selection) =>
+  skir.TypeDisplay? selectionDisplay(skir.TypeSelection selection) =>
       selected(selection)?.display;
 
-  String typeDefinitionName(types.TypeDefinitionId definition) {
+  String typeDefinitionName(skir.TypeDefinitionId definition) {
     final displayName = typeDisplay(definition)?.name.trim();
     if (displayName != null && displayName.isNotEmpty) return displayName;
     return switch (definition.typeId) {
-      types.TypeId_qualifiedWrapper(:final value) => value.name,
-      types.TypeId_declaredWrapper(:final value) => value.value,
+      skir.TypeId_qualifiedWrapper(:final value) => value.name,
+      skir.TypeId_declaredWrapper(:final value) => value.value,
       _ => "Unknown type",
     };
   }
 
-  String typeUseName(types.TypeUse type) => switch (type) {
-    types.TypeUse_namedWrapper(:final value) => _namedTypeName(value),
-    types.TypeUse_nullableWrapper(:final value) =>
+  String typeUseName(skir.TypeUse type) => switch (type) {
+    skir.TypeUse_namedWrapper(:final value) => _namedTypeName(value),
+    skir.TypeUse_nullableWrapper(:final value) =>
       "${typeUseName(value.value)}?",
-    types.TypeUse_scalarWrapper(:final value) => _scalarName(value),
+    skir.TypeUse_scalarWrapper(:final value) => _scalarName(value),
     _ => "Unknown type",
   };
 
-  String typeSelectionName(
-    types.TypeSelection selection,
-  ) => switch (selection) {
-    types.TypeSelection_completeWrapper(:final value) => _namedTypeName(value),
-    types.TypeSelection_pendingWrapper(:final value) => _pendingTypeName(value),
+  String typeSelectionName(skir.TypeSelection selection) => switch (selection) {
+    skir.TypeSelection_completeWrapper(:final value) => _namedTypeName(value),
+    skir.TypeSelection_pendingWrapper(:final value) => _pendingTypeName(value),
     _ => "Unknown type",
   };
 
-  String _namedTypeName(types.NamedTypeUse type) {
+  String _namedTypeName(skir.NamedTypeUse type) {
     final name = typeDefinitionName(type.definition);
     final arguments = type.arguments.toList(growable: false);
     if (arguments.isEmpty) return name;
     return "$name<${arguments.map(typeUseName).join(", ")}>";
   }
 
-  String _pendingTypeName(types.PendingTypeSelection type) {
+  String _pendingTypeName(skir.PendingTypeSelection type) {
     final name = typeDefinitionName(type.definition);
     final arguments = type.arguments.toList(growable: false);
     if (arguments.isEmpty) return name;
     return "$name<${arguments.map((argument) => switch (argument) {
-      types.ArgumentSelection_chosenWrapper(:final value) => typeUseName(value),
+      skir.ArgumentSelection_chosenWrapper(:final value) => typeUseName(value),
       _ => "Unfilled",
     }).join(", ")}>";
   }
 
-  String _scalarName(types.ScalarKind scalar) => switch (scalar) {
-    types.ScalarKind.unit => "Unit",
-    types.ScalarKind.boolean => "Boolean",
-    types.ScalarKind.text => "Text",
-    types.ScalarKind.bytes => "Bytes",
-    types.ScalarKind.decimal => "Decimal",
-    types.ScalarKind.timestamp => "Timestamp",
-    types.ScalarKind.duration => "Duration",
-    types.ScalarKind_integerWrapper(:final value) => switch (value.width) {
-      types.IntegerWidth.signedEight => "Signed 8 bit integer",
-      types.IntegerWidth.signedSixteen => "Signed 16 bit integer",
-      types.IntegerWidth.signedThirtyTwo => "Signed 32 bit integer",
-      types.IntegerWidth.signedSixtyFour => "Signed 64 bit integer",
-      types.IntegerWidth.unsignedEight => "Unsigned 8 bit integer",
-      types.IntegerWidth.unsignedSixteen => "Unsigned 16 bit integer",
-      types.IntegerWidth.unsignedThirtyTwo => "Unsigned 32 bit integer",
-      types.IntegerWidth.unsignedSixtyFour => "Unsigned 64 bit integer",
+  String _scalarName(skir.ScalarKind scalar) => switch (scalar) {
+    skir.ScalarKind.unit => "Unit",
+    skir.ScalarKind.boolean => "Boolean",
+    skir.ScalarKind.text => "Text",
+    skir.ScalarKind.bytes => "Bytes",
+    skir.ScalarKind.decimal => "Decimal",
+    skir.ScalarKind.timestamp => "Timestamp",
+    skir.ScalarKind.duration => "Duration",
+    skir.ScalarKind_integerWrapper(:final value) => switch (value.width) {
+      skir.IntegerWidth.signedEight => "Signed 8 bit integer",
+      skir.IntegerWidth.signedSixteen => "Signed 16 bit integer",
+      skir.IntegerWidth.signedThirtyTwo => "Signed 32 bit integer",
+      skir.IntegerWidth.signedSixtyFour => "Signed 64 bit integer",
+      skir.IntegerWidth.unsignedEight => "Unsigned 8 bit integer",
+      skir.IntegerWidth.unsignedSixteen => "Unsigned 16 bit integer",
+      skir.IntegerWidth.unsignedThirtyTwo => "Unsigned 32 bit integer",
+      skir.IntegerWidth.unsignedSixtyFour => "Unsigned 64 bit integer",
       _ => "Integer",
     },
-    types.ScalarKind_floatWrapper(:final value) => switch (value.width) {
-      types.FloatWidth.thirtyTwo => "32 bit float",
-      types.FloatWidth.sixtyFour => "64 bit float",
+    skir.ScalarKind_floatWrapper(:final value) => switch (value.width) {
+      skir.FloatWidth.thirtyTwo => "32 bit float",
+      skir.FloatWidth.sixtyFour => "64 bit float",
       _ => "Float",
     },
     _ => "Unknown type",
   };
 
-  List<catalog.PresentationRole> roleFallbackOrder(
-    catalog.PresentationRole requested,
+  List<skir.PresentationRole> roleFallbackOrder(
+    skir.PresentationRole requested,
   ) {
     final parents = {
       for (final fallback in snapshot.roleFallbacks)
         fallback.role: fallback.parents.toList(growable: false),
     };
-    final pending = <catalog.PresentationRole>[requested];
-    final visited = <catalog.PresentationRole>{};
-    final ordered = <catalog.PresentationRole>[];
+    final pending = <skir.PresentationRole>[requested];
+    final visited = <skir.PresentationRole>{};
+    final ordered = <skir.PresentationRole>[];
     while (pending.isNotEmpty) {
       final current = pending.removeAt(0);
       if (!visited.add(current)) continue;
@@ -198,8 +192,8 @@ final class CheckedEditorCatalog {
   }
 
   EditorPresentationSelection selectPresentation(
-    types.TypeSelection actual,
-    catalog.PresentationRole requested,
+    skir.TypeSelection actual,
+    skir.PresentationRole requested,
   ) {
     for (final role in roleFallbackOrder(requested)) {
       final selected = _selectWithinRole(actual, role);
@@ -220,9 +214,9 @@ final class CheckedEditorCatalog {
     return MissingEditorPresentation(requested);
   }
 
-  catalog.PresentationMaterial? presentationMaterial(
-    types.PresentationId id,
-    types.TypeSelection actual,
+  skir.PresentationMaterial? presentationMaterial(
+    skir.PresentationId id,
+    skir.TypeSelection actual,
   ) => snapshot.presentationMaterials
       .where(
         (material) =>
@@ -231,11 +225,11 @@ final class CheckedEditorCatalog {
       )
       .firstOrNull;
 
-  Map<types.ValuePath, EditorFieldPresentationSelection> fieldPresentations(
-    types.TypeSelection actual,
-    catalog.PresentationRole role,
+  Map<skir.ValuePath, EditorFieldPresentationSelection> fieldPresentations(
+    skir.TypeSelection actual,
+    skir.PresentationRole role,
   ) {
-    final candidates = <types.ValuePath, List<_FieldPresentationCandidate>>{};
+    final candidates = <skir.ValuePath, List<_FieldPresentationCandidate>>{};
     for (final material in snapshot.presentationMaterials) {
       if (material.role != role ||
           !_presentationTargetMatches(material.target, actual)) {
@@ -306,26 +300,26 @@ final class CheckedEditorCatalog {
   }
 
   bool isPresentationCompatible(
-    catalog.PresentationTarget target,
-    types.TypeSelection actual,
+    skir.PresentationTarget target,
+    skir.TypeSelection actual,
   ) => _presentationTargetMatches(target, actual);
 
-  types.TypeUse? applyTemplate(
-    types.TypeTemplate template,
-    types.TypeSelection containing,
+  skir.TypeUse? applyTemplate(
+    skir.TypeTemplate template,
+    skir.TypeSelection containing,
   ) {
     final definition = selected(containing);
     if (definition == null) return null;
     return _apply(template, _bindings(containing, definition));
   }
 
-  types.TypeUse? concreteType(types.TypeTemplate template) =>
+  skir.TypeUse? concreteType(skir.TypeTemplate template) =>
       _concreteTemplateType(template);
 
-  bool hasConstructorDefault(types.FieldOwner owner) {
+  bool hasConstructorDefault(skir.FieldOwner owner) {
     final definition = _types[owner.definition];
     final representation = definition?.definition.representation;
-    if (representation case types.RepresentationTemplate_recordWrapper(
+    if (representation case skir.RepresentationTemplate_recordWrapper(
       :final value,
     )) {
       return value.fields
@@ -337,19 +331,19 @@ final class CheckedEditorCatalog {
     return false;
   }
 
-  catalog.PublishedType? selected(types.TypeSelection selection) {
+  skir.PublishedType? selected(skir.TypeSelection selection) {
     final definition = switch (selection) {
-      types.TypeSelection_completeWrapper(:final value) => value.definition,
-      types.TypeSelection_pendingWrapper(:final value) => value.definition,
+      skir.TypeSelection_completeWrapper(:final value) => value.definition,
+      skir.TypeSelection_pendingWrapper(:final value) => value.definition,
       _ => null,
     };
     return definition == null ? null : _types[definition];
   }
 
-  List<AppliedEditorField> fields(types.TypeSelection selection) {
+  List<AppliedEditorField> fields(skir.TypeSelection selection) {
     final definition = selected(selection);
     if (definition == null ||
-        definition.status != catalog.DeclarationStatus.ready) {
+        definition.status != skir.DeclarationStatus.ready) {
       return const [];
     }
     final bindings = _bindings(selection, definition);
@@ -359,20 +353,20 @@ final class CheckedEditorCatalog {
     ];
   }
 
-  types.TypeUse? valueTypeAt(
-    types.TypeSelection root,
-    types.ValuePath path, {
-    types.DataValue? value,
+  skir.TypeUse? valueTypeAt(
+    skir.TypeSelection root,
+    skir.ValuePath path, {
+    skir.DataValue? value,
   }) {
     var selection = root;
-    types.TypeUse? current;
+    skir.TypeUse? current;
     var currentValue = value;
     final segments = path.segments.toList(growable: false);
     var index = 0;
     while (index < segments.length) {
       final segment = segments[index];
       switch (segment) {
-        case types.PathSegment_fieldWrapper(:final value):
+        case skir.PathSegment_fieldWrapper(:final value):
           final selected = _selectionAtValue(selection, currentValue);
           if (selected == null) return null;
           selection = selected;
@@ -383,13 +377,13 @@ final class CheckedEditorCatalog {
           if (current == null) return null;
           currentValue = _fieldValue(currentValue, value.name);
           index++;
-        case types.PathSegment_itemWrapper():
+        case skir.PathSegment_itemWrapper():
           final named = _namedValueUse(current);
           if (named == null) return null;
           final containing = _selectionForUse(named, currentValue);
           if (containing == null) return null;
           final actual = switch (containing) {
-            types.TypeSelection_completeWrapper(:final value) => value,
+            skir.TypeSelection_completeWrapper(:final value) => value,
             _ => null,
           };
           if (actual == null) return null;
@@ -399,19 +393,16 @@ final class CheckedEditorCatalog {
           final payload = _namedPayload(currentValue);
           final itemId = segment.value.id;
           switch (representation) {
-            case types.RepresentationTemplate_sequenceWrapper(:final value):
+            case skir.RepresentationTemplate_sequenceWrapper(:final value):
               current = applyTemplate(value.item, containing);
               currentValue = _collectionItem(payload, itemId);
               index++;
-            case types.RepresentationTemplate_mappingWrapper(:final value):
+            case skir.RepresentationTemplate_mappingWrapper(:final value):
               if (index + 1 >= segments.length) return null;
               final rowPart = segments[index + 1];
               current = switch (rowPart) {
-                types.PathSegment.mapKey => applyTemplate(
-                  value.key,
-                  containing,
-                ),
-                types.PathSegment.mapValue => applyTemplate(
+                skir.PathSegment.mapKey => applyTemplate(value.key, containing),
+                skir.PathSegment.mapValue => applyTemplate(
                   value.value,
                   containing,
                 ),
@@ -423,13 +414,13 @@ final class CheckedEditorCatalog {
               return null;
           }
           if (current == null) return null;
-        case types.PathSegment.mapKey || types.PathSegment.mapValue:
+        case skir.PathSegment.mapKey || skir.PathSegment.mapValue:
           return null;
         default:
           return null;
       }
       if (index < segments.length &&
-          segments[index] is types.PathSegment_fieldWrapper) {
+          segments[index] is skir.PathSegment_fieldWrapper) {
         final named = _namedValueUse(current);
         if (named == null) return null;
         final nested = _selectionForUse(named, currentValue);
@@ -440,71 +431,71 @@ final class CheckedEditorCatalog {
     return current;
   }
 
-  types.TypeSelection? _selectionAtValue(
-    types.TypeSelection declared,
-    types.DataValue? value,
+  skir.TypeSelection? _selectionAtValue(
+    skir.TypeSelection declared,
+    skir.DataValue? value,
   ) {
-    if (value case types.DataValue_namedWrapper(:final value)) {
+    if (value case skir.DataValue_namedWrapper(:final value)) {
       final actual = value.actualType;
       final compatible = switch (declared) {
-        types.TypeSelection_completeWrapper(:final value) => isReadableAs(
-          types.TypeUse.wrapNamed(actual),
-          types.TypeUse.wrapNamed(value),
+        skir.TypeSelection_completeWrapper(:final value) => isReadableAs(
+          skir.TypeUse.wrapNamed(actual),
+          skir.TypeUse.wrapNamed(value),
         ),
-        types.TypeSelection_pendingWrapper() =>
-          knownApplications(types.TypeSelection.wrapComplete(actual)).any(
+        skir.TypeSelection_pendingWrapper() =>
+          knownApplications(skir.TypeSelection.wrapComplete(actual)).any(
             (candidate) => knownApplications(declared).any(
               (expected) => isReadableAs(
-                types.TypeUse.wrapNamed(candidate),
-                types.TypeUse.wrapNamed(expected),
+                skir.TypeUse.wrapNamed(candidate),
+                skir.TypeUse.wrapNamed(expected),
               ),
             ),
           ),
         _ => false,
       };
-      return compatible ? types.TypeSelection.wrapComplete(actual) : null;
+      return compatible ? skir.TypeSelection.wrapComplete(actual) : null;
     }
     return declared;
   }
 
-  types.TypeSelection? _selectionForUse(
-    types.NamedTypeUse declared,
-    types.DataValue? value,
+  skir.TypeSelection? _selectionForUse(
+    skir.NamedTypeUse declared,
+    skir.DataValue? value,
   ) {
-    if (value case types.DataValue_namedWrapper(:final value)) {
+    if (value case skir.DataValue_namedWrapper(:final value)) {
       if (!isReadableAs(
-        types.TypeUse.wrapNamed(value.actualType),
-        types.TypeUse.wrapNamed(declared),
+        skir.TypeUse.wrapNamed(value.actualType),
+        skir.TypeUse.wrapNamed(declared),
       )) {
         return null;
       }
-      return types.TypeSelection.wrapComplete(value.actualType);
+      return skir.TypeSelection.wrapComplete(value.actualType);
     }
-    return types.TypeSelection.wrapComplete(declared);
+    return skir.TypeSelection.wrapComplete(declared);
   }
 
-  types.DataValue? _namedPayload(types.DataValue? value) => switch (value) {
-    types.DataValue_namedWrapper(:final value) => value.payload,
+  skir.DataValue? _namedPayload(skir.DataValue? value) => switch (value) {
+    skir.DataValue_namedWrapper(:final value) => value.payload,
     _ => value,
   };
 
-  types.DataValue? _fieldValue(types.DataValue? value, String name) {
+  skir.DataValue? _fieldValue(skir.DataValue? value, String name) {
     final payload = _namedPayload(value);
     final fields = switch (payload) {
-      types.DataValue_recordWrapper(:final value) =>
+      skir.DataValue_recordWrapper(:final value) =>
         value.fields
             .where((field) => field.name == name)
             .toList(growable: false),
-      _ => const <types.FieldValue>[],
+      _ => const <skir.FieldValue>[],
     };
     return fields.length == 1 ? fields.single.value : null;
   }
 
-  types.DataValue? _collectionItem(types.DataValue? value, types.ItemId id) {
+  skir.DataValue? _collectionItem(skir.DataValue? value, skir.ItemId id) {
     final items = switch (value) {
-      types.DataValue_listValueWrapper(:final value) => value.items,
-      types.DataValue_setValueWrapper(:final value) => value.items,
-      _ => const <types.ListItem>[],
+      skir.DataValue_listValueWrapper(:final value) => value.items,
+      skir.DataValue_setValueWrapper(:final value) => value.items,
+      _ => const <skir.ListItem>[],
     };
     final matching = items
         .where((candidate) => candidate.id == id)
@@ -512,47 +503,47 @@ final class CheckedEditorCatalog {
     return matching.length == 1 ? matching.single.value : null;
   }
 
-  types.DataValue? _mapRowValue(
-    types.DataValue? value,
-    types.ItemId id,
-    types.PathSegment branch,
+  skir.DataValue? _mapRowValue(
+    skir.DataValue? value,
+    skir.ItemId id,
+    skir.PathSegment branch,
   ) {
     final rows = switch (value) {
-      types.DataValue_mapValueWrapper(:final value) =>
+      skir.DataValue_mapValueWrapper(:final value) =>
         value.rows
             .where((candidate) => candidate.id == id)
             .toList(growable: false),
-      _ => const <types.MapRow>[],
+      _ => const <skir.MapRow>[],
     };
     if (rows.length != 1) return null;
     return switch (branch) {
-      final value when value == types.PathSegment.mapKey => rows.single.key,
-      final value when value == types.PathSegment.mapValue => rows.single.value,
+      final value when value == skir.PathSegment.mapKey => rows.single.key,
+      final value when value == skir.PathSegment.mapValue => rows.single.value,
       _ => null,
     };
   }
 
-  types.NamedTypeUse? _namedValueUse(types.TypeUse? type) {
+  skir.NamedTypeUse? _namedValueUse(skir.TypeUse? type) {
     var current = type;
-    while (current is types.TypeUse_nullableWrapper) {
+    while (current is skir.TypeUse_nullableWrapper) {
       current = current.value.value;
     }
     return switch (current) {
-      types.TypeUse_namedWrapper(:final value) => value,
+      skir.TypeUse_namedWrapper(:final value) => value,
       _ => null,
     };
   }
 
-  Set<types.NamedTypeUse> knownApplications(types.TypeSelection selection) {
+  Set<skir.NamedTypeUse> knownApplications(skir.TypeSelection selection) {
     final definition = selected(selection);
     if (definition == null ||
-        definition.status != catalog.DeclarationStatus.ready) {
+        definition.status != skir.DeclarationStatus.ready) {
       return const {};
     }
     final bindings = _bindings(selection, definition);
-    final applications = <types.NamedTypeUse>{};
+    final applications = <skir.NamedTypeUse>{};
     final selectedUse = switch (selection) {
-      types.TypeSelection_completeWrapper(:final value) => value,
+      skir.TypeSelection_completeWrapper(:final value) => value,
       _ => null,
     };
     if (selectedUse != null) applications.add(selectedUse);
@@ -563,17 +554,17 @@ final class CheckedEditorCatalog {
     return applications;
   }
 
-  List<catalog.TypeRecommendation> get recommendations =>
+  List<skir.TypeRecommendation> get recommendations =>
       snapshot.recommendations.toList(growable: false);
 
-  catalog.InitializationDescriptor? initialization(
-    types.TypeDefinitionId definition,
+  skir.InitializationDescriptor? initialization(
+    skir.TypeDefinitionId definition,
   ) => snapshot.initialization
       .where((descriptor) => descriptor.definition == definition)
       .firstOrNull;
 
-  catalog.AuthoringResourceDefinition? resourceDefinition(
-    types.TypeSelection selection,
+  skir.AuthoringResourceDefinition? resourceDefinition(
+    skir.TypeSelection selection,
   ) {
     final definitions = nominalDefinitions(selection);
     return snapshot.resourceDefinitions
@@ -582,8 +573,8 @@ final class CheckedEditorCatalog {
   }
 
   bool isResourceDefinition(
-    types.TypeSelection selection,
-    catalog.ResourceDefinitionId id,
+    skir.TypeSelection selection,
+    skir.ResourceDefinitionId id,
   ) {
     final definitions = nominalDefinitions(selection);
     return snapshot.resourceDefinitions.any(
@@ -591,9 +582,7 @@ final class CheckedEditorCatalog {
     );
   }
 
-  Set<types.TypeDefinitionId> nominalDefinitions(
-    types.TypeSelection selection,
-  ) {
+  Set<skir.TypeDefinitionId> nominalDefinitions(skir.TypeSelection selection) {
     final definition = selected(selection);
     if (definition == null) return const {};
     return {
@@ -602,7 +591,7 @@ final class CheckedEditorCatalog {
     };
   }
 
-  List<AppliedEndpointBinding> endpointBindings(types.TypeSelection selection) {
+  List<AppliedEndpointBinding> endpointBindings(skir.TypeSelection selection) {
     final definition = selected(selection);
     if (definition == null) return const [];
     final nominal = nominalDefinitions(selection);
@@ -628,33 +617,31 @@ final class CheckedEditorCatalog {
   }
 
   List<AppliedEndpointBinding> endpointBindingsAt(
-    types.TypeSelection selection,
-    types.ValuePath path,
+    skir.TypeSelection selection,
+    skir.ValuePath path,
   ) => endpointBindings(selection)
       .where(
         (binding) => _patternMatchesPath(binding.template.relativePath, path),
       )
       .toList(growable: false);
 
-  types.NamedTypeUse? namedUse(types.TypeUse? type) => _namedValueUse(type);
+  skir.NamedTypeUse? namedUse(skir.TypeUse? type) => _namedValueUse(type);
 
-  types.TypeUse? collectionItemType(types.TypeUse? type) {
+  skir.TypeUse? collectionItemType(skir.TypeUse? type) {
     final named = _namedValueUse(type);
     if (named == null) return null;
     final representation = published(named.definition)
         ?.definition
         .representation;
-    if (representation case types.RepresentationTemplate_sequenceWrapper(
+    if (representation case skir.RepresentationTemplate_sequenceWrapper(
       :final value,
     )) {
-      return applyTemplate(value.item, types.TypeSelection.wrapComplete(named));
+      return applyTemplate(value.item, skir.TypeSelection.wrapComplete(named));
     }
     return null;
   }
 
-  List<catalog.ConfigurationRecipe> configuration(
-    types.TypeSelection selection,
-  ) {
+  List<skir.ConfigurationRecipe> configuration(skir.TypeSelection selection) {
     final owners = nominalDefinitions(selection);
     return [
       for (final recipe in snapshot.configuration)
@@ -662,51 +649,50 @@ final class CheckedEditorCatalog {
     ];
   }
 
-  catalog.RepresentationKind? representationKindAt(
-    types.TypeSelection root,
-    types.ValuePath path, {
-    types.DataValue? value,
+  skir.RepresentationKind? representationKindAt(
+    skir.TypeSelection root,
+    skir.ValuePath path, {
+    skir.DataValue? value,
   }) {
     if (path.segments.isEmpty) return representationKind(root);
     return _representationKindForUse(valueTypeAt(root, path, value: value));
   }
 
-  types.TypeSelection beginSelection(types.TypeDefinitionId definition) {
+  skir.TypeSelection beginSelection(skir.TypeDefinitionId definition) {
     final published = _types[definition];
-    if (published == null ||
-        published.status != catalog.DeclarationStatus.ready) {
-      return types.TypeSelection.unknown;
+    if (published == null || published.status != skir.DeclarationStatus.ready) {
+      return skir.TypeSelection.unknown;
     }
     final count = published.definition.parameters.length;
     if (count == 0) {
-      return types.TypeSelection.createComplete(
+      return skir.TypeSelection.createComplete(
         definition: definition,
         arguments: const [],
       );
     }
-    return types.TypeSelection.createPending(
+    return skir.TypeSelection.createPending(
       definition: definition,
-      arguments: List.filled(count, types.ArgumentSelection.unfilled),
+      arguments: List.filled(count, skir.ArgumentSelection.unfilled),
     );
   }
 
-  bool isAbstractRecordSelection(types.TypeSelection selection) =>
+  bool isAbstractRecordSelection(skir.TypeSelection selection) =>
       switch (selected(selection)?.definition.representation) {
-        types.RepresentationTemplate_recordWrapper(:final value) =>
+        skir.RepresentationTemplate_recordWrapper(:final value) =>
           value.abstract_,
         _ => false,
       };
 
-  List<types.TypeSelection> concreteRecordSelections(
-    types.TypeSelection expected,
+  List<skir.TypeSelection> concreteRecordSelections(
+    skir.TypeSelection expected,
   ) {
     final root = selected(expected)?.definition.id;
     if (root == null) return const [];
-    final selections = <types.TypeSelection>[];
+    final selections = <skir.TypeSelection>[];
     for (final published in snapshot.types) {
       final representation = published.definition.representation;
-      if (published.status != catalog.DeclarationStatus.ready ||
-          representation is! types.RepresentationTemplate_recordWrapper ||
+      if (published.status != skir.DeclarationStatus.ready ||
+          representation is! skir.RepresentationTemplate_recordWrapper ||
           representation.value.abstract_ ||
           !_isNominalSubtype(published.definition.id, root)) {
         continue;
@@ -717,13 +703,12 @@ final class CheckedEditorCatalog {
   }
 
   TypeArgumentChoice chooseArgument(
-    types.TypeSelection selection,
+    skir.TypeSelection selection,
     int index,
-    types.TypeUse argument,
+    skir.TypeUse argument,
   ) {
     final published = selected(selection);
-    if (published == null ||
-        published.status != catalog.DeclarationStatus.ready) {
+    if (published == null || published.status != skir.DeclarationStatus.ready) {
       return const TypeArgumentChoice.rejected(
         "The selected type is unavailable",
       );
@@ -735,8 +720,8 @@ final class CheckedEditorCatalog {
       );
     }
     final arguments = _argumentSelections(selection, parameters.length);
-    arguments[index] = types.ArgumentSelection.wrapChosen(argument);
-    final pending = types.TypeSelection.createPending(
+    arguments[index] = skir.ArgumentSelection.wrapChosen(argument);
+    final pending = skir.TypeSelection.createPending(
       definition: published.definition.id,
       arguments: arguments,
     );
@@ -744,7 +729,7 @@ final class CheckedEditorCatalog {
     var complete = true;
     for (var position = 0; position < parameters.length; position++) {
       final chosenArgument = switch (arguments[position]) {
-        types.ArgumentSelection_chosenWrapper(:final value) => value,
+        skir.ArgumentSelection_chosenWrapper(:final value) => value,
         _ => null,
       };
       if (chosenArgument == null) {
@@ -765,34 +750,34 @@ final class CheckedEditorCatalog {
       }
     }
     if (!complete) return TypeArgumentChoice.accepted(pending);
-    final chosen = <types.TypeUse>[];
+    final chosen = <skir.TypeUse>[];
     for (final selection in arguments) {
-      chosen.add((selection as types.ArgumentSelection_chosenWrapper).value);
+      chosen.add((selection as skir.ArgumentSelection_chosenWrapper).value);
     }
     return TypeArgumentChoice.accepted(
-      types.TypeSelection.createComplete(
+      skir.TypeSelection.createComplete(
         definition: published.definition.id,
         arguments: chosen,
       ),
     );
   }
 
-  types.TypeSelection clearArgument(types.TypeSelection selection, int index) {
+  skir.TypeSelection clearArgument(skir.TypeSelection selection, int index) {
     final published = selected(selection);
-    if (published == null) return types.TypeSelection.unknown;
+    if (published == null) return skir.TypeSelection.unknown;
     final arguments = _argumentSelections(
       selection,
       published.definition.parameters.length,
     );
     if (index < 0 || index >= arguments.length) return selection;
-    arguments[index] = types.ArgumentSelection.unfilled;
-    return types.TypeSelection.createPending(
+    arguments[index] = skir.ArgumentSelection.unfilled;
+    return skir.TypeSelection.createPending(
       definition: published.definition.id,
       arguments: arguments,
     );
   }
 
-  bool isReadableAs(types.TypeUse actual, types.TypeUse expected) =>
+  bool isReadableAs(skir.TypeUse actual, skir.TypeUse expected) =>
       _isReadableAs(actual, expected, 0);
 
   /// Whether a complete named use is valid in this checked snapshot.
@@ -801,14 +786,13 @@ final class CheckedEditorCatalog {
   /// This boundary also proves that every referenced declaration is ready,
   /// every application has the declared arity, and every applied argument
   /// satisfies its parameter bounds.
-  bool isReadyApplication(types.NamedTypeUse application) =>
+  bool isReadyApplication(skir.NamedTypeUse application) =>
       _isReadyApplication(application, 0);
 
-  bool _isReadyApplication(types.NamedTypeUse application, int depth) {
+  bool _isReadyApplication(skir.NamedTypeUse application, int depth) {
     if (depth > _maximumCheckedTypeDepth) return false;
     final published = _types[application.definition];
-    if (published == null ||
-        published.status != catalog.DeclarationStatus.ready) {
+    if (published == null || published.status != skir.DeclarationStatus.ready) {
       return false;
     }
     final parameters = published.definition.parameters.toList(growable: false);
@@ -817,7 +801,7 @@ final class CheckedEditorCatalog {
     for (final argument in arguments) {
       if (!_isReadyTypeUse(argument, depth + 1)) return false;
     }
-    final selection = types.TypeSelection.wrapComplete(application);
+    final selection = skir.TypeSelection.wrapComplete(application);
     final bindings = _bindings(selection, published);
     for (var index = 0; index < parameters.length; index++) {
       for (final bound in parameters[index].bounds) {
@@ -830,15 +814,15 @@ final class CheckedEditorCatalog {
     return true;
   }
 
-  bool _isReadyTypeUse(types.TypeUse use, int depth) {
+  bool _isReadyTypeUse(skir.TypeUse use, int depth) {
     if (depth > _maximumCheckedTypeDepth) return false;
     return switch (use) {
-      types.TypeUse_scalarWrapper(:final value) => _isReadyScalar(value),
-      types.TypeUse_nullableWrapper(:final value) => _isReadyTypeUse(
+      skir.TypeUse_scalarWrapper(:final value) => _isReadyScalar(value),
+      skir.TypeUse_nullableWrapper(:final value) => _isReadyTypeUse(
         value.value,
         depth + 1,
       ),
-      types.TypeUse_namedWrapper(:final value) => _isReadyApplication(
+      skir.TypeUse_namedWrapper(:final value) => _isReadyApplication(
         value,
         depth + 1,
       ),
@@ -846,35 +830,35 @@ final class CheckedEditorCatalog {
     };
   }
 
-  bool _isReadyScalar(types.ScalarKind scalar) {
-    if (scalar case types.ScalarKind_integerWrapper(:final value)) {
-      return value.width != types.IntegerWidth.unknown;
+  bool _isReadyScalar(skir.ScalarKind scalar) {
+    if (scalar case skir.ScalarKind_integerWrapper(:final value)) {
+      return value.width != skir.IntegerWidth.unknown;
     }
-    if (scalar case types.ScalarKind_floatWrapper(:final value)) {
-      return value.width != types.FloatWidth.unknown;
+    if (scalar case skir.ScalarKind_floatWrapper(:final value)) {
+      return value.width != skir.FloatWidth.unknown;
     }
-    return scalar == types.ScalarKind.unit ||
-        scalar == types.ScalarKind.boolean ||
-        scalar == types.ScalarKind.text ||
-        scalar == types.ScalarKind.bytes ||
-        scalar == types.ScalarKind.decimal ||
-        scalar == types.ScalarKind.timestamp ||
-        scalar == types.ScalarKind.duration;
+    return scalar == skir.ScalarKind.unit ||
+        scalar == skir.ScalarKind.boolean ||
+        scalar == skir.ScalarKind.text ||
+        scalar == skir.ScalarKind.bytes ||
+        scalar == skir.ScalarKind.decimal ||
+        scalar == skir.ScalarKind.timestamp ||
+        scalar == skir.ScalarKind.duration;
   }
 
-  bool _isReadableAs(types.TypeUse actual, types.TypeUse expected, int depth) {
+  bool _isReadableAs(skir.TypeUse actual, skir.TypeUse expected, int depth) {
     if (depth > 64) return false;
     if (actual == expected) return true;
-    if (expected case types.TypeUse_nullableWrapper(:final value)) {
+    if (expected case skir.TypeUse_nullableWrapper(:final value)) {
       final expectedValue = value.value;
-      if (actual case types.TypeUse_nullableWrapper(:final value)) {
+      if (actual case skir.TypeUse_nullableWrapper(:final value)) {
         return _isReadableAs(value.value, expectedValue, depth + 1);
       }
       return _isReadableAs(actual, expectedValue, depth + 1);
     }
-    if (actual case types.TypeUse_namedWrapper(:final value)) {
-      if (expected case types.TypeUse_namedWrapper(value: final expectedUse)) {
-        final selection = types.TypeSelection.wrapComplete(value);
+    if (actual case skir.TypeUse_namedWrapper(:final value)) {
+      if (expected case skir.TypeUse_namedWrapper(value: final expectedUse)) {
+        final selection = skir.TypeSelection.wrapComplete(value);
         return knownApplications(selection).any(
           (application) =>
               application.definition == expectedUse.definition &&
@@ -891,8 +875,8 @@ final class CheckedEditorCatalog {
   }
 
   bool _argumentsReadableAs(
-    Iterable<types.TypeUse> actual,
-    Iterable<types.TypeUse> expected,
+    Iterable<skir.TypeUse> actual,
+    Iterable<skir.TypeUse> expected,
     int depth,
   ) {
     final actualArguments = actual.toList(growable: false);
@@ -910,8 +894,8 @@ final class CheckedEditorCatalog {
   }
 
   EditorPresentationSelection _selectWithinRole(
-    types.TypeSelection actual,
-    catalog.PresentationRole role,
+    skir.TypeSelection actual,
+    skir.PresentationRole role,
   ) {
     final matching = snapshot.presentations
         .where(
@@ -978,46 +962,46 @@ final class CheckedEditorCatalog {
   }
 
   bool _presentationTargetMatches(
-    catalog.PresentationTarget target,
-    types.TypeSelection actual,
+    skir.PresentationTarget target,
+    skir.TypeSelection actual,
   ) => switch (target) {
-    catalog.PresentationTarget_namedWrapper(:final value) =>
+    skir.PresentationTarget_namedWrapper(:final value) =>
       _namedPresentationTargetMatches(value, actual),
-    catalog.PresentationTarget_representationWrapper(:final value) =>
+    skir.PresentationTarget_representationWrapper(:final value) =>
       representationKind(actual) == value,
     _ => false,
   };
 
   bool _namedPresentationTargetMatches(
-    types.NamedTypeTemplate target,
-    types.TypeSelection actual,
+    skir.NamedTypeTemplate target,
+    skir.TypeSelection actual,
   ) {
     for (final application in knownApplications(actual)) {
       if (_templateMatchesUse(
         target,
         application,
-        <types.ParameterKey, types.TypeUse>{},
+        <skir.ParameterKey, skir.TypeUse>{},
       )) {
         return true;
       }
     }
-    if (actual case types.TypeSelection_pendingWrapper(:final value)) {
+    if (actual case skir.TypeSelection_pendingWrapper(:final value)) {
       if (target.definition != value.definition ||
           target.arguments.length != value.arguments.length) {
         return false;
       }
-      final bindings = <types.ParameterKey, types.TypeUse>{};
+      final bindings = <skir.ParameterKey, skir.TypeUse>{};
       final expectedArguments = target.arguments.toList();
       final actualArguments = value.arguments.toList();
       for (var index = 0; index < expectedArguments.length; index++) {
         switch (actualArguments[index]) {
-          case types.ArgumentSelection_chosenWrapper(:final value):
+          case skir.ArgumentSelection_chosenWrapper(:final value):
             if (!_templateMatches(expectedArguments[index], value, bindings)) {
               return false;
             }
-          case final argument when argument == types.ArgumentSelection.unfilled:
+          case final argument when argument == skir.ArgumentSelection.unfilled:
             if (expectedArguments[index]
-                is! types.TypeTemplate_parameterWrapper) {
+                is! skir.TypeTemplate_parameterWrapper) {
               return false;
             }
           default:
@@ -1030,23 +1014,23 @@ final class CheckedEditorCatalog {
   }
 
   bool matchesNamedTemplate(
-    types.TypeSelection actual,
-    types.NamedTypeTemplate expected,
+    skir.TypeSelection actual,
+    skir.NamedTypeTemplate expected,
   ) => _namedPresentationTargetMatches(expected, actual);
 
   bool _templateMatchesUse(
-    types.NamedTypeTemplate expected,
-    types.NamedTypeUse actual,
-    Map<types.ParameterKey, types.TypeUse> bindings,
+    skir.NamedTypeTemplate expected,
+    skir.NamedTypeUse actual,
+    Map<skir.ParameterKey, skir.TypeUse> bindings,
   ) =>
       expected.definition == actual.definition &&
       expected.arguments.length == actual.arguments.length &&
       _templatesMatchUses(expected.arguments, actual.arguments, bindings);
 
   bool _templatesMatchUses(
-    Iterable<types.TypeTemplate> expected,
-    Iterable<types.TypeUse> actual,
-    Map<types.ParameterKey, types.TypeUse> bindings,
+    Iterable<skir.TypeTemplate> expected,
+    Iterable<skir.TypeUse> actual,
+    Map<skir.ParameterKey, skir.TypeUse> bindings,
   ) {
     final expectedList = expected.toList();
     final actualList = actual.toList();
@@ -1059,23 +1043,23 @@ final class CheckedEditorCatalog {
   }
 
   bool _templateMatches(
-    types.TypeTemplate expected,
-    types.TypeUse actual,
-    Map<types.ParameterKey, types.TypeUse> bindings,
+    skir.TypeTemplate expected,
+    skir.TypeUse actual,
+    Map<skir.ParameterKey, skir.TypeUse> bindings,
   ) => switch (expected) {
-    types.TypeTemplate_parameterWrapper(:final value) =>
+    skir.TypeTemplate_parameterWrapper(:final value) =>
       bindings[value] == null
           ? (bindings[value] = actual) == actual
           : bindings[value] == actual,
-    types.TypeTemplate_scalarWrapper(:final value) =>
-      actual == types.TypeUse.wrapScalar(value),
-    types.TypeTemplate_nullableWrapper(:final value) =>
-      actual is types.TypeUse_nullableWrapper &&
+    skir.TypeTemplate_scalarWrapper(:final value) =>
+      actual == skir.TypeUse.wrapScalar(value),
+    skir.TypeTemplate_nullableWrapper(:final value) =>
+      actual is skir.TypeUse_nullableWrapper &&
           _templateMatches(value.value, actual.value.value, bindings),
-    types.TypeTemplate_namedWrapper(:final value) =>
-      actual is types.TypeUse_namedWrapper &&
+    skir.TypeTemplate_namedWrapper(:final value) =>
+      actual is skir.TypeUse_namedWrapper &&
           (_templateMatchesUse(value, actual.value, bindings) ||
-              knownApplications(types.TypeSelection.wrapComplete(actual.value))
+              knownApplications(skir.TypeSelection.wrapComplete(actual.value))
                   .any(
                     (application) =>
                         _templateMatchesUse(value, application, bindings),
@@ -1084,15 +1068,15 @@ final class CheckedEditorCatalog {
   };
 
   bool _isMoreSpecific(
-    catalog.PresentationTarget left,
-    catalog.PresentationTarget right,
+    skir.PresentationTarget left,
+    skir.PresentationTarget right,
   ) {
-    if (left is catalog.PresentationTarget_namedWrapper &&
-        right is catalog.PresentationTarget_representationWrapper) {
+    if (left is skir.PresentationTarget_namedWrapper &&
+        right is skir.PresentationTarget_representationWrapper) {
       return true;
     }
-    if (left is! catalog.PresentationTarget_namedWrapper ||
-        right is! catalog.PresentationTarget_namedWrapper) {
+    if (left is! skir.PresentationTarget_namedWrapper ||
+        right is! skir.PresentationTarget_namedWrapper) {
       return false;
     }
     final leftDefinition = left.value.definition;
@@ -1107,36 +1091,36 @@ final class CheckedEditorCatalog {
   }
 
   bool _presentationTargetsEquivalent(
-    catalog.PresentationTarget left,
-    catalog.PresentationTarget right,
+    skir.PresentationTarget left,
+    skir.PresentationTarget right,
   ) => switch ((left, right)) {
     (
-      catalog.PresentationTarget_namedWrapper(:final value),
-      catalog.PresentationTarget_namedWrapper(value: final rightValue),
+      skir.PresentationTarget_namedWrapper(:final value),
+      skir.PresentationTarget_namedWrapper(value: final rightValue),
     ) =>
       _namedTemplateSubsumes(value, rightValue) &&
           _namedTemplateSubsumes(rightValue, value),
     (
-      catalog.PresentationTarget_representationWrapper(:final value),
-      catalog.PresentationTarget_representationWrapper(value: final rightValue),
+      skir.PresentationTarget_representationWrapper(:final value),
+      skir.PresentationTarget_representationWrapper(value: final rightValue),
     ) =>
       value == rightValue,
     _ => false,
   };
 
   bool _isNominalSubtype(
-    types.TypeDefinitionId actual,
-    types.TypeDefinitionId expected,
+    skir.TypeDefinitionId actual,
+    skir.TypeDefinitionId expected,
   ) {
     if (actual == expected) return true;
-    final pending = <types.TypeDefinitionId>[actual];
-    final visited = <types.TypeDefinitionId>{};
+    final pending = <skir.TypeDefinitionId>[actual];
+    final visited = <skir.TypeDefinitionId>{};
     while (pending.isNotEmpty) {
       final current = pending.removeLast();
       if (!visited.add(current)) continue;
       final published = _types[current];
       if (published == null ||
-          published.status != catalog.DeclarationStatus.ready) {
+          published.status != skir.DeclarationStatus.ready) {
         continue;
       }
       for (final parent in published.ancestorTemplates) {
@@ -1148,18 +1132,18 @@ final class CheckedEditorCatalog {
   }
 
   bool _namedTemplateSubsumes(
-    types.NamedTypeTemplate broader,
-    types.NamedTypeTemplate narrower,
+    skir.NamedTypeTemplate broader,
+    skir.NamedTypeTemplate narrower,
   ) => _namedTemplateSubsumesWithBindings(
     broader,
     narrower,
-    <types.ParameterKey, types.TypeTemplate>{},
+    <skir.ParameterKey, skir.TypeTemplate>{},
   );
 
   bool _namedTemplateSubsumesWithBindings(
-    types.NamedTypeTemplate broader,
-    types.NamedTypeTemplate narrower,
-    Map<types.ParameterKey, types.TypeTemplate> bindings,
+    skir.NamedTypeTemplate broader,
+    skir.NamedTypeTemplate narrower,
+    Map<skir.ParameterKey, skir.TypeTemplate> bindings,
   ) {
     if (broader.definition != narrower.definition ||
         broader.arguments.length != narrower.arguments.length) {
@@ -1180,21 +1164,21 @@ final class CheckedEditorCatalog {
   }
 
   bool _templateSubsumes(
-    types.TypeTemplate broader,
-    types.TypeTemplate narrower,
-    Map<types.ParameterKey, types.TypeTemplate> bindings,
+    skir.TypeTemplate broader,
+    skir.TypeTemplate narrower,
+    Map<skir.ParameterKey, skir.TypeTemplate> bindings,
   ) => switch (broader) {
-    types.TypeTemplate_parameterWrapper(:final value) =>
+    skir.TypeTemplate_parameterWrapper(:final value) =>
       bindings[value] == null
           ? (bindings[value] = narrower) == narrower
           : bindings[value] == narrower,
-    types.TypeTemplate_scalarWrapper(:final value) =>
-      narrower is types.TypeTemplate_scalarWrapper && narrower.value == value,
-    types.TypeTemplate_nullableWrapper(:final value) =>
-      narrower is types.TypeTemplate_nullableWrapper &&
+    skir.TypeTemplate_scalarWrapper(:final value) =>
+      narrower is skir.TypeTemplate_scalarWrapper && narrower.value == value,
+    skir.TypeTemplate_nullableWrapper(:final value) =>
+      narrower is skir.TypeTemplate_nullableWrapper &&
           _templateSubsumes(value.value, narrower.value.value, bindings),
-    types.TypeTemplate_namedWrapper(:final value) =>
-      narrower is types.TypeTemplate_namedWrapper &&
+    skir.TypeTemplate_namedWrapper(:final value) =>
+      narrower is skir.TypeTemplate_namedWrapper &&
           (_namedTemplateSubsumesWithBindings(
                 value,
                 narrower.value,
@@ -1205,138 +1189,136 @@ final class CheckedEditorCatalog {
   };
 
   bool _concreteTemplateReadableAs(
-    types.NamedTypeTemplate actual,
-    types.NamedTypeTemplate expected,
+    skir.NamedTypeTemplate actual,
+    skir.NamedTypeTemplate expected,
   ) {
     final actualUse = _concreteTemplateUse(actual);
     final expectedUse = _concreteTemplateUse(expected);
     return actualUse != null &&
         expectedUse != null &&
         isReadableAs(
-          types.TypeUse.wrapNamed(actualUse),
-          types.TypeUse.wrapNamed(expectedUse),
+          skir.TypeUse.wrapNamed(actualUse),
+          skir.TypeUse.wrapNamed(expectedUse),
         );
   }
 
-  types.NamedTypeUse? _concreteTemplateUse(types.NamedTypeTemplate template) {
-    final arguments = <types.TypeUse>[];
+  skir.NamedTypeUse? _concreteTemplateUse(skir.NamedTypeTemplate template) {
+    final arguments = <skir.TypeUse>[];
     for (final argument in template.arguments) {
       final applied = switch (argument) {
-        types.TypeTemplate_scalarWrapper(:final value) =>
-          types.TypeUse.wrapScalar(value),
-        types.TypeTemplate_nullableWrapper(:final value) =>
+        skir.TypeTemplate_scalarWrapper(:final value) =>
+          skir.TypeUse.wrapScalar(value),
+        skir.TypeTemplate_nullableWrapper(:final value) =>
           _concreteTemplateType(value.value, nullable: true),
-        types.TypeTemplate_namedWrapper() => _concreteTemplateType(argument),
+        skir.TypeTemplate_namedWrapper() => _concreteTemplateType(argument),
         _ => null,
       };
       if (applied == null) return null;
       arguments.add(applied);
     }
-    return types.NamedTypeUse(
+    return skir.NamedTypeUse(
       definition: template.definition,
       arguments: arguments,
     );
   }
 
-  types.TypeUse? _concreteTemplateType(
-    types.TypeTemplate template, {
+  skir.TypeUse? _concreteTemplateType(
+    skir.TypeTemplate template, {
     bool nullable = false,
   }) {
     final use = switch (template) {
-      types.TypeTemplate_scalarWrapper(:final value) =>
-        types.TypeUse.wrapScalar(value),
-      types.TypeTemplate_namedWrapper(:final value) =>
+      skir.TypeTemplate_scalarWrapper(:final value) => skir.TypeUse.wrapScalar(
+        value,
+      ),
+      skir.TypeTemplate_namedWrapper(:final value) =>
         switch (_concreteTemplateUse(value)) {
-          final named? => types.TypeUse.wrapNamed(named),
+          final named? => skir.TypeUse.wrapNamed(named),
           _ => null,
         },
-      types.TypeTemplate_nullableWrapper(:final value) => _concreteTemplateType(
+      skir.TypeTemplate_nullableWrapper(:final value) => _concreteTemplateType(
         value.value,
         nullable: true,
       ),
       _ => null,
     };
     if (use == null || !nullable) return use;
-    return types.TypeUse.wrapNullable(types.NullableTypeUse(value: use));
+    return skir.TypeUse.wrapNullable(skir.NullableTypeUse(value: use));
   }
 
-  catalog.RepresentationKind? representationKind(
-    types.TypeSelection selection,
-  ) => _representationKind(selected(selection)?.definition.representation);
+  skir.RepresentationKind? representationKind(skir.TypeSelection selection) =>
+      _representationKind(selected(selection)?.definition.representation);
 
-  catalog.RepresentationKind? _representationKindForUse(types.TypeUse? use) {
+  skir.RepresentationKind? _representationKindForUse(skir.TypeUse? use) {
     var current = use;
-    while (current is types.TypeUse_nullableWrapper) {
+    while (current is skir.TypeUse_nullableWrapper) {
       current = current.value.value;
     }
     return switch (current) {
-      types.TypeUse_scalarWrapper(:final value) => _scalarRepresentation(value),
-      types.TypeUse_namedWrapper(:final value) => _representationKind(
+      skir.TypeUse_scalarWrapper(:final value) => _scalarRepresentation(value),
+      skir.TypeUse_namedWrapper(:final value) => _representationKind(
         published(value.definition)?.definition.representation,
       ),
       _ => null,
     };
   }
 
-  catalog.RepresentationKind? _representationKind(
-    types.RepresentationTemplate? representation,
+  skir.RepresentationKind? _representationKind(
+    skir.RepresentationTemplate? representation,
   ) => switch (representation) {
-    types.RepresentationTemplate_scalarWrapper(:final value) =>
+    skir.RepresentationTemplate_scalarWrapper(:final value) =>
       switch (value.kind) {
         final kind => _scalarRepresentation(kind),
       },
-    types.RepresentationTemplate_recordWrapper() =>
-      catalog.RepresentationKind.record,
-    types.RepresentationTemplate_sequenceWrapper(:final value) =>
-      value.kind == types.CollectionKind.list
-          ? catalog.RepresentationKind.list
-          : catalog.RepresentationKind.set_,
-    types.RepresentationTemplate_mappingWrapper() =>
-      catalog.RepresentationKind.map,
-    types.RepresentationTemplate_enumerationWrapper() =>
-      catalog.RepresentationKind.enumeration,
-    types.RepresentationTemplate_linkWrapper() =>
-      catalog.RepresentationKind.link,
+    skir.RepresentationTemplate_recordWrapper() =>
+      skir.RepresentationKind.record,
+    skir.RepresentationTemplate_sequenceWrapper(:final value) =>
+      value.kind == skir.CollectionKind.list
+          ? skir.RepresentationKind.list
+          : skir.RepresentationKind.set_,
+    skir.RepresentationTemplate_mappingWrapper() => skir.RepresentationKind.map,
+    skir.RepresentationTemplate_enumerationWrapper() =>
+      skir.RepresentationKind.enumeration,
+    skir.RepresentationTemplate_linkWrapper() => skir.RepresentationKind.link,
     _ => null,
   };
 
-  catalog.RepresentationKind? _scalarRepresentation(types.ScalarKind kind) =>
+  skir.RepresentationKind? _scalarRepresentation(skir.ScalarKind kind) =>
       switch (kind) {
-        types.ScalarKind.unit => catalog.RepresentationKind.unit,
-        types.ScalarKind.boolean => catalog.RepresentationKind.boolean,
-        types.ScalarKind.text => catalog.RepresentationKind.text,
-        types.ScalarKind.bytes => catalog.RepresentationKind.bytes,
-        types.ScalarKind_integerWrapper() => catalog.RepresentationKind.integer,
-        types.ScalarKind_floatWrapper() => catalog.RepresentationKind.float,
-        types.ScalarKind.decimal => catalog.RepresentationKind.decimal,
-        types.ScalarKind.timestamp => catalog.RepresentationKind.timestamp,
-        types.ScalarKind.duration => catalog.RepresentationKind.duration,
+        skir.ScalarKind.unit => skir.RepresentationKind.unit,
+        skir.ScalarKind.boolean => skir.RepresentationKind.boolean,
+        skir.ScalarKind.text => skir.RepresentationKind.text,
+        skir.ScalarKind.bytes => skir.RepresentationKind.bytes,
+        skir.ScalarKind_integerWrapper() => skir.RepresentationKind.integer,
+        skir.ScalarKind_floatWrapper() => skir.RepresentationKind.float,
+        skir.ScalarKind.decimal => skir.RepresentationKind.decimal,
+        skir.ScalarKind.timestamp => skir.RepresentationKind.timestamp,
+        skir.ScalarKind.duration => skir.RepresentationKind.duration,
         _ => null,
       };
 
   bool _bindingMatchesKnownApplication(
-    types.NamedTypeTemplate template,
-    Map<types.ParameterKey, types.TypeUse> bindings,
-    Set<types.NamedTypeUse> known,
+    skir.NamedTypeTemplate template,
+    Map<skir.ParameterKey, skir.TypeUse> bindings,
+    Set<skir.NamedTypeUse> known,
   ) {
     final applied = _applyNamed(template, bindings);
     if (applied != null) return known.contains(applied);
     return true;
   }
 
-  Map<types.ParameterKey, types.TypeUse> _bindings(
-    types.TypeSelection selection,
-    catalog.PublishedType definition,
+  Map<skir.ParameterKey, skir.TypeUse> _bindings(
+    skir.TypeSelection selection,
+    skir.PublishedType definition,
   ) {
-    final result = <types.ParameterKey, types.TypeUse>{};
+    final result = <skir.ParameterKey, skir.TypeUse>{};
     final arguments = switch (selection) {
-      types.TypeSelection_completeWrapper(:final value) => [
+      skir.TypeSelection_completeWrapper(:final value) => [
         for (final argument in value.arguments)
-          types.ArgumentSelection.wrapChosen(argument),
+          skir.ArgumentSelection.wrapChosen(argument),
       ],
-      types.TypeSelection_pendingWrapper(:final value) =>
+      skir.TypeSelection_pendingWrapper(:final value) =>
         value.arguments.toList(),
-      _ => const <types.ArgumentSelection>[],
+      _ => const <skir.ArgumentSelection>[],
     };
     final parameters = definition.definition.parameters.toList();
     for (
@@ -1344,7 +1326,7 @@ final class CheckedEditorCatalog {
       index < parameters.length && index < arguments.length;
       index++
     ) {
-      if (arguments[index] case types.ArgumentSelection_chosenWrapper(
+      if (arguments[index] case skir.ArgumentSelection_chosenWrapper(
         :final value,
       )) {
         result[parameters[index].key] = value;
@@ -1369,65 +1351,65 @@ final class CheckedEditorCatalog {
     return result;
   }
 
-  types.TypeUse? _apply(
-    types.TypeTemplate template,
-    Map<types.ParameterKey, types.TypeUse> bindings,
+  skir.TypeUse? _apply(
+    skir.TypeTemplate template,
+    Map<skir.ParameterKey, skir.TypeUse> bindings,
   ) => switch (template) {
-    types.TypeTemplate_parameterWrapper(:final value) => bindings[value],
-    types.TypeTemplate_namedWrapper(:final value) => switch (_applyNamed(
+    skir.TypeTemplate_parameterWrapper(:final value) => bindings[value],
+    skir.TypeTemplate_namedWrapper(:final value) => switch (_applyNamed(
       value,
       bindings,
     )) {
-      final applied? => types.TypeUse.wrapNamed(applied),
+      final applied? => skir.TypeUse.wrapNamed(applied),
       null => null,
     },
-    types.TypeTemplate_nullableWrapper(:final value) => switch (_apply(
+    skir.TypeTemplate_nullableWrapper(:final value) => switch (_apply(
       value.value,
       bindings,
     )) {
-      final applied? => types.TypeUse.createNullable(value: applied),
+      final applied? => skir.TypeUse.createNullable(value: applied),
       null => null,
     },
-    types.TypeTemplate_scalarWrapper(:final value) => types.TypeUse.wrapScalar(
+    skir.TypeTemplate_scalarWrapper(:final value) => skir.TypeUse.wrapScalar(
       value,
     ),
     _ => null,
   };
 
-  types.NamedTypeUse? _applyNamed(
-    types.NamedTypeTemplate template,
-    Map<types.ParameterKey, types.TypeUse> bindings,
+  skir.NamedTypeUse? _applyNamed(
+    skir.NamedTypeTemplate template,
+    Map<skir.ParameterKey, skir.TypeUse> bindings,
   ) {
-    final arguments = <types.TypeUse>[];
+    final arguments = <skir.TypeUse>[];
     for (final argument in template.arguments) {
       final applied = _apply(argument, bindings);
       if (applied == null) return null;
       arguments.add(applied);
     }
-    return types.NamedTypeUse(
+    return skir.NamedTypeUse(
       definition: template.definition,
       arguments: arguments,
     );
   }
 
-  List<types.ArgumentSelection> _argumentSelections(
-    types.TypeSelection selection,
+  List<skir.ArgumentSelection> _argumentSelections(
+    skir.TypeSelection selection,
     int count,
   ) {
     final current = switch (selection) {
-      types.TypeSelection_completeWrapper(:final value) => [
+      skir.TypeSelection_completeWrapper(:final value) => [
         for (final argument in value.arguments)
-          types.ArgumentSelection.wrapChosen(argument),
+          skir.ArgumentSelection.wrapChosen(argument),
       ],
-      types.TypeSelection_pendingWrapper(:final value) =>
+      skir.TypeSelection_pendingWrapper(:final value) =>
         value.arguments.toList(),
-      _ => <types.ArgumentSelection>[],
+      _ => <skir.ArgumentSelection>[],
     };
     return List.generate(
       count,
       (index) => index < current.length
           ? current[index]
-          : types.ArgumentSelection.unfilled,
+          : skir.ArgumentSelection.unfilled,
     );
   }
 }
@@ -1441,8 +1423,8 @@ final class _FieldPresentationCandidate {
     required this.priority,
   });
 
-  final types.PresentationId presentation;
-  final catalog.PresentationTarget target;
+  final skir.PresentationId presentation;
+  final skir.PresentationTarget target;
   final int priority;
 }
 
@@ -1452,21 +1434,20 @@ final class _ExplicitFieldPresentation {
     required this.presentation,
   });
 
-  final types.ValuePath path;
-  final types.PresentationId presentation;
+  final skir.ValuePath path;
+  final skir.PresentationId presentation;
 }
 
 Iterable<_ExplicitFieldPresentation> _explicitFieldSelections(
-  presentation.PresentationNode root,
+  skir.PresentationNode root,
 ) sync* {
-  final pending = <presentation.PresentationNode>[root];
+  final pending = <skir.PresentationNode>[root];
   while (pending.isNotEmpty) {
     final node = pending.removeLast();
     final element = node.element;
-    if (element
-        case presentation.PresentationElement_defaultPresentationWrapper(
-          :final value,
-        )) {
+    if (element case skir.PresentationElement_defaultPresentationWrapper(
+      :final value,
+    )) {
       final id = value.presentationId;
       if (id != null &&
           value.binding.bindingId.value == "configured_value" &&
@@ -1481,208 +1462,208 @@ Iterable<_ExplicitFieldPresentation> _explicitFieldSelections(
   }
 }
 
-Iterable<presentation.PresentationNode> _nestedPresentationNodes(
-  presentation.PresentationNode node,
+Iterable<skir.PresentationNode> _nestedPresentationNodes(
+  skir.PresentationNode node,
 ) sync* {
   final title = node.header?.title;
-  if (title case presentation.PresentationHeaderTitle_presentationWrapper(
+  if (title case skir.PresentationHeaderTitle_presentationWrapper(
     :final value,
   )) {
     yield value;
   }
   final element = node.element;
   switch (element) {
-    case presentation.PresentationElement_childrenWrapper(:final value):
+    case skir.PresentationElement_childrenWrapper(:final value):
       yield* _childrenNodes(value);
-    case presentation.PresentationElement_sectionWrapper(:final value):
+    case skir.PresentationElement_sectionWrapper(:final value):
       yield value.child;
-    case presentation.PresentationElement_paddingWrapper(:final value):
+    case skir.PresentationElement_paddingWrapper(:final value):
       yield value.child;
-    case presentation.PresentationElement_tabsWrapper(:final value):
+    case skir.PresentationElement_tabsWrapper(:final value):
       for (final tab in value.tabs) {
         yield tab.child;
       }
-    case presentation.PresentationElement_typedFieldWrapper(:final value):
+    case skir.PresentationElement_typedFieldWrapper(:final value):
       if (value.presentation case final child?) yield child;
-    case presentation.PresentationElement_conditionalWrapper(:final value):
+    case skir.PresentationElement_conditionalWrapper(:final value):
       yield value.whenTrue;
       if (value.whenFalse case final child?) yield child;
-    case presentation.PresentationElement_repeatedWrapper(:final value):
+    case skir.PresentationElement_repeatedWrapper(:final value):
       yield* _sequenceNodes(value.presentation);
-    case presentation.PresentationElement_scopedBindingWrapper(:final value):
+    case skir.PresentationElement_scopedBindingWrapper(:final value):
       yield value.child;
-    case presentation.PresentationElement_textInputWrapper(:final value):
+    case skir.PresentationElement_textInputWrapper(:final value):
       yield* _boundControlNodes(value.control);
-    case presentation.PresentationElement_numericInputWrapper(:final value):
+    case skir.PresentationElement_numericInputWrapper(:final value):
       yield* _boundControlNodes(value);
-    case presentation.PresentationElement_toggleInputWrapper(:final value):
+    case skir.PresentationElement_toggleInputWrapper(:final value):
       yield* _boundControlNodes(value);
-    case presentation.PresentationElement_selectInputWrapper(:final value):
+    case skir.PresentationElement_selectInputWrapper(:final value):
       yield* _boundControlNodes(value.control);
-    case presentation.PresentationElement_sliderInputWrapper(:final value):
+    case skir.PresentationElement_sliderInputWrapper(:final value):
       yield* _boundControlNodes(value.control);
-    case presentation.PresentationElement_dateTimeInputWrapper(:final value):
+    case skir.PresentationElement_dateTimeInputWrapper(:final value):
       yield* _boundControlNodes(value.control);
-    case presentation.PresentationElement_durationInputWrapper(:final value):
+    case skir.PresentationElement_durationInputWrapper(:final value):
       yield* _boundControlNodes(value);
-    case presentation.PresentationElement_colorInputWrapper(:final value):
+    case skir.PresentationElement_colorInputWrapper(:final value):
       yield* _boundControlNodes(value.control);
-    case presentation.PresentationElement_bytesInputWrapper(:final value):
+    case skir.PresentationElement_bytesInputWrapper(:final value):
       yield* _boundControlNodes(value);
-    case presentation.PresentationElement_namedInputWrapper(:final value):
+    case skir.PresentationElement_namedInputWrapper(:final value):
       yield* _boundControlNodes(value.control);
       if (value.payloadPresentation case final child?) yield child;
-    case presentation.PresentationElement_tooltipWrapper(:final value):
+    case skir.PresentationElement_tooltipWrapper(:final value):
       yield value.child;
-    case presentation.PresentationElement_listInputWrapper(:final value):
+    case skir.PresentationElement_listInputWrapper(:final value):
       yield* _boundControlNodes(value.control);
       if (value.itemPresentation case final child?) yield child;
-    case presentation.PresentationElement_setInputWrapper(:final value):
+    case skir.PresentationElement_setInputWrapper(:final value):
       yield* _boundControlNodes(value.control);
       if (value.itemPresentation case final child?) yield child;
-    case presentation.PresentationElement_mapInputWrapper(:final value):
+    case skir.PresentationElement_mapInputWrapper(:final value):
       yield* _boundControlNodes(value.control);
       if (value.keyPresentation case final child?) yield child;
       if (value.valuePresentation case final child?) yield child;
-    case presentation.PresentationElement_recordInputWrapper(:final value):
+    case skir.PresentationElement_recordInputWrapper(:final value):
       yield* _boundControlNodes(value.control);
       if (value.fieldPresentation case final child?) yield child;
-    case presentation.PresentationElement_polymorphicInputWrapper(:final value):
+    case skir.PresentationElement_polymorphicInputWrapper(:final value):
       yield* _boundControlNodes(value.control);
       for (final option in value.concreteTypes) {
         if (option.presentation case final child?) yield child;
       }
-    case presentation.PresentationElement_searchInputWrapper(:final value):
+    case skir.PresentationElement_searchInputWrapper(:final value):
       yield* _boundControlNodes(value.control);
       if (value.summary case final child?) yield child;
       yield* _searchProviderNodes(value.provider);
-    case presentation.PresentationElement_collectionLookupWrapper(:final value):
+    case skir.PresentationElement_collectionLookupWrapper(:final value):
       yield value.found;
       yield value.missing;
       if (value.loading case final child?) yield child;
-    case presentation.PresentationElement_collectionGraphWrapper(:final value):
+    case skir.PresentationElement_collectionGraphWrapper(:final value):
       yield* _sequenceNodes(value.rootSequence);
       yield value.node;
       yield* _sequenceNodes(value.children);
-    case presentation.PresentationElement_containerWrapper(:final value):
+    case skir.PresentationElement_containerWrapper(:final value):
       yield value.child;
-    case presentation.PresentationElement_anchorWrapper(:final value):
+    case skir.PresentationElement_anchorWrapper(:final value):
       yield value.child;
-    case presentation.PresentationElement_connectionLayerWrapper(:final value):
+    case skir.PresentationElement_connectionLayerWrapper(:final value):
       yield value.child;
       for (final connection in value.connections) {
         yield* _connectionNodes(connection);
       }
-    case presentation.PresentationElement_polymorphicMatchWrapper(:final value):
+    case skir.PresentationElement_polymorphicMatchWrapper(:final value):
       for (final item in value.cases) {
         yield item.child;
       }
       if (value.fallback case final child?) yield child;
-    case presentation.PresentationElement_linkInputWrapper(:final value):
+    case skir.PresentationElement_linkInputWrapper(:final value):
       yield* _boundControlNodes(value.control);
-    case presentation.PresentationElement_adaptiveLeadingWrapper(:final value):
+    case skir.PresentationElement_adaptiveLeadingWrapper(:final value):
       yield value.leading;
       if (value.center case final child?) yield child;
       if (value.suffix case final child?) yield child;
-    case presentation.PresentationElement_nullableInputWrapper(:final value):
+    case skir.PresentationElement_nullableInputWrapper(:final value):
       yield* _boundControlNodes(value.control);
       if (value.valuePresentation case final child?) yield child;
-    case presentation.PresentationElement_pageGraphWrapper(:final value):
+    case skir.PresentationElement_pageGraphWrapper(:final value):
       yield* _boundControlNodes(value.control);
-    case presentation.PresentationElement_pageTimelineWrapper(:final value):
+    case skir.PresentationElement_pageTimelineWrapper(:final value):
       yield* _boundControlNodes(value.control);
     default:
       break;
   }
 }
 
-Iterable<presentation.PresentationNode> _childrenNodes(
-  presentation.ChildrenElement children,
+Iterable<skir.PresentationNode> _childrenNodes(
+  skir.ChildrenElement children,
 ) sync* {
   switch (children) {
-    case presentation.ChildrenElement_columnWrapper(:final value) ||
-        presentation.ChildrenElement_rowWrapper(:final value):
+    case skir.ChildrenElement_columnWrapper(:final value) ||
+        skir.ChildrenElement_rowWrapper(:final value):
       for (final child in value.children) {
         switch (child) {
-          case presentation.AxisChild_fixedWrapper(:final value):
+          case skir.AxisChild_fixedWrapper(:final value):
             yield value;
-          case presentation.AxisChild_flexibleWrapper(:final value):
+          case skir.AxisChild_flexibleWrapper(:final value):
             yield value.child;
           default:
             break;
         }
       }
-    case presentation.ChildrenElement_wrapWrapper(:final value):
+    case skir.ChildrenElement_wrapWrapper(:final value):
       yield* value.children;
-    case presentation.ChildrenElement_gridWrapper(:final value):
+    case skir.ChildrenElement_gridWrapper(:final value):
       yield* value.children;
-    case presentation.ChildrenElement_stackWrapper(:final value):
+    case skir.ChildrenElement_stackWrapper(:final value):
       yield* value.children;
     default:
       break;
   }
 }
 
-Iterable<presentation.PresentationNode> _sequenceNodes(
-  presentation.SequencePresentation sequence,
+Iterable<skir.PresentationNode> _sequenceNodes(
+  skir.SequencePresentation sequence,
 ) sync* {
   yield sequence.item;
   if (sequence.empty case final child?) yield child;
   if (sequence.separator case final child?) yield child;
 }
 
-Iterable<presentation.PresentationNode> _boundControlNodes(
-  presentation.BoundControl control,
+Iterable<skir.PresentationNode> _boundControlNodes(
+  skir.BoundControl control,
 ) sync* {
   if (control.prefix case final prefix?) yield prefix;
 }
 
-Iterable<presentation.PresentationNode> _connectionNodes(
-  presentation.PresentationConnection connection,
+Iterable<skir.PresentationNode> _connectionNodes(
+  skir.PresentationConnection connection,
 ) sync* {
   final markers = switch (connection) {
-    presentation.PresentationConnection_connectionWrapper(:final value) =>
+    skir.PresentationConnection_connectionWrapper(:final value) =>
       value.markers,
-    presentation.PresentationConnection_bundleWrapper(:final value) => [
+    skir.PresentationConnection_bundleWrapper(:final value) => [
       ...value.trunkMarkers,
       ...value.branchMarkers,
     ],
-    _ => const <presentation.ConnectionMarker>[],
+    _ => const <skir.ConnectionMarker>[],
   };
   for (final marker in markers) {
     yield marker.node;
   }
 }
 
-Iterable<presentation.PresentationNode> _searchProviderNodes(
-  presentation.SearchProvider provider,
+Iterable<skir.PresentationNode> _searchProviderNodes(
+  skir.SearchProvider provider,
 ) sync* {
   switch (provider) {
-    case presentation.SearchProvider_staticValuesWrapper(:final value):
+    case skir.SearchProvider_staticValuesWrapper(:final value):
       yield value.result.presentation;
-    case presentation.SearchProvider_collectionWrapper(:final value):
+    case skir.SearchProvider_collectionWrapper(:final value):
       yield value.result.presentation;
-    case presentation.SearchProvider_httpJsonWrapper(:final value):
+    case skir.SearchProvider_httpJsonWrapper(:final value):
       yield value.result.presentation;
-    case presentation.SearchProvider_realmCallbackWrapper(:final value):
+    case skir.SearchProvider_realmCallbackWrapper(:final value):
       yield value.result.presentation;
-    case presentation.SearchProvider_gateWrapper(:final value):
+    case skir.SearchProvider_gateWrapper(:final value):
       yield* _searchProviderNodes(value.child);
-    case presentation.SearchProvider_debounceWrapper(:final value):
+    case skir.SearchProvider_debounceWrapper(:final value):
       yield* _searchProviderNodes(value.child);
-    case presentation.SearchProvider_cacheWrapper(:final value):
+    case skir.SearchProvider_cacheWrapper(:final value):
       yield* _searchProviderNodes(value.child);
-    case presentation.SearchProvider_rankWrapper(:final value):
+    case skir.SearchProvider_rankWrapper(:final value):
       yield* _searchProviderNodes(value.child);
-    case presentation.SearchProvider_limitWrapper(:final value):
+    case skir.SearchProvider_limitWrapper(:final value):
       yield* _searchProviderNodes(value.child);
-    case presentation.SearchProvider_distinctWrapper(:final value):
+    case skir.SearchProvider_distinctWrapper(:final value):
       yield* _searchProviderNodes(value.child);
-    case presentation.SearchProvider_historyWrapper(:final value):
+    case skir.SearchProvider_historyWrapper(:final value):
       yield* _searchProviderNodes(value.child);
-    case presentation.SearchProvider_sectionWrapper(:final value):
+    case skir.SearchProvider_sectionWrapper(:final value):
       yield* _searchProviderNodes(value.child);
-    case presentation.SearchProvider_mergeWrapper(:final value):
+    case skir.SearchProvider_mergeWrapper(:final value):
       for (final child in value.children) {
         yield* _searchProviderNodes(child);
       }
@@ -1692,8 +1673,8 @@ Iterable<presentation.PresentationNode> _searchProviderNodes(
 }
 
 bool _patternMatchesPath(
-  types.RelativeFieldPattern pattern,
-  types.ValuePath path,
+  skir.RelativeFieldPattern pattern,
+  skir.ValuePath path,
 ) {
   final expected = pattern.segments.toList(growable: false);
   final actual = path.segments.toList(growable: false);
@@ -1701,19 +1682,19 @@ bool _patternMatchesPath(
   for (var index = 0; index < expected.length; index++) {
     final matches = switch ((expected[index], actual[index])) {
       (
-        types.FieldPatternSegment_fieldWrapper(value: final field),
-        types.PathSegment_fieldWrapper(value: final segment),
+        skir.FieldPatternSegment_fieldWrapper(value: final field),
+        skir.PathSegment_fieldWrapper(value: final segment),
       ) =>
         field.name == segment.name,
-      (final pattern, types.PathSegment_itemWrapper())
-          when pattern == types.FieldPatternSegment.items =>
+      (final pattern, skir.PathSegment_itemWrapper())
+          when pattern == skir.FieldPatternSegment.items =>
         true,
       (final pattern, final segment)
-          when pattern == types.FieldPatternSegment.keys =>
-        segment == types.PathSegment.mapKey,
+          when pattern == skir.FieldPatternSegment.keys =>
+        segment == skir.PathSegment.mapKey,
       (final pattern, final segment)
-          when pattern == types.FieldPatternSegment.values =>
-        segment == types.PathSegment.mapValue,
+          when pattern == skir.FieldPatternSegment.values =>
+        segment == skir.PathSegment.mapValue,
       _ => false,
     };
     if (!matches) return false;
@@ -1724,7 +1705,7 @@ bool _patternMatchesPath(
 sealed class TypeArgumentChoice {
   const TypeArgumentChoice();
 
-  const factory TypeArgumentChoice.accepted(types.TypeSelection selection) =
+  const factory TypeArgumentChoice.accepted(skir.TypeSelection selection) =
       TypeArgumentAccepted;
 
   const factory TypeArgumentChoice.rejected(String message) =
@@ -1734,7 +1715,7 @@ sealed class TypeArgumentChoice {
 final class TypeArgumentAccepted extends TypeArgumentChoice {
   const TypeArgumentAccepted(this.selection);
 
-  final types.TypeSelection selection;
+  final skir.TypeSelection selection;
 }
 
 final class TypeArgumentRejected extends TypeArgumentChoice {

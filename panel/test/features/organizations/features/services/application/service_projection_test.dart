@@ -1,13 +1,12 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
-final _organization = recordId("organization:projection");
-final _firstId = recordId("service:first");
-final _secondId = recordId("service:second");
+final _organization = skir.recordId("organization:projection");
+final _firstId = skir.recordId("service:first");
+final _secondId = skir.recordId("service:second");
 
 Service _service(
   skir.RecordId id,

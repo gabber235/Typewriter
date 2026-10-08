@@ -1,6 +1,4 @@
-import "dart:typed_data";
-
-import "data_value.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Safe adapters from the tagged [DataValue] union to native Dart values.
 ///

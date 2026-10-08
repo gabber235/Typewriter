@@ -1,4 +1,3 @@
-import "package:flutter/material.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Renders the non row states of a search source snapshot.

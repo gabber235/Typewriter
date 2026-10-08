@@ -120,7 +120,7 @@ return direct(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( types.TypeSelection selection)?  selection,TResult Function( types.TypeUse type)?  direct,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( skir.TypeSelection selection)?  selection,TResult Function( skir.TypeUse type)?  direct,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case AuthoredTypeSelectionCandidate() when selection != null:
 return selection(_that.selection);case AuthoredDirectTypeUseCandidate() when direct != null:
@@ -142,7 +142,7 @@ return direct(_that.type);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( types.TypeSelection selection)  selection,required TResult Function( types.TypeUse type)  direct,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( skir.TypeSelection selection)  selection,required TResult Function( skir.TypeUse type)  direct,}) {final _that = this;
 switch (_that) {
 case AuthoredTypeSelectionCandidate():
 return selection(_that.selection);case AuthoredDirectTypeUseCandidate():
@@ -160,7 +160,7 @@ return direct(_that.type);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( types.TypeSelection selection)?  selection,TResult? Function( types.TypeUse type)?  direct,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( skir.TypeSelection selection)?  selection,TResult? Function( skir.TypeUse type)?  direct,}) {final _that = this;
 switch (_that) {
 case AuthoredTypeSelectionCandidate() when selection != null:
 return selection(_that.selection);case AuthoredDirectTypeUseCandidate() when direct != null:
@@ -179,7 +179,7 @@ class AuthoredTypeSelectionCandidate implements AuthoredTypeUseCandidate {
   const AuthoredTypeSelectionCandidate(this.selection);
   
 
- final  types.TypeSelection selection;
+ final  skir.TypeSelection selection;
 
 /// Create a copy of AuthoredTypeUseCandidate
 /// with the given fields replaced by the non-null parameter values.
@@ -213,7 +213,7 @@ abstract mixin class $AuthoredTypeSelectionCandidateCopyWith<$Res> implements $A
   factory $AuthoredTypeSelectionCandidateCopyWith(AuthoredTypeSelectionCandidate value, $Res Function(AuthoredTypeSelectionCandidate) _then) = _$AuthoredTypeSelectionCandidateCopyWithImpl;
 @useResult
 $Res call({
- types.TypeSelection selection
+ skir.TypeSelection selection
 });
 
 
@@ -233,7 +233,7 @@ class _$AuthoredTypeSelectionCandidateCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') $Res call({Object? selection = null,}) {
   return _then(AuthoredTypeSelectionCandidate(
 null == selection ? _self.selection : selection // ignore: cast_nullable_to_non_nullable
-as types.TypeSelection,
+as skir.TypeSelection,
   ));
 }
 
@@ -247,7 +247,7 @@ class AuthoredDirectTypeUseCandidate implements AuthoredTypeUseCandidate {
   const AuthoredDirectTypeUseCandidate(this.type);
   
 
- final  types.TypeUse type;
+ final  skir.TypeUse type;
 
 /// Create a copy of AuthoredTypeUseCandidate
 /// with the given fields replaced by the non-null parameter values.
@@ -281,7 +281,7 @@ abstract mixin class $AuthoredDirectTypeUseCandidateCopyWith<$Res> implements $A
   factory $AuthoredDirectTypeUseCandidateCopyWith(AuthoredDirectTypeUseCandidate value, $Res Function(AuthoredDirectTypeUseCandidate) _then) = _$AuthoredDirectTypeUseCandidateCopyWithImpl;
 @useResult
 $Res call({
- types.TypeUse type
+ skir.TypeUse type
 });
 
 
@@ -301,7 +301,7 @@ class _$AuthoredDirectTypeUseCandidateCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') $Res call({Object? type = null,}) {
   return _then(AuthoredDirectTypeUseCandidate(
 null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
-as types.TypeUse,
+as skir.TypeUse,
   ));
 }
 

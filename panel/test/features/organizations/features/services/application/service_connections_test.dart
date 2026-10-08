@@ -1,7 +1,6 @@
-import "package:clock/clock.dart";
-import "package:flutter/widgets.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
@@ -11,7 +10,7 @@ void main() {
       var now = DateTime.utc(2026, 9, 6);
       await withClock(Clock(() => now), () async {
         final service = Service(
-          serviceId: recordId("service:deadline"),
+          serviceId: skir.recordId("service:deadline"),
           revision: 1,
           name: "deadline",
           role: HostServiceRole(version: "1"),
@@ -20,7 +19,7 @@ void main() {
         );
 
         final host = TopologyHost(
-          hostId: recordId("service_host:deadline"),
+          hostId: skir.recordId("service_host:deadline"),
           serviceId: service.serviceId,
           revision: 1,
           entrypoint: "PAPER",

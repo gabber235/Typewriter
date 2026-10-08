@@ -1,26 +1,6 @@
-import "dart:async";
-
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring.dart"
-    as authoring;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring_facts.dart"
-    as facts;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/binding.dart"
-    as binding;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/capability.dart"
-    as capability;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as catalog;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/diagnostic.dart"
-    as diagnostic;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
-    as expression;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/presentation.dart"
-    as presentation;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../../../support/test_utils.dart";
@@ -32,13 +12,13 @@ void main() {
       (tester) async {
         final named = kind != "ordinary";
         final initial = kind == "expected named Unfilled"
-            ? types.DataValue.unfilled
+            ? skir.DataValue.unfilled
             : named
-            ? types.DataValue.createNamed(
+            ? skir.DataValue.createNamed(
                 actualType: _chapterTextType,
-                payload: types.DataValue.wrapStringValue("old.chapter"),
+                payload: skir.DataValue.wrapStringValue("old.chapter"),
               )
-            : types.DataValue.wrapStringValue("old.chapter");
+            : skir.DataValue.wrapStringValue("old.chapter");
         final fixture = _fixture(
           fieldName: "chapter",
           initial: initial,
@@ -50,8 +30,8 @@ void main() {
               resource: fixture.resource,
               draft: fixture.draft,
               catalog: fixture.catalog,
-              role: catalog.PresentationRole.inspector,
-              budget: expression.EvaluationBudget(
+              role: skir.PresentationRole.inspector,
+              budget: skir.EvaluationBudget(
                 maxSteps: 100,
                 maxCollectionItems: 100,
               ),
@@ -61,49 +41,48 @@ void main() {
         await tester.enterText(find.byType(TextFormField), "new.chapter");
         await tester.pumpAndSettle();
         final expectedEdit = named
-            ? types.DataValue.createNamed(
+            ? skir.DataValue.createNamed(
                 actualType: _chapterTextType,
-                payload: types.DataValue.wrapStringValue("new.chapter"),
+                payload: skir.DataValue.wrapStringValue("new.chapter"),
               )
-            : types.DataValue.wrapStringValue("new.chapter");
+            : skir.DataValue.wrapStringValue("new.chapter");
         expect(
           fixture.draft.resource(fixture.resource)?.authoredField("chapter"),
           expectedEdit,
         );
         expect(fixture.draft.intents, hasLength(1));
         final first =
-            fixture.draft.intents.single
-                as authoring.EditIntent_setValueWrapper;
+            fixture.draft.intents.single as skir.EditIntent_setValueWrapper;
         expect(first.value.at.resource, fixture.resource);
         expect(
           first.value.at.path,
-          types.ValuePath(
-            segments: [types.PathSegment.createField(name: "chapter")],
+          skir.ValuePath(
+            segments: [skir.PathSegment.createField(name: "chapter")],
           ),
         );
         expect(first.value.value, expectedEdit);
         final expectation = fixture.draft
             .prepare()
             .expectations
-            .whereType<facts.EditExpectation_valueWrapper>()
+            .whereType<skir.EditExpectation_valueWrapper>()
             .where((fact) => fact.value.at == first.value.at)
             .single;
         expect(expectation.value.expected, initial);
         await tester.enterText(find.byType(TextFormField), "");
         await tester.pumpAndSettle();
         final expectedClear = named
-            ? types.DataValue.createNamed(
+            ? skir.DataValue.createNamed(
                 actualType: _chapterTextType,
-                payload: types.DataValue.wrapStringValue(""),
+                payload: skir.DataValue.wrapStringValue(""),
               )
-            : types.DataValue.wrapStringValue("");
+            : skir.DataValue.wrapStringValue("");
         expect(
           fixture.draft.resource(fixture.resource)?.authoredField("chapter"),
           expectedClear,
         );
         expect(fixture.draft.intents, hasLength(2));
         final clear =
-            fixture.draft.intents.last as authoring.EditIntent_setValueWrapper;
+            fixture.draft.intents.last as skir.EditIntent_setValueWrapper;
         expect(clear.value.at, first.value.at);
         expect(clear.value.value, expectedClear);
       },
@@ -120,23 +99,23 @@ void main() {
                 snapshot: "realm:1",
                 minimum: 0,
                 fieldName: field,
-                initial: types.DataValue.unfilled,
+                initial: skir.DataValue.unfilled,
               )
-            : _fixture(fieldName: field, initial: types.DataValue.unfilled);
-        final submitted = <authoring.PreparedEdit>[];
+            : _fixture(fieldName: field, initial: skir.DataValue.unfilled);
+        final submitted = <skir.PreparedEdit>[];
         var latest = _snapshotOf(fixture.draft);
-        Future<authoring.CommitPreparedEditResponse> commit(
-          authoring.PreparedEdit edit,
+        Future<skir.CommitPreparedEditResponse> commit(
+          skir.PreparedEdit edit,
         ) async {
           submitted.add(edit);
           final accepted = fixture.draft.fork();
           for (final intent
-              in edit.intents.cast<authoring.EditIntent_setValueWrapper>()) {
+              in edit.intents.cast<skir.EditIntent_setValueWrapper>()) {
             accepted.set(intent.value.at, intent.value.value);
           }
           latest = _snapshotOf(accepted);
-          return authoring.CommitPreparedEditResponse.wrapResult(
-            authoring.CommitResult.committed,
+          return skir.CommitPreparedEditResponse.wrapResult(
+            skir.CommitResult.committed,
           );
         }
 
@@ -147,7 +126,7 @@ void main() {
           commitTypeArguments: (_) => throw UnimplementedError(),
           prepareCreation: (_) => throw UnimplementedError(),
           invokeCommand: ({required capabilityId, required payload}) async =>
-              capability.CommandResult.unknown,
+              skir.CommandResult.unknown,
           watchSearch: (_) => const Stream.empty(),
           reload: () async {},
           openAutosave: _openAutosave(
@@ -173,26 +152,23 @@ void main() {
         await tester.pumpAndSettle();
         expect(submitted, hasLength(1));
         final set =
-            submitted.single.intents.single
-                as authoring.EditIntent_setValueWrapper;
+            submitted.single.intents.single as skir.EditIntent_setValueWrapper;
         expect(set.value.at.resource, fixture.resource);
         expect(
           set.value.at.path,
-          types.ValuePath(
-            segments: [types.PathSegment.createField(name: field)],
-          ),
+          skir.ValuePath(segments: [skir.PathSegment.createField(name: field)]),
         );
         expect(
           set.value.value,
           field == "priority"
-              ? types.DataValue.wrapInteger("3")
-              : types.DataValue.wrapStringValue("new"),
+              ? skir.DataValue.wrapInteger("3")
+              : skir.DataValue.wrapStringValue("new"),
         );
         final expected = submitted.single.expectations
-            .whereType<facts.EditExpectation_valueWrapper>()
+            .whereType<skir.EditExpectation_valueWrapper>()
             .where((fact) => fact.value.at == set.value.at)
             .single;
-        expect(expected.value.expected, types.DataValue.unfilled);
+        expect(expected.value.expected, skir.DataValue.unfilled);
         expect(find.textContaining("changed"), findsNothing);
         await tester.pumpWidget(const SizedBox());
         await tester.pumpAndSettle();
@@ -211,7 +187,7 @@ void main() {
       commitTypeArguments: (_) => throw UnimplementedError(),
       prepareCreation: (_) => throw UnimplementedError(),
       invokeCommand: ({required capabilityId, required payload}) async =>
-          capability.CommandResult.unknown,
+          skir.CommandResult.unknown,
       watchSearch: (_) => const Stream.empty(),
       reload: () async {},
       openAutosave: _openAutosave(commit: (_) => throw UnimplementedError()),
@@ -224,7 +200,7 @@ void main() {
           draft: fixture.draft,
           catalog: fixture.catalog,
           commands: commands,
-          role: catalog.PresentationRole.editor,
+          role: skir.PresentationRole.editor,
         ),
       ),
     );
@@ -262,8 +238,8 @@ void main() {
                   resource: fixture.resource,
                   draft: fixture.draft,
                   catalog: fixture.catalog,
-                  role: catalog.PresentationRole.graphNode,
-                  budget: expression.EvaluationBudget(
+                  role: skir.PresentationRole.graphNode,
+                  budget: skir.EvaluationBudget(
                     maxSteps: 100,
                     maxCollectionItems: 100,
                   ),
@@ -316,11 +292,8 @@ void main() {
           resource: fixture.resource,
           draft: fixture.draft,
           catalog: fixture.catalog,
-          role: catalog.PresentationRole.editor,
-          budget: expression.EvaluationBudget(
-            maxSteps: 100,
-            maxCollectionItems: 100,
-          ),
+          role: skir.PresentationRole.editor,
+          budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
         ),
       ),
     );
@@ -343,8 +316,8 @@ void main() {
             resource: fixture.resource,
             draft: fixture.draft,
             catalog: fixture.catalog,
-            role: catalog.PresentationRole.editor,
-            budget: expression.EvaluationBudget(
+            role: skir.PresentationRole.editor,
+            budget: skir.EvaluationBudget(
               maxSteps: 100,
               maxCollectionItems: 100,
             ),
@@ -369,7 +342,7 @@ void main() {
     expect(fixture.draft.intents, hasLength(1));
     expect(
       fixture.draft.intents.single,
-      isA<authoring.EditIntent_setValueWrapper>(),
+      isA<skir.EditIntent_setValueWrapper>(),
     );
   });
 
@@ -384,7 +357,7 @@ void main() {
         commitTypeArguments: (_) => throw UnimplementedError(),
         prepareCreation: (_) => throw UnimplementedError(),
         invokeCommand: ({required capabilityId, required payload}) async =>
-            capability.CommandResult.unknown,
+            skir.CommandResult.unknown,
         watchSearch: (_) => const Stream.empty(),
         reload: () async {},
         openAutosave: _openAutosave(commit: (_) => throw UnimplementedError()),
@@ -452,13 +425,13 @@ void main() {
     expect(adoption, isA<AuthoredDraftRebaseFailed>());
     final rebound = second.draft.fork()
       ..set(
-        types.ValueLocation(
+        skir.ValueLocation(
           resource: second.resource,
-          path: types.ValuePath(
-            segments: [types.PathSegment.createField(name: "repetitions")],
+          path: skir.ValuePath(
+            segments: [skir.PathSegment.createField(name: "repetitions")],
           ),
         ),
-        types.DataValue.wrapInteger("3"),
+        skir.DataValue.wrapInteger("3"),
       );
 
     await tester.pumpTestApp(
@@ -497,7 +470,7 @@ void main() {
     await tester.pump();
     expect(
       fixture.draft.resource(fixture.resource)?.authoredField("repetitions"),
-      types.DataValue.unfilled,
+      skir.DataValue.unfilled,
     );
     expect(fixture.draft.intents, hasLength(1));
 
@@ -505,7 +478,7 @@ void main() {
       generation: "catalog:1",
       snapshot: "realm:2",
       minimum: 1,
-      initial: types.DataValue.unfilled,
+      initial: skir.DataValue.unfilled,
     );
     await tester.pumpTestApp(child: _numericEditor(empty));
     await tester.enterText(find.byType(TextFormField), "7");
@@ -523,8 +496,8 @@ void main() {
     tester,
   ) async {
     final first = _fixture();
-    final completion = Completer<authoring.CommitPreparedEditResponse>();
-    final adoption = Completer<authoring.AuthoringState>();
+    final completion = Completer<skir.CommitPreparedEditResponse>();
+    final adoption = Completer<skir.AuthoringState>();
     final commands = AuthoredResourceCommands(
       commit: (_) => completion.future,
       previewTypeArguments: ({required resource, required requested}) =>
@@ -532,7 +505,7 @@ void main() {
       commitTypeArguments: (_) => throw UnimplementedError(),
       prepareCreation: (_) => throw UnimplementedError(),
       invokeCommand: ({required capabilityId, required payload}) async =>
-          capability.CommandResult.unknown,
+          skir.CommandResult.unknown,
       watchSearch: (_) => const Stream.empty(),
       reload: () async {},
       openAutosave: _openAutosave(
@@ -543,7 +516,7 @@ void main() {
 
     Widget inspection(
       ({
-        types.ResourceId resource,
+        skir.ResourceId resource,
         AuthoredDraft draft,
         CheckedEditorCatalog catalog,
       })
@@ -555,7 +528,7 @@ void main() {
           draft: fixture.draft,
           catalog: fixture.catalog,
           commands: commands,
-          role: catalog.PresentationRole.editor,
+          role: skir.PresentationRole.editor,
           commitPolicy: EditorCommitPolicy.applyResource,
         ),
       ),
@@ -584,9 +557,7 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
     completion.complete(
-      authoring.CommitPreparedEditResponse.wrapResult(
-        authoring.CommitResult.committed,
-      ),
+      skir.CommitPreparedEditResponse.wrapResult(skir.CommitResult.committed),
     );
     await tester.pumpAndSettle();
 
@@ -601,14 +572,12 @@ void main() {
     tester,
   ) async {
     final first = _fixture();
-    final firstResponse = Completer<authoring.CommitPreparedEditResponse>();
-    final secondResponse = Completer<authoring.CommitPreparedEditResponse>();
-    final snapshots = <String, Completer<authoring.AuthoringState>>{};
+    final firstResponse = Completer<skir.CommitPreparedEditResponse>();
+    final secondResponse = Completer<skir.CommitPreparedEditResponse>();
+    final snapshots = <String, Completer<skir.AuthoringState>>{};
     var fetchCount = 1;
-    final submitted = <authoring.PreparedEdit>[];
-    Future<authoring.CommitPreparedEditResponse> commit(
-      authoring.PreparedEdit edit,
-    ) {
+    final submitted = <skir.PreparedEdit>[];
+    Future<skir.CommitPreparedEditResponse> commit(skir.PreparedEdit edit) {
       submitted.add(edit);
       return submitted.length == 1
           ? firstResponse.future
@@ -622,7 +591,7 @@ void main() {
       commitTypeArguments: (_) => throw UnimplementedError(),
       prepareCreation: (_) => throw UnimplementedError(),
       invokeCommand: ({required capabilityId, required payload}) async =>
-          capability.CommandResult.unknown,
+          skir.CommandResult.unknown,
       watchSearch: (_) => const Stream.empty(),
       reload: () async {},
       openAutosave: _openAutosave(
@@ -639,7 +608,7 @@ void main() {
           draft: first.draft,
           catalog: first.catalog,
           commands: commands,
-          role: catalog.PresentationRole.editor,
+          role: skir.PresentationRole.editor,
         ),
       ),
     );
@@ -660,9 +629,7 @@ void main() {
         .putIfAbsent("realm:2", Completer.new)
         .complete(_snapshotOf(second.draft));
     firstResponse.complete(
-      authoring.CommitPreparedEditResponse.wrapResult(
-        authoring.CommitResult.committed,
-      ),
+      skir.CommitPreparedEditResponse.wrapResult(skir.CommitResult.committed),
     );
     await tester.pump(AuthoredDraftAutosave.debounce);
     await tester.pump();
@@ -676,9 +643,7 @@ void main() {
         .putIfAbsent("realm:3", Completer.new)
         .complete(_snapshotOf(third.draft));
     secondResponse.complete(
-      authoring.CommitPreparedEditResponse.wrapResult(
-        authoring.CommitResult.committed,
-      ),
+      skir.CommitPreparedEditResponse.wrapResult(skir.CommitResult.committed),
     );
     await tester.pumpAndSettle();
 
@@ -695,12 +660,12 @@ void main() {
         "realm:3": _fixture(snapshot: "realm:3", title: "books"),
       };
       var submissions = 0;
-      Future<authoring.CommitPreparedEditResponse> commit(
-        authoring.PreparedEdit _,
+      Future<skir.CommitPreparedEditResponse> commit(
+        skir.PreparedEdit _,
       ) async {
         submissions++;
-        return authoring.CommitPreparedEditResponse.wrapResult(
-          authoring.CommitResult.committed,
+        return skir.CommitPreparedEditResponse.wrapResult(
+          skir.CommitResult.committed,
         );
       }
 
@@ -711,7 +676,7 @@ void main() {
         commitTypeArguments: (_) => throw UnimplementedError(),
         prepareCreation: (_) => throw UnimplementedError(),
         invokeCommand: ({required capabilityId, required payload}) async =>
-            capability.CommandResult.unknown,
+            skir.CommandResult.unknown,
         watchSearch: (_) => const Stream.empty(),
         reload: () async {},
         openAutosave: _openAutosave(
@@ -728,7 +693,7 @@ void main() {
             draft: first.draft,
             catalog: first.catalog,
             commands: commands,
-            role: catalog.PresentationRole.editor,
+            role: skir.PresentationRole.editor,
           ),
         ),
       );
@@ -805,13 +770,13 @@ void main() {
       var submissions = 0;
       final first = _fixture();
       final recovered = _fixture(snapshot: "realm:4", title: "After");
-      Future<authoring.CommitPreparedEditResponse> commit(
-        authoring.PreparedEdit _,
+      Future<skir.CommitPreparedEditResponse> commit(
+        skir.PreparedEdit _,
       ) async {
         submissions++;
         if (submissions == 1) throw StateError("The save response timed out");
-        return authoring.CommitPreparedEditResponse.wrapResult(
-          authoring.CommitResult.committed,
+        return skir.CommitPreparedEditResponse.wrapResult(
+          skir.CommitResult.committed,
         );
       }
 
@@ -822,7 +787,7 @@ void main() {
         commitTypeArguments: (_) => throw UnimplementedError(),
         prepareCreation: (_) => throw UnimplementedError(),
         invokeCommand: ({required capabilityId, required payload}) async =>
-            capability.CommandResult.unknown,
+            skir.CommandResult.unknown,
         watchSearch: (_) => const Stream.empty(),
         reload: () async {},
         openAutosave: _openAutosave(
@@ -842,7 +807,7 @@ void main() {
                 draft: current.draft,
                 catalog: current.catalog,
                 commands: commands,
-                role: catalog.PresentationRole.editor,
+                role: skir.PresentationRole.editor,
               ),
             );
           },
@@ -891,7 +856,7 @@ void main() {
       commitTypeArguments: (_) => throw UnimplementedError(),
       prepareCreation: (_) => throw UnimplementedError(),
       invokeCommand: ({required capabilityId, required payload}) async =>
-          capability.CommandResult.unknown,
+          skir.CommandResult.unknown,
       watchSearch: (_) => const Stream.empty(),
       reload: () async {},
       openAutosave: _openAutosave(commit: (_) => throw UnimplementedError()),
@@ -908,7 +873,7 @@ void main() {
                     draft: fixture.draft,
                     catalog: fixture.catalog,
                     commands: commands,
-                    role: catalog.PresentationRole.editor,
+                    role: skir.PresentationRole.editor,
                     commitPolicy: EditorCommitPolicy.applyResource,
                   ),
                 ),
@@ -940,16 +905,16 @@ void main() {
 }
 
 AuthoredDraftAutosave Function({
-  required types.ResourceId resource,
+  required skir.ResourceId resource,
   required AuthoredDraft baseline,
   EditorCommitPolicy policy,
 })
 _openAutosave({
-  required Future<authoring.CommitPreparedEditResponse> Function(
-    authoring.PreparedEdit edit,
+  required Future<skir.CommitPreparedEditResponse> Function(
+    skir.PreparedEdit edit,
   )
   commit,
-  Future<authoring.AuthoringState> Function()? fetchCurrent,
+  Future<skir.AuthoringState> Function()? fetchCurrent,
 }) =>
     ({
       required resource,
@@ -969,55 +934,54 @@ _openAutosave({
       onSettled: () {},
     );
 
-authoring.AuthoringState _snapshotOf(AuthoredDraft draft) =>
-    authoring.AuthoringState(
-      generation: draft.generation,
-      resources: [
-        for (final resource in draft.resources.entries)
-          authoring.AuthoringResource(
-            id: resource.key,
-            definition: catalog.ResourceDefinitionId.defaultInstance,
-            content: resource.value,
-          ),
-      ],
-      links: draft.links,
-      findings: const [],
-    );
+skir.AuthoringState _snapshotOf(AuthoredDraft draft) => skir.AuthoringState(
+  generation: draft.generation,
+  resources: [
+    for (final resource in draft.resources.entries)
+      skir.AuthoringResource(
+        id: resource.key,
+        definition: skir.ResourceDefinitionId.defaultInstance,
+        content: resource.value,
+      ),
+  ],
+  links: draft.links,
+  findings: const [],
+);
 
-({types.ResourceId resource, AuthoredDraft draft, CheckedEditorCatalog catalog})
+({skir.ResourceId resource, AuthoredDraft draft, CheckedEditorCatalog catalog})
 _emptyPageGraphFixture() {
-  final generation = types.CatalogGeneration(value: "catalog:page");
-  final definition = types.TypeDefinitionId(
-    typeId: types.TypeId.createQualified(
+  final generation = skir.CatalogGeneration(value: "catalog:page");
+  final definition = skir.TypeDefinitionId(
+    typeId: skir.TypeId.createQualified(
       namespace: "test",
       name: "SequencePage",
     ),
     revision: 1,
   );
-  final presentationId = types.PresentationId(
+  final presentationId = skir.PresentationId(
     namespace: "test",
     name: "sequence.editor",
   );
-  final target = catalog.PresentationTarget.createNamed(
+  final target = skir.PresentationTarget.createNamed(
     definition: definition,
     arguments: const [],
   );
   final checked = CheckedEditorCatalog(
-    catalog.EditorCatalogWireSnapshot(
+    skir.EditorCatalogWireSnapshot(
       generation: generation,
       types: [
-        catalog.PublishedType(
+        skir.PublishedType(
           display: null,
-          definition: types.TypeDefinition(
+          definition: skir.TypeDefinition(
             id: definition,
             parameters: const [],
-            representation: types.RepresentationTemplate.createRecord(
+            representation: skir.RepresentationTemplate.createRecord(
               fields: const [],
               abstract_: false,
             ),
             parents: const [],
           ),
-          status: catalog.DeclarationStatus.ready,
+          status: skir.DeclarationStatus.ready,
           effectiveFields: const [],
           ancestorTemplates: const [],
         ),
@@ -1025,37 +989,36 @@ _emptyPageGraphFixture() {
       relations: const [],
       resourceDefinitions: const [],
       presentations: [
-        catalog.PresentationDescriptor(
+        skir.PresentationDescriptor(
           id: presentationId,
-          owner: types.DeclarationOwner.defaultInstance,
+          owner: skir.DeclarationOwner.defaultInstance,
           target: target,
-          roles: [catalog.PresentationRole.editor],
+          roles: [skir.PresentationRole.editor],
           priority: 0,
         ),
       ],
       presentationMaterials: [
-        catalog.PresentationMaterial(
+        skir.PresentationMaterial(
           provider: presentationId,
           target: target,
-          role: catalog.PresentationRole.editor,
-          layout: presentation.PresentationNode(
+          role: skir.PresentationRole.editor,
+          layout: skir.PresentationNode(
             nodeId: "generated.root",
-            properties: presentation.PresentationProperties.defaultInstance,
-            element: presentation.PresentationElement.wrapChildren(
-              presentation.ChildrenElement.createColumn(
+            properties: skir.PresentationProperties.defaultInstance,
+            element: skir.PresentationElement.wrapChildren(
+              skir.ChildrenElement.createColumn(
                 children: [
-                  presentation.AxisChild.wrapFixed(
-                    presentation.PresentationNode(
+                  skir.AxisChild.wrapFixed(
+                    skir.PresentationNode(
                       nodeId: "sequence.graph",
-                      properties:
-                          presentation.PresentationProperties.defaultInstance,
-                      element: presentation.PresentationElement.createPageGraph(
-                        control: presentation.BoundControl(
-                          binding: binding.BindingRef(
+                      properties: skir.PresentationProperties.defaultInstance,
+                      element: skir.PresentationElement.createPageGraph(
+                        control: skir.BoundControl(
+                          binding: skir.BindingRef(
                             bindingId: configuredValueBindingId,
-                            path: types.ValuePath(
+                            path: skir.ValuePath(
                               segments: [
-                                types.PathSegment.createField(name: "elements"),
+                                skir.PathSegment.createField(name: "elements"),
                               ],
                             ),
                           ),
@@ -1064,23 +1027,23 @@ _emptyPageGraphFixture() {
                           prefix: null,
                           semanticLabel: null,
                         ),
-                        direction: presentation.PageGraphDirection.leftToRight,
+                        direction: skir.PageGraphDirection.leftToRight,
                       ),
                       header: null,
                     ),
                   ),
                 ],
-                layout: presentation.AxisChildrenLayout(
+                layout: skir.AxisChildrenLayout(
                   spacing: 0,
-                  mainAxisAlignment: presentation.MainAxisAlignment.start,
-                  crossAxisAlignment: presentation.CrossAxisAlignment.start,
+                  mainAxisAlignment: skir.MainAxisAlignment.start,
+                  crossAxisAlignment: skir.CrossAxisAlignment.start,
                 ),
               ),
             ),
             header: null,
           ),
-          dependencies: presentation.PresentationDependencies.defaultInstance,
-          subject: types.TypeTemplate.createNamed(
+          dependencies: skir.PresentationDependencies.defaultInstance,
+          subject: skir.TypeTemplate.createNamed(
             definition: definition,
             arguments: const [],
           ),
@@ -1095,22 +1058,20 @@ _emptyPageGraphFixture() {
       roleFallbacks: const [],
     ),
   );
-  final resource = types.ResourceId(value: "page:empty");
-  final record = types.AuthoringRecord(
-    configuration: types.TypeSelection.createComplete(
+  final resource = skir.ResourceId(value: "page:empty");
+  final record = skir.AuthoringRecord(
+    configuration: skir.TypeSelection.createComplete(
       definition: definition,
       arguments: const [],
     ),
-    fields: [
-      types.FieldValue(name: "elements", value: types.DataValue.unfilled),
-    ],
+    fields: [skir.FieldValue(name: "elements", value: skir.DataValue.unfilled)],
   );
   final draft = AuthoredDraft(
     generation: generation,
     resources: [
-      authoring.AuthoringResource(
+      skir.AuthoringResource(
         id: resource,
-        definition: catalog.ResourceDefinitionId(value: "typewriter.page"),
+        definition: skir.ResourceDefinitionId(value: "typewriter.page"),
         content: record,
       ),
     ],
@@ -1122,7 +1083,7 @@ _emptyPageGraphFixture() {
 
 Widget _numericEditor(
   ({
-    types.ResourceId resource,
+    skir.ResourceId resource,
     AuthoredDraft draft,
     CheckedEditorCatalog catalog,
   })
@@ -1133,61 +1094,58 @@ Widget _numericEditor(
       resource: fixture.resource,
       draft: fixture.draft,
       catalog: fixture.catalog,
-      role: catalog.PresentationRole.inspector,
-      budget: expression.EvaluationBudget(
-        maxSteps: 100,
-        maxCollectionItems: 100,
-      ),
+      role: skir.PresentationRole.inspector,
+      budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
     ),
   ),
 );
 
-({types.ResourceId resource, AuthoredDraft draft, CheckedEditorCatalog catalog})
+({skir.ResourceId resource, AuthoredDraft draft, CheckedEditorCatalog catalog})
 _numericFixture({
   required String generation,
   required String snapshot,
   required int minimum,
-  types.DataValue? initial,
+  skir.DataValue? initial,
   String fieldName = "repetitions",
 }) {
-  final catalogGeneration = types.CatalogGeneration(value: generation);
-  final definition = types.TypeDefinitionId(
-    typeId: types.TypeId.createQualified(namespace: "test", name: "Repeating"),
+  final catalogGeneration = skir.CatalogGeneration(value: generation);
+  final definition = skir.TypeDefinitionId(
+    typeId: skir.TypeId.createQualified(namespace: "test", name: "Repeating"),
     revision: 1,
   );
-  final presentationId = types.PresentationId(
+  final presentationId = skir.PresentationId(
     namespace: "test",
     name: "repeating.inspector",
   );
-  final ruleOrigin = types.RuleOrigin(owner: definition, ordinal: 0);
-  final ruleId = types.RuleId(origin: ruleOrigin, localIndex: 0);
-  final configured = types.ExpressionBindingId(value: "configured_value");
-  final target = catalog.PresentationTarget.createNamed(
+  final ruleOrigin = skir.RuleOrigin(owner: definition, ordinal: 0);
+  final ruleId = skir.RuleId(origin: ruleOrigin, localIndex: 0);
+  final configured = skir.ExpressionBindingId(value: "configured_value");
+  final target = skir.PresentationTarget.createNamed(
     definition: definition,
     arguments: const [],
   );
-  final path = types.ValuePath(
-    segments: [types.PathSegment.createField(name: fieldName)],
+  final path = skir.ValuePath(
+    segments: [skir.PathSegment.createField(name: fieldName)],
   );
   final checked = CheckedEditorCatalog(
-    catalog.EditorCatalogWireSnapshot(
+    skir.EditorCatalogWireSnapshot(
       generation: catalogGeneration,
       types: [
-        catalog.PublishedType(
+        skir.PublishedType(
           display: null,
-          definition: types.TypeDefinition(
+          definition: skir.TypeDefinition(
             id: definition,
             parameters: const [],
-            representation: types.RepresentationTemplate.createRecord(
+            representation: skir.RepresentationTemplate.createRecord(
               fields: [
-                types.FieldDeclaration(
-                  owner: types.FieldOwner(
+                skir.FieldDeclaration(
+                  owner: skir.FieldOwner(
                     definition: definition,
                     name: fieldName,
                   ),
-                  type: types.TypeTemplate.wrapScalar(
-                    types.ScalarKind.createInteger(
-                      width: types.IntegerWidth.signedThirtyTwo,
+                  type: skir.TypeTemplate.wrapScalar(
+                    skir.ScalarKind.createInteger(
+                      width: skir.IntegerWidth.signedThirtyTwo,
                     ),
                   ),
                   overrides: const [],
@@ -1198,14 +1156,14 @@ _numericFixture({
             ),
             parents: const [],
           ),
-          status: catalog.DeclarationStatus.ready,
+          status: skir.DeclarationStatus.ready,
           effectiveFields: [
-            catalog.EffectiveFieldTemplate(
+            skir.EffectiveFieldTemplate(
               key: fieldName,
-              owner: types.FieldOwner(definition: definition, name: fieldName),
-              type: types.TypeTemplate.wrapScalar(
-                types.ScalarKind.createInteger(
-                  width: types.IntegerWidth.signedThirtyTwo,
+              owner: skir.FieldOwner(definition: definition, name: fieldName),
+              type: skir.TypeTemplate.wrapScalar(
+                skir.ScalarKind.createInteger(
+                  width: skir.IntegerWidth.signedThirtyTwo,
                 ),
               ),
               rules: [ruleId],
@@ -1217,25 +1175,25 @@ _numericFixture({
       relations: const [],
       resourceDefinitions: const [],
       presentations: [
-        catalog.PresentationDescriptor(
+        skir.PresentationDescriptor(
           id: presentationId,
-          owner: types.DeclarationOwner.defaultInstance,
+          owner: skir.DeclarationOwner.defaultInstance,
           target: target,
-          roles: [catalog.PresentationRole.inspector],
+          roles: [skir.PresentationRole.inspector],
           priority: 0,
         ),
       ],
       presentationMaterials: [
-        catalog.PresentationMaterial(
+        skir.PresentationMaterial(
           provider: presentationId,
           target: target,
-          role: catalog.PresentationRole.inspector,
-          layout: presentation.PresentationNode(
+          role: skir.PresentationRole.inspector,
+          layout: skir.PresentationNode(
             nodeId: fieldName,
-            properties: presentation.PresentationProperties.defaultInstance,
-            element: presentation.PresentationElement.wrapNumericInput(
-              presentation.BoundControl(
-                binding: binding.BindingRef(
+            properties: skir.PresentationProperties.defaultInstance,
+            element: skir.PresentationElement.wrapNumericInput(
+              skir.BoundControl(
+                binding: skir.BindingRef(
                   bindingId: configuredValueBindingId,
                   path: path,
                 ),
@@ -1247,46 +1205,44 @@ _numericFixture({
             ),
             header: null,
           ),
-          dependencies: presentation.PresentationDependencies.defaultInstance,
-          subject: types.TypeTemplate.createNamed(
+          dependencies: skir.PresentationDependencies.defaultInstance,
+          subject: skir.TypeTemplate.createNamed(
             definition: definition,
             arguments: const [],
           ),
         ),
       ],
       configuration: [
-        catalog.ConfigurationRecipe(
+        skir.ConfigurationRecipe(
           origin: ruleOrigin,
-          relativePath: types.RelativeFieldPattern(
-            segments: [types.FieldPatternSegment.createField(name: fieldName)],
+          relativePath: skir.RelativeFieldPattern(
+            segments: [skir.FieldPatternSegment.createField(name: fieldName)],
           ),
-          representationCondition: catalog.RepresentationKind.integer,
+          representationCondition: skir.RepresentationKind.integer,
           rules: [
-            catalog.OwnedRule(
+            skir.OwnedRule(
               id: ruleId,
-              descriptor: catalog.RuleDescriptor(
-                predicate: expression.ExpressionNode.createCall(
-                  operation: types.OperationId(
-                    value: "typewriter.rule.minimum",
-                  ),
+              descriptor: skir.RuleDescriptor(
+                predicate: skir.ExpressionNode.createCall(
+                  operation: skir.OperationId(value: "typewriter.rule.minimum"),
                   arguments: [
-                    expression.ExpressionNode.createRead(
+                    skir.ExpressionNode.createRead(
                       binding: configured,
-                      path: types.ValuePath(segments: const []),
+                      path: skir.ValuePath(segments: const []),
                     ),
-                    expression.ExpressionNode.wrapLiteral(
-                      types.DataValue.wrapInteger(minimum.toString()),
+                    skir.ExpressionNode.wrapLiteral(
+                      skir.DataValue.wrapInteger(minimum.toString()),
                     ),
-                    expression.ExpressionNode.wrapLiteral(
-                      types.DataValue.wrapBoolean(true),
+                    skir.ExpressionNode.wrapLiteral(
+                      skir.DataValue.wrapBoolean(true),
                     ),
                   ],
                 ),
               ),
-              diagnostic: diagnostic.DiagnosticTemplate(
+              diagnostic: skir.DiagnosticTemplate(
                 code: "minimum",
                 message: "Must be at least $minimum",
-                severity: diagnostic.DiagnosticSeverity.error,
+                severity: skir.DiagnosticSeverity.error,
                 targets: const [],
               ),
             ),
@@ -1301,16 +1257,16 @@ _numericFixture({
       roleFallbacks: const [],
     ),
   );
-  final resource = types.ResourceId(value: "repeating:one");
-  final record = types.AuthoringRecord(
-    configuration: types.TypeSelection.createComplete(
+  final resource = skir.ResourceId(value: "repeating:one");
+  final record = skir.AuthoringRecord(
+    configuration: skir.TypeSelection.createComplete(
       definition: definition,
       arguments: const [],
     ),
     fields: [
-      types.FieldValue(
+      skir.FieldValue(
         name: fieldName,
-        value: initial ?? types.DataValue.wrapInteger("2"),
+        value: initial ?? skir.DataValue.wrapInteger("2"),
       ),
     ],
   );
@@ -1320,9 +1276,9 @@ _numericFixture({
     draft: AuthoredDraft(
       generation: catalogGeneration,
       resources: [
-        authoring.AuthoringResource(
+        skir.AuthoringResource(
           id: resource,
-          definition: catalog.ResourceDefinitionId(value: "test.repeating"),
+          definition: skir.ResourceDefinitionId(value: "test.repeating"),
           content: record,
         ),
       ],
@@ -1332,47 +1288,47 @@ _numericFixture({
   );
 }
 
-({types.ResourceId resource, AuthoredDraft draft, CheckedEditorCatalog catalog})
+({skir.ResourceId resource, AuthoredDraft draft, CheckedEditorCatalog catalog})
 _fixture({
   String snapshot = "realm:1",
   String title = "Original",
   bool requireTitle = false,
   String fieldName = "title",
-  types.DataValue? initial,
-  types.NamedTypeUse? namedText,
+  skir.DataValue? initial,
+  skir.NamedTypeUse? namedText,
 }) {
-  final generation = types.CatalogGeneration(value: "catalog:1");
+  final generation = skir.CatalogGeneration(value: "catalog:1");
   final fieldType = namedText == null
-      ? types.TypeTemplate.wrapScalar(types.ScalarKind.text)
-      : types.TypeTemplate.createNamed(
+      ? skir.TypeTemplate.wrapScalar(skir.ScalarKind.text)
+      : skir.TypeTemplate.createNamed(
           definition: namedText.definition,
           arguments: const [],
         );
-  final definition = types.TypeDefinitionId(
-    typeId: types.TypeId.wrapQualified(
-      types.QualifiedTypeId(namespace: "test", name: "Message"),
+  final definition = skir.TypeDefinitionId(
+    typeId: skir.TypeId.wrapQualified(
+      skir.QualifiedTypeId(namespace: "test", name: "Message"),
     ),
     revision: 1,
   );
-  final presentationId = types.PresentationId(
+  final presentationId = skir.PresentationId(
     namespace: "test",
     name: "message.editor",
   );
-  final ruleOrigin = types.RuleOrigin(owner: definition, ordinal: 0);
-  final titleRule = types.RuleId(origin: ruleOrigin, localIndex: 0);
-  final target = catalog.PresentationTarget.createNamed(
+  final ruleOrigin = skir.RuleOrigin(owner: definition, ordinal: 0);
+  final titleRule = skir.RuleId(origin: ruleOrigin, localIndex: 0);
+  final target = skir.PresentationTarget.createNamed(
     definition: definition,
     arguments: const [],
   );
-  final layout = presentation.PresentationNode(
+  final layout = skir.PresentationNode(
     nodeId: "message.title",
-    properties: presentation.PresentationProperties.defaultInstance,
-    element: presentation.PresentationElement.createTextInput(
-      control: presentation.BoundControl(
-        binding: binding.BindingRef(
+    properties: skir.PresentationProperties.defaultInstance,
+    element: skir.PresentationElement.createTextInput(
+      control: skir.BoundControl(
+        binding: skir.BindingRef(
           bindingId: configuredValueBindingId,
-          path: types.ValuePath(
-            segments: [types.PathSegment.createField(name: fieldName)],
+          path: skir.ValuePath(
+            segments: [skir.PathSegment.createField(name: fieldName)],
           ),
         ),
         label: null,
@@ -1386,14 +1342,14 @@ _fixture({
     ),
     header: null,
   );
-  final headerLayout = presentation.PresentationNode(
+  final headerLayout = skir.PresentationNode(
     nodeId: "message.header",
-    properties: presentation.PresentationProperties.defaultInstance,
-    element: presentation.PresentationElement.createText(
-      value: expression.ExpressionNode.createRead(
+    properties: skir.PresentationProperties.defaultInstance,
+    element: skir.PresentationElement.createText(
+      value: skir.ExpressionNode.createRead(
         binding: configuredValueBindingId,
-        path: types.ValuePath(
-          segments: [types.PathSegment.createField(name: fieldName)],
+        path: skir.ValuePath(
+          segments: [skir.PathSegment.createField(name: fieldName)],
         ),
       ),
       color: null,
@@ -1408,35 +1364,35 @@ _fixture({
       letterSpacing: null,
       decoration: null,
       semanticLabel: null,
-      paragraph: presentation.TextParagraph.defaultInstance,
+      paragraph: skir.TextParagraph.defaultInstance,
     ),
     header: null,
   );
-  final graphLayout = presentation.PresentationNode(
+  final graphLayout = skir.PresentationNode(
     nodeId: "message.graph",
-    properties: presentation.PresentationProperties.defaultInstance,
-    element: presentation.PresentationElement.createAdaptiveLeading(
-      leading: presentation.PresentationNode(
+    properties: skir.PresentationProperties.defaultInstance,
+    element: skir.PresentationElement.createAdaptiveLeading(
+      leading: skir.PresentationNode(
         nodeId: "message.graph.icon.color",
-        properties: presentation.PresentationProperties.defaultInstance,
-        element: presentation.PresentationElement.createContainer(
-          child: presentation.PresentationNode(
+        properties: skir.PresentationProperties.defaultInstance,
+        element: skir.PresentationElement.createContainer(
+          child: skir.PresentationNode(
             nodeId: "message.graph.icon.padding",
-            properties: presentation.PresentationProperties.defaultInstance,
-            element: presentation.PresentationElement.createPadding(
-              child: presentation.PresentationNode(
+            properties: skir.PresentationProperties.defaultInstance,
+            element: skir.PresentationElement.createPadding(
+              child: skir.PresentationNode(
                 nodeId: "message.graph.icon",
-                properties: presentation.PresentationProperties.defaultInstance,
-                element: presentation.PresentationElement.createIcon(
-                  name: expression.ExpressionNode.wrapLiteral(
-                    types.DataValue.wrapStringValue(
+                properties: skir.PresentationProperties.defaultInstance,
+                element: skir.PresentationElement.createIcon(
+                  name: skir.ExpressionNode.wrapLiteral(
+                    skir.DataValue.wrapStringValue(
                       '<svg xmlns="http://www.w3.org/2000/svg" '
                       'viewBox="0 0 24 24">'
                       ' <path d="M4 4h16v16H4z"/></svg>',
                     ),
                   ),
-                  semanticLabel: expression.ExpressionNode.wrapLiteral(
-                    types.DataValue.wrapStringValue("Tag"),
+                  semanticLabel: skir.ExpressionNode.wrapLiteral(
+                    skir.DataValue.wrapStringValue("Tag"),
                   ),
                   color: null,
                   size: null,
@@ -1451,65 +1407,65 @@ _fixture({
             header: null,
           ),
           border: null,
-          backgroundColor: expression.ExpressionNode.wrapLiteral(
-            types.DataValue.wrapInteger("4288585374"),
+          backgroundColor: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapInteger("4288585374"),
           ),
-          radius: presentation.PresentationRadius.none,
+          radius: skir.PresentationRadius.none,
         ),
         header: null,
       ),
       center: headerLayout,
       suffix: null,
-      padding: presentation.PresentationInsets.wrapAll(8),
-      compactPadding: presentation.PresentationInsets.wrapAll(4),
+      padding: skir.PresentationInsets.wrapAll(8),
+      compactPadding: skir.PresentationInsets.wrapAll(4),
       gap: 12,
       minimumCenterWidth: 80,
     ),
     header: null,
   );
-  final generatedGraphLayout = presentation.PresentationNode(
+  final generatedGraphLayout = skir.PresentationNode(
     nodeId: "message.graph.root",
-    properties: presentation.PresentationProperties.defaultInstance,
-    element: presentation.PresentationElement.wrapChildren(
-      presentation.ChildrenElement.createColumn(
-        children: [presentation.AxisChild.wrapFixed(graphLayout)],
-        layout: presentation.AxisChildrenLayout(
+    properties: skir.PresentationProperties.defaultInstance,
+    element: skir.PresentationElement.wrapChildren(
+      skir.ChildrenElement.createColumn(
+        children: [skir.AxisChild.wrapFixed(graphLayout)],
+        layout: skir.AxisChildrenLayout(
           spacing: 0,
-          mainAxisAlignment: presentation.MainAxisAlignment.start,
-          crossAxisAlignment: presentation.CrossAxisAlignment.start,
+          mainAxisAlignment: skir.MainAxisAlignment.start,
+          crossAxisAlignment: skir.CrossAxisAlignment.start,
         ),
       ),
     ),
     header: null,
   );
   final checked = CheckedEditorCatalog(
-    catalog.EditorCatalogWireSnapshot(
+    skir.EditorCatalogWireSnapshot(
       generation: generation,
       types: [
         if (namedText != null)
-          catalog.PublishedType(
+          skir.PublishedType(
             display: null,
-            definition: types.TypeDefinition(
+            definition: skir.TypeDefinition(
               id: namedText.definition,
               parameters: const [],
-              representation: types.RepresentationTemplate.createScalar(
-                kind: types.ScalarKind.text,
+              representation: skir.RepresentationTemplate.createScalar(
+                kind: skir.ScalarKind.text,
               ),
               parents: const [],
             ),
-            status: catalog.DeclarationStatus.ready,
+            status: skir.DeclarationStatus.ready,
             effectiveFields: const [],
             ancestorTemplates: const [],
           ),
-        catalog.PublishedType(
+        skir.PublishedType(
           display: null,
-          definition: types.TypeDefinition(
+          definition: skir.TypeDefinition(
             id: definition,
             parameters: const [],
-            representation: types.RepresentationTemplate.createRecord(
+            representation: skir.RepresentationTemplate.createRecord(
               fields: [
-                types.FieldDeclaration(
-                  owner: types.FieldOwner(
+                skir.FieldDeclaration(
+                  owner: skir.FieldOwner(
                     definition: definition,
                     name: fieldName,
                   ),
@@ -1522,11 +1478,11 @@ _fixture({
             ),
             parents: const [],
           ),
-          status: catalog.DeclarationStatus.ready,
+          status: skir.DeclarationStatus.ready,
           effectiveFields: [
-            catalog.EffectiveFieldTemplate(
+            skir.EffectiveFieldTemplate(
               key: fieldName,
-              owner: types.FieldOwner(definition: definition, name: fieldName),
+              owner: skir.FieldOwner(definition: definition, name: fieldName),
               type: fieldType,
               rules: requireTitle ? [titleRule] : const [],
             ),
@@ -1537,60 +1493,60 @@ _fixture({
       relations: const [],
       resourceDefinitions: const [],
       presentations: [
-        catalog.PresentationDescriptor(
+        skir.PresentationDescriptor(
           id: presentationId,
-          owner: types.DeclarationOwner.defaultInstance,
+          owner: skir.DeclarationOwner.defaultInstance,
           target: target,
           roles: [
-            catalog.PresentationRole.editor,
-            catalog.PresentationRole.inspector,
-            catalog.PresentationRole.inspectorHeader,
-            catalog.PresentationRole.graphNode,
+            skir.PresentationRole.editor,
+            skir.PresentationRole.inspector,
+            skir.PresentationRole.inspectorHeader,
+            skir.PresentationRole.graphNode,
           ],
           priority: 0,
         ),
       ],
       presentationMaterials: [
-        catalog.PresentationMaterial(
+        skir.PresentationMaterial(
           provider: presentationId,
           target: target,
-          role: catalog.PresentationRole.editor,
+          role: skir.PresentationRole.editor,
           layout: layout,
-          dependencies: presentation.PresentationDependencies.defaultInstance,
-          subject: types.TypeTemplate.createNamed(
+          dependencies: skir.PresentationDependencies.defaultInstance,
+          subject: skir.TypeTemplate.createNamed(
             definition: definition,
             arguments: const [],
           ),
         ),
-        catalog.PresentationMaterial(
+        skir.PresentationMaterial(
           provider: presentationId,
           target: target,
-          role: catalog.PresentationRole.inspector,
+          role: skir.PresentationRole.inspector,
           layout: layout,
-          dependencies: presentation.PresentationDependencies.defaultInstance,
-          subject: types.TypeTemplate.createNamed(
+          dependencies: skir.PresentationDependencies.defaultInstance,
+          subject: skir.TypeTemplate.createNamed(
             definition: definition,
             arguments: const [],
           ),
         ),
-        catalog.PresentationMaterial(
+        skir.PresentationMaterial(
           provider: presentationId,
           target: target,
-          role: catalog.PresentationRole.inspectorHeader,
+          role: skir.PresentationRole.inspectorHeader,
           layout: headerLayout,
-          dependencies: presentation.PresentationDependencies.defaultInstance,
-          subject: types.TypeTemplate.createNamed(
+          dependencies: skir.PresentationDependencies.defaultInstance,
+          subject: skir.TypeTemplate.createNamed(
             definition: definition,
             arguments: const [],
           ),
         ),
-        catalog.PresentationMaterial(
+        skir.PresentationMaterial(
           provider: presentationId,
           target: target,
-          role: catalog.PresentationRole.graphNode,
+          role: skir.PresentationRole.graphNode,
           layout: generatedGraphLayout,
-          dependencies: presentation.PresentationDependencies.defaultInstance,
-          subject: types.TypeTemplate.createNamed(
+          dependencies: skir.PresentationDependencies.defaultInstance,
+          subject: skir.TypeTemplate.createNamed(
             definition: definition,
             arguments: const [],
           ),
@@ -1598,34 +1554,34 @@ _fixture({
       ],
       configuration: requireTitle
           ? [
-              catalog.ConfigurationRecipe(
+              skir.ConfigurationRecipe(
                 origin: ruleOrigin,
-                relativePath: types.RelativeFieldPattern(
+                relativePath: skir.RelativeFieldPattern(
                   segments: [
-                    types.FieldPatternSegment.createField(name: fieldName),
+                    skir.FieldPatternSegment.createField(name: fieldName),
                   ],
                 ),
-                representationCondition: catalog.RepresentationKind.text,
+                representationCondition: skir.RepresentationKind.text,
                 rules: [
-                  catalog.OwnedRule(
+                  skir.OwnedRule(
                     id: titleRule,
-                    descriptor: catalog.RuleDescriptor(
-                      predicate: expression.ExpressionNode.createCall(
-                        operation: types.OperationId(
+                    descriptor: skir.RuleDescriptor(
+                      predicate: skir.ExpressionNode.createCall(
+                        operation: skir.OperationId(
                           value: "typewriter.rule.nonBlank",
                         ),
                         arguments: [
-                          expression.ExpressionNode.createRead(
+                          skir.ExpressionNode.createRead(
                             binding: configuredValueBindingId,
-                            path: types.ValuePath(segments: const []),
+                            path: skir.ValuePath(segments: const []),
                           ),
                         ],
                       ),
                     ),
-                    diagnostic: diagnostic.DiagnosticTemplate(
+                    diagnostic: skir.DiagnosticTemplate(
                       code: "non_blank",
                       message: "Title must not be blank",
-                      severity: diagnostic.DiagnosticSeverity.error,
+                      severity: skir.DiagnosticSeverity.error,
                       targets: const [],
                     ),
                   ),
@@ -1641,25 +1597,25 @@ _fixture({
       roleFallbacks: const [],
     ),
   );
-  final resource = types.ResourceId(value: "message:one");
-  final record = types.AuthoringRecord(
-    configuration: types.TypeSelection.createComplete(
+  final resource = skir.ResourceId(value: "message:one");
+  final record = skir.AuthoringRecord(
+    configuration: skir.TypeSelection.createComplete(
       definition: definition,
       arguments: const [],
     ),
     fields: [
-      types.FieldValue(
+      skir.FieldValue(
         name: fieldName,
-        value: initial ?? types.DataValue.wrapStringValue(title),
+        value: initial ?? skir.DataValue.wrapStringValue(title),
       ),
     ],
   );
   final draft = AuthoredDraft(
     generation: generation,
     resources: [
-      authoring.AuthoringResource(
+      skir.AuthoringResource(
         id: resource,
-        definition: catalog.ResourceDefinitionId(value: "test.message"),
+        definition: skir.ResourceDefinitionId(value: "test.message"),
         content: record,
       ),
     ],
@@ -1669,12 +1625,9 @@ _fixture({
   return (resource: resource, draft: draft, catalog: checked);
 }
 
-final _chapterTextType = types.NamedTypeUse(
-  definition: types.TypeDefinitionId(
-    typeId: types.TypeId.createQualified(
-      namespace: "test",
-      name: "ChapterPath",
-    ),
+final _chapterTextType = skir.NamedTypeUse(
+  definition: skir.TypeDefinitionId(
+    typeId: skir.TypeId.createQualified(namespace: "test", name: "ChapterPath"),
     revision: 1,
   ),
   arguments: const [],

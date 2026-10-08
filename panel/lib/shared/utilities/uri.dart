@@ -1,4 +1,4 @@
-import "package:url_launcher/url_launcher.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// URI actions used when navigation must leave the panel application.
 extension UriExtensions on Uri {

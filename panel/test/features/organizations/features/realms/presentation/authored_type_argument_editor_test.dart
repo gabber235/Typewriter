@@ -1,12 +1,6 @@
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring.dart"
-    as authoring;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as catalog;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../../../support/test_utils.dart";
@@ -14,7 +8,7 @@ import "../../../../../support/test_utils.dart";
 void main() {
   testWidgets("chooses only concrete resource descendants", (tester) async {
     final fixture = _concreteResourceFixture();
-    types.TypeSelection? selected;
+    skir.TypeSelection? selected;
 
     await tester.pumpTestApp(
       child: Builder(
@@ -22,7 +16,7 @@ void main() {
           onPressed: () async {
             selected = await showCreationConcreteTypePicker(
               context,
-              expected: types.TypeSelection.createComplete(
+              expected: skir.TypeSelection.createComplete(
                 definition: fixture.page,
                 arguments: const [],
               ),
@@ -60,7 +54,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final complete = switch (selected) {
-      types.TypeSelection_completeWrapper(:final value) => value,
+      skir.TypeSelection_completeWrapper(:final value) => value,
       _ => throw TestFailure("Expected a complete resource selection"),
     };
     expect(complete.definition, fixture.manifest);
@@ -70,7 +64,7 @@ void main() {
     tester,
   ) async {
     final fixture = _concreteResourceFixture();
-    types.TypeSelection? selected;
+    skir.TypeSelection? selected;
 
     await tester.pumpTestApp(
       child: Builder(
@@ -78,7 +72,7 @@ void main() {
           onPressed: () async {
             selected = await showCreationConcreteTypePicker(
               context,
-              expected: types.TypeSelection.createComplete(
+              expected: skir.TypeSelection.createComplete(
                 definition: fixture.page,
                 arguments: const [],
               ),
@@ -118,7 +112,7 @@ void main() {
     tester,
   ) async {
     final fixture = _fixture(unbounded: true, containerName: "List");
-    types.TypeUse? selected;
+    skir.TypeUse? selected;
 
     await tester.pumpTestApp(
       child: Builder(
@@ -170,47 +164,47 @@ void main() {
     await tester.pumpAndSettle();
 
     final nullable = switch (selected) {
-      types.TypeUse_nullableWrapper(:final value) => value.value,
+      skir.TypeUse_nullableWrapper(:final value) => value.value,
       _ => throw TestFailure("Expected a nullable type"),
     };
     final named = switch (nullable) {
-      types.TypeUse_namedWrapper(:final value) => value,
+      skir.TypeUse_namedWrapper(:final value) => value,
       _ => throw TestFailure("Expected a named generic type"),
     };
     expect(named.definition, fixture.container);
-    expect(named.arguments, [types.TypeUse.wrapScalar(types.ScalarKind.text)]);
+    expect(named.arguments, [skir.TypeUse.wrapScalar(skir.ScalarKind.text)]);
   });
 
   testWidgets("composes arguments and confirms the Realm repair preview", (
     tester,
   ) async {
     final fixture = _fixture();
-    types.TypeSelection? requested;
-    authoring.TypeArgumentChangePreview? committed;
+    skir.TypeSelection? requested;
+    skir.TypeArgumentChangePreview? committed;
     String? status;
 
     await tester.pumpTestApp(
       child: Scaffold(
         body: AuthoredTypeArgumentEditor(
-          selection: types.TypeSelection.createPending(
+          selection: skir.TypeSelection.createPending(
             definition: fixture.container,
-            arguments: [types.ArgumentSelection.unfilled],
+            arguments: [skir.ArgumentSelection.unfilled],
           ),
           catalog: fixture.catalog,
           preview: (next) async {
             requested = next;
-            return authoring.TypePreviewResult.createReady(
+            return skir.TypePreviewResult.createReady(
               catalog: fixture.catalog.snapshot.generation,
-              resource: types.ResourceId(value: "variable:1"),
+              resource: skir.ResourceId(value: "variable:1"),
               next: next,
               expectations: const [],
               intents: const [],
               linkRepairs: const [],
               clearedLocations: [
-                types.ValueLocation(
-                  resource: types.ResourceId(value: "variable:1"),
-                  path: types.ValuePath(
-                    segments: [types.PathSegment.createField(name: "value")],
+                skir.ValueLocation(
+                  resource: skir.ResourceId(value: "variable:1"),
+                  path: skir.ValuePath(
+                    segments: [skir.PathSegment.createField(name: "value")],
                   ),
                 ),
               ],
@@ -218,8 +212,8 @@ void main() {
           },
           commit: (preview) async {
             committed = preview;
-            return authoring.CommitTypeArgumentChangeResponse.wrapResult(
-              authoring.CommitResult.committed,
+            return skir.CommitTypeArgumentChangeResponse.wrapResult(
+              skir.CommitResult.committed,
             );
           },
           onStatus: (value) => status = value,
@@ -238,12 +232,12 @@ void main() {
     await tester.pumpAndSettle();
 
     final complete = switch (requested) {
-      final types.TypeSelection_completeWrapper value => value,
+      final skir.TypeSelection_completeWrapper value => value,
       _ => throw TestFailure("Expected a complete selection"),
     };
     expect(complete.value.definition, fixture.container);
     expect(
-      (complete.value.arguments.single as types.TypeUse_namedWrapper)
+      (complete.value.arguments.single as skir.TypeUse_namedWrapper)
           .value
           .definition,
       fixture.coin,
@@ -262,23 +256,23 @@ void main() {
     tester,
   ) async {
     final fixture = _fixture(parameterCount: 2);
-    types.TypeSelection? requested;
+    skir.TypeSelection? requested;
     await tester.pumpTestApp(
       child: Scaffold(
         body: AuthoredTypeArgumentEditor(
-          selection: types.TypeSelection.createPending(
+          selection: skir.TypeSelection.createPending(
             definition: fixture.container,
             arguments: [
-              types.ArgumentSelection.unfilled,
-              types.ArgumentSelection.unfilled,
+              skir.ArgumentSelection.unfilled,
+              skir.ArgumentSelection.unfilled,
             ],
           ),
           catalog: fixture.catalog,
           preview: (next) async {
             requested = next;
-            return authoring.TypePreviewResult.createReady(
+            return skir.TypePreviewResult.createReady(
               catalog: fixture.catalog.snapshot.generation,
-              resource: types.ResourceId(value: "variable:1"),
+              resource: skir.ResourceId(value: "variable:1"),
               next: next,
               expectations: const [],
               intents: const [],
@@ -286,10 +280,9 @@ void main() {
               clearedLocations: const [],
             );
           },
-          commit: (_) async =>
-              authoring.CommitTypeArgumentChangeResponse.wrapResult(
-                authoring.CommitResult.committed,
-              ),
+          commit: (_) async => skir.CommitTypeArgumentChangeResponse.wrapResult(
+            skir.CommitResult.committed,
+          ),
         ),
       ),
     );
@@ -301,24 +294,24 @@ void main() {
     await tester.pumpAndSettle();
 
     final pending = switch (requested) {
-      final types.TypeSelection_pendingWrapper value => value,
+      final skir.TypeSelection_pendingWrapper value => value,
       _ => throw TestFailure("Expected a pending selection"),
     };
     expect(pending.value.definition, fixture.container);
     expect(
       pending.value.arguments.first,
-      isA<types.ArgumentSelection_chosenWrapper>(),
+      isA<skir.ArgumentSelection_chosenWrapper>(),
     );
-    expect(pending.value.arguments.last, types.ArgumentSelection.unfilled);
+    expect(pending.value.arguments.last, skir.ArgumentSelection.unfilled);
     expect(find.textContaining("Unfilled"), findsOneWidget);
   });
 }
 
 ({
   CheckedEditorCatalog catalog,
-  types.TypeDefinitionId page,
-  types.TypeDefinitionId sequence,
-  types.TypeDefinitionId manifest,
+  skir.TypeDefinitionId page,
+  skir.TypeDefinitionId sequence,
+  skir.TypeDefinitionId manifest,
 })
 _concreteResourceFixture() {
   final page = _definition("Page");
@@ -327,34 +320,34 @@ _concreteResourceFixture() {
   final scene = _definition("ScenePage");
   final manifest = _definition("ManifestPage");
   final unrelated = _definition("Unrelated");
-  catalog.PublishedType published(
-    types.TypeDefinitionId id, {
+  skir.PublishedType published(
+    skir.TypeDefinitionId id, {
     required bool abstract,
-    List<types.NamedTypeTemplate> parents = const [],
-    catalog.TypeDisplay? display,
-  }) => catalog.PublishedType(
-    definition: types.TypeDefinition(
+    List<skir.NamedTypeTemplate> parents = const [],
+    skir.TypeDisplay? display,
+  }) => skir.PublishedType(
+    definition: skir.TypeDefinition(
       id: id,
       parameters: const [],
-      representation: types.RepresentationTemplate.createRecord(
+      representation: skir.RepresentationTemplate.createRecord(
         fields: const [],
         abstract_: abstract,
       ),
       parents: parents,
     ),
-    status: catalog.DeclarationStatus.ready,
+    status: skir.DeclarationStatus.ready,
     effectiveFields: const [],
     ancestorTemplates: parents,
     display: display,
   );
-  final pageParent = types.NamedTypeTemplate(
+  final pageParent = skir.NamedTypeTemplate(
     definition: page,
     arguments: const [],
   );
   return (
     catalog: CheckedEditorCatalog(
-      catalog.EditorCatalogWireSnapshot(
-        generation: types.CatalogGeneration(value: "catalog:resources"),
+      skir.EditorCatalogWireSnapshot(
+        generation: skir.CatalogGeneration(value: "catalog:resources"),
         types: [
           published(page, abstract: true),
           published(
@@ -408,8 +401,8 @@ _concreteResourceFixture() {
 
 ({
   CheckedEditorCatalog catalog,
-  types.TypeDefinitionId container,
-  types.TypeDefinitionId coin,
+  skir.TypeDefinitionId container,
+  skir.TypeDefinitionId coin,
 })
 _fixture({
   int parameterCount = 1,
@@ -419,41 +412,41 @@ _fixture({
   final container = _definition(containerName);
   final reward = _definition("Reward");
   final coin = _definition("CoinReward");
-  catalog.PublishedType published(
-    types.TypeDefinitionId id, {
-    List<types.TypeParameter> parameters = const [],
-    List<types.NamedTypeTemplate> parents = const [],
-  }) => catalog.PublishedType(
-    definition: types.TypeDefinition(
+  skir.PublishedType published(
+    skir.TypeDefinitionId id, {
+    List<skir.TypeParameter> parameters = const [],
+    List<skir.NamedTypeTemplate> parents = const [],
+  }) => skir.PublishedType(
+    definition: skir.TypeDefinition(
       id: id,
       parameters: parameters,
-      representation: types.RepresentationTemplate.createRecord(
+      representation: skir.RepresentationTemplate.createRecord(
         fields: const [],
         abstract_: false,
       ),
       parents: parents,
     ),
-    status: catalog.DeclarationStatus.ready,
+    status: skir.DeclarationStatus.ready,
     effectiveFields: const [],
     ancestorTemplates: parents,
     display: null,
   );
   return (
     catalog: CheckedEditorCatalog(
-      catalog.EditorCatalogWireSnapshot(
-        generation: types.CatalogGeneration(value: "catalog:1"),
+      skir.EditorCatalogWireSnapshot(
+        generation: skir.CatalogGeneration(value: "catalog:1"),
         types: [
           published(
             container,
             parameters: [
               for (var index = 0; index < parameterCount; index++)
-                types.TypeParameter(
-                  key: types.ParameterKey(owner: container, index: index),
+                skir.TypeParameter(
+                  key: skir.ParameterKey(owner: container, index: index),
                   name: index == 0 ? "T" : "U",
                   bounds: unbounded
                       ? const []
                       : [
-                          types.TypeTemplate.createNamed(
+                          skir.TypeTemplate.createNamed(
                             definition: reward,
                             arguments: const [],
                           ),
@@ -465,7 +458,7 @@ _fixture({
           published(
             coin,
             parents: [
-              types.NamedTypeTemplate(definition: reward, arguments: const []),
+              skir.NamedTypeTemplate(definition: reward, arguments: const []),
             ],
           ),
         ],
@@ -487,13 +480,13 @@ _fixture({
   );
 }
 
-types.TypeDefinitionId _definition(String name) => types.TypeDefinitionId(
-  typeId: types.TypeId.createQualified(namespace: "test", name: name),
+skir.TypeDefinitionId _definition(String name) => skir.TypeDefinitionId(
+  typeId: skir.TypeId.createQualified(namespace: "test", name: name),
   revision: 1,
 );
 
-catalog.TypeDisplay _display(String name, String icon, String color) =>
-    catalog.TypeDisplay(
+skir.TypeDisplay _display(String name, String icon, String color) =>
+    skir.TypeDisplay(
       name: name,
       description: "$name page",
       icon: icon,

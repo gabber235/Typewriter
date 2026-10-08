@@ -1,8 +1,3 @@
-import "dart:math" as math;
-
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "mutation_activity_details.dart";
@@ -48,10 +43,7 @@ class MutationActivityView extends StatelessWidget {
             clipBehavior: Clip.antiAlias,
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                maxHeight: math.min(
-                  MediaQuery.sizeOf(context).height * .75,
-                  580,
-                ),
+                maxHeight: min(MediaQuery.sizeOf(context).height * .75, 580),
               ),
               child: _ActivityDetails(
                 state: state,
@@ -79,7 +71,7 @@ class MutationActivityView extends StatelessWidget {
       targetAnchor: Alignment.bottomRight,
       popupAnchor: Alignment.topRight,
       offset: Offset(0, context.spacing.space2),
-      maxHeight: math.min(MediaQuery.sizeOf(context).height * .75, 580),
+      maxHeight: min(MediaQuery.sizeOf(context).height * .75, 580),
       popupBuilder: (context, close) => SizedBox(
         width: double.infinity,
         child: _ActivityDetails(

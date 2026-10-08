@@ -14,7 +14,7 @@ final class _ConnectionLayerSurface extends StatefulWidget {
     required this.child,
   });
 
-  final List<PresentationConnection> connections;
+  final List<skir.PresentationConnection> connections;
   final PortablePresentationScope scope;
   final Widget child;
 
@@ -103,7 +103,7 @@ final class _ConnectionLayerRenderSurface
     required super.child,
   });
 
-  final List<PresentationConnection> connections;
+  final List<skir.PresentationConnection> connections;
   final PortablePresentationScope scope;
   final TextDirection textDirection;
   final ValueChanged<_ConnectionOverlay> onOverlayChanged;
@@ -145,7 +145,7 @@ final class _RenderConnectionLayerSurface extends RenderProxyBox {
     required this._onOverlayChanged,
   });
 
-  List<PresentationConnection> _connections;
+  List<skir.PresentationConnection> _connections;
   PortablePresentationScope _scope;
   TextDirection _textDirection;
   ValueChanged<_ConnectionOverlay> _onOverlayChanged;
@@ -158,7 +158,7 @@ final class _RenderConnectionLayerSurface extends RenderProxyBox {
   _ConnectionResolution get debugResolution => _lastResolution;
 
   void update({
-    required List<PresentationConnection> connections,
+    required List<skir.PresentationConnection> connections,
     required PortablePresentationScope scope,
     required TextDirection textDirection,
     required ValueChanged<_ConnectionOverlay> onOverlayChanged,

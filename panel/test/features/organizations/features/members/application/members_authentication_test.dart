@@ -1,5 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
@@ -34,7 +35,7 @@ void main() {
       expect(
         () => container
             .read(organizationMembersProvider.notifier)
-            .updateMemberRoles([recordId("user:m1")], []),
+            .updateMemberRoles([skir.recordId("user:m1")], []),
         throwsA(isA<ApiException>()),
       );
     });
@@ -56,7 +57,7 @@ void main() {
       expect(
         () => container
             .read(organizationMembersProvider.notifier)
-            .updateMemberRoles([recordId("user:m1")], []),
+            .updateMemberRoles([skir.recordId("user:m1")], []),
         throwsA(isA<ApiException>()),
       );
     });
@@ -78,7 +79,7 @@ void main() {
       expect(
         () => container
             .read(organizationMembersProvider.notifier)
-            .removeMember(recordId("user:m1")),
+            .removeMember(skir.recordId("user:m1")),
         throwsA(isA<ApiException>()),
       );
     });
@@ -100,7 +101,7 @@ void main() {
       expect(
         () => container
             .read(organizationMembersProvider.notifier)
-            .removeMember(recordId("user:m1")),
+            .removeMember(skir.recordId("user:m1")),
         throwsA(isA<ApiException>()),
       );
     });

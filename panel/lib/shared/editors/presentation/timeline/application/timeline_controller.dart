@@ -1,9 +1,3 @@
-import "dart:math" as math;
-
-import "package:collection/collection.dart";
-import "package:flutter/material.dart";
-import "package:flutter/scheduler.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// The edit operation represented by an active timeline preview.
@@ -54,9 +48,9 @@ class ExactFrameConstraint implements FrameConstraint {
   bool operator >=(int frame) => this.frame >= frame;
 
   @override
-  int coerceAtLeast(int frame) => math.max(this.frame, frame);
+  int coerceAtLeast(int frame) => max(this.frame, frame);
   @override
-  int coerceAtMost(int frame) => math.min(this.frame, frame);
+  int coerceAtMost(int frame) => min(this.frame, frame);
 
   @override
   String toString() => "ExactFrameConstraint($frame)";
@@ -73,7 +67,7 @@ class InfiniteFrameConstraint implements FrameConstraint {
   bool operator >=(int frame) => true;
 
   @override
-  int coerceAtLeast(int frame) => math.max(0, frame);
+  int coerceAtLeast(int frame) => max(0, frame);
   @override
   int coerceAtMost(int frame) => frame;
 
@@ -235,7 +229,7 @@ class ResizeEndTimelinePreview implements TimelinePreview {
 
   @override
   TimelinePreview update(int frameDelta) {
-    final nextEnd = math.max(
+    final nextEnd = max(
       startFrame,
       endFrameRange.coerceIn(originalEndFrame + frameDelta),
     );
@@ -313,8 +307,8 @@ class TimelineController extends ChangeNotifier {
 
   void panBy({double dx = 0, double dy = 0, bool animate = true}) {
     if (dx == 0 && dy == 0) return;
-    final nextHorizontalOffset = math.max(0.0, _horizontalOffset.target + dx);
-    final nextVerticalOffset = math.max(0.0, _verticalOffset.target + dy);
+    final nextHorizontalOffset = max(0.0, _horizontalOffset.target + dx);
+    final nextVerticalOffset = max(0.0, _verticalOffset.target + dy);
     if (nextHorizontalOffset == _horizontalOffset.target &&
         nextVerticalOffset == _verticalOffset.target) {
       return;
@@ -345,7 +339,7 @@ class TimelineController extends ChangeNotifier {
     if (oldPixelsPerFrame == nextPixelsPerFrame) return;
     final anchorFrame =
         (_horizontalOffset.target + localDx) / oldPixelsPerFrame;
-    final nextHorizontalOffset = math.max(
+    final nextHorizontalOffset = max(
       0.0,
       anchorFrame * nextPixelsPerFrame - localDx,
     );
@@ -384,14 +378,14 @@ class TimelineController extends ChangeNotifier {
         .map((placement) => placement.element.endFrame)
         .maxOrNull!;
 
-    final displayFrameSpan = math.max(1, endFrame - startFrame);
+    final displayFrameSpan = max(1, endFrame - startFrame);
 
     final width = viewport.planeWidth;
     final nextPixelsPerFrame = (width / displayFrameSpan).clamp(
       minPixelsPerFrame,
       maxPixelsPerFrame,
     );
-    final nextHorizontalOffset = math.max(0.0, startFrame * nextPixelsPerFrame);
+    final nextHorizontalOffset = max(0.0, startFrame * nextPixelsPerFrame);
     if (nextPixelsPerFrame == _pixelsPerFrame.target &&
         nextHorizontalOffset == _horizontalOffset.target) {
       return true;
@@ -415,11 +409,11 @@ class TimelineController extends ChangeNotifier {
   }) {
     final elementRect = element.rect;
     final targetOffset = elementRect.center;
-    final targetHorizontalOffset = math.max(
+    final targetHorizontalOffset = max(
       0.0,
       targetOffset.dx - viewport.planeWidth / 2,
     );
-    final targetVerticalOffset = math.max(
+    final targetVerticalOffset = max(
       0.0,
       targetOffset.dy - viewport.planeHeight / 2,
     );

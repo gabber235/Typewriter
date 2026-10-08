@@ -1,13 +1,6 @@
-import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/features/organizations/features/realms/application/authored_draft.dart";
-import "package:typewriter_panel/features/organizations/features/realms/application/authoring_session.dart";
-import "package:typewriter_panel/features/organizations/features/realms/presentation/authored_resource_inspection.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/shared/editors/editors.dart";
-import "package:typewriter_panel/shared/inspector/inspector.dart";
-import "package:typewriter_panel/shared/selectables/selectables.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 final class AuthoringResourceIdentifier extends SelectableIdentifier {
   const AuthoringResourceIdentifier({

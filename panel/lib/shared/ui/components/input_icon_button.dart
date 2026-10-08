@@ -1,4 +1,3 @@
-import "package:flutter/material.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// An icon action intended for the trailing edge of an input or query field.

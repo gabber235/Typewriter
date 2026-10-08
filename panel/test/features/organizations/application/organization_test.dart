@@ -1,13 +1,14 @@
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   group("JoinRequest expiration", () {
     test("isExpired returns false when expiresAt is in the future", () {
       final request = OrganizationJoinRequest(
-        requestId: recordId("request_to_join:req-1"),
-        userId: recordId("user:user-1"),
+        requestId: skir.recordId("request_to_join:req-1"),
+        userId: skir.recordId("user:user-1"),
         userName: "Test User",
         userEmail: "test@example.com",
         userAvatarUrl: "https://example.com/avatar.png",
@@ -20,8 +21,8 @@ void main() {
 
     test("isExpired returns true when expiresAt is in the past", () {
       final request = OrganizationJoinRequest(
-        requestId: recordId("request_to_join:req-1"),
-        userId: recordId("user:user-1"),
+        requestId: skir.recordId("request_to_join:req-1"),
+        userId: skir.recordId("user:user-1"),
         userName: "Test User",
         userEmail: "test@example.com",
         userAvatarUrl: "https://example.com/avatar.png",
@@ -35,8 +36,8 @@ void main() {
     test("remainingDuration calculates correctly for future expiry", () {
       final expiresAt = DateTime.now().add(const Duration(hours: 2));
       final request = OrganizationJoinRequest(
-        requestId: recordId("request_to_join:req-1"),
-        userId: recordId("user:user-1"),
+        requestId: skir.recordId("request_to_join:req-1"),
+        userId: skir.recordId("user:user-1"),
         userName: "Test User",
         userEmail: "test@example.com",
         userAvatarUrl: "https://example.com/avatar.png",
@@ -51,8 +52,8 @@ void main() {
 
     test("remainingDuration returns zero for past expiry", () {
       final request = OrganizationJoinRequest(
-        requestId: recordId("request_to_join:req-1"),
-        userId: recordId("user:user-1"),
+        requestId: skir.recordId("request_to_join:req-1"),
+        userId: skir.recordId("user:user-1"),
         userName: "Test User",
         userEmail: "test@example.com",
         userAvatarUrl: "https://example.com/avatar.png",
@@ -67,7 +68,7 @@ void main() {
   group("JoinCode expiration", () {
     test("isExpired returns false when expiresAt is null (never expires)", () {
       final code = OrganizationJoinCode(
-        code: recordId("organization_join_code:ABC123"),
+        code: skir.recordId("organization_join_code:ABC123"),
         createdAt: DateTime.now(),
         expiresAt: null,
       );
@@ -78,7 +79,7 @@ void main() {
 
     test("isExpired returns false when expiresAt is in the future", () {
       final code = OrganizationJoinCode(
-        code: recordId("organization_join_code:ABC123"),
+        code: skir.recordId("organization_join_code:ABC123"),
         createdAt: DateTime.now(),
         expiresAt: DateTime.now().add(const Duration(days: 7)),
       );
@@ -89,7 +90,7 @@ void main() {
 
     test("isExpired returns true when expiresAt is in the past", () {
       final code = OrganizationJoinCode(
-        code: recordId("organization_join_code:ABC123"),
+        code: skir.recordId("organization_join_code:ABC123"),
         createdAt: DateTime.now().subtract(const Duration(days: 14)),
         expiresAt: DateTime.now().subtract(const Duration(days: 7)),
       );
@@ -99,7 +100,7 @@ void main() {
 
     test("remainingDuration returns null when never expires", () {
       final code = OrganizationJoinCode(
-        code: recordId("organization_join_code:ABC123"),
+        code: skir.recordId("organization_join_code:ABC123"),
         createdAt: DateTime.now(),
         expiresAt: null,
       );
@@ -109,7 +110,7 @@ void main() {
 
     test("remainingDuration returns zero for past expiry", () {
       final code = OrganizationJoinCode(
-        code: recordId("organization_join_code:ABC123"),
+        code: skir.recordId("organization_join_code:ABC123"),
         createdAt: DateTime.now().subtract(const Duration(days: 14)),
         expiresAt: DateTime.now().subtract(const Duration(days: 1)),
       );
@@ -121,8 +122,8 @@ void main() {
   group("UserJoinRequest expiration", () {
     test("isExpired returns false when expiresAt is in the future", () {
       final request = UserJoinRequest(
-        requestId: recordId("request_to_join:req-1"),
-        organizationId: recordId("organization:org-1"),
+        requestId: skir.recordId("request_to_join:req-1"),
+        organizationId: skir.recordId("organization:org-1"),
         organizationName: "Test Org",
         organizationLogoUrl: "https://example.com/icon.png",
         requestedAt: DateTime.now(),
@@ -134,8 +135,8 @@ void main() {
 
     test("isExpired returns true when expiresAt is in the past", () {
       final request = UserJoinRequest(
-        requestId: recordId("request_to_join:req-1"),
-        organizationId: recordId("organization:org-1"),
+        requestId: skir.recordId("request_to_join:req-1"),
+        organizationId: skir.recordId("organization:org-1"),
         organizationName: "Test Org",
         organizationLogoUrl: "https://example.com/icon.png",
         requestedAt: DateTime.now().subtract(const Duration(days: 2)),
@@ -147,8 +148,8 @@ void main() {
 
     test("remainingDuration returns zero for expired request", () {
       final request = UserJoinRequest(
-        requestId: recordId("request_to_join:req-1"),
-        organizationId: recordId("organization:org-1"),
+        requestId: skir.recordId("request_to_join:req-1"),
+        organizationId: skir.recordId("organization:org-1"),
         organizationName: "Test Org",
         organizationLogoUrl: "https://example.com/icon.png",
         requestedAt: DateTime.now().subtract(const Duration(days: 2)),
@@ -162,7 +163,7 @@ void main() {
   group("MemberRole model", () {
     test("creates role with all fields", () {
       final role = OrganizationRole(
-        roleId: recordId("organization_role:role-1"),
+        roleId: skir.recordId("organization_role:role-1"),
         name: "Editor",
         color: Colors.blue,
         defaultRole: true,
@@ -170,7 +171,7 @@ void main() {
         deletable: false,
       );
 
-      expect(role.roleId, recordId("organization_role:role-1"));
+      expect(role.roleId, skir.recordId("organization_role:role-1"));
       expect(role.name, "Editor");
       expect(role.color, Colors.blue);
       expect(role.defaultRole, isTrue);
@@ -180,7 +181,7 @@ void main() {
 
     test("uses correct defaults", () {
       final role = OrganizationRole(
-        roleId: recordId("organization_role:role-1"),
+        roleId: skir.recordId("organization_role:role-1"),
         name: "Member",
         color: Colors.grey,
       );
@@ -208,16 +209,16 @@ void main() {
         expiration: JoinCodeExpiration.never(),
         singleUse: false,
         autoAcceptRoleIds: [
-          recordId("organization_role:role-1"),
-          recordId("organization_role:role-2"),
+          skir.recordId("organization_role:role-1"),
+          skir.recordId("organization_role:role-2"),
         ],
       );
 
       expect(options.singleUse, isFalse);
       expect(options.expiration, const JoinCodeExpiration.never());
       expect(options.autoAcceptRoleIds, [
-        recordId("organization_role:role-1"),
-        recordId("organization_role:role-2"),
+        skir.recordId("organization_role:role-1"),
+        skir.recordId("organization_role:role-2"),
       ]);
     });
 

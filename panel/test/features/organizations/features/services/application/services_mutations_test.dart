@@ -1,7 +1,4 @@
-import "dart:typed_data";
-
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -10,10 +7,10 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 const _bindSubject = "cloud.to.user.user1.organization.org1.services.bind";
 const _updateSubject = "cloud.to.user.user1.organization.org1.services.update";
 const _unbindSubject = "cloud.to.user.user1.organization.org1.services.unbind";
-final _organizationId = recordId("organization:org1");
+final _organizationId = skir.recordId("organization:org1");
 
 Service _service({String name = "Original", int revision = 1}) => Service(
-  serviceId: recordId("service:service1"),
+  serviceId: skir.recordId("service:service1"),
   revision: revision,
   name: name,
   role: HostServiceRole(version: "1"),

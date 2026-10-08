@@ -1,8 +1,10 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Shared payload contract for resource nodes dropped onto reference controls.
 abstract interface class ReferenceResourceDragData {
-  ResourceId get referenceId;
+  skir.ResourceId get referenceId;
   List<ResolvedTypeRef> get referenceTypes;
 }
 

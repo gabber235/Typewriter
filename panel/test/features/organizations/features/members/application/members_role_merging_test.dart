@@ -1,6 +1,4 @@
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -41,7 +39,7 @@ void main() {
       );
 
       final member = OrganizationMember(
-        userId: recordId("user:m1"),
+        userId: skir.recordId("user:m1"),
         name: "Test",
         email: "test@test.com",
         avatarUrl: "",
@@ -74,7 +72,7 @@ void main() {
         return skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
           successfulMemberUpdate([
             skir.OrganizationMember(
-              userId: recordId("user:m1"),
+              userId: skir.recordId("user:m1"),
               name: "Test",
               email: "test@test.com",
               avatarUrl: "",
@@ -87,19 +85,19 @@ void main() {
 
       await container
           .read(organizationMembersProvider.notifier)
-          .updateMemberRoles([recordId("user:m1")], [newRole]);
+          .updateMemberRoles([skir.recordId("user:m1")], [newRole]);
 
       expect(capturedRoleIds, isNotNull);
       expect(
-        capturedRoleIds!.contains(recordId("organization_role:owner")),
+        capturedRoleIds!.contains(skir.recordId("organization_role:owner")),
         false,
       );
       expect(
-        capturedRoleIds!.contains(recordId("organization_role:viewer")),
+        capturedRoleIds!.contains(skir.recordId("organization_role:viewer")),
         true,
       );
       expect(
-        capturedRoleIds!.contains(recordId("organization_role:editor")),
+        capturedRoleIds!.contains(skir.recordId("organization_role:editor")),
         false,
       );
     });
@@ -144,7 +142,7 @@ void main() {
         return skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
           successfulMemberUpdate([
             skir.OrganizationMember(
-              userId: recordId("user:m1"),
+              userId: skir.recordId("user:m1"),
               name: "Test",
               email: "test@test.com",
               avatarUrl: "",
@@ -158,17 +156,17 @@ void main() {
       await container
           .read(organizationMembersProvider.notifier)
           .updateMemberRoles(
-            [recordId("user:m1")],
+            [skir.recordId("user:m1")],
             [assignableRole, nonAssignableRequested],
           );
 
       expect(capturedRoleIds, isNotNull);
       expect(
-        capturedRoleIds!.contains(recordId("organization_role:member")),
+        capturedRoleIds!.contains(skir.recordId("organization_role:member")),
         true,
       );
       expect(
-        capturedRoleIds!.contains(recordId("organization_role:admin")),
+        capturedRoleIds!.contains(skir.recordId("organization_role:admin")),
         false,
       );
     });
@@ -177,7 +175,7 @@ void main() {
       "leaves empty role selection defaults to the atomic backend",
       () async {
         final defaultRole = OrganizationRole(
-          roleId: recordId("organization_role:default"),
+          roleId: skir.recordId("organization_role:default"),
           name: "Default",
           color: Colors.grey,
           defaultRole: true,
@@ -217,7 +215,7 @@ void main() {
           return skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
             successfulMemberUpdate([
               skir.OrganizationMember(
-                userId: recordId("user:m1"),
+                userId: skir.recordId("user:m1"),
                 name: "Test",
                 email: "test@test.com",
                 avatarUrl: "",
@@ -230,11 +228,11 @@ void main() {
 
         await container
             .read(organizationMembersProvider.notifier)
-            .updateMemberRoles([recordId("user:m1")], []);
+            .updateMemberRoles([skir.recordId("user:m1")], []);
 
         expect(capturedRoleIds, isNotNull);
         expect(
-          capturedRoleIds!.contains(recordId("organization_role:default")),
+          capturedRoleIds!.contains(skir.recordId("organization_role:default")),
           false,
         );
         expect(capturedRoleIds, isEmpty);

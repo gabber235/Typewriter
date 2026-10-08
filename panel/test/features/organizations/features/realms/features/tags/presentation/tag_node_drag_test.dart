@@ -1,11 +1,6 @@
-import "dart:async";
-
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/typewriter_panel.dart" as tags_lib;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../../../../../support/test_utils.dart";
@@ -40,7 +35,7 @@ void main() {
       await tester.pumpTestApp(
         settle: false,
         overrides: [
-          tags_lib.canonicalTagProvider(_testTagId).overrideWith((ref) {
+          canonicalTagProvider(_testTagId).overrideWith((ref) {
             ref.watch(_tagRefreshProvider);
             buildCount++;
             if (buildCount == 1) return tag;
@@ -73,7 +68,7 @@ void main() {
 
       expect(buildCount, 2);
       expect(
-        container.read(tags_lib.projectedTagProvider(_testTagId)).isLoading,
+        container.read(projectedTagProvider(_testTagId)).isLoading,
         isTrue,
       );
 
@@ -96,8 +91,7 @@ void main() {
 
       await tester.pumpTestApp(
         overrides: [
-          tags_lib
-              .projectedTagProvider(_testTagId)
+          projectedTagProvider(_testTagId)
               .overrideWith((ref) => AsyncData(tag)),
         ],
         child: Center(
@@ -142,8 +136,7 @@ void main() {
 
       await tester.pumpTestApp(
         overrides: [
-          tags_lib
-              .projectedTagProvider(_testTagId)
+          projectedTagProvider(_testTagId)
               .overrideWith((ref) => AsyncData(tag)),
         ],
         child: Center(
@@ -183,8 +176,7 @@ void main() {
 
       await tester.pumpTestApp(
         overrides: [
-          tags_lib
-              .projectedTagProvider(_testTagId)
+          projectedTagProvider(_testTagId)
               .overrideWith((ref) => AsyncData(tag)),
         ],
         child: Center(
@@ -223,8 +215,7 @@ void main() {
 
       await tester.pumpTestApp(
         overrides: [
-          tags_lib
-              .projectedTagProvider(_testTagId)
+          projectedTagProvider(_testTagId)
               .overrideWith((ref) => AsyncData(tag)),
         ],
         child: Center(
@@ -262,8 +253,7 @@ void main() {
 
       await tester.pumpTestApp(
         overrides: [
-          tags_lib
-              .projectedTagProvider(_testTagId)
+          projectedTagProvider(_testTagId)
               .overrideWith((ref) => AsyncData(tag)),
         ],
         child: Center(
@@ -297,8 +287,7 @@ void main() {
 
       await tester.pumpTestApp(
         overrides: [
-          tags_lib
-              .projectedTagProvider(_testTagId)
+          projectedTagProvider(_testTagId)
               .overrideWith((ref) => AsyncData(tag)),
         ],
         child: Center(
@@ -332,8 +321,7 @@ void main() {
 
       await tester.pumpTestApp(
         overrides: [
-          tags_lib
-              .projectedTagProvider(_testTagId)
+          projectedTagProvider(_testTagId)
               .overrideWith((ref) => AsyncData(tag)),
         ],
         child: Center(

@@ -1,3 +1,5 @@
+import "package:typewriter_panel/typewriter_panel.dart";
+
 /*
  * Editing is deliberately owned separately from persistence.
  *
@@ -9,8 +11,6 @@
  * themselves. Implementations notify listeners after an observable state
  * change and release all owned interaction state from dispose.
  */
-import "package:flutter/foundation.dart";
-import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Owns mutable typed values and reversible interactions, independently of
 /// saving.

@@ -1,6 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter_animate/flutter_animate.dart";
-import "package:okcolor/models/extensions.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Shared interactive surface for one editor search result.

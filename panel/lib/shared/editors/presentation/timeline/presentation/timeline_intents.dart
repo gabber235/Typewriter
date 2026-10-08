@@ -1,4 +1,4 @@
-import "package:flutter/widgets.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Requests one frame movement step for the active timeline edit mode.
 class TimelineMoveIntent extends Intent {

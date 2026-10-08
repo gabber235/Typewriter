@@ -1,5 +1,4 @@
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Provides two dimensional saturation and brightness selection for an HSV
 /// color.

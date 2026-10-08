@@ -1,4 +1,3 @@
-import "package:flutter/widgets.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 export "anchored_overlay_config.dart";

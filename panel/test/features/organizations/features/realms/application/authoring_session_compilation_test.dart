@@ -1,7 +1,4 @@
-import "dart:async";
-
 import "package:flutter_test/flutter_test.dart";
-import "package:riverpod/riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -136,8 +133,8 @@ void main() {
   );
 }
 
-final _organization = recordId("organization:org1");
-final _realm = recordId("service:realm1");
+final _organization = skir.recordId("organization:org1");
+final _realm = skir.recordId("service:realm1");
 
 skir.PublicationReport _attempt(
   skir.PublicationState state, {

@@ -1,7 +1,4 @@
-import "dart:math" as math;
-
-import "package:flutter/rendering.dart";
-import "package:flutter/widgets.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Centers a sliver group when its content is shorter than the viewport.
 ///
@@ -33,12 +30,11 @@ class _RenderCenteredSliverMainAxisGroup extends RenderSliverEdgeInsetsPadding {
       return;
     }
 
-    final fillExtent = math.max(
+    final fillExtent = max(
       0.0,
       constraints.viewportMainAxisExtent - constraints.precedingScrollExtent,
     );
-    final paddingExtent =
-        math.max(0.0, fillExtent - childGeometry.scrollExtent) / 2;
+    final paddingExtent = max(0.0, fillExtent - childGeometry.scrollExtent) / 2;
     final nextPadding = switch (constraints.axis) {
       Axis.vertical => EdgeInsets.symmetric(vertical: paddingExtent),
       Axis.horizontal => EdgeInsets.symmetric(horizontal: paddingExtent),

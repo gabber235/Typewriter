@@ -1,9 +1,5 @@
-import "dart:async";
-
-import "package:flutter/foundation.dart";
-import "package:freezed_annotation/freezed_annotation.dart";
-import "package:riverpod/riverpod.dart";
-import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "local_work.freezed.dart";
@@ -17,7 +13,7 @@ part "local_work.g.dart";
 abstract class LocalWorkScope with _$LocalWorkScope {
   const factory LocalWorkScope({
     required String? userId,
-    required RecordId? organizationId,
+    required skir.RecordId? organizationId,
   }) = _LocalWorkScope;
 }
 
@@ -28,8 +24,8 @@ abstract class LocalWorkScope with _$LocalWorkScope {
 @freezed
 abstract class EditorResourceScope with _$EditorResourceScope {
   const factory EditorResourceScope({
-    required RecordId organizationId,
-    RecordId? realmId,
+    required skir.RecordId organizationId,
+    skir.RecordId? realmId,
   }) = _EditorResourceScope;
 }
 

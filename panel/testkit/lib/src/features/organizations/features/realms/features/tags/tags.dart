@@ -1,10 +1,7 @@
-import "dart:math" as math;
-
-import "package:faker/faker.dart" hide Color;
-import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:faker/faker.dart" hide Color, random;
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/typewriter_panel.dart" hide random;
+import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/src/shared/testing/testing.dart";
 
 part "tag_batch_layout.dart";
@@ -21,7 +18,7 @@ List<Tag> generateTagBatch(int count) {
   final rawTags = _generateRawTags(count);
   final layerMap = rawTags._calculateLayers();
 
-  final maxLayer = layerMap.values.fold(0, math.max);
+  final maxLayer = layerMap.values.fold(0, max);
   final layers = List.generate(
     maxLayer + 1,
     (i) => rawTags.where((t) => layerMap[t.tagId] == i).toList(),
@@ -38,7 +35,7 @@ List<Tag> _generateRawTags(int count) {
     final parentIds = <skir.ResourceId>[];
 
     if (i > 0 && tags.isNotEmpty) {
-      final prob = random.decimal();
+      final prob = faker.randomGenerator.decimal();
       final parentCount = prob < _probNoParents
           ? 0
           : prob < _probOneParent
@@ -47,8 +44,8 @@ List<Tag> _generateRawTags(int count) {
 
       final available = tags.toList();
       for (int p = 0; p < parentCount && available.isNotEmpty; p++) {
-        final recentWindow = math.min(_recentParentWindow, available.length);
-        final offset = random.integer(recentWindow, min: 0);
+        final recentWindow = min(_recentParentWindow, available.length);
+        final offset = faker.randomGenerator.integer(recentWindow, min: 0);
         final parentIndex = available.length - 1 - offset;
         final parent = available.removeAt(parentIndex);
         parentIds.add(parent.tagId);
@@ -59,7 +56,7 @@ List<Tag> _generateRawTags(int count) {
       Tag(
         tagId: skir.ResourceId(value: "tag:${faker.guid.guid()}"),
         name: faker.lorem
-            .words(random.integer(3, min: 1))
+            .words(faker.randomGenerator.integer(3, min: 1))
             .join(" ")
             .snakeCase(),
         color: safeColors.randomElement(),
@@ -76,14 +73,17 @@ List<Tag> _generateRawTags(int count) {
 Tag generateRandomTag() {
   return Tag(
     tagId: skir.ResourceId(value: "tag:${faker.guid.guid()}"),
-    name: faker.lorem.words(random.integer(4, min: 1)).join(" ").snakeCase(),
+    name: faker.lorem
+        .words(faker.randomGenerator.integer(4, min: 1))
+        .join(" ")
+        .snakeCase(),
     color: safeColors.randomElement(),
     parentIds: const [],
     placement: GraphPlacement(
-      x: random.integer(20),
-      y: random.integer(10),
-      width: random.integer(6, min: 2),
-      height: random.integer(3, min: 1),
+      x: faker.randomGenerator.integer(20),
+      y: faker.randomGenerator.integer(10),
+      width: faker.randomGenerator.integer(6, min: 2),
+      height: faker.randomGenerator.integer(3, min: 1),
     ),
   );
 }

@@ -1,27 +1,23 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/checking.dart"
-    as checking;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/diagnostic.dart"
-    as wire_diagnostic;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 
 final class AuthoredFindingView {
   const AuthoredFindingView({required this.source, required this.diagnostic});
 
-  final checking.FindingSet source;
-  final wire_diagnostic.Diagnostic diagnostic;
+  final skir.FindingSet source;
+  final skir.Diagnostic diagnostic;
 
-  bool get isOutdated => source.status == checking.FindingStatus.outdated;
+  bool get isOutdated => source.status == skir.FindingStatus.outdated;
 }
 
-extension AuthoredFindingProjection on Iterable<checking.FindingSet> {
-  List<AuthoredFindingView> atResource(types.ResourceId resource) {
+extension AuthoredFindingProjection on Iterable<skir.FindingSet> {
+  List<AuthoredFindingView> atResource(skir.ResourceId resource) {
     final projected = <AuthoredFindingView>[];
     for (final set in this) {
       final fallback = set.ticket.instance.location.resource;
-      final diagnostics = <wire_diagnostic.Diagnostic>[
+      final diagnostics = <skir.Diagnostic>[
         ...set.findings,
-        if (set.outcome case checking.CheckOutcome_failedWrapper(:final value))
+        if (set.outcome case skir.CheckOutcome_failedWrapper(:final value))
           ...value,
       ];
       for (final finding in diagnostics) {

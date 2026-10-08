@@ -1,5 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter_animate/flutter_animate.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Communicates that the current graph drop cannot create an inheritance link.

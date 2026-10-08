@@ -1,9 +1,10 @@
+import "package:typewriter_panel/typewriter_panel.dart";
+
 // Hosts the panel body in the app's single opaque overlay entry.
 //
 // The entry is retained across widget rebuilds so overlay descendants keep
 // their route and focus state. Replacing child updates that entry without
 // replacing the surrounding Overlay.
-import "package:flutter/material.dart";
 
 class AppOverlay extends StatefulWidget {
   const AppOverlay({required this.child, super.key});

@@ -1,4 +1,4 @@
-import "package:flutter/widgets.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Named predicates for resolving Flutter widget state sets.
 ///

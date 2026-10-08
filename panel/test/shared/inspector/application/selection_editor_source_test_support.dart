@@ -198,11 +198,11 @@ final class _OwnerInspectionHost extends ChangeNotifier
   _OwnerInspectionHost(this.owner, {this.onDispose})
     : _document = PortablePresentationDocument(
         catalog: CheckedEditorCatalog(
-          portable_catalog.EditorCatalogWireSnapshot.defaultInstance,
+          skir.EditorCatalogWireSnapshot.defaultInstance,
         ),
-        root: portable_presentation.PresentationNode.defaultInstance,
+        root: skir.PresentationNode.defaultInstance,
         bindings: const {},
-        budget: portable_expression.EvaluationBudget.defaultInstance,
+        budget: skir.EvaluationBudget.defaultInstance,
       );
 
   final EditOwner owner;
@@ -225,27 +225,24 @@ final class _OwnerInspectionHost extends ChangeNotifier
 
   @override
   Future<PortablePresentationWriteResult> execute(
-    portable_action.EditorAction editorAction,
+    skir.EditorAction editorAction,
   ) async => const PortablePresentationWriteResult.rejected(
     "This test host has no actions",
   );
 
   @override
-  portable_types.TypeUse? expectedType(portable_binding.BindingRef reference) =>
-      null;
+  skir.TypeUse? expectedType(skir.BindingRef reference) => null;
 
   @override
-  portable_types.ValueLocation? location(
-    portable_binding.BindingRef reference,
-  ) => null;
+  skir.ValueLocation? location(skir.BindingRef reference) => null;
 
   @override
-  portable_types.DataValue? read(portable_binding.BindingRef reference) => null;
+  skir.DataValue? read(skir.BindingRef reference) => null;
 
   @override
   Future<PortablePresentationWriteResult> write(
-    portable_binding.BindingRef reference,
-    portable_types.DataValue value,
+    skir.BindingRef reference,
+    skir.DataValue value,
   ) async => const PortablePresentationWriteResult.rejected(
     "This test host has no bindings",
   );

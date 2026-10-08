@@ -1,19 +1,15 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/features/organizations/features/realms/application/authored_library_values.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring.dart"
-    as authoring;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as catalog;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   test("book reads tagged visual values and relation items", () {
     final tag = skir.ResourceId(value: "tag:one");
     final book = decodeAuthoredBook(
-      authoring.AuthoringResource(
+      skir.AuthoringResource(
         id: skir.ResourceId(value: "book:one"),
-        definition: catalog.ResourceDefinitionId(value: "typewriter.book"),
+        definition: skir.ResourceDefinitionId(value: "typewriter.book"),
         content: skir.AuthoringRecord(
           configuration: skir.TypeSelection.unknown,
           fields: [
@@ -60,9 +56,9 @@ void main() {
   test("book reads the generated SVG icon payload", () {
     const source = "<svg viewBox=\"0 0 1 1\"></svg>";
     final book = decodeAuthoredBook(
-      authoring.AuthoringResource(
+      skir.AuthoringResource(
         id: skir.ResourceId(value: "book:svg"),
-        definition: catalog.ResourceDefinitionId(value: "typewriter.book"),
+        definition: skir.ResourceDefinitionId(value: "typewriter.book"),
         content: skir.AuthoringRecord(
           configuration: skir.TypeSelection.unknown,
           fields: [
@@ -91,9 +87,9 @@ void main() {
   test("tag reads tagged placement and parent links", () {
     final parent = skir.ResourceId(value: "tag:parent");
     final tag = decodeAuthoredTag(
-      authoring.AuthoringResource(
+      skir.AuthoringResource(
         id: skir.ResourceId(value: "tag:child"),
-        definition: catalog.ResourceDefinitionId(value: "typewriter.tag"),
+        definition: skir.ResourceDefinitionId(value: "typewriter.tag"),
         content: skir.AuthoringRecord(
           configuration: skir.TypeSelection.unknown,
           fields: [
@@ -148,9 +144,9 @@ void main() {
       arguments: const [skir.ArgumentSelection.unfilled],
     );
     final page = decodeAuthoredPage(
-      authoring.AuthoringResource(
+      skir.AuthoringResource(
         id: skir.ResourceId(value: "page:one"),
-        definition: catalog.ResourceDefinitionId(value: "typewriter.page"),
+        definition: skir.ResourceDefinitionId(value: "typewriter.page"),
         content: skir.AuthoringRecord(
           configuration: configuration,
           fields: [
@@ -345,13 +341,13 @@ void main() {
   });
 }
 
-authoring.AuthoringResource _resource(
+skir.AuthoringResource _resource(
   String id,
   String definition,
   List<skir.FieldValue> fields,
-) => authoring.AuthoringResource(
+) => skir.AuthoringResource(
   id: skir.ResourceId(value: id),
-  definition: catalog.ResourceDefinitionId(value: definition),
+  definition: skir.ResourceDefinitionId(value: definition),
   content: skir.AuthoringRecord(
     configuration: skir.TypeSelection.unknown,
     fields: fields,

@@ -1,9 +1,4 @@
-import "dart:ui" as ui;
-
-import "package:flutter/material.dart" hide Page;
-import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -16,8 +11,8 @@ void main() {
     "sidebar Edit keyboard action inspects the page without toggling it",
     (tester) async {
       final image = await tester.runAsync(() async {
-        final recorder = ui.PictureRecorder();
-        ui.Canvas(recorder);
+        final recorder = PictureRecorder();
+        Canvas(recorder);
         return recorder.endRecording().toImage(1, 1);
       });
       final avatar = NetworkImage(mockUserInfo.avatarUrl!);
@@ -375,7 +370,7 @@ skir.ValueLocation _field(skir.ResourceId id) => skir.ValueLocation(
 final _page = skir.ResourceId(value: "page:test");
 final _second = skir.ResourceId(value: "page:second");
 final _generation = skir.CatalogGeneration(value: "catalog:page");
-final _organization = recordId("organization:test");
-final _realm = recordId("realm:test");
+final _organization = skir.recordId("organization:test");
+final _realm = skir.recordId("realm:test");
 
 final _book = skir.ResourceId(value: "book:test");

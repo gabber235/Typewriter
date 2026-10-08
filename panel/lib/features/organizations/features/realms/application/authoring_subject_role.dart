@@ -1,11 +1,5 @@
-import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as catalog_wire;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
-    as expression;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 final class AuthoringSubjectRole extends ConsumerWidget {
@@ -15,8 +9,8 @@ final class AuthoringSubjectRole extends ConsumerWidget {
     super.key,
   });
 
-  final types.ResourceId resourceId;
-  final catalog_wire.PresentationRole role;
+  final skir.ResourceId resourceId;
+  final skir.PresentationRole role;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -38,10 +32,7 @@ final class AuthoringSubjectRole extends ConsumerWidget {
       draft: draft,
       catalog: catalog,
       role: role,
-      budget: expression.EvaluationBudget(
-        maxSteps: 10000,
-        maxCollectionItems: 10000,
-      ),
+      budget: skir.EvaluationBudget(maxSteps: 10000, maxCollectionItems: 10000),
       enabled: false,
     );
   }

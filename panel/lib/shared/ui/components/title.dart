@@ -1,5 +1,4 @@
-import "package:auto_size_text/auto_size_text.dart";
-import "package:flutter/material.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Renders the prominent title used by inspector and editor headers.
 ///

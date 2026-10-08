@@ -1,32 +1,30 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as catalog_wire;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   test("named scalar payload keeps its checked identity", () {
     final chapter = _definition("ChapterPath");
     final page = _definition("Page");
-    final expected = types.TypeUse.createNamed(
+    final expected = skir.TypeUse.createNamed(
       definition: chapter,
       arguments: const [],
     );
     final checked = _catalog([
       _published(
         chapter,
-        representation: types.RepresentationTemplate.createScalar(
-          kind: types.ScalarKind.text,
+        representation: skir.RepresentationTemplate.createScalar(
+          kind: skir.ScalarKind.text,
         ),
       ),
       _published(
         page,
         effectiveFields: [
-          catalog_wire.EffectiveFieldTemplate(
+          skir.EffectiveFieldTemplate(
             key: "chapter",
-            owner: types.FieldOwner(definition: page, name: "chapter"),
-            type: types.TypeTemplate.createNamed(
+            owner: skir.FieldOwner(definition: page, name: "chapter"),
+            type: skir.TypeTemplate.createNamed(
               definition: chapter,
               arguments: const [],
             ),
@@ -35,24 +33,19 @@ void main() {
         ],
       ),
     ]);
-    final payload = types.DataValue.wrapStringValue("opening");
+    final payload = skir.DataValue.wrapStringValue("opening");
 
     expect(checked.admitsPortableValue(expected, payload), isFalse);
     final admitted = checked.admitPortablePayloadAt(
-      types.TypeSelection.createComplete(definition: page, arguments: const []),
-      types.ValuePath(
-        segments: [types.PathSegment.createField(name: "chapter")],
-      ),
+      skir.TypeSelection.createComplete(definition: page, arguments: const []),
+      skir.ValuePath(segments: [skir.PathSegment.createField(name: "chapter")]),
       payload,
     );
 
     expect(
       admitted,
-      types.DataValue.createNamed(
-        actualType: types.NamedTypeUse(
-          definition: chapter,
-          arguments: const [],
-        ),
+      skir.DataValue.createNamed(
+        actualType: skir.NamedTypeUse(definition: chapter, arguments: const []),
         payload: payload,
       ),
     );
@@ -62,17 +55,17 @@ void main() {
   test("rejects an application whose argument violates its bound", () {
     final marker = _definition("Marker");
     final box = _definition("Box");
-    final parameter = types.ParameterKey(owner: box, index: 0);
+    final parameter = skir.ParameterKey(owner: box, index: 0);
     final checked = _catalog([
       _published(marker),
       _published(
         box,
         parameters: [
-          types.TypeParameter(
+          skir.TypeParameter(
             key: parameter,
             name: "T",
             bounds: [
-              types.TypeTemplate.createNamed(
+              skir.TypeTemplate.createNamed(
                 definition: marker,
                 arguments: const [],
               ),
@@ -81,35 +74,35 @@ void main() {
         ],
       ),
     ]);
-    final invalid = types.NamedTypeUse(
+    final invalid = skir.NamedTypeUse(
       definition: box,
-      arguments: [types.TypeUse.wrapScalar(types.ScalarKind.text)],
+      arguments: [skir.TypeUse.wrapScalar(skir.ScalarKind.text)],
     );
     final value = _emptyRecord(invalid);
 
     expect(
       checked.isReadableAs(
-        types.TypeUse.wrapNamed(invalid),
-        types.TypeUse.wrapNamed(invalid),
+        skir.TypeUse.wrapNamed(invalid),
+        skir.TypeUse.wrapNamed(invalid),
       ),
       isTrue,
     );
     expect(checked.isReadyApplication(invalid), isFalse);
     expect(
-      checked.admitsPortableValue(types.TypeUse.wrapNamed(invalid), value),
+      checked.admitsPortableValue(skir.TypeUse.wrapNamed(invalid), value),
       isFalse,
     );
 
-    final valid = types.NamedTypeUse(
+    final valid = skir.NamedTypeUse(
       definition: box,
       arguments: [
-        types.TypeUse.createNamed(definition: marker, arguments: const []),
+        skir.TypeUse.createNamed(definition: marker, arguments: const []),
       ],
     );
     expect(checked.isReadyApplication(valid), isTrue);
     expect(
       checked.admitsPortableValue(
-        types.TypeUse.wrapNamed(valid),
+        skir.TypeUse.wrapNamed(valid),
         _emptyRecord(valid),
       ),
       isTrue,
@@ -121,25 +114,22 @@ void main() {
     final checked = _catalog([
       _published(
         unavailable,
-        status: catalog_wire.DeclarationStatus.wrapUnavailable(const []),
+        status: skir.DeclarationStatus.wrapUnavailable(const []),
       ),
     ]);
-    final use = types.NamedTypeUse(
-      definition: unavailable,
-      arguments: const [],
-    );
+    final use = skir.NamedTypeUse(definition: unavailable, arguments: const []);
 
     expect(
       checked.isReadableAs(
-        types.TypeUse.wrapNamed(use),
-        types.TypeUse.wrapNamed(use),
+        skir.TypeUse.wrapNamed(use),
+        skir.TypeUse.wrapNamed(use),
       ),
       isTrue,
     );
     expect(checked.isReadyApplication(use), isFalse);
     expect(
       checked.admitsPortableValue(
-        types.TypeUse.wrapNamed(use),
+        skir.TypeUse.wrapNamed(use),
         _emptyRecord(use),
       ),
       isFalse,
@@ -148,33 +138,33 @@ void main() {
 
   test("rejects unknown scalar kinds inside named applications", () {
     final box = _definition("Box");
-    final parameter = types.ParameterKey(owner: box, index: 0);
+    final parameter = skir.ParameterKey(owner: box, index: 0);
     final checked = _catalog([
       _published(
         box,
         parameters: [
-          types.TypeParameter(key: parameter, name: "T", bounds: const []),
+          skir.TypeParameter(key: parameter, name: "T", bounds: const []),
         ],
       ),
     ]);
     final applications = [
-      types.NamedTypeUse(
+      skir.NamedTypeUse(
         definition: box,
-        arguments: [types.TypeUse.wrapScalar(types.ScalarKind.unknown)],
+        arguments: [skir.TypeUse.wrapScalar(skir.ScalarKind.unknown)],
       ),
-      types.NamedTypeUse(
+      skir.NamedTypeUse(
         definition: box,
         arguments: [
-          types.TypeUse.wrapScalar(
-            types.ScalarKind.createInteger(width: types.IntegerWidth.unknown),
+          skir.TypeUse.wrapScalar(
+            skir.ScalarKind.createInteger(width: skir.IntegerWidth.unknown),
           ),
         ],
       ),
-      types.NamedTypeUse(
+      skir.NamedTypeUse(
         definition: box,
         arguments: [
-          types.TypeUse.wrapScalar(
-            types.ScalarKind.createFloat(width: types.FloatWidth.unknown),
+          skir.TypeUse.wrapScalar(
+            skir.ScalarKind.createFloat(width: skir.FloatWidth.unknown),
           ),
         ],
       ),
@@ -184,7 +174,7 @@ void main() {
       expect(checked.isReadyApplication(application), isFalse);
       expect(
         checked.admitsPortableValue(
-          types.TypeUse.wrapNamed(application),
+          skir.TypeUse.wrapNamed(application),
           _emptyRecord(application),
         ),
         isFalse,
@@ -193,10 +183,10 @@ void main() {
   });
 }
 
-CheckedEditorCatalog _catalog(List<catalog_wire.PublishedType> published) =>
+CheckedEditorCatalog _catalog(List<skir.PublishedType> published) =>
     CheckedEditorCatalog(
-      catalog_wire.EditorCatalogWireSnapshot(
-        generation: types.CatalogGeneration(value: "catalog:admission"),
+      skir.EditorCatalogWireSnapshot(
+        generation: skir.CatalogGeneration(value: "catalog:admission"),
         types: published,
         relations: const [],
         resourceDefinitions: const [],
@@ -212,20 +202,20 @@ CheckedEditorCatalog _catalog(List<catalog_wire.PublishedType> published) =>
       ),
     );
 
-catalog_wire.PublishedType _published(
-  types.TypeDefinitionId definition, {
-  List<types.TypeParameter> parameters = const [],
-  catalog_wire.DeclarationStatus status = catalog_wire.DeclarationStatus.ready,
-  types.RepresentationTemplate? representation,
-  List<catalog_wire.EffectiveFieldTemplate> effectiveFields = const [],
-}) => catalog_wire.PublishedType(
+skir.PublishedType _published(
+  skir.TypeDefinitionId definition, {
+  List<skir.TypeParameter> parameters = const [],
+  skir.DeclarationStatus status = skir.DeclarationStatus.ready,
+  skir.RepresentationTemplate? representation,
+  List<skir.EffectiveFieldTemplate> effectiveFields = const [],
+}) => skir.PublishedType(
   display: null,
-  definition: types.TypeDefinition(
+  definition: skir.TypeDefinition(
     id: definition,
     parameters: parameters,
     representation:
         representation ??
-        types.RepresentationTemplate.createRecord(
+        skir.RepresentationTemplate.createRecord(
           fields: const [],
           abstract_: false,
         ),
@@ -236,13 +226,13 @@ catalog_wire.PublishedType _published(
   ancestorTemplates: const [],
 );
 
-types.DataValue _emptyRecord(types.NamedTypeUse type) =>
-    types.DataValue.createNamed(
+skir.DataValue _emptyRecord(skir.NamedTypeUse type) =>
+    skir.DataValue.createNamed(
       actualType: type,
-      payload: types.DataValue.createRecord(fields: const []),
+      payload: skir.DataValue.createRecord(fields: const []),
     );
 
-types.TypeDefinitionId _definition(String name) => types.TypeDefinitionId(
-  typeId: types.TypeId.createQualified(namespace: "test", name: name),
+skir.TypeDefinitionId _definition(String name) => skir.TypeDefinitionId(
+  typeId: skir.TypeId.createQualified(namespace: "test", name: name),
   revision: 1,
 );

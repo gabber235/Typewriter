@@ -1,5 +1,3 @@
-import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -42,9 +40,9 @@ Widget bookAndTagSelectionStory({required bool sharedColor}) {
     overrides: [
       ...authoringSessionMockOverrides(books: [book], tags: [tag]),
       organizationIdProvider.overrideWithValue(
-        recordId("organization:widgetbook"),
+        skir.recordId("organization:widgetbook"),
       ),
-      realmIdProvider.overrideWithValue(recordId("service:widgetbook")),
+      realmIdProvider.overrideWithValue(skir.recordId("service:widgetbook")),
       ...tagsProviderOverrides(tags: [tag]),
       canonicalBooksProvider.overrideWith(() => _HeterogeneousBooks(book)),
     ],

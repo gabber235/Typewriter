@@ -1,7 +1,5 @@
-import "dart:async";
-
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 extension LoadingButtonWidgetTesterX on WidgetTester {
   Future<void> pumpLoadingButtonApp({required Widget child}) async {

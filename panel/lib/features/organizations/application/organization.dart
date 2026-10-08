@@ -1,7 +1,3 @@
-import "package:collection/collection.dart";
-import "package:flutter/foundation.dart";
-import "package:freezed_annotation/freezed_annotation.dart";
-import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -203,7 +199,7 @@ List<OrganizationData> _reduceOrganizations(
 skir.RecordId? organizationId(Ref ref) {
   final id = ref.watch(routeParamProvider("organizationId"));
   if (id == null) return null;
-  return recordId("organization:$id");
+  return skir.recordId("organization:$id");
 }
 
 /// Selects the routed organization from the user's canonical organization list.

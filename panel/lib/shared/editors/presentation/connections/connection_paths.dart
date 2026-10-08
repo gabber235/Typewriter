@@ -6,40 +6,40 @@ part of "portable_connections.dart";
 /// path. Curved control offsets are logical, so their horizontal component is
 /// mirrored for right to left layouts before the cubic path is built.
 Path? _resolvePath(
-  ConnectionPath configuration,
+  skir.ConnectionPath configuration,
   _LayerAnchor source,
   _LayerAnchor target,
   TextDirection textDirection,
   double cornerRadius,
   List<String> diagnostics,
 ) => switch (configuration.kind) {
-  ConnectionPath_kind.straightConst =>
+  skir.ConnectionPath_kind.straightConst =>
     Path()
       ..moveTo(source.position.dx, source.position.dy)
       ..lineTo(target.position.dx, target.position.dy),
-  ConnectionPath_kind.orthogonalWrapper => _orthogonalPath(
+  skir.ConnectionPath_kind.orthogonalWrapper => _orthogonalPath(
     source.position,
     target.position,
-    (configuration as ConnectionPath_orthogonalWrapper).value,
+    (configuration as skir.ConnectionPath_orthogonalWrapper).value,
     source.snapshot.scope,
     cornerRadius,
     diagnostics,
   ),
-  ConnectionPath_kind.curvedWrapper => _curvedPath(
+  skir.ConnectionPath_kind.curvedWrapper => _curvedPath(
     source.position,
     target.position,
-    (configuration as ConnectionPath_curvedWrapper).value,
+    (configuration as skir.ConnectionPath_curvedWrapper).value,
     source.snapshot.scope,
     textDirection,
     diagnostics,
   ),
-  ConnectionPath_kind.unknown => null,
+  skir.ConnectionPath_kind.unknown => null,
 };
 
 Path? _orthogonalPath(
   Offset source,
   Offset target,
-  OrthogonalConnectionPath configuration,
+  skir.OrthogonalConnectionPath configuration,
   PortablePresentationScope scope,
   double cornerRadius,
   List<String> diagnostics,
@@ -72,7 +72,7 @@ Path? _orthogonalPath(
 Path? _curvedPath(
   Offset source,
   Offset target,
-  CurvedConnectionPath configuration,
+  skir.CurvedConnectionPath configuration,
   PortablePresentationScope scope,
   TextDirection textDirection,
   List<String> diagnostics,
@@ -109,14 +109,14 @@ Path? _curvedPath(
 /// back to its target with radius bounded by available segment lengths. An
 /// empty target selection is handled by the caller and creates no geometry.
 _ResolvedBundlePaths? _resolveBundlePaths(
-  ConnectionBundlePath configuration,
+  skir.ConnectionBundlePath configuration,
   _LayerAnchor source,
   List<_LayerAnchor> targets,
   double trunkRadius,
   List<double> branchRadii,
   List<String> diagnostics,
 ) {
-  if (configuration.kind == ConnectionBundlePath_kind.fanConst) {
+  if (configuration.kind == skir.ConnectionBundlePath_kind.fanConst) {
     return _ResolvedBundlePaths(
       branches: [
         for (final target in targets)
@@ -126,8 +126,9 @@ _ResolvedBundlePaths? _resolveBundlePaths(
       ],
     );
   }
-  if (configuration case ConnectionBundlePath_unknown()) return null;
-  final path = (configuration as ConnectionBundlePath_orthogonalWrapper).value;
+  if (configuration case skir.ConnectionBundlePath_unknown()) return null;
+  final path =
+      (configuration as skir.ConnectionBundlePath_orthogonalWrapper).value;
   final bend = _evaluateUnit(
     path.bendPosition,
     source.snapshot.scope,
@@ -142,7 +143,7 @@ _ResolvedBundlePaths? _resolveBundlePaths(
           .reduce((left, right) => left + right) /
       targets.length.toDouble();
 
-  final vertical = path.axis.kind == ConnectionAxis_kind.verticalConst;
+  final vertical = path.axis.kind == skir.ConnectionAxis_kind.verticalConst;
   final trunkCoordinate = vertical
       ? _lerp(source.position.dx, average.dx, bend.valueOrNull!)
       : _lerp(source.position.dy, average.dy, bend.valueOrNull!);
@@ -155,9 +156,9 @@ _ResolvedBundlePaths? _resolveBundlePaths(
     for (final target in targets) _axisCoordinate(target.position, vertical),
   ];
 
-  final minimumAxis = targetAxes.reduce(math.min);
+  final minimumAxis = targetAxes.reduce(min);
 
-  final maximumAxis = targetAxes.reduce(math.max);
+  final maximumAxis = targetAxes.reduce(max);
   final primaryAxis = sourceAxis - minimumAxis >= maximumAxis - sourceAxis
       ? minimumAxis
       : maximumAxis;
@@ -209,10 +210,7 @@ Path _orthogonalBranch(
   final lateralDistance = vertical
       ? (target.dx - trunkCoordinate).abs()
       : (target.dy - trunkCoordinate).abs();
-  final approachDistance = math.min(
-    radius,
-    math.min(axialDistance, lateralDistance),
-  );
+  final approachDistance = min(radius, min(axialDistance, lateralDistance));
   final approach = vertical
       ? Offset(trunkCoordinate, target.dy - direction * approachDistance)
       : Offset(target.dx - direction * approachDistance, trunkCoordinate);
@@ -250,10 +248,7 @@ Path _roundedPath(List<Offset> points, double radius) {
     final incoming = corner - previous;
 
     final outgoing = next - corner;
-    final distance = math.min(
-      radius,
-      math.min(incoming.distance, outgoing.distance) / 2,
-    );
+    final distance = min(radius, min(incoming.distance, outgoing.distance) / 2);
     if (distance <= 0) {
       path.lineTo(corner.dx, corner.dy);
       continue;

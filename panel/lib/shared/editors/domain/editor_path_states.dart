@@ -1,4 +1,3 @@
-import "package:freezed_annotation/freezed_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "editor_path_states.freezed.dart";
@@ -189,10 +188,10 @@ abstract class EditorPathRecord with _$EditorPathRecord {
 
   const EditorPathRecord._();
 
-  bool get removable => progress == null && gate == null;
+  bool get removable => this.progress == null && gate == null;
 
   bool get dirty {
-    return switch (progress) {
+    return switch (this.progress) {
       PendingPathProgress() ||
       SavingPathProgress() ||
       FailedPathProgress() ||
@@ -203,7 +202,7 @@ abstract class EditorPathRecord with _$EditorPathRecord {
   }
 
   EditorSavePhase get phase {
-    return switch (progress) {
+    return switch (this.progress) {
       null => EditorSavePhase.idle,
       PendingPathProgress() => EditorSavePhase.pending,
       SavingPathProgress() => EditorSavePhase.saving,
@@ -221,11 +220,11 @@ abstract class EditorPathRecord with _$EditorPathRecord {
     return EditorSaveState(
       phase: phase,
       path: path,
-      conflict: switch (progress) {
+      conflict: switch (this.progress) {
         ConflictedPathProgress(:final conflict) => conflict,
         _ => null,
       },
-      diagnostics: switch (progress) {
+      diagnostics: switch (this.progress) {
         FailedPathProgress(:final diagnostics) => diagnostics,
         _ => const [],
       },

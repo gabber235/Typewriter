@@ -1,22 +1,15 @@
-import "package:flutter/widgets.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/binding.dart"
-    as binding;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
-    as expression;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/presentation.dart"
-    as presentation;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 typedef PortableBindingSetter = void Function(
-  binding.BindingRef reference,
-  types.DataValue value,
+  skir.BindingRef reference,
+  skir.DataValue value,
 );
 
 typedef PortableNamedPayloadBuilder = Widget Function(
   BuildContext context,
-  presentation.PresentationNode? customPresentation,
+  skir.PresentationNode? customPresentation,
   PortableNamedPayload payload,
 );
 
@@ -36,12 +29,12 @@ final class PortableNamedPayload {
     required this.setBinding,
   });
 
-  final binding.BindingRef reference;
-  final types.NamedTypeUse actualType;
-  final types.DataValue value;
-  final types.ValueLocation location;
-  final Map<types.ExpressionBindingId, PortableExpressionBinding> bindings;
-  final expression.EvaluationBudget budget;
+  final skir.BindingRef reference;
+  final skir.NamedTypeUse actualType;
+  final skir.DataValue value;
+  final skir.ValueLocation location;
+  final Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings;
+  final skir.EvaluationBudget budget;
   final PortableBindingSetter setBinding;
 
   PortableExpressionEvaluator evaluator() =>
@@ -52,10 +45,10 @@ final class PortableNamedPayload {
         additional: bindings,
       );
 
-  void replace(types.DataValue replacement) {
+  void replace(skir.DataValue replacement) {
     setBinding(
       reference,
-      types.DataValue.createNamed(actualType: actualType, payload: replacement),
+      skir.DataValue.createNamed(actualType: actualType, payload: replacement),
     );
   }
 }
@@ -71,9 +64,9 @@ final class PortableNamedControlHost extends StatelessWidget {
     super.key,
   });
 
-  final presentation.NamedControl control;
-  final Map<types.ExpressionBindingId, PortableExpressionBinding> bindings;
-  final expression.EvaluationBudget budget;
+  final skir.NamedControl control;
+  final Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings;
+  final skir.EvaluationBudget budget;
   final PortableBindingSetter setBinding;
   final PortableNamedPayloadBuilder builder;
   final PortableControlUnavailableBuilder unavailableBuilder;
@@ -92,7 +85,7 @@ final class PortableNamedControlHost extends StatelessWidget {
       PortablePathValue(:final value) => value,
       PortablePathUnavailable() => null,
     };
-    if (value is! types.DataValue_namedWrapper) {
+    if (value is! skir.DataValue_namedWrapper) {
       return unavailableBuilder(
         context,
         "The control binding is not a named value",
@@ -105,9 +98,9 @@ final class PortableNamedControlHost extends StatelessWidget {
         "The control binding has no authored location",
       );
     }
-    final location = types.ValueLocation(
+    final location = skir.ValueLocation(
       resource: baseLocation.resource,
-      path: types.ValuePath(
+      path: skir.ValuePath(
         segments: [...baseLocation.path.segments, ...reference.path.segments],
       ),
     );

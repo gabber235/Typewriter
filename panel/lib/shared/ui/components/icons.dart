@@ -1,6 +1,3 @@
-import "package:flutter/material.dart";
-import "package:http/http.dart" as http;
-import "package:jovial_svg/jovial_svg.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 final _iconRegex = RegExp(r"^([a-z0-9\-]+):([a-z0-9\-]+)$");
@@ -116,7 +113,7 @@ final class _IconifySource extends ScalableImageSource {
 /// response here so a failing host can be retried and its failure is visible.
 Future<ScalableImage> loadIconifySvg(
   String value, {
-  http.Client? client,
+  Client? client,
   List<String> hosts = _iconifyHosts,
 }) async {
   final match = _iconRegex.firstMatch(value);
@@ -124,7 +121,7 @@ Future<ScalableImage> loadIconifySvg(
     throw ArgumentError.value(value, "value", "Invalid Iconify name");
   }
   final ownedClient = client == null;
-  final connection = client ?? http.Client();
+  final connection = client ?? Client();
   final failures = <String>[];
   try {
     for (final host in hosts) {

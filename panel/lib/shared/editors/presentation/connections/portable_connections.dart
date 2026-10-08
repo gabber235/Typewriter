@@ -1,12 +1,5 @@
-import "dart:math" as math;
-
-import "package:flutter/foundation.dart" show listEquals;
-import "package:flutter/material.dart";
-import "package:flutter/rendering.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/presentation.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "connection_geometry.dart";
@@ -34,7 +27,7 @@ final class _ConnectionResult<T> {
 }
 
 extension on PortableExpressionResult {
-  types.DataValue? get valueOrNull => switch (this) {
+  skir.DataValue? get valueOrNull => switch (this) {
     PortableExpressionAvailable(:final value) => value,
     PortableExpressionUnavailable() || PortableExpressionFailed() => null,
   };

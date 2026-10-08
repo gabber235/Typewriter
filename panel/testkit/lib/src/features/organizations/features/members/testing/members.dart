@@ -1,12 +1,10 @@
-import "dart:async";
-
-import "package:faker/faker.dart";
-import "package:flutter/material.dart";
-// ignore: depend_on_referenced_packages, implementation_imports
-import "package:riverpod/src/framework.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/typewriter_panel.dart" hide random;
+import "package:typewriter_panel/typewriter_panel.dart";
+import "package:faker/faker.dart";
+
+// ignore: depend_on_referenced_packages, implementation_imports
+
 import "package:typewriter_testkit/src/shared/testing/testing.dart";
 
 // ============================================================================
@@ -40,7 +38,7 @@ List<OrganizationRole> presetRoles() {
     final isFirst = i == 0;
     final isLast = i == _roleNames.length - 1;
     return OrganizationRole(
-      roleId: recordId("organization_role:${faker.guid.guid()}"),
+      roleId: skir.recordId("organization_role:${faker.guid.guid()}"),
       name: _roleNames[i],
       color: _roleColors[i],
       deletable: !isFirst && !isLast,
@@ -66,7 +64,7 @@ OrganizationMember generateRandomMember({
       : presetRoles();
 
   return OrganizationMember(
-    userId: recordId("user:${faker.guid.guid()}"),
+    userId: skir.recordId("user:${faker.guid.guid()}"),
     name: faker.person.name(),
     email: faker.internet.email(),
     avatarUrl:

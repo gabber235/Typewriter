@@ -1,15 +1,6 @@
-import "package:typewriter_panel/features/organizations/features/realms/application/authored_draft.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as catalog;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/diagnostic.dart"
-    as diagnostic;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
-    as expression;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
-import "package:typewriter_panel/shared/editors/application/checked_editor_catalog.dart";
-import "package:typewriter_panel/shared/editors/application/portable_expression.dart";
-import "package:typewriter_panel/shared/editors/application/portable_value_tree.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
 
 final class AuthoredLocalDiagnostic {
   const AuthoredLocalDiagnostic({
@@ -21,8 +12,8 @@ final class AuthoredLocalDiagnostic {
 
   final String code;
   final String message;
-  final diagnostic.DiagnosticSeverity severity;
-  final types.ValueLocation location;
+  final skir.DiagnosticSeverity severity;
+  final skir.ValueLocation location;
 }
 
 final class AuthoredRuleProjection {
@@ -34,8 +25,8 @@ final class AuthoredRuleProjection {
   factory AuthoredRuleProjection.evaluate({
     required AuthoredDraft draft,
     required CheckedEditorCatalog catalog,
-    required types.ResourceId resource,
-    required expression.EvaluationBudget budget,
+    required skir.ResourceId resource,
+    required skir.EvaluationBudget budget,
   }) {
     final record = draft.resource(resource);
     if (record == null) {
@@ -48,7 +39,7 @@ final class AuthoredRuleProjection {
           budget: budget,
         )..visitContext(
           record.configuration,
-          types.DataValue.createRecord(fields: record.fields),
+          skir.DataValue.createRecord(fields: record.fields),
           const [],
           0,
         );
@@ -58,14 +49,14 @@ final class AuthoredRuleProjection {
     );
   }
 
-  final Map<types.ValueLocation, List<catalog.OwnedRule>> rules;
+  final Map<skir.ValueLocation, List<skir.OwnedRule>> rules;
   final List<AuthoredLocalDiagnostic> diagnostics;
 
-  bool hasOperation(types.ValueLocation? location, String operation) {
+  bool hasOperation(skir.ValueLocation? location, String operation) {
     if (location == null) return false;
     return rules[location]?.any(
           (rule) => switch (rule.descriptor.predicate) {
-            expression.ExpressionNode_callWrapper(:final value) =>
+            skir.ExpressionNode_callWrapper(:final value) =>
               value.operation.value == operation,
             _ => false,
           },
@@ -74,11 +65,11 @@ final class AuthoredRuleProjection {
   }
 }
 
-Map<types.ValueLocation, List<catalog.OwnedRule>> _freezeRules(
-  Map<types.ValueLocation, List<catalog.OwnedRule>> source,
-) => Map<types.ValueLocation, List<catalog.OwnedRule>>.unmodifiable({
+Map<skir.ValueLocation, List<skir.OwnedRule>> _freezeRules(
+  Map<skir.ValueLocation, List<skir.OwnedRule>> source,
+) => Map<skir.ValueLocation, List<skir.OwnedRule>>.unmodifiable({
   for (final entry in source.entries)
-    entry.key: List<catalog.OwnedRule>.unmodifiable(entry.value),
+    entry.key: List<skir.OwnedRule>.unmodifiable(entry.value),
 });
 
 final class _RuleProjectionBuilder {
@@ -89,15 +80,15 @@ final class _RuleProjectionBuilder {
   });
 
   final CheckedEditorCatalog checkedCatalog;
-  final types.ResourceId resource;
-  final expression.EvaluationBudget budget;
-  final Map<types.ValueLocation, List<catalog.OwnedRule>> rules = {};
+  final skir.ResourceId resource;
+  final skir.EvaluationBudget budget;
+  final Map<skir.ValueLocation, List<skir.OwnedRule>> rules = {};
   final List<AuthoredLocalDiagnostic> diagnostics = [];
 
   void visitContext(
-    types.TypeSelection selection,
-    types.DataValue value,
-    List<types.PathSegment> base,
+    skir.TypeSelection selection,
+    skir.DataValue value,
+    List<skir.PathSegment> base,
     int depth,
   ) {
     if (depth > 512) return;
@@ -109,7 +100,7 @@ final class _RuleProjectionBuilder {
         base,
         depth,
       )) {
-        final concretePath = types.ValuePath(
+        final concretePath = skir.ValuePath(
           segments: match.path.skip(base.length),
         );
         final condition = recipe.representationCondition;
@@ -122,9 +113,9 @@ final class _RuleProjectionBuilder {
                 condition) {
           continue;
         }
-        final location = types.ValueLocation(
+        final location = skir.ValueLocation(
           resource: resource,
-          path: types.ValuePath(segments: match.path),
+          path: skir.ValuePath(segments: match.path),
         );
         (rules[location] ??= []).addAll(recipe.rules);
         for (final rule in recipe.rules) {
@@ -136,14 +127,14 @@ final class _RuleProjectionBuilder {
   }
 
   void _visitNested(
-    types.DataValue value,
-    List<types.PathSegment> path,
+    skir.DataValue value,
+    List<skir.PathSegment> path,
     int depth,
   ) {
     if (depth > 512) return;
-    if (value case types.DataValue_namedWrapper(:final value)) {
+    if (value case skir.DataValue_namedWrapper(:final value)) {
       visitContext(
-        types.TypeSelection.wrapComplete(value.actualType),
+        skir.TypeSelection.wrapComplete(value.actualType),
         value.payload,
         path,
         depth,
@@ -151,37 +142,37 @@ final class _RuleProjectionBuilder {
       return;
     }
     switch (value.authoredPayload) {
-      case types.DataValue_recordWrapper(:final value):
+      case skir.DataValue_recordWrapper(:final value):
         for (final field in value.fields) {
           _visitNested(field.value, [
             ...path,
-            types.PathSegment.createField(name: field.name),
+            skir.PathSegment.createField(name: field.name),
           ], depth + 1);
         }
-      case types.DataValue_listValueWrapper(:final value):
+      case skir.DataValue_listValueWrapper(:final value):
         for (final item in value.items) {
           _visitNested(item.value, [
             ...path,
-            types.PathSegment.createItem(id: item.id),
+            skir.PathSegment.createItem(id: item.id),
           ], depth + 1);
         }
-      case types.DataValue_setValueWrapper(:final value):
+      case skir.DataValue_setValueWrapper(:final value):
         for (final item in value.items) {
           _visitNested(item.value, [
             ...path,
-            types.PathSegment.createItem(id: item.id),
+            skir.PathSegment.createItem(id: item.id),
           ], depth + 1);
         }
-      case types.DataValue_mapValueWrapper(:final value):
+      case skir.DataValue_mapValueWrapper(:final value):
         for (final row in value.rows) {
-          final rowPath = [...path, types.PathSegment.createItem(id: row.id)];
+          final rowPath = [...path, skir.PathSegment.createItem(id: row.id)];
           _visitNested(row.key, [
             ...rowPath,
-            types.PathSegment.mapKey,
+            skir.PathSegment.mapKey,
           ], depth + 1);
           _visitNested(row.value, [
             ...rowPath,
-            types.PathSegment.mapValue,
+            skir.PathSegment.mapValue,
           ], depth + 1);
         }
       default:
@@ -190,9 +181,9 @@ final class _RuleProjectionBuilder {
   }
 
   void _evaluate(
-    catalog.OwnedRule rule,
-    types.DataValue value,
-    types.ValueLocation location,
+    skir.OwnedRule rule,
+    skir.DataValue value,
+    skir.ValueLocation location,
   ) {
     final result = PortableExpressionEvaluator.configuredValue(
       value: value,
@@ -202,11 +193,11 @@ final class _RuleProjectionBuilder {
     switch (result) {
       case PortableExpressionAvailable(:final value):
         final payload = value.authoredPayload;
-        if (payload is types.DataValue_booleanWrapper && payload.value) return;
+        if (payload is skir.DataValue_booleanWrapper && payload.value) return;
         diagnostics.add(
           AuthoredLocalDiagnostic(
             code: rule.diagnostic.code,
-            message: payload is types.DataValue_booleanWrapper
+            message: payload is skir.DataValue_booleanWrapper
                 ? rule.diagnostic.message
                 : "${rule.diagnostic.message}: the rule result is not boolean",
             severity: rule.diagnostic.severity,
@@ -220,7 +211,7 @@ final class _RuleProjectionBuilder {
           AuthoredLocalDiagnostic(
             code: code,
             message: message,
-            severity: diagnostic.DiagnosticSeverity.error,
+            severity: skir.DiagnosticSeverity.error,
             location: location,
           ),
         );
@@ -231,15 +222,15 @@ final class _RuleProjectionBuilder {
 final class _PatternMatch {
   const _PatternMatch(this.value, this.path);
 
-  final types.DataValue value;
-  final List<types.PathSegment> path;
+  final skir.DataValue value;
+  final List<skir.PathSegment> path;
 }
 
 Iterable<_PatternMatch> _expand(
-  types.DataValue current,
-  List<types.FieldPatternSegment> segments,
+  skir.DataValue current,
+  List<skir.FieldPatternSegment> segments,
   int offset,
-  List<types.PathSegment> path,
+  List<skir.PathSegment> path,
   int depth,
 ) sync* {
   if (depth > 512) return;
@@ -250,43 +241,43 @@ Iterable<_PatternMatch> _expand(
   final payload = current.authoredPayload;
   final segment = segments[offset];
   switch (segment) {
-    case types.FieldPatternSegment_fieldWrapper(:final value):
+    case skir.FieldPatternSegment_fieldWrapper(:final value):
       final field = payload.authoredField(value.name);
       if (field == null) return;
       yield* _expand(field, segments, offset + 1, [
         ...path,
-        types.PathSegment.createField(name: value.name),
+        skir.PathSegment.createField(name: value.name),
       ], depth + 1);
-    case types.FieldPatternSegment.items:
+    case skir.FieldPatternSegment.items:
       final items = payload.authoredItems;
       if (items == null) return;
       for (final item in items) {
         yield* _expand(item.value, segments, offset + 1, [
           ...path,
-          types.PathSegment.createItem(id: item.id),
+          skir.PathSegment.createItem(id: item.id),
         ], depth + 1);
       }
-    case types.FieldPatternSegment.keys:
-      if (payload case types.DataValue_mapValueWrapper(:final value)) {
+    case skir.FieldPatternSegment.keys:
+      if (payload case skir.DataValue_mapValueWrapper(:final value)) {
         for (final row in value.rows) {
           yield* _expand(row.key, segments, offset + 1, [
             ...path,
-            types.PathSegment.createItem(id: row.id),
-            types.PathSegment.mapKey,
+            skir.PathSegment.createItem(id: row.id),
+            skir.PathSegment.mapKey,
           ], depth + 1);
         }
       }
-    case types.FieldPatternSegment.values:
-      if (payload case types.DataValue_mapValueWrapper(:final value)) {
+    case skir.FieldPatternSegment.values:
+      if (payload case skir.DataValue_mapValueWrapper(:final value)) {
         for (final row in value.rows) {
           yield* _expand(row.value, segments, offset + 1, [
             ...path,
-            types.PathSegment.createItem(id: row.id),
-            types.PathSegment.mapValue,
+            skir.PathSegment.createItem(id: row.id),
+            skir.PathSegment.mapValue,
           ], depth + 1);
         }
       }
-    case types.FieldPatternSegment_unknown():
+    case skir.FieldPatternSegment_unknown():
       return;
   }
 }

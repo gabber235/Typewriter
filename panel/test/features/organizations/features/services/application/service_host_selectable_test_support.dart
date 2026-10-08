@@ -21,7 +21,7 @@ class _Harness {
   }) async {
     final nats = FakeNatsClient();
     final service = Service(
-      serviceId: recordId("service:paper"),
+      serviceId: skir.recordId("service:paper"),
       revision: 1,
       name: "Paper",
       role: HostServiceRole(version: "1.0.0"),
@@ -33,7 +33,7 @@ class _Harness {
     );
 
     final host = skir.ServiceHost(
-      hostId: recordId("service_host:paper"),
+      hostId: skir.recordId("service_host:paper"),
       serviceId: service.serviceId,
       revision: 1,
       entrypoint: "PAPER",
@@ -50,7 +50,7 @@ class _Harness {
     );
     final secondHost = includeSecondHost
         ? skir.ServiceHost(
-            hostId: recordId("service_host:paper_backup"),
+            hostId: skir.recordId("service_host:paper_backup"),
             serviceId: service.serviceId,
             revision: 1,
             entrypoint: "PAPER_BACKUP",
@@ -69,7 +69,7 @@ class _Harness {
         : null;
 
     final realm = skir.RealmInstance(
-      realmId: recordId("realm_instance:paper"),
+      realmId: skir.recordId("realm_instance:paper"),
       ownerHost: skir.OwnerHost(id: host.hostId, name: service.name),
       revision: 1,
       targetEngine: skir.EngineTarget(

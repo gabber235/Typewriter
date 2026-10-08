@@ -1,8 +1,4 @@
-import "dart:typed_data";
-
-import "package:crypto/crypto.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:skir_client/skir_client.dart" show ByteString;
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -85,7 +81,7 @@ List<skir.AuthoringStateTransferChunk> _chunks(
           chunkCount: 2,
           encodedSize: bytes.length,
           sha256: sha256.convert(bytes).toString(),
-          payload: ByteString.copy(
+          payload: skir.ByteString.copy(
             Uint8List.sublistView(
               bytes,
               index == 0 ? 0 : split,

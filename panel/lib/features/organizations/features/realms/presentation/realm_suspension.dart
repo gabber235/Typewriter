@@ -1,6 +1,3 @@
-import "dart:ui";
-
-import "package:flutter/material.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Keeps realm content visible while blocking interaction when its connection

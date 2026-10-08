@@ -8,7 +8,7 @@ part of "portable_connections.dart";
 /// diagnostics. It does not mutate widgets or render objects, so the paint
 /// owner can publish one complete result for the current frame.
 _ConnectionResolution _resolveConnections({
-  required List<PresentationConnection> connections,
+  required List<skir.PresentationConnection> connections,
   required PortablePresentationScope scope,
   required TextDirection textDirection,
   required List<_AnchorSnapshot> localAnchors,
@@ -36,15 +36,19 @@ _ConnectionResolution _resolveConnections({
   }
   for (final (connectionIndex, connection) in connections.indexed) {
     final visibleIf = switch (connection) {
-      PresentationConnection_connectionWrapper(:final value) => value.visibleIf,
-      PresentationConnection_bundleWrapper(:final value) => value.visibleIf,
-      PresentationConnection_unknown() => null,
+      skir.PresentationConnection_connectionWrapper(:final value) =>
+        value.visibleIf,
+      skir.PresentationConnection_bundleWrapper(:final value) =>
+        value.visibleIf,
+      skir.PresentationConnection_unknown() => null,
     };
     final visible = _evaluateBoolean(visibleIf, scope, true);
     diagnostics.addAll(visible.diagnostics);
     if (visible.valueOrNull != true) continue;
     switch (connection) {
-      case PresentationConnection_connectionWrapper(value: final configured):
+      case skir.PresentationConnection_connectionWrapper(
+        value: final configured,
+      ):
         _resolveSingle(
           configured,
           (connectionIndex, configured),
@@ -56,7 +60,7 @@ _ConnectionResolution _resolveConnections({
           markers,
           diagnostics,
         );
-      case PresentationConnection_bundleWrapper(value: final configured):
+      case skir.PresentationConnection_bundleWrapper(value: final configured):
         _resolveBundle(
           configured,
           (connectionIndex, configured),
@@ -67,7 +71,7 @@ _ConnectionResolution _resolveConnections({
           markers,
           diagnostics,
         );
-      case PresentationConnection_unknown():
+      case skir.PresentationConnection_unknown():
         diagnostics.add(_connectionDiagnostic("Unknown connection type"));
     }
   }
@@ -79,7 +83,7 @@ _ConnectionResolution _resolveConnections({
 }
 
 void _resolveSingle(
-  AnchoredConnection connection,
+  skir.AnchoredConnection connection,
   Object connectionIdentity,
   PortablePresentationScope layerScope,
   TextDirection textDirection,
@@ -147,7 +151,7 @@ void _resolveSingle(
 }
 
 void _resolveBundle(
-  AnchoredConnectionBundle connection,
+  skir.AnchoredConnectionBundle connection,
   Object connectionIdentity,
   PortablePresentationScope layerScope,
   List<_LayerAnchor> local,
@@ -229,15 +233,15 @@ void _resolveBundle(
 }
 
 List<_LayerAnchor> _select(
-  PresentationAnchorSelector selector,
+  skir.PresentationAnchorSelector selector,
   List<_LayerAnchor> local,
   List<_LayerAnchor> exported,
 ) => switch (selector) {
-  PresentationAnchorSelector_localWrapper(:final value) =>
+  skir.PresentationAnchorSelector_localWrapper(:final value) =>
     local.where((anchor) => anchor.snapshot.id == value).toList(),
-  PresentationAnchorSelector_exportedGroupWrapper(:final value) =>
+  skir.PresentationAnchorSelector_exportedGroupWrapper(:final value) =>
     exported
         .where((anchor) => anchor.snapshot.groupIds.contains(value))
         .toList(),
-  PresentationAnchorSelector_unknown() => const [],
+  skir.PresentationAnchorSelector_unknown() => const [],
 };

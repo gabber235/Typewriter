@@ -1,6 +1,3 @@
-import "package:flutter/material.dart" hide SearchController;
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:hooks_riverpod/legacy.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Controller scoped to one search surface.

@@ -1,13 +1,6 @@
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/binding.dart"
-    as binding;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
-    as expression;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/presentation.dart"
-    as presentation;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../../../support/test_utils.dart";
@@ -16,8 +9,8 @@ void main() {
   testWidgets(
     "renders a nested named payload and preserves its actual type on write",
     (tester) async {
-      binding.BindingRef? writtenReference;
-      types.DataValue? writtenValue;
+      skir.BindingRef? writtenReference;
+      skir.DataValue? writtenValue;
 
       Widget host(bool visible) => testApp(
         child: Scaffold(
@@ -25,7 +18,7 @@ void main() {
             node: _rootPresentation(),
             scope: PortablePresentationScope(
               bindings: _bindings(visible),
-              budget: expression.EvaluationBudget(
+              budget: skir.EvaluationBudget(
                 maxSteps: 100,
                 maxCollectionItems: 100,
               ),
@@ -49,7 +42,7 @@ void main() {
       await tester.pump();
 
       expect(writtenReference, _styleReference);
-      final named = writtenValue! as types.DataValue_namedWrapper;
+      final named = writtenValue! as skir.DataValue_namedWrapper;
       expect(named.value.actualType, _styleType);
       expect(
         named.value.payload.authoredField("title")?.authoredString,
@@ -66,17 +59,15 @@ void main() {
     var writes = 0;
     final control =
         _control().payloadPresentation!.element!
-            as presentation.PresentationElement_childrenWrapper;
-    final children =
-        control.value as presentation.ChildrenElement_columnWrapper;
+            as skir.PresentationElement_childrenWrapper;
+    final children = control.value as skir.ChildrenElement_columnWrapper;
     final title =
-        (children.value.children.last as presentation.AxisChild_fixedWrapper)
-            .value;
-    final disabled = presentation.PresentationNode(
+        (children.value.children.last as skir.AxisChild_fixedWrapper).value;
+    final disabled = skir.PresentationNode(
       nodeId: title.nodeId,
-      properties: presentation.PresentationProperties(
-        enabledIf: expression.ExpressionNode.wrapLiteral(
-          types.DataValue.wrapBoolean(false),
+      properties: skir.PresentationProperties(
+        enabledIf: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapBoolean(false),
         ),
         readOnly: false,
       ),
@@ -90,20 +81,20 @@ void main() {
             node: disabled,
             scope: PortablePresentationScope(
               bindings: {
-                types.ExpressionBindingId(
+                skir.ExpressionBindingId(
                   value: "configured_value",
                 ): PortableExpressionBinding(
-                  value: types.DataValue.createRecord(
+                  value: skir.DataValue.createRecord(
                     fields: [
-                      types.FieldValue(
+                      skir.FieldValue(
                         name: "title",
-                        value: types.DataValue.wrapStringValue("Original"),
+                        value: skir.DataValue.wrapStringValue("Original"),
                       ),
                     ],
                   ),
                 ),
               },
-              budget: expression.EvaluationBudget(
+              budget: skir.EvaluationBudget(
                 maxSteps: 100,
                 maxCollectionItems: 100,
               ),
@@ -127,40 +118,40 @@ void main() {
   });
 }
 
-final _rootBinding = types.ExpressionBindingId(value: "element");
-final _styleReference = binding.BindingRef(
+final _rootBinding = skir.ExpressionBindingId(value: "element");
+final _styleReference = skir.BindingRef(
   bindingId: _rootBinding,
   path: _fieldPath("style"),
 );
-final _styleType = types.NamedTypeUse(
-  definition: types.TypeDefinitionId(
-    typeId: types.TypeId.wrapQualified(
-      types.QualifiedTypeId(namespace: "example", name: "MessageStyle"),
+final _styleType = skir.NamedTypeUse(
+  definition: skir.TypeDefinitionId(
+    typeId: skir.TypeId.wrapQualified(
+      skir.QualifiedTypeId(namespace: "example", name: "MessageStyle"),
     ),
     revision: 1,
   ),
   arguments: const [],
 );
 
-Map<types.ExpressionBindingId, PortableExpressionBinding> _bindings(
+Map<skir.ExpressionBindingId, PortableExpressionBinding> _bindings(
   bool visible,
 ) => {
   _rootBinding: PortableExpressionBinding(
-    value: types.DataValue.createRecord(
+    value: skir.DataValue.createRecord(
       fields: [
-        types.FieldValue(
+        skir.FieldValue(
           name: "style",
-          value: types.DataValue.createNamed(
+          value: skir.DataValue.createNamed(
             actualType: _styleType,
-            payload: types.DataValue.createRecord(
+            payload: skir.DataValue.createRecord(
               fields: [
-                types.FieldValue(
+                skir.FieldValue(
                   name: "visible",
-                  value: types.DataValue.wrapBoolean(visible),
+                  value: skir.DataValue.wrapBoolean(visible),
                 ),
-                types.FieldValue(
+                skir.FieldValue(
                   name: "title",
-                  value: types.DataValue.wrapStringValue("Original"),
+                  value: skir.DataValue.wrapStringValue("Original"),
                 ),
               ],
             ),
@@ -168,43 +159,42 @@ Map<types.ExpressionBindingId, PortableExpressionBinding> _bindings(
         ),
       ],
     ),
-    location: types.ValueLocation(
-      resource: types.ResourceId(value: "element:message"),
-      path: types.ValuePath(segments: const []),
+    location: skir.ValueLocation(
+      resource: skir.ResourceId(value: "element:message"),
+      path: skir.ValuePath(segments: const []),
     ),
   ),
 };
 
-presentation.NamedControl _control() => presentation.NamedControl(
-  control: presentation.BoundControl(
+skir.NamedControl _control() => skir.NamedControl(
+  control: skir.BoundControl(
     binding: _styleReference,
     label: null,
     description: null,
     prefix: null,
     semanticLabel: null,
   ),
-  payloadPresentation: presentation.PresentationNode(
+  payloadPresentation: skir.PresentationNode(
     nodeId: "style.custom",
-    properties: presentation.PresentationProperties.defaultInstance,
-    element: presentation.PresentationElement.wrapChildren(
-      presentation.ChildrenElement.createColumn(
+    properties: skir.PresentationProperties.defaultInstance,
+    element: skir.PresentationElement.wrapChildren(
+      skir.ChildrenElement.createColumn(
         children: [
-          presentation.AxisChild.wrapFixed(
-            presentation.PresentationNode(
+          skir.AxisChild.wrapFixed(
+            skir.PresentationNode(
               nodeId: "style.conditional",
-              properties: presentation.PresentationProperties.defaultInstance,
-              element: presentation.PresentationElement.createConditional(
-                condition: expression.ExpressionNode.createRead(
-                  binding: types.ExpressionBindingId(value: "configured_value"),
+              properties: skir.PresentationProperties.defaultInstance,
+              element: skir.PresentationElement.createConditional(
+                condition: skir.ExpressionNode.createRead(
+                  binding: skir.ExpressionBindingId(value: "configured_value"),
                   path: _fieldPath("visible"),
                 ),
-                whenTrue: presentation.PresentationNode(
+                whenTrue: skir.PresentationNode(
                   nodeId: "style.visible",
-                  properties:
-                      presentation.PresentationProperties.defaultInstance,
-                  element: presentation.PresentationElement.createText(
-                    value: expression.ExpressionNode.wrapLiteral(
-                      types.DataValue.wrapStringValue("Custom style"),
+                  properties: skir.PresentationProperties.defaultInstance,
+                  element: skir.PresentationElement.createText(
+                    value: skir.ExpressionNode.wrapLiteral(
+                      skir.DataValue.wrapStringValue("Custom style"),
                     ),
                     color: null,
                     fontSize: null,
@@ -218,7 +208,7 @@ presentation.NamedControl _control() => presentation.NamedControl(
                     letterSpacing: null,
                     decoration: null,
                     semanticLabel: null,
-                    paragraph: presentation.TextParagraph.defaultInstance,
+                    paragraph: skir.TextParagraph.defaultInstance,
                   ),
                   header: null,
                 ),
@@ -227,14 +217,14 @@ presentation.NamedControl _control() => presentation.NamedControl(
               header: null,
             ),
           ),
-          presentation.AxisChild.wrapFixed(
-            presentation.PresentationNode(
+          skir.AxisChild.wrapFixed(
+            skir.PresentationNode(
               nodeId: "style.title",
-              properties: presentation.PresentationProperties.defaultInstance,
-              element: presentation.PresentationElement.createTextInput(
-                control: presentation.BoundControl(
-                  binding: binding.BindingRef(
-                    bindingId: types.ExpressionBindingId(
+              properties: skir.PresentationProperties.defaultInstance,
+              element: skir.PresentationElement.createTextInput(
+                control: skir.BoundControl(
+                  binding: skir.BindingRef(
+                    bindingId: skir.ExpressionBindingId(
                       value: "configured_value",
                     ),
                     path: _fieldPath("title"),
@@ -252,10 +242,10 @@ presentation.NamedControl _control() => presentation.NamedControl(
             ),
           ),
         ],
-        layout: presentation.AxisChildrenLayout(
+        layout: skir.AxisChildrenLayout(
           spacing: 8,
-          mainAxisAlignment: presentation.MainAxisAlignment.start,
-          crossAxisAlignment: presentation.CrossAxisAlignment.start,
+          mainAxisAlignment: skir.MainAxisAlignment.start,
+          crossAxisAlignment: skir.CrossAxisAlignment.start,
         ),
       ),
     ),
@@ -263,13 +253,12 @@ presentation.NamedControl _control() => presentation.NamedControl(
   ),
 );
 
-presentation.PresentationNode _rootPresentation() =>
-    presentation.PresentationNode(
-      nodeId: "style.root",
-      properties: presentation.PresentationProperties.defaultInstance,
-      element: presentation.PresentationElement.wrapNamedInput(_control()),
-      header: null,
-    );
+skir.PresentationNode _rootPresentation() => skir.PresentationNode(
+  nodeId: "style.root",
+  properties: skir.PresentationProperties.defaultInstance,
+  element: skir.PresentationElement.wrapNamedInput(_control()),
+  header: null,
+);
 
-types.ValuePath _fieldPath(String name) =>
-    types.ValuePath(segments: [types.PathSegment.createField(name: name)]);
+skir.ValuePath _fieldPath(String name) =>
+    skir.ValuePath(segments: [skir.PathSegment.createField(name: name)]);

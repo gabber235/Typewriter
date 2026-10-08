@@ -62,7 +62,7 @@ final class _ResolvedMarker {
   });
 
   final Object identity;
-  final PresentationNode node;
+  final skir.PresentationNode node;
   final PortablePresentationScope scope;
   final Offset position;
   final double angle;

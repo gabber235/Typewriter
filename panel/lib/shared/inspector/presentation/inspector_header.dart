@@ -1,5 +1,3 @@
-import "package:flutter/widgets.dart" hide Title;
-import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Displays a resource title and stable identifier.

@@ -1,8 +1,4 @@
-import "dart:async";
-
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -44,8 +40,10 @@ void main() {
     final book = _book("book1", "Quest for Glory");
     final container = ProviderContainer.test(
       overrides: [
-        organizationIdProvider.overrideWithValue(recordId("organization:test")),
-        realmIdProvider.overrideWithValue(recordId("realm_instance:test")),
+        organizationIdProvider.overrideWithValue(
+          skir.recordId("organization:test"),
+        ),
+        realmIdProvider.overrideWithValue(skir.recordId("realm_instance:test")),
         ...authoringSessionMockOverrides(books: [book]),
       ],
     );
@@ -60,8 +58,10 @@ void main() {
   test("canonical books expose an authoring session failure", () async {
     final container = ProviderContainer.test(
       overrides: [
-        organizationIdProvider.overrideWithValue(recordId("organization:test")),
-        realmIdProvider.overrideWithValue(recordId("realm_instance:test")),
+        organizationIdProvider.overrideWithValue(
+          skir.recordId("organization:test"),
+        ),
+        realmIdProvider.overrideWithValue(skir.recordId("realm_instance:test")),
         ...authoringSessionMockOverrides(
           initial: AuthoringSessionState(
             failure: StateError("Authoring unavailable"),

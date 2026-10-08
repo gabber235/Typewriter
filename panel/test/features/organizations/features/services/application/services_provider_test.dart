@@ -1,8 +1,4 @@
-import "dart:async";
-
-import "package:flutter/foundation.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -10,10 +6,10 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 
 const _publishSubject = "cloud.to.user.user1.organization.org1.services.watch";
 const _listenSubject = "cloud.from.organization.org1.services.watch";
-final _organizationId = recordId("organization:org1");
+final _organizationId = skir.recordId("organization:org1");
 
 Service _service(String id, {String? name, int revision = 1}) => Service(
-  serviceId: recordId("service:$id"),
+  serviceId: skir.recordId("service:$id"),
   revision: revision,
   name: name ?? "Service $id",
   role: HostServiceRole(version: "1"),

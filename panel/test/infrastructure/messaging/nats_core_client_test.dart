@@ -1,7 +1,4 @@
-import "dart:async";
-
 import "package:flutter_test/flutter_test.dart";
-import "package:nats_core/nats_core.dart" as core;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
@@ -11,7 +8,7 @@ void main() {
       final cause = StateError("super-secret-token");
       final causeStackTrace = StackTrace.current;
       final client = NatsCoreClient.fromConnectionFuture(
-        Future<core.NatsConnection>.error(cause, causeStackTrace),
+        Future<NatsConnection>.error(cause, causeStackTrace),
       );
       addTearDown(client.close);
 
@@ -31,10 +28,10 @@ void main() {
   test(
     "connection failure remains unavailable and preserves its cause and stack",
     () async {
-      const error = core.NatsConnectionException("Transport closed");
+      const error = NatsConnectionException("Transport closed");
       final stackTrace = StackTrace.current;
       final client = NatsCoreClient.fromConnectionFuture(
-        Future<core.NatsConnection>.error(error, stackTrace),
+        Future<NatsConnection>.error(error, stackTrace),
       );
       addTearDown(client.close);
 
@@ -49,12 +46,12 @@ void main() {
   );
 
   test("nonstandard cause stack cannot prevent failure state", () async {
-    final error = core.NatsAuthenticationException(
+    final error = NatsAuthenticationException(
       "authentication rejected",
       causeStackTrace: StackTrace.fromString("<asynchronous suspension>"),
     );
     final client = NatsCoreClient.fromConnectionFuture(
-      Future<core.NatsConnection>.error(error, StackTrace.current),
+      Future<NatsConnection>.error(error, StackTrace.current),
     );
     addTearDown(client.close);
 
@@ -67,7 +64,7 @@ void main() {
   });
 
   test("explicit close remains closed when initial connection fails", () async {
-    final connection = Completer<core.NatsConnection>();
+    final connection = Completer<NatsConnection>();
     final client = NatsCoreClient.fromConnectionFuture(connection.future);
 
     final close = client.close();
@@ -78,7 +75,7 @@ void main() {
   });
 
   test("failure listener can close the client", () async {
-    final connection = Completer<core.NatsConnection>();
+    final connection = Completer<NatsConnection>();
     final client = NatsCoreClient.fromConnectionFuture(connection.future);
     final states = <NatsConnectionState>[];
     final closeCompleted = Completer<void>();

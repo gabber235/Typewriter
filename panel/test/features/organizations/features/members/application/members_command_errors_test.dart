@@ -1,6 +1,4 @@
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -66,7 +64,7 @@ void main() {
       await expectLater(
         container
             .read(organizationMembersProvider.notifier)
-            .updateMemberRoles([recordId("user:m1")], [newRole]),
+            .updateMemberRoles([skir.recordId("user:m1")], [newRole]),
         throwsA(apiException(400, "One or more roles cannot be assigned")),
       );
       expect(
@@ -110,7 +108,7 @@ void main() {
       await expectLater(
         container
             .read(organizationMembersProvider.notifier)
-            .updateMemberRoles([recordId("user:m1")], [role]),
+            .updateMemberRoles([skir.recordId("user:m1")], [role]),
         throwsA(
           apiException(409, "Organization must retain at least one founder"),
         ),
@@ -119,7 +117,7 @@ void main() {
 
     test("removeMember maps founder removal conflict and restores state", () async {
       final role = OrganizationRole(
-        roleId: recordId("organization_role:founder"),
+        roleId: skir.recordId("organization_role:founder"),
         name: "Founder",
         color: Colors.red,
       );

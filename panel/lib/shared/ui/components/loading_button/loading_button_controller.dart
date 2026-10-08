@@ -1,6 +1,4 @@
-import "dart:async";
-
-import "package:flutter/foundation.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Owns asynchronous execution state for one [LoadingButton] or
 /// [LoadingIconButton].

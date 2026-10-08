@@ -1,9 +1,5 @@
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:http/http.dart" as http;
 import "package:http/testing.dart";
-import "package:jovial_svg/jovial_svg.dart";
-import "package:typewriter_panel/shared/ui/components/icons.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../support/test_utils.dart";
@@ -25,8 +21,8 @@ void main() {
       final client = MockClient((request) async {
         requested.add(request.url);
         return request.url.host == "primary.example"
-            ? http.Response("<html>unavailable</html>", 200)
-            : http.Response(
+            ? Response("<html>unavailable</html>", 200)
+            : Response(
                 '''
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
 <path d="M0 0h24v24H0z"/></svg>

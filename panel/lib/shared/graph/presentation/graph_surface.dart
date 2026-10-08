@@ -1,10 +1,4 @@
-import "dart:math";
-
-import "package:flutter/foundation.dart";
-import "package:flutter/material.dart";
-import "package:flutter/rendering.dart";
-import "package:typewriter_panel/shared/graph/application/application.dart";
-import "package:typewriter_panel/shared/graph/domain/domain.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Widget bridge for the graph render object and its visible node children.
 ///

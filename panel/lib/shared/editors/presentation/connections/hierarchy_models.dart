@@ -21,7 +21,7 @@ final class _ResolvedHierarchyLayout {
   final double indentation;
   final double leadingSpacing;
   final bool flattenSingleItem;
-  final CrossAxisAlignment_kind crossAxisAlignment;
+  final skir.CrossAxisAlignment_kind crossAxisAlignment;
   final _HierarchyAnchorKind anchorKind;
   final List<double?> anchorOffsets;
   final _ResolvedConnectorStyle? unaryStyle;

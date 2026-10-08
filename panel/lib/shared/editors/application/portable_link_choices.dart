@@ -1,9 +1,5 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring.dart"
-    as authoring;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as catalog;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 sealed class PortableLinkPlanResult {
@@ -30,9 +26,9 @@ final class PortableLinkPlan {
     required this.targets,
   });
 
-  final authoring.LinkOccurrence source;
-  final catalog.RelationContract relation;
-  final catalog.EndpointDefinition opposite;
+  final skir.LinkOccurrence source;
+  final skir.RelationContract relation;
+  final skir.EndpointDefinition opposite;
   final List<PortableLinkTargetChoice> targets;
 }
 
@@ -44,9 +40,9 @@ final class PortableLinkTargetChoice {
     required this.creatable,
   });
 
-  final types.ResourceId resource;
+  final skir.ResourceId resource;
   final bool automaticCounterpart;
-  final List<authoring.LinkOccurrence> existing;
+  final List<skir.LinkOccurrence> existing;
   final List<PortableNewCounterpartChoice> creatable;
 }
 
@@ -56,20 +52,20 @@ final class PortableNewCounterpartChoice {
     required this.selection,
   });
 
-  final types.ValueLocation containing;
-  final types.TypeSelection selection;
+  final skir.ValueLocation containing;
+  final skir.TypeSelection selection;
 }
 
 void replacePortableLinkCollection({
   required PortableAuthoringDocument draft,
   required CheckedEditorCatalog catalog,
-  required types.ResourceId resource,
+  required skir.ResourceId resource,
   required String field,
-  required List<types.ResourceId> expected,
-  required List<types.ResourceId> proposed,
+  required List<skir.ResourceId> expected,
+  required List<skir.ResourceId> proposed,
 }) {
-  final containing = types.ValuePath(
-    segments: [types.PathSegment.createField(name: field)],
+  final containing = skir.ValuePath(
+    segments: [skir.PathSegment.createField(name: field)],
   );
   final record = draft.resource(resource);
   final items = record?.authoredField(field)?.authoredItems?.toList();
@@ -83,7 +79,7 @@ void replacePortableLinkCollection({
   if (!_sameResources(current, expected)) {
     throw StateError("The $field link collection changed");
   }
-  final remaining = List<types.ResourceId>.of(proposed);
+  final remaining = List<skir.ResourceId>.of(proposed);
   for (final item in items) {
     final link = item.value.authoredLink;
     if (link == null) continue;
@@ -93,15 +89,15 @@ void replacePortableLinkCollection({
       continue;
     }
     draft.disconnect(
-      authoring.LinkOccurrence(
-        id: authoring.LinkOccurrenceId(
+      skir.LinkOccurrence(
+        id: skir.LinkOccurrenceId(
           endpoint: link.endpoint,
-          location: types.ValueLocation(
+          location: skir.ValueLocation(
             resource: resource,
-            path: types.ValuePath(
+            path: skir.ValuePath(
               segments: [
                 ...containing.segments,
-                types.PathSegment.createItem(id: item.id),
+                skir.PathSegment.createItem(id: item.id),
               ],
             ),
           ),
@@ -113,21 +109,21 @@ void replacePortableLinkCollection({
   }
   var index = 0;
   for (final target in remaining) {
-    late types.ItemId item;
-    late types.ValueLocation source;
+    late skir.ItemId item;
+    late skir.ValueLocation source;
     do {
-      item = types.ItemId(value: "panel:link:${draft.operationCount}:$index");
+      item = skir.ItemId(value: "panel:link:${draft.operationCount}:$index");
       index++;
-      source = types.ValueLocation(
+      source = skir.ValueLocation(
         resource: resource,
-        path: types.ValuePath(
+        path: skir.ValuePath(
           segments: [
             ...containing.segments,
-            types.PathSegment.createItem(id: item),
+            skir.PathSegment.createItem(id: item),
           ],
         ),
       );
-    } while (record.readAt(source.path) is PortablePathValue<types.DataValue>);
+    } while (record.readAt(source.path) is PortablePathValue<skir.DataValue>);
     final plans = portableLinkPlans(
       draft: draft,
       catalog: catalog,
@@ -148,10 +144,7 @@ void replacePortableLinkCollection({
   }
 }
 
-bool _sameResources(
-  List<types.ResourceId> first,
-  List<types.ResourceId> second,
-) {
+bool _sameResources(List<skir.ResourceId> first, List<skir.ResourceId> second) {
   if (first.length != second.length) return false;
   for (var index = 0; index < first.length; index++) {
     if (first[index] != second[index]) return false;
@@ -162,7 +155,7 @@ bool _sameResources(
 PortableLinkPlanResult portableLinkPlans({
   required PortableAuthoringDocument draft,
   required CheckedEditorCatalog catalog,
-  required types.ValueLocation source,
+  required skir.ValueLocation source,
 }) {
   final sourceRecord = draft.resource(source.resource);
   if (sourceRecord == null) {
@@ -196,16 +189,16 @@ PortableLinkPlanResult portableLinkPlans({
     final opposite = relation.first.id == binding.template.endpoint
         ? relation.second
         : relation.first;
-    final sourceOccurrence = authoring.LinkOccurrence(
-      id: authoring.LinkOccurrenceId(
+    final sourceOccurrence = skir.LinkOccurrence(
+      id: skir.LinkOccurrenceId(
         endpoint: binding.template.endpoint,
         location: source,
       ),
       source: source.resource,
       target:
           current?.target ??
-          types.LinkTarget(
-            resource: types.ResourceId.defaultInstance,
+          skir.LinkTarget(
+            resource: skir.ResourceId.defaultInstance,
             opposite: null,
           ),
     );
@@ -227,7 +220,7 @@ PortableLinkPlanResult portableLinkPlans({
           catalog
               .nominalDefinitions(entry.value.configuration)
               .contains(oppositeBindings.single.template.valueOwner);
-      final existing = <authoring.LinkOccurrence>[];
+      final existing = <skir.LinkOccurrence>[];
       final creatable = <PortableNewCounterpartChoice>[];
       for (final oppositeBinding in oppositeBindings) {
         for (final path in expandAuthoredPattern(
@@ -235,13 +228,13 @@ PortableLinkPlanResult portableLinkPlans({
           oppositeBinding.template.relativePath,
         )) {
           existing.add(
-            authoring.LinkOccurrence(
-              id: authoring.LinkOccurrenceId(
+            skir.LinkOccurrence(
+              id: skir.LinkOccurrenceId(
                 endpoint: opposite.id,
-                location: types.ValueLocation(resource: entry.key, path: path),
+                location: skir.ValueLocation(resource: entry.key, path: path),
               ),
               source: entry.key,
-              target: types.LinkTarget(
+              target: skir.LinkTarget(
                 resource: source.resource,
                 opposite: source.path,
               ),
@@ -287,13 +280,14 @@ PortableLinkPlanResult portableLinkPlans({
 
 bool _resourceMatches(
   CheckedEditorCatalog catalog,
-  types.TypeSelection selection,
-  types.TypeUse? expected,
+  skir.TypeSelection selection,
+  skir.TypeUse? expected,
 ) {
   if (expected == null) return false;
   final actual = switch (selection) {
-    types.TypeSelection_completeWrapper(:final value) =>
-      types.TypeUse.wrapNamed(value),
+    skir.TypeSelection_completeWrapper(:final value) => skir.TypeUse.wrapNamed(
+      value,
+    ),
     _ => null,
   };
   return actual != null && catalog.isReadableAs(actual, expected);
@@ -301,8 +295,8 @@ bool _resourceMatches(
 
 Iterable<PortableNewCounterpartChoice> _newCounterpartChoices({
   required CheckedEditorCatalog catalog,
-  required types.ResourceId resource,
-  required types.AuthoringRecord record,
+  required skir.ResourceId resource,
+  required skir.AuthoringRecord record,
   required AppliedEndpointBinding binding,
 }) sync* {
   final segments = binding.template.relativePath.segments.toList(
@@ -310,14 +304,14 @@ Iterable<PortableNewCounterpartChoice> _newCounterpartChoices({
   );
 
   Iterable<PortableNewCounterpartChoice> visit(
-    types.ValuePath path,
-    types.TypeSelection selection,
+    skir.ValuePath path,
+    skir.TypeSelection selection,
     int index,
   ) sync* {
     if (index >= segments.length) return;
     final segment = segments[index];
     switch (segment) {
-      case types.FieldPatternSegment_fieldWrapper(:final value):
+      case skir.FieldPatternSegment_fieldWrapper(:final value):
         final field = catalog
             .fields(selection)
             .where((candidate) => candidate.template.key == value.name)
@@ -328,30 +322,29 @@ Iterable<PortableNewCounterpartChoice> _newCounterpartChoices({
           final current = record.readAt(path);
           final empty = switch (current) {
             PortablePathValue(value: final value) =>
-              value == types.DataValue.unfilled ||
-                  value == types.DataValue.null_,
+              value == skir.DataValue.unfilled || value == skir.DataValue.null_,
             PortablePathUnavailable() => true,
           };
           if (empty) {
             if (catalog.selected(selection)?.definition.id ==
                 binding.template.valueOwner) {
               yield PortableNewCounterpartChoice(
-                containing: types.ValueLocation(resource: resource, path: path),
+                containing: skir.ValueLocation(resource: resource, path: path),
                 selection: selection,
               );
             }
           }
         }
-        final next = types.ValuePath(
+        final next = skir.ValuePath(
           segments: [
             ...path.segments,
-            types.PathSegment.createField(name: value.name),
+            skir.PathSegment.createField(name: value.name),
           ],
         );
         final named = catalog.namedUse(field.type);
         if (named == null) return;
-        yield* visit(next, types.TypeSelection.wrapComplete(named), index + 1);
-      case final value when value == types.FieldPatternSegment.items:
+        yield* visit(next, skir.TypeSelection.wrapComplete(named), index + 1);
+      case final value when value == skir.FieldPatternSegment.items:
         final collectionType = path.segments.isEmpty
             ? null
             : catalog.valueTypeAt(record.configuration, path);
@@ -360,23 +353,23 @@ Iterable<PortableNewCounterpartChoice> _newCounterpartChoices({
         if (named == null) return;
         if (named.definition == binding.template.valueOwner) {
           yield PortableNewCounterpartChoice(
-            containing: types.ValueLocation(resource: resource, path: path),
-            selection: types.TypeSelection.wrapComplete(named),
+            containing: skir.ValueLocation(resource: resource, path: path),
+            selection: skir.TypeSelection.wrapComplete(named),
           );
         }
         final items = switch (record.readAt(path)) {
           PortablePathValue(value: final value) => value.authoredItems,
           PortablePathUnavailable() => null,
         };
-        for (final item in items ?? const <types.ListItem>[]) {
+        for (final item in items ?? const <skir.ListItem>[]) {
           yield* visit(
-            types.ValuePath(
+            skir.ValuePath(
               segments: [
                 ...path.segments,
-                types.PathSegment.createItem(id: item.id),
+                skir.PathSegment.createItem(id: item.id),
               ],
             ),
-            types.TypeSelection.wrapComplete(named),
+            skir.TypeSelection.wrapComplete(named),
             index + 1,
           );
         }
@@ -384,13 +377,13 @@ Iterable<PortableNewCounterpartChoice> _newCounterpartChoices({
     }
   }
 
-  yield* visit(types.ValuePath(segments: const []), record.configuration, 0);
+  yield* visit(skir.ValuePath(segments: const []), record.configuration, 0);
 }
 
 Iterable<PortableNewCounterpartChoice> _distinctNewChoices(
   Iterable<PortableNewCounterpartChoice> choices,
 ) sync* {
-  final seen = <types.ValueLocation>{};
+  final seen = <skir.ValueLocation>{};
   for (final choice in choices) {
     if (seen.add(choice.containing)) yield choice;
   }

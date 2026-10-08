@@ -1,7 +1,3 @@
-import "package:collection/collection.dart";
-import "package:flutter/widgets.dart";
-import "package:freezed_annotation/freezed_annotation.dart";
-import "package:petitparser/petitparser.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "query_selector.freezed.dart";
@@ -79,12 +75,15 @@ final class KeyValueSelectorDefinition extends QuerySelectorDefinition {
     return (string(key, ignoreCase: !caseSensitive).token() &
             [
               ([whitespace(), pattern("'\"|&()")].toChoiceParser().not() &
-                      any())
+                      anyCharacter())
                   .plus()
                   .flatten(),
               for (final quote in quotes)
                 char(quote) &
-                    (char(quote).not() & any()).plus().flatten().optional() &
+                    (char(quote).not() & anyCharacter())
+                        .plus()
+                        .flatten()
+                        .optional() &
                     char(quote).optional(),
             ].toChoiceParser().token().optional())
         .token()

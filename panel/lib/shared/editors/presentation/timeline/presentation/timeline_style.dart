@@ -1,6 +1,4 @@
-import "dart:math";
-
-import "package:flutter/material.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Shared geometry, zoom limits, grid policy, and colors for one timeline.
 ///

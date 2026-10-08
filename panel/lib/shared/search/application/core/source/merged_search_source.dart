@@ -1,6 +1,3 @@
-import "dart:async";
-
-import "package:collection/collection.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Combines independent sources into one snapshot and selector stream.

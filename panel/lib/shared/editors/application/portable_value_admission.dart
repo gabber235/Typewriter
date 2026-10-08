@@ -1,27 +1,26 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
-import "package:typewriter_panel/typewriter_panel.dart"
-    show CheckedEditorCatalog, admitsPortableScalarValue;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Applies the checked portable schema before a backend codec receives a write.
 extension PortableValueAdmission on CheckedEditorCatalog {
-  bool admitsPortableValue(types.TypeUse expected, types.DataValue value) =>
+  bool admitsPortableValue(skir.TypeUse expected, skir.DataValue value) =>
       _admitsPortableValue(this, expected, value, 0);
 
-  types.DataValue? admitPortablePayloadAt(
-    types.TypeSelection root,
-    types.ValuePath path,
-    types.DataValue payload,
+  skir.DataValue? admitPortablePayloadAt(
+    skir.TypeSelection root,
+    skir.ValuePath path,
+    skir.DataValue payload,
   ) {
     final expected = valueTypeAt(root, path);
     if (expected == null) return null;
     final actual = switch (payload) {
       final value
-          when value == types.DataValue.unfilled ||
-              value == types.DataValue.null_ =>
+          when value == skir.DataValue.unfilled ||
+              value == skir.DataValue.null_ =>
         value,
       _ => switch (namedUse(expected)) {
-        final named? => types.DataValue.createNamed(
+        final named? => skir.DataValue.createNamed(
           actualType: named,
           payload: payload,
         ),
@@ -34,23 +33,23 @@ extension PortableValueAdmission on CheckedEditorCatalog {
 
 bool _admitsPortableValue(
   CheckedEditorCatalog catalog,
-  types.TypeUse expected,
-  types.DataValue value,
+  skir.TypeUse expected,
+  skir.DataValue value,
   int depth,
 ) {
-  if (depth > _maximumPortableValueDepth || value == types.DataValue.unknown) {
+  if (depth > _maximumPortableValueDepth || value == skir.DataValue.unknown) {
     return false;
   }
-  if (value == types.DataValue.unfilled) return true;
-  if (expected case types.TypeUse_nullableWrapper(value: final nullable)) {
-    return value == types.DataValue.null_ ||
+  if (value == skir.DataValue.unfilled) return true;
+  if (expected case skir.TypeUse_nullableWrapper(value: final nullable)) {
+    return value == skir.DataValue.null_ ||
         _admitsPortableValue(catalog, nullable.value, value, depth + 1);
   }
-  if (value == types.DataValue.null_) return false;
+  if (value == skir.DataValue.null_) return false;
   return switch (expected) {
-    types.TypeUse_scalarWrapper(value: final scalar) =>
+    skir.TypeUse_scalarWrapper(value: final scalar) =>
       admitsPortableScalarValue(scalar, value),
-    types.TypeUse_namedWrapper(value: final named) => _admitsNamed(
+    skir.TypeUse_namedWrapper(value: final named) => _admitsNamed(
       catalog,
       named,
       value,
@@ -62,12 +61,12 @@ bool _admitsPortableValue(
 
 bool _admitsNamed(
   CheckedEditorCatalog catalog,
-  types.NamedTypeUse expected,
-  types.DataValue value,
+  skir.NamedTypeUse expected,
+  skir.DataValue value,
   int depth,
 ) {
   final named = switch (value) {
-    types.DataValue_namedWrapper(:final value) => value,
+    skir.DataValue_namedWrapper(:final value) => value,
     _ => null,
   };
   if (named == null) return false;
@@ -76,13 +75,13 @@ bool _admitsNamed(
     return false;
   }
   if (!catalog.isReadableAs(
-    types.TypeUse.wrapNamed(named.actualType),
-    types.TypeUse.wrapNamed(expected),
+    skir.TypeUse.wrapNamed(named.actualType),
+    skir.TypeUse.wrapNamed(expected),
   )) {
     return false;
   }
   final published = catalog.published(named.actualType.definition)!;
-  final selection = types.TypeSelection.wrapComplete(named.actualType);
+  final selection = skir.TypeSelection.wrapComplete(named.actualType);
   return _admitsPayload(
     catalog,
     selection,
@@ -94,33 +93,33 @@ bool _admitsNamed(
 
 bool _admitsPayload(
   CheckedEditorCatalog catalog,
-  types.TypeSelection selection,
-  types.RepresentationTemplate representation,
-  types.DataValue value,
+  skir.TypeSelection selection,
+  skir.RepresentationTemplate representation,
+  skir.DataValue value,
   int depth,
 ) {
-  if (depth > _maximumPortableValueDepth || value == types.DataValue.unknown) {
+  if (depth > _maximumPortableValueDepth || value == skir.DataValue.unknown) {
     return false;
   }
-  if (value == types.DataValue.unfilled) return true;
+  if (value == skir.DataValue.unfilled) return true;
   return switch (representation) {
-    types.RepresentationTemplate_scalarWrapper(value: final scalar) =>
+    skir.RepresentationTemplate_scalarWrapper(value: final scalar) =>
       admitsPortableScalarValue(scalar.kind, value),
-    types.RepresentationTemplate_recordWrapper() => _admitsRecord(
+    skir.RepresentationTemplate_recordWrapper() => _admitsRecord(
       catalog,
       selection,
       value,
       depth + 1,
     ),
-    types.RepresentationTemplate_sequenceWrapper(value: final sequence) =>
+    skir.RepresentationTemplate_sequenceWrapper(value: final sequence) =>
       _admitsSequence(catalog, selection, sequence, value, depth + 1),
-    types.RepresentationTemplate_mappingWrapper(value: final mapping) =>
+    skir.RepresentationTemplate_mappingWrapper(value: final mapping) =>
       _admitsMapping(catalog, selection, mapping, value, depth + 1),
-    types.RepresentationTemplate_enumerationWrapper(value: final enumeration) =>
-      value is types.DataValue_enumCaseWrapper &&
+    skir.RepresentationTemplate_enumerationWrapper(value: final enumeration) =>
+      value is skir.DataValue_enumCaseWrapper &&
           enumeration.cases.any((candidate) => candidate.key == value.value),
-    types.RepresentationTemplate_linkWrapper(value: final link) =>
-      value is types.DataValue_linkWrapper &&
+    skir.RepresentationTemplate_linkWrapper(value: final link) =>
+      value is skir.DataValue_linkWrapper &&
           value.value.endpoint == link.endpoint,
     _ => false,
   };
@@ -128,12 +127,12 @@ bool _admitsPayload(
 
 bool _admitsRecord(
   CheckedEditorCatalog catalog,
-  types.TypeSelection selection,
-  types.DataValue value,
+  skir.TypeSelection selection,
+  skir.DataValue value,
   int depth,
 ) {
   final record = switch (value) {
-    types.DataValue_recordWrapper(:final value) => value,
+    skir.DataValue_recordWrapper(:final value) => value,
     _ => null,
   };
   if (record == null) return false;
@@ -142,7 +141,7 @@ bool _admitsRecord(
   final expected = {
     for (final field in fields) field.template.key: field.type!,
   };
-  final actual = <String, types.DataValue>{};
+  final actual = <String, skir.DataValue>{};
   for (final field in record.fields) {
     if (actual.containsKey(field.name)) return false;
     actual[field.name] = field.value;
@@ -163,23 +162,23 @@ bool _admitsRecord(
 
 bool _admitsSequence(
   CheckedEditorCatalog catalog,
-  types.TypeSelection selection,
-  types.SequenceRepresentationTemplate representation,
-  types.DataValue value,
+  skir.TypeSelection selection,
+  skir.SequenceRepresentationTemplate representation,
+  skir.DataValue value,
   int depth,
 ) {
   final items = switch ((representation.kind, value)) {
-    (final kind, types.DataValue_listValueWrapper(value: final payload))
-        when kind == types.CollectionKind.list =>
+    (final kind, skir.DataValue_listValueWrapper(value: final payload))
+        when kind == skir.CollectionKind.list =>
       payload.items,
-    (final kind, types.DataValue_setValueWrapper(value: final payload))
-        when kind == types.CollectionKind.set_ =>
+    (final kind, skir.DataValue_setValueWrapper(value: final payload))
+        when kind == skir.CollectionKind.set_ =>
       payload.items,
     _ => null,
   };
   final itemType = catalog.applyTemplate(representation.item, selection);
   if (items == null || itemType == null) return false;
-  final ids = <types.ItemId>{};
+  final ids = <skir.ItemId>{};
   for (final item in items) {
     if (!ids.add(item.id) ||
         !_admitsPortableValue(catalog, itemType, item.value, depth + 1)) {
@@ -191,19 +190,19 @@ bool _admitsSequence(
 
 bool _admitsMapping(
   CheckedEditorCatalog catalog,
-  types.TypeSelection selection,
-  types.MappingRepresentationTemplate representation,
-  types.DataValue value,
+  skir.TypeSelection selection,
+  skir.MappingRepresentationTemplate representation,
+  skir.DataValue value,
   int depth,
 ) {
   final rows = switch (value) {
-    types.DataValue_mapValueWrapper(:final value) => value.rows,
+    skir.DataValue_mapValueWrapper(:final value) => value.rows,
     _ => null,
   };
   final keyType = catalog.applyTemplate(representation.key, selection);
   final valueType = catalog.applyTemplate(representation.value, selection);
   if (rows == null || keyType == null || valueType == null) return false;
-  final ids = <types.ItemId>{};
+  final ids = <skir.ItemId>{};
   for (final row in rows) {
     if (!ids.add(row.id) ||
         !_admitsPortableValue(catalog, keyType, row.key, depth + 1) ||

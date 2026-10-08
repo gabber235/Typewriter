@@ -1,6 +1,4 @@
-import "dart:math" as math;
-
-import "package:flutter/widgets.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 @immutable
 /// Immutable coordinate conversion and overscan state for the timeline plane.
@@ -31,12 +29,12 @@ class TimelineViewport {
 
   int get visibleStartFrame {
     final frame = (horizontalOffset / pixelsPerFrame).floor() - overscanFrames;
-    return math.max(0, frame);
+    return max(0, frame);
   }
 
   int get visibleEndFrame {
     final frame = ((horizontalOffset + planeWidth) / pixelsPerFrame).ceil();
-    return math.max(visibleStartFrame, frame + overscanFrames);
+    return max(visibleStartFrame, frame + overscanFrames);
   }
 
   int get visibleFrameCount {

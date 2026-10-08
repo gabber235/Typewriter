@@ -1,5 +1,4 @@
-import "package:flutter/material.dart";
-import "package:typewriter_panel/app/presentation/theme/theme.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Displays an identifier that users may need to copy or compare while
 /// inspecting an object.

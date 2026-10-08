@@ -73,7 +73,7 @@ void _testHostApply() {
             host: _hostWithRevision(harness.host, 2),
             realm: harness.realm,
             engine: skir.EngineInstance(
-              engineId: recordId("engine_instance:paper"),
+              engineId: skir.recordId("engine_instance:paper"),
               ownerHost: harness.realm.ownerHost,
               realm: skir.RealmInfo(
                 realmId: harness.realm.realmId,
@@ -124,7 +124,7 @@ void _testHostApply() {
     view.dispose();
     harness.servicesSubscription.close();
     harness.topologySubscription.close();
-    organization = recordId("organization:org2");
+    organization = skir.recordId("organization:org2");
     harness.container.invalidate(organizationIdProvider);
 
     await harness.container.pump();

@@ -13,15 +13,15 @@ void main() {
       "a:b",
       "a b/한글`",
     ]) {
-      final id = recordId("page:$key");
+      final id = skir.recordId("page:$key");
       final routeKey = Uri.decodeComponent(Uri.encodeComponent(id.id));
-      expect(recordId("page:$routeKey"), id);
+      expect(skir.recordId("page:$routeKey"), id);
       expect(id.id, key);
     }
   });
 
   test("query rendering is separate from raw string identity", () {
-    final id = recordId("page:old-id");
+    final id = skir.recordId("page:old-id");
     expect(id.id, "old-id");
     expect(id.toSurrealQl(), "page:`old-id`");
     expect(

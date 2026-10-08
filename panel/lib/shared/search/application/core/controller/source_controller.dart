@@ -1,6 +1,3 @@
-import "dart:async";
-
-import "package:flutter/foundation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Owns raw query text and the parsed context sent to a [SearchSource].

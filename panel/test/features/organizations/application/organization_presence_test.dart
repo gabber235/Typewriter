@@ -1,5 +1,4 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:riverpod/riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -39,9 +38,9 @@ void main() {
       skir.PresenceLocation_pageWrapper(:final value) => value,
       _ => throw StateError("Expected page presence"),
     };
-    expect(page.realmId, recordId("service:realm1"));
-    expect(page.bookId, recordId("book:book1"));
-    expect(page.pageId, recordId("page:page1"));
+    expect(page.realmId, skir.recordId("service:realm1"));
+    expect(page.bookId, skir.recordId("book:book1"));
+    expect(page.pageId, skir.recordId("page:page1"));
     expect(page.activity, skir.PageActivity.overview);
 
     subscription.close();
@@ -125,7 +124,9 @@ final class _Harness {
     container = ProviderContainer.test(
       overrides: [
         userIdProvider.overrideWith((ref) async => "authenticated-user"),
-        organizationIdProvider.overrideWithValue(recordId("organization:org1")),
+        organizationIdProvider.overrideWithValue(
+          skir.recordId("organization:org1"),
+        ),
         currentRouteProvider.overrideWithValue(route),
         natsProvider.overrideWithValue(nats),
       ],

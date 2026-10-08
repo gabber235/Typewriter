@@ -1,12 +1,7 @@
-import "dart:convert";
-import "dart:io";
-
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
-    as expression;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
-import "package:typewriter_panel/shared/editors/application/portable_expression.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   test("matches the shared portable expression corpus", () async {
@@ -64,17 +59,17 @@ void main() {
   });
 
   test("uses ordered short circuit and missing only fallback", () {
-    final missing = types.ExpressionBindingId(value: "missing");
+    final missing = skir.ExpressionBindingId(value: "missing");
     final evaluator = PortableExpressionEvaluator(const {}, budget: _budget());
-    final unread = expression.ExpressionNode.createRead(
+    final unread = skir.ExpressionNode.createRead(
       binding: missing,
-      path: types.ValuePath(segments: const []),
+      path: skir.ValuePath(segments: const []),
     );
 
     final shortCircuit = evaluator.evaluate(
-      expression.ExpressionNode.createAnd(
-        left: expression.ExpressionNode.wrapLiteral(
-          types.DataValue.wrapBoolean(false),
+      skir.ExpressionNode.createAnd(
+        left: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapBoolean(false),
         ),
         right: unread,
       ),
@@ -83,13 +78,13 @@ void main() {
     expect(shortCircuit.reads, isEmpty);
 
     final failed = evaluator.evaluate(
-      expression.ExpressionNode.createOrElse(
-        input: expression.ExpressionNode.createCall(
-          operation: types.OperationId(value: "unknown"),
+      skir.ExpressionNode.createOrElse(
+        input: skir.ExpressionNode.createCall(
+          operation: skir.OperationId(value: "unknown"),
           arguments: const [],
         ),
-        fallback: expression.ExpressionNode.wrapLiteral(
-          types.DataValue.wrapStringValue("fallback"),
+        fallback: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue("fallback"),
         ),
       ),
     );
@@ -97,18 +92,18 @@ void main() {
   });
 
   test("configured value reads retain their exact nested location", () {
-    final location = types.ValueLocation(
-      resource: types.ResourceId(value: "element:message"),
-      path: types.ValuePath(
-        segments: [types.PathSegment.createField(name: "style")],
+    final location = skir.ValueLocation(
+      resource: skir.ResourceId(value: "element:message"),
+      path: skir.ValuePath(
+        segments: [skir.PathSegment.createField(name: "style")],
       ),
     );
     final evaluator = PortableExpressionEvaluator.configuredValue(
-      value: types.DataValue.createRecord(
+      value: skir.DataValue.createRecord(
         fields: [
-          types.FieldValue(
+          skir.FieldValue(
             name: "visible",
-            value: types.DataValue.wrapBoolean(true),
+            value: skir.DataValue.wrapBoolean(true),
           ),
         ],
       ),
@@ -117,10 +112,10 @@ void main() {
     );
 
     final result = evaluator.evaluate(
-      expression.ExpressionNode.createRead(
-        binding: types.ExpressionBindingId(value: "configured_value"),
-        path: types.ValuePath(
-          segments: [types.PathSegment.createField(name: "visible")],
+      skir.ExpressionNode.createRead(
+        binding: skir.ExpressionBindingId(value: "configured_value"),
+        path: skir.ValuePath(
+          segments: [skir.PathSegment.createField(name: "visible")],
         ),
       ),
     );
@@ -128,12 +123,12 @@ void main() {
     expect(result, isA<PortableExpressionAvailable>());
     expect(
       result.reads.single.location,
-      types.ValueLocation(
+      skir.ValueLocation(
         resource: location.resource,
-        path: types.ValuePath(
+        path: skir.ValuePath(
           segments: [
-            types.PathSegment.createField(name: "style"),
-            types.PathSegment.createField(name: "visible"),
+            skir.PathSegment.createField(name: "style"),
+            skir.PathSegment.createField(name: "visible"),
           ],
         ),
       ),
@@ -159,29 +154,29 @@ void main() {
 
   test("evaluates generated helper and rule operations", () {
     final evaluator = PortableExpressionEvaluator(const {}, budget: _budget());
-    final collection = types.DataValue.createListValue(
+    final collection = skir.DataValue.createListValue(
       items: [
-        types.ListItem(
-          id: types.ItemId(value: "first"),
-          value: types.DataValue.wrapStringValue("value"),
+        skir.ListItem(
+          id: skir.ItemId(value: "first"),
+          value: skir.DataValue.wrapStringValue("value"),
         ),
       ],
     );
-    final record = types.DataValue.createRecord(
+    final record = skir.DataValue.createRecord(
       fields: [
-        types.FieldValue(
+        skir.FieldValue(
           name: "title",
-          value: types.DataValue.wrapStringValue("Quest"),
+          value: skir.DataValue.wrapStringValue("Quest"),
         ),
       ],
     );
-    final checks = <String, ({List<types.DataValue> arguments, String value})>{
+    final checks = <String, ({List<skir.DataValue> arguments, String value})>{
       "typewriter.rule.nonEmpty": (
-        arguments: [types.DataValue.wrapStringValue("value")],
+        arguments: [skir.DataValue.wrapStringValue("value")],
         value: "boolean:true",
       ),
       "typewriter.rule.singleLine": (
-        arguments: [types.DataValue.wrapStringValue("one line")],
+        arguments: [skir.DataValue.wrapStringValue("one line")],
         value: "boolean:true",
       ),
       "typewriter.collection.size": (
@@ -190,32 +185,30 @@ void main() {
       ),
       "typewriter.number.gt": (
         arguments: [
-          types.DataValue.wrapInteger("9"),
-          types.DataValue.wrapInteger("4"),
+          skir.DataValue.wrapInteger("9"),
+          skir.DataValue.wrapInteger("4"),
         ],
         value: "boolean:true",
       ),
       "typewriter.rule.minimum": (
         arguments: [
-          types.DataValue.wrapInteger("5"),
-          types.DataValue.wrapInteger("5"),
-          types.DataValue.wrapBoolean(true),
+          skir.DataValue.wrapInteger("5"),
+          skir.DataValue.wrapInteger("5"),
+          skir.DataValue.wrapBoolean(true),
         ],
         value: "boolean:true",
       ),
       "typewriter.record.field": (
-        arguments: [record, types.DataValue.wrapStringValue("title")],
+        arguments: [record, skir.DataValue.wrapStringValue("title")],
         value: "string:Quest",
       ),
     };
 
     for (final entry in checks.entries) {
       final result = evaluator.evaluate(
-        expression.ExpressionNode.createCall(
-          operation: types.OperationId(value: entry.key),
-          arguments: entry.value.arguments.map(
-            expression.ExpressionNode.wrapLiteral,
-          ),
+        skir.ExpressionNode.createCall(
+          operation: skir.OperationId(value: entry.key),
+          arguments: entry.value.arguments.map(skir.ExpressionNode.wrapLiteral),
         ),
       );
       expect(result, isA<PortableExpressionAvailable>(), reason: entry.key);
@@ -230,27 +223,27 @@ void main() {
   test(
     "canonical equality ignores collection identities and unordered order",
     () {
-      final leftRecord = types.DataValue.createRecord(
+      final leftRecord = skir.DataValue.createRecord(
         fields: [
-          types.FieldValue(
+          skir.FieldValue(
             name: "second",
-            value: types.DataValue.wrapInteger("2"),
+            value: skir.DataValue.wrapInteger("2"),
           ),
-          types.FieldValue(
+          skir.FieldValue(
             name: "first",
-            value: types.DataValue.wrapInteger("1"),
+            value: skir.DataValue.wrapInteger("1"),
           ),
         ],
       );
-      final rightRecord = types.DataValue.createRecord(
+      final rightRecord = skir.DataValue.createRecord(
         fields: [
-          types.FieldValue(
+          skir.FieldValue(
             name: "first",
-            value: types.DataValue.wrapInteger("1"),
+            value: skir.DataValue.wrapInteger("1"),
           ),
-          types.FieldValue(
+          skir.FieldValue(
             name: "second",
-            value: types.DataValue.wrapInteger("2"),
+            value: skir.DataValue.wrapInteger("2"),
           ),
         ],
       );
@@ -273,27 +266,27 @@ void main() {
         );
       }
 
-      final keyed = types.DataValue.createMapValue(
+      final keyed = skir.DataValue.createMapValue(
         rows: [
-          types.MapRow(
-            id: types.ItemId(value: "record"),
+          skir.MapRow(
+            id: skir.ItemId(value: "record"),
             key: leftRecord,
-            value: types.DataValue.wrapStringValue("record"),
+            value: skir.DataValue.wrapStringValue("record"),
           ),
-          types.MapRow(
-            id: types.ItemId(value: "list"),
+          skir.MapRow(
+            id: skir.ItemId(value: "list"),
             key: leftList,
-            value: types.DataValue.wrapStringValue("list"),
+            value: skir.DataValue.wrapStringValue("list"),
           ),
-          types.MapRow(
-            id: types.ItemId(value: "set"),
+          skir.MapRow(
+            id: skir.ItemId(value: "set"),
             key: leftSet,
-            value: types.DataValue.wrapStringValue("set"),
+            value: skir.DataValue.wrapStringValue("set"),
           ),
-          types.MapRow(
-            id: types.ItemId(value: "map"),
+          skir.MapRow(
+            id: skir.ItemId(value: "map"),
             key: leftMap,
-            value: types.DataValue.wrapStringValue("map"),
+            value: skir.DataValue.wrapStringValue("map"),
           ),
         ],
       );
@@ -313,28 +306,28 @@ void main() {
   );
 
   test("link target projection preserves the resource key", () {
-    final link = types.DataValue.createLink(
-      endpoint: types.EndpointId(value: "page.elements"),
-      target: types.LinkTarget(
-        resource: types.ResourceId(value: "page:first"),
-        opposite: types.ValuePath(segments: const []),
+    final link = skir.DataValue.createLink(
+      endpoint: skir.EndpointId(value: "page.elements"),
+      target: skir.LinkTarget(
+        resource: skir.ResourceId(value: "page:first"),
+        opposite: skir.ValuePath(segments: const []),
       ),
     );
     expect(
       _availableCall("typewriter.link.target", [link]),
-      types.DataValue.wrapStringValue("page:first"),
+      skir.DataValue.wrapStringValue("page:first"),
     );
   });
 
   test("canonical links preserve their opposite location", () {
-    types.DataValue link(String item) => types.DataValue.createLink(
-      endpoint: types.EndpointId(value: "page.elements"),
-      target: types.LinkTarget(
-        resource: types.ResourceId(value: "page:first"),
-        opposite: types.ValuePath(
+    skir.DataValue link(String item) => skir.DataValue.createLink(
+      endpoint: skir.EndpointId(value: "page.elements"),
+      target: skir.LinkTarget(
+        resource: skir.ResourceId(value: "page:first"),
+        opposite: skir.ValuePath(
           segments: [
-            types.PathSegment.createField(name: "elements"),
-            types.PathSegment.createItem(id: types.ItemId(value: item)),
+            skir.PathSegment.createField(name: "elements"),
+            skir.PathSegment.createItem(id: skir.ItemId(value: item)),
           ],
         ),
       ),
@@ -352,16 +345,16 @@ void main() {
 
   test("regex replacement preserves escapes and rejects absent captures", () {
     final escaped = _availableCall("typewriter.regex.replace", [
-      types.DataValue.wrapStringValue("a"),
-      types.DataValue.wrapStringValue("(a)"),
-      types.DataValue.wrapStringValue(r"\$1"),
+      skir.DataValue.wrapStringValue("a"),
+      skir.DataValue.wrapStringValue("(a)"),
+      skir.DataValue.wrapStringValue(r"\$1"),
     ]);
     expect(_valueKey(escaped), r"string:$1");
 
     final failed = _call("typewriter.regex.replace", [
-      types.DataValue.wrapStringValue("a"),
-      types.DataValue.wrapStringValue("(a)"),
-      types.DataValue.wrapStringValue(r"$99"),
+      skir.DataValue.wrapStringValue("a"),
+      skir.DataValue.wrapStringValue("(a)"),
+      skir.DataValue.wrapStringValue(r"$99"),
     ]);
     expect(failed, isA<PortableExpressionFailed>());
     expect(
@@ -381,8 +374,8 @@ void main() {
 
       for (final pattern in [r"\v", r"[\v]"]) {
         final result = _call("typewriter.regex.matches", [
-          types.DataValue.wrapStringValue("\n"),
-          types.DataValue.wrapStringValue(pattern),
+          skir.DataValue.wrapStringValue("\n"),
+          skir.DataValue.wrapStringValue(pattern),
         ]);
         expect(result, isA<PortableExpressionFailed>());
         expect(
@@ -396,8 +389,8 @@ void main() {
   test("decimal division uses 34 significant digits and half even rounding", () {
     void expectQuotient(String dividend, String divisor, String expected) {
       final value = _availableCall("typewriter.number.divide", [
-        types.DataValue.wrapDecimal(dividend),
-        types.DataValue.wrapDecimal(divisor),
+        skir.DataValue.wrapDecimal(dividend),
+        skir.DataValue.wrapDecimal(divisor),
       ]);
       expect(_valueKey(value), "decimal:$expected");
     }
@@ -422,12 +415,12 @@ void main() {
           const {},
           budget: _budget(maxSteps: 2),
         ).evaluate(
-          expression.ExpressionNode.createAnd(
-            left: expression.ExpressionNode.wrapLiteral(
-              types.DataValue.wrapBoolean(false),
+          skir.ExpressionNode.createAnd(
+            left: skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapBoolean(false),
             ),
-            right: expression.ExpressionNode.wrapLiteral(
-              types.DataValue.wrapBoolean(true),
+            right: skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapBoolean(true),
             ),
           ),
         );
@@ -438,12 +431,12 @@ void main() {
           const {},
           budget: _budget(maxSteps: 2),
         ).evaluate(
-          expression.ExpressionNode.createAnd(
-            left: expression.ExpressionNode.wrapLiteral(
-              types.DataValue.wrapBoolean(true),
+          skir.ExpressionNode.createAnd(
+            left: skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapBoolean(true),
             ),
-            right: expression.ExpressionNode.wrapLiteral(
-              types.DataValue.wrapBoolean(true),
+            right: skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapBoolean(true),
             ),
           ),
         );
@@ -453,14 +446,14 @@ void main() {
       "expression_step_limit",
     );
 
-    var nested = expression.ExpressionNode.wrapLiteral(
-      types.DataValue.wrapBoolean(true),
+    var nested = skir.ExpressionNode.wrapLiteral(
+      skir.DataValue.wrapBoolean(true),
     );
     for (var index = 0; index < 600; index++) {
-      nested = expression.ExpressionNode.createAnd(
+      nested = skir.ExpressionNode.createAnd(
         left: nested,
-        right: expression.ExpressionNode.wrapLiteral(
-          types.DataValue.wrapBoolean(true),
+        right: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapBoolean(true),
         ),
       );
     }
@@ -476,13 +469,13 @@ void main() {
   });
 
   test("charges regex search and replacement output to the step budget", () {
-    expression.ExpressionNode call(String operation, List<String> values) =>
-        expression.ExpressionNode.createCall(
-          operation: types.OperationId(value: operation),
+    skir.ExpressionNode call(String operation, List<String> values) =>
+        skir.ExpressionNode.createCall(
+          operation: skir.OperationId(value: operation),
           arguments: values
               .map(
-                (value) => expression.ExpressionNode.wrapLiteral(
-                  types.DataValue.wrapStringValue(value),
+                (value) => skir.ExpressionNode.wrapLiteral(
+                  skir.DataValue.wrapStringValue(value),
                 ),
               )
               .toList(),
@@ -523,17 +516,15 @@ void main() {
   });
 
   test("bounds text expansion and uses Unicode character boundaries", () {
-    expression.ExpressionNode call(
-      String operation,
-      List<types.DataValue> values,
-    ) => expression.ExpressionNode.createCall(
-      operation: types.OperationId(value: operation),
-      arguments: values.map(expression.ExpressionNode.wrapLiteral),
-    );
+    skir.ExpressionNode call(String operation, List<skir.DataValue> values) =>
+        skir.ExpressionNode.createCall(
+          operation: skir.OperationId(value: operation),
+          arguments: values.map(skir.ExpressionNode.wrapLiteral),
+        );
 
     PortableExpressionResult evaluate(
       String operation,
-      List<types.DataValue> values, {
+      List<skir.DataValue> values, {
       int maxSteps = 100,
       int maxCollectionItems = 100,
     }) => PortableExpressionEvaluator(
@@ -545,9 +536,9 @@ void main() {
     ).evaluate(call(operation, values));
 
     final replaced = evaluate("typewriter.text.replace", [
-      types.DataValue.wrapStringValue("😀"),
-      types.DataValue.wrapStringValue(""),
-      types.DataValue.wrapStringValue("_"),
+      skir.DataValue.wrapStringValue("😀"),
+      skir.DataValue.wrapStringValue(""),
+      skir.DataValue.wrapStringValue("_"),
     ]);
     expect(replaced, isA<PortableExpressionAvailable>());
     expect(
@@ -556,13 +547,13 @@ void main() {
     );
 
     final split = evaluate("typewriter.text.split", [
-      types.DataValue.wrapStringValue("😀x"),
-      types.DataValue.wrapStringValue(""),
+      skir.DataValue.wrapStringValue("😀x"),
+      skir.DataValue.wrapStringValue(""),
     ]);
     expect(split, isA<PortableExpressionAvailable>());
     final splitItems =
         ((split as PortableExpressionAvailable).value
-                as types.DataValue_listValueWrapper)
+                as skir.DataValue_listValueWrapper)
             .value
             .items;
     expect(splitItems.map((item) => _valueKey(item.value)), [
@@ -570,37 +561,37 @@ void main() {
       "string:x",
     ]);
     final emptySplit = evaluate("typewriter.text.split", [
-      types.DataValue.wrapStringValue(""),
-      types.DataValue.wrapStringValue(""),
+      skir.DataValue.wrapStringValue(""),
+      skir.DataValue.wrapStringValue(""),
     ]);
     expect(emptySplit, isA<PortableExpressionAvailable>());
     expect(
       ((emptySplit as PortableExpressionAvailable).value
-              as types.DataValue_listValueWrapper)
+              as skir.DataValue_listValueWrapper)
           .value
           .items,
       isEmpty,
     );
 
-    final large = types.DataValue.wrapStringValue(
+    final large = skir.DataValue.wrapStringValue(
       List.filled(20, "value").join(),
     );
     final amplified = [
       evaluate("typewriter.text.replace", [
-        types.DataValue.wrapStringValue("a"),
-        types.DataValue.wrapStringValue(""),
+        skir.DataValue.wrapStringValue("a"),
+        skir.DataValue.wrapStringValue(""),
         large,
       ], maxSteps: 30),
       evaluate("typewriter.text.join", [
-        types.DataValue.createListValue(
+        skir.DataValue.createListValue(
           items: [
-            types.ListItem(
-              id: types.ItemId(value: "only"),
+            skir.ListItem(
+              id: skir.ItemId(value: "only"),
               value: large,
             ),
           ],
         ),
-        types.DataValue.wrapStringValue(""),
+        skir.DataValue.wrapStringValue(""),
       ], maxSteps: 30),
       evaluate("typewriter.text.interpolate", [large], maxSteps: 30),
     ];
@@ -613,8 +604,8 @@ void main() {
     }
 
     final splitLimit = evaluate("typewriter.text.split", [
-      types.DataValue.wrapStringValue("😀x"),
-      types.DataValue.wrapStringValue(""),
+      skir.DataValue.wrapStringValue("😀x"),
+      skir.DataValue.wrapStringValue(""),
     ], maxCollectionItems: 1);
     expect(splitLimit, isA<PortableExpressionFailed>());
     expect(
@@ -625,29 +616,29 @@ void main() {
 
   test("validates operation arity and finite scientific notation", () {
     final comparison = _availableCall("typewriter.number.gt", [
-      types.DataValue.wrapFloat(1e-8),
-      types.DataValue.wrapFloat(0),
+      skir.DataValue.wrapFloat(1e-8),
+      skir.DataValue.wrapFloat(0),
     ]);
     expect(_valueKey(comparison), "boolean:true");
 
     final missing = _call("typewriter.number.gt", [
-      types.DataValue.wrapInteger("1"),
+      skir.DataValue.wrapInteger("1"),
     ]);
     expect(missing, isA<PortableExpressionFailed>());
     expect((missing as PortableExpressionFailed).code, "operation_arity");
 
     final extra = _call("typewriter.boolean.not", [
-      types.DataValue.wrapBoolean(true),
-      types.DataValue.wrapBoolean(false),
+      skir.DataValue.wrapBoolean(true),
+      skir.DataValue.wrapBoolean(false),
     ]);
     expect(extra, isA<PortableExpressionFailed>());
     expect((extra as PortableExpressionFailed).code, "operation_arity");
   });
 
   test("deep authored values return a bounded evaluation failure", () {
-    final actualType = types.NamedTypeUse(
-      definition: types.TypeDefinitionId(
-        typeId: types.TypeId.createQualified(
+    final actualType = skir.NamedTypeUse(
+      definition: skir.TypeDefinitionId(
+        typeId: skir.TypeId.createQualified(
           namespace: "typewriter",
           name: "Nested",
         ),
@@ -655,9 +646,9 @@ void main() {
       ),
       arguments: const [],
     );
-    var value = types.DataValue.wrapBoolean(true);
+    var value = skir.DataValue.wrapBoolean(true);
     for (var depth = 0; depth < 600; depth++) {
-      value = types.DataValue.createNamed(
+      value = skir.DataValue.createNamed(
         actualType: actualType,
         payload: value,
       );
@@ -672,7 +663,7 @@ void main() {
   test("uses portable whitespace and partial uniqueness semantics", () {
     for (final whitespace in ["\u0085", "\ufeff", "\u001c"]) {
       final nonBlank = _availableCall("typewriter.rule.nonBlank", [
-        types.DataValue.wrapStringValue(whitespace),
+        skir.DataValue.wrapStringValue(whitespace),
       ]);
       expect(
         _valueKey(nonBlank),
@@ -680,12 +671,12 @@ void main() {
       );
     }
 
-    types.DataValue values(List<types.DataValue> items) =>
-        types.DataValue.createListValue(
+    skir.DataValue values(List<skir.DataValue> items) =>
+        skir.DataValue.createListValue(
           items: [
             for (final entry in items.indexed)
-              types.ListItem(
-                id: types.ItemId(value: "item.${entry.$1}"),
+              skir.ListItem(
+                id: skir.ItemId(value: "item.${entry.$1}"),
                 value: entry.$2,
               ),
           ],
@@ -693,9 +684,9 @@ void main() {
 
     final disproved = _call("typewriter.rule.unique", [
       values([
-        types.DataValue.wrapStringValue("same"),
-        types.DataValue.unfilled,
-        types.DataValue.wrapStringValue("same"),
+        skir.DataValue.wrapStringValue("same"),
+        skir.DataValue.unfilled,
+        skir.DataValue.wrapStringValue("same"),
       ]),
     ]);
     expect(disproved, isA<PortableExpressionAvailable>());
@@ -706,46 +697,46 @@ void main() {
 
     final unknown = _call("typewriter.rule.unique", [
       values([
-        types.DataValue.wrapStringValue("known"),
-        types.DataValue.unfilled,
+        skir.DataValue.wrapStringValue("known"),
+        skir.DataValue.unfilled,
       ]),
     ]);
     expect(unknown, isA<PortableExpressionUnavailable>());
 
     final size = _availableCall("typewriter.collection.size", [
-      values([types.DataValue.unfilled]),
+      values([skir.DataValue.unfilled]),
     ]);
     expect(_valueKey(size), "integer:1");
   });
 
   test("evaluates the complete collection expression vocabulary", () {
-    final item = types.ExpressionBindingId(value: "item");
-    final accumulator = types.ExpressionBindingId(value: "accumulator");
-    final left = types.ExpressionBindingId(value: "left");
-    final right = types.ExpressionBindingId(value: "right");
+    final item = skir.ExpressionBindingId(value: "item");
+    final accumulator = skir.ExpressionBindingId(value: "accumulator");
+    final left = skir.ExpressionBindingId(value: "left");
+    final right = skir.ExpressionBindingId(value: "right");
     final input = _list("source", ["3", "1", "2", "1"]);
     final itemRead = _bindingRead(item);
     final accumulatorRead = _bindingRead(accumulator);
     final leftRead = _bindingRead(left);
     final rightRead = _bindingRead(right);
-    final one = expression.ExpressionNode.wrapLiteral(
-      types.DataValue.wrapInteger("1"),
+    final one = skir.ExpressionNode.wrapLiteral(
+      skir.DataValue.wrapInteger("1"),
     );
-    final two = expression.ExpressionNode.wrapLiteral(
-      types.DataValue.wrapInteger("2"),
+    final two = skir.ExpressionNode.wrapLiteral(
+      skir.DataValue.wrapInteger("2"),
     );
     final evaluator = PortableExpressionEvaluator(const {}, budget: _budget());
 
-    PortableExpressionAvailable available(expression.ExpressionNode node) {
+    PortableExpressionAvailable available(skir.ExpressionNode node) {
       final result = evaluator.evaluate(node);
       expect(result, isA<PortableExpressionAvailable>());
       return result as PortableExpressionAvailable;
     }
 
-    expression.ExpressionNode unary(
+    skir.ExpressionNode unary(
       String operation,
-      expression.ExpressionNode body, {
-      List<expression.ExpressionNode> arguments = const [],
+      skir.ExpressionNode body, {
+      List<skir.ExpressionNode> arguments = const [],
     }) => _collectionNode(
       operation,
       input,
@@ -842,23 +833,22 @@ void main() {
     ).value;
     expect(_groupSizes(groups), {"integer:1": 3, "integer:0": 1});
 
-    final nested = types.DataValue.createListValue(
+    final nested = skir.DataValue.createListValue(
       items: [
-        types.ListItem(
-          id: types.ItemId(value: "nested.a"),
-          value: types.DataValue.wrapInteger("7"),
+        skir.ListItem(
+          id: skir.ItemId(value: "nested.a"),
+          value: skir.DataValue.wrapInteger("7"),
         ),
-        types.ListItem(
-          id: types.ItemId(value: "nested.b"),
-          value: types.DataValue.wrapInteger("8"),
+        skir.ListItem(
+          id: skir.ItemId(value: "nested.b"),
+          value: skir.DataValue.wrapInteger("8"),
         ),
       ],
     );
     expect(
       _integerItems(
-        available(
-          unary("flat_map", expression.ExpressionNode.wrapLiteral(nested)),
-        ).value,
+        available(unary("flat_map", skir.ExpressionNode.wrapLiteral(nested)))
+            .value,
       ),
       [7, 8, 7, 8, 7, 8, 7, 8],
     );
@@ -910,9 +900,7 @@ void main() {
             input,
             bindings: [accumulator, item],
             arguments: [
-              expression.ExpressionNode.wrapLiteral(
-                types.DataValue.wrapInteger("10"),
-              ),
+              skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapInteger("10")),
             ],
             body: _callNode("typewriter.number.add", [
               accumulatorRead,
@@ -942,11 +930,11 @@ void main() {
   });
 
   test("collection expressions enforce shape and item budgets", () {
-    final item = types.ExpressionBindingId(value: "item");
+    final item = skir.ExpressionBindingId(value: "item");
     final input = _list("source", ["3", "1", "2"]);
     final predicate = _callNode("typewriter.number.gt", [
       _bindingRead(item),
-      expression.ExpressionNode.wrapLiteral(types.DataValue.wrapInteger("2")),
+      skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapInteger("2")),
     ]);
     final shortCircuit =
         PortableExpressionEvaluator(
@@ -982,9 +970,7 @@ void main() {
             input,
             bindings: [item, item],
             arguments: [
-              expression.ExpressionNode.wrapLiteral(
-                types.DataValue.wrapInteger("0"),
-              ),
+              skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapInteger("0")),
             ],
             body: _bindingRead(item),
           ),
@@ -997,129 +983,129 @@ void main() {
   });
 }
 
-expression.ExpressionNode _collectionNode(
+skir.ExpressionNode _collectionNode(
   String operation,
-  types.DataValue input, {
-  List<types.ExpressionBindingId> bindings = const [],
-  List<expression.ExpressionNode> arguments = const [],
-  expression.ExpressionNode? body,
-}) => expression.ExpressionNode.createCollection(
-  operation: types.OperationId(value: "typewriter.collection.$operation"),
-  input: expression.ExpressionNode.wrapLiteral(input),
+  skir.DataValue input, {
+  List<skir.ExpressionBindingId> bindings = const [],
+  List<skir.ExpressionNode> arguments = const [],
+  skir.ExpressionNode? body,
+}) => skir.ExpressionNode.createCollection(
+  operation: skir.OperationId(value: "typewriter.collection.$operation"),
+  input: skir.ExpressionNode.wrapLiteral(input),
   bindings: bindings,
   arguments: arguments,
   body: body,
 );
 
-expression.ExpressionNode _bindingRead(types.ExpressionBindingId binding) =>
-    expression.ExpressionNode.createRead(
+skir.ExpressionNode _bindingRead(skir.ExpressionBindingId binding) =>
+    skir.ExpressionNode.createRead(
       binding: binding,
-      path: types.ValuePath(segments: const []),
+      path: skir.ValuePath(segments: const []),
     );
 
-expression.ExpressionNode _callNode(
+skir.ExpressionNode _callNode(
   String operation,
-  List<expression.ExpressionNode> arguments,
-) => expression.ExpressionNode.createCall(
-  operation: types.OperationId(value: operation),
+  List<skir.ExpressionNode> arguments,
+) => skir.ExpressionNode.createCall(
+  operation: skir.OperationId(value: operation),
   arguments: arguments,
 );
 
-List<int> _integerItems(types.DataValue value) {
-  final list = value as types.DataValue_listValueWrapper;
+List<int> _integerItems(skir.DataValue value) {
+  final list = value as skir.DataValue_listValueWrapper;
   return [
     for (final item in list.value.items)
-      int.parse((item.value as types.DataValue_integerWrapper).value),
+      int.parse((item.value as skir.DataValue_integerWrapper).value),
   ];
 }
 
-Map<String, int> _groupSizes(types.DataValue value) {
-  final map = value as types.DataValue_mapValueWrapper;
+Map<String, int> _groupSizes(skir.DataValue value) {
+  final map = value as skir.DataValue_mapValueWrapper;
   return {
     for (final row in map.value.rows)
       _valueKey(row.key):
-          (row.value as types.DataValue_listValueWrapper).value.items.length,
+          (row.value as skir.DataValue_listValueWrapper).value.items.length,
   };
 }
 
-PortableExpressionResult _call(String operation, List<types.DataValue> values) {
+PortableExpressionResult _call(String operation, List<skir.DataValue> values) {
   return PortableExpressionEvaluator(const {}, budget: _budget()).evaluate(
-    expression.ExpressionNode.createCall(
-      operation: types.OperationId(value: operation),
-      arguments: values.map(expression.ExpressionNode.wrapLiteral),
+    skir.ExpressionNode.createCall(
+      operation: skir.OperationId(value: operation),
+      arguments: values.map(skir.ExpressionNode.wrapLiteral),
     ),
   );
 }
 
-expression.EvaluationBudget _budget({
+skir.EvaluationBudget _budget({
   int maxSteps = 10000,
   int maxCollectionItems = 10000,
-}) => expression.EvaluationBudget(
+}) => skir.EvaluationBudget(
   maxSteps: maxSteps,
   maxCollectionItems: maxCollectionItems,
 );
 
-types.DataValue _availableCall(String operation, List<types.DataValue> values) {
+skir.DataValue _availableCall(String operation, List<skir.DataValue> values) {
   final result = _call(operation, values);
   expect(result, isA<PortableExpressionAvailable>());
   return (result as PortableExpressionAvailable).value;
 }
 
-bool _booleanCall(String operation, List<types.DataValue> values) {
+bool _booleanCall(String operation, List<skir.DataValue> values) {
   final result = _availableCall(operation, values);
   return switch (result) {
-    types.DataValue_booleanWrapper(:final value) => value,
+    skir.DataValue_booleanWrapper(:final value) => value,
     _ => throw StateError("Expected a Boolean result"),
   };
 }
 
 bool _regexMatches(String input, String pattern) =>
     _booleanCall("typewriter.regex.matches", [
-      types.DataValue.wrapStringValue(input),
-      types.DataValue.wrapStringValue(pattern),
+      skir.DataValue.wrapStringValue(input),
+      skir.DataValue.wrapStringValue(pattern),
     ]);
 
-types.DataValue _list(String prefix, List<String> values) {
-  return types.DataValue.createListValue(
+skir.DataValue _list(String prefix, List<String> values) {
+  return skir.DataValue.createListValue(
     items: [
       for (var index = 0; index < values.length; index++)
-        types.ListItem(
-          id: types.ItemId(value: "$prefix.$index"),
-          value: types.DataValue.wrapInteger(values[index]),
+        skir.ListItem(
+          id: skir.ItemId(value: "$prefix.$index"),
+          value: skir.DataValue.wrapInteger(values[index]),
         ),
     ],
   );
 }
 
-types.DataValue _set(String prefix, List<String> values) {
-  return types.DataValue.createSetValue(
+skir.DataValue _set(String prefix, List<String> values) {
+  return skir.DataValue.createSetValue(
     items: [
       for (var index = 0; index < values.length; index++)
-        types.ListItem(
-          id: types.ItemId(value: "$prefix.$index"),
-          value: types.DataValue.wrapInteger(values[index]),
+        skir.ListItem(
+          id: skir.ItemId(value: "$prefix.$index"),
+          value: skir.DataValue.wrapInteger(values[index]),
         ),
     ],
   );
 }
 
-types.DataValue _map(String prefix, List<(String, String)> values) {
-  return types.DataValue.createMapValue(
+skir.DataValue _map(String prefix, List<(String, String)> values) {
+  return skir.DataValue.createMapValue(
     rows: [
       for (var index = 0; index < values.length; index++)
-        types.MapRow(
-          id: types.ItemId(value: "$prefix.$index"),
-          key: types.DataValue.wrapStringValue(values[index].$1),
-          value: types.DataValue.wrapInteger(values[index].$2),
+        skir.MapRow(
+          id: skir.ItemId(value: "$prefix.$index"),
+          key: skir.DataValue.wrapStringValue(values[index].$1),
+          value: skir.DataValue.wrapInteger(values[index].$2),
         ),
     ],
   );
 }
 
-Map<types.ExpressionBindingId, types.DataValue> _reads(
+Map<skir.ExpressionBindingId, skir.DataValue> _reads(
   Map<String, Object?> source,
 ) {
-  final fields = <String, List<types.FieldValue>>{};
+  final fields = <String, List<skir.FieldValue>>{};
   for (final entry in source.entries) {
     final separator = entry.key.indexOf(":");
     final binding = separator < 0
@@ -1128,77 +1114,77 @@ Map<types.ExpressionBindingId, types.DataValue> _reads(
     final field = separator < 0 ? "value" : entry.key.substring(separator + 1);
     final encoded = entry.value! as Map<String, Object?>;
     final value = encoded["unavailable"] == true
-        ? types.DataValue.unfilled
+        ? skir.DataValue.unfilled
         : _value(encoded);
     fields
         .putIfAbsent(binding, () => [])
-        .add(types.FieldValue(name: field, value: value));
+        .add(skir.FieldValue(name: field, value: value));
   }
   return {
     for (final entry in fields.entries)
-      types.ExpressionBindingId(value: entry.key): types.DataValue.createRecord(
+      skir.ExpressionBindingId(value: entry.key): skir.DataValue.createRecord(
         fields: entry.value,
       ),
   };
 }
 
-expression.ExpressionNode _expression(Map<String, Object?> source) {
+skir.ExpressionNode _expression(Map<String, Object?> source) {
   if (source["call"] case final String operation) {
-    return expression.ExpressionNode.createCall(
-      operation: types.OperationId(value: operation),
+    return skir.ExpressionNode.createCall(
+      operation: skir.OperationId(value: operation),
       arguments: (source["arguments"]! as List<Object?>)
           .cast<Map<String, Object?>>()
           .map(_expression),
     );
   }
   if (source["read"] case final String binding) {
-    return expression.ExpressionNode.createRead(
-      binding: types.ExpressionBindingId(value: binding),
-      path: types.ValuePath(
+    return skir.ExpressionNode.createRead(
+      binding: skir.ExpressionBindingId(value: binding),
+      path: skir.ValuePath(
         segments: [
           for (final field in (source["path"]! as List<Object?>).cast<String>())
-            types.PathSegment.createField(name: field),
+            skir.PathSegment.createField(name: field),
         ],
       ),
     );
   }
   if (source["and"] case final List<Object?> operands) {
-    return expression.ExpressionNode.createAnd(
+    return skir.ExpressionNode.createAnd(
       left: _expression(operands[0]! as Map<String, Object?>),
       right: _expression(operands[1]! as Map<String, Object?>),
     );
   }
   if (source["orElse"] case final List<Object?> operands) {
-    return expression.ExpressionNode.createOrElse(
+    return skir.ExpressionNode.createOrElse(
       input: _expression(operands[0]! as Map<String, Object?>),
       fallback: _expression(operands[1]! as Map<String, Object?>),
     );
   }
-  return expression.ExpressionNode.wrapLiteral(_value(source));
+  return skir.ExpressionNode.wrapLiteral(_value(source));
 }
 
-types.DataValue _value(Map<String, Object?> source) {
+skir.DataValue _value(Map<String, Object?> source) {
   if (source["unfilled"] == true) {
-    return types.DataValue.unfilled;
+    return skir.DataValue.unfilled;
   }
   if (source["integer"] case final String value) {
-    return types.DataValue.wrapInteger(value);
+    return skir.DataValue.wrapInteger(value);
   }
   if (source["decimal"] case final String value) {
-    return types.DataValue.wrapDecimal(value);
+    return skir.DataValue.wrapDecimal(value);
   }
   if (source["string"] case final String value) {
-    return types.DataValue.wrapStringValue(value);
+    return skir.DataValue.wrapStringValue(value);
   }
   if (source["boolean"] case final bool value) {
-    return types.DataValue.wrapBoolean(value);
+    return skir.DataValue.wrapBoolean(value);
   }
   if (source["named"] case final Map<String, Object?> named) {
-    return types.DataValue.createNamed(
-      actualType: types.NamedTypeUse(
-        definition: types.TypeDefinitionId(
-          typeId: types.TypeId.wrapQualified(
-            types.QualifiedTypeId(
+    return skir.DataValue.createNamed(
+      actualType: skir.NamedTypeUse(
+        definition: skir.TypeDefinitionId(
+          typeId: skir.TypeId.wrapQualified(
+            skir.QualifiedTypeId(
               namespace: named["namespace"]! as String,
               name: named["name"]! as String,
             ),
@@ -1211,10 +1197,10 @@ types.DataValue _value(Map<String, Object?> source) {
     );
   }
   if (source["record"] case final Map<String, Object?> record) {
-    return types.DataValue.createRecord(
+    return skir.DataValue.createRecord(
       fields: [
         for (final entry in record.entries)
-          types.FieldValue(
+          skir.FieldValue(
             name: entry.key,
             value: _value(entry.value! as Map<String, Object?>),
           ),
@@ -1222,21 +1208,21 @@ types.DataValue _value(Map<String, Object?> source) {
     );
   }
   if (source["list"] case final List<Object?> items) {
-    return types.DataValue.createListValue(
+    return skir.DataValue.createListValue(
       items: items.cast<Map<String, Object?>>().map(_listItem),
     );
   }
   if (source["set"] case final List<Object?> items) {
-    return types.DataValue.createSetValue(
+    return skir.DataValue.createSetValue(
       items: items.cast<Map<String, Object?>>().map(_listItem),
     );
   }
   if (source["map"] case final List<Object?> rows) {
-    return types.DataValue.createMapValue(
+    return skir.DataValue.createMapValue(
       rows: [
         for (final row in rows.cast<Map<String, Object?>>())
-          types.MapRow(
-            id: types.ItemId(value: row["id"]! as String),
+          skir.MapRow(
+            id: skir.ItemId(value: row["id"]! as String),
             key: _value(row["key"]! as Map<String, Object?>),
             value: _value(row["value"]! as Map<String, Object?>),
           ),
@@ -1246,18 +1232,18 @@ types.DataValue _value(Map<String, Object?> source) {
   throw StateError("Unsupported fixture value $source");
 }
 
-types.ListItem _listItem(Map<String, Object?> item) => types.ListItem(
-  id: types.ItemId(value: item["id"]! as String),
+skir.ListItem _listItem(Map<String, Object?> item) => skir.ListItem(
+  id: skir.ItemId(value: item["id"]! as String),
   value: _value(item["value"]! as Map<String, Object?>),
 );
 
-String _valueKey(types.DataValue value) => switch (value) {
-  types.DataValue_integerWrapper(:final value) => "integer:$value",
-  types.DataValue_decimalWrapper(:final value) =>
+String _valueKey(skir.DataValue value) => switch (value) {
+  skir.DataValue_integerWrapper(:final value) => "integer:$value",
+  skir.DataValue_decimalWrapper(:final value) =>
     "decimal:${_canonicalDecimal(value)}",
-  types.DataValue_stringValueWrapper(:final value) => "string:$value",
-  types.DataValue_booleanWrapper(:final value) => "boolean:$value",
-  types.DataValue_namedWrapper(:final value) =>
+  skir.DataValue_stringValueWrapper(:final value) => "string:$value",
+  skir.DataValue_booleanWrapper(:final value) => "boolean:$value",
+  skir.DataValue_namedWrapper(:final value) =>
     "named:${value.actualType}:${_valueKey(value.payload)}",
   _ => value.toString(),
 };

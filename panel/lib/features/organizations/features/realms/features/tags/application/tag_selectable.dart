@@ -1,5 +1,3 @@
-import "package:flutter/foundation.dart";
-import "package:riverpod/riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";

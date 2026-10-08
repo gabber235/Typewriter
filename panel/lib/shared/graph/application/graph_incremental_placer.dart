@@ -1,7 +1,4 @@
-import "dart:math" as math;
-
-import "package:flutter/widgets.dart";
-import "package:typewriter_panel/shared/graph/domain/domain.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Places incoming graph rectangles without moving existing content.
 ///
@@ -118,20 +115,20 @@ final class GraphPlacementRegion {
     ({int x, int y}) translation,
   ) => switch (direction) {
     GraphPlacementDirection.left => (
-      x: math.min(translation.x, boundary - group.right),
+      x: min(translation.x, boundary - group.right),
       y: translation.y,
     ),
     GraphPlacementDirection.right => (
-      x: math.max(translation.x, boundary - group.x),
+      x: max(translation.x, boundary - group.x),
       y: translation.y,
     ),
     GraphPlacementDirection.above => (
       x: translation.x,
-      y: math.min(translation.y, boundary - group.bottom),
+      y: min(translation.y, boundary - group.bottom),
     ),
     GraphPlacementDirection.below => (
       x: translation.x,
-      y: math.max(translation.y, boundary - group.y),
+      y: max(translation.y, boundary - group.y),
     ),
   };
 
@@ -142,20 +139,20 @@ final class GraphPlacementRegion {
     int gap,
   ) => switch (direction) {
     GraphPlacementDirection.left => (
-      x: math.min(preferred.x, obstacles.x - gap - group.right),
+      x: min(preferred.x, obstacles.x - gap - group.right),
       y: preferred.y,
     ),
     GraphPlacementDirection.right => (
-      x: math.max(preferred.x, obstacles.right + gap - group.x),
+      x: max(preferred.x, obstacles.right + gap - group.x),
       y: preferred.y,
     ),
     GraphPlacementDirection.above => (
       x: preferred.x,
-      y: math.min(preferred.y, obstacles.y - gap - group.bottom),
+      y: min(preferred.y, obstacles.y - gap - group.bottom),
     ),
     GraphPlacementDirection.below => (
       x: preferred.x,
-      y: math.max(preferred.y, obstacles.bottom + gap - group.y),
+      y: max(preferred.y, obstacles.bottom + gap - group.y),
     ),
   };
 }

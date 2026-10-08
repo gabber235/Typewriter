@@ -1,17 +1,6 @@
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring.dart"
-    as authoring;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/binding.dart"
-    as binding;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as catalog;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
-    as expression;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/presentation.dart"
-    as presentation;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../../../support/test_utils.dart";
@@ -57,14 +46,14 @@ void main() {
       (candidate) => candidate.resource == fixture.emptyTarget,
     );
     final slot = target.creatable.single;
-    final prepared = catalog.PreparedCreation(
-      record: types.AuthoringRecord(
+    final prepared = skir.PreparedCreation(
+      record: skir.AuthoringRecord(
         configuration: fixture.wrapperSelection,
         fields: [
-          types.FieldValue(name: "back", value: types.DataValue.unfilled),
-          types.FieldValue(
+          skir.FieldValue(name: "back", value: skir.DataValue.unfilled),
+          skir.FieldValue(
             name: "label",
-            value: types.DataValue.wrapStringValue("captured default"),
+            value: skir.DataValue.wrapStringValue("captured default"),
           ),
         ],
       ),
@@ -74,14 +63,14 @@ void main() {
     fixture.draft.connect(
       plan.source,
       target.resource,
-      counterpart: authoring.CounterpartChoice.createNew(
+      counterpart: skir.CounterpartChoice.createNew(
         containing: slot.containing,
         prepared: prepared,
       ),
     );
 
     final wrapper = switch (fixture.draft.read(
-      types.ValueLocation(
+      skir.ValueLocation(
         resource: fixture.emptyTarget,
         path: _fieldPath("wrapper"),
       ),
@@ -97,17 +86,16 @@ void main() {
     );
     expect(fixture.draft.links.single.secondLocation, fixture.nestedLinkPath);
     final intent = fixture.draft.intents.single;
-    expect(intent, isA<authoring.EditIntent_connectRelationWrapper>());
-    final connect =
-        (intent as authoring.EditIntent_connectRelationWrapper).value;
-    expect(connect.counterpart, isA<authoring.CounterpartChoice_newWrapper>());
-    final decoded = authoring.EditIntent.serializer.fromBytes(
-      authoring.EditIntent.serializer.toBytes(intent),
+    expect(intent, isA<skir.EditIntent_connectRelationWrapper>());
+    final connect = (intent as skir.EditIntent_connectRelationWrapper).value;
+    expect(connect.counterpart, isA<skir.CounterpartChoice_newWrapper>());
+    final decoded = skir.EditIntent.serializer.fromBytes(
+      skir.EditIntent.serializer.toBytes(intent),
     );
     final decodedConnect =
-        (decoded as authoring.EditIntent_connectRelationWrapper).value;
+        (decoded as skir.EditIntent_connectRelationWrapper).value;
     final decodedCounterpart =
-        (decodedConnect.counterpart! as authoring.CounterpartChoice_newWrapper)
+        (decodedConnect.counterpart! as skir.CounterpartChoice_newWrapper)
             .value;
     expect(
       [
@@ -146,14 +134,13 @@ void main() {
     await tester.pumpAndSettle();
 
     final intent =
-        fixture.draft.intents.single
-            as authoring.EditIntent_connectRelationWrapper;
+        fixture.draft.intents.single as skir.EditIntent_connectRelationWrapper;
     expect(
       intent.value.counterpart,
-      isA<authoring.CounterpartChoice_existingWrapper>(),
+      isA<skir.CounterpartChoice_existingWrapper>(),
     );
     final counterpart =
-        (intent.value.counterpart! as authoring.CounterpartChoice_existingWrapper)
+        (intent.value.counterpart! as skir.CounterpartChoice_existingWrapper)
             .value;
     expect(intent.value.target, fixture.existingTarget);
     expect(counterpart.id.location.resource, fixture.existingTarget);
@@ -165,20 +152,20 @@ void main() {
     tester,
   ) async {
     final fixture = _fixture();
-    final prepared = catalog.PreparedCreation(
-      record: types.AuthoringRecord(
+    final prepared = skir.PreparedCreation(
+      record: skir.AuthoringRecord(
         configuration: fixture.wrapperSelection,
         fields: [
-          types.FieldValue(name: "back", value: types.DataValue.unfilled),
-          types.FieldValue(
+          skir.FieldValue(name: "back", value: skir.DataValue.unfilled),
+          skir.FieldValue(
             name: "label",
-            value: types.DataValue.wrapStringValue("prepared"),
+            value: skir.DataValue.wrapStringValue("prepared"),
           ),
         ],
       ),
       findings: const [],
     );
-    catalog.InitializationRequest? request;
+    skir.InitializationRequest? request;
     await tester.pumpWidget(
       _linkControl(
         fixture,
@@ -200,17 +187,15 @@ void main() {
 
     expect(request?.type, fixture.wrapperSelection);
     final intent =
-        fixture.draft.intents.single
-            as authoring.EditIntent_connectRelationWrapper;
+        fixture.draft.intents.single as skir.EditIntent_connectRelationWrapper;
     final counterpart = intent.value.counterpart;
-    expect(counterpart, isA<authoring.CounterpartChoice_newWrapper>());
-    final created =
-        (counterpart! as authoring.CounterpartChoice_newWrapper).value;
+    expect(counterpart, isA<skir.CounterpartChoice_newWrapper>());
+    final created = (counterpart! as skir.CounterpartChoice_newWrapper).value;
     expect(created.prepared, prepared);
     expect(intent.value.target, fixture.emptyTarget);
     expect(
       created.containing,
-      types.ValueLocation(
+      skir.ValueLocation(
         resource: fixture.emptyTarget,
         path: _fieldPath("wrapper"),
       ),
@@ -223,29 +208,29 @@ Widget _linkControl(
   ({
     AuthoredDraft draft,
     CheckedEditorCatalog catalog,
-    types.ValueLocation source,
-    types.ResourceId existingTarget,
-    types.ResourceId emptyTarget,
-    types.ValuePath nestedLinkPath,
-    types.NamedTypeUse wrapperUse,
-    types.TypeSelection wrapperSelection,
+    skir.ValueLocation source,
+    skir.ResourceId existingTarget,
+    skir.ResourceId emptyTarget,
+    skir.ValuePath nestedLinkPath,
+    skir.NamedTypeUse wrapperUse,
+    skir.TypeSelection wrapperSelection,
   })
   fixture, {
-  Future<catalog.PreparedCreation> Function(catalog.InitializationRequest)?
+  Future<skir.PreparedCreation> Function(skir.InitializationRequest)?
   prepareCreation,
 }) {
-  final root = types.ExpressionBindingId(value: "configured_value");
+  final root = skir.ExpressionBindingId(value: "configured_value");
   final record = fixture.draft.resource(fixture.source.resource)!;
   return testApp(
     child: Scaffold(
       body: PortablePresentationNodeRenderer(
-        node: presentation.PresentationNode(
+        node: skir.PresentationNode(
           nodeId: "link",
-          properties: presentation.PresentationProperties.defaultInstance,
-          element: presentation.PresentationElement.wrapLinkInput(
-            presentation.LinkControl(
-              control: presentation.BoundControl(
-                binding: binding.BindingRef(
+          properties: skir.PresentationProperties.defaultInstance,
+          element: skir.PresentationElement.wrapLinkInput(
+            skir.LinkControl(
+              control: skir.BoundControl(
+                binding: skir.BindingRef(
                   bindingId: root,
                   path: fixture.source.path,
                 ),
@@ -256,7 +241,7 @@ Widget _linkControl(
               ),
               allowReorder: false,
               candidatePolicy: null,
-              rejectionDisplay: presentation.LinkRejectionDisplay.disabled,
+              rejectionDisplay: skir.LinkRejectionDisplay.disabled,
               sourceId: null,
             ),
           ),
@@ -265,17 +250,14 @@ Widget _linkControl(
         scope: PortablePresentationScope(
           bindings: {
             root: PortableExpressionBinding(
-              value: types.DataValue.createRecord(fields: record.fields),
-              location: types.ValueLocation(
+              value: skir.DataValue.createRecord(fields: record.fields),
+              location: skir.ValueLocation(
                 resource: fixture.source.resource,
-                path: types.ValuePath(segments: const []),
+                path: skir.ValuePath(segments: const []),
               ),
             ),
           },
-          budget: expression.EvaluationBudget(
-            maxSteps: 100,
-            maxCollectionItems: 100,
-          ),
+          budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
           setBinding: (_, _) {},
           authoring: AuthoredDraftAuthoringDocument(fixture.draft),
           catalog: fixture.catalog,
@@ -289,75 +271,75 @@ Widget _linkControl(
 ({
   AuthoredDraft draft,
   CheckedEditorCatalog catalog,
-  types.ValueLocation source,
-  types.ResourceId existingTarget,
-  types.ResourceId emptyTarget,
-  types.ValuePath nestedLinkPath,
-  types.NamedTypeUse wrapperUse,
-  types.TypeSelection wrapperSelection,
+  skir.ValueLocation source,
+  skir.ResourceId existingTarget,
+  skir.ResourceId emptyTarget,
+  skir.ValuePath nestedLinkPath,
+  skir.NamedTypeUse wrapperUse,
+  skir.TypeSelection wrapperSelection,
 })
 _fixture() {
-  final generation = types.CatalogGeneration(value: "catalog:links");
+  final generation = skir.CatalogGeneration(value: "catalog:links");
   final node = _definition("Node");
   final wrapper = _definition("Wrapper");
   final sourceLink = _definition("SourceLink");
   final targetLink = _definition("TargetLink");
-  final sourceEndpoint = types.EndpointId(value: "test.source");
-  final targetEndpoint = types.EndpointId(value: "test.target");
-  final nodeTemplate = types.TypeTemplate.createNamed(
+  final sourceEndpoint = skir.EndpointId(value: "test.source");
+  final targetEndpoint = skir.EndpointId(value: "test.target");
+  final nodeTemplate = skir.TypeTemplate.createNamed(
     definition: node,
     arguments: const [],
   );
-  final nodeUse = types.NamedTypeUse(definition: node, arguments: const []);
-  final wrapperUse = types.NamedTypeUse(
+  final nodeUse = skir.NamedTypeUse(definition: node, arguments: const []);
+  final wrapperUse = skir.NamedTypeUse(
     definition: wrapper,
     arguments: const [],
   );
-  final wrapperSelection = types.TypeSelection.wrapComplete(wrapperUse);
-  final sourceField = types.FieldOwner(definition: node, name: "source");
-  final wrapperField = types.FieldOwner(definition: node, name: "wrapper");
-  final backField = types.FieldOwner(definition: wrapper, name: "back");
-  final labelField = types.FieldOwner(definition: wrapper, name: "label");
-  types.FieldDeclaration declaration(
-    types.FieldOwner owner,
-    types.TypeTemplate type,
-  ) => types.FieldDeclaration(
+  final wrapperSelection = skir.TypeSelection.wrapComplete(wrapperUse);
+  final sourceField = skir.FieldOwner(definition: node, name: "source");
+  final wrapperField = skir.FieldOwner(definition: node, name: "wrapper");
+  final backField = skir.FieldOwner(definition: wrapper, name: "back");
+  final labelField = skir.FieldOwner(definition: wrapper, name: "label");
+  skir.FieldDeclaration declaration(
+    skir.FieldOwner owner,
+    skir.TypeTemplate type,
+  ) => skir.FieldDeclaration(
     owner: owner,
     type: type,
     overrides: const [],
     hasConstructorDefault: false,
   );
-  catalog.PublishedType published(
-    types.TypeDefinition definition,
-    List<catalog.EffectiveFieldTemplate> fields,
-  ) => catalog.PublishedType(
+  skir.PublishedType published(
+    skir.TypeDefinition definition,
+    List<skir.EffectiveFieldTemplate> fields,
+  ) => skir.PublishedType(
     display: null,
     definition: definition,
-    status: catalog.DeclarationStatus.ready,
+    status: skir.DeclarationStatus.ready,
     effectiveFields: fields,
     ancestorTemplates: const [],
   );
-  final sourceLinkTemplate = types.TypeTemplate.createNamed(
+  final sourceLinkTemplate = skir.TypeTemplate.createNamed(
     definition: sourceLink,
     arguments: const [],
   );
-  final wrapperTemplate = types.TypeTemplate.createNamed(
+  final wrapperTemplate = skir.TypeTemplate.createNamed(
     definition: wrapper,
     arguments: const [],
   );
-  final targetLinkTemplate = types.TypeTemplate.createNamed(
+  final targetLinkTemplate = skir.TypeTemplate.createNamed(
     definition: targetLink,
     arguments: const [],
   );
-  final textTemplate = types.TypeTemplate.wrapScalar(types.ScalarKind.text);
-  final snapshot = catalog.EditorCatalogWireSnapshot(
+  final textTemplate = skir.TypeTemplate.wrapScalar(skir.ScalarKind.text);
+  final snapshot = skir.EditorCatalogWireSnapshot(
     generation: generation,
     types: [
       published(
-        types.TypeDefinition(
+        skir.TypeDefinition(
           id: node,
           parameters: const [],
-          representation: types.RepresentationTemplate.createRecord(
+          representation: skir.RepresentationTemplate.createRecord(
             fields: [
               declaration(sourceField, sourceLinkTemplate),
               declaration(wrapperField, wrapperTemplate),
@@ -367,13 +349,13 @@ _fixture() {
           parents: const [],
         ),
         [
-          catalog.EffectiveFieldTemplate(
+          skir.EffectiveFieldTemplate(
             key: "source",
             owner: sourceField,
             type: sourceLinkTemplate,
             rules: const [],
           ),
-          catalog.EffectiveFieldTemplate(
+          skir.EffectiveFieldTemplate(
             key: "wrapper",
             owner: wrapperField,
             type: wrapperTemplate,
@@ -382,10 +364,10 @@ _fixture() {
         ],
       ),
       published(
-        types.TypeDefinition(
+        skir.TypeDefinition(
           id: wrapper,
           parameters: const [],
-          representation: types.RepresentationTemplate.createRecord(
+          representation: skir.RepresentationTemplate.createRecord(
             fields: [
               declaration(backField, targetLinkTemplate),
               declaration(labelField, textTemplate),
@@ -395,13 +377,13 @@ _fixture() {
           parents: const [],
         ),
         [
-          catalog.EffectiveFieldTemplate(
+          skir.EffectiveFieldTemplate(
             key: "back",
             owner: backField,
             type: targetLinkTemplate,
             rules: const [],
           ),
-          catalog.EffectiveFieldTemplate(
+          skir.EffectiveFieldTemplate(
             key: "label",
             owner: labelField,
             type: textTemplate,
@@ -414,10 +396,10 @@ _fixture() {
         (targetLink, targetEndpoint),
       ])
         published(
-          types.TypeDefinition(
+          skir.TypeDefinition(
             id: link.$1,
             parameters: const [],
-            representation: types.RepresentationTemplate.createLink(
+            representation: skir.RepresentationTemplate.createLink(
               endpoint: link.$2,
               target: nodeTemplate,
             ),
@@ -427,27 +409,27 @@ _fixture() {
         ),
     ],
     relations: [
-      catalog.RelationContract(
-        id: types.RelationId(value: "test.links"),
-        first: catalog.EndpointDefinition(
+      skir.RelationContract(
+        id: skir.RelationId(value: "test.links"),
+        first: skir.EndpointDefinition(
           id: sourceEndpoint,
-          slot: catalog.EndpointSlot.first,
-          resource: types.NamedTypeTemplate(
+          slot: skir.EndpointSlot.first,
+          resource: skir.NamedTypeTemplate(
             definition: node,
             arguments: const [],
           ),
-          cardinality: catalog.EndpointCardinality.one,
-          onDelete: catalog.RelationDeletePolicy.clear,
+          cardinality: skir.EndpointCardinality.one,
+          onDelete: skir.RelationDeletePolicy.clear,
         ),
-        second: catalog.EndpointDefinition(
+        second: skir.EndpointDefinition(
           id: targetEndpoint,
-          slot: catalog.EndpointSlot.second,
-          resource: types.NamedTypeTemplate(
+          slot: skir.EndpointSlot.second,
+          resource: skir.NamedTypeTemplate(
             definition: node,
             arguments: const [],
           ),
-          cardinality: catalog.EndpointCardinality.many,
-          onDelete: catalog.RelationDeletePolicy.clear,
+          cardinality: skir.EndpointCardinality.many,
+          onDelete: skir.RelationDeletePolicy.clear,
         ),
         families: const [],
       ),
@@ -459,30 +441,30 @@ _fixture() {
     diagnostics: const [],
     initialization: const [],
     endpointBindings: [
-      catalog.EndpointBindingTemplate(
+      skir.EndpointBindingTemplate(
         endpoint: sourceEndpoint,
-        containingResource: types.NamedTypeTemplate(
+        containingResource: skir.NamedTypeTemplate(
           definition: node,
           arguments: const [],
         ),
         valueOwner: node,
-        relativePath: types.RelativeFieldPattern(
-          segments: [types.FieldPatternSegment.createField(name: "source")],
+        relativePath: skir.RelativeFieldPattern(
+          segments: [skir.FieldPatternSegment.createField(name: "source")],
         ),
         target: nodeTemplate,
         containsCollection: false,
       ),
-      catalog.EndpointBindingTemplate(
+      skir.EndpointBindingTemplate(
         endpoint: targetEndpoint,
-        containingResource: types.NamedTypeTemplate(
+        containingResource: skir.NamedTypeTemplate(
           definition: node,
           arguments: const [],
         ),
         valueOwner: wrapper,
-        relativePath: types.RelativeFieldPattern(
+        relativePath: skir.RelativeFieldPattern(
           segments: [
-            types.FieldPatternSegment.createField(name: "wrapper"),
-            types.FieldPatternSegment.createField(name: "back"),
+            skir.FieldPatternSegment.createField(name: "wrapper"),
+            skir.FieldPatternSegment.createField(name: "back"),
           ],
         ),
         target: nodeTemplate,
@@ -493,47 +475,47 @@ _fixture() {
     recommendations: const [],
     roleFallbacks: const [],
   );
-  final source = types.ResourceId(value: "resource:source");
-  final existingTarget = types.ResourceId(value: "resource:existing");
-  final emptyTarget = types.ResourceId(value: "resource:empty");
-  types.AuthoringRecord record(types.DataValue wrapperValue) =>
-      types.AuthoringRecord(
-        configuration: types.TypeSelection.wrapComplete(nodeUse),
+  final source = skir.ResourceId(value: "resource:source");
+  final existingTarget = skir.ResourceId(value: "resource:existing");
+  final emptyTarget = skir.ResourceId(value: "resource:empty");
+  skir.AuthoringRecord record(skir.DataValue wrapperValue) =>
+      skir.AuthoringRecord(
+        configuration: skir.TypeSelection.wrapComplete(nodeUse),
         fields: [
-          types.FieldValue(name: "source", value: types.DataValue.unfilled),
-          types.FieldValue(name: "wrapper", value: wrapperValue),
+          skir.FieldValue(name: "source", value: skir.DataValue.unfilled),
+          skir.FieldValue(name: "wrapper", value: wrapperValue),
         ],
       );
-  final authored = authoring.AuthoringState(
+  final authored = skir.AuthoringState(
     generation: generation,
     resources: [
-      authoring.AuthoringResource(
+      skir.AuthoringResource(
         id: source,
-        definition: catalog.ResourceDefinitionId(value: "test.node"),
-        content: record(types.DataValue.unfilled),
+        definition: skir.ResourceDefinitionId(value: "test.node"),
+        content: record(skir.DataValue.unfilled),
       ),
-      authoring.AuthoringResource(
+      skir.AuthoringResource(
         id: existingTarget,
-        definition: catalog.ResourceDefinitionId(value: "test.node"),
+        definition: skir.ResourceDefinitionId(value: "test.node"),
         content: record(
-          types.DataValue.createNamed(
+          skir.DataValue.createNamed(
             actualType: wrapperUse,
-            payload: types.DataValue.createRecord(
+            payload: skir.DataValue.createRecord(
               fields: [
-                types.FieldValue(name: "back", value: types.DataValue.unfilled),
-                types.FieldValue(
+                skir.FieldValue(name: "back", value: skir.DataValue.unfilled),
+                skir.FieldValue(
                   name: "label",
-                  value: types.DataValue.wrapStringValue("existing"),
+                  value: skir.DataValue.wrapStringValue("existing"),
                 ),
               ],
             ),
           ),
         ),
       ),
-      authoring.AuthoringResource(
+      skir.AuthoringResource(
         id: emptyTarget,
-        definition: catalog.ResourceDefinitionId(value: "test.node"),
-        content: record(types.DataValue.unfilled),
+        definition: skir.ResourceDefinitionId(value: "test.node"),
+        content: record(skir.DataValue.unfilled),
       ),
     ],
     links: const [],
@@ -543,13 +525,13 @@ _fixture() {
   return (
     draft: AuthoredDraft.fromState(authored, catalog: checked),
     catalog: checked,
-    source: types.ValueLocation(resource: source, path: _fieldPath("source")),
+    source: skir.ValueLocation(resource: source, path: _fieldPath("source")),
     existingTarget: existingTarget,
     emptyTarget: emptyTarget,
-    nestedLinkPath: types.ValuePath(
+    nestedLinkPath: skir.ValuePath(
       segments: [
-        types.PathSegment.createField(name: "wrapper"),
-        types.PathSegment.createField(name: "back"),
+        skir.PathSegment.createField(name: "wrapper"),
+        skir.PathSegment.createField(name: "back"),
       ],
     ),
     wrapperUse: wrapperUse,
@@ -557,10 +539,10 @@ _fixture() {
   );
 }
 
-types.TypeDefinitionId _definition(String name) => types.TypeDefinitionId(
-  typeId: types.TypeId.createQualified(namespace: "test", name: name),
+skir.TypeDefinitionId _definition(String name) => skir.TypeDefinitionId(
+  typeId: skir.TypeId.createQualified(namespace: "test", name: name),
   revision: 1,
 );
 
-types.ValuePath _fieldPath(String name) =>
-    types.ValuePath(segments: [types.PathSegment.createField(name: name)]);
+skir.ValuePath _fieldPath(String name) =>
+    skir.ValuePath(segments: [skir.PathSegment.createField(name: name)]);

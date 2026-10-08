@@ -1,4 +1,4 @@
-import "package:flutter/foundation.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Supplies readiness and change notifications for one family of route guards.
 ///

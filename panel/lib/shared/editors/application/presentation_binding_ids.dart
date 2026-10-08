@@ -1,6 +1,6 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 
-final configuredValueBindingId = types.ExpressionBindingId(
+final configuredValueBindingId = skir.ExpressionBindingId(
   value: "configured_value",
 );

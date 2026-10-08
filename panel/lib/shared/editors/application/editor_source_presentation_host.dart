@@ -1,25 +1,12 @@
-import "dart:async";
-
-import "package:flutter/foundation.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/action.dart"
-    as action;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/binding.dart"
-    as binding;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as catalog_wire;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
-    as expression;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/presentation.dart"
-    as presentation;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-typedef PortableBindingReader = types.DataValue? Function(types.ValuePath path);
+typedef PortableBindingReader = skir.DataValue? Function(skir.ValuePath path);
 typedef PortableBindingWriter =
     FutureOr<PortablePresentationWriteResult> Function(
-      types.ValuePath path,
-      types.DataValue value,
+      skir.ValuePath path,
+      skir.DataValue value,
     );
 
 /// Explicitly maps one backend owned editor value into a portable binding.
@@ -36,8 +23,8 @@ final class EditorSourcePresentationBinding {
     this.owner,
   });
 
-  final types.ExpressionBindingId id;
-  final types.TypeUse use;
+  final skir.ExpressionBindingId id;
+  final skir.TypeUse use;
   final PortableBindingReader read;
   final PortableBindingWriter? write;
 
@@ -48,8 +35,7 @@ final class EditorSourcePresentationBinding {
 
   PortablePresentationBinding snapshot() => PortablePresentationBinding(
     schema: PortablePresentationBindingSchema.complete(use),
-    value:
-        read(types.ValuePath(segments: const [])) ?? types.DataValue.unfilled,
+    value: read(skir.ValuePath(segments: const [])) ?? skir.DataValue.unfilled,
     editable: editable,
   );
 }
@@ -82,18 +68,18 @@ final class EditorSourcePresentationHost extends ChangeNotifier
   }
 
   final CheckedEditorCatalog catalog;
-  final presentation.PresentationNode Function() root;
-  final Map<types.ExpressionBindingId, EditorSourcePresentationBinding>
+  final skir.PresentationNode Function() root;
+  final Map<skir.ExpressionBindingId, EditorSourcePresentationBinding>
   _bindings;
   final FutureOr<PortablePresentationWriteResult> Function(
-    action.EditorAction action,
+    skir.EditorAction action,
   )?
   executeAction;
-  final expression.EvaluationBudget budget;
-  final catalog_wire.PresentationRole? role;
-  final catalog_wire.PresentationMaterial? material;
-  final Set<types.PresentationId> activePresentations;
-  final Map<String, presentation.PresentationNode> slots;
+  final skir.EvaluationBudget budget;
+  final skir.PresentationRole? role;
+  final skir.PresentationMaterial? material;
+  final Set<skir.PresentationId> activePresentations;
+  final Map<String, skir.PresentationNode> slots;
   late PortablePresentationDocument _document;
   bool _disposed = false;
 
@@ -117,7 +103,7 @@ final class EditorSourcePresentationHost extends ChangeNotifier
   PortablePresentationDocument get document => _document;
 
   @override
-  types.DataValue? read(binding.BindingRef reference) {
+  skir.DataValue? read(skir.BindingRef reference) {
     final exposed = _document.bindings[reference.bindingId];
     if (exposed == null) return null;
     if (reference.path.segments.isEmpty) return exposed.value;
@@ -128,17 +114,17 @@ final class EditorSourcePresentationHost extends ChangeNotifier
   }
 
   @override
-  types.ValueLocation? location(binding.BindingRef reference) => null;
+  skir.ValueLocation? location(skir.BindingRef reference) => null;
 
   @override
-  types.TypeUse? expectedType(binding.BindingRef reference) {
+  skir.TypeUse? expectedType(skir.BindingRef reference) {
     final source = _bindings[reference.bindingId];
     final exposed = _document.bindings[reference.bindingId];
     if (source == null || exposed == null) return null;
     if (reference.path.segments.isEmpty) return source.use;
     final selection = switch (source.use) {
-      types.TypeUse_namedWrapper(:final value) =>
-        types.TypeSelection.wrapComplete(value),
+      skir.TypeUse_namedWrapper(:final value) =>
+        skir.TypeSelection.wrapComplete(value),
       _ => null,
     };
     return selection == null
@@ -148,8 +134,8 @@ final class EditorSourcePresentationHost extends ChangeNotifier
 
   @override
   Future<PortablePresentationWriteResult> write(
-    binding.BindingRef reference,
-    types.DataValue value,
+    skir.BindingRef reference,
+    skir.DataValue value,
   ) async {
     if (!enabled || readOnly) {
       return const PortablePresentationWriteRejected(
@@ -175,7 +161,7 @@ final class EditorSourcePresentationHost extends ChangeNotifier
 
   @override
   Future<PortablePresentationWriteResult> execute(
-    action.EditorAction editorAction,
+    skir.EditorAction editorAction,
   ) async {
     if (!enabled || readOnly) {
       return const PortablePresentationWriteRejected(
@@ -184,8 +170,8 @@ final class EditorSourcePresentationHost extends ChangeNotifier
     }
     final executor = executeAction;
     if (executor == null) {
-      if (editorAction case action.EditorAction_localWrapper(
-        value: action.LocalEditorAction_setValueWrapper(:final value),
+      if (editorAction case skir.EditorAction_localWrapper(
+        value: skir.LocalEditorAction_setValueWrapper(:final value),
       )) {
         final evaluated = PortableExpressionEvaluator({
           for (final entry in document.bindings.entries)
@@ -243,11 +229,10 @@ final class EditorSourcePresentationHost extends ChangeNotifier
   }
 }
 
-Map<types.ExpressionBindingId, EditorSourcePresentationBinding> _indexBindings(
+Map<skir.ExpressionBindingId, EditorSourcePresentationBinding> _indexBindings(
   Iterable<EditorSourcePresentationBinding> values,
 ) {
-  final indexed =
-      <types.ExpressionBindingId, EditorSourcePresentationBinding>{};
+  final indexed = <skir.ExpressionBindingId, EditorSourcePresentationBinding>{};
   for (final value in values) {
     if (indexed.containsKey(value.id)) {
       throw ArgumentError.value(value.id, "bindings", "Duplicate binding id");

@@ -1,5 +1,4 @@
-import "package:flutter/material.dart";
-import "package:responsive_framework/responsive_framework.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Installs the panel's shared responsive breakpoint vocabulary.
 ///
@@ -15,10 +14,10 @@ class Responsive extends StatelessWidget {
   Widget build(BuildContext context) {
     return ResponsiveBreakpoints.builder(
       breakpoints: const [
-        Breakpoint(start: 0, end: 450, name: MOBILE),
-        Breakpoint(start: 451, end: 1000, name: TABLET),
-        Breakpoint(start: 1001, end: 1920, name: DESKTOP),
-        Breakpoint(start: 1921, end: double.infinity, name: "4K"),
+        ResponsiveBreakpoint(start: 0, end: 450, name: MOBILE),
+        ResponsiveBreakpoint(start: 451, end: 1000, name: TABLET),
+        ResponsiveBreakpoint(start: 1001, end: 1920, name: DESKTOP),
+        ResponsiveBreakpoint(start: 1921, end: double.infinity, name: "4K"),
       ],
       child: child,
     );

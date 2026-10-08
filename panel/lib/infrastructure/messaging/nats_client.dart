@@ -1,4 +1,4 @@
-import "dart:typed_data";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Stable failure categories exposed by the panel transport boundary.
 ///

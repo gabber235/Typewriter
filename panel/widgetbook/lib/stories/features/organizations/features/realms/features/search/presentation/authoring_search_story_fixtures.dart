@@ -33,8 +33,8 @@ final class AuthoringSearchStoryFixtures {
   }
 
   final CheckedEditorCatalog catalog;
-  final organizationId = recordId("organization:widgetbook");
-  final realmId = recordId("realm_instance:authoring_demo");
+  final organizationId = skir.recordId("organization:widgetbook");
+  final realmId = skir.recordId("realm_instance:authoring_demo");
 
   late final AuthoringSearchResultPayload mainQuest;
   late final AuthoringSearchResultPayload mainQuestTag;

@@ -1,5 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 import "support/join_requests_test_support.dart";
@@ -10,8 +11,8 @@ void main() {
       required String id,
       required DateTime expiresAt,
     }) => OrganizationJoinRequest(
-      requestId: recordId("request_to_join:$id"),
-      userId: recordId("user:$id"),
+      requestId: skir.recordId("request_to_join:$id"),
+      userId: skir.recordId("user:$id"),
       requestedAt: DateTime.utc(2024),
       expiresAt: expiresAt,
     );

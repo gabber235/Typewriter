@@ -1,4 +1,3 @@
-import "package:dart_casing/dart_casing.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// String transformations used for authored names and display labels.

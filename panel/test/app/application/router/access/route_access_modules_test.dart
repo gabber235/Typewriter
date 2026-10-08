@@ -1,7 +1,5 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/app/application/router/access/authentication_route_access.dart";
-import "package:typewriter_panel/app/application/router/access/organization_route_access.dart";
-import "package:typewriter_panel/app/application/router/access/route_access_coordinator.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   test("authentication emits only for changed stable decisions", () async {

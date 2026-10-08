@@ -13,17 +13,11 @@ part of 'portable_presentation_host.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$PortablePresentationBindingSchema implements DiagnosticableTreeMixin {
+mixin _$PortablePresentationBindingSchema {
 
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'PortablePresentationBindingSchema'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -35,7 +29,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'PortablePresentationBindingSchema()';
 }
 
@@ -126,7 +120,7 @@ return partial(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( types.TypeUse use)?  complete,TResult Function( types.TypeSelection selection)?  partial,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( skir.TypeUse use)?  complete,TResult Function( skir.TypeSelection selection)?  partial,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case CompletePortablePresentationBinding() when complete != null:
 return complete(_that.use);case PartialPortablePresentationBinding() when partial != null:
@@ -148,7 +142,7 @@ return partial(_that.selection);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( types.TypeUse use)  complete,required TResult Function( types.TypeSelection selection)  partial,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( skir.TypeUse use)  complete,required TResult Function( skir.TypeSelection selection)  partial,}) {final _that = this;
 switch (_that) {
 case CompletePortablePresentationBinding():
 return complete(_that.use);case PartialPortablePresentationBinding():
@@ -166,7 +160,7 @@ return partial(_that.selection);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( types.TypeUse use)?  complete,TResult? Function( types.TypeSelection selection)?  partial,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( skir.TypeUse use)?  complete,TResult? Function( skir.TypeSelection selection)?  partial,}) {final _that = this;
 switch (_that) {
 case CompletePortablePresentationBinding() when complete != null:
 return complete(_that.use);case PartialPortablePresentationBinding() when partial != null:
@@ -181,11 +175,11 @@ return partial(_that.selection);case _:
 /// @nodoc
 
 
-class CompletePortablePresentationBinding with DiagnosticableTreeMixin implements PortablePresentationBindingSchema {
+class CompletePortablePresentationBinding implements PortablePresentationBindingSchema {
   const CompletePortablePresentationBinding(this.use);
   
 
- final  types.TypeUse use;
+ final  skir.TypeUse use;
 
 /// Create a copy of PortablePresentationBindingSchema
 /// with the given fields replaced by the non-null parameter values.
@@ -194,12 +188,6 @@ class CompletePortablePresentationBinding with DiagnosticableTreeMixin implement
 $CompletePortablePresentationBindingCopyWith<CompletePortablePresentationBinding> get copyWith => _$CompletePortablePresentationBindingCopyWithImpl<CompletePortablePresentationBinding>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'PortablePresentationBindingSchema.complete'))
-    ..add(DiagnosticsProperty('use', use));
-}
 
 @override
 bool operator ==(Object other) {
@@ -213,7 +201,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'PortablePresentationBindingSchema.complete(use: $use)';
 }
 
@@ -225,7 +213,7 @@ abstract mixin class $CompletePortablePresentationBindingCopyWith<$Res> implemen
   factory $CompletePortablePresentationBindingCopyWith(CompletePortablePresentationBinding value, $Res Function(CompletePortablePresentationBinding) _then) = _$CompletePortablePresentationBindingCopyWithImpl;
 @useResult
 $Res call({
- types.TypeUse use
+ skir.TypeUse use
 });
 
 
@@ -245,7 +233,7 @@ class _$CompletePortablePresentationBindingCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') $Res call({Object? use = null,}) {
   return _then(CompletePortablePresentationBinding(
 null == use ? _self.use : use // ignore: cast_nullable_to_non_nullable
-as types.TypeUse,
+as skir.TypeUse,
   ));
 }
 
@@ -255,11 +243,11 @@ as types.TypeUse,
 /// @nodoc
 
 
-class PartialPortablePresentationBinding with DiagnosticableTreeMixin implements PortablePresentationBindingSchema {
+class PartialPortablePresentationBinding implements PortablePresentationBindingSchema {
   const PartialPortablePresentationBinding(this.selection);
   
 
- final  types.TypeSelection selection;
+ final  skir.TypeSelection selection;
 
 /// Create a copy of PortablePresentationBindingSchema
 /// with the given fields replaced by the non-null parameter values.
@@ -268,12 +256,6 @@ class PartialPortablePresentationBinding with DiagnosticableTreeMixin implements
 $PartialPortablePresentationBindingCopyWith<PartialPortablePresentationBinding> get copyWith => _$PartialPortablePresentationBindingCopyWithImpl<PartialPortablePresentationBinding>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'PortablePresentationBindingSchema.partial'))
-    ..add(DiagnosticsProperty('selection', selection));
-}
 
 @override
 bool operator ==(Object other) {
@@ -287,7 +269,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'PortablePresentationBindingSchema.partial(selection: $selection)';
 }
 
@@ -299,7 +281,7 @@ abstract mixin class $PartialPortablePresentationBindingCopyWith<$Res> implement
   factory $PartialPortablePresentationBindingCopyWith(PartialPortablePresentationBinding value, $Res Function(PartialPortablePresentationBinding) _then) = _$PartialPortablePresentationBindingCopyWithImpl;
 @useResult
 $Res call({
- types.TypeSelection selection
+ skir.TypeSelection selection
 });
 
 
@@ -319,7 +301,7 @@ class _$PartialPortablePresentationBindingCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') $Res call({Object? selection = null,}) {
   return _then(PartialPortablePresentationBinding(
 null == selection ? _self.selection : selection // ignore: cast_nullable_to_non_nullable
-as types.TypeSelection,
+as skir.TypeSelection,
   ));
 }
 
@@ -327,9 +309,9 @@ as types.TypeSelection,
 }
 
 /// @nodoc
-mixin _$PortablePresentationBinding implements DiagnosticableTreeMixin {
+mixin _$PortablePresentationBinding {
 
- PortablePresentationBindingSchema get schema; types.DataValue get value; bool get editable; types.ValueLocation? get location;
+ PortablePresentationBindingSchema get schema; skir.DataValue get value; bool get editable; skir.ValueLocation? get location;
 /// Create a copy of PortablePresentationBinding
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -337,13 +319,6 @@ mixin _$PortablePresentationBinding implements DiagnosticableTreeMixin {
 $PortablePresentationBindingCopyWith<PortablePresentationBinding> get copyWith => _$PortablePresentationBindingCopyWithImpl<PortablePresentationBinding>(this as PortablePresentationBinding, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as PortablePresentationBinding;
-  properties
-    ..add(DiagnosticsProperty('type', 'PortablePresentationBinding'))
-    ..add(DiagnosticsProperty('schema', _this.schema))..add(DiagnosticsProperty('value', _this.value))..add(DiagnosticsProperty('editable', _this.editable))..add(DiagnosticsProperty('location', _this.location));
-}
 
 @override
 bool operator ==(Object other) {
@@ -359,7 +334,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as PortablePresentationBinding;
   return 'PortablePresentationBinding(schema: ${_this.schema}, value: ${_this.value}, editable: ${_this.editable}, location: ${_this.location})';
 }
@@ -372,7 +347,7 @@ abstract mixin class $PortablePresentationBindingCopyWith<$Res>  {
   factory $PortablePresentationBindingCopyWith(PortablePresentationBinding value, $Res Function(PortablePresentationBinding) _then) = _$PortablePresentationBindingCopyWithImpl;
 @useResult
 $Res call({
- PortablePresentationBindingSchema schema, types.DataValue value, bool editable, types.ValueLocation? location
+ PortablePresentationBindingSchema schema, skir.DataValue value, bool editable, skir.ValueLocation? location
 });
 
 
@@ -393,9 +368,9 @@ class _$PortablePresentationBindingCopyWithImpl<$Res>
   return _then(PortablePresentationBinding(
 schema: null == schema ? _self.schema : schema // ignore: cast_nullable_to_non_nullable
 as PortablePresentationBindingSchema,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
-as types.DataValue,editable: null == editable ? _self.editable : editable // ignore: cast_nullable_to_non_nullable
+as skir.DataValue,editable: null == editable ? _self.editable : editable // ignore: cast_nullable_to_non_nullable
 as bool,location: freezed == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
-as types.ValueLocation?,
+as skir.ValueLocation?,
   ));
 }
 /// Create a copy of PortablePresentationBinding
@@ -489,7 +464,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PortablePresentationBindingSchema schema,  types.DataValue value,  bool editable,  types.ValueLocation? location)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PortablePresentationBindingSchema schema,  skir.DataValue value,  bool editable,  skir.ValueLocation? location)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PortablePresentationBinding() when $default != null:
 return $default(_that.schema,_that.value,_that.editable,_that.location);case _:
@@ -510,7 +485,7 @@ return $default(_that.schema,_that.value,_that.editable,_that.location);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PortablePresentationBindingSchema schema,  types.DataValue value,  bool editable,  types.ValueLocation? location)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PortablePresentationBindingSchema schema,  skir.DataValue value,  bool editable,  skir.ValueLocation? location)  $default,) {final _that = this;
 switch (_that) {
 case _PortablePresentationBinding():
 return $default(_that.schema,_that.value,_that.editable,_that.location);case _:
@@ -530,7 +505,7 @@ return $default(_that.schema,_that.value,_that.editable,_that.location);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PortablePresentationBindingSchema schema,  types.DataValue value,  bool editable,  types.ValueLocation? location)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PortablePresentationBindingSchema schema,  skir.DataValue value,  bool editable,  skir.ValueLocation? location)?  $default,) {final _that = this;
 switch (_that) {
 case _PortablePresentationBinding() when $default != null:
 return $default(_that.schema,_that.value,_that.editable,_that.location);case _:
@@ -544,14 +519,14 @@ return $default(_that.schema,_that.value,_that.editable,_that.location);case _:
 /// @nodoc
 
 
-class _PortablePresentationBinding with DiagnosticableTreeMixin implements PortablePresentationBinding {
+class _PortablePresentationBinding implements PortablePresentationBinding {
   const _PortablePresentationBinding({required this.schema, required this.value, this.editable = false, this.location});
   
 
 @override final  PortablePresentationBindingSchema schema;
-@override final  types.DataValue value;
+@override final  skir.DataValue value;
 @override@JsonKey() final  bool editable;
-@override final  types.ValueLocation? location;
+@override final  skir.ValueLocation? location;
 
 /// Create a copy of PortablePresentationBinding
 /// with the given fields replaced by the non-null parameter values.
@@ -560,12 +535,6 @@ class _PortablePresentationBinding with DiagnosticableTreeMixin implements Porta
 _$PortablePresentationBindingCopyWith<_PortablePresentationBinding> get copyWith => __$PortablePresentationBindingCopyWithImpl<_PortablePresentationBinding>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'PortablePresentationBinding'))
-    ..add(DiagnosticsProperty('schema', schema))..add(DiagnosticsProperty('value', value))..add(DiagnosticsProperty('editable', editable))..add(DiagnosticsProperty('location', location));
-}
 
 @override
 bool operator ==(Object other) {
@@ -579,7 +548,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'PortablePresentationBinding(schema: $schema, value: $value, editable: $editable, location: $location)';
 }
 
@@ -591,7 +560,7 @@ abstract mixin class _$PortablePresentationBindingCopyWith<$Res> implements $Por
   factory _$PortablePresentationBindingCopyWith(_PortablePresentationBinding value, $Res Function(_PortablePresentationBinding) _then) = __$PortablePresentationBindingCopyWithImpl;
 @override @useResult
 $Res call({
- PortablePresentationBindingSchema schema, types.DataValue value, bool editable, types.ValueLocation? location
+ PortablePresentationBindingSchema schema, skir.DataValue value, bool editable, skir.ValueLocation? location
 });
 
 
@@ -612,9 +581,9 @@ class __$PortablePresentationBindingCopyWithImpl<$Res>
   return _then(_PortablePresentationBinding(
 schema: null == schema ? _self.schema : schema // ignore: cast_nullable_to_non_nullable
 as PortablePresentationBindingSchema,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
-as types.DataValue,editable: null == editable ? _self.editable : editable // ignore: cast_nullable_to_non_nullable
+as skir.DataValue,editable: null == editable ? _self.editable : editable // ignore: cast_nullable_to_non_nullable
 as bool,location: freezed == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
-as types.ValueLocation?,
+as skir.ValueLocation?,
   ));
 }
 
@@ -631,18 +600,11 @@ $PortablePresentationBindingSchemaCopyWith<$Res> get schema {
 }
 
 /// @nodoc
-mixin _$PortablePresentationDocument implements DiagnosticableTreeMixin {
+mixin _$PortablePresentationDocument {
 
- CheckedEditorCatalog get catalog; presentation.PresentationNode get root; Map<types.ExpressionBindingId, PortablePresentationBinding> get bindings; expression.EvaluationBudget get budget; catalog_wire.PresentationRole? get role; catalog_wire.PresentationMaterial? get material; Set<types.PresentationId> get activePresentations; Map<String, presentation.PresentationNode> get slots;
+ CheckedEditorCatalog get catalog; skir.PresentationNode get root; Map<skir.ExpressionBindingId, PortablePresentationBinding> get bindings; skir.EvaluationBudget get budget; skir.PresentationRole? get role; skir.PresentationMaterial? get material; Set<skir.PresentationId> get activePresentations; Map<String, skir.PresentationNode> get slots;
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as PortablePresentationDocument;
-  properties
-    ..add(DiagnosticsProperty('type', 'PortablePresentationDocument'))
-    ..add(DiagnosticsProperty('catalog', _this.catalog))..add(DiagnosticsProperty('root', _this.root))..add(DiagnosticsProperty('bindings', _this.bindings))..add(DiagnosticsProperty('budget', _this.budget))..add(DiagnosticsProperty('role', _this.role))..add(DiagnosticsProperty('material', _this.material))..add(DiagnosticsProperty('activePresentations', _this.activePresentations))..add(DiagnosticsProperty('slots', _this.slots));
-}
 
 @override
 bool operator ==(Object other) {
@@ -658,7 +620,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as PortablePresentationDocument;
   return 'PortablePresentationDocument(catalog: ${_this.catalog}, root: ${_this.root}, bindings: ${_this.bindings}, budget: ${_this.budget}, role: ${_this.role}, material: ${_this.material}, activePresentations: ${_this.activePresentations}, slots: ${_this.slots})';
 }
@@ -673,31 +635,31 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 /// @nodoc
 
 
-class _PortablePresentationDocument extends PortablePresentationDocument with DiagnosticableTreeMixin {
-  const _PortablePresentationDocument({required this.catalog, required this.root, required  Map<types.ExpressionBindingId, PortablePresentationBinding> bindings, required this.budget, required this.role, required this.material, required  Set<types.PresentationId> activePresentations, required  Map<String, presentation.PresentationNode> slots}): _bindings = bindings,_activePresentations = activePresentations,_slots = slots,super._();
+class _PortablePresentationDocument extends PortablePresentationDocument {
+  const _PortablePresentationDocument({required this.catalog, required this.root, required  Map<skir.ExpressionBindingId, PortablePresentationBinding> bindings, required this.budget, required this.role, required this.material, required  Set<skir.PresentationId> activePresentations, required  Map<String, skir.PresentationNode> slots}): _bindings = bindings,_activePresentations = activePresentations,_slots = slots,super._();
   
 
 @override final  CheckedEditorCatalog catalog;
-@override final  presentation.PresentationNode root;
- final  Map<types.ExpressionBindingId, PortablePresentationBinding> _bindings;
-@override Map<types.ExpressionBindingId, PortablePresentationBinding> get bindings {
+@override final  skir.PresentationNode root;
+ final  Map<skir.ExpressionBindingId, PortablePresentationBinding> _bindings;
+@override Map<skir.ExpressionBindingId, PortablePresentationBinding> get bindings {
   if (_bindings is EqualUnmodifiableMapView) return _bindings;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableMapView(_bindings);
 }
 
-@override final  expression.EvaluationBudget budget;
-@override final  catalog_wire.PresentationRole? role;
-@override final  catalog_wire.PresentationMaterial? material;
- final  Set<types.PresentationId> _activePresentations;
-@override Set<types.PresentationId> get activePresentations {
+@override final  skir.EvaluationBudget budget;
+@override final  skir.PresentationRole? role;
+@override final  skir.PresentationMaterial? material;
+ final  Set<skir.PresentationId> _activePresentations;
+@override Set<skir.PresentationId> get activePresentations {
   if (_activePresentations is EqualUnmodifiableSetView) return _activePresentations;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableSetView(_activePresentations);
 }
 
- final  Map<String, presentation.PresentationNode> _slots;
-@override Map<String, presentation.PresentationNode> get slots {
+ final  Map<String, skir.PresentationNode> _slots;
+@override Map<String, skir.PresentationNode> get slots {
   if (_slots is EqualUnmodifiableMapView) return _slots;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableMapView(_slots);
@@ -706,12 +668,6 @@ class _PortablePresentationDocument extends PortablePresentationDocument with Di
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'PortablePresentationDocument._value'))
-    ..add(DiagnosticsProperty('catalog', catalog))..add(DiagnosticsProperty('root', root))..add(DiagnosticsProperty('bindings', bindings))..add(DiagnosticsProperty('budget', budget))..add(DiagnosticsProperty('role', role))..add(DiagnosticsProperty('material', material))..add(DiagnosticsProperty('activePresentations', activePresentations))..add(DiagnosticsProperty('slots', slots));
-}
 
 @override
 bool operator ==(Object other) {
@@ -725,7 +681,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'PortablePresentationDocument._value(catalog: $catalog, root: $root, bindings: $bindings, budget: $budget, role: $role, material: $material, activePresentations: $activePresentations, slots: $slots)';
 }
 
@@ -736,9 +692,9 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 
 
 /// @nodoc
-mixin _$PortablePresentationCapabilities implements DiagnosticableTreeMixin {
+mixin _$PortablePresentationCapabilities {
 
- Future<void> Function(types.CapabilityId capabilityId, types.DataValue payload)? get invokeCommand; Stream<search.RealmPresentationSearchUpdate> Function(search.RealmPresentationSearchRequest request)? get watchSearch; Future<void> Function()? get reload; Future<void> Function()? get commit; ValueChanged<types.ResourceId>? get openResource; Future<catalog_wire.PreparedCreation> Function(catalog_wire.InitializationRequest request)? get prepareCreation;
+ Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)? get invokeCommand; Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? get watchSearch; Future<void> Function()? get reload; Future<void> Function()? get commit; ValueChanged<skir.ResourceId>? get openResource; Future<skir.PreparedCreation> Function(skir.InitializationRequest request)? get prepareCreation;
 /// Create a copy of PortablePresentationCapabilities
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -746,13 +702,6 @@ mixin _$PortablePresentationCapabilities implements DiagnosticableTreeMixin {
 $PortablePresentationCapabilitiesCopyWith<PortablePresentationCapabilities> get copyWith => _$PortablePresentationCapabilitiesCopyWithImpl<PortablePresentationCapabilities>(this as PortablePresentationCapabilities, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as PortablePresentationCapabilities;
-  properties
-    ..add(DiagnosticsProperty('type', 'PortablePresentationCapabilities'))
-    ..add(DiagnosticsProperty('invokeCommand', _this.invokeCommand))..add(DiagnosticsProperty('watchSearch', _this.watchSearch))..add(DiagnosticsProperty('reload', _this.reload))..add(DiagnosticsProperty('commit', _this.commit))..add(DiagnosticsProperty('openResource', _this.openResource))..add(DiagnosticsProperty('prepareCreation', _this.prepareCreation));
-}
 
 @override
 bool operator ==(Object other) {
@@ -768,7 +717,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as PortablePresentationCapabilities;
   return 'PortablePresentationCapabilities(invokeCommand: ${_this.invokeCommand}, watchSearch: ${_this.watchSearch}, reload: ${_this.reload}, commit: ${_this.commit}, openResource: ${_this.openResource}, prepareCreation: ${_this.prepareCreation})';
 }
@@ -781,7 +730,7 @@ abstract mixin class $PortablePresentationCapabilitiesCopyWith<$Res>  {
   factory $PortablePresentationCapabilitiesCopyWith(PortablePresentationCapabilities value, $Res Function(PortablePresentationCapabilities) _then) = _$PortablePresentationCapabilitiesCopyWithImpl;
 @useResult
 $Res call({
- Future<void> Function(types.CapabilityId capabilityId, types.DataValue payload)? invokeCommand, Stream<search.RealmPresentationSearchUpdate> Function(search.RealmPresentationSearchRequest request)? watchSearch, Future<void> Function()? reload, Future<void> Function()? commit, ValueChanged<types.ResourceId>? openResource, Future<catalog_wire.PreparedCreation> Function(catalog_wire.InitializationRequest request)? prepareCreation
+ Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)? invokeCommand, Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch, Future<void> Function()? reload, Future<void> Function()? commit, ValueChanged<skir.ResourceId>? openResource, Future<skir.PreparedCreation> Function(skir.InitializationRequest request)? prepareCreation
 });
 
 
@@ -801,12 +750,12 @@ class _$PortablePresentationCapabilitiesCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') @override $Res call({Object? invokeCommand = freezed,Object? watchSearch = freezed,Object? reload = freezed,Object? commit = freezed,Object? openResource = freezed,Object? prepareCreation = freezed,}) {
   return _then(PortablePresentationCapabilities(
 invokeCommand: freezed == invokeCommand ? _self.invokeCommand : invokeCommand // ignore: cast_nullable_to_non_nullable
-as Future<void> Function(types.CapabilityId capabilityId, types.DataValue payload)?,watchSearch: freezed == watchSearch ? _self.watchSearch : watchSearch // ignore: cast_nullable_to_non_nullable
-as Stream<search.RealmPresentationSearchUpdate> Function(search.RealmPresentationSearchRequest request)?,reload: freezed == reload ? _self.reload : reload // ignore: cast_nullable_to_non_nullable
+as Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)?,watchSearch: freezed == watchSearch ? _self.watchSearch : watchSearch // ignore: cast_nullable_to_non_nullable
+as Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)?,reload: freezed == reload ? _self.reload : reload // ignore: cast_nullable_to_non_nullable
 as Future<void> Function()?,commit: freezed == commit ? _self.commit : commit // ignore: cast_nullable_to_non_nullable
 as Future<void> Function()?,openResource: freezed == openResource ? _self.openResource : openResource // ignore: cast_nullable_to_non_nullable
-as ValueChanged<types.ResourceId>?,prepareCreation: freezed == prepareCreation ? _self.prepareCreation : prepareCreation // ignore: cast_nullable_to_non_nullable
-as Future<catalog_wire.PreparedCreation> Function(catalog_wire.InitializationRequest request)?,
+as ValueChanged<skir.ResourceId>?,prepareCreation: freezed == prepareCreation ? _self.prepareCreation : prepareCreation // ignore: cast_nullable_to_non_nullable
+as Future<skir.PreparedCreation> Function(skir.InitializationRequest request)?,
   ));
 }
 
@@ -891,7 +840,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Future<void> Function(types.CapabilityId capabilityId, types.DataValue payload)? invokeCommand,  Stream<search.RealmPresentationSearchUpdate> Function(search.RealmPresentationSearchRequest request)? watchSearch,  Future<void> Function()? reload,  Future<void> Function()? commit,  ValueChanged<types.ResourceId>? openResource,  Future<catalog_wire.PreparedCreation> Function(catalog_wire.InitializationRequest request)? prepareCreation)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)? invokeCommand,  Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch,  Future<void> Function()? reload,  Future<void> Function()? commit,  ValueChanged<skir.ResourceId>? openResource,  Future<skir.PreparedCreation> Function(skir.InitializationRequest request)? prepareCreation)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PortablePresentationCapabilities() when $default != null:
 return $default(_that.invokeCommand,_that.watchSearch,_that.reload,_that.commit,_that.openResource,_that.prepareCreation);case _:
@@ -912,7 +861,7 @@ return $default(_that.invokeCommand,_that.watchSearch,_that.reload,_that.commit,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Future<void> Function(types.CapabilityId capabilityId, types.DataValue payload)? invokeCommand,  Stream<search.RealmPresentationSearchUpdate> Function(search.RealmPresentationSearchRequest request)? watchSearch,  Future<void> Function()? reload,  Future<void> Function()? commit,  ValueChanged<types.ResourceId>? openResource,  Future<catalog_wire.PreparedCreation> Function(catalog_wire.InitializationRequest request)? prepareCreation)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)? invokeCommand,  Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch,  Future<void> Function()? reload,  Future<void> Function()? commit,  ValueChanged<skir.ResourceId>? openResource,  Future<skir.PreparedCreation> Function(skir.InitializationRequest request)? prepareCreation)  $default,) {final _that = this;
 switch (_that) {
 case _PortablePresentationCapabilities():
 return $default(_that.invokeCommand,_that.watchSearch,_that.reload,_that.commit,_that.openResource,_that.prepareCreation);case _:
@@ -932,7 +881,7 @@ return $default(_that.invokeCommand,_that.watchSearch,_that.reload,_that.commit,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Future<void> Function(types.CapabilityId capabilityId, types.DataValue payload)? invokeCommand,  Stream<search.RealmPresentationSearchUpdate> Function(search.RealmPresentationSearchRequest request)? watchSearch,  Future<void> Function()? reload,  Future<void> Function()? commit,  ValueChanged<types.ResourceId>? openResource,  Future<catalog_wire.PreparedCreation> Function(catalog_wire.InitializationRequest request)? prepareCreation)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)? invokeCommand,  Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch,  Future<void> Function()? reload,  Future<void> Function()? commit,  ValueChanged<skir.ResourceId>? openResource,  Future<skir.PreparedCreation> Function(skir.InitializationRequest request)? prepareCreation)?  $default,) {final _that = this;
 switch (_that) {
 case _PortablePresentationCapabilities() when $default != null:
 return $default(_that.invokeCommand,_that.watchSearch,_that.reload,_that.commit,_that.openResource,_that.prepareCreation);case _:
@@ -946,16 +895,16 @@ return $default(_that.invokeCommand,_that.watchSearch,_that.reload,_that.commit,
 /// @nodoc
 
 
-class _PortablePresentationCapabilities with DiagnosticableTreeMixin implements PortablePresentationCapabilities {
+class _PortablePresentationCapabilities implements PortablePresentationCapabilities {
   const _PortablePresentationCapabilities({this.invokeCommand, this.watchSearch, this.reload, this.commit, this.openResource, this.prepareCreation});
   
 
-@override final  Future<void> Function(types.CapabilityId capabilityId, types.DataValue payload)? invokeCommand;
-@override final  Stream<search.RealmPresentationSearchUpdate> Function(search.RealmPresentationSearchRequest request)? watchSearch;
+@override final  Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)? invokeCommand;
+@override final  Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch;
 @override final  Future<void> Function()? reload;
 @override final  Future<void> Function()? commit;
-@override final  ValueChanged<types.ResourceId>? openResource;
-@override final  Future<catalog_wire.PreparedCreation> Function(catalog_wire.InitializationRequest request)? prepareCreation;
+@override final  ValueChanged<skir.ResourceId>? openResource;
+@override final  Future<skir.PreparedCreation> Function(skir.InitializationRequest request)? prepareCreation;
 
 /// Create a copy of PortablePresentationCapabilities
 /// with the given fields replaced by the non-null parameter values.
@@ -964,12 +913,6 @@ class _PortablePresentationCapabilities with DiagnosticableTreeMixin implements 
 _$PortablePresentationCapabilitiesCopyWith<_PortablePresentationCapabilities> get copyWith => __$PortablePresentationCapabilitiesCopyWithImpl<_PortablePresentationCapabilities>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'PortablePresentationCapabilities'))
-    ..add(DiagnosticsProperty('invokeCommand', invokeCommand))..add(DiagnosticsProperty('watchSearch', watchSearch))..add(DiagnosticsProperty('reload', reload))..add(DiagnosticsProperty('commit', commit))..add(DiagnosticsProperty('openResource', openResource))..add(DiagnosticsProperty('prepareCreation', prepareCreation));
-}
 
 @override
 bool operator ==(Object other) {
@@ -983,7 +926,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'PortablePresentationCapabilities(invokeCommand: $invokeCommand, watchSearch: $watchSearch, reload: $reload, commit: $commit, openResource: $openResource, prepareCreation: $prepareCreation)';
 }
 
@@ -995,7 +938,7 @@ abstract mixin class _$PortablePresentationCapabilitiesCopyWith<$Res> implements
   factory _$PortablePresentationCapabilitiesCopyWith(_PortablePresentationCapabilities value, $Res Function(_PortablePresentationCapabilities) _then) = __$PortablePresentationCapabilitiesCopyWithImpl;
 @override @useResult
 $Res call({
- Future<void> Function(types.CapabilityId capabilityId, types.DataValue payload)? invokeCommand, Stream<search.RealmPresentationSearchUpdate> Function(search.RealmPresentationSearchRequest request)? watchSearch, Future<void> Function()? reload, Future<void> Function()? commit, ValueChanged<types.ResourceId>? openResource, Future<catalog_wire.PreparedCreation> Function(catalog_wire.InitializationRequest request)? prepareCreation
+ Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)? invokeCommand, Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch, Future<void> Function()? reload, Future<void> Function()? commit, ValueChanged<skir.ResourceId>? openResource, Future<skir.PreparedCreation> Function(skir.InitializationRequest request)? prepareCreation
 });
 
 
@@ -1015,12 +958,12 @@ class __$PortablePresentationCapabilitiesCopyWithImpl<$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? invokeCommand = freezed,Object? watchSearch = freezed,Object? reload = freezed,Object? commit = freezed,Object? openResource = freezed,Object? prepareCreation = freezed,}) {
   return _then(_PortablePresentationCapabilities(
 invokeCommand: freezed == invokeCommand ? _self.invokeCommand : invokeCommand // ignore: cast_nullable_to_non_nullable
-as Future<void> Function(types.CapabilityId capabilityId, types.DataValue payload)?,watchSearch: freezed == watchSearch ? _self.watchSearch : watchSearch // ignore: cast_nullable_to_non_nullable
-as Stream<search.RealmPresentationSearchUpdate> Function(search.RealmPresentationSearchRequest request)?,reload: freezed == reload ? _self.reload : reload // ignore: cast_nullable_to_non_nullable
+as Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)?,watchSearch: freezed == watchSearch ? _self.watchSearch : watchSearch // ignore: cast_nullable_to_non_nullable
+as Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)?,reload: freezed == reload ? _self.reload : reload // ignore: cast_nullable_to_non_nullable
 as Future<void> Function()?,commit: freezed == commit ? _self.commit : commit // ignore: cast_nullable_to_non_nullable
 as Future<void> Function()?,openResource: freezed == openResource ? _self.openResource : openResource // ignore: cast_nullable_to_non_nullable
-as ValueChanged<types.ResourceId>?,prepareCreation: freezed == prepareCreation ? _self.prepareCreation : prepareCreation // ignore: cast_nullable_to_non_nullable
-as Future<catalog_wire.PreparedCreation> Function(catalog_wire.InitializationRequest request)?,
+as ValueChanged<skir.ResourceId>?,prepareCreation: freezed == prepareCreation ? _self.prepareCreation : prepareCreation // ignore: cast_nullable_to_non_nullable
+as Future<skir.PreparedCreation> Function(skir.InitializationRequest request)?,
   ));
 }
 
@@ -1028,17 +971,11 @@ as Future<catalog_wire.PreparedCreation> Function(catalog_wire.InitializationReq
 }
 
 /// @nodoc
-mixin _$PortablePresentationWriteResult implements DiagnosticableTreeMixin {
+mixin _$PortablePresentationWriteResult {
 
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'PortablePresentationWriteResult'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -1050,7 +987,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'PortablePresentationWriteResult()';
 }
 
@@ -1196,7 +1133,7 @@ return rejected(_that.message);case _:
 /// @nodoc
 
 
-class PortablePresentationWriteApplied with DiagnosticableTreeMixin implements PortablePresentationWriteResult {
+class PortablePresentationWriteApplied implements PortablePresentationWriteResult {
   const PortablePresentationWriteApplied();
   
 
@@ -1204,12 +1141,6 @@ class PortablePresentationWriteApplied with DiagnosticableTreeMixin implements P
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'PortablePresentationWriteResult.applied'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -1221,7 +1152,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'PortablePresentationWriteResult.applied()';
 }
 
@@ -1234,7 +1165,7 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 /// @nodoc
 
 
-class PortablePresentationWriteRejected with DiagnosticableTreeMixin implements PortablePresentationWriteResult {
+class PortablePresentationWriteRejected implements PortablePresentationWriteResult {
   const PortablePresentationWriteRejected(this.message);
   
 
@@ -1247,12 +1178,6 @@ class PortablePresentationWriteRejected with DiagnosticableTreeMixin implements 
 $PortablePresentationWriteRejectedCopyWith<PortablePresentationWriteRejected> get copyWith => _$PortablePresentationWriteRejectedCopyWithImpl<PortablePresentationWriteRejected>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'PortablePresentationWriteResult.rejected'))
-    ..add(DiagnosticsProperty('message', message));
-}
 
 @override
 bool operator ==(Object other) {
@@ -1266,7 +1191,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'PortablePresentationWriteResult.rejected(message: $message)';
 }
 

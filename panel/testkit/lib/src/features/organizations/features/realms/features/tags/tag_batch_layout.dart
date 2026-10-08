@@ -31,7 +31,7 @@ extension on List<Tag> {
       var maxParentDepth = -1;
       for (final parentId in tag.parentIds) {
         if (tagById.containsKey(parentId)) {
-          maxParentDepth = math.max(
+          maxParentDepth = max(
             maxParentDepth,
             calculateDepth(parentId, visiting),
           );

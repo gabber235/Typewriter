@@ -1,18 +1,6 @@
-import "package:auto_route/auto_route.dart";
-import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/app/presentation/shell/panes.dart";
-import "package:typewriter_panel/app/presentation/theme/typewriter_theme_access.dart";
-import "package:typewriter_panel/features/organizations/application/application.dart";
-import "package:typewriter_panel/features/organizations/features/realms/application/authoring_selectable_resource.dart";
-import "package:typewriter_panel/features/organizations/features/realms/application/authoring_session.dart";
-import "package:typewriter_panel/features/organizations/features/realms/application/realm.dart";
-import "package:typewriter_panel/features/organizations/features/realms/presentation/authored_resource_inspection.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as catalog_wire;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
-import "package:typewriter_panel/shared/selectables/selectables.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
 
 @RoutePage()
 class PagePage extends ConsumerWidget {
@@ -30,7 +18,7 @@ class PagePage extends ConsumerWidget {
     } else {
       final provider = authoringSessionProvider(organizationId, realmId);
       final state = ref.watch(provider);
-      final resource = types.ResourceId(value: pageId);
+      final resource = skir.ResourceId(value: pageId);
       final draft = state.draft;
       final catalog = state.catalog;
       if (state.failure case final failure?) {
@@ -41,7 +29,7 @@ class PagePage extends ConsumerWidget {
         child = const Center(child: Text("This page is no longer available"));
       } else {
         child = AuthoredResourceInspection(
-          key: ValueKey((resource, catalog_wire.PresentationRole.editor)),
+          key: ValueKey((resource, skir.PresentationRole.editor)),
           resource: resource,
           draft: draft,
           catalog: catalog,
@@ -59,7 +47,7 @@ class PagePage extends ConsumerWidget {
             reload: ref.read(provider.notifier).refresh,
             openAutosave: ref.read(provider.notifier).openAutosave,
           ),
-          role: catalog_wire.PresentationRole.editor,
+          role: skir.PresentationRole.editor,
           openResource: (selected) {
             ref
                 .read(selectionProvider.notifier)

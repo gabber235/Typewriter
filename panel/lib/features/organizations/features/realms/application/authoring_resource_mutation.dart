@@ -1,31 +1,30 @@
-import "package:typewriter_panel/features/organizations/features/realms/application/authored_draft.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
-import "package:typewriter_panel/shared/editors/application/portable_value_tree.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
 
-types.ValueLocation authoredFieldLocation(
-  types.ResourceId resource,
+skir.ValueLocation authoredFieldLocation(
+  skir.ResourceId resource,
   Iterable<String> fields,
-) => types.ValueLocation(
+) => skir.ValueLocation(
   resource: resource,
-  path: types.ValuePath(
+  path: skir.ValuePath(
     segments: [
-      for (final field in fields) types.PathSegment.createField(name: field),
+      for (final field in fields) skir.PathSegment.createField(name: field),
     ],
   ),
 );
 
 void setAuthoredFieldPayload({
   required AuthoredDraft draft,
-  required types.ResourceId resource,
+  required skir.ResourceId resource,
   required Iterable<String> fields,
-  required types.DataValue payload,
+  required skir.DataValue payload,
 }) {
   final result = draft.setPayload(
     authoredFieldLocation(resource, fields),
     payload,
   );
-  if (result is PortablePathUnavailable<types.AuthoringRecord>) {
+  if (result is PortablePathUnavailable<skir.AuthoringRecord>) {
     throw StateError(result.message);
   }
 }

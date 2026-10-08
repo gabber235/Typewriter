@@ -1,4 +1,5 @@
-import "package:flutter/material.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
@@ -29,7 +30,7 @@ Widget tagsPageStory({
       ),
       ...tagsProviderOverrides(state: tagsState, tags: tags),
       ...canonicalServicesProviderOverrides(state: DisplayState.manyItems),
-      realmIdProvider.overrideWithValue(recordId("service:widgetbook")),
+      realmIdProvider.overrideWithValue(skir.recordId("service:widgetbook")),
       selectedRealmProvider.overrideWith((ref) async => null),
       ...organizationProviderOverrides(),
       ...organizationsProviderOverrides(state: DisplayState.fewItems),

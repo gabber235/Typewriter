@@ -13,7 +13,7 @@ part of 'organization.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$OrganizationData implements DiagnosticableTreeMixin {
+mixin _$OrganizationData {
 
  skir.RecordId get organizationId; String get name; String get logoUrl;
 /// Create a copy of OrganizationData
@@ -23,13 +23,6 @@ mixin _$OrganizationData implements DiagnosticableTreeMixin {
 $OrganizationDataCopyWith<OrganizationData> get copyWith => _$OrganizationDataCopyWithImpl<OrganizationData>(this as OrganizationData, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as OrganizationData;
-  properties
-    ..add(DiagnosticsProperty('type', 'OrganizationData'))
-    ..add(DiagnosticsProperty('organizationId', _this.organizationId))..add(DiagnosticsProperty('name', _this.name))..add(DiagnosticsProperty('logoUrl', _this.logoUrl));
-}
 
 @override
 bool operator ==(Object other) {
@@ -45,7 +38,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as OrganizationData;
   return 'OrganizationData(organizationId: ${_this.organizationId}, name: ${_this.name}, logoUrl: ${_this.logoUrl})';
 }
@@ -220,7 +213,7 @@ return $default(_that.organizationId,_that.name,_that.logoUrl);case _:
 /// @nodoc
 
 
-class _OrganizationData extends OrganizationData with DiagnosticableTreeMixin {
+class _OrganizationData extends OrganizationData {
   const _OrganizationData({required this.organizationId, required this.name, required this.logoUrl}): assert(name != "", 'Name must not be empty.'),super._();
   
 
@@ -235,12 +228,6 @@ class _OrganizationData extends OrganizationData with DiagnosticableTreeMixin {
 _$OrganizationDataCopyWith<_OrganizationData> get copyWith => __$OrganizationDataCopyWithImpl<_OrganizationData>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'OrganizationData'))
-    ..add(DiagnosticsProperty('organizationId', organizationId))..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('logoUrl', logoUrl));
-}
 
 @override
 bool operator ==(Object other) {
@@ -254,7 +241,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'OrganizationData(organizationId: $organizationId, name: $name, logoUrl: $logoUrl)';
 }
 

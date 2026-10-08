@@ -1,6 +1,4 @@
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -12,8 +10,8 @@ void main() {
     "Realm navigation keeps the Realm ID distinct from its host service",
     () {
       final route = realmNavigationRoute(
-        recordId("organization:test"),
-        recordId("realm_instance:adventure"),
+        skir.recordId("organization:test"),
+        skir.recordId("realm_instance:adventure"),
       );
       final realmRoute = route.initialChildren!.single;
 
@@ -241,7 +239,7 @@ class _Fixture {
       role: CustomServiceRole(name: "discord", version: "1.0.0"),
     );
     host = skir.ServiceHost(
-      hostId: recordId("service_host:paper-eu"),
+      hostId: skir.recordId("service_host:paper-eu"),
       serviceId: hostService.serviceId,
       revision: 2,
       entrypoint: "PAPER",
@@ -255,7 +253,7 @@ class _Fixture {
       ),
     );
     realm = skir.RealmInstance(
-      realmId: recordId("realm_instance:adventure"),
+      realmId: skir.recordId("realm_instance:adventure"),
       ownerHost: skir.OwnerHost(id: host.hostId, name: hostService.name),
       revision: 3,
       targetEngine: skir.EngineTarget(
@@ -265,7 +263,7 @@ class _Fixture {
       state: _childState(message: childMessage),
     );
     engine = skir.EngineInstance(
-      engineId: recordId("engine_instance:paper-eu"),
+      engineId: skir.recordId("engine_instance:paper-eu"),
       ownerHost: skir.OwnerHost(id: host.hostId, name: hostService.name),
       realm: skir.RealmInfo(realmId: realm.realmId, ownerHost: realm.ownerHost),
       revision: 4,
@@ -289,8 +287,10 @@ class _Fixture {
   List<Service> get services => [hostService, customService];
 
   List<Override> get overrides => [
-    organizationIdProvider.overrideWith((ref) => recordId("organization:test")),
-    organizationTopologyControllerProvider(recordId("organization:test"))
+    organizationIdProvider.overrideWith(
+      (ref) => skir.recordId("organization:test"),
+    ),
+    organizationTopologyControllerProvider(skir.recordId("organization:test"))
         .overrideWith(() => _FixtureScopedTopology(topology)),
     canonicalServicesProvider.overrideWith(() => _FixtureServices(services)),
   ];
@@ -311,12 +311,12 @@ Service _service({
   required bool connected,
   required ServiceRole role,
 }) => Service(
-  serviceId: recordId("service:$id"),
+  serviceId: skir.recordId("service:$id"),
   revision: 1,
   name: name,
   role: role,
   createdAt: DateTime.utc(2026, 8, 20),
-  organization: recordId("organization:test"),
+  organization: skir.recordId("organization:test"),
   state: ServiceState(
     status: connected ? ServiceStateStatus.online : ServiceStateStatus.offline,
     lastSeen: DateTime.now(),

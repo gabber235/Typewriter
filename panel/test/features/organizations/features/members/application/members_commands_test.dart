@@ -1,8 +1,4 @@
-import "dart:async";
-
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -54,7 +50,7 @@ void main() {
         final currentState = container.read(organizationMembersProvider);
         expect(currentState.value, isNotNull);
         expect(currentState.value!.length, 1);
-        expect(currentState.value!.first.userId, recordId("user:m1"));
+        expect(currentState.value!.first.userId, skir.recordId("user:m1"));
       },
     );
 
@@ -78,13 +74,13 @@ void main() {
       mockNats.registerHandler(memberRemoveSubject, (data) {
         confirmed = [];
         return skir.RemoveOrganizationMemberResponse.serializer.toBytes(
-          successfulMemberRemoval(recordId("user:m1")),
+          successfulMemberRemoval(skir.recordId("user:m1")),
         );
       });
 
       await container
           .read(organizationMembersProvider.notifier)
-          .removeMember(recordId("user:m1"));
+          .removeMember(skir.recordId("user:m1"));
 
       final currentState = container.read(organizationMembersProvider);
       expect(currentState.value, isNotNull);
@@ -141,7 +137,7 @@ void main() {
         expect(currentState.value!.first.roles.length, 1);
         expect(
           currentState.value!.first.roles.first.roleId,
-          recordId("organization_role:r1"),
+          skir.recordId("organization_role:r1"),
         );
       },
     );
@@ -184,7 +180,7 @@ void main() {
         return skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
           successfulMemberUpdate([
             skir.OrganizationMember(
-              userId: recordId("user:m1"),
+              userId: skir.recordId("user:m1"),
               name: "Test",
               email: "test@test.com",
               avatarUrl: "",
@@ -197,7 +193,7 @@ void main() {
 
       await container
           .read(organizationMembersProvider.notifier)
-          .updateMemberRoles([recordId("user:m1")], [newRole]);
+          .updateMemberRoles([skir.recordId("user:m1")], [newRole]);
 
       await readMembers(container);
       final currentState = container.read(organizationMembersProvider);
@@ -205,7 +201,7 @@ void main() {
       expect(currentState.value!.first.roles.length, 1);
       expect(
         currentState.value!.first.roles.first.roleId,
-        recordId("organization_role:r2"),
+        skir.recordId("organization_role:r2"),
       );
     });
   });

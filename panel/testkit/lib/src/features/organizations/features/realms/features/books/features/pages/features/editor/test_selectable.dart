@@ -1,12 +1,5 @@
-import "package:flutter/foundation.dart";
-import "package:flutter/material.dart" hide Title;
-import "package:riverpod_annotation/riverpod_annotation.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as portable_catalog;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
-    as portable_expression;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/presentation.dart"
-    as portable_presentation;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
@@ -214,25 +207,21 @@ class TestSelectable extends InspectableSelectable<TestSelectableIdentifier>
     final owner = owners.editor(this);
     return InspectionContent(
       host: EditorSourcePresentationHost(
-        catalog: portable_catalog.EditorCatalogWireSnapshot.defaultInstance
+        catalog: skir.EditorCatalogWireSnapshot.defaultInstance
             .asTrustedLocalCatalog(),
-        root: () => portable_presentation.PresentationNode(
+        root: () => skir.PresentationNode(
           nodeId: "testSelectable",
-          properties:
-              portable_presentation.PresentationProperties.defaultInstance,
-          element: portable_presentation.PresentationElement.wrapChildren(
-            portable_presentation.ChildrenElement.createColumn(
+          properties: skir.PresentationProperties.defaultInstance,
+          element: skir.PresentationElement.wrapChildren(
+            skir.ChildrenElement.createColumn(
               children: const [],
-              layout: portable_presentation.AxisChildrenLayout.defaultInstance,
+              layout: skir.AxisChildrenLayout.defaultInstance,
             ),
           ),
           header: null,
         ),
         bindings: const [],
-        budget: portable_expression.EvaluationBudget(
-          maxSteps: 64,
-          maxCollectionItems: 16,
-        ),
+        budget: skir.EvaluationBudget(maxSteps: 64, maxCollectionItems: 16),
       ),
       header: ManagedInspectorHeader(
         id: id.id,

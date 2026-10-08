@@ -1,6 +1,3 @@
-import "dart:async";
-
-import "package:flutter_animate/flutter_animate.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 export "query.dart";

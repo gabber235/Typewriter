@@ -1,4 +1,4 @@
-import "package:flutter/material.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Displays the compact heading used within a [Section] or grouped panel.
 class SectionTitle extends StatelessWidget {

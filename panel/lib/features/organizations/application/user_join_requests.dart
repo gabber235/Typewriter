@@ -1,6 +1,3 @@
-import "package:flutter/foundation.dart";
-import "package:freezed_annotation/freezed_annotation.dart";
-import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -123,7 +120,7 @@ class UserJoinRequests extends _$UserJoinRequests {
 
     state.ensureReady();
     final code = _extractCode(urlOrCode);
-    final codeId = recordId("organization_join_code:$code");
+    final codeId = skir.recordId("organization_join_code:$code");
 
     final request = skir.SubmitUserJoinRequestRequest(
       operationId: uuid.v4(),

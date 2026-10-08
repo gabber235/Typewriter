@@ -1,4 +1,3 @@
-import "package:flutter/material.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -27,9 +26,9 @@ Widget tagNodeUseCase(BuildContext context) {
     overrides: [
       ...authoringSessionMockOverrides(tags: [previewTag, parentCandidate]),
       organizationIdProvider.overrideWithValue(
-        recordId("organization:widgetbook"),
+        skir.recordId("organization:widgetbook"),
       ),
-      realmIdProvider.overrideWithValue(recordId("service:widgetbook")),
+      realmIdProvider.overrideWithValue(skir.recordId("service:widgetbook")),
       ...tagsProviderOverrides(tags: [previewTag, parentCandidate]),
     ],
     child: InspectorScaffold(
@@ -75,9 +74,9 @@ Widget mixedTagSelectionStory({bool initiallySelected = true}) {
     overrides: [
       ...authoringSessionMockOverrides(tags: tags),
       organizationIdProvider.overrideWithValue(
-        recordId("organization:widgetbook"),
+        skir.recordId("organization:widgetbook"),
       ),
-      realmIdProvider.overrideWithValue(recordId("service:widgetbook")),
+      realmIdProvider.overrideWithValue(skir.recordId("service:widgetbook")),
       ...tagsProviderOverrides(tags: tags),
     ],
     child: InspectorScaffold(
@@ -142,9 +141,9 @@ Widget tagNodeColorsUseCase(BuildContext context) {
     overrides: [
       ...authoringSessionMockOverrides(tags: tags),
       organizationIdProvider.overrideWithValue(
-        recordId("organization:widgetbook"),
+        skir.recordId("organization:widgetbook"),
       ),
-      realmIdProvider.overrideWithValue(recordId("service:widgetbook")),
+      realmIdProvider.overrideWithValue(skir.recordId("service:widgetbook")),
       ...tagsProviderOverrides(tags: tags),
     ],
     child: InspectorScaffold(

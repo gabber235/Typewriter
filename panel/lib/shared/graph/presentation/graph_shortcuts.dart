@@ -1,11 +1,4 @@
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:iconify_flutter_plus/icons/ion.dart";
-import "package:iconify_flutter_plus/icons/lucide.dart";
-import "package:typewriter_panel/app/presentation/shortcuts/action_shortcuts.dart";
-import "package:typewriter_panel/shared/graph/application/application.dart";
-import "package:typewriter_panel/shared/ui/components/icons.dart";
-import "package:typewriter_panel/shared/utilities/adaptive_single_activator.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Builds graph specific mode, zoom, and reset shortcuts.
 ///

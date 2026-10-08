@@ -1,11 +1,6 @@
-// ignore_for_file: prefer_initializing_formals
-
-import "dart:async";
-
-import "package:collection/collection.dart";
-import "package:flutter/foundation.dart";
-import "package:flutter_animate/flutter_animate.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+
+// ignore_for_file: prefer_initializing_formals
 
 typedef CommandSurfaceEffectCallback = FutureOr<void> Function(
   SearchSurfaceEffect effect,

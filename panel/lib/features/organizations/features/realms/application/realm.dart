@@ -2,9 +2,7 @@
 // organization topology and the selected realm's owner host. The resulting
 // interaction state is the shared gate used by the organization workspace:
 // presentation may remain mounted while mutations and navigation are paused.
-import "package:collection/collection.dart";
-import "package:freezed_annotation/freezed_annotation.dart";
-import "package:riverpod_annotation/riverpod_annotation.dart";
+
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -77,7 +75,7 @@ abstract class RealmInteractionState with _$RealmInteractionState {
 skir.RecordId? realmId(Ref ref) {
   final id = ref.watch(routeParamProvider("realmId"));
   if (id == null) return null;
-  return recordId("realm_instance:$id");
+  return skir.recordId("realm_instance:$id");
 }
 
 /// Finds the selected realm in the organization topology projection.

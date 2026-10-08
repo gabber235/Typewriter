@@ -1,25 +1,6 @@
-import "package:clock/clock.dart";
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/action.dart"
-    as action;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring.dart"
-    as authoring;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring_facts.dart"
-    as facts;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/binding.dart"
-    as binding;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as catalog;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/diagnostic.dart"
-    as diagnostic;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
-    as expression;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/presentation.dart"
-    as presentation;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../support/test_utils.dart";
@@ -30,16 +11,16 @@ void main() {
   ) async {
     var now = DateTime.utc(2026, 10, 5, 12);
     final host = _TestPortableHost(
-      root: presentation.PresentationNode(
+      root: skir.PresentationNode(
         nodeId: "relative",
-        properties: presentation.PresentationProperties.defaultInstance,
+        properties: skir.PresentationProperties.defaultInstance,
         header: null,
-        element: presentation.PresentationElement.createRelativeTime(
-          value: expression.ExpressionNode.wrapLiteral(
-            types.DataValue.wrapTimestamp(now),
+        element: skir.PresentationElement.createRelativeTime(
+          value: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapTimestamp(now),
           ),
-          style: presentation.RelativeTimeStyle.natural,
-          timeZone: presentation.DateTimeZone.utc,
+          style: skir.RelativeTimeStyle.natural,
+          timeZone: skir.DateTimeZone.utc,
         ),
       ),
     );
@@ -58,13 +39,13 @@ void main() {
 
   testWidgets("grid cells keep their content height", (tester) async {
     final host = _TestPortableHost(
-      root: presentation.PresentationNode(
+      root: skir.PresentationNode(
         nodeId: "grid",
-        properties: presentation.PresentationProperties.defaultInstance,
+        properties: skir.PresentationProperties.defaultInstance,
         header: null,
-        element: presentation.PresentationElement.wrapChildren(
-          presentation.ChildrenElement.createGrid(
-            layout: presentation.GridChildrenLayout(
+        element: skir.PresentationElement.wrapChildren(
+          skir.ChildrenElement.createGrid(
+            layout: skir.GridChildrenLayout(
               columns: 2,
               horizontalSpacing: 12,
               verticalSpacing: 12,
@@ -125,18 +106,18 @@ void main() {
     tester,
   ) async {
     final host = _TestPortableHost(
-      root: presentation.PresentationNode(
+      root: skir.PresentationNode(
         nodeId: "section",
-        properties: presentation.PresentationProperties.defaultInstance,
-        element: presentation.PresentationElement.createSection(
+        properties: skir.PresentationProperties.defaultInstance,
+        element: skir.PresentationElement.createSection(
           child: _visualText("section.body", "Section body"),
           border: null,
         ),
-        header: presentation.PresentationHeader(
+        header: skir.PresentationHeader(
           binding: null,
-          title: presentation.PresentationHeaderTitle.wrapText(
-            expression.ExpressionNode.wrapLiteral(
-              types.DataValue.wrapStringValue("Section title"),
+          title: skir.PresentationHeaderTitle.wrapText(
+            skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapStringValue("Section title"),
             ),
           ),
           description: null,
@@ -170,19 +151,19 @@ void main() {
     tester,
   ) async {
     final host = _TestPortableHost(
-      root: presentation.PresentationNode(
+      root: skir.PresentationNode(
         nodeId: "status",
-        properties: presentation.PresentationProperties.defaultInstance,
+        properties: skir.PresentationProperties.defaultInstance,
         header: null,
-        element: presentation.PresentationElement.createStatus(
-          value: expression.ExpressionNode.wrapLiteral(
-            types.DataValue.wrapStringValue("Connected"),
+        element: skir.PresentationElement.createStatus(
+          value: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapStringValue("Connected"),
           ),
           cases: [
-            presentation.StatusCase(
-              match: types.DataValue.wrapStringValue("Connected"),
-              appearance: presentation.StatusAppearance(
-                tone: presentation.StatusTone.online,
+            skir.StatusCase(
+              match: skir.DataValue.wrapStringValue("Connected"),
+              appearance: skir.StatusAppearance(
+                tone: skir.StatusTone.online,
                 label: null,
               ),
             ),
@@ -212,19 +193,19 @@ void main() {
     tester,
   ) async {
     final host = _TestPortableHost(
-      root: presentation.PresentationNode(
+      root: skir.PresentationNode(
         nodeId: "status",
-        properties: presentation.PresentationProperties.defaultInstance,
+        properties: skir.PresentationProperties.defaultInstance,
         header: null,
-        element: presentation.PresentationElement.createStatus(
-          value: expression.ExpressionNode.wrapLiteral(
-            types.DataValue.wrapEnumCase("Connected"),
+        element: skir.PresentationElement.createStatus(
+          value: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapEnumCase("Connected"),
           ),
           cases: [
-            presentation.StatusCase(
-              match: types.DataValue.wrapEnumCase("Connected"),
-              appearance: presentation.StatusAppearance(
-                tone: presentation.StatusTone.online,
+            skir.StatusCase(
+              match: skir.DataValue.wrapEnumCase("Connected"),
+              appearance: skir.StatusAppearance(
+                tone: skir.StatusTone.online,
                 label: null,
               ),
             ),
@@ -264,7 +245,7 @@ void main() {
 
     expect(host.writes, hasLength(1));
     expect(host.writes.single.$1, _reference);
-    expect(host.writes.single.$2, types.DataValue.wrapInteger("7"));
+    expect(host.writes.single.$2, skir.DataValue.wrapInteger("7"));
     expect(host.expectedTypeReads, greaterThan(0));
   });
 
@@ -334,10 +315,10 @@ void main() {
           child: PortablePresentationRenderer(
             host: host,
             compactDiagnostics: [
-              diagnostic.DiagnosticTemplate(
+              skir.DiagnosticTemplate(
                 code: "compact_error",
                 message: "Compact problem",
-                severity: diagnostic.DiagnosticSeverity.error,
+                severity: skir.DiagnosticSeverity.error,
                 targets: const [],
               ),
             ],
@@ -356,8 +337,8 @@ void main() {
     tester,
   ) async {
     for (final role in [
-      catalog.PresentationRole.editor,
-      catalog.PresentationRole.inspector,
+      skir.PresentationRole.editor,
+      skir.PresentationRole.inspector,
     ]) {
       final host = _TestPortableHost(
         root: _actionNode,
@@ -392,10 +373,10 @@ void main() {
         child: PortablePresentationRenderer(
           host: host,
           compactDiagnostics: [
-            diagnostic.DiagnosticTemplate(
+            skir.DiagnosticTemplate(
               code: "informational",
               message: "This value was inferred",
-              severity: diagnostic.DiagnosticSeverity.information,
+              severity: skir.DiagnosticSeverity.information,
               targets: const [],
             ),
           ],
@@ -422,7 +403,7 @@ void main() {
     expect(control.top - description.bottom, greaterThanOrEqualTo(8));
     final label = tester.getRect(find.text("Count"));
     expect(control.top - label.bottom, greaterThanOrEqualTo(6));
-    expect(find.byType(ValidatedTextField<types.DataValue>), findsOneWidget);
+    expect(find.byType(ValidatedTextField<skir.DataValue>), findsOneWidget);
   });
 
   testWidgets("does not repeat a control label supplied by its header", (
@@ -490,27 +471,27 @@ void main() {
         child: PortablePresentationNodeRenderer(
           node: _node(
             "icon",
-            presentation.PresentationElement.createIcon(
-              name: expression.ExpressionNode.wrapLiteral(
-                types.DataValue.wrapStringValue(
+            skir.PresentationElement.createIcon(
+              name: skir.ExpressionNode.wrapLiteral(
+                skir.DataValue.wrapStringValue(
                   '<svg xmlns="http://www.w3.org/2000/svg" '
                   'viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>',
                 ),
               ),
-              semanticLabel: expression.ExpressionNode.wrapLiteral(
-                types.DataValue.wrapStringValue("Book icon"),
+              semanticLabel: skir.ExpressionNode.wrapLiteral(
+                skir.DataValue.wrapStringValue("Book icon"),
               ),
-              color: expression.ExpressionNode.wrapLiteral(
-                types.DataValue.wrapInteger(color.toARGB32().toString()),
+              color: skir.ExpressionNode.wrapLiteral(
+                skir.DataValue.wrapInteger(color.toARGB32().toString()),
               ),
-              size: expression.ExpressionNode.wrapLiteral(
-                types.DataValue.wrapFloat(28),
+              size: skir.ExpressionNode.wrapLiteral(
+                skir.DataValue.wrapFloat(28),
               ),
             ),
           ),
           scope: PortablePresentationScope(
             bindings: const {},
-            budget: expression.EvaluationBudget(
+            budget: skir.EvaluationBudget(
               maxSteps: 100,
               maxCollectionItems: 100,
             ),
@@ -536,19 +517,19 @@ void main() {
     addTearDown(width.dispose);
     addTearDown(name.dispose);
 
-    presentation.PresentationNode tagCard(String tagName) {
+    skir.PresentationNode tagCard(String tagName) {
       final label = tagName.isEmpty ? "Unnamed tag" : tagName;
       final icon = _node(
         "tag.icon",
-        presentation.PresentationElement.createIcon(
-          name: expression.ExpressionNode.wrapLiteral(
-            types.DataValue.wrapStringValue(
+        skir.PresentationElement.createIcon(
+          name: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapStringValue(
               '<svg xmlns="http://www.w3.org/2000/svg" '
               'viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>',
             ),
           ),
-          semanticLabel: expression.ExpressionNode.wrapLiteral(
-            types.DataValue.wrapStringValue("Tag"),
+          semanticLabel: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapStringValue("Tag"),
           ),
           color: null,
           size: null,
@@ -556,10 +537,10 @@ void main() {
       );
       final coloredIcon = _node(
         "tag.icon.color",
-        presentation.PresentationElement.createContainer(
+        skir.PresentationElement.createContainer(
           child: _node(
             "tag.icon.padding",
-            presentation.PresentationElement.createPadding(
+            skir.PresentationElement.createPadding(
               child: icon,
               top: 6,
               start: 6,
@@ -568,17 +549,17 @@ void main() {
             ),
           ),
           border: null,
-          backgroundColor: expression.ExpressionNode.wrapLiteral(
-            types.DataValue.wrapInteger("4288585374"),
+          backgroundColor: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapInteger("4288585374"),
           ),
-          radius: presentation.PresentationRadius.none,
+          radius: skir.PresentationRadius.none,
         ),
       );
       final center = _node(
         "tag.name",
-        presentation.PresentationElement.createText(
-          value: expression.ExpressionNode.wrapLiteral(
-            types.DataValue.wrapStringValue(label),
+        skir.PresentationElement.createText(
+          value: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapStringValue(label),
           ),
           color: null,
           fontSize: null,
@@ -592,30 +573,30 @@ void main() {
           letterSpacing: null,
           decoration: null,
           semanticLabel: null,
-          paragraph: presentation.TextParagraph.defaultInstance,
+          paragraph: skir.TextParagraph.defaultInstance,
         ),
       );
       final card = _node(
         "tag.card",
-        presentation.PresentationElement.createAdaptiveLeading(
+        skir.PresentationElement.createAdaptiveLeading(
           leading: coloredIcon,
           center: center,
           suffix: null,
-          padding: presentation.PresentationInsets.wrapAll(8),
-          compactPadding: presentation.PresentationInsets.wrapAll(4),
+          padding: skir.PresentationInsets.wrapAll(8),
+          compactPadding: skir.PresentationInsets.wrapAll(4),
           gap: 12,
           minimumCenterWidth: 80,
         ),
       );
       return _node(
         "tag.root",
-        presentation.PresentationElement.wrapChildren(
-          presentation.ChildrenElement.createColumn(
-            children: [presentation.AxisChild.wrapFixed(card)],
-            layout: presentation.AxisChildrenLayout(
+        skir.PresentationElement.wrapChildren(
+          skir.ChildrenElement.createColumn(
+            children: [skir.AxisChild.wrapFixed(card)],
+            layout: skir.AxisChildrenLayout(
               spacing: 0,
-              mainAxisAlignment: presentation.MainAxisAlignment.start,
-              crossAxisAlignment: presentation.CrossAxisAlignment.start,
+              mainAxisAlignment: skir.MainAxisAlignment.start,
+              crossAxisAlignment: skir.CrossAxisAlignment.start,
             ),
           ),
         ),
@@ -624,10 +605,7 @@ void main() {
 
     final scope = PortablePresentationScope(
       bindings: const {},
-      budget: expression.EvaluationBudget(
-        maxSteps: 100,
-        maxCollectionItems: 100,
-      ),
+      budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
       setBinding: (_, _) {},
     );
 
@@ -688,61 +666,53 @@ void main() {
     tester,
   ) async {
     const color = Color(0xFF884422);
-    presentation.PresentationNode textNode(expression.ExpressionNode weight) =>
-        _node(
-          "styled.text",
-          presentation.PresentationElement.createText(
-            value: expression.ExpressionNode.wrapLiteral(
-              types.DataValue.wrapStringValue("Styled title"),
-            ),
-            color: expression.ExpressionNode.wrapLiteral(
-              types.DataValue.wrapInteger(color.toARGB32().toString()),
-            ),
-            fontSize: expression.ExpressionNode.wrapLiteral(
-              types.DataValue.wrapFloat(22),
-            ),
-            fontWeight: weight,
-            fontItalic: expression.ExpressionNode.wrapLiteral(
-              types.DataValue.wrapFloat(1),
-            ),
-            fontOpticalSize: null,
-            fontSlant: null,
-            fontWidth: null,
-            textAlignment: expression.ExpressionNode.wrapLiteral(
-              types.DataValue.wrapStringValue("center"),
-            ),
-            lineHeight: null,
-            letterSpacing: null,
-            decoration: expression.ExpressionNode.wrapLiteral(
-              types.DataValue.wrapStringValue("underline"),
-            ),
-            semanticLabel: expression.ExpressionNode.wrapLiteral(
-              types.DataValue.wrapStringValue("Styled heading"),
-            ),
-            paragraph: presentation.TextParagraph(
-              maxLines: 1,
-              overflow: presentation.PresentationTextOverflow.ellipsis,
-              softWrap: false,
-              selectable: false,
-              tone: presentation.PresentationTextTone.primary,
-            ),
-          ),
-        );
+    skir.PresentationNode textNode(skir.ExpressionNode weight) => _node(
+      "styled.text",
+      skir.PresentationElement.createText(
+        value: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue("Styled title"),
+        ),
+        color: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapInteger(color.toARGB32().toString()),
+        ),
+        fontSize: skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapFloat(22)),
+        fontWeight: weight,
+        fontItalic: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapFloat(1),
+        ),
+        fontOpticalSize: null,
+        fontSlant: null,
+        fontWidth: null,
+        textAlignment: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue("center"),
+        ),
+        lineHeight: null,
+        letterSpacing: null,
+        decoration: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue("underline"),
+        ),
+        semanticLabel: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue("Styled heading"),
+        ),
+        paragraph: skir.TextParagraph(
+          maxLines: 1,
+          overflow: skir.PresentationTextOverflow.ellipsis,
+          softWrap: false,
+          selectable: false,
+          tone: skir.PresentationTextTone.primary,
+        ),
+      ),
+    );
     final scope = PortablePresentationScope(
       bindings: const {},
-      budget: expression.EvaluationBudget(
-        maxSteps: 100,
-        maxCollectionItems: 100,
-      ),
+      budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
       setBinding: (_, _) {},
     );
     await tester.pumpTestApp(
       child: Material(
         child: PortablePresentationNodeRenderer(
           node: textNode(
-            expression.ExpressionNode.wrapLiteral(
-              types.DataValue.wrapFloat(700),
-            ),
+            skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapFloat(700)),
           ),
           scope: scope,
         ),
@@ -761,8 +731,8 @@ void main() {
       child: Material(
         child: PortablePresentationNodeRenderer(
           node: textNode(
-            expression.ExpressionNode.wrapLiteral(
-              types.DataValue.wrapStringValue("heavy"),
+            skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapStringValue("heavy"),
             ),
           ),
           scope: scope,
@@ -781,13 +751,13 @@ void main() {
     final scope = PortablePresentationScope(
       bindings: {
         _bindingId: PortableExpressionBinding(
-          value: types.DataValue.createNamed(
+          value: skir.DataValue.createNamed(
             actualType: _iconifyType,
-            payload: types.DataValue.createRecord(
+            payload: skir.DataValue.createRecord(
               fields: [
-                types.FieldValue(
+                skir.FieldValue(
                   name: "value",
-                  value: types.DataValue.wrapStringValue(
+                  value: skir.DataValue.wrapStringValue(
                     "material-symbols:book",
                   ),
                 ),
@@ -796,10 +766,7 @@ void main() {
           ),
         ),
       },
-      budget: expression.EvaluationBudget(
-        maxSteps: 100,
-        maxCollectionItems: 100,
-      ),
+      budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
       setBinding: (_, _) {},
       catalog: _polymorphicCatalog,
     );
@@ -828,30 +795,28 @@ void main() {
   testWidgets("record input scopes relative fields to the nested value", (
     tester,
   ) async {
-    final writes = <(binding.BindingRef, types.DataValue)>[];
-    final placementReference = binding.BindingRef(
+    final writes = <(skir.BindingRef, skir.DataValue)>[];
+    final placementReference = skir.BindingRef(
       bindingId: _configuredBindingId,
-      path: types.ValuePath(
-        segments: [types.PathSegment.createField(name: "placement")],
+      path: skir.ValuePath(
+        segments: [skir.PathSegment.createField(name: "placement")],
       ),
     );
-    final xReference = binding.BindingRef(
+    final xReference = skir.BindingRef(
       bindingId: _configuredBindingId,
-      path: types.ValuePath(
-        segments: [types.PathSegment.createField(name: "x")],
-      ),
+      path: skir.ValuePath(segments: [skir.PathSegment.createField(name: "x")]),
     );
-    final root = types.DataValue.createRecord(
+    final root = skir.DataValue.createRecord(
       fields: [
-        types.FieldValue(
+        skir.FieldValue(
           name: "placement",
-          value: types.DataValue.createNamed(
-            actualType: types.NamedTypeUse.defaultInstance,
-            payload: types.DataValue.createRecord(
+          value: skir.DataValue.createNamed(
+            actualType: skir.NamedTypeUse.defaultInstance,
+            payload: skir.DataValue.createRecord(
               fields: [
-                types.FieldValue(
+                skir.FieldValue(
                   name: "x",
-                  value: types.DataValue.wrapInteger("4"),
+                  value: skir.DataValue.wrapInteger("4"),
                 ),
               ],
             ),
@@ -861,8 +826,8 @@ void main() {
     );
     final node = _node(
       "placement",
-      presentation.PresentationElement.createRecordInput(
-        control: presentation.BoundControl(
+      skir.PresentationElement.createRecordInput(
+        control: skir.BoundControl(
           binding: placementReference,
           label: null,
           description: null,
@@ -871,8 +836,8 @@ void main() {
         ),
         fieldPresentation: _node(
           "placement.x",
-          presentation.PresentationElement.wrapNumericInput(
-            presentation.BoundControl(
+          skir.PresentationElement.wrapNumericInput(
+            skir.BoundControl(
               binding: xReference,
               label: null,
               description: null,
@@ -885,10 +850,7 @@ void main() {
     );
     final scope = PortablePresentationScope(
       bindings: {_configuredBindingId: PortableExpressionBinding(value: root)},
-      budget: expression.EvaluationBudget(
-        maxSteps: 100,
-        maxCollectionItems: 100,
-      ),
+      budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
       setBinding: (reference, value) => writes.add((reference, value)),
     );
 
@@ -910,7 +872,7 @@ void main() {
     expect(writes.single.$1, placementReference);
     expect(
       writes.single.$2.authoredActualType,
-      types.NamedTypeUse.defaultInstance,
+      skir.NamedTypeUse.defaultInstance,
     );
     expect(
       writes.single.$2.authoredField("x")?.authoredInteger,
@@ -922,7 +884,7 @@ void main() {
     tester,
   ) async {
     final fixture = _collectionFixture(
-      value: types.DataValue.unfilled,
+      value: skir.DataValue.unfilled,
       allowAdd: true,
     );
     await tester.pumpTestApp(child: fixture.widget);
@@ -934,7 +896,7 @@ void main() {
     expect(fixture.document.insertions, hasLength(1));
     expect(
       fixture.document.insertions.single.item.value,
-      types.DataValue.wrapStringValue(""),
+      skir.DataValue.wrapStringValue(""),
     );
   });
 
@@ -942,7 +904,7 @@ void main() {
     tester,
   ) async {
     final list = _collectionFixture(
-      value: types.DataValue.createListValue(items: const []),
+      value: skir.DataValue.createListValue(items: const []),
       allowAdd: true,
       label: "Pages",
       description: "Pages in this book",
@@ -963,7 +925,7 @@ void main() {
     tester,
   ) async {
     final fixture = _collectionFixture(
-      value: types.DataValue.createListValue(items: const []),
+      value: skir.DataValue.createListValue(items: const []),
       allowAdd: false,
     );
     await tester.pumpTestApp(child: fixture.widget);
@@ -983,8 +945,8 @@ void main() {
     expect(fixture.document.maps, hasLength(1));
     final row = fixture.document.maps.single.single;
     expect(row.id.value, startsWith("panel:"));
-    expect(row.key, types.DataValue.wrapStringValue(""));
-    expect(row.value, types.DataValue.wrapStringValue(""));
+    expect(row.key, skir.DataValue.wrapStringValue(""));
+    expect(row.value, skir.DataValue.wrapStringValue(""));
   });
 
   testWidgets("selects the first link before inserting an empty set item", (
@@ -1007,7 +969,7 @@ void main() {
     expect(connection.target, fixture.target);
     expect(
       connection.source.id.location.path.segments.last,
-      isA<types.PathSegment_itemWrapper>(),
+      isA<skir.PathSegment_itemWrapper>(),
     );
   });
 
@@ -1122,7 +1084,7 @@ void main() {
     expect(removing.document.disconnections, hasLength(1));
     expect(
       removing.document.disconnections.single.id.location.path.segments.last,
-      types.PathSegment.createItem(id: _knownLinkItem),
+      skir.PathSegment.createItem(id: _knownLinkItem),
     );
     expect(removing.document.connections, isEmpty);
 
@@ -1141,7 +1103,7 @@ void main() {
     expect(adding.document.connections.single.target, adding.secondTarget);
     expect(
       adding.document.connections.single.source.id.location.path.segments.last,
-      isNot(types.PathSegment.createItem(id: _unfinishedLinkItem)),
+      isNot(skir.PathSegment.createItem(id: _unfinishedLinkItem)),
     );
   });
 
@@ -1149,15 +1111,15 @@ void main() {
     tester,
   ) async {
     final document = _TestAuthoringDocument(
-      defaultFactory: (_) => types.DataValue.unfilled,
+      defaultFactory: (_) => skir.DataValue.unfilled,
       resources: {
-        _resource: types.AuthoringRecord(
-          configuration: types.TypeSelection.unknown,
+        _resource: skir.AuthoringRecord(
+          configuration: skir.TypeSelection.unknown,
           fields: const [],
         ),
       },
     );
-    catalog.InitializationRequest? request;
+    skir.InitializationRequest? request;
     await tester.pumpTestApp(
       child: Material(
         child: PortablePresentationNodeRenderer(
@@ -1165,14 +1127,14 @@ void main() {
           scope: PortablePresentationScope(
             bindings: {
               _bindingId: PortableExpressionBinding(
-                value: types.DataValue.unfilled,
-                location: types.ValueLocation(
+                value: skir.DataValue.unfilled,
+                location: skir.ValueLocation(
                   resource: _resource,
-                  path: types.ValuePath(segments: const []),
+                  path: skir.ValuePath(segments: const []),
                 ),
               ),
             },
-            budget: expression.EvaluationBudget(
+            budget: skir.EvaluationBudget(
               maxSteps: 100,
               maxCollectionItems: 100,
             ),
@@ -1181,13 +1143,13 @@ void main() {
             catalog: _polymorphicCatalog,
             prepareCreation: (value) async {
               request = value;
-              return catalog.PreparedCreation(
-                record: types.AuthoringRecord(
+              return skir.PreparedCreation(
+                record: skir.AuthoringRecord(
                   configuration: value.type,
                   fields: [
-                    types.FieldValue(
+                    skir.FieldValue(
                       name: "value",
-                      value: types.DataValue.wrapStringValue(""),
+                      value: skir.DataValue.wrapStringValue(""),
                     ),
                   ],
                 ),
@@ -1207,51 +1169,49 @@ void main() {
     await tester.tap(find.text("Iconify").last);
     await tester.pumpAndSettle();
 
-    expect(request?.type, types.TypeSelection.wrapComplete(_iconifyType));
+    expect(request?.type, skir.TypeSelection.wrapComplete(_iconifyType));
     expect(document.preparedApplications, hasLength(1));
   });
 
   testWidgets("hierarchy sequences preserve branches spacing and flattening", (
     tester,
   ) async {
-    final itemBinding = types.ExpressionBindingId(value: "hierarchy.item");
-    presentation.ConnectorStyle connector() => presentation.ConnectorStyle(
-      stroke: presentation.ConnectorStroke(
-        color: expression.ExpressionNode.wrapLiteral(
-          types.DataValue.wrapInteger("4286611584"),
+    final itemBinding = skir.ExpressionBindingId(value: "hierarchy.item");
+    skir.ConnectorStyle connector() => skir.ConnectorStyle(
+      stroke: skir.ConnectorStroke(
+        color: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapInteger("4286611584"),
         ),
-        width: expression.ExpressionNode.wrapLiteral(
-          types.DataValue.wrapFloat(2),
-        ),
+        width: skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapFloat(2)),
       ),
-      cornerRadius: expression.ExpressionNode.wrapLiteral(
-        types.DataValue.wrapFloat(6),
+      cornerRadius: skir.ExpressionNode.wrapLiteral(
+        skir.DataValue.wrapFloat(6),
       ),
       startMarker: null,
       endMarker: null,
     );
-    presentation.PresentationNode hierarchy(List<String> values) => _node(
+    skir.PresentationNode hierarchy(List<String> values) => _node(
       "hierarchy",
-      presentation.PresentationElement.createRepeated(
-        source: expression.ExpressionNode.wrapLiteral(
-          types.DataValue.createListValue(
+      skir.PresentationElement.createRepeated(
+        source: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.createListValue(
             items: [
               for (final (index, value) in values.indexed)
-                types.ListItem(
-                  id: types.ItemId(value: "hierarchy:$index"),
-                  value: types.DataValue.wrapStringValue(value),
+                skir.ListItem(
+                  id: skir.ItemId(value: "hierarchy:$index"),
+                  value: skir.DataValue.wrapStringValue(value),
                 ),
             ],
           ),
         ),
         itemBindingId: itemBinding,
-        presentation: presentation.SequencePresentation(
+        presentation: skir.SequencePresentation(
           item: _node(
             "hierarchy.item",
-            presentation.PresentationElement.createText(
-              value: expression.ExpressionNode.createRead(
+            skir.PresentationElement.createText(
+              value: skir.ExpressionNode.createRead(
                 binding: itemBinding,
-                path: types.ValuePath(segments: const []),
+                path: skir.ValuePath(segments: const []),
               ),
               color: null,
               fontSize: null,
@@ -1265,39 +1225,36 @@ void main() {
               letterSpacing: null,
               decoration: null,
               semanticLabel: null,
-              paragraph: presentation.TextParagraph.defaultInstance,
+              paragraph: skir.TextParagraph.defaultInstance,
             ),
           ),
           empty: null,
           separator: null,
-          layout: presentation.SequenceLayout.createHierarchy(
+          layout: skir.SequenceLayout.createHierarchy(
             unaryConnector: connector(),
             trunkConnector: connector(),
             branchConnector: connector(),
-            itemSpacing: expression.ExpressionNode.wrapLiteral(
-              types.DataValue.wrapFloat(20),
+            itemSpacing: skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapFloat(20),
             ),
-            indentation: expression.ExpressionNode.wrapLiteral(
-              types.DataValue.wrapFloat(24),
+            indentation: skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapFloat(24),
             ),
-            leadingSpacing: expression.ExpressionNode.wrapLiteral(
-              types.DataValue.wrapFloat(12),
+            leadingSpacing: skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapFloat(12),
             ),
-            itemAnchor: presentation.ConnectorAnchor.center,
-            flattenSingleItem: expression.ExpressionNode.wrapLiteral(
-              types.DataValue.wrapBoolean(true),
+            itemAnchor: skir.ConnectorAnchor.center,
+            flattenSingleItem: skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapBoolean(true),
             ),
-            crossAxisAlignment: presentation.CrossAxisAlignment.stretch,
+            crossAxisAlignment: skir.CrossAxisAlignment.stretch,
           ),
         ),
       ),
     );
     final scope = PortablePresentationScope(
       bindings: const {},
-      budget: expression.EvaluationBudget(
-        maxSteps: 100,
-        maxCollectionItems: 100,
-      ),
+      budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
       setBinding: (_, _) {},
     );
     Future<void> pumpHierarchy(List<String> values) => tester.pumpTestApp(
@@ -1340,18 +1297,18 @@ void main() {
 }
 
 ({Widget widget, _TestAuthoringDocument document}) _collectionFixture({
-  required types.DataValue value,
+  required skir.DataValue value,
   required bool allowAdd,
   String? label,
   String? description,
 }) {
   final document = _TestAuthoringDocument(
-    defaultFactory: (_) => types.DataValue.wrapStringValue(""),
+    defaultFactory: (_) => skir.DataValue.wrapStringValue(""),
   );
-  final reference = binding.BindingRef(
+  final reference = skir.BindingRef(
     bindingId: _bindingId,
-    path: types.ValuePath(
-      segments: [types.PathSegment.createField(name: "items")],
+    path: skir.ValuePath(
+      segments: [skir.PathSegment.createField(name: "items")],
     ),
   );
   return (
@@ -1360,19 +1317,19 @@ void main() {
       child: PortablePresentationNodeRenderer(
         node: _node(
           "collection",
-          presentation.PresentationElement.wrapListInput(
-            presentation.ListControl(
-              control: presentation.BoundControl(
+          skir.PresentationElement.wrapListInput(
+            skir.ListControl(
+              control: skir.BoundControl(
                 binding: reference,
                 label: label == null
                     ? null
-                    : expression.ExpressionNode.wrapLiteral(
-                        types.DataValue.wrapStringValue(label),
+                    : skir.ExpressionNode.wrapLiteral(
+                        skir.DataValue.wrapStringValue(label),
                       ),
                 description: description == null
                     ? null
-                    : expression.ExpressionNode.wrapLiteral(
-                        types.DataValue.wrapStringValue(description),
+                    : skir.ExpressionNode.wrapLiteral(
+                        skir.DataValue.wrapStringValue(description),
                       ),
                 prefix: null,
                 semanticLabel: null,
@@ -1381,8 +1338,8 @@ void main() {
               allowAdd: allowAdd,
               allowRemove: true,
               allowReorder: true,
-              itemBindingId: types.ExpressionBindingId(value: "item"),
-              indexBindingId: types.ExpressionBindingId(value: "index"),
+              itemBindingId: skir.ExpressionBindingId(value: "item"),
+              indexBindingId: skir.ExpressionBindingId(value: "index"),
             ),
           ),
         ),
@@ -1396,12 +1353,12 @@ void main() {
   String? label,
 }) {
   final document = _TestAuthoringDocument(
-    defaultFactory: (_) => types.DataValue.wrapStringValue(""),
+    defaultFactory: (_) => skir.DataValue.wrapStringValue(""),
   );
-  final reference = binding.BindingRef(
+  final reference = skir.BindingRef(
     bindingId: _bindingId,
-    path: types.ValuePath(
-      segments: [types.PathSegment.createField(name: "values")],
+    path: skir.ValuePath(
+      segments: [skir.PathSegment.createField(name: "values")],
     ),
   );
   return (
@@ -1410,14 +1367,14 @@ void main() {
       child: PortablePresentationNodeRenderer(
         node: _node(
           "map",
-          presentation.PresentationElement.wrapMapInput(
-            presentation.MapControl(
-              control: presentation.BoundControl(
+          skir.PresentationElement.wrapMapInput(
+            skir.MapControl(
+              control: skir.BoundControl(
                 binding: reference,
                 label: label == null
                     ? null
-                    : expression.ExpressionNode.wrapLiteral(
-                        types.DataValue.wrapStringValue(label),
+                    : skir.ExpressionNode.wrapLiteral(
+                        skir.DataValue.wrapStringValue(label),
                       ),
                 description: null,
                 prefix: null,
@@ -1427,12 +1384,12 @@ void main() {
               valuePresentation: null,
               allowAdd: true,
               allowRemove: true,
-              keyBindingId: types.ExpressionBindingId(value: "key"),
-              valueBindingId: types.ExpressionBindingId(value: "map_value"),
+              keyBindingId: skir.ExpressionBindingId(value: "key"),
+              valueBindingId: skir.ExpressionBindingId(value: "map_value"),
             ),
           ),
         ),
-        scope: _authoringScope(document, "values", types.DataValue.unfilled),
+        scope: _authoringScope(document, "values", skir.DataValue.unfilled),
       ),
     ),
   );
@@ -1442,8 +1399,8 @@ void main() {
   Widget widget,
   _TestAuthoringDocument document,
   CheckedEditorCatalog catalog,
-  types.ResourceId target,
-  types.ResourceId secondTarget,
+  skir.ResourceId target,
+  skir.ResourceId secondTarget,
 })
 _linkCollectionFixture({
   bool withPartialLinks = false,
@@ -1451,59 +1408,56 @@ _linkCollectionFixture({
   bool adaptiveAppearance = false,
   String? label,
 }) {
-  final rootDefinition = types.TypeDefinitionId(
-    typeId: types.TypeId.createQualified(namespace: "test", name: "Node"),
+  final rootDefinition = skir.TypeDefinitionId(
+    typeId: skir.TypeId.createQualified(namespace: "test", name: "Node"),
     revision: 1,
   );
-  final setDefinition = types.TypeDefinitionId(
-    typeId: types.TypeId.createQualified(namespace: "test", name: "Links"),
+  final setDefinition = skir.TypeDefinitionId(
+    typeId: skir.TypeId.createQualified(namespace: "test", name: "Links"),
     revision: 1,
   );
-  final linkDefinition = types.TypeDefinitionId(
-    typeId: types.TypeId.createQualified(namespace: "test", name: "NodeLink"),
+  final linkDefinition = skir.TypeDefinitionId(
+    typeId: skir.TypeId.createQualified(namespace: "test", name: "NodeLink"),
     revision: 1,
   );
-  final sourceEndpoint = types.EndpointId(value: "test.source");
-  final targetEndpoint = types.EndpointId(value: "test.target");
-  final rootUse = types.NamedTypeUse(
+  final sourceEndpoint = skir.EndpointId(value: "test.source");
+  final targetEndpoint = skir.EndpointId(value: "test.target");
+  final rootUse = skir.NamedTypeUse(
     definition: rootDefinition,
     arguments: const [],
   );
-  final setUse = types.NamedTypeUse(
+  final setUse = skir.NamedTypeUse(
     definition: setDefinition,
     arguments: const [],
   );
-  final linksOwner = types.FieldOwner(
-    definition: rootDefinition,
-    name: "links",
-  );
-  final rootTemplate = types.TypeTemplate.createNamed(
+  final linksOwner = skir.FieldOwner(definition: rootDefinition, name: "links");
+  final rootTemplate = skir.TypeTemplate.createNamed(
     definition: rootDefinition,
     arguments: const [],
   );
-  final linkTemplate = types.TypeTemplate.createNamed(
+  final linkTemplate = skir.TypeTemplate.createNamed(
     definition: linkDefinition,
     arguments: const [],
   );
-  final setTemplate = types.TypeTemplate.createNamed(
+  final setTemplate = skir.TypeTemplate.createNamed(
     definition: setDefinition,
     arguments: const [],
   );
-  final appearanceId = types.PresentationId(
+  final appearanceId = skir.PresentationId(
     namespace: "test",
     name: "node.reference.option",
   );
-  final appearanceTarget = catalog.PresentationTarget.createNamed(
+  final appearanceTarget = skir.PresentationTarget.createNamed(
     definition: rootDefinition,
     arguments: const [],
   );
   final appearanceText = _node(
     "node.reference.name",
-    presentation.PresentationElement.createText(
-      value: expression.ExpressionNode.createRead(
+    skir.PresentationElement.createText(
+      value: skir.ExpressionNode.createRead(
         binding: _configuredBindingId,
-        path: types.ValuePath(
-          segments: [types.PathSegment.createField(name: "name")],
+        path: skir.ValuePath(
+          segments: [skir.PathSegment.createField(name: "name")],
         ),
       ),
       color: null,
@@ -1518,20 +1472,20 @@ _linkCollectionFixture({
       letterSpacing: null,
       decoration: null,
       semanticLabel: null,
-      paragraph: presentation.TextParagraph.defaultInstance,
+      paragraph: skir.TextParagraph.defaultInstance,
     ),
   );
   final appearanceIcon = _node(
     "node.reference.icon",
-    presentation.PresentationElement.createIcon(
-      name: expression.ExpressionNode.wrapLiteral(
-        types.DataValue.wrapStringValue(
+    skir.PresentationElement.createIcon(
+      name: skir.ExpressionNode.wrapLiteral(
+        skir.DataValue.wrapStringValue(
           '<svg xmlns="http://www.w3.org/2000/svg" '
           'viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>',
         ),
       ),
-      semanticLabel: expression.ExpressionNode.wrapLiteral(
-        types.DataValue.wrapStringValue("Node"),
+      semanticLabel: skir.ExpressionNode.wrapLiteral(
+        skir.DataValue.wrapStringValue("Node"),
       ),
       color: null,
       size: null,
@@ -1539,10 +1493,10 @@ _linkCollectionFixture({
   );
   final coloredIcon = _node(
     "node.reference.icon.color",
-    presentation.PresentationElement.createContainer(
+    skir.PresentationElement.createContainer(
       child: _node(
         "node.reference.icon.padding",
-        presentation.PresentationElement.createPadding(
+        skir.PresentationElement.createPadding(
           child: appearanceIcon,
           top: 6,
           start: 6,
@@ -1551,66 +1505,64 @@ _linkCollectionFixture({
         ),
       ),
       border: null,
-      backgroundColor: expression.ExpressionNode.wrapLiteral(
-        types.DataValue.wrapInteger("4288585374"),
+      backgroundColor: skir.ExpressionNode.wrapLiteral(
+        skir.DataValue.wrapInteger("4288585374"),
       ),
-      radius: presentation.PresentationRadius.none,
+      radius: skir.PresentationRadius.none,
     ),
   );
   final appearanceCard = _node(
     "node.reference.card",
-    presentation.PresentationElement.createAdaptiveLeading(
+    skir.PresentationElement.createAdaptiveLeading(
       leading: coloredIcon,
       center: appearanceText,
       suffix: null,
-      padding: presentation.PresentationInsets.wrapAll(8),
-      compactPadding: presentation.PresentationInsets.wrapAll(4),
+      padding: skir.PresentationInsets.wrapAll(8),
+      compactPadding: skir.PresentationInsets.wrapAll(4),
       gap: 12,
       minimumCenterWidth: 80,
     ),
   );
   final appearanceLayout = _node(
     "node.reference.root",
-    presentation.PresentationElement.wrapChildren(
-      presentation.ChildrenElement.createColumn(
-        children: [presentation.AxisChild.wrapFixed(appearanceCard)],
-        layout: presentation.AxisChildrenLayout(
+    skir.PresentationElement.wrapChildren(
+      skir.ChildrenElement.createColumn(
+        children: [skir.AxisChild.wrapFixed(appearanceCard)],
+        layout: skir.AxisChildrenLayout(
           spacing: 0,
-          mainAxisAlignment: presentation.MainAxisAlignment.start,
-          crossAxisAlignment: presentation.CrossAxisAlignment.start,
+          mainAxisAlignment: skir.MainAxisAlignment.start,
+          crossAxisAlignment: skir.CrossAxisAlignment.start,
         ),
       ),
     ),
   );
-  final collectionResourceBinding = types.ExpressionBindingId(
-    value: "resource",
-  );
-  final collectionRowBinding = types.ExpressionBindingId(value: "row");
-  final collectionDefinition = presentation.PresentationCollectionDefinition(
+  final collectionResourceBinding = skir.ExpressionBindingId(value: "resource");
+  final collectionRowBinding = skir.ExpressionBindingId(value: "row");
+  final collectionDefinition = skir.PresentationCollectionDefinition(
     sourceId: "nodes",
     rowType: rootTemplate,
     rowBindingId: collectionRowBinding,
-    key: expression.ExpressionNode.createRead(
+    key: skir.ExpressionNode.createRead(
       binding: collectionResourceBinding,
-      path: types.ValuePath(segments: const []),
+      path: skir.ValuePath(segments: const []),
     ),
-    selectability: expression.ExpressionNode.wrapLiteral(
-      types.DataValue.wrapBoolean(true),
+    selectability: skir.ExpressionNode.wrapLiteral(
+      skir.DataValue.wrapBoolean(true),
     ),
     relations: const [],
     projection: null,
-    resources: presentation.PresentationResourceCollection(
+    resources: skir.PresentationResourceCollection(
       root: rootDefinition,
       resourceBindingId: collectionResourceBinding,
       appearance: null,
     ),
   );
-  final collectionMaterial = catalog.PresentationMaterial(
-    provider: types.PresentationId(namespace: "test", name: "link.collection"),
+  final collectionMaterial = skir.PresentationMaterial(
+    provider: skir.PresentationId(namespace: "test", name: "link.collection"),
     target: appearanceTarget,
-    role: catalog.PresentationRole.inspector,
+    role: skir.PresentationRole.inspector,
     layout: _compactNode,
-    dependencies: presentation.PresentationDependencies(
+    dependencies: skir.PresentationDependencies(
       types: const [],
       presentations: const [],
       conversions: const [],
@@ -1620,17 +1572,17 @@ _linkCollectionFixture({
     subject: rootTemplate,
   );
   final checked = CheckedEditorCatalog(
-    catalog.EditorCatalogWireSnapshot(
-      generation: types.CatalogGeneration(value: "catalog:links"),
+    skir.EditorCatalogWireSnapshot(
+      generation: skir.CatalogGeneration(value: "catalog:links"),
       types: [
-        catalog.PublishedType(
+        skir.PublishedType(
           display: null,
-          definition: types.TypeDefinition(
+          definition: skir.TypeDefinition(
             id: rootDefinition,
             parameters: const [],
-            representation: types.RepresentationTemplate.createRecord(
+            representation: skir.RepresentationTemplate.createRecord(
               fields: [
-                types.FieldDeclaration(
+                skir.FieldDeclaration(
                   owner: linksOwner,
                   type: setTemplate,
                   overrides: const [],
@@ -1641,9 +1593,9 @@ _linkCollectionFixture({
             ),
             parents: const [],
           ),
-          status: catalog.DeclarationStatus.ready,
+          status: skir.DeclarationStatus.ready,
           effectiveFields: [
-            catalog.EffectiveFieldTemplate(
+            skir.EffectiveFieldTemplate(
               key: "links",
               owner: linksOwner,
               type: setTemplate,
@@ -1652,59 +1604,59 @@ _linkCollectionFixture({
           ],
           ancestorTemplates: const [],
         ),
-        catalog.PublishedType(
+        skir.PublishedType(
           display: null,
-          definition: types.TypeDefinition(
+          definition: skir.TypeDefinition(
             id: setDefinition,
             parameters: const [],
-            representation: types.RepresentationTemplate.createSequence(
+            representation: skir.RepresentationTemplate.createSequence(
               item: linkTemplate,
-              kind: types.CollectionKind.set_,
+              kind: skir.CollectionKind.set_,
             ),
             parents: const [],
           ),
-          status: catalog.DeclarationStatus.ready,
+          status: skir.DeclarationStatus.ready,
           effectiveFields: const [],
           ancestorTemplates: const [],
         ),
-        catalog.PublishedType(
+        skir.PublishedType(
           display: null,
-          definition: types.TypeDefinition(
+          definition: skir.TypeDefinition(
             id: linkDefinition,
             parameters: const [],
-            representation: types.RepresentationTemplate.createLink(
+            representation: skir.RepresentationTemplate.createLink(
               endpoint: sourceEndpoint,
               target: rootTemplate,
             ),
             parents: const [],
           ),
-          status: catalog.DeclarationStatus.ready,
+          status: skir.DeclarationStatus.ready,
           effectiveFields: const [],
           ancestorTemplates: const [],
         ),
       ],
       relations: [
-        catalog.RelationContract(
-          id: types.RelationId(value: "test.links"),
-          first: catalog.EndpointDefinition(
+        skir.RelationContract(
+          id: skir.RelationId(value: "test.links"),
+          first: skir.EndpointDefinition(
             id: sourceEndpoint,
-            slot: catalog.EndpointSlot.first,
-            resource: types.NamedTypeTemplate(
+            slot: skir.EndpointSlot.first,
+            resource: skir.NamedTypeTemplate(
               definition: rootDefinition,
               arguments: const [],
             ),
-            cardinality: catalog.EndpointCardinality.many,
-            onDelete: catalog.RelationDeletePolicy.clear,
+            cardinality: skir.EndpointCardinality.many,
+            onDelete: skir.RelationDeletePolicy.clear,
           ),
-          second: catalog.EndpointDefinition(
+          second: skir.EndpointDefinition(
             id: targetEndpoint,
-            slot: catalog.EndpointSlot.second,
-            resource: types.NamedTypeTemplate(
+            slot: skir.EndpointSlot.second,
+            resource: skir.NamedTypeTemplate(
               definition: rootDefinition,
               arguments: const [],
             ),
-            cardinality: catalog.EndpointCardinality.many,
-            onDelete: catalog.RelationDeletePolicy.clear,
+            cardinality: skir.EndpointCardinality.many,
+            onDelete: skir.RelationDeletePolicy.clear,
           ),
           families: const [],
         ),
@@ -1712,24 +1664,23 @@ _linkCollectionFixture({
       resourceDefinitions: const [],
       presentations: adaptiveAppearance
           ? [
-              catalog.PresentationDescriptor(
+              skir.PresentationDescriptor(
                 id: appearanceId,
-                owner: types.DeclarationOwner.defaultInstance,
+                owner: skir.DeclarationOwner.defaultInstance,
                 target: appearanceTarget,
-                roles: [catalog.PresentationRole.referenceOption],
+                roles: [skir.PresentationRole.referenceOption],
                 priority: 0,
               ),
             ]
           : const [],
       presentationMaterials: adaptiveAppearance
           ? [
-              catalog.PresentationMaterial(
+              skir.PresentationMaterial(
                 provider: appearanceId,
                 target: appearanceTarget,
-                role: catalog.PresentationRole.referenceOption,
+                role: skir.PresentationRole.referenceOption,
                 layout: appearanceLayout,
-                dependencies:
-                    presentation.PresentationDependencies.defaultInstance,
+                dependencies: skir.PresentationDependencies.defaultInstance,
                 subject: rootTemplate,
               ),
             ]
@@ -1738,17 +1689,17 @@ _linkCollectionFixture({
       diagnostics: const [],
       initialization: const [],
       endpointBindings: [
-        catalog.EndpointBindingTemplate(
+        skir.EndpointBindingTemplate(
           endpoint: sourceEndpoint,
-          containingResource: types.NamedTypeTemplate(
+          containingResource: skir.NamedTypeTemplate(
             definition: rootDefinition,
             arguments: const [],
           ),
           valueOwner: linkDefinition,
-          relativePath: types.RelativeFieldPattern(
+          relativePath: skir.RelativeFieldPattern(
             segments: [
-              types.FieldPatternSegment.createField(name: "links"),
-              types.FieldPatternSegment.items,
+              skir.FieldPatternSegment.createField(name: "links"),
+              skir.FieldPatternSegment.items,
             ],
           ),
           target: rootTemplate,
@@ -1760,65 +1711,65 @@ _linkCollectionFixture({
       roleFallbacks: const [],
     ),
   );
-  final target = types.ResourceId(value: "resource:target");
-  final secondTarget = types.ResourceId(value: "resource:second-target");
+  final target = skir.ResourceId(value: "resource:target");
+  final secondTarget = skir.ResourceId(value: "resource:second-target");
   final items = withPartialLinks
       ? [
-          types.ListItem(
+          skir.ListItem(
             id: _knownLinkItem,
-            value: types.DataValue.createLink(
+            value: skir.DataValue.createLink(
               endpoint: sourceEndpoint,
-              target: types.LinkTarget(resource: target, opposite: null),
+              target: skir.LinkTarget(resource: target, opposite: null),
             ),
           ),
-          types.ListItem(
+          skir.ListItem(
             id: _unfinishedLinkItem,
-            value: types.DataValue.unfilled,
+            value: skir.DataValue.unfilled,
           ),
         ]
-      : const <types.ListItem>[];
-  final sourceRecord = types.AuthoringRecord(
-    configuration: types.TypeSelection.wrapComplete(rootUse),
+      : const <skir.ListItem>[];
+  final sourceRecord = skir.AuthoringRecord(
+    configuration: skir.TypeSelection.wrapComplete(rootUse),
     fields: [
-      types.FieldValue(
+      skir.FieldValue(
         name: "links",
-        value: types.DataValue.createNamed(
+        value: skir.DataValue.createNamed(
           actualType: setUse,
-          payload: types.DataValue.createSetValue(items: items),
+          payload: skir.DataValue.createSetValue(items: items),
         ),
       ),
     ],
   );
-  types.AuthoringRecord targetRecord(String name) => types.AuthoringRecord(
-    configuration: types.TypeSelection.wrapComplete(rootUse),
+  skir.AuthoringRecord targetRecord(String name) => skir.AuthoringRecord(
+    configuration: skir.TypeSelection.wrapComplete(rootUse),
     fields: [
-      types.FieldValue(
+      skir.FieldValue(
         name: "name",
-        value: types.DataValue.wrapStringValue(name),
+        value: skir.DataValue.wrapStringValue(name),
       ),
-      types.FieldValue(
+      skir.FieldValue(
         name: "links",
-        value: types.DataValue.createNamed(
+        value: skir.DataValue.createNamed(
           actualType: setUse,
-          payload: types.DataValue.createSetValue(items: const []),
+          payload: skir.DataValue.createSetValue(items: const []),
         ),
       ),
     ],
   );
   final document = _TestAuthoringDocument(
-    defaultFactory: (_) => types.DataValue.unfilled,
+    defaultFactory: (_) => skir.DataValue.unfilled,
     resources: {
       _resource: sourceRecord,
       target: targetRecord("Target Alpha"),
       secondTarget: targetRecord("Target Beta"),
     },
   );
-  final rootBinding = types.ExpressionBindingId(value: "root");
-  final itemBinding = types.ExpressionBindingId(value: "item");
-  final collectionReference = binding.BindingRef(
+  final rootBinding = skir.ExpressionBindingId(value: "root");
+  final itemBinding = skir.ExpressionBindingId(value: "item");
+  final collectionReference = skir.BindingRef(
     bindingId: rootBinding,
-    path: types.ValuePath(
-      segments: [types.PathSegment.createField(name: "links")],
+    path: skir.ValuePath(
+      segments: [skir.PathSegment.createField(name: "links")],
     ),
   );
   return (
@@ -1831,14 +1782,14 @@ _linkCollectionFixture({
         node: directCollection
             ? _node(
                 "links.direct",
-                presentation.PresentationElement.wrapLinkInput(
-                  presentation.LinkControl(
-                    control: presentation.BoundControl(
+                skir.PresentationElement.wrapLinkInput(
+                  skir.LinkControl(
+                    control: skir.BoundControl(
                       binding: collectionReference,
                       label: label == null
                           ? null
-                          : expression.ExpressionNode.wrapLiteral(
-                              types.DataValue.wrapStringValue(label),
+                          : skir.ExpressionNode.wrapLiteral(
+                              skir.DataValue.wrapStringValue(label),
                             ),
                       description: null,
                       prefix: null,
@@ -1846,31 +1797,29 @@ _linkCollectionFixture({
                     ),
                     allowReorder: true,
                     candidatePolicy: null,
-                    rejectionDisplay:
-                        presentation.LinkRejectionDisplay.disabled,
+                    rejectionDisplay: skir.LinkRejectionDisplay.disabled,
                     sourceId: null,
                   ),
                 ),
               )
             : _node(
                 "links",
-                presentation.PresentationElement.wrapSetInput(
-                  presentation.SetControl(
+                skir.PresentationElement.wrapSetInput(
+                  skir.SetControl(
                     control: _boundControl(collectionReference),
                     itemPresentation: _node(
                       "link.item",
-                      presentation.PresentationElement.wrapLinkInput(
-                        presentation.LinkControl(
+                      skir.PresentationElement.wrapLinkInput(
+                        skir.LinkControl(
                           control: _boundControl(
-                            binding.BindingRef(
+                            skir.BindingRef(
                               bindingId: itemBinding,
-                              path: types.ValuePath(segments: const []),
+                              path: skir.ValuePath(segments: const []),
                             ),
                           ),
                           allowReorder: false,
                           candidatePolicy: null,
-                          rejectionDisplay:
-                              presentation.LinkRejectionDisplay.disabled,
+                          rejectionDisplay: skir.LinkRejectionDisplay.disabled,
                           sourceId: adaptiveAppearance ? "nodes" : null,
                         ),
                       ),
@@ -1884,17 +1833,14 @@ _linkCollectionFixture({
         scope: PortablePresentationScope(
           bindings: {
             rootBinding: PortableExpressionBinding(
-              value: types.DataValue.createRecord(fields: sourceRecord.fields),
-              location: types.ValueLocation(
+              value: skir.DataValue.createRecord(fields: sourceRecord.fields),
+              location: skir.ValueLocation(
                 resource: _resource,
-                path: types.ValuePath(segments: const []),
+                path: skir.ValuePath(segments: const []),
               ),
             ),
           },
-          budget: expression.EvaluationBudget(
-            maxSteps: 100,
-            maxCollectionItems: 100,
-          ),
+          budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
           setBinding: (_, _) {},
           authoring: document,
           catalog: checked,
@@ -1908,62 +1854,58 @@ _linkCollectionFixture({
 PortablePresentationScope _authoringScope(
   _TestAuthoringDocument document,
   String field,
-  types.DataValue value,
+  skir.DataValue value,
 ) => PortablePresentationScope(
   bindings: {
     _bindingId: PortableExpressionBinding(
-      value: types.DataValue.createRecord(
-        fields: [types.FieldValue(name: field, value: value)],
+      value: skir.DataValue.createRecord(
+        fields: [skir.FieldValue(name: field, value: value)],
       ),
-      location: types.ValueLocation(
+      location: skir.ValueLocation(
         resource: _resource,
-        path: types.ValuePath(segments: const []),
+        path: skir.ValuePath(segments: const []),
       ),
     ),
   },
-  budget: expression.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
+  budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
   setBinding: (_, _) {},
   authoring: document,
 );
 
-presentation.BoundControl _boundControl(binding.BindingRef reference) =>
-    presentation.BoundControl(
-      binding: reference,
-      label: null,
-      description: null,
-      prefix: null,
-      semanticLabel: null,
-    );
+skir.BoundControl _boundControl(skir.BindingRef reference) => skir.BoundControl(
+  binding: reference,
+  label: null,
+  description: null,
+  prefix: null,
+  semanticLabel: null,
+);
 
 final class _TestPortableHost extends ChangeNotifier
     implements PortablePresentationHost {
   _TestPortableHost({
-    required presentation.PresentationNode root,
+    required skir.PresentationNode root,
     this.rejectWrites = false,
-    catalog.PresentationRole? role,
+    skir.PresentationRole? role,
   }) : _document = PortablePresentationDocument(
          catalog: CheckedEditorCatalog(
-           catalog.EditorCatalogWireSnapshot.defaultInstance,
+           skir.EditorCatalogWireSnapshot.defaultInstance,
          ),
          root: root,
          bindings: {
            _bindingId: PortablePresentationBinding(
              schema: PortablePresentationBindingSchema.complete(_integerType),
-             value: types.DataValue.wrapInteger("2"),
+             value: skir.DataValue.wrapInteger("2"),
              editable: true,
            ),
          },
-         budget: expression.EvaluationBudget(
-           maxSteps: 100,
-           maxCollectionItems: 100,
-         ),
+         budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
          role: role,
        );
 
   final bool rejectWrites;
   PortablePresentationDocument _document;
-  final List<(binding.BindingRef, types.DataValue)> writes = [];
-  final List<action.EditorAction> actions = [];
+  final List<(skir.BindingRef, skir.DataValue)> writes = [];
+  final List<skir.EditorAction> actions = [];
   int expectedTypeReads = 0;
 
   @override
@@ -1981,29 +1923,29 @@ final class _TestPortableHost extends ChangeNotifier
 
   @override
   Future<PortablePresentationWriteResult> execute(
-    action.EditorAction editorAction,
+    skir.EditorAction editorAction,
   ) async {
     actions.add(editorAction);
     return const PortablePresentationWriteResult.applied();
   }
 
   @override
-  types.TypeUse? expectedType(binding.BindingRef reference) {
+  skir.TypeUse? expectedType(skir.BindingRef reference) {
     expectedTypeReads++;
     return _integerType;
   }
 
   @override
-  types.ValueLocation? location(binding.BindingRef reference) => null;
+  skir.ValueLocation? location(skir.BindingRef reference) => null;
 
   @override
-  types.DataValue? read(binding.BindingRef reference) =>
+  skir.DataValue? read(skir.BindingRef reference) =>
       _document.bindings[reference.bindingId]?.value;
 
   @override
   Future<PortablePresentationWriteResult> write(
-    binding.BindingRef reference,
-    types.DataValue value,
+    skir.BindingRef reference,
+    skir.DataValue value,
   ) async {
     writes.add((reference, value));
     if (rejectWrites) {
@@ -2036,103 +1978,102 @@ final class _TestAuthoringDocument implements PortableAuthoringDocument {
     this.resources = const {},
   });
 
-  final types.DataValue Function(types.TypeUse? type) defaultFactory;
+  final skir.DataValue Function(skir.TypeUse? type) defaultFactory;
   @override
-  final Map<types.ResourceId, types.AuthoringRecord> resources;
-  final List<({types.ValueLocation location, types.ListItem item})> insertions =
+  final Map<skir.ResourceId, skir.AuthoringRecord> resources;
+  final List<({skir.ValueLocation location, skir.ListItem item})> insertions =
       [];
-  final List<List<types.MapRow>> maps = [];
+  final List<List<skir.MapRow>> maps = [];
   final List<
     ({
-      authoring.LinkOccurrence source,
-      types.ResourceId target,
-      authoring.CounterpartChoice? counterpart,
+      skir.LinkOccurrence source,
+      skir.ResourceId target,
+      skir.CounterpartChoice? counterpart,
     })
   >
   connections = [];
-  final List<catalog.InitializationRequest> preparedApplications = [];
-  final List<authoring.LinkOccurrence> disconnections = [];
+  final List<skir.InitializationRequest> preparedApplications = [];
+  final List<skir.LinkOccurrence> disconnections = [];
 
   @override
-  types.CatalogGeneration get generation =>
-      types.CatalogGeneration(value: "catalog:test");
+  skir.CatalogGeneration get generation =>
+      skir.CatalogGeneration(value: "catalog:test");
 
   @override
-  List<facts.LinkProjection> get links => const [];
+  List<skir.LinkProjection> get links => const [];
 
   @override
-  List<diagnostic.InitializationDiagnostic> get initializationFindings =>
-      const [];
+  List<skir.InitializationDiagnostic> get initializationFindings => const [];
 
   @override
   int get operationCount => insertions.length + maps.length;
 
   @override
-  types.DataValue defaultValue(types.TypeUse? type) => defaultFactory(type);
+  skir.DataValue defaultValue(skir.TypeUse? type) => defaultFactory(type);
 
   @override
-  types.AuthoringRecord? resource(types.ResourceId id) => resources[id];
+  skir.AuthoringRecord? resource(skir.ResourceId id) => resources[id];
 
   @override
-  PortablePathResult<types.DataValue> read(types.ValueLocation location) =>
+  PortablePathResult<skir.DataValue> read(skir.ValueLocation location) =>
       const PortablePathUnavailable("No stored value");
 
   @override
-  PortablePathResult<types.AuthoringRecord> set(
-    types.ValueLocation location,
-    types.DataValue value,
+  PortablePathResult<skir.AuthoringRecord> set(
+    skir.ValueLocation location,
+    skir.DataValue value,
   ) => PortablePathValue(_emptyRecord);
 
   @override
-  PortablePathResult<types.AuthoringRecord> insert(
-    types.ValueLocation location,
-    types.ItemId? after,
-    types.ListItem item,
+  PortablePathResult<skir.AuthoringRecord> insert(
+    skir.ValueLocation location,
+    skir.ItemId? after,
+    skir.ListItem item,
   ) {
     insertions.add((location: location, item: item));
     return PortablePathValue(_emptyRecord);
   }
 
   @override
-  PortablePathResult<types.AuthoringRecord> insertPrepared(
-    types.ValueLocation location,
-    types.ItemId? after,
-    types.ItemId item,
-    catalog.InitializationRequest request,
-    catalog.PreparedCreation prepared,
+  PortablePathResult<skir.AuthoringRecord> insertPrepared(
+    skir.ValueLocation location,
+    skir.ItemId? after,
+    skir.ItemId item,
+    skir.InitializationRequest request,
+    skir.PreparedCreation prepared,
   ) => insert(
     location,
     after,
-    types.ListItem(id: item, value: types.DataValue.unfilled),
+    skir.ListItem(id: item, value: skir.DataValue.unfilled),
   );
 
   @override
-  PortablePathResult<types.AuthoringRecord> remove(
-    types.ValueLocation location,
-    types.ItemId item,
+  PortablePathResult<skir.AuthoringRecord> remove(
+    skir.ValueLocation location,
+    skir.ItemId item,
   ) => PortablePathValue(_emptyRecord);
 
   @override
-  PortablePathResult<types.AuthoringRecord> move(
-    types.ValueLocation location,
-    types.ItemId item,
-    types.ItemId? after,
+  PortablePathResult<skir.AuthoringRecord> move(
+    skir.ValueLocation location,
+    skir.ItemId item,
+    skir.ItemId? after,
   ) => PortablePathValue(_emptyRecord);
 
   @override
-  PortablePathResult<types.AuthoringRecord> replaceMap(
-    types.ValueLocation location,
-    Iterable<types.MapRow> rows,
+  PortablePathResult<skir.AuthoringRecord> replaceMap(
+    skir.ValueLocation location,
+    Iterable<skir.MapRow> rows,
   ) {
     maps.add(rows.toList(growable: false));
     return PortablePathValue(_emptyRecord);
   }
 
   @override
-  PortablePathResult<types.AuthoringRecord> applyPreparedRecord(
-    types.ValueLocation location,
-    catalog.InitializationRequest request,
-    catalog.PreparedCreation prepared,
+  PortablePathResult<skir.AuthoringRecord> applyPreparedRecord(
+    skir.ValueLocation location,
+    skir.InitializationRequest request,
+    skir.PreparedCreation prepared,
   ) {
     preparedApplications.add(request);
     return PortablePathValue(_emptyRecord);
@@ -2145,60 +2086,58 @@ final class _TestAuthoringDocument implements PortableAuthoringDocument {
   ) => edit(this);
 
   @override
-  void delete(types.ResourceId id) {}
+  void delete(skir.ResourceId id) {}
 
   @override
   void connect(
-    authoring.LinkOccurrence source,
-    types.ResourceId target, {
-    authoring.CounterpartChoice? counterpart,
+    skir.LinkOccurrence source,
+    skir.ResourceId target, {
+    skir.CounterpartChoice? counterpart,
   }) {
     connections.add((source: source, target: target, counterpart: counterpart));
   }
 
   @override
-  void disconnect(authoring.LinkOccurrence occurrence) {
+  void disconnect(skir.LinkOccurrence occurrence) {
     disconnections.add(occurrence);
   }
 }
 
-final _bindingId = types.ExpressionBindingId(value: "value");
-final _resource = types.ResourceId(value: "resource:test");
-final _knownLinkItem = types.ItemId(value: "link:known");
-final _unfinishedLinkItem = types.ItemId(value: "link:unfinished");
-final _emptyRecord = types.AuthoringRecord(
-  configuration: types.TypeSelection.unknown,
+final _bindingId = skir.ExpressionBindingId(value: "value");
+final _resource = skir.ResourceId(value: "resource:test");
+final _knownLinkItem = skir.ItemId(value: "link:known");
+final _unfinishedLinkItem = skir.ItemId(value: "link:unfinished");
+final _emptyRecord = skir.AuthoringRecord(
+  configuration: skir.TypeSelection.unknown,
   fields: const [],
 );
-final _reference = binding.BindingRef(
+final _reference = skir.BindingRef(
   bindingId: _bindingId,
-  path: types.ValuePath(segments: const []),
+  path: skir.ValuePath(segments: const []),
 );
-final _integerType = types.TypeUse.wrapScalar(
-  types.ScalarKind.createInteger(width: types.IntegerWidth.signedThirtyTwo),
+final _integerType = skir.TypeUse.wrapScalar(
+  skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedThirtyTwo),
 );
-final _iconifyDefinition = types.TypeDefinitionId(
-  typeId: types.TypeId.createQualified(namespace: "test", name: "Iconify"),
+final _iconifyDefinition = skir.TypeDefinitionId(
+  typeId: skir.TypeId.createQualified(namespace: "test", name: "Iconify"),
   revision: 1,
 );
-final _iconifyType = types.NamedTypeUse(
+final _iconifyType = skir.NamedTypeUse(
   definition: _iconifyDefinition,
   arguments: const [],
 );
-final _iconifyPresentation = types.PresentationId(
+final _iconifyPresentation = skir.PresentationId(
   namespace: "test",
   name: "iconify.inspector",
 );
-final _configuredBindingId = types.ExpressionBindingId(
+final _configuredBindingId = skir.ExpressionBindingId(
   value: "configured_value",
 );
-final _configuredValueReference = binding.BindingRef(
+final _configuredValueReference = skir.BindingRef(
   bindingId: _configuredBindingId,
-  path: types.ValuePath(
-    segments: [types.PathSegment.createField(name: "value")],
-  ),
+  path: skir.ValuePath(segments: [skir.PathSegment.createField(name: "value")]),
 );
-final _control = presentation.BoundControl(
+final _control = skir.BoundControl(
   binding: _reference,
   label: null,
   description: null,
@@ -2207,29 +2146,29 @@ final _control = presentation.BoundControl(
 );
 final _numericNode = _node(
   "numeric",
-  presentation.PresentationElement.wrapNumericInput(_control),
+  skir.PresentationElement.wrapNumericInput(_control),
 );
 final _polymorphicNode = _node(
   "polymorphic",
-  presentation.PresentationElement.createPolymorphicInput(
-    control: presentation.BoundControl(
+  skir.PresentationElement.createPolymorphicInput(
+    control: skir.BoundControl(
       binding: _reference,
-      label: expression.ExpressionNode.wrapLiteral(
-        types.DataValue.wrapStringValue("Icon form"),
+      label: skir.ExpressionNode.wrapLiteral(
+        skir.DataValue.wrapStringValue("Icon form"),
       ),
       description: null,
       prefix: null,
       semanticLabel: null,
     ),
     concreteTypes: [
-      presentation.ConcreteTypePresentation(
-        concreteType: types.TypeUse.wrapNamed(_iconifyType),
-        label: expression.ExpressionNode.wrapLiteral(
-          types.DataValue.wrapStringValue("Iconify"),
+      skir.ConcreteTypePresentation(
+        concreteType: skir.TypeUse.wrapNamed(_iconifyType),
+        label: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue("Iconify"),
         ),
         presentation: _node(
           "polymorphic.iconify",
-          presentation.PresentationElement.createInvocation(
+          skir.PresentationElement.createInvocation(
             presentationId: _iconifyPresentation,
             arguments: const [],
           ),
@@ -2239,21 +2178,21 @@ final _polymorphicNode = _node(
   ),
 );
 final _polymorphicCatalog = CheckedEditorCatalog(
-  catalog.EditorCatalogWireSnapshot(
-    generation: types.CatalogGeneration(value: "test"),
+  skir.EditorCatalogWireSnapshot(
+    generation: skir.CatalogGeneration(value: "test"),
     types: [
-      catalog.PublishedType(
+      skir.PublishedType(
         display: null,
-        definition: types.TypeDefinition(
+        definition: skir.TypeDefinition(
           id: _iconifyDefinition,
           parameters: const [],
-          representation: types.RepresentationTemplate.createRecord(
+          representation: skir.RepresentationTemplate.createRecord(
             fields: const [],
             abstract_: false,
           ),
           parents: const [],
         ),
-        status: catalog.DeclarationStatus.ready,
+        status: skir.DeclarationStatus.ready,
         effectiveFields: const [],
         ancestorTemplates: const [],
       ),
@@ -2262,20 +2201,20 @@ final _polymorphicCatalog = CheckedEditorCatalog(
     resourceDefinitions: const [],
     presentations: const [],
     presentationMaterials: [
-      catalog.PresentationMaterial(
+      skir.PresentationMaterial(
         provider: _iconifyPresentation,
-        target: catalog.PresentationTarget.createNamed(
+        target: skir.PresentationTarget.createNamed(
           definition: _iconifyDefinition,
           arguments: const [],
         ),
-        role: catalog.PresentationRole.inspector,
+        role: skir.PresentationRole.inspector,
         layout: _node(
           "iconify.value",
-          presentation.PresentationElement.createTextInput(
-            control: presentation.BoundControl(
+          skir.PresentationElement.createTextInput(
+            control: skir.BoundControl(
               binding: _configuredValueReference,
-              label: expression.ExpressionNode.wrapLiteral(
-                types.DataValue.wrapStringValue("Icon"),
+              label: skir.ExpressionNode.wrapLiteral(
+                skir.DataValue.wrapStringValue("Icon"),
               ),
               description: null,
               prefix: null,
@@ -2286,8 +2225,8 @@ final _polymorphicCatalog = CheckedEditorCatalog(
             inputFormatters: const [],
           ),
         ),
-        dependencies: presentation.PresentationDependencies.defaultInstance,
-        subject: types.TypeTemplate.createNamed(
+        dependencies: skir.PresentationDependencies.defaultInstance,
+        subject: skir.TypeTemplate.createNamed(
           definition: _iconifyDefinition,
           arguments: const [],
         ),
@@ -2304,22 +2243,22 @@ final _polymorphicCatalog = CheckedEditorCatalog(
 );
 final _actionNode = _node(
   "action.root",
-  presentation.PresentationElement.wrapChildren(
-    presentation.ChildrenElement.createColumn(
+  skir.PresentationElement.wrapChildren(
+    skir.ChildrenElement.createColumn(
       children: [
-        presentation.AxisChild.wrapFixed(_numericNode),
-        presentation.AxisChild.wrapFixed(
+        skir.AxisChild.wrapFixed(_numericNode),
+        skir.AxisChild.wrapFixed(
           _node(
             "action.button",
-            presentation.PresentationElement.createButton(
-              label: expression.ExpressionNode.wrapLiteral(
-                types.DataValue.wrapStringValue("Run action"),
+            skir.PresentationElement.createButton(
+              label: skir.ExpressionNode.wrapLiteral(
+                skir.DataValue.wrapStringValue("Run action"),
               ),
-              action: action.EditorAction.wrapLocal(
-                action.LocalEditorAction.createSetValue(
+              action: skir.EditorAction.wrapLocal(
+                skir.LocalEditorAction.createSetValue(
                   target: _reference,
-                  value: expression.ExpressionNode.wrapLiteral(
-                    types.DataValue.wrapInteger("9"),
+                  value: skir.ExpressionNode.wrapLiteral(
+                    skir.DataValue.wrapInteger("9"),
                   ),
                 ),
               ),
@@ -2327,19 +2266,19 @@ final _actionNode = _node(
           ),
         ),
       ],
-      layout: presentation.AxisChildrenLayout(
+      layout: skir.AxisChildrenLayout(
         spacing: 8,
-        mainAxisAlignment: presentation.MainAxisAlignment.start,
-        crossAxisAlignment: presentation.CrossAxisAlignment.stretch,
+        mainAxisAlignment: skir.MainAxisAlignment.start,
+        crossAxisAlignment: skir.CrossAxisAlignment.stretch,
       ),
     ),
   ),
 );
 final _compactNode = _node(
   "compact.root",
-  presentation.PresentationElement.createText(
-    value: expression.ExpressionNode.wrapLiteral(
-      types.DataValue.wrapStringValue("Compact card"),
+  skir.PresentationElement.createText(
+    value: skir.ExpressionNode.wrapLiteral(
+      skir.DataValue.wrapStringValue("Compact card"),
     ),
     color: null,
     fontSize: null,
@@ -2353,32 +2292,32 @@ final _compactNode = _node(
     letterSpacing: null,
     decoration: null,
     semanticLabel: null,
-    paragraph: presentation.TextParagraph.defaultInstance,
+    paragraph: skir.TextParagraph.defaultInstance,
   ),
 );
-final _headerNode = presentation.PresentationNode(
+final _headerNode = skir.PresentationNode(
   nodeId: "header.root",
-  properties: presentation.PresentationProperties.defaultInstance,
-  element: presentation.PresentationElement.wrapNumericInput(
-    presentation.BoundControl(
+  properties: skir.PresentationProperties.defaultInstance,
+  element: skir.PresentationElement.wrapNumericInput(
+    skir.BoundControl(
       binding: _reference,
-      label: expression.ExpressionNode.wrapLiteral(
-        types.DataValue.wrapStringValue("Count"),
+      label: skir.ExpressionNode.wrapLiteral(
+        skir.DataValue.wrapStringValue("Count"),
       ),
       description: null,
       prefix: null,
       semanticLabel: null,
     ),
   ),
-  header: presentation.PresentationHeader(
+  header: skir.PresentationHeader(
     binding: _reference,
-    title: presentation.PresentationHeaderTitle.wrapText(
-      expression.ExpressionNode.wrapLiteral(
-        types.DataValue.wrapStringValue("Document"),
+    title: skir.PresentationHeaderTitle.wrapText(
+      skir.ExpressionNode.wrapLiteral(
+        skir.DataValue.wrapStringValue("Document"),
       ),
     ),
-    description: expression.ExpressionNode.wrapLiteral(
-      types.DataValue.wrapStringValue("Document description"),
+    description: skir.ExpressionNode.wrapLiteral(
+      skir.DataValue.wrapStringValue("Document description"),
     ),
     initiallyExpanded: true,
     items: const [],
@@ -2386,26 +2325,24 @@ final _headerNode = presentation.PresentationNode(
     contentPadding: null,
   ),
 );
-final _matchingHeaderNode = presentation.PresentationNode(
+final _matchingHeaderNode = skir.PresentationNode(
   nodeId: "matching.header.root",
-  properties: presentation.PresentationProperties.defaultInstance,
-  element: presentation.PresentationElement.wrapNumericInput(
-    presentation.BoundControl(
+  properties: skir.PresentationProperties.defaultInstance,
+  element: skir.PresentationElement.wrapNumericInput(
+    skir.BoundControl(
       binding: _reference,
-      label: expression.ExpressionNode.wrapLiteral(
-        types.DataValue.wrapStringValue("Count"),
+      label: skir.ExpressionNode.wrapLiteral(
+        skir.DataValue.wrapStringValue("Count"),
       ),
       description: null,
       prefix: null,
       semanticLabel: null,
     ),
   ),
-  header: presentation.PresentationHeader(
+  header: skir.PresentationHeader(
     binding: _reference,
-    title: presentation.PresentationHeaderTitle.wrapText(
-      expression.ExpressionNode.wrapLiteral(
-        types.DataValue.wrapStringValue("Count"),
-      ),
+    title: skir.PresentationHeaderTitle.wrapText(
+      skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapStringValue("Count")),
     ),
     description: null,
     initiallyExpanded: true,
@@ -2414,49 +2351,46 @@ final _matchingHeaderNode = presentation.PresentationNode(
     contentPadding: null,
   ),
 );
-final _overflowHeaderNode = presentation.PresentationNode(
+final _overflowHeaderNode = skir.PresentationNode(
   nodeId: "overflow.header.root",
-  properties: presentation.PresentationProperties.defaultInstance,
-  element: presentation.PresentationElement.wrapNumericInput(_control),
-  header: presentation.PresentationHeader(
+  properties: skir.PresentationProperties.defaultInstance,
+  element: skir.PresentationElement.wrapNumericInput(_control),
+  header: skir.PresentationHeader(
     binding: _reference,
-    title: presentation.PresentationHeaderTitle.wrapText(
-      expression.ExpressionNode.wrapLiteral(
-        types.DataValue.wrapStringValue("Document with actions"),
+    title: skir.PresentationHeaderTitle.wrapText(
+      skir.ExpressionNode.wrapLiteral(
+        skir.DataValue.wrapStringValue("Document with actions"),
       ),
     ),
     description: null,
     initiallyExpanded: null,
     items: [
       for (var index = 0; index < 6; index++)
-        presentation.HeaderItem.createButton(
-          itemId: presentation.HeaderItemId(
-            namespace: "test",
-            name: "action.$index",
+        skir.HeaderItem.createButton(
+          itemId: skir.HeaderItemId(namespace: "test", name: "action.$index"),
+          icon: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapStringValue("edit"),
           ),
-          icon: expression.ExpressionNode.wrapLiteral(
-            types.DataValue.wrapStringValue("edit"),
+          label: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapStringValue("Action $index"),
           ),
-          label: expression.ExpressionNode.wrapLiteral(
-            types.DataValue.wrapStringValue("Action $index"),
+          tooltip: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapStringValue("Action $index"),
           ),
-          tooltip: expression.ExpressionNode.wrapLiteral(
-            types.DataValue.wrapStringValue("Action $index"),
-          ),
-          action: action.EditorAction.wrapLocal(
-            action.LocalEditorAction.createSetValue(
+          action: skir.EditorAction.wrapLocal(
+            skir.LocalEditorAction.createSetValue(
               target: _reference,
-              value: expression.ExpressionNode.wrapLiteral(
-                types.DataValue.wrapInteger(index.toString()),
+              value: skir.ExpressionNode.wrapLiteral(
+                skir.DataValue.wrapInteger(index.toString()),
               ),
             ),
           ),
           priority: null,
           visibleIf: null,
           enabledIf: null,
-          tone: presentation.HeaderActionTone.neutral,
+          tone: skir.HeaderActionTone.neutral,
           confirmation: null,
-          placement: presentation.HeaderActionPlacement.end,
+          placement: skir.HeaderActionPlacement.end,
         ),
     ],
     headerPadding: null,
@@ -2464,25 +2398,23 @@ final _overflowHeaderNode = presentation.PresentationNode(
   ),
 );
 
-presentation.PresentationNode _node(
-  String id,
-  presentation.PresentationElement element,
-) => presentation.PresentationNode(
-  nodeId: id,
-  properties: presentation.PresentationProperties.defaultInstance,
-  element: element,
-  header: null,
-);
-
-presentation.PresentationNode _visualText(String id, String value) =>
-    presentation.PresentationNode(
+skir.PresentationNode _node(String id, skir.PresentationElement element) =>
+    skir.PresentationNode(
       nodeId: id,
-      properties: presentation.PresentationProperties.defaultInstance,
+      properties: skir.PresentationProperties.defaultInstance,
+      element: element,
       header: null,
-      element: presentation.PresentationElement.wrapText(
-        (presentation.TextContent.defaultInstance.toMutable()
-              ..value = expression.ExpressionNode.wrapLiteral(
-                types.DataValue.wrapStringValue(value),
+    );
+
+skir.PresentationNode _visualText(String id, String value) =>
+    skir.PresentationNode(
+      nodeId: id,
+      properties: skir.PresentationProperties.defaultInstance,
+      header: null,
+      element: skir.PresentationElement.wrapText(
+        (skir.TextContent.defaultInstance.toMutable()
+              ..value = skir.ExpressionNode.wrapLiteral(
+                skir.DataValue.wrapStringValue(value),
               ))
             .toFrozen(),
       ),

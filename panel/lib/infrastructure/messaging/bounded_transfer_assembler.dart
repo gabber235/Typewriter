@@ -1,7 +1,4 @@
-import "dart:async";
-import "dart:typed_data";
-
-import "package:crypto/crypto.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 final RegExp _boundedTransferIdPattern = RegExp(r"^[A-Za-z0-9_-]{1,64}$");
 

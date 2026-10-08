@@ -1,8 +1,6 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring.dart"
-    as authoring;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
-import "package:typewriter_panel/shared/editors/application/portable_value_tree.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
 
 final class AuthoredBookValue {
   const AuthoredBookValue({
@@ -13,11 +11,11 @@ final class AuthoredBookValue {
     required this.tags,
   });
 
-  final types.ResourceId id;
+  final skir.ResourceId id;
   final String title;
   final String icon;
   final int argb;
-  final List<types.ResourceId> tags;
+  final List<skir.ResourceId> tags;
 }
 
 final class AuthoredTagValue {
@@ -32,10 +30,10 @@ final class AuthoredTagValue {
     required this.height,
   });
 
-  final types.ResourceId id;
+  final skir.ResourceId id;
   final String name;
   final int argb;
-  final List<types.ResourceId> parents;
+  final List<skir.ResourceId> parents;
   final int x;
   final int y;
   final int width;
@@ -53,16 +51,16 @@ final class AuthoredPageValue {
     required this.elements,
   });
 
-  final types.ResourceId id;
-  final types.TypeSelection configuration;
-  final types.ResourceId? book;
+  final skir.ResourceId id;
+  final skir.TypeSelection configuration;
+  final skir.ResourceId? book;
   final String name;
   final String chapter;
   final int priority;
-  final List<types.ResourceId> elements;
+  final List<skir.ResourceId> elements;
 }
 
-AuthoredBookValue decodeAuthoredBook(authoring.AuthoringResource resource) {
+AuthoredBookValue decodeAuthoredBook(skir.AuthoringResource resource) {
   final title = resource.content.authoredField("title")?.authoredString;
   final iconValue = resource.content.authoredField("icon");
   final icon =
@@ -71,7 +69,7 @@ AuthoredBookValue decodeAuthoredBook(authoring.AuthoringResource resource) {
   final color = resource.content.authoredField("color")?.authoredInteger;
   final tagIds =
       (resource.content.authoredField("tags")?.authoredItems ??
-              const <types.ListItem>[])
+              const <skir.ListItem>[])
           .map((item) => item.value.authoredLink?.target.resource)
           .nonNulls
           .toList(growable: false);
@@ -84,12 +82,12 @@ AuthoredBookValue decodeAuthoredBook(authoring.AuthoringResource resource) {
   );
 }
 
-AuthoredTagValue decodeAuthoredTag(authoring.AuthoringResource resource) {
+AuthoredTagValue decodeAuthoredTag(skir.AuthoringResource resource) {
   final name = resource.content.authoredField("name")?.authoredString;
   final color = resource.content.authoredField("color")?.authoredInteger;
   final parentIds =
       (resource.content.authoredField("parents")?.authoredItems ??
-              const <types.ListItem>[])
+              const <skir.ListItem>[])
           .map((item) => item.value.authoredLink?.target.resource)
           .nonNulls
           .toList(growable: false);
@@ -110,14 +108,14 @@ AuthoredTagValue decodeAuthoredTag(authoring.AuthoringResource resource) {
   );
 }
 
-AuthoredPageValue decodeAuthoredPage(authoring.AuthoringResource resource) {
+AuthoredPageValue decodeAuthoredPage(skir.AuthoringResource resource) {
   final book = resource.content.authoredField("book")?.authoredLink;
   final name = resource.content.authoredField("name")?.authoredString;
   final chapter = resource.content.authoredField("chapter")?.authoredString;
   final priority = resource.content.authoredField("priority")?.authoredInteger;
   final elementIds =
       (resource.content.authoredField("elements")?.authoredItems ??
-              const <types.ListItem>[])
+              const <skir.ListItem>[])
           .map((item) => item.value.authoredLink?.target.resource)
           .nonNulls
           .toList(growable: false);

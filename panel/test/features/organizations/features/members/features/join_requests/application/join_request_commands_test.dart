@@ -1,5 +1,4 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -49,8 +48,8 @@ void main() {
     for (final outcome in approveRequestErrors) {
       test("approveRequest maps ${outcome.name}", () async {
         final request = OrganizationJoinRequest(
-          requestId: recordId("request_to_join:req-1"),
-          userId: recordId("user:m1"),
+          requestId: skir.recordId("request_to_join:req-1"),
+          userId: skir.recordId("user:m1"),
           requestedAt: testTimestamp,
           expiresAt: testTimestamp.add(const Duration(days: 1)),
         );

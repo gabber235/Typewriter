@@ -1,5 +1,3 @@
-import "package:auto_route/auto_route.dart";
-import "package:flutter/material.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Route entry point for managing invitation codes in the selected organization.

@@ -6,7 +6,7 @@ part of "portable_connections.dart";
 /// target scope because it represents the shared source side; that invalid
 /// combination becomes a diagnostic and the affected marker is skipped.
 void _resolveMarkers({
-  required List<ConnectionMarker> templates,
+  required List<skir.ConnectionMarker> templates,
   required Path path,
   required PortablePresentationScope layerScope,
   required _LayerAnchor source,
@@ -22,17 +22,18 @@ void _resolveMarkers({
   for (var index = 0; index < templates.length; index++) {
     final template = templates[index];
     if (!allowTargetScope &&
-        template.scope.kind == ConnectionExpressionScope_kind.targetConst) {
+        template.scope.kind ==
+            skir.ConnectionExpressionScope_kind.targetConst) {
       diagnostics.add(
         _connectionDiagnostic("Bundle trunk markers cannot use a target scope"),
       );
       continue;
     }
     final markerScope = switch (template.scope.kind) {
-      ConnectionExpressionScope_kind.layerConst => layerScope,
-      ConnectionExpressionScope_kind.sourceConst => source.snapshot.scope,
-      ConnectionExpressionScope_kind.targetConst => target.snapshot.scope,
-      ConnectionExpressionScope_kind.unknown => layerScope,
+      skir.ConnectionExpressionScope_kind.layerConst => layerScope,
+      skir.ConnectionExpressionScope_kind.sourceConst => source.snapshot.scope,
+      skir.ConnectionExpressionScope_kind.targetConst => target.snapshot.scope,
+      skir.ConnectionExpressionScope_kind.unknown => layerScope,
     };
     final position = _evaluateUnit(
       template.position,
@@ -68,7 +69,7 @@ void _resolveMarkers({
 /// suppresses only the stroke that cannot be painted; accumulated diagnostics
 /// remain available to the layer overlay.
 _ResolvedConnectorStyle? _resolveConnectorStyle(
-  ConnectorStyle style,
+  skir.ConnectorStyle style,
   PortablePresentationScope scope,
   List<String> diagnostics,
 ) {
@@ -91,7 +92,7 @@ _ResolvedConnectorStyle? _resolveConnectorStyle(
 
   final colorValue = colorResult.valueOrNull;
 
-  final color = colorValue is types.DataValue_integerWrapper
+  final color = colorValue is skir.DataValue_integerWrapper
       ? _connectorColor(colorValue.value)
       : null;
   if (colorResult is PortableExpressionAvailable && color == null) {
@@ -114,15 +115,15 @@ _ResolvedConnectorStyle? _resolveConnectorStyle(
 }
 
 _ResolvedEndpointMarker? _resolveEndpointMarker(
-  ConnectorEndpointMarker? marker,
+  skir.ConnectorEndpointMarker? marker,
   PortablePresentationScope scope,
   List<String> diagnostics,
 ) {
   if (marker == null) return null;
   final expression = switch (marker) {
-    ConnectorEndpointMarker_arrowWrapper(:final value) => value.size,
-    ConnectorEndpointMarker_circleWrapper(:final value) => value.diameter,
-    ConnectorEndpointMarker_unknown() => null,
+    skir.ConnectorEndpointMarker_arrowWrapper(:final value) => value.size,
+    skir.ConnectorEndpointMarker_circleWrapper(:final value) => value.diameter,
+    skir.ConnectorEndpointMarker_unknown() => null,
   };
   if (expression == null) {
     diagnostics.add(_connectionDiagnostic("Unknown connector marker"));
@@ -133,7 +134,7 @@ _ResolvedEndpointMarker? _resolveEndpointMarker(
 
   if (extent.valueOrNull == null) return null;
   return _ResolvedEndpointMarker(
-    kind: marker is ConnectorEndpointMarker_arrowWrapper
+    kind: marker is skir.ConnectorEndpointMarker_arrowWrapper
         ? _ResolvedEndpointMarkerKind.arrow
         : _ResolvedEndpointMarkerKind.circle,
     extent: extent.valueOrNull!,
@@ -146,7 +147,7 @@ _ResolvedEndpointMarker? _resolveEndpointMarker(
 /// boolean, otherwise resolution fails visibly instead of treating malformed
 /// authoring data as enabled or disabled by accident.
 _ConnectionResult<bool> _evaluateBoolean(
-  ExpressionNode? expression,
+  skir.ExpressionNode? expression,
   PortablePresentationScope scope,
   bool fallback,
 ) {
@@ -156,7 +157,7 @@ _ConnectionResult<bool> _evaluateBoolean(
     return _ConnectionResult.failure(result.diagnostics);
   }
   final value = result.valueOrNull;
-  return value is types.DataValue_booleanWrapper
+  return value is skir.DataValue_booleanWrapper
       ? _ConnectionResult.success(value.value)
       : _ConnectionResult.failure([
           _connectionDiagnostic(
@@ -170,7 +171,7 @@ _ConnectionResult<bool> _evaluateBoolean(
 /// Connection bend and marker positions use this contract so routing and path
 /// sampling cannot receive an invalid fraction.
 _ConnectionResult<double> _evaluateUnit(
-  ExpressionNode expression,
+  skir.ExpressionNode expression,
   PortablePresentationScope scope,
   String name,
 ) {
@@ -191,7 +192,7 @@ _ConnectionResult<double> _evaluateUnit(
 /// Widths, radii, and marker extents are authoring values in logical pixels.
 /// Invalid values become diagnostics rather than entering Flutter painting.
 _ConnectionResult<double> _evaluateNonnegative(
-  ExpressionNode expression,
+  skir.ExpressionNode expression,
   PortablePresentationScope scope,
   String name,
 ) {

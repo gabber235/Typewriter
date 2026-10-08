@@ -1,16 +1,5 @@
-import "package:flutter/material.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring.dart"
-    as authoring;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/capability.dart"
-    as capability;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as catalog_wire;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
-    as expression;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/search.dart"
-    as search;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 final class AuthoredResourceInspection extends StatefulWidget
@@ -20,28 +9,28 @@ final class AuthoredResourceInspection extends StatefulWidget
     required this.draft,
     required this.catalog,
     required this.commands,
-    this.role = catalog_wire.PresentationRole.inspector,
+    this.role = skir.PresentationRole.inspector,
     this.commitPolicy = EditorCommitPolicy.autosaveChanges,
     this.openResource,
     super.key,
   });
 
-  final types.ResourceId resource;
+  final skir.ResourceId resource;
   final AuthoredDraft draft;
   final CheckedEditorCatalog catalog;
   final AuthoredResourceCommands commands;
-  final catalog_wire.PresentationRole role;
+  final skir.PresentationRole role;
   final EditorCommitPolicy commitPolicy;
-  final ValueChanged<types.ResourceId>? openResource;
+  final ValueChanged<skir.ResourceId>? openResource;
 
   @override
   bool get ownsInspectorHeader {
-    if (role != catalog_wire.PresentationRole.inspector) return false;
+    if (role != skir.PresentationRole.inspector) return false;
     final record = draft.resource(resource);
     if (record == null) return false;
     return catalog.selectPresentation(
       record.configuration,
-      catalog_wire.PresentationRole.inspectorHeader,
+      skir.PresentationRole.inspectorHeader,
     ) is SelectedEditorPresentation;
   }
 
@@ -93,11 +82,11 @@ final class _AuthoredResourceInspectionState
         .resource(widget.resource)
         ?.configuration;
     final ownsInspectorHeader =
-        widget.role == catalog_wire.PresentationRole.inspector &&
+        widget.role == skir.PresentationRole.inspector &&
         configuration != null &&
         widget.catalog.selectPresentation(
           configuration,
-          catalog_wire.PresentationRole.inspectorHeader,
+          skir.PresentationRole.inspectorHeader,
         ) is SelectedEditorPresentation;
     final editor = _editor(widget.role, enabled: true, onChanged: _changed);
     final content = Column(
@@ -121,7 +110,7 @@ final class _AuthoredResourceInspectionState
               _autosave.reportStatus(message);
             },
           ),
-        if (widget.role == catalog_wire.PresentationRole.editor)
+        if (widget.role == skir.PresentationRole.editor)
           Expanded(child: editor)
         else
           editor,
@@ -173,12 +162,12 @@ final class _AuthoredResourceInspectionState
           IgnorePointer(
             child: ExcludeFocus(
               child: _editor(
-                catalog_wire.PresentationRole.inspectorHeader,
+                skir.PresentationRole.inspectorHeader,
                 enabled: true,
               ),
             ),
           ),
-        if (widget.role == catalog_wire.PresentationRole.editor)
+        if (widget.role == skir.PresentationRole.editor)
           Expanded(child: content)
         else
           content,
@@ -187,7 +176,7 @@ final class _AuthoredResourceInspectionState
   }
 
   AuthoredResourceEditor _editor(
-    catalog_wire.PresentationRole role, {
+    skir.PresentationRole role, {
     required bool enabled,
     ValueChanged<AuthoredDraft>? onChanged,
   }) => AuthoredResourceEditor(
@@ -196,10 +185,7 @@ final class _AuthoredResourceInspectionState
     draft: _autosave.draft,
     catalog: widget.catalog,
     role: role,
-    budget: expression.EvaluationBudget(
-      maxSteps: 10000,
-      maxCollectionItems: 10000,
-    ),
+    budget: skir.EvaluationBudget(maxSteps: 10000, maxCollectionItems: 10000),
     commit: _save,
     invokeCommand: _invokeCommand,
     watchSearch: widget.commands.watchSearch,
@@ -225,8 +211,8 @@ final class _AuthoredResourceInspectionState
   }
 
   Future<void> _invokeCommand(
-    types.CapabilityId capabilityId,
-    types.DataValue payload,
+    skir.CapabilityId capabilityId,
+    skir.DataValue payload,
   ) async {
     final result = await widget.commands.invokeCommand(
       capabilityId: capabilityId,
@@ -234,47 +220,47 @@ final class _AuthoredResourceInspectionState
     );
     if (!mounted) return;
     switch (result) {
-      case capability.CommandResult_successWrapper(:final value):
+      case skir.CommandResult_successWrapper(:final value):
         for (final instruction in value.instructions) {
           switch (instruction) {
-            case capability.PanelInstruction_invalidateResourceWrapper():
+            case skir.PanelInstruction_invalidateResourceWrapper():
               await widget.commands.reload();
               if (!mounted) return;
-            case capability.PanelInstruction_openResourceWrapper(:final value):
+            case skir.PanelInstruction_openResourceWrapper(:final value):
               final id = value.resource.identity.authoredString;
               if (id != null) {
-                widget.openResource?.call(types.ResourceId(value: id));
+                widget.openResource?.call(skir.ResourceId(value: id));
               } else {
                 _autosave.reportStatus(
                   "The command returned an invalid resource identity",
                 );
               }
-            case capability.PanelInstruction_notifyWrapper(:final value):
+            case skir.PanelInstruction_notifyWrapper(:final value):
               _autosave.reportStatus(value.message);
-            case capability.PanelInstruction_unknown():
+            case skir.PanelInstruction_unknown():
               _autosave.reportStatus(
                 "The command returned an unknown instruction",
               );
           }
         }
-      case capability.CommandResult_invalidWrapper(:final value):
+      case skir.CommandResult_invalidWrapper(:final value):
         _autosave.reportStatus(
           value.diagnostics.map((item) => item.message).join("\n"),
         );
-      case capability.CommandResult_unavailableWrapper(:final value):
+      case skir.CommandResult_unavailableWrapper(:final value):
         _autosave.reportStatus(
           value.diagnostics.map((item) => item.message).join("\n"),
         );
-      case capability.CommandResult_permissionDeniedWrapper(:final value):
+      case skir.CommandResult_permissionDeniedWrapper(:final value):
         _autosave.reportStatus(value.message);
-      case capability.CommandResult_staleGenerationWrapper():
+      case skir.CommandResult_staleGenerationWrapper():
         await widget.commands.reload();
         if (mounted) {
           _autosave.reportStatus(
             "The editor catalog changed. Review the refreshed form",
           );
         }
-      case capability.CommandResult_unknown():
+      case skir.CommandResult_unknown():
         _autosave.reportStatus("The command result is unavailable");
     }
   }
@@ -296,35 +282,33 @@ final class AuthoredResourceCommands {
     required this.openAutosave,
   });
 
-  final Future<authoring.CommitPreparedEditResponse> Function(
-    authoring.PreparedEdit edit,
-  )
+  final Future<skir.CommitPreparedEditResponse> Function(skir.PreparedEdit edit)
   commit;
-  final Future<authoring.TypePreviewResult> Function({
-    required types.ResourceId resource,
-    required types.TypeSelection requested,
+  final Future<skir.TypePreviewResult> Function({
+    required skir.ResourceId resource,
+    required skir.TypeSelection requested,
   })
   previewTypeArguments;
-  final Future<authoring.CommitTypeArgumentChangeResponse> Function(
-    authoring.TypeArgumentChangePreview preview,
+  final Future<skir.CommitTypeArgumentChangeResponse> Function(
+    skir.TypeArgumentChangePreview preview,
   )
   commitTypeArguments;
-  final Future<catalog_wire.PreparedCreation> Function(
-    catalog_wire.InitializationRequest request,
+  final Future<skir.PreparedCreation> Function(
+    skir.InitializationRequest request,
   )
   prepareCreation;
-  final Future<capability.CommandResult> Function({
-    required types.CapabilityId capabilityId,
-    required types.DataValue payload,
+  final Future<skir.CommandResult> Function({
+    required skir.CapabilityId capabilityId,
+    required skir.DataValue payload,
   })
   invokeCommand;
-  final Stream<search.RealmPresentationSearchUpdate> Function(
-    search.RealmPresentationSearchRequest request,
+  final Stream<skir.RealmPresentationSearchUpdate> Function(
+    skir.RealmPresentationSearchRequest request,
   )
   watchSearch;
   final Future<void> Function() reload;
   final AuthoredDraftAutosave Function({
-    required types.ResourceId resource,
+    required skir.ResourceId resource,
     required AuthoredDraft baseline,
     EditorCommitPolicy policy,
   })

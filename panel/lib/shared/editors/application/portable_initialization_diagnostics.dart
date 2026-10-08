@@ -1,26 +1,24 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/diagnostic.dart"
-    as diagnostic;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 
 String formatPortableInitializationDiagnostic(
-  diagnostic.InitializationDiagnostic finding,
+  skir.InitializationDiagnostic finding,
 ) {
   final path = finding.relativePath;
   if (path == null || path.segments.isEmpty) return finding.message;
   final buffer = StringBuffer();
   for (final segment in path.segments) {
     switch (segment) {
-      case types.PathSegment_fieldWrapper(:final value):
+      case skir.PathSegment_fieldWrapper(:final value):
         if (buffer.isNotEmpty) buffer.write(".");
         buffer.write(value.name);
-      case types.PathSegment_itemWrapper(:final value):
+      case skir.PathSegment_itemWrapper(:final value):
         buffer.write("[${value.id.value}]");
-      case types.PathSegment.mapKey:
+      case skir.PathSegment.mapKey:
         buffer.write(".key");
-      case types.PathSegment.mapValue:
+      case skir.PathSegment.mapValue:
         buffer.write(".value");
-      case types.PathSegment_unknown():
+      case skir.PathSegment_unknown():
         buffer.write(".unknown");
     }
   }

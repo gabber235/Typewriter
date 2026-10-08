@@ -1,8 +1,4 @@
-import "package:flutter/widgets.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/app/application/router/access/access.dart";
-import "package:typewriter_panel/app/presentation/route_access/authentication_route_access_binding.dart";
-import "package:typewriter_panel/app/presentation/route_access/organization_route_access_binding.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Binds provider state to the route access coordinator used by the router.
 ///

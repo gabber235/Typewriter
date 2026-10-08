@@ -1,5 +1,4 @@
-import "package:flutter/material.dart";
-import "package:typewriter_panel/shared/graph/domain/domain.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Payload shared by draggable graph sources and their target surface.
 abstract class GraphDragData {

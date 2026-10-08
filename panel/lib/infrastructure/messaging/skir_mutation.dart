@@ -1,8 +1,5 @@
-import "dart:async";
-import "dart:typed_data";
-
-import "package:riverpod/riverpod.dart";
-import "package:skir_client/skir_client.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Classification returned by a feature after decoding a mutation response.
@@ -24,7 +21,7 @@ extension RefSkirMutation on Ref {
   PreparedCommit<TResponse> prepareSkir<TResponse>(
     String subject,
     Uint8List requestBytes,
-    Serializer<TResponse> serializer, {
+    skir.Serializer<TResponse> serializer, {
     required String label,
     required MutationResponseDisposition Function(TResponse) classify,
     String Function(TResponse)? rejectionMessage,
@@ -60,7 +57,7 @@ extension RefSkirMutation on Ref {
   Future<TResponse> mutateSkir<TResponse>(
     String subject,
     Uint8List requestBytes,
-    Serializer<TResponse> serializer, {
+    skir.Serializer<TResponse> serializer, {
     required String label,
     required MutationResponseDisposition Function(TResponse) classify,
     String Function(TResponse)? rejectionMessage,
@@ -108,7 +105,7 @@ final class SkirMutationClient {
   Future<T> request<T>(
     FutureOr<String> subject,
     Uint8List bytes,
-    Serializer<T> serializer,
+    skir.Serializer<T> serializer,
   ) async {
     final destination = await subject;
     final telemetry = await _telemetry();
@@ -133,7 +130,7 @@ final class SkirMutationClient {
     String subject,
     String updateSubject,
     Uint8List bytes,
-    Serializer<T> serializer,
+    skir.Serializer<T> serializer,
   ) => Stream<T>.multi((controller) async {
     NatsSubscription? subscription;
     var active = true;
@@ -192,7 +189,7 @@ final class SkirMutationClient {
   PreparedCommit<TResponse> prepare<TResponse>(
     FutureOr<String> subject,
     Uint8List requestBytes,
-    Serializer<TResponse> serializer, {
+    skir.Serializer<TResponse> serializer, {
     required String label,
     required MutationResponseDisposition Function(TResponse) classify,
     String Function(TResponse)? rejectionMessage,

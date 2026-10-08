@@ -1,6 +1,6 @@
 part of "portable_connections.dart";
 
-extension PortableHierarchySequenceRendering on HierarchySequenceLayout {
+extension PortableHierarchySequenceRendering on skir.HierarchySequenceLayout {
   Widget renderPortableHierarchy({
     required PortablePresentationScope scope,
     required List<PortablePresentationScope> itemScopes,
@@ -21,7 +21,7 @@ final class _PortableHierarchySequenceRenderer extends StatefulWidget {
     required this.children,
   });
 
-  final HierarchySequenceLayout layout;
+  final skir.HierarchySequenceLayout layout;
   final PortablePresentationScope scope;
   final List<PortablePresentationScope> itemScopes;
   final List<Widget> children;
@@ -87,7 +87,7 @@ final class _PortableHierarchySequenceRendererState
 }
 
 _ResolvedHierarchyLayout _resolvePortableHierarchyLayout(
-  HierarchySequenceLayout layout,
+  skir.HierarchySequenceLayout layout,
   PortablePresentationScope scope,
   List<PortablePresentationScope> itemScopes,
 ) {
@@ -117,7 +117,7 @@ _ResolvedHierarchyLayout _resolvePortableHierarchyLayout(
 
   final anchorOffsets = <double?>[];
   final anchorKind = switch (layout.itemAnchor) {
-    ConnectorAnchor_offsetWrapper(:final value) => () {
+    skir.ConnectorAnchor_offsetWrapper(:final value) => () {
       for (final itemScope in itemScopes) {
         final offset = _evaluateNonnegative(
           value,
@@ -129,7 +129,7 @@ _ResolvedHierarchyLayout _resolvePortableHierarchyLayout(
       }
       return _HierarchyAnchorKind.offset;
     }(),
-    _ when layout.itemAnchor.kind == ConnectorAnchor_kind.centerConst =>
+    _ when layout.itemAnchor.kind == skir.ConnectorAnchor_kind.centerConst =>
       _HierarchyAnchorKind.center,
     _ => _HierarchyAnchorKind.start,
   };

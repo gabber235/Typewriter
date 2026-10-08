@@ -6,9 +6,9 @@ void _testHostTargetSelection() {
       "hosted Realm inference respects ${realmTarget == "paper" ? "version constraints" : "engine identity"}",
       (tester) async {
         final hosted = skir.RealmInstance(
-          realmId: recordId("realm_instance:paper"),
+          realmId: skir.recordId("realm_instance:paper"),
           ownerHost: skir.OwnerHost(
-            id: recordId("service_host:paper"),
+            id: skir.recordId("service_host:paper"),
             name: "Host",
           ),
           revision: 1,
@@ -19,9 +19,9 @@ void _testHostTargetSelection() {
           state: skir.ChildRuntimeState.defaultInstance,
         );
         final external = skir.RealmInstance(
-          realmId: recordId("realm_instance:external"),
+          realmId: skir.recordId("realm_instance:external"),
           ownerHost: skir.OwnerHost(
-            id: recordId("service_host:external"),
+            id: skir.recordId("service_host:external"),
             name: "Compatible Realm",
           ),
           revision: 1,
@@ -34,9 +34,9 @@ void _testHostTargetSelection() {
         final incompatible = skir.RealmInstance(
           revision: 1,
           state: skir.ChildRuntimeState.defaultInstance,
-          realmId: recordId("realm_instance:incompatible"),
+          realmId: skir.recordId("realm_instance:incompatible"),
           ownerHost: skir.OwnerHost(
-            id: recordId("service_host:incompatible"),
+            id: skir.recordId("service_host:incompatible"),
             name: "Incompatible Realm",
           ),
           targetEngine: skir.EngineTarget(
@@ -101,7 +101,7 @@ void _testHostTargetSelection() {
               host: _hostWithRevision(harness.host, 2),
               realm: hosted,
               engine: skir.EngineInstance(
-                engineId: recordId("engine_instance:paper"),
+                engineId: skir.recordId("engine_instance:paper"),
                 ownerHost: hosted.ownerHost,
                 realm: skir.RealmInfo(
                   realmId: external.realmId,

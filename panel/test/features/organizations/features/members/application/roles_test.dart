@@ -1,20 +1,16 @@
-import "dart:async";
-
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 const _userId = "user1";
-final _organizationId = recordId("organization:org1");
+final _organizationId = skir.recordId("organization:org1");
 const _publishSubject = "cloud.to.user.user1.organization.org1.roles.watch";
 const _listenSubject = "cloud.from.organization.org1.roles.watch";
 
 OrganizationRole _role(String id, {String? name}) => OrganizationRole(
-  roleId: recordId("organization_role:$id"),
+  roleId: skir.recordId("organization_role:$id"),
   name: name ?? "Role $id",
   color: const Color(0xff2196f3),
   assignable: true,

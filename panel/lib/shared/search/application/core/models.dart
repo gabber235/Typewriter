@@ -1,8 +1,3 @@
-import "dart:async";
-
-import "package:collection/collection.dart";
-import "package:flutter/foundation.dart";
-import "package:freezed_annotation/freezed_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "models.freezed.dart";

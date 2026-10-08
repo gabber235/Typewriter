@@ -1,10 +1,3 @@
-import "dart:math" as math;
-
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/ion.dart";
-import "package:iconify_flutter_plus/icons/lucide.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Builds context sensitive navigation, zoom, and edit mode shortcuts.
@@ -312,7 +305,7 @@ Object? _invokeTimelineZoomIn({
       planeGlobalKey.currentContext?.findRenderObject() as RenderBox?;
   if (planeBox == null) return null;
   final focal = planeBox.size.center(Offset.zero);
-  final scaleDelta = math.exp(25 * 0.0025);
+  final scaleDelta = exp(25 * 0.0025);
   controller.zoomAt(
     localDx: focal.dx,
     scaleDelta: scaleDelta,
@@ -331,7 +324,7 @@ Object? _invokeTimelineZoomOut({
       planeGlobalKey.currentContext?.findRenderObject() as RenderBox?;
   if (planeBox == null) return null;
   final focal = planeBox.size.center(Offset.zero);
-  final scaleDelta = math.exp(-25 * 0.0025);
+  final scaleDelta = exp(-25 * 0.0025);
   controller.zoomAt(
     localDx: focal.dx,
     scaleDelta: scaleDelta,

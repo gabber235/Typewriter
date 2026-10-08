@@ -1,9 +1,5 @@
-import "dart:typed_data";
-
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
-    as expression;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 const authoredPortableOperationIds = <String>{
@@ -82,7 +78,7 @@ sealed class PortableExpressionResult {
 final class PortableExpressionAvailable extends PortableExpressionResult {
   const PortableExpressionAvailable(this.value, super.reads);
 
-  final types.DataValue value;
+  final skir.DataValue value;
 }
 
 final class PortableExpressionUnavailable extends PortableExpressionResult {
@@ -99,16 +95,16 @@ final class PortableExpressionFailed extends PortableExpressionResult {
 final class PortableExpressionRead {
   const PortableExpressionRead(this.binding, this.path, {this.location});
 
-  final types.ExpressionBindingId binding;
-  final types.ValuePath path;
-  final types.ValueLocation? location;
+  final skir.ExpressionBindingId binding;
+  final skir.ValuePath path;
+  final skir.ValueLocation? location;
 
   String get key {
     final suffix = path.segments
         .map(
           (segment) => switch (segment) {
-            types.PathSegment_fieldWrapper(:final value) => value.name,
-            types.PathSegment_itemWrapper(:final value) => value.id.value,
+            skir.PathSegment_fieldWrapper(:final value) => value.name,
+            skir.PathSegment_itemWrapper(:final value) => value.id.value,
             _ => "?",
           },
         )
@@ -130,13 +126,13 @@ final class PortableExpressionRead {
 final class PortableExpressionBinding {
   const PortableExpressionBinding({required this.value, this.location});
 
-  final types.DataValue value;
-  final types.ValueLocation? location;
+  final skir.DataValue value;
+  final skir.ValueLocation? location;
 }
 
 final class PortableExpressionEvaluator {
   PortableExpressionEvaluator(
-    Map<types.ExpressionBindingId, types.DataValue> bindings, {
+    Map<skir.ExpressionBindingId, skir.DataValue> bindings, {
     required this.budget,
   }) : _bindings = Map.unmodifiable({
          for (final entry in bindings.entries)
@@ -144,31 +140,31 @@ final class PortableExpressionEvaluator {
        });
 
   PortableExpressionEvaluator.located(
-    Map<types.ExpressionBindingId, PortableExpressionBinding> bindings, {
+    Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings, {
     required this.budget,
   }) : _bindings = Map.unmodifiable(bindings);
 
   factory PortableExpressionEvaluator.configuredValue({
-    required types.DataValue value,
-    required types.ValueLocation location,
-    required expression.EvaluationBudget budget,
-    Map<types.ExpressionBindingId, PortableExpressionBinding> additional =
+    required skir.DataValue value,
+    required skir.ValueLocation location,
+    required skir.EvaluationBudget budget,
+    Map<skir.ExpressionBindingId, PortableExpressionBinding> additional =
         const {},
   }) => PortableExpressionEvaluator.located({
     ...additional,
-    types.ExpressionBindingId(value: "configured_value"):
+    skir.ExpressionBindingId(value: "configured_value"):
         PortableExpressionBinding(value: value, location: location),
   }, budget: budget);
 
-  final expression.EvaluationBudget budget;
-  final Map<types.ExpressionBindingId, PortableExpressionBinding> _bindings;
-  final Map<types.ExpressionBindingId, PortableExpressionBinding> _locals = {};
+  final skir.EvaluationBudget budget;
+  final Map<skir.ExpressionBindingId, PortableExpressionBinding> _bindings;
+  final Map<skir.ExpressionBindingId, PortableExpressionBinding> _locals = {};
   final Set<PortableExpressionRead> _reads = {};
   var _steps = 0;
   var _collectionItems = 0;
   var _depth = 0;
 
-  PortableExpressionResult evaluate(expression.ExpressionNode node) {
+  PortableExpressionResult evaluate(skir.ExpressionNode node) {
     _reads.clear();
     _locals.clear();
     _steps = 0;
@@ -200,7 +196,7 @@ final class PortableExpressionEvaluator {
     }
   }
 
-  _Evaluation _evaluate(expression.ExpressionNode node) {
+  _Evaluation _evaluate(skir.ExpressionNode node) {
     _depth++;
     try {
       if (_depth > 512) {
@@ -211,27 +207,27 @@ final class PortableExpressionEvaluator {
       }
       _consumeStep();
       return switch (node) {
-        expression.ExpressionNode_literalWrapper(:final value) => _Available(
-          value,
-        ),
-        expression.ExpressionNode_readWrapper(:final value) => _read(value),
-        expression.ExpressionNode_callWrapper(:final value) => _call(value),
-        expression.ExpressionNode_andWrapper(:final value) => _boolean(
+        skir.ExpressionNode_literalWrapper(:final value) => _Available(value),
+        skir.ExpressionNode_readWrapper(:final value) => _read(value),
+        skir.ExpressionNode_callWrapper(:final value) => _call(value),
+        skir.ExpressionNode_andWrapper(:final value) => _boolean(
           value.left,
           value.right,
           conjunction: true,
         ),
-        expression.ExpressionNode_orWrapper(:final value) => _boolean(
+        skir.ExpressionNode_orWrapper(:final value) => _boolean(
           value.left,
           value.right,
           conjunction: false,
         ),
-        expression.ExpressionNode_conditionalWrapper(:final value) =>
-          _conditional(value),
-        expression.ExpressionNode_orElseWrapper(:final value) => _orElse(value),
-        expression.ExpressionNode_collectionWrapper(:final value) =>
-          _collection(value),
-        expression.ExpressionNode_unknown() => throw const _ExpressionFailure(
+        skir.ExpressionNode_conditionalWrapper(:final value) => _conditional(
+          value,
+        ),
+        skir.ExpressionNode_orElseWrapper(:final value) => _orElse(value),
+        skir.ExpressionNode_collectionWrapper(:final value) => _collection(
+          value,
+        ),
+        skir.ExpressionNode_unknown() => throw const _ExpressionFailure(
           "unknown_expression",
           "The expression variant is unknown",
         ),
@@ -241,7 +237,7 @@ final class PortableExpressionEvaluator {
     }
   }
 
-  _Evaluation _read(expression.ExpressionRead read) {
+  _Evaluation _read(skir.ExpressionRead read) {
     final binding = _locals[read.binding] ?? _bindings[read.binding];
     _reads.add(
       PortableExpressionRead(
@@ -249,9 +245,9 @@ final class PortableExpressionEvaluator {
         read.path,
         location: binding?.location == null
             ? null
-            : types.ValueLocation(
+            : skir.ValueLocation(
                 resource: binding!.location!.resource,
-                path: types.ValuePath(
+                path: skir.ValuePath(
                   segments: [
                     ...binding.location!.path.segments,
                     ...read.path.segments,
@@ -263,36 +259,36 @@ final class PortableExpressionEvaluator {
     if (binding == null) return const _Unavailable();
     final root = binding.value;
     if (read.path.segments.isEmpty) {
-      return root == types.DataValue.unfilled
+      return root == skir.DataValue.unfilled
           ? const _Unavailable()
           : _Available(root);
     }
     return switch (root.readAt(read.path)) {
-      PortablePathValue(:final value) when value != types.DataValue.unfilled =>
+      PortablePathValue(:final value) when value != skir.DataValue.unfilled =>
         _Available(value),
       _ => const _Unavailable(),
     };
   }
 
   _Evaluation _boolean(
-    expression.ExpressionNode left,
-    expression.ExpressionNode right, {
+    skir.ExpressionNode left,
+    skir.ExpressionNode right, {
     required bool conjunction,
   }) {
     final first = _evaluate(left);
     if (first is _Unavailable) return first;
     final firstValue = _booleanValue((first as _Available).value);
     if (conjunction ? !firstValue : firstValue) {
-      return _Available(types.DataValue.wrapBoolean(firstValue));
+      return _Available(skir.DataValue.wrapBoolean(firstValue));
     }
     final second = _evaluate(right);
     if (second is _Unavailable) return second;
     return _Available(
-      types.DataValue.wrapBoolean(_booleanValue((second as _Available).value)),
+      skir.DataValue.wrapBoolean(_booleanValue((second as _Available).value)),
     );
   }
 
-  _Evaluation _conditional(expression.ConditionalExpression value) {
+  _Evaluation _conditional(skir.ConditionalExpression value) {
     final test = _evaluate(value.test);
     if (test is _Unavailable) return test;
     return _evaluate(
@@ -300,17 +296,17 @@ final class PortableExpressionEvaluator {
     );
   }
 
-  _Evaluation _orElse(expression.OrElseExpression value) {
+  _Evaluation _orElse(skir.OrElseExpression value) {
     final input = _evaluate(value.input);
     if (input is _Unavailable) return _evaluate(value.fallback);
     final actual = (input as _Available).value;
-    return actual == types.DataValue.null_ || actual == types.DataValue.unfilled
+    return actual == skir.DataValue.null_ || actual == skir.DataValue.unfilled
         ? _evaluate(value.fallback)
         : input;
   }
 
-  _Evaluation _call(expression.ExpressionCall call) {
-    final arguments = <types.DataValue>[];
+  _Evaluation _call(skir.ExpressionCall call) {
+    final arguments = <skir.DataValue>[];
     for (final argument in call.arguments) {
       final evaluated = _evaluate(argument);
       if (evaluated is _Unavailable) return evaluated;
@@ -323,13 +319,13 @@ final class PortableExpressionEvaluator {
     return _Available(_operation(call.operation.value, arguments));
   }
 
-  _Evaluation _collection(expression.CollectionExpression expression) {
+  _Evaluation _collection(skir.CollectionExpression expression) {
     final input = _evaluate(expression.input);
     if (input is _Unavailable) return input;
     final inputValue = (input as _Available).value;
     final entries = _collectionEntries(inputValue);
     final sourceLocation = _sourceLocation(expression.input);
-    final arguments = <types.DataValue>[];
+    final arguments = <skir.DataValue>[];
     for (final argument in expression.arguments) {
       final result = _evaluate(argument);
       if (result is _Unavailable) return result;
@@ -385,10 +381,10 @@ final class PortableExpressionEvaluator {
   }
 
   _Evaluation _takeOrSkip(
-    expression.CollectionExpression expression,
-    types.DataValue input,
+    skir.CollectionExpression expression,
+    skir.DataValue input,
     List<_CollectionEntry> entries,
-    List<types.DataValue> arguments, {
+    List<skir.DataValue> arguments, {
     required bool take,
   }) {
     _requireCollectionShape(expression, bindings: 0, arguments: 1, body: false);
@@ -403,8 +399,8 @@ final class PortableExpressionEvaluator {
   }
 
   _Evaluation _reverse(
-    expression.CollectionExpression expression,
-    types.DataValue input,
+    skir.CollectionExpression expression,
+    skir.DataValue input,
     List<_CollectionEntry> entries,
   ) {
     _requireCollectionShape(expression, bindings: 0, arguments: 0, body: false);
@@ -413,8 +409,8 @@ final class PortableExpressionEvaluator {
   }
 
   _Evaluation _distinct(
-    expression.CollectionExpression expression,
-    types.DataValue input,
+    skir.CollectionExpression expression,
+    skir.DataValue input,
     List<_CollectionEntry> entries,
   ) {
     _requireCollectionShape(expression, bindings: 0, arguments: 0, body: false);
@@ -432,11 +428,11 @@ final class PortableExpressionEvaluator {
   }
 
   _Evaluation _collectionWithUnaryBody(
-    expression.CollectionExpression expression,
-    types.DataValue input,
+    skir.CollectionExpression expression,
+    skir.DataValue input,
     List<_CollectionEntry> entries,
-    List<types.DataValue> arguments,
-    types.ValueLocation? sourceLocation,
+    List<skir.DataValue> arguments,
+    skir.ValueLocation? sourceLocation,
   ) {
     final operation = expression.operation.value;
     _requireCollectionShape(
@@ -448,7 +444,7 @@ final class PortableExpressionEvaluator {
     );
     final binding = expression.bindings.single;
     final body = expression.body!;
-    final results = <(_CollectionEntry, types.DataValue)>[];
+    final results = <(_CollectionEntry, skir.DataValue)>[];
     var unavailable = false;
     for (final entry in entries) {
       _consumeCollectionItems(1);
@@ -496,10 +492,10 @@ final class PortableExpressionEvaluator {
       "typewriter.collection.none" => _Available(_bool(true)),
       "typewriter.collection.unique_by" => _Available(_bool(true)),
       "typewriter.collection.map" => _Available(
-        types.DataValue.createListValue(
+        skir.DataValue.createListValue(
           items: [
             for (final result in results)
-              types.ListItem(id: result.$1.id, value: result.$2),
+              skir.ListItem(id: result.$1.id, value: result.$2),
           ],
         ),
       ),
@@ -512,14 +508,14 @@ final class PortableExpressionEvaluator {
               .toList(),
         ),
       ),
-      "typewriter.collection.find" => _Available(types.DataValue.null_),
+      "typewriter.collection.find" => _Available(skir.DataValue.null_),
       "typewriter.collection.find_last" => _Available(
         results
                 .where((result) => _booleanValue(result.$2))
                 .lastOrNull
                 ?.$1
                 .value ??
-            types.DataValue.null_,
+            skir.DataValue.null_,
       ),
       "typewriter.collection.count" => _Available(
         _integerValue(
@@ -550,10 +546,10 @@ final class PortableExpressionEvaluator {
   }
 
   _Evaluation _fold(
-    expression.CollectionExpression expression,
+    skir.CollectionExpression expression,
     List<_CollectionEntry> entries,
-    List<types.DataValue> arguments,
-    types.ValueLocation? sourceLocation,
+    List<skir.DataValue> arguments,
+    skir.ValueLocation? sourceLocation,
   ) {
     final fold = expression.operation.value == "typewriter.collection.fold";
     _requireCollectionShape(
@@ -562,7 +558,7 @@ final class PortableExpressionEvaluator {
       arguments: fold ? 1 : 0,
       body: true,
     );
-    if (!fold && entries.isEmpty) return _Available(types.DataValue.null_);
+    if (!fold && entries.isEmpty) return _Available(skir.DataValue.null_);
     var accumulator = fold ? arguments.single : entries.first.value;
     var accumulatorLocation = fold
         ? _sourceLocation(expression.arguments.single)
@@ -594,10 +590,10 @@ final class PortableExpressionEvaluator {
   }
 
   _Evaluation _sortWith(
-    expression.CollectionExpression expression,
-    types.DataValue input,
+    skir.CollectionExpression expression,
+    skir.DataValue input,
     List<_CollectionEntry> entries,
-    types.ValueLocation? sourceLocation,
+    skir.ValueLocation? sourceLocation,
   ) {
     _requireCollectionShape(expression, bindings: 2, arguments: 0, body: true);
     final sorted = <_CollectionEntry>[];
@@ -632,12 +628,12 @@ final class PortableExpressionEvaluator {
   }
 
   _Evaluation _evaluateWithLocals(
-    Map<types.ExpressionBindingId, PortableExpressionBinding> values,
-    expression.ExpressionNode body,
+    Map<skir.ExpressionBindingId, PortableExpressionBinding> values,
+    skir.ExpressionNode body,
   ) {
     final previous =
         <
-          types.ExpressionBindingId,
+          skir.ExpressionBindingId,
           ({bool present, PortableExpressionBinding? value})
         >{};
     for (final entry in values.entries) {
@@ -660,8 +656,8 @@ final class PortableExpressionEvaluator {
     }
   }
 
-  types.ValueLocation? _sourceLocation(expression.ExpressionNode node) {
-    if (node case expression.ExpressionNode_readWrapper(:final value)) {
+  skir.ValueLocation? _sourceLocation(skir.ExpressionNode node) {
+    if (node case skir.ExpressionNode_readWrapper(:final value)) {
       final binding = _locals[value.binding] ?? _bindings[value.binding];
       final base = binding?.location;
       if (base == null) return null;
@@ -671,7 +667,7 @@ final class PortableExpressionEvaluator {
   }
 
   void _requireCollectionShape(
-    expression.CollectionExpression expression, {
+    skir.CollectionExpression expression, {
     required int bindings,
     required bool body,
     int? arguments,
@@ -717,7 +713,7 @@ final class PortableExpressionEvaluator {
     }
   }
 
-  types.DataValue _operation(String id, List<types.DataValue> values) {
+  skir.DataValue _operation(String id, List<skir.DataValue> values) {
     if (!authoredPortableOperationIds.contains(id)) {
       throw _ExpressionFailure(
         "unknown_operation",
@@ -732,7 +728,7 @@ final class PortableExpressionEvaluator {
         _canonical(values[0]) != _canonical(values[1]),
       ),
       "typewriter.value.is_null" => _bool(
-        values.single == types.DataValue.null_,
+        values.single == skir.DataValue.null_,
       ),
       "typewriter.link.target" => _linkTarget(values.single),
       "typewriter.record.field" => _recordField(values),
@@ -750,7 +746,7 @@ final class PortableExpressionEvaluator {
         _Arithmetic.remainder,
       ),
       "typewriter.number.negate" => _arithmetic(values, _Arithmetic.negate),
-      "typewriter.text.length" => types.DataValue.wrapInteger(
+      "typewriter.text.length" => skir.DataValue.wrapInteger(
         _text(values.single).runes.length.toString(),
       ),
       "typewriter.text.has_line_break" => _bool(
@@ -878,9 +874,7 @@ final class PortableExpressionEvaluator {
       "typewriter.rule.unique" => throw StateError(
         "Unique availability is evaluated before operations",
       ),
-      "typewriter.rule.notNull" => _bool(
-        values.single != types.DataValue.null_,
-      ),
+      "typewriter.rule.notNull" => _bool(values.single != skir.DataValue.null_),
       "typewriter.rule.notBefore" => _bool(
         _timestamp(values[0]).compareTo(_timestamp(values[1])) >= 0,
       ),
@@ -895,14 +889,14 @@ final class PortableExpressionEvaluator {
     };
   }
 
-  types.DataValue _arithmetic(
-    List<types.DataValue> values,
+  skir.DataValue _arithmetic(
+    List<skir.DataValue> values,
     _Arithmetic operation,
   ) {
     final unwrapped = values.map(_unwrap).toList(growable: false);
-    if (unwrapped.every((value) => value is types.DataValue_integerWrapper)) {
+    if (unwrapped.every((value) => value is skir.DataValue_integerWrapper)) {
       final operands = unwrapped
-          .cast<types.DataValue_integerWrapper>()
+          .cast<skir.DataValue_integerWrapper>()
           .map((value) => BigInt.parse(value.value))
           .toList();
       var result = operands.first;
@@ -925,11 +919,11 @@ final class PortableExpressionEvaluator {
           _Arithmetic.negate => result,
         };
       }
-      return types.DataValue.wrapInteger(result.toString());
+      return skir.DataValue.wrapInteger(result.toString());
     }
-    if (unwrapped.every((value) => value is types.DataValue_decimalWrapper)) {
+    if (unwrapped.every((value) => value is skir.DataValue_decimalWrapper)) {
       final operands = unwrapped
-          .cast<types.DataValue_decimalWrapper>()
+          .cast<skir.DataValue_decimalWrapper>()
           .map((value) => _Decimal.parse(value.value))
           .toList();
       var result = operands.first;
@@ -944,11 +938,11 @@ final class PortableExpressionEvaluator {
           _Arithmetic.negate => result,
         };
       }
-      return types.DataValue.wrapDecimal(result.canonical);
+      return skir.DataValue.wrapDecimal(result.canonical);
     }
-    if (unwrapped.every((value) => value is types.DataValue_floatWrapper)) {
+    if (unwrapped.every((value) => value is skir.DataValue_floatWrapper)) {
       final operands = unwrapped
-          .cast<types.DataValue_floatWrapper>()
+          .cast<skir.DataValue_floatWrapper>()
           .map((value) => value.value)
           .toList();
       var result = operands.first;
@@ -969,7 +963,7 @@ final class PortableExpressionEvaluator {
           "Floating point arithmetic produced a nonfinite value",
         );
       }
-      return types.DataValue.wrapFloat(result);
+      return skir.DataValue.wrapFloat(result);
     }
     throw const _ExpressionFailure(
       "numeric_family_mismatch",
@@ -977,7 +971,7 @@ final class PortableExpressionEvaluator {
     );
   }
 
-  types.DataValue _substring(List<types.DataValue> values) {
+  skir.DataValue _substring(List<skir.DataValue> values) {
     final runes = _text(values.first).runes.toList(growable: false);
     final start = _integer(values[1]).toInt();
     final end = values.length == 2 ? runes.length : _integer(values[2]).toInt();
@@ -987,12 +981,12 @@ final class PortableExpressionEvaluator {
         "The substring range is invalid",
       );
     }
-    return types.DataValue.wrapStringValue(
+    return skir.DataValue.wrapStringValue(
       String.fromCharCodes(runes.sublist(start, end)),
     );
   }
 
-  types.DataValue _capture(List<types.DataValue> values) {
+  skir.DataValue _capture(List<skir.DataValue> values) {
     final input = _text(values.first);
     final matcher = _regex(values);
     final match = matcher.find(input, _consumeStep);
@@ -1016,12 +1010,12 @@ final class PortableExpressionEvaluator {
         "The regular expression capture group is absent",
       );
     }
-    return types.DataValue.wrapStringValue(captured);
+    return skir.DataValue.wrapStringValue(captured);
   }
 
-  types.DataValue _replaceRegex(List<types.DataValue> values) {
+  skir.DataValue _replaceRegex(List<skir.DataValue> values) {
     try {
-      return types.DataValue.wrapStringValue(
+      return skir.DataValue.wrapStringValue(
         _regex(values)
             .replace(_text(values[0]), _text(values[2]), _consumeStep),
       );
@@ -1033,7 +1027,7 @@ final class PortableExpressionEvaluator {
     }
   }
 
-  types.DataValue _withAlpha(List<types.DataValue> values) {
+  skir.DataValue _withAlpha(List<skir.DataValue> values) {
     final color = _integer(values[0]);
     final alpha = _integer(values[1]).toInt();
     if (alpha < 0 || alpha > 255) {
@@ -1044,10 +1038,10 @@ final class PortableExpressionEvaluator {
     }
     final replaced =
         (color & BigInt.from(0x00ffffff)) | (BigInt.from(alpha) << 24);
-    return types.DataValue.wrapInteger(replaced.toString());
+    return skir.DataValue.wrapInteger(replaced.toString());
   }
 
-  PortableRegexMatcher _regex(List<types.DataValue> values) {
+  PortableRegexMatcher _regex(List<skir.DataValue> values) {
     final input = _text(values.first);
     final pattern = _text(values[1]);
     if (input.length > 16384) {
@@ -1078,7 +1072,7 @@ final class PortableExpressionEvaluator {
     }
   }
 
-  _Evaluation _unique(types.DataValue value) {
+  _Evaluation _unique(skir.DataValue value) {
     final keys = <String>{};
     var unfinished = false;
     for (final item in _collectionValues(value)) {
@@ -1087,36 +1081,36 @@ final class PortableExpressionEvaluator {
         continue;
       }
       if (!keys.add(_canonical(item))) {
-        return _Available(types.DataValue.wrapBoolean(false));
+        return _Available(skir.DataValue.wrapBoolean(false));
       }
     }
     return unfinished
         ? const _Unavailable()
-        : _Available(types.DataValue.wrapBoolean(true));
+        : _Available(skir.DataValue.wrapBoolean(true));
   }
 }
 
 final class _CollectionEntry {
   const _CollectionEntry(this.id, this.value);
 
-  final types.ItemId id;
-  final types.DataValue value;
+  final skir.ItemId id;
+  final skir.DataValue value;
 }
 
-List<_CollectionEntry> _collectionEntries(types.DataValue value) =>
+List<_CollectionEntry> _collectionEntries(skir.DataValue value) =>
     switch (_unwrap(value)) {
-      types.DataValue_listValueWrapper(:final value) ||
-      types.DataValue_setValueWrapper(:final value) => [
+      skir.DataValue_listValueWrapper(:final value) ||
+      skir.DataValue_setValueWrapper(:final value) => [
         for (final item in value.items) _CollectionEntry(item.id, item.value),
       ],
-      types.DataValue_mapValueWrapper(:final value) => [
+      skir.DataValue_mapValueWrapper(:final value) => [
         for (final row in value.rows)
           _CollectionEntry(
             row.id,
-            types.DataValue.createRecord(
+            skir.DataValue.createRecord(
               fields: [
-                types.FieldValue(name: "key", value: row.key),
-                types.FieldValue(name: "value", value: row.value),
+                skir.FieldValue(name: "key", value: row.key),
+                skir.FieldValue(name: "value", value: row.value),
               ],
             ),
           ),
@@ -1127,29 +1121,28 @@ List<_CollectionEntry> _collectionEntries(types.DataValue value) =>
       ),
     };
 
-types.DataValue _reorderCollection(
-  types.DataValue value,
+skir.DataValue _reorderCollection(
+  skir.DataValue value,
   List<_CollectionEntry> entries,
 ) => switch (value) {
-  types.DataValue_namedWrapper(value: final named) =>
-    types.DataValue.createNamed(
-      actualType: named.actualType,
-      payload: _reorderCollection(named.payload, entries),
-    ),
-  types.DataValue_listValueWrapper(value: final list) =>
-    types.DataValue.createListValue(items: _orderedItems(list.items, entries)),
-  types.DataValue_setValueWrapper(value: final set) =>
-    types.DataValue.createSetValue(items: _orderedItems(set.items, entries)),
-  types.DataValue_mapValueWrapper(value: final map) =>
-    types.DataValue.createMapValue(rows: _orderedRows(map.rows, entries)),
+  skir.DataValue_namedWrapper(value: final named) => skir.DataValue.createNamed(
+    actualType: named.actualType,
+    payload: _reorderCollection(named.payload, entries),
+  ),
+  skir.DataValue_listValueWrapper(value: final list) =>
+    skir.DataValue.createListValue(items: _orderedItems(list.items, entries)),
+  skir.DataValue_setValueWrapper(value: final set) =>
+    skir.DataValue.createSetValue(items: _orderedItems(set.items, entries)),
+  skir.DataValue_mapValueWrapper(value: final map) =>
+    skir.DataValue.createMapValue(rows: _orderedRows(map.rows, entries)),
   _ => throw const _ExpressionFailure(
     "expected_collection",
     "The expression value is not a collection",
   ),
 };
 
-List<types.ListItem> _orderedItems(
-  Iterable<types.ListItem> source,
+List<skir.ListItem> _orderedItems(
+  Iterable<skir.ListItem> source,
   List<_CollectionEntry> entries,
 ) {
   final byId = {for (final item in source) item.id: item};
@@ -1163,8 +1156,8 @@ List<types.ListItem> _orderedItems(
   ];
 }
 
-List<types.MapRow> _orderedRows(
-  Iterable<types.MapRow> source,
+List<skir.MapRow> _orderedRows(
+  Iterable<skir.MapRow> source,
   List<_CollectionEntry> entries,
 ) {
   final byId = {for (final row in source) row.id: row};
@@ -1178,21 +1171,21 @@ List<types.MapRow> _orderedRows(
   ];
 }
 
-types.ValueLocation _entryLocation(types.ValueLocation base, types.ItemId id) =>
+skir.ValueLocation _entryLocation(skir.ValueLocation base, skir.ItemId id) =>
     _appendLocation(
       base,
-      types.ValuePath(segments: [types.PathSegment.createItem(id: id)]),
+      skir.ValuePath(segments: [skir.PathSegment.createItem(id: id)]),
     );
 
-types.ValueLocation _appendLocation(
-  types.ValueLocation base,
-  types.ValuePath suffix,
-) => types.ValueLocation(
+skir.ValueLocation _appendLocation(
+  skir.ValueLocation base,
+  skir.ValuePath suffix,
+) => skir.ValueLocation(
   resource: base.resource,
-  path: types.ValuePath(segments: [...base.path.segments, ...suffix.segments]),
+  path: skir.ValuePath(segments: [...base.path.segments, ...suffix.segments]),
 );
 
-int _nonnegativeCount(types.DataValue value) {
+int _nonnegativeCount(skir.DataValue value) {
   final count = _integer(value);
   if (count.isNegative) {
     throw const _ExpressionFailure(
@@ -1204,7 +1197,7 @@ int _nonnegativeCount(types.DataValue value) {
 }
 
 List<_CollectionEntry> _distinctEntriesByResult(
-  List<(_CollectionEntry, types.DataValue)> results,
+  List<(_CollectionEntry, skir.DataValue)> results,
 ) {
   final seen = <String>{};
   return [
@@ -1214,7 +1207,7 @@ List<_CollectionEntry> _distinctEntriesByResult(
 }
 
 List<_CollectionEntry> _sortEntriesByResult(
-  List<(_CollectionEntry, types.DataValue)> results, {
+  List<(_CollectionEntry, skir.DataValue)> results, {
   required bool descending,
 }) {
   final sorted = [...results]
@@ -1225,8 +1218,8 @@ List<_CollectionEntry> _sortEntriesByResult(
   return sorted.map((result) => result.$1).toList();
 }
 
-types.DataValue _groupByKey(List<(_CollectionEntry, types.DataValue)> results) {
-  final groups = <String, (types.DataValue, List<_CollectionEntry>)>{};
+skir.DataValue _groupByKey(List<(_CollectionEntry, skir.DataValue)> results) {
+  final groups = <String, (skir.DataValue, List<_CollectionEntry>)>{};
   for (final result in results) {
     final key = _canonical(result.$2);
     final group = groups[key];
@@ -1236,16 +1229,16 @@ types.DataValue _groupByKey(List<(_CollectionEntry, types.DataValue)> results) {
       group.$2.add(result.$1);
     }
   }
-  return types.DataValue.createMapValue(
+  return skir.DataValue.createMapValue(
     rows: [
       for (final group in groups.values)
-        types.MapRow(
+        skir.MapRow(
           id: group.$2.first.id,
           key: group.$1,
-          value: types.DataValue.createListValue(
+          value: skir.DataValue.createListValue(
             items: [
               for (final entry in group.$2)
-                types.ListItem(id: entry.id, value: entry.value),
+                skir.ListItem(id: entry.id, value: entry.value),
             ],
           ),
         ),
@@ -1253,14 +1246,14 @@ types.DataValue _groupByKey(List<(_CollectionEntry, types.DataValue)> results) {
   );
 }
 
-types.DataValue _flatMap(
-  List<(_CollectionEntry, types.DataValue)> results,
-) => types.DataValue.createListValue(
+skir.DataValue _flatMap(
+  List<(_CollectionEntry, skir.DataValue)> results,
+) => skir.DataValue.createListValue(
   items: [
     for (final result in results)
       for (final inner in _collectionEntries(result.$2))
-        types.ListItem(
-          id: types.ItemId(
+        skir.ListItem(
+          id: skir.ItemId(
             value:
                 "${result.$1.id.value.length}:${result.$1.id.value}${inner.id.value.length}:${inner.id.value}",
           ),
@@ -1269,33 +1262,33 @@ types.DataValue _flatMap(
   ],
 );
 
-int _comparePortable(types.DataValue left, types.DataValue right) {
+int _comparePortable(skir.DataValue left, skir.DataValue right) {
   final first = _unwrap(left);
   final second = _unwrap(right);
-  if (first is types.DataValue_integerWrapper ||
-      first is types.DataValue_floatWrapper ||
-      first is types.DataValue_decimalWrapper) {
+  if (first is skir.DataValue_integerWrapper ||
+      first is skir.DataValue_floatWrapper ||
+      first is skir.DataValue_decimalWrapper) {
     return _compareNumber(first, second);
   }
   return switch ((first, second)) {
     (
-      types.DataValue_stringValueWrapper(value: final left),
-      types.DataValue_stringValueWrapper(value: final right),
+      skir.DataValue_stringValueWrapper(value: final left),
+      skir.DataValue_stringValueWrapper(value: final right),
     ) =>
       _compareCodePoints(left, right),
     (
-      types.DataValue_booleanWrapper(value: final left),
-      types.DataValue_booleanWrapper(value: final right),
+      skir.DataValue_booleanWrapper(value: final left),
+      skir.DataValue_booleanWrapper(value: final right),
     ) =>
       left == right ? 0 : (left ? 1 : -1),
     (
-      types.DataValue_timestampWrapper(value: final left),
-      types.DataValue_timestampWrapper(value: final right),
+      skir.DataValue_timestampWrapper(value: final left),
+      skir.DataValue_timestampWrapper(value: final right),
     ) =>
       left.compareTo(right),
     (
-      types.DataValue_durationWrapper(value: final left),
-      types.DataValue_durationWrapper(value: final right),
+      skir.DataValue_durationWrapper(value: final left),
+      skir.DataValue_durationWrapper(value: final right),
     ) =>
       left.value.milliseconds.compareTo(right.value.milliseconds),
     _ => throw const _ExpressionFailure(
@@ -1399,16 +1392,16 @@ void _validateOperationArity(String id, int count) {
 
 enum _Arithmetic { add, subtract, multiply, divide, remainder, negate }
 
-types.DataValue _bool(bool value) => types.DataValue.wrapBoolean(value);
+skir.DataValue _bool(bool value) => skir.DataValue.wrapBoolean(value);
 
-types.DataValue _string(String value) => types.DataValue.wrapStringValue(value);
+skir.DataValue _string(String value) => skir.DataValue.wrapStringValue(value);
 
-types.DataValue _integerValue(int value) =>
-    types.DataValue.wrapInteger(value.toString());
+skir.DataValue _integerValue(int value) =>
+    skir.DataValue.wrapInteger(value.toString());
 
-types.DataValue _recordField(List<types.DataValue> values) {
+skir.DataValue _recordField(List<skir.DataValue> values) {
   final record = switch (_unwrap(values[0])) {
-    types.DataValue_recordWrapper(:final value) => value,
+    skir.DataValue_recordWrapper(:final value) => value,
     _ => null,
   };
   if (record == null) {
@@ -1428,26 +1421,24 @@ types.DataValue _recordField(List<types.DataValue> values) {
   return field.value;
 }
 
-int _compareNumbers(List<types.DataValue> values) =>
+int _compareNumbers(List<skir.DataValue> values) =>
     _compareNumber(values[0], values[1]);
 
-int _compareNumber(types.DataValue left, types.DataValue right) =>
+int _compareNumber(skir.DataValue left, skir.DataValue right) =>
     _number(left).compareTo(_number(right));
 
-_Decimal _number(types.DataValue value) => switch (_unwrap(value)) {
-  types.DataValue_integerWrapper(:final value) => _Decimal.parse(value),
-  types.DataValue_decimalWrapper(:final value) => _Decimal.parse(value),
-  types.DataValue_floatWrapper(:final value) => _Decimal.parse(
-    value.toString(),
-  ),
+_Decimal _number(skir.DataValue value) => switch (_unwrap(value)) {
+  skir.DataValue_integerWrapper(:final value) => _Decimal.parse(value),
+  skir.DataValue_decimalWrapper(:final value) => _Decimal.parse(value),
+  skir.DataValue_floatWrapper(:final value) => _Decimal.parse(value.toString()),
   _ => throw const _ExpressionFailure(
     "expected_number",
     "The expression value is not numeric",
   ),
 };
 
-types.DataValue _split(
-  List<types.DataValue> values,
+skir.DataValue _split(
+  List<skir.DataValue> values,
   void Function(int) consumeItems,
 ) {
   final source = _text(values[0]);
@@ -1456,11 +1447,11 @@ types.DataValue _split(
   final parts = separator.isEmpty
       ? [for (final codePoint in source.runes) String.fromCharCode(codePoint)]
       : source.split(separator);
-  return types.DataValue.createListValue(
+  return skir.DataValue.createListValue(
     items: [
       for (var index = 0; index < parts.length; index++)
-        types.ListItem(
-          id: types.ItemId(value: "split.$index"),
+        skir.ListItem(
+          id: skir.ItemId(value: "split.$index"),
           value: _string(parts[index]),
         ),
     ],
@@ -1518,7 +1509,7 @@ String _boundedJoin(
 }
 
 String _boundedInterpolate(
-  List<types.DataValue> values,
+  List<skir.DataValue> values,
   void Function() consumeStep,
 ) {
   final rendered = values
@@ -1568,15 +1559,15 @@ void _chargeCodePointRange(
   }
 }
 
-List<types.DataValue> _collectionValues(types.DataValue value) =>
+List<skir.DataValue> _collectionValues(skir.DataValue value) =>
     switch (_unwrap(value)) {
-      types.DataValue_listValueWrapper(:final value) => [
+      skir.DataValue_listValueWrapper(:final value) => [
         for (final item in value.items) item.value,
       ],
-      types.DataValue_setValueWrapper(:final value) => [
+      skir.DataValue_setValueWrapper(:final value) => [
         for (final item in value.items) item.value,
       ],
-      types.DataValue_mapValueWrapper(:final value) => [
+      skir.DataValue_mapValueWrapper(:final value) => [
         for (final row in value.rows) row.value,
       ],
       _ => throw const _ExpressionFailure(
@@ -1585,28 +1576,28 @@ List<types.DataValue> _collectionValues(types.DataValue value) =>
       ),
     };
 
-types.DataValue _collectionAccess(List<types.DataValue> values) {
+skir.DataValue _collectionAccess(List<skir.DataValue> values) {
   final collection = _unwrap(values[0]);
   final key = _unwrap(values[1]);
   final result = switch ((collection, key)) {
     (
-      types.DataValue_listValueWrapper(value: final list),
-      types.DataValue_integerWrapper(value: final index),
+      skir.DataValue_listValueWrapper(value: final list),
+      skir.DataValue_integerWrapper(value: final index),
     ) =>
       list.items.elementAtOrNull(int.parse(index))?.value,
-    (types.DataValue_mapValueWrapper(value: final map), _) =>
+    (skir.DataValue_mapValueWrapper(value: final map), _) =>
       map.rows
           .where((row) => _canonical(row.key) == _canonical(key))
           .firstOrNull
           ?.value,
     (
-      types.DataValue_recordWrapper(value: final record),
-      types.DataValue_stringValueWrapper(value: final field),
+      skir.DataValue_recordWrapper(value: final record),
+      skir.DataValue_stringValueWrapper(value: final field),
     ) =>
       record.fields.where((entry) => entry.name == field).firstOrNull?.value,
     (
-      types.DataValue_stringValueWrapper(value: final text),
-      types.DataValue_integerWrapper(value: final index),
+      skir.DataValue_stringValueWrapper(value: final text),
+      skir.DataValue_integerWrapper(value: final index),
     ) =>
       text.runes.elementAtOrNull(int.parse(index)) == null
           ? null
@@ -1624,22 +1615,22 @@ types.DataValue _collectionAccess(List<types.DataValue> values) {
   return result;
 }
 
-bool _collectionContains(List<types.DataValue> values) {
+bool _collectionContains(List<skir.DataValue> values) {
   final collection = _unwrap(values[0]);
   final expected = _unwrap(values[1]);
   final key = _canonical(expected);
   return switch (collection) {
-    types.DataValue_listValueWrapper(:final value) => value.items.any(
+    skir.DataValue_listValueWrapper(:final value) => value.items.any(
       (item) => _canonical(item.value) == key,
     ),
-    types.DataValue_setValueWrapper(:final value) => value.items.any(
+    skir.DataValue_setValueWrapper(:final value) => value.items.any(
       (item) => _canonical(item.value) == key,
     ),
-    types.DataValue_mapValueWrapper(:final value) => value.rows.any(
+    skir.DataValue_mapValueWrapper(:final value) => value.rows.any(
       (row) => _canonical(row.key) == key,
     ),
-    types.DataValue_recordWrapper(:final value)
-        when expected is types.DataValue_stringValueWrapper =>
+    skir.DataValue_recordWrapper(:final value)
+        when expected is skir.DataValue_stringValueWrapper =>
       value.fields.any((field) => field.name == expected.value),
     _ => throw const _ExpressionFailure(
       "expected_collection",
@@ -1648,13 +1639,13 @@ bool _collectionContains(List<types.DataValue> values) {
   };
 }
 
-int _size(types.DataValue value) => switch (_unwrap(value)) {
-  types.DataValue_stringValueWrapper(:final value) => value.runes.length,
-  types.DataValue_bytesWrapper(:final value) => value.length,
-  types.DataValue_listValueWrapper(:final value) => value.items.length,
-  types.DataValue_setValueWrapper(:final value) => value.items.length,
-  types.DataValue_mapValueWrapper(:final value) => value.rows.length,
-  types.DataValue_recordWrapper(:final value) => value.fields.length,
+int _size(skir.DataValue value) => switch (_unwrap(value)) {
+  skir.DataValue_stringValueWrapper(:final value) => value.runes.length,
+  skir.DataValue_bytesWrapper(:final value) => value.length,
+  skir.DataValue_listValueWrapper(:final value) => value.items.length,
+  skir.DataValue_setValueWrapper(:final value) => value.items.length,
+  skir.DataValue_mapValueWrapper(:final value) => value.rows.length,
+  skir.DataValue_recordWrapper(:final value) => value.fields.length,
   _ => throw const _ExpressionFailure(
     "expected_sized_value",
     "The expression value has no size",
@@ -1664,31 +1655,31 @@ int _size(types.DataValue value) => switch (_unwrap(value)) {
 /// Formats a value for presentation labels and expression interpolation.
 ///
 /// Named values use their payload, and empty values have no display text.
-String portableExpressionDisplayText(types.DataValue value) {
+String portableExpressionDisplayText(skir.DataValue value) {
   final unwrapped = _unwrap(value);
-  if (unwrapped == types.DataValue.unfilled ||
-      unwrapped == types.DataValue.null_ ||
-      unwrapped == types.DataValue.unit) {
+  if (unwrapped == skir.DataValue.unfilled ||
+      unwrapped == skir.DataValue.null_ ||
+      unwrapped == skir.DataValue.unit) {
     return "";
   }
   return switch (unwrapped) {
-    types.DataValue_booleanWrapper(:final value) => value.toString(),
-    types.DataValue_integerWrapper(:final value) => value,
-    types.DataValue_floatWrapper(:final value) => value.toString(),
-    types.DataValue_decimalWrapper(:final value) => value,
-    types.DataValue_stringValueWrapper(:final value) => value,
-    types.DataValue_bytesWrapper(:final value) => "${value.length} bytes",
-    types.DataValue_timestampWrapper(:final value) => value.toIso8601String(),
-    types.DataValue_durationWrapper(:final value) => value.toString(),
-    types.DataValue_enumCaseWrapper(:final value) => value,
-    types.DataValue_listValueWrapper(:final value) =>
+    skir.DataValue_booleanWrapper(:final value) => value.toString(),
+    skir.DataValue_integerWrapper(:final value) => value,
+    skir.DataValue_floatWrapper(:final value) => value.toString(),
+    skir.DataValue_decimalWrapper(:final value) => value,
+    skir.DataValue_stringValueWrapper(:final value) => value,
+    skir.DataValue_bytesWrapper(:final value) => "${value.length} bytes",
+    skir.DataValue_timestampWrapper(:final value) => value.toIso8601String(),
+    skir.DataValue_durationWrapper(:final value) => value.toString(),
+    skir.DataValue_enumCaseWrapper(:final value) => value,
+    skir.DataValue_listValueWrapper(:final value) =>
       "${value.items.length} items",
-    types.DataValue_setValueWrapper(:final value) =>
+    skir.DataValue_setValueWrapper(:final value) =>
       "${value.items.length} items",
-    types.DataValue_mapValueWrapper(:final value) =>
+    skir.DataValue_mapValueWrapper(:final value) =>
       "${value.rows.length} entries",
-    types.DataValue_recordWrapper() => "record",
-    types.DataValue_linkWrapper(:final value) => value.target.resource.value,
+    skir.DataValue_recordWrapper() => "record",
+    skir.DataValue_linkWrapper(:final value) => value.target.resource.value,
     _ => "",
   };
 }
@@ -1735,14 +1726,14 @@ bool _isPortableWhitespace(int value) =>
 bool _betweenInt(int value, int minimum, int maximum) =>
     value >= minimum && value <= maximum;
 
-types.DataValue _multipleOf(List<types.DataValue> values) {
+skir.DataValue _multipleOf(List<skir.DataValue> values) {
   final divisor = _number(values[1]);
   if (divisor.compareTo(_Decimal.zero) == 0) return _bool(false);
   return _bool(_number(values[0]).remainder(divisor).isZero);
 }
 
-DateTime _timestamp(types.DataValue value) => switch (_unwrap(value)) {
-  types.DataValue_timestampWrapper(:final value) => value,
+DateTime _timestamp(skir.DataValue value) => switch (_unwrap(value)) {
+  skir.DataValue_timestampWrapper(:final value) => value,
   _ => throw const _ExpressionFailure(
     "expected_timestamp",
     "The expression value is not a timestamp",
@@ -1756,7 +1747,7 @@ sealed class _Evaluation {
 final class _Available extends _Evaluation {
   const _Available(this.value);
 
-  final types.DataValue value;
+  final skir.DataValue value;
 }
 
 final class _Unavailable extends _Evaluation {
@@ -1770,10 +1761,10 @@ final class _ExpressionFailure implements Exception {
   final String message;
 }
 
-types.DataValue _unwrap(types.DataValue value) {
+skir.DataValue _unwrap(skir.DataValue value) {
   var current = value;
   var depth = 0;
-  while (current is types.DataValue_namedWrapper) {
+  while (current is skir.DataValue_namedWrapper) {
     depth++;
     if (depth > _maximumAuthoredValueDepth) {
       throw const _ExpressionFailure(
@@ -1786,24 +1777,24 @@ types.DataValue _unwrap(types.DataValue value) {
   return current;
 }
 
-bool _booleanValue(types.DataValue value) => switch (_unwrap(value)) {
-  types.DataValue_booleanWrapper(:final value) => value,
+bool _booleanValue(skir.DataValue value) => switch (_unwrap(value)) {
+  skir.DataValue_booleanWrapper(:final value) => value,
   _ => throw const _ExpressionFailure(
     "expected_boolean",
     "The expression value is not Boolean",
   ),
 };
 
-BigInt _integer(types.DataValue value) => switch (_unwrap(value)) {
-  types.DataValue_integerWrapper(:final value) => BigInt.parse(value),
+BigInt _integer(skir.DataValue value) => switch (_unwrap(value)) {
+  skir.DataValue_integerWrapper(:final value) => BigInt.parse(value),
   _ => throw const _ExpressionFailure(
     "expected_integer",
     "The expression value is not an integer",
   ),
 };
 
-String _text(types.DataValue value) => switch (_unwrap(value)) {
-  types.DataValue_stringValueWrapper(:final value) => value,
+String _text(skir.DataValue value) => switch (_unwrap(value)) {
+  skir.DataValue_stringValueWrapper(:final value) => value,
   _ => throw const _ExpressionFailure(
     "expected_text",
     "The expression value is not text",
@@ -1827,33 +1818,33 @@ int _lineCount(String value) {
   return lines;
 }
 
-String _canonical(types.DataValue value, [int depth = 0]) {
+String _canonical(skir.DataValue value, [int depth = 0]) {
   if (depth > _maximumAuthoredValueDepth) {
     throw const _ExpressionFailure(
       "value_depth_limit",
       "The authored value exceeded its depth limit",
     );
   }
-  if (value == types.DataValue.unfilled) return "unfilled";
-  if (value == types.DataValue.null_) return "null";
-  if (value == types.DataValue.unit) return "unit";
+  if (value == skir.DataValue.unfilled) return "unfilled";
+  if (value == skir.DataValue.null_) return "null";
+  if (value == skir.DataValue.unit) return "unit";
   return switch (value) {
-    types.DataValue_booleanWrapper(:final value) => "boolean:$value",
-    types.DataValue_integerWrapper(:final value) =>
+    skir.DataValue_booleanWrapper(:final value) => "boolean:$value",
+    skir.DataValue_integerWrapper(:final value) =>
       "integer:${BigInt.parse(value)}",
-    types.DataValue_floatWrapper(:final value) => "float:${_floatBits(value)}",
-    types.DataValue_decimalWrapper(:final value) =>
+    skir.DataValue_floatWrapper(:final value) => "float:${_floatBits(value)}",
+    skir.DataValue_decimalWrapper(:final value) =>
       "decimal:${_Decimal.parse(value).canonical}",
-    types.DataValue_stringValueWrapper(:final value) =>
+    skir.DataValue_stringValueWrapper(:final value) =>
       "text:${value.length}:$value",
-    types.DataValue_bytesWrapper(:final value) => "bytes:${value.toBase16()}",
-    types.DataValue_timestampWrapper(:final value) =>
+    skir.DataValue_bytesWrapper(:final value) => "bytes:${value.toBase16()}",
+    skir.DataValue_timestampWrapper(:final value) =>
       "timestamp:${value.toUtc().microsecondsSinceEpoch}",
-    types.DataValue_durationWrapper(:final value) =>
+    skir.DataValue_durationWrapper(:final value) =>
       "duration:${value.value.milliseconds}",
-    types.DataValue_enumCaseWrapper(:final value) =>
+    skir.DataValue_enumCaseWrapper(:final value) =>
       "enum:${value.length}:$value",
-    types.DataValue_recordWrapper(:final value) => _framed(
+    skir.DataValue_recordWrapper(:final value) => _framed(
       "record",
       value.fields
           .map(
@@ -1865,20 +1856,20 @@ String _canonical(types.DataValue value, [int depth = 0]) {
           .toList()
         ..sort(),
     ),
-    types.DataValue_namedWrapper(:final value) => _framed("named", [
+    skir.DataValue_namedWrapper(:final value) => _framed("named", [
       _namedTypeKey(value.actualType, depth + 1),
       _canonical(value.payload, depth + 1),
     ]),
-    types.DataValue_listValueWrapper(:final value) => _framed(
+    skir.DataValue_listValueWrapper(:final value) => _framed(
       "list",
       value.items.map((item) => _canonical(item.value, depth + 1)),
     ),
-    types.DataValue_setValueWrapper(:final value) => _framed(
+    skir.DataValue_setValueWrapper(:final value) => _framed(
       "set",
       value.items.map((item) => _canonical(item.value, depth + 1)).toList()
         ..sort(),
     ),
-    types.DataValue_mapValueWrapper(:final value) => _framed(
+    skir.DataValue_mapValueWrapper(:final value) => _framed(
       "map",
       value.rows
           .map(
@@ -1890,7 +1881,7 @@ String _canonical(types.DataValue value, [int depth = 0]) {
           .toList()
         ..sort(),
     ),
-    types.DataValue_linkWrapper(:final value) => _framed("link", [
+    skir.DataValue_linkWrapper(:final value) => _framed("link", [
       value.endpoint.value,
       value.target.resource.value,
       _pathKey(value.target.opposite),
@@ -1899,7 +1890,7 @@ String _canonical(types.DataValue value, [int depth = 0]) {
   };
 }
 
-String canonicalAuthoredValue(types.DataValue value) => _canonical(value);
+String canonicalAuthoredValue(skir.DataValue value) => _canonical(value);
 
 String _framed(String kind, Iterable<String> parts) {
   final values = parts.toList(growable: false);
@@ -1911,7 +1902,7 @@ String _floatBits(double value) {
   return data.getUint64(0).toRadixString(16).padLeft(16, "0");
 }
 
-String _namedTypeKey(types.NamedTypeUse value, [int depth = 0]) {
+String _namedTypeKey(skir.NamedTypeUse value, [int depth = 0]) {
   _guardAuthoredValueDepth(depth);
   return _framed("named_type", [
     _definitionKey(value.definition),
@@ -1922,30 +1913,30 @@ String _namedTypeKey(types.NamedTypeUse value, [int depth = 0]) {
   ]);
 }
 
-String _definitionKey(types.TypeDefinitionId value) => _framed("definition", [
+String _definitionKey(skir.TypeDefinitionId value) => _framed("definition", [
   _typeIdKey(value.typeId),
   value.revision.toString(),
 ]);
 
-String _typeIdKey(types.TypeId value) => switch (value) {
-  types.TypeId_declaredWrapper(:final value) => _framed("declared", [
+String _typeIdKey(skir.TypeId value) => switch (value) {
+  skir.TypeId_declaredWrapper(:final value) => _framed("declared", [
     value.value,
   ]),
-  types.TypeId_qualifiedWrapper(:final value) => _framed("qualified", [
+  skir.TypeId_qualifiedWrapper(:final value) => _framed("qualified", [
     value.namespace,
     value.name,
   ]),
   _ => "unknown_type_id",
 };
 
-String _typeUseKey(types.TypeUse value, [int depth = 0]) {
+String _typeUseKey(skir.TypeUse value, [int depth = 0]) {
   _guardAuthoredValueDepth(depth);
   return switch (value) {
-    types.TypeUse_namedWrapper(:final value) => _namedTypeKey(value, depth + 1),
-    types.TypeUse_nullableWrapper(:final value) => _framed("nullable", [
+    skir.TypeUse_namedWrapper(:final value) => _namedTypeKey(value, depth + 1),
+    skir.TypeUse_nullableWrapper(:final value) => _framed("nullable", [
       _typeUseKey(value.value, depth + 1),
     ]),
-    types.TypeUse_scalarWrapper(:final value) => _framed("scalar", [
+    skir.TypeUse_scalarWrapper(:final value) => _framed("scalar", [
       _scalarKindKey(value),
     ]),
     _ => "unknown_type_use",
@@ -1961,54 +1952,54 @@ void _guardAuthoredValueDepth(int depth) {
   }
 }
 
-String _scalarKindKey(types.ScalarKind value) => switch (value) {
-  types.ScalarKind_integerWrapper(:final value) =>
+String _scalarKindKey(skir.ScalarKind value) => switch (value) {
+  skir.ScalarKind_integerWrapper(:final value) =>
     "integer:${value.width.kind.name}",
-  types.ScalarKind_floatWrapper(:final value) =>
+  skir.ScalarKind_floatWrapper(:final value) =>
     "float:${value.width.kind.name}",
   _ => value.kind.name,
 };
 
-String _pathKey(types.ValuePath? value) {
+String _pathKey(skir.ValuePath? value) {
   if (value == null) return "absent";
   return _framed("path", value.segments.map(_pathSegmentKey));
 }
 
-String _pathSegmentKey(types.PathSegment value) {
-  if (value == types.PathSegment.mapKey) return "map_key";
-  if (value == types.PathSegment.mapValue) return "map_value";
+String _pathSegmentKey(skir.PathSegment value) {
+  if (value == skir.PathSegment.mapKey) return "map_key";
+  if (value == skir.PathSegment.mapValue) return "map_value";
   return switch (value) {
-    types.PathSegment_fieldWrapper(:final value) => _framed("field", [
+    skir.PathSegment_fieldWrapper(:final value) => _framed("field", [
       value.name,
     ]),
-    types.PathSegment_itemWrapper(:final value) => _framed("item", [
+    skir.PathSegment_itemWrapper(:final value) => _framed("item", [
       value.id.value,
     ]),
     _ => "unknown_path_segment",
   };
 }
 
-bool _containsUnfilled(types.DataValue value, [int depth = 0]) {
+bool _containsUnfilled(skir.DataValue value, [int depth = 0]) {
   if (depth > _maximumAuthoredValueDepth) {
     throw const _ExpressionFailure(
       "value_depth_limit",
       "The authored value exceeded its depth limit",
     );
   }
-  if (value == types.DataValue.unfilled) return true;
+  if (value == skir.DataValue.unfilled) return true;
   return switch (value) {
-    types.DataValue_namedWrapper(:final value) => _containsUnfilled(
+    skir.DataValue_namedWrapper(:final value) => _containsUnfilled(
       value.payload,
       depth + 1,
     ),
-    types.DataValue_recordWrapper(:final value) => value.fields.any(
+    skir.DataValue_recordWrapper(:final value) => value.fields.any(
       (field) => _containsUnfilled(field.value, depth + 1),
     ),
-    types.DataValue_listValueWrapper(:final value) ||
-    types.DataValue_setValueWrapper(
+    skir.DataValue_listValueWrapper(:final value) ||
+    skir.DataValue_setValueWrapper(
       :final value,
     ) => value.items.any((item) => _containsUnfilled(item.value, depth + 1)),
-    types.DataValue_mapValueWrapper(:final value) => value.rows.any(
+    skir.DataValue_mapValueWrapper(:final value) => value.rows.any(
       (row) =>
           _containsUnfilled(row.key, depth + 1) ||
           _containsUnfilled(row.value, depth + 1),
@@ -2169,8 +2160,8 @@ BigInt _tenPow(int exponent) {
   return value;
 }
 
-types.DataValue _linkTarget(types.DataValue value) {
-  if (_unwrap(value) case types.DataValue_linkWrapper(:final value)) {
+skir.DataValue _linkTarget(skir.DataValue value) {
+  if (_unwrap(value) case skir.DataValue_linkWrapper(:final value)) {
     return _string(value.target.resource.value);
   }
   throw const _ExpressionFailure(

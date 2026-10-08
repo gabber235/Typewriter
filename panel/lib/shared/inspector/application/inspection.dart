@@ -1,4 +1,3 @@
-import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "inspection.g.dart";

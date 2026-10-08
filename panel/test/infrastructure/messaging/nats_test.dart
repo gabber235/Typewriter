@@ -1,10 +1,5 @@
-import "dart:async";
-import "dart:typed_data";
-
 import "package:flutter_test/flutter_test.dart";
-import "package:http/http.dart" as http;
 import "package:http/testing.dart";
-import "package:riverpod/riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -215,11 +210,10 @@ final class _FakeTelemetry implements PanelTelemetry {
   });
 
   @override
-  Future<http.Response> traceHttp({
+  Future<Response> traceHttp({
     required String method,
     required Uri uri,
-    required Future<http.Response> Function(Map<String, String> headers)
-    operation,
+    required Future<Response> Function(Map<String, String> headers) operation,
   }) => operation({
     "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
     "tracestate": "vendor=value",
@@ -229,7 +223,7 @@ final class _FakeTelemetry implements PanelTelemetry {
 void main() {
   group("sentinelCredentials", () {
     test("forwards trace headers and decodes a successful response", () async {
-      late http.Request capturedRequest;
+      late Request capturedRequest;
       final responseBytes = skir.GetSentinelCredentialsResponse.serializer
           .toBytes(
             skir.GetSentinelCredentialsResponse.createSuccess(
@@ -239,7 +233,7 @@ void main() {
           );
       final client = MockClient((request) async {
         capturedRequest = request;
-        return http.Response.bytes(responseBytes, 200);
+        return Response.bytes(responseBytes, 200);
       });
       final container = ProviderContainer(
         retry: (retryCount, error) => null,
@@ -263,7 +257,7 @@ void main() {
         retry: (retryCount, error) => null,
         overrides: [
           panelHttpClientProvider.overrideWithValue(
-            MockClient((_) async => http.Response("unavailable", 503)),
+            MockClient((_) async => Response("unavailable", 503)),
           ),
           panelTelemetryProvider.overrideWithValue(AsyncData(_FakeTelemetry())),
         ],
@@ -290,7 +284,7 @@ void main() {
         retry: (retryCount, error) => null,
         overrides: [
           panelHttpClientProvider.overrideWithValue(
-            MockClient((_) => Future<http.Response>.error(error)),
+            MockClient((_) => Future<Response>.error(error)),
           ),
           panelTelemetryProvider.overrideWithValue(AsyncData(_FakeTelemetry())),
         ],
@@ -892,7 +886,7 @@ void main() {
             ),
           ),
           organizationIdProvider.overrideWithValue(
-            recordId("organization:test"),
+            skir.recordId("organization:test"),
           ),
           natsClientFactoryProvider.overrideWithValue((_) {
             final client = createdClients.isEmpty ? firstClient : secondClient;

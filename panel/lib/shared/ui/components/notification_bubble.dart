@@ -1,6 +1,4 @@
-import "package:flutter/material.dart";
-import "package:flutter/rendering.dart";
-import "package:flutter_animate/flutter_animate.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Corners of the child to which a notification bubble is attached.
 enum NotificationBubbleAnchor { topLeft, topRight, bottomLeft, bottomRight }

@@ -1,9 +1,4 @@
-import "package:flutter/material.dart";
-import "package:freezed_annotation/freezed_annotation.dart";
-import "package:typewriter_panel/shared/graph/domain/edge_side.dart";
-import "package:typewriter_panel/shared/graph/domain/graph_data.dart";
-import "package:typewriter_panel/shared/graph/domain/graph_element.dart";
-import "package:typewriter_panel/shared/graph/domain/graph_identifier.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 part "graph_edge.freezed.dart";
 

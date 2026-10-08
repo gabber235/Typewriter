@@ -1,7 +1,3 @@
-import "dart:math" as math;
-
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Provides a transient popup anchored to caller supplied content.
@@ -172,8 +168,8 @@ class _PopupPosition extends SingleChildLayoutDelegate {
   BoxConstraints getConstraintsForChild(BoxConstraints constraints) =>
       BoxConstraints.loose(
         Size(
-          math.min(maxWidth, math.max(0, constraints.maxWidth - _margin * 2)),
-          math.min(maxHeight, math.max(0, constraints.maxHeight - _margin * 2)),
+          min(maxWidth, max(0, constraints.maxWidth - _margin * 2)),
+          min(maxHeight, max(0, constraints.maxHeight - _margin * 2)),
         ),
       );
 
@@ -186,11 +182,11 @@ class _PopupPosition extends SingleChildLayoutDelegate {
     return Offset(
       position.dx.clamp(
         _margin,
-        math.max(_margin, size.width - childSize.width - _margin),
+        max(_margin, size.width - childSize.width - _margin),
       ),
       position.dy.clamp(
         _margin,
-        math.max(_margin, size.height - childSize.height - _margin),
+        max(_margin, size.height - childSize.height - _margin),
       ),
     );
   }

@@ -1,5 +1,4 @@
-import "package:flutter/rendering.dart";
-import "package:flutter/widgets.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Layers built by [OutlineDecorator].
 enum OutlineSlot { base, outer, inner }

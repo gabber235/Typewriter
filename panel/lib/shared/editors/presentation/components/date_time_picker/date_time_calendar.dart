@@ -1,5 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Selects a calendar date while retaining keyboard navigation state locally.

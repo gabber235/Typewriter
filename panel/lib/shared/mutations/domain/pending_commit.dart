@@ -1,4 +1,3 @@
-import "package:flutter/foundation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Defers request capture until its resource reservation is acquired.

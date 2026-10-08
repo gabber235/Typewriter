@@ -1,6 +1,4 @@
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -31,7 +29,7 @@ void main() {
         );
 
         final member = OrganizationMember(
-          userId: recordId("user:m1"),
+          userId: skir.recordId("user:m1"),
           name: "Current Name",
           email: "test@test.com",
           avatarUrl: "",
@@ -61,7 +59,7 @@ void main() {
               skir.UpdateOrganizationMemberRolesResponse.serializer.toBytes(
                 successfulMemberUpdate([
                   skir.OrganizationMember(
-                    userId: recordId("user:m1"),
+                    userId: skir.recordId("user:m1"),
                     name: "Historical Name",
                     email: "test@test.com",
                     avatarUrl: "",
@@ -74,7 +72,7 @@ void main() {
 
         await container
             .read(organizationMembersProvider.notifier)
-            .updateMemberRoles([recordId("user:m1")], [role]);
+            .updateMemberRoles([skir.recordId("user:m1")], [role]);
 
         final current = await readMembers(container);
         expect(current.single.name, "Current Name");

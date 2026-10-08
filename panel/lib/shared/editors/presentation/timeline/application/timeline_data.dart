@@ -1,6 +1,3 @@
-import "package:collection/collection.dart";
-import "package:flutter/material.dart";
-import "package:json_annotation/json_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "timeline_data.g.dart";

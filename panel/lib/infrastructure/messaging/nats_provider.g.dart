@@ -68,8 +68,8 @@ final panelHttpClientProvider = PanelHttpClientProvider._();
 /// Owns the HTTP client used by panel infrastructure requests.
 
 final class PanelHttpClientProvider
-    extends $FunctionalProvider<http.Client, http.Client, http.Client>
-    with $Provider<http.Client> {
+    extends $FunctionalProvider<Client, Client, Client>
+    with $Provider<Client> {
   /// Owns the HTTP client used by panel infrastructure requests.
   PanelHttpClientProvider._()
     : super(
@@ -87,24 +87,24 @@ final class PanelHttpClientProvider
 
   @$internal
   @override
-  $ProviderElement<http.Client> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<Client> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  http.Client create(Ref ref) {
+  Client create(Ref ref) {
     return panelHttpClient(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(http.Client value) {
+  Override overrideWithValue(Client value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<http.Client>(value),
+      providerOverride: $SyncValueProvider<Client>(value),
     );
   }
 }
 
-String _$panelHttpClientHash() => r'7135e3872b268ca83f0cf2cb03ecc737f66a43d1';
+String _$panelHttpClientHash() => r'e19c3ba3e7d607f78da40a62ede3db9221f54206';
 
 /// Fetches the short lived credentials required to open the user's NATS session.
 ///

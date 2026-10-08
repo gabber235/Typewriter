@@ -1,13 +1,7 @@
-import "dart:async";
-import "dart:typed_data";
-
-import "package:crypto/crypto.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:skir_client/skir_client.dart" show ByteString;
-import "package:typewriter_panel/features/organizations/features/realms/application/catalog_transfer_assembler.dart";
-import "package:typewriter_panel/infrastructure/messaging/bounded_transfer_assembler.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   test("adopts a complete transfer only after every validated chunk", () {
@@ -36,7 +30,7 @@ void main() {
             chunkCount: 2,
             encodedSize: fixture.encoded.length,
             sha256: fixture.digest,
-            payload: ByteString.copy([1]),
+            payload: skir.ByteString.copy([1]),
           ),
         ),
       ),
@@ -322,7 +316,7 @@ final class _TransferFixture {
         chunkCount: chunkCount,
         encodedSize: encoded.length,
         sha256: sha256Value ?? digest,
-        payload: ByteString.copy(payload ?? encoded.sublist(start, end)),
+        payload: skir.ByteString.copy(payload ?? encoded.sublist(start, end)),
       ),
     );
   }

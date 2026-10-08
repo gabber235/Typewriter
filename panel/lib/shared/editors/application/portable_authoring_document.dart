@@ -1,71 +1,63 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring.dart"
-    as authoring;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring_facts.dart"
-    as facts;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as catalog;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/diagnostic.dart"
-    as diagnostic;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 abstract interface class PortableAuthoringDocument {
-  types.CatalogGeneration get generation;
+  skir.CatalogGeneration get generation;
 
-  Map<types.ResourceId, types.AuthoringRecord> get resources;
+  Map<skir.ResourceId, skir.AuthoringRecord> get resources;
 
-  List<facts.LinkProjection> get links;
+  List<skir.LinkProjection> get links;
 
-  List<diagnostic.InitializationDiagnostic> get initializationFindings;
+  List<skir.InitializationDiagnostic> get initializationFindings;
 
   int get operationCount;
 
-  types.AuthoringRecord? resource(types.ResourceId id);
+  skir.AuthoringRecord? resource(skir.ResourceId id);
 
-  PortablePathResult<types.DataValue> read(types.ValueLocation location);
+  PortablePathResult<skir.DataValue> read(skir.ValueLocation location);
 
-  PortablePathResult<types.AuthoringRecord> set(
-    types.ValueLocation location,
-    types.DataValue value,
+  PortablePathResult<skir.AuthoringRecord> set(
+    skir.ValueLocation location,
+    skir.DataValue value,
   );
 
-  PortablePathResult<types.AuthoringRecord> insert(
-    types.ValueLocation location,
-    types.ItemId? after,
-    types.ListItem item,
+  PortablePathResult<skir.AuthoringRecord> insert(
+    skir.ValueLocation location,
+    skir.ItemId? after,
+    skir.ListItem item,
   );
 
-  PortablePathResult<types.AuthoringRecord> insertPrepared(
-    types.ValueLocation location,
-    types.ItemId? after,
-    types.ItemId item,
-    catalog.InitializationRequest request,
-    catalog.PreparedCreation prepared,
+  PortablePathResult<skir.AuthoringRecord> insertPrepared(
+    skir.ValueLocation location,
+    skir.ItemId? after,
+    skir.ItemId item,
+    skir.InitializationRequest request,
+    skir.PreparedCreation prepared,
   );
 
-  types.DataValue defaultValue(types.TypeUse? type);
+  skir.DataValue defaultValue(skir.TypeUse? type);
 
-  PortablePathResult<types.AuthoringRecord> remove(
-    types.ValueLocation location,
-    types.ItemId item,
+  PortablePathResult<skir.AuthoringRecord> remove(
+    skir.ValueLocation location,
+    skir.ItemId item,
   );
 
-  PortablePathResult<types.AuthoringRecord> move(
-    types.ValueLocation location,
-    types.ItemId item,
-    types.ItemId? after,
+  PortablePathResult<skir.AuthoringRecord> move(
+    skir.ValueLocation location,
+    skir.ItemId item,
+    skir.ItemId? after,
   );
 
-  PortablePathResult<types.AuthoringRecord> replaceMap(
-    types.ValueLocation location,
-    Iterable<types.MapRow> rows,
+  PortablePathResult<skir.AuthoringRecord> replaceMap(
+    skir.ValueLocation location,
+    Iterable<skir.MapRow> rows,
   );
 
-  PortablePathResult<types.AuthoringRecord> applyPreparedRecord(
-    types.ValueLocation location,
-    catalog.InitializationRequest request,
-    catalog.PreparedCreation prepared,
+  PortablePathResult<skir.AuthoringRecord> applyPreparedRecord(
+    skir.ValueLocation location,
+    skir.InitializationRequest request,
+    skir.PreparedCreation prepared,
   );
 
   bool stageExpressionEdit(
@@ -73,13 +65,13 @@ abstract interface class PortableAuthoringDocument {
     bool Function(PortableAuthoringDocument document) edit,
   );
 
-  void delete(types.ResourceId id);
+  void delete(skir.ResourceId id);
 
   void connect(
-    authoring.LinkOccurrence source,
-    types.ResourceId target, {
-    authoring.CounterpartChoice? counterpart,
+    skir.LinkOccurrence source,
+    skir.ResourceId target, {
+    skir.CounterpartChoice? counterpart,
   });
 
-  void disconnect(authoring.LinkOccurrence occurrence);
+  void disconnect(skir.LinkOccurrence occurrence);
 }

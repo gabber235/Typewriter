@@ -1,29 +1,12 @@
-import "dart:convert";
-
-import "package:crypto/crypto.dart";
-import "package:skir_client/skir_client.dart" show ByteString;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring.dart"
-    as authoring;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring_facts.dart"
-    as facts;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as catalog_wire;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/diagnostic.dart"
-    as diagnostic_wire;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/kernel/v1/duration.dart"
-    as kernel;
-import "package:typewriter_panel/shared/editors/application/checked_editor_catalog.dart";
-import "package:typewriter_panel/shared/editors/application/portable_expression.dart";
-import "package:typewriter_panel/shared/editors/application/portable_value_tree.dart";
-import "package:uuid/uuid.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
 
 final class AuthoredDraft {
   AuthoredDraft({
     required this.generation,
-    required Iterable<authoring.AuthoringResource> resources,
-    required Iterable<facts.LinkProjection> links,
+    required Iterable<skir.AuthoringResource> resources,
+    required Iterable<skir.LinkProjection> links,
     this.catalog,
   }) : _resources = {
          for (final resource in resources) resource.id: resource.content,
@@ -35,7 +18,7 @@ final class AuthoredDraft {
        _baselineLinks = List.of(links);
 
   factory AuthoredDraft.fromState(
-    authoring.AuthoringState source, {
+    skir.AuthoringState source, {
     CheckedEditorCatalog? catalog,
   }) => AuthoredDraft(
     generation: source.generation,
@@ -43,30 +26,29 @@ final class AuthoredDraft {
     links: source.links,
     catalog: catalog,
   );
-  final types.CatalogGeneration generation;
+  final skir.CatalogGeneration generation;
   final CheckedEditorCatalog? catalog;
-  final Map<types.ResourceId, types.AuthoringRecord> _resources;
-  final List<facts.LinkProjection> _links;
-  final Map<types.ResourceId, types.AuthoringRecord> _baselineResources;
-  final List<facts.LinkProjection> _baselineLinks;
-  final Map<Object, facts.EditExpectation> _observed = {};
-  final List<authoring.EditIntent> _intents = [];
-  final List<diagnostic_wire.InitializationDiagnostic> _initializationFindings =
-      [];
-  final Map<types.ValueLocation, _MaterializationOperation>
+  final Map<skir.ResourceId, skir.AuthoringRecord> _resources;
+  final List<skir.LinkProjection> _links;
+  final Map<skir.ResourceId, skir.AuthoringRecord> _baselineResources;
+  final List<skir.LinkProjection> _baselineLinks;
+  final Map<Object, skir.EditExpectation> _observed = {};
+  final List<skir.EditIntent> _intents = [];
+  final List<skir.InitializationDiagnostic> _initializationFindings = [];
+  final Map<skir.ValueLocation, _MaterializationOperation>
   _materializationOperations = {};
 
-  List<authoring.EditIntent> get intents => List.unmodifiable(_intents);
+  List<skir.EditIntent> get intents => List.unmodifiable(_intents);
 
-  Map<types.ResourceId, types.AuthoringRecord> get resources =>
+  Map<skir.ResourceId, skir.AuthoringRecord> get resources =>
       Map.unmodifiable(_resources);
 
-  List<facts.LinkProjection> get links => List.unmodifiable(_links);
+  List<skir.LinkProjection> get links => List.unmodifiable(_links);
 
-  List<facts.EditExpectation> get expectations =>
+  List<skir.EditExpectation> get expectations =>
       List.unmodifiable(_observed.values);
 
-  List<diagnostic_wire.InitializationDiagnostic> get initializationFindings =>
+  List<skir.InitializationDiagnostic> get initializationFindings =>
       List.unmodifiable(_initializationFindings);
 
   void observeExpressionReads(Iterable<PortableExpressionRead> reads) {
@@ -94,11 +76,11 @@ final class AuthoredDraft {
       generation: generation,
       resources: [
         for (final entry in _resources.entries)
-          authoring.AuthoringResource(
+          skir.AuthoringResource(
             id: entry.key,
             definition:
                 catalog?.resourceDefinition(entry.value.configuration)?.id ??
-                catalog_wire.ResourceDefinitionId.defaultInstance,
+                skir.ResourceDefinitionId.defaultInstance,
             content: entry.value,
           ),
       ],
@@ -155,9 +137,9 @@ final class AuthoredDraft {
       generation: generation,
       resources: [
         for (final entry in _baselineResources.entries)
-          authoring.AuthoringResource(
+          skir.AuthoringResource(
             id: entry.key,
-            definition: catalog_wire.ResourceDefinitionId.defaultInstance,
+            definition: skir.ResourceDefinitionId.defaultInstance,
             content: entry.value,
           ),
       ],
@@ -191,15 +173,15 @@ final class AuthoredDraft {
     return AuthoredDraftRebased(next);
   }
 
-  authoring.PreparedEdit prepare() => authoring.PreparedEdit(
+  skir.PreparedEdit prepare() => skir.PreparedEdit(
     catalog: generation,
     expectations: expectations,
     intents: intents,
   );
 
-  types.AuthoringRecord? resource(types.ResourceId id) => _resources[id];
+  skir.AuthoringRecord? resource(skir.ResourceId id) => _resources[id];
 
-  PortablePathResult<types.DataValue> read(types.ValueLocation location) {
+  PortablePathResult<skir.DataValue> read(skir.ValueLocation location) {
     _observePath(location);
     _observe(_value(at: location));
     final record = _resources[location.resource];
@@ -209,9 +191,9 @@ final class AuthoredDraft {
     return record.readAt(location.path);
   }
 
-  PortablePathResult<types.AuthoringRecord> set(
-    types.ValueLocation location,
-    types.DataValue value,
+  PortablePathResult<skir.AuthoringRecord> set(
+    skir.ValueLocation location,
+    skir.DataValue value,
   ) {
     final record = _resources[location.resource];
     if (record == null) {
@@ -230,9 +212,9 @@ final class AuthoredDraft {
       );
     }
     final originalIntents = _intents.length;
-    final originalObserved = Map<Object, facts.EditExpectation>.from(_observed);
-    PortablePathResult<types.AuthoringRecord> rollback(
-      PortablePathResult<types.AuthoringRecord> result,
+    final originalObserved = Map<Object, skir.EditExpectation>.from(_observed);
+    PortablePathResult<skir.AuthoringRecord> rollback(
+      PortablePathResult<skir.AuthoringRecord> result,
     ) {
       _resources[location.resource] = record;
       _intents.removeRange(originalIntents, _intents.length);
@@ -243,7 +225,7 @@ final class AuthoredDraft {
     }
 
     final materialized = _materializeParents(location);
-    if (materialized case PortablePathUnavailable<types.AuthoringRecord>()) {
+    if (materialized case PortablePathUnavailable<skir.AuthoringRecord>()) {
       return rollback(materialized);
     }
     final writableRecord = _resources[location.resource]!;
@@ -252,26 +234,22 @@ final class AuthoredDraft {
     final updated = writableRecord.replaceAt(location.path, value);
     if (updated case PortablePathValue(value: final stagedRecord)) {
       _resources[location.resource] = stagedRecord;
-      _intents.add(
-        authoring.EditIntent.createSetValue(at: location, value: value),
-      );
+      _intents.add(skir.EditIntent.createSetValue(at: location, value: value));
       return updated;
     }
     return rollback(updated);
   }
 
-  Future<PortablePathResult<types.AuthoringRecord>> setWithInitialization(
-    types.ValueLocation location,
-    types.DataValue value,
-    Future<catalog_wire.PreparedCreation> Function(
-      catalog_wire.InitializationRequest request,
-    )
+  Future<PortablePathResult<skir.AuthoringRecord>> setWithInitialization(
+    skir.ValueLocation location,
+    skir.DataValue value,
+    Future<skir.PreparedCreation> Function(skir.InitializationRequest request)
     prepare,
   ) async {
     final baseline = _DraftState.capture(this);
     final working = fork();
     var result = working.set(location, value);
-    while (result is PortablePathUnavailable<types.AuthoringRecord> &&
+    while (result is PortablePathUnavailable<skir.AuthoringRecord> &&
         result.message == "The parent field needs prepared initialization") {
       final plan = working._parentInitialization(location);
       if (plan == null) return result;
@@ -302,8 +280,8 @@ final class AuthoredDraft {
           .firstOrNull
           ?.value;
       if (parent == null ||
-          parent == types.DataValue.unfilled ||
-          parent == types.DataValue.null_) {
+          parent == skir.DataValue.unfilled ||
+          parent == skir.DataValue.null_) {
         final child = await prepare(plan.childRequest);
         if (!baseline.matches(this)) {
           return const PortablePathUnavailable(
@@ -319,22 +297,22 @@ final class AuthoredDraft {
           _locatedInitializationFindings(plan.location.path, child.findings),
         );
         final actual = switch (child.record.configuration) {
-          types.TypeSelection_completeWrapper(:final value) => value,
+          skir.TypeSelection_completeWrapper(:final value) => value,
           _ => null,
         };
         if (actual == null ||
             !(catalog?.isReadableAs(
-                  types.TypeUse.wrapNamed(actual),
-                  types.TypeUse.wrapNamed(plan.expected),
+                  skir.TypeUse.wrapNamed(actual),
+                  skir.TypeUse.wrapNamed(plan.expected),
                 ) ??
                 false)) {
           return const PortablePathUnavailable(
             "The prepared parent field has an incompatible type",
           );
         }
-        parent = types.DataValue.createNamed(
+        parent = skir.DataValue.createNamed(
           actualType: actual,
-          payload: types.DataValue.createRecord(fields: child.record.fields),
+          payload: skir.DataValue.createRecord(fields: child.record.fields),
         );
       }
       if (_containsLink(parent)) {
@@ -359,8 +337,8 @@ final class AuthoredDraft {
   }
 
   bool _preparedRecordIsUsable(
-    catalog_wire.PreparedCreation prepared,
-    catalog_wire.InitializationRequest request,
+    skir.PreparedCreation prepared,
+    skir.InitializationRequest request,
   ) {
     if (prepared.record.configuration != request.type) return false;
     final actual = prepared.record.fields.map((field) => field.name).toList();
@@ -395,9 +373,9 @@ final class AuthoredDraft {
       ..addAll(source._materializationOperations);
   }
 
-  PortablePathResult<types.AuthoringRecord> setPayload(
-    types.ValueLocation location,
-    types.DataValue payload,
+  PortablePathResult<skir.AuthoringRecord> setPayload(
+    skir.ValueLocation location,
+    skir.DataValue payload,
   ) {
     final current = read(location);
     return switch (current) {
@@ -411,42 +389,38 @@ final class AuthoredDraft {
     };
   }
 
-  PortablePathResult<types.AuthoringRecord> clear(
-    types.ValueLocation location, {
-    types.TypeUse? expected,
+  PortablePathResult<skir.AuthoringRecord> clear(
+    skir.ValueLocation location, {
+    skir.TypeUse? expected,
   }) => set(
     location,
-    expected is types.TypeUse_nullableWrapper
-        ? types.DataValue.null_
-        : types.DataValue.unfilled,
+    expected is skir.TypeUse_nullableWrapper
+        ? skir.DataValue.null_
+        : skir.DataValue.unfilled,
   );
 
-  PortablePathResult<types.AuthoringRecord> insert(
-    types.ValueLocation location,
-    types.ItemId? after,
-    types.ListItem item,
+  PortablePathResult<skir.AuthoringRecord> insert(
+    skir.ValueLocation location,
+    skir.ItemId? after,
+    skir.ListItem item,
   ) {
     _observeCollection(location);
-    return _updateCollection(
-      location,
-      (items) {
-        if (items.any((candidate) => candidate.id == item.id)) return null;
-        final index = after == null
-            ? 0
-            : items.indexWhere((candidate) => candidate.id == after) + 1;
-        if (after != null && index == 0) return null;
-        return [...items.take(index), item, ...items.skip(index)];
-      },
-      authoring.EditIntent.createInsert(at: location, after: after, item: item),
-    );
+    return _updateCollection(location, (items) {
+      if (items.any((candidate) => candidate.id == item.id)) return null;
+      final index = after == null
+          ? 0
+          : items.indexWhere((candidate) => candidate.id == after) + 1;
+      if (after != null && index == 0) return null;
+      return [...items.take(index), item, ...items.skip(index)];
+    }, skir.EditIntent.createInsert(at: location, after: after, item: item));
   }
 
-  PortablePathResult<types.AuthoringRecord> insertPrepared(
-    types.ValueLocation location,
-    types.ItemId? after,
-    types.ItemId item,
-    catalog_wire.InitializationRequest request,
-    catalog_wire.PreparedCreation prepared,
+  PortablePathResult<skir.AuthoringRecord> insertPrepared(
+    skir.ValueLocation location,
+    skir.ItemId? after,
+    skir.ItemId item,
+    skir.InitializationRequest request,
+    skir.PreparedCreation prepared,
   ) {
     if (!_preparedRecordIsUsable(prepared, request)) {
       return const PortablePathUnavailable(
@@ -454,7 +428,7 @@ final class AuthoredDraft {
       );
     }
     final actual = switch (prepared.record.configuration) {
-      types.TypeSelection_completeWrapper(:final value) => value,
+      skir.TypeSelection_completeWrapper(:final value) => value,
       _ => null,
     };
     if (actual == null) {
@@ -466,21 +440,21 @@ final class AuthoredDraft {
     final result = branch.insert(
       location,
       after,
-      types.ListItem(
+      skir.ListItem(
         id: item,
-        value: types.DataValue.createNamed(
+        value: skir.DataValue.createNamed(
           actualType: actual,
-          payload: types.DataValue.createRecord(fields: prepared.record.fields),
+          payload: skir.DataValue.createRecord(fields: prepared.record.fields),
         ),
       ),
     );
     if (result case PortablePathValue()) {
       branch._initializationFindings.addAll(
         _locatedInitializationFindings(
-          types.ValuePath(
+          skir.ValuePath(
             segments: [
               ...location.path.segments,
-              types.PathSegment.createItem(id: item),
+              skir.PathSegment.createItem(id: item),
             ],
           ),
           prepared.findings,
@@ -491,24 +465,24 @@ final class AuthoredDraft {
     return result;
   }
 
-  types.DataValue defaultValue(types.TypeUse? type) =>
+  skir.DataValue defaultValue(skir.TypeUse? type) =>
       _defaultForType(type, const {});
 
-  PortablePathResult<types.AuthoringRecord> remove(
-    types.ValueLocation location,
-    types.ItemId item,
+  PortablePathResult<skir.AuthoringRecord> remove(
+    skir.ValueLocation location,
+    skir.ItemId item,
   ) {
     _observeCollection(location);
     return _updateCollection(location, (items) {
       if (items.every((candidate) => candidate.id != item)) return null;
       return items.where((candidate) => candidate.id != item).toList();
-    }, authoring.EditIntent.createRemove(at: location, item: item));
+    }, skir.EditIntent.createRemove(at: location, item: item));
   }
 
-  PortablePathResult<types.AuthoringRecord> move(
-    types.ValueLocation location,
-    types.ItemId item,
-    types.ItemId? after,
+  PortablePathResult<skir.AuthoringRecord> move(
+    skir.ValueLocation location,
+    skir.ItemId item,
+    skir.ItemId? after,
   ) {
     _observeCollection(location);
     return _updateCollection(location, (items) {
@@ -524,18 +498,18 @@ final class AuthoredDraft {
           : remaining.indexWhere((candidate) => candidate.id == after) + 1;
       if (after != null && index == 0) return null;
       return [...remaining.take(index), moving, ...remaining.skip(index)];
-    }, authoring.EditIntent.createMove(at: location, item: item, after: after));
+    }, skir.EditIntent.createMove(at: location, item: item, after: after));
   }
 
-  PortablePathResult<types.AuthoringRecord> replaceMap(
-    types.ValueLocation location,
-    Iterable<types.MapRow> rows,
+  PortablePathResult<skir.AuthoringRecord> replaceMap(
+    skir.ValueLocation location,
+    Iterable<skir.MapRow> rows,
   ) {
-    final previous = Map<Object, facts.EditExpectation>.of(_observed);
+    final previous = Map<Object, skir.EditExpectation>.of(_observed);
     _observeCollection(location);
     final result = setPayload(
       location,
-      types.DataValue.createMapValue(rows: rows),
+      skir.DataValue.createMapValue(rows: rows),
     );
     if (result case PortablePathUnavailable()) {
       _observed
@@ -545,10 +519,10 @@ final class AuthoredDraft {
     return result;
   }
 
-  PortablePathResult<types.AuthoringRecord> applyPreparedRecord(
-    types.ValueLocation location,
-    catalog_wire.InitializationRequest request,
-    catalog_wire.PreparedCreation prepared,
+  PortablePathResult<skir.AuthoringRecord> applyPreparedRecord(
+    skir.ValueLocation location,
+    skir.InitializationRequest request,
+    skir.PreparedCreation prepared,
   ) {
     if (!_preparedRecordIsUsable(prepared, request)) {
       return const PortablePathUnavailable(
@@ -556,7 +530,7 @@ final class AuthoredDraft {
       );
     }
     final actual = switch (prepared.record.configuration) {
-      types.TypeSelection_completeWrapper(:final value) => value,
+      skir.TypeSelection_completeWrapper(:final value) => value,
       _ => null,
     };
     if (actual == null) {
@@ -567,9 +541,9 @@ final class AuthoredDraft {
     final branch = fork();
     final result = branch.set(
       location,
-      types.DataValue.createNamed(
+      skir.DataValue.createNamed(
         actualType: actual,
-        payload: types.DataValue.createRecord(fields: prepared.record.fields),
+        payload: skir.DataValue.createRecord(fields: prepared.record.fields),
       ),
     );
     if (result case PortablePathValue()) {
@@ -581,41 +555,36 @@ final class AuthoredDraft {
     return result;
   }
 
-  void create(types.ResourceId id, types.AuthoringRecord record) {
+  void create(skir.ResourceId id, skir.AuthoringRecord record) {
     _observe(_exists(resource: id));
     _resources[id] = record;
-    _intents.add(
-      authoring.EditIntent.createCreateResource(id: id, record: record),
-    );
+    _intents.add(skir.EditIntent.createCreateResource(id: id, record: record));
   }
 
-  void createPrepared(
-    types.ResourceId id,
-    catalog_wire.PreparedCreation prepared,
-  ) {
+  void createPrepared(skir.ResourceId id, skir.PreparedCreation prepared) {
     create(id, prepared.record);
     _initializationFindings.addAll(
       _locatedInitializationFindings(
-        types.ValuePath(segments: const []),
+        skir.ValuePath(segments: const []),
         prepared.findings,
       ),
     );
   }
 
-  void delete(types.ResourceId id) {
+  void delete(skir.ResourceId id) {
     _observe(_exists(resource: id));
     _observe(_configuration(at: _root(id)));
     _observeIncoming(id, null);
     _observeDeletionRelations(id);
     _resources.remove(id);
     _links.removeWhere((link) => link.first == id || link.second == id);
-    _intents.add(authoring.EditIntent.createDeleteResource(id: id));
+    _intents.add(skir.EditIntent.createDeleteResource(id: id));
   }
 
   void connect(
-    authoring.LinkOccurrence source,
-    types.ResourceId target, {
-    authoring.CounterpartChoice? counterpart,
+    skir.LinkOccurrence source,
+    skir.ResourceId target, {
+    skir.CounterpartChoice? counterpart,
   }) {
     _observeRelationPath(source.id.location);
     _observe(_exists(resource: target));
@@ -624,26 +593,26 @@ final class AuthoredDraft {
     _observeIncoming(target, null);
     _observeRelationsForEndpoint(source.id.endpoint, source.source, target);
     switch (counterpart) {
-      case authoring.CounterpartChoice_existingWrapper(:final value):
+      case skir.CounterpartChoice_existingWrapper(:final value):
         _observeRelationPath(value.id.location);
-      case authoring.CounterpartChoice_newWrapper(:final value):
+      case skir.CounterpartChoice_newWrapper(:final value):
         _observePath(value.containing);
         _observe(_configuration(at: value.containing));
         _observe(_value(at: value.containing));
       case null:
-      case authoring.CounterpartChoice_unknown():
+      case skir.CounterpartChoice_unknown():
     }
     _insertMissingCollectionLinkItem(source.id.location);
     _stageConnection(source, target, counterpart);
     final wireSource = source.target.resource.value.isEmpty
-        ? authoring.LinkOccurrence(
+        ? skir.LinkOccurrence(
             id: source.id,
             source: source.source,
-            target: types.LinkTarget(resource: target, opposite: null),
+            target: skir.LinkTarget(resource: target, opposite: null),
           )
         : source;
     _intents.add(
-      authoring.EditIntent.createConnectRelation(
+      skir.EditIntent.createConnectRelation(
         source: wireSource,
         target: target,
         counterpart: counterpart,
@@ -651,17 +620,17 @@ final class AuthoredDraft {
     );
   }
 
-  void _insertMissingCollectionLinkItem(types.ValueLocation location) {
+  void _insertMissingCollectionLinkItem(skir.ValueLocation location) {
     final record = _resources[location.resource];
     if (record == null || record.readAt(location.path) is PortablePathValue) {
       return;
     }
     final segments = location.path.segments.toList(growable: false);
-    if (segments.isEmpty || segments.last is! types.PathSegment_itemWrapper) {
+    if (segments.isEmpty || segments.last is! skir.PathSegment_itemWrapper) {
       return;
     }
-    final item = (segments.last as types.PathSegment_itemWrapper).value.id;
-    final containingPath = types.ValuePath(
+    final item = (segments.last as skir.PathSegment_itemWrapper).value.id;
+    final containingPath = skir.ValuePath(
       segments: segments.take(segments.length - 1),
     );
     final containing = record.readAt(containingPath);
@@ -671,16 +640,16 @@ final class AuthoredDraft {
     };
     if (items == null) return;
     final result = insert(
-      types.ValueLocation(resource: location.resource, path: containingPath),
+      skir.ValueLocation(resource: location.resource, path: containingPath),
       items.lastOrNull?.id,
-      types.ListItem(id: item, value: types.DataValue.unfilled),
+      skir.ListItem(id: item, value: skir.DataValue.unfilled),
     );
     if (result case PortablePathUnavailable(:final message)) {
       throw StateError(message);
     }
   }
 
-  void disconnect(authoring.LinkOccurrence occurrence) {
+  void disconnect(skir.LinkOccurrence occurrence) {
     _disconnect(
       occurrence.id,
       source: occurrence.source,
@@ -689,9 +658,9 @@ final class AuthoredDraft {
   }
 
   void _disconnect(
-    authoring.LinkOccurrenceId occurrence, {
-    types.ResourceId? source,
-    types.ResourceId? target,
+    skir.LinkOccurrenceId occurrence, {
+    skir.ResourceId? source,
+    skir.ResourceId? target,
   }) {
     _observeRelationPath(occurrence.location);
     final actualSource = source ?? occurrence.location.resource;
@@ -724,7 +693,7 @@ final class AuthoredDraft {
           ? projected.secondLocation
           : projected.firstLocation;
       if (actualTarget != null && oppositePath != null) {
-        final opposite = types.ValueLocation(
+        final opposite = skir.ValueLocation(
           resource: actualTarget,
           path: oppositePath,
         );
@@ -735,13 +704,13 @@ final class AuthoredDraft {
     _links.removeWhere(
       (link) => _projectionContainsOccurrence(link, occurrence),
     );
-    _intents.add(authoring.EditIntent.wrapDisconnectRelation(occurrence));
+    _intents.add(skir.EditIntent.wrapDisconnectRelation(occurrence));
   }
 
   void _stageConnection(
-    authoring.LinkOccurrence source,
-    types.ResourceId target,
-    authoring.CounterpartChoice? counterpart,
+    skir.LinkOccurrence source,
+    skir.ResourceId target,
+    skir.CounterpartChoice? counterpart,
   ) {
     final relations = catalog?.snapshot.relations ?? const [];
     final relation = relations
@@ -756,17 +725,16 @@ final class AuthoredDraft {
         ? relation.second.id
         : relation.first.id;
     final oppositeOccurrence = switch (counterpart) {
-      authoring.CounterpartChoice_existingWrapper(:final value) => value,
+      skir.CounterpartChoice_existingWrapper(:final value) => value,
       _ => null,
     };
     final newOpposite = switch (counterpart) {
-      authoring.CounterpartChoice_newWrapper(:final value) =>
-        _stageNewCounterpart(
-          source: source,
-          target: target,
-          oppositeEndpoint: oppositeEndpoint,
-          choice: value,
-        ),
+      skir.CounterpartChoice_newWrapper(:final value) => _stageNewCounterpart(
+        source: source,
+        target: target,
+        oppositeEndpoint: oppositeEndpoint,
+        choice: value,
+      ),
       _ => null,
     };
     final automaticOpposite = counterpart == null
@@ -794,7 +762,7 @@ final class AuthoredDraft {
           : previous.firstLocation;
       if ((previousTarget != target || previousOpposite != oppositePath) &&
           previousOpposite != null) {
-        final previousLocation = types.ValueLocation(
+        final previousLocation = skir.ValueLocation(
           resource: previousTarget,
           path: previousOpposite,
         );
@@ -805,13 +773,13 @@ final class AuthoredDraft {
     _stageLinkValue(
       source.id.location,
       source.id.endpoint,
-      types.LinkTarget(resource: target, opposite: oppositePath),
+      skir.LinkTarget(resource: target, opposite: oppositePath),
     );
     if (oppositeOccurrence != null) {
       _stageLinkValue(
         oppositeOccurrence.id.location,
         oppositeOccurrence.id.endpoint,
-        types.LinkTarget(
+        skir.LinkTarget(
           resource: source.source,
           opposite: source.id.location.path,
         ),
@@ -821,7 +789,7 @@ final class AuthoredDraft {
       _stageLinkValue(
         newOpposite,
         oppositeEndpoint,
-        types.LinkTarget(
+        skir.LinkTarget(
           resource: source.source,
           opposite: source.id.location.path,
         ),
@@ -831,7 +799,7 @@ final class AuthoredDraft {
       _stageLinkValue(
         automaticOpposite,
         oppositeEndpoint,
-        types.LinkTarget(
+        skir.LinkTarget(
           resource: source.source,
           opposite: source.id.location.path,
         ),
@@ -842,7 +810,7 @@ final class AuthoredDraft {
     );
     final sourceIsFirst = relation.first.id == source.id.endpoint;
     _links.add(
-      facts.LinkProjection(
+      skir.LinkProjection(
         contract: relation.id,
         first: sourceIsFirst ? source.source : target,
         second: sourceIsFirst ? target : source.source,
@@ -852,15 +820,15 @@ final class AuthoredDraft {
     );
   }
 
-  types.ValueLocation? _automaticScalarCounterpart(
-    types.ResourceId resource,
-    types.EndpointId endpoint,
+  skir.ValueLocation? _automaticScalarCounterpart(
+    skir.ResourceId resource,
+    skir.EndpointId endpoint,
   ) {
     final record = _resources[resource];
     final checked = catalog;
     if (record == null || checked == null) return null;
     final owners = checked.nominalDefinitions(record.configuration);
-    final candidates = <types.ValueLocation>{};
+    final candidates = <skir.ValueLocation>{};
     for (final binding in checked.endpointBindings(record.configuration)) {
       if (binding.template.endpoint != endpoint ||
           binding.template.containsCollection ||
@@ -869,28 +837,28 @@ final class AuthoredDraft {
       }
       final path = _directFieldPath(binding.template.relativePath);
       if (path != null) {
-        candidates.add(types.ValueLocation(resource: resource, path: path));
+        candidates.add(skir.ValueLocation(resource: resource, path: path));
       }
     }
     return candidates.length == 1 ? candidates.single : null;
   }
 
-  types.ValueLocation? _stageNewCounterpart({
-    required authoring.LinkOccurrence source,
-    required types.ResourceId target,
-    required types.EndpointId oppositeEndpoint,
-    required authoring.NewCounterpartChoice choice,
+  skir.ValueLocation? _stageNewCounterpart({
+    required skir.LinkOccurrence source,
+    required skir.ResourceId target,
+    required skir.EndpointId oppositeEndpoint,
+    required skir.NewCounterpartChoice choice,
   }) {
     final targetRecord = _resources[target];
     if (targetRecord == null) return null;
     final actual = switch (choice.prepared.record.configuration) {
-      types.TypeSelection_completeWrapper(:final value) => value,
+      skir.TypeSelection_completeWrapper(:final value) => value,
       _ => null,
     };
     if (actual == null) return null;
-    final materialized = types.DataValue.createNamed(
+    final materialized = skir.DataValue.createNamed(
       actualType: actual,
-      payload: types.DataValue.createRecord(
+      payload: skir.DataValue.createRecord(
         fields: choice.prepared.record.fields,
       ),
     );
@@ -899,12 +867,12 @@ final class AuthoredDraft {
     if (current case PortablePathValue(value: final value)
         when value.authoredItems != null) {
       final item = _nextStagedItem(choice.containing);
-      embedded = types.ValueLocation(
+      embedded = skir.ValueLocation(
         resource: target,
-        path: types.ValuePath(
+        path: skir.ValuePath(
           segments: [
             ...choice.containing.path.segments,
-            types.PathSegment.createItem(id: item),
+            skir.PathSegment.createItem(id: item),
           ],
         ),
       );
@@ -922,7 +890,7 @@ final class AuthoredDraft {
     }
     final staged = _resources[target];
     if (staged == null) return null;
-    final locations = <types.ValueLocation>[];
+    final locations = <skir.ValueLocation>[];
     for (final binding
         in catalog
                 ?.endpointBindings(staged.configuration)
@@ -935,26 +903,26 @@ final class AuthoredDraft {
         binding.template.relativePath,
       )) {
         if (authoredPathStartsWith(path, embedded.path)) {
-          locations.add(types.ValueLocation(resource: target, path: path));
+          locations.add(skir.ValueLocation(resource: target, path: path));
         }
       }
     }
     return locations.length == 1 ? locations.single : null;
   }
 
-  types.ItemId _nextStagedItem(types.ValueLocation containing) {
+  skir.ItemId _nextStagedItem(skir.ValueLocation containing) {
     final prefix = "panel:new:${_intents.length}:";
     var index = 0;
     while (true) {
-      final candidate = types.ItemId(value: "$prefix$index");
-      final location = types.ValuePath(
+      final candidate = skir.ItemId(value: "$prefix$index");
+      final location = skir.ValuePath(
         segments: [
           ...containing.path.segments,
-          types.PathSegment.createItem(id: candidate),
+          skir.PathSegment.createItem(id: candidate),
         ],
       );
       if (_resources[containing.resource]?.readAt(location)
-          is PortablePathUnavailable<types.DataValue>) {
+          is PortablePathUnavailable<skir.DataValue>) {
         return candidate;
       }
       index++;
@@ -962,25 +930,25 @@ final class AuthoredDraft {
   }
 
   void _stageLinkValue(
-    types.ValueLocation location,
-    types.EndpointId endpoint,
-    types.LinkTarget target,
+    skir.ValueLocation location,
+    skir.EndpointId endpoint,
+    skir.LinkTarget target,
   ) {
     final record = _resources[location.resource];
     if (record == null) return;
     final current = record.readAt(location.path);
-    final payload = types.DataValue.createLink(
+    final payload = skir.DataValue.createLink(
       endpoint: endpoint,
       target: target,
     );
     final replacement = switch (current) {
-      PortablePathValue(value: final types.DataValue value)
-          when value is types.DataValue_namedWrapper =>
+      PortablePathValue(value: final skir.DataValue value)
+          when value is skir.DataValue_namedWrapper =>
         value.withAuthoredPayload(payload),
       _ => switch (_concreteNamed(
         catalog?.valueTypeAt(record.configuration, location.path),
       )) {
-        final actual? => types.DataValue.createNamed(
+        final actual? => skir.DataValue.createNamed(
           actualType: actual,
           payload: payload,
         ),
@@ -997,21 +965,19 @@ final class AuthoredDraft {
   }
 
   void _appendDirectLinkItem(
-    types.AuthoringRecord record,
-    types.ValueLocation location,
-    types.DataValue replacement,
+    skir.AuthoringRecord record,
+    skir.ValueLocation location,
+    skir.DataValue replacement,
   ) {
     final segments = location.path.segments.toList(growable: false);
-    if (segments.isEmpty || segments.last is! types.PathSegment_itemWrapper) {
+    if (segments.isEmpty || segments.last is! skir.PathSegment_itemWrapper) {
       return;
     }
-    final item = (segments.last as types.PathSegment_itemWrapper).value.id;
-    final parent = types.ValuePath(
-      segments: segments.take(segments.length - 1),
-    );
+    final item = (segments.last as skir.PathSegment_itemWrapper).value.id;
+    final parent = skir.ValuePath(segments: segments.take(segments.length - 1));
     final current = record.readAt(parent);
     if (current case PortablePathValue(value: final value)) {
-      final containing = types.ValueLocation(
+      final containing = skir.ValueLocation(
         resource: location.resource,
         path: parent,
       );
@@ -1019,7 +985,7 @@ final class AuthoredDraft {
         _collectionValue(containing, value),
         (items) {
           if (items.any((candidate) => candidate.id == item)) return null;
-          return [...items, types.ListItem(id: item, value: replacement)];
+          return [...items, skir.ListItem(id: item, value: replacement)];
         },
       );
       if (updated == null) return;
@@ -1030,13 +996,13 @@ final class AuthoredDraft {
     }
   }
 
-  void _stageLinkClear(types.ValueLocation location) {
+  void _stageLinkClear(skir.ValueLocation location) {
     final record = _resources[location.resource];
     if (record == null) return;
     final segments = location.path.segments.toList(growable: false);
-    if (segments.isNotEmpty && segments.last is types.PathSegment_itemWrapper) {
-      final item = (segments.last as types.PathSegment_itemWrapper).value.id;
-      final parent = types.ValuePath(
+    if (segments.isNotEmpty && segments.last is skir.PathSegment_itemWrapper) {
+      final item = (segments.last as skir.PathSegment_itemWrapper).value.id;
+      final parent = skir.ValuePath(
         segments: segments.take(segments.length - 1),
       );
       final current = record.readAt(parent);
@@ -1057,9 +1023,9 @@ final class AuthoredDraft {
       return;
     }
     final expected = catalog?.valueTypeAt(record.configuration, location.path);
-    final replacement = expected is types.TypeUse_nullableWrapper
-        ? types.DataValue.null_
-        : types.DataValue.unfilled;
+    final replacement = expected is skir.TypeUse_nullableWrapper
+        ? skir.DataValue.null_
+        : skir.DataValue.unfilled;
     final updated = record.replaceAt(location.path, replacement);
     if (updated case PortablePathValue(value: final staged)) {
       _resources[location.resource] = staged;
@@ -1067,8 +1033,8 @@ final class AuthoredDraft {
   }
 
   bool _projectionContainsOccurrence(
-    facts.LinkProjection link,
-    authoring.LinkOccurrenceId occurrence,
+    skir.LinkProjection link,
+    skir.LinkOccurrenceId occurrence,
   ) {
     final relation = catalog?.snapshot.relations
         .where((candidate) => candidate.id == link.contract)
@@ -1082,62 +1048,60 @@ final class AuthoredDraft {
             link.secondLocation == occurrence.location.path);
   }
 
-  void retag(types.ValueLocation location, types.NamedTypeUse type) {
+  void retag(skir.ValueLocation location, skir.NamedTypeUse type) {
     _observe(_value(at: location));
     _observePath(location);
     _observe(_configuration(at: location));
     _observeIncoming(location.resource, null);
-    _intents.add(authoring.EditIntent.createRetag(at: location, type: type));
+    _intents.add(skir.EditIntent.createRetag(at: location, type: type));
   }
 
   void configureResource(
-    types.ResourceId resource,
-    types.TypeSelection configuration,
+    skir.ResourceId resource,
+    skir.TypeSelection configuration,
   ) {
     final current = _resources[resource];
     if (current == null) return;
-    _observe(
-      facts.EditExpectation.createResource(id: resource, expected: null),
-    );
+    _observe(skir.EditExpectation.createResource(id: resource, expected: null));
     _observe(_exists(resource: resource));
     _observe(_configuration(at: _root(resource)));
     _observeIncoming(resource, null);
-    _resources[resource] = types.AuthoringRecord(
+    _resources[resource] = skir.AuthoringRecord(
       configuration: configuration,
       fields: current.fields,
     );
     _intents.add(
-      authoring.EditIntent.createConfigureResource(
+      skir.EditIntent.createConfigureResource(
         resource: resource,
         configuration: configuration,
       ),
     );
   }
 
-  String? _replay(authoring.EditIntent intent) {
-    PortablePathResult<types.AuthoringRecord>? result;
+  String? _replay(skir.EditIntent intent) {
+    PortablePathResult<skir.AuthoringRecord>? result;
     switch (intent) {
-      case authoring.EditIntent_createResourceWrapper(:final value):
+      case skir.EditIntent_createResourceWrapper(:final value):
         create(value.id, value.record);
-      case authoring.EditIntent_deleteResourceWrapper(:final value):
+      case skir.EditIntent_deleteResourceWrapper(:final value):
         delete(value.id);
-      case authoring.EditIntent_setValueWrapper(:final value):
+      case skir.EditIntent_setValueWrapper(:final value):
         result = set(value.at, value.value);
-      case authoring.EditIntent_insertWrapper(:final value):
+      case skir.EditIntent_insertWrapper(:final value):
         result = insert(value.at, value.after, value.item);
-      case authoring.EditIntent_removeWrapper(:final value):
+      case skir.EditIntent_removeWrapper(:final value):
         result = remove(value.at, value.item);
-      case authoring.EditIntent_moveWrapper(:final value):
+      case skir.EditIntent_moveWrapper(:final value):
         result = move(value.at, value.item, value.after);
-      case authoring.EditIntent_connectRelationWrapper(:final value):
+      case skir.EditIntent_connectRelationWrapper(:final value):
         connect(value.source, value.target, counterpart: value.counterpart);
-      case authoring.EditIntent_disconnectRelationWrapper(:final value):
+      case skir.EditIntent_disconnectRelationWrapper(:final value):
         _disconnect(value);
-      case authoring.EditIntent_retagWrapper(:final value):
+      case skir.EditIntent_retagWrapper(:final value):
         retag(value.at, value.type);
-      case authoring.EditIntent_configureResourceWrapper(:final value):
+      case skir.EditIntent_configureResourceWrapper(:final value):
         configureResource(value.resource, value.configuration);
-      case authoring.EditIntent_unknown():
+      case skir.EditIntent_unknown():
         return "The draft contains an unknown edit";
     }
     return switch (result) {
@@ -1146,39 +1110,39 @@ final class AuthoredDraft {
     };
   }
 
-  void _observeCollection(types.ValueLocation location) {
+  void _observeCollection(skir.ValueLocation location) {
     _observePath(location);
     _observe(_configuration(at: location));
     _observe(_value(at: location));
   }
 
-  void _observePath(types.ValueLocation location) {
+  void _observePath(skir.ValueLocation location) {
     _observe(_exists(resource: location.resource));
     var current = _root(location.resource);
     _observe(_configuration(at: current));
     for (final segment in location.path.segments) {
-      if (segment is types.PathSegment_itemWrapper) {
+      if (segment is skir.PathSegment_itemWrapper) {
         _observe(_value(at: current));
       }
-      current = types.ValueLocation(
+      current = skir.ValueLocation(
         resource: current.resource,
-        path: types.ValuePath(segments: [...current.path.segments, segment]),
+        path: skir.ValuePath(segments: [...current.path.segments, segment]),
       );
       _observe(_configuration(at: current));
     }
   }
 
-  void _observeIncoming(types.ResourceId resource, types.RelationId? relation) {
+  void _observeIncoming(skir.ResourceId resource, skir.RelationId? relation) {
     final contracts = relation == null
         ? catalog?.snapshot.relations.map((value) => value.id) ??
-              const <types.RelationId>[]
+              const <skir.RelationId>[]
         : [relation];
     for (final contract in contracts) {
       _observe(
-        facts.EditExpectation.createLinks(
+        skir.EditExpectation.createLinks(
           resource: resource,
           contract: contract,
-          direction: facts.TraversalDirection.both,
+          direction: skir.TraversalDirection.both,
           expected: const [],
         ),
       );
@@ -1186,9 +1150,9 @@ final class AuthoredDraft {
   }
 
   void _observeRelationsForEndpoint(
-    types.EndpointId endpoint,
-    types.ResourceId source,
-    types.ResourceId target,
+    skir.EndpointId endpoint,
+    skir.ResourceId source,
+    skir.ResourceId target,
   ) {
     if (catalog case final actualCatalog?) {
       for (final contract in actualCatalog.snapshot.relations.where(
@@ -1208,10 +1172,10 @@ final class AuthoredDraft {
     }
   }
 
-  void _observeDeletionRelations(types.ResourceId requested) {
-    final deleting = <types.ResourceId>{requested};
-    final pending = <types.ResourceId>[requested];
-    final contracts = <types.RelationId, catalog_wire.RelationContract>{};
+  void _observeDeletionRelations(skir.ResourceId requested) {
+    final deleting = <skir.ResourceId>{requested};
+    final pending = <skir.ResourceId>[requested];
+    final contracts = <skir.RelationId, skir.RelationContract>{};
     if (catalog case final checked?) {
       for (final relation in checked.snapshot.relations) {
         contracts[relation.id] = relation;
@@ -1227,7 +1191,7 @@ final class AuthoredDraft {
         final endpoint = link.first == current
             ? contract.first
             : contract.second;
-        if (endpoint.onDelete != catalog_wire.RelationDeletePolicy.cascade) {
+        if (endpoint.onDelete != skir.RelationDeletePolicy.cascade) {
           continue;
         }
         final related = link.first == current ? link.second : link.first;
@@ -1236,7 +1200,7 @@ final class AuthoredDraft {
     }
     for (final resource in deleting) {
       _observe(
-        facts.EditExpectation.createResource(id: resource, expected: null),
+        skir.EditExpectation.createResource(id: resource, expected: null),
       );
       _observe(_exists(resource: resource));
       _observe(_configuration(at: _root(resource)));
@@ -1251,50 +1215,50 @@ final class AuthoredDraft {
     }
   }
 
-  void _observeRelationProjection(facts.LinkProjection link) {
+  void _observeRelationProjection(skir.LinkProjection link) {
     _observeIncoming(link.first, link.contract);
     _observeIncoming(link.second, link.contract);
     if (link.firstLocation case final path?) {
       _observeRelationPath(
-        types.ValueLocation(resource: link.first, path: path),
+        skir.ValueLocation(resource: link.first, path: path),
       );
     }
     if (link.secondLocation case final path?) {
       _observeRelationPath(
-        types.ValueLocation(resource: link.second, path: path),
+        skir.ValueLocation(resource: link.second, path: path),
       );
     }
   }
 
-  void _observeRelationPath(types.ValueLocation location) {
+  void _observeRelationPath(skir.ValueLocation location) {
     _observePath(location);
     _observe(_value(at: location));
     final segments = location.path.segments.toList();
-    if (segments.lastOrNull is types.PathSegment_itemWrapper) {
-      final parent = types.ValueLocation(
+    if (segments.lastOrNull is skir.PathSegment_itemWrapper) {
+      final parent = skir.ValueLocation(
         resource: location.resource,
-        path: types.ValuePath(segments: segments.take(segments.length - 1)),
+        path: skir.ValuePath(segments: segments.take(segments.length - 1)),
       );
       _observe(_configuration(at: parent));
       _observe(_value(at: parent));
     }
   }
 
-  void _observe(facts.EditExpectation expected) {
+  void _observe(skir.EditExpectation expected) {
     _observed.putIfAbsent(_factKey(expected), () => _actual(expected));
   }
 
-  facts.EditExpectation _actual(
-    facts.EditExpectation expected, {
+  skir.EditExpectation _actual(
+    skir.EditExpectation expected, {
     bool original = true,
   }) {
     final resources = original ? _baselineResources : _resources;
     final links = original ? _baselineLinks : _links;
-    types.DataValue? value(types.ValueLocation at) {
+    skir.DataValue? value(skir.ValueLocation at) {
       final record = resources[at.resource];
       if (record == null) return null;
       if (at.path.segments.isEmpty) {
-        return types.DataValue.createRecord(fields: record.fields);
+        return skir.DataValue.createRecord(fields: record.fields);
       }
       return switch (record.readAt(at.path)) {
         PortablePathValue(:final value) => value,
@@ -1303,38 +1267,38 @@ final class AuthoredDraft {
     }
 
     return switch (expected) {
-      facts.EditExpectation_valueWrapper(value: final expected) =>
-        facts.EditExpectation.createValue(
+      skir.EditExpectation_valueWrapper(value: final expected) =>
+        skir.EditExpectation.createValue(
           at: expected.at,
           expected: value(expected.at),
         ),
-      facts.EditExpectation_resourceWrapper(:final value) =>
-        facts.EditExpectation.createResource(
+      skir.EditExpectation_resourceWrapper(:final value) =>
+        skir.EditExpectation.createResource(
           id: value.id,
           expected: resources[value.id],
         ),
-      facts.EditExpectation_resourceExistsWrapper(:final value) =>
-        facts.EditExpectation.createResourceExists(
+      skir.EditExpectation_resourceExistsWrapper(:final value) =>
+        skir.EditExpectation.createResourceExists(
           id: value.id,
           expected: resources.containsKey(value.id),
         ),
-      facts.EditExpectation_configurationWrapper(value: final config) =>
-        facts.EditExpectation.createConfiguration(
+      skir.EditExpectation_configurationWrapper(value: final config) =>
+        skir.EditExpectation.createConfiguration(
           at: config.at,
           expected: config.at.path.segments.isEmpty
               ? resources[config.at.resource]?.configuration
               : switch (value(config.at)) {
-                  types.DataValue_namedWrapper(:final value) =>
-                    types.TypeSelection.wrapComplete(value.actualType),
+                  skir.DataValue_namedWrapper(:final value) =>
+                    skir.TypeSelection.wrapComplete(value.actualType),
                   _ => null,
                 },
         ),
-      facts.EditExpectation_resourceIdsWrapper() =>
-        facts.EditExpectation.wrapResourceIds(
+      skir.EditExpectation_resourceIdsWrapper() =>
+        skir.EditExpectation.wrapResourceIds(
           resources.keys.toList()..sort((a, b) => a.value.compareTo(b.value)),
         ),
-      facts.EditExpectation_linksWrapper(:final value) =>
-        facts.EditExpectation.createLinks(
+      skir.EditExpectation_linksWrapper(:final value) =>
+        skir.EditExpectation.createLinks(
           resource: value.resource,
           contract: value.contract,
           direction: value.direction,
@@ -1343,11 +1307,11 @@ final class AuthoredDraft {
                 (link) =>
                     link.contract == value.contract &&
                     switch (value.direction) {
-                      facts.TraversalDirection.forward =>
+                      skir.TraversalDirection.forward =>
                         link.first == value.resource,
-                      facts.TraversalDirection.reverse =>
+                      skir.TraversalDirection.reverse =>
                         link.second == value.resource,
-                      facts.TraversalDirection.both =>
+                      skir.TraversalDirection.both =>
                         link.first == value.resource ||
                             link.second == value.resource,
                       _ => false,
@@ -1360,8 +1324,8 @@ final class AuthoredDraft {
     };
   }
 
-  PortablePathResult<types.AuthoringRecord> _materializeParents(
-    types.ValueLocation target,
+  PortablePathResult<skir.AuthoringRecord> _materializeParents(
+    skir.ValueLocation target,
   ) {
     final checked = catalog;
     if (checked == null || target.path.segments.length < 2) {
@@ -1370,12 +1334,12 @@ final class AuthoredDraft {
     while (true) {
       final record = _resources[target.resource]!;
       var selection = record.configuration;
-      var currentPath = <types.PathSegment>[];
+      var currentPath = <skir.PathSegment>[];
       var changed = false;
       for (final segment in target.path.segments.take(
         target.path.segments.length - 1,
       )) {
-        if (segment case types.PathSegment_fieldWrapper(:final value)) {
+        if (segment case skir.PathSegment_fieldWrapper(:final value)) {
           final field = checked
               .fields(selection)
               .where((candidate) => candidate.template.key == value.name)
@@ -1386,17 +1350,17 @@ final class AuthoredDraft {
             );
           }
           currentPath = [...currentPath, segment];
-          final location = types.ValueLocation(
+          final location = skir.ValueLocation(
             resource: target.resource,
-            path: types.ValuePath(segments: currentPath),
+            path: skir.ValuePath(segments: currentPath),
           );
           final child = record.readAt(location.path);
           final childValue = switch (child) {
             PortablePathValue(:final value) => value,
-            PortablePathUnavailable() => types.DataValue.unfilled,
+            PortablePathUnavailable() => skir.DataValue.unfilled,
           };
-          if (childValue == types.DataValue.unfilled ||
-              childValue == types.DataValue.null_) {
+          if (childValue == skir.DataValue.unfilled ||
+              childValue == skir.DataValue.null_) {
             final expected = _concreteNamed(field.type);
             if (expected == null) {
               return const PortablePathUnavailable(
@@ -1419,10 +1383,7 @@ final class AuthoredDraft {
             if (updated case PortablePathValue(value: final stagedRecord)) {
               _resources[target.resource] = stagedRecord;
               _intents.add(
-                authoring.EditIntent.createSetValue(
-                  at: location,
-                  value: parent,
-                ),
+                skir.EditIntent.createSetValue(at: location, value: parent),
               );
               changed = true;
               break;
@@ -1430,24 +1391,23 @@ final class AuthoredDraft {
             return updated;
           }
           selection = switch (childValue) {
-            types.DataValue_namedWrapper(:final value) =>
-              types.TypeSelection.wrapComplete(value.actualType),
-            _ => types.TypeSelection.unknown,
+            skir.DataValue_namedWrapper(:final value) =>
+              skir.TypeSelection.wrapComplete(value.actualType),
+            _ => skir.TypeSelection.unknown,
           };
         } else {
           currentPath = [...currentPath, segment];
-          final child = record.readAt(types.ValuePath(segments: currentPath));
+          final child = record.readAt(skir.ValuePath(segments: currentPath));
           if (child case PortablePathUnavailable()) {
             return const PortablePathUnavailable(
               "The collection item is absent",
             );
           }
-          final childValue =
-              (child as PortablePathValue<types.DataValue>).value;
+          final childValue = (child as PortablePathValue<skir.DataValue>).value;
           selection = switch (childValue) {
-            types.DataValue_namedWrapper(:final value) =>
-              types.TypeSelection.wrapComplete(value.actualType),
-            _ => types.TypeSelection.unknown,
+            skir.DataValue_namedWrapper(:final value) =>
+              skir.TypeSelection.wrapComplete(value.actualType),
+            _ => skir.TypeSelection.unknown,
           };
         }
       }
@@ -1455,39 +1415,38 @@ final class AuthoredDraft {
     }
   }
 
-  types.DataValue? _materializeParent(
-    types.TypeSelection containing,
-    types.FieldOwner owner,
-    types.NamedTypeUse expected,
+  skir.DataValue? _materializeParent(
+    skir.TypeSelection containing,
+    skir.FieldOwner owner,
+    skir.NamedTypeUse expected,
   ) {
     final checked = catalog!;
     final containingDefinition = checked.selected(containing)?.definition.id;
     final containingDescriptor = containingDefinition == null
         ? null
         : checked.initialization(containingDefinition);
-    if (containingDescriptor?.mode ==
-        catalog_wire.InitializationMode.creation) {
+    if (containingDescriptor?.mode == skir.InitializationMode.creation) {
       return null;
     }
     final captured = containingDescriptor?.captured
         .where((candidate) => candidate.field == owner)
         .firstOrNull
         ?.value;
-    if (captured case types.DataValue_namedWrapper(:final value)
+    if (captured case skir.DataValue_namedWrapper(:final value)
         when checked.isReadableAs(
-          types.TypeUse.wrapNamed(value.actualType),
-          types.TypeUse.wrapNamed(expected),
+          skir.TypeUse.wrapNamed(value.actualType),
+          skir.TypeUse.wrapNamed(expected),
         )) {
       return captured;
     }
     final descriptor = checked.initialization(expected.definition);
-    if (descriptor?.mode == catalog_wire.InitializationMode.creation) {
+    if (descriptor?.mode == skir.InitializationMode.creation) {
       return null;
     }
-    return _defaultForNamed(expected, <types.NamedTypeUse>{});
+    return _defaultForNamed(expected, <skir.NamedTypeUse>{});
   }
 
-  _ParentInitialization? _parentInitialization(types.ValueLocation target) {
+  _ParentInitialization? _parentInitialization(skir.ValueLocation target) {
     final checked = catalog;
     final root = _resources[target.resource];
     if (checked == null || root == null || target.path.segments.length < 2) {
@@ -1495,13 +1454,13 @@ final class AuthoredDraft {
     }
     var selection = root.configuration;
     var fields = root.fields.toList(growable: false);
-    var currentPath = <types.PathSegment>[];
+    var currentPath = <skir.PathSegment>[];
     for (final segment in target.path.segments.take(
       target.path.segments.length - 1,
     )) {
       currentPath = [...currentPath, segment];
-      final child = root.readAt(types.ValuePath(segments: currentPath));
-      if (segment case types.PathSegment_fieldWrapper(:final value)) {
+      final child = root.readAt(skir.ValuePath(segments: currentPath));
+      if (segment case skir.PathSegment_fieldWrapper(:final value)) {
         final field = checked
             .fields(selection)
             .where((candidate) => candidate.template.key == value.name)
@@ -1510,15 +1469,15 @@ final class AuthoredDraft {
         if (field == null || expected == null) return null;
         final childValue = switch (child) {
           PortablePathValue(:final value) => value,
-          PortablePathUnavailable() => types.DataValue.unfilled,
+          PortablePathUnavailable() => skir.DataValue.unfilled,
         };
-        if ((childValue == types.DataValue.unfilled ||
-                childValue == types.DataValue.null_) &&
+        if ((childValue == skir.DataValue.unfilled ||
+                childValue == skir.DataValue.null_) &&
             _materializeParent(selection, field.template.owner, expected) ==
                 null) {
-          final location = types.ValueLocation(
+          final location = skir.ValueLocation(
             resource: target.resource,
-            path: types.ValuePath(segments: currentPath),
+            path: skir.ValuePath(segments: currentPath),
           );
           final supplied = fields
               .where((candidate) => candidate.name != value.name)
@@ -1541,9 +1500,9 @@ final class AuthoredDraft {
             "containing",
           );
           final childIdentity = _initializationIntentHash(operation, "child");
-          final containingLocation = types.ValueLocation(
+          final containingLocation = skir.ValueLocation(
             resource: target.resource,
-            path: types.ValuePath(
+            path: skir.ValuePath(
               segments: currentPath.take(currentPath.length - 1),
             ),
           );
@@ -1552,8 +1511,8 @@ final class AuthoredDraft {
             containing: containingLocation,
             field: value.name,
             expected: expected,
-            request: catalog_wire.InitializationRequest(
-              id: types.InitializationRequestId(
+            request: skir.InitializationRequest(
+              id: skir.InitializationRequestId(
                 value: "panel:materialize:${operation.id}:containing",
               ),
               catalog: generation,
@@ -1561,32 +1520,32 @@ final class AuthoredDraft {
               supplied: supplied,
               intentHash: containingIdentity,
             ),
-            childRequest: catalog_wire.InitializationRequest(
-              id: types.InitializationRequestId(
+            childRequest: skir.InitializationRequest(
+              id: skir.InitializationRequestId(
                 value: "panel:materialize:${operation.id}:child",
               ),
               catalog: generation,
-              type: types.TypeSelection.wrapComplete(expected),
+              type: skir.TypeSelection.wrapComplete(expected),
               supplied: const [],
               intentHash: childIdentity,
             ),
           );
         }
         selection = switch (childValue) {
-          types.DataValue_namedWrapper(:final value) =>
-            types.TypeSelection.wrapComplete(value.actualType),
-          _ => types.TypeSelection.unknown,
+          skir.DataValue_namedWrapper(:final value) =>
+            skir.TypeSelection.wrapComplete(value.actualType),
+          _ => skir.TypeSelection.unknown,
         };
         fields =
             childValue.authoredRecord?.fields.toList(growable: false) ??
             const [];
       } else {
-        if (child is! PortablePathValue<types.DataValue>) return null;
+        if (child is! PortablePathValue<skir.DataValue>) return null;
         final childValue = child.value;
         selection = switch (childValue) {
-          types.DataValue_namedWrapper(:final value) =>
-            types.TypeSelection.wrapComplete(value.actualType),
-          _ => types.TypeSelection.unknown,
+          skir.DataValue_namedWrapper(:final value) =>
+            skir.TypeSelection.wrapComplete(value.actualType),
+          _ => skir.TypeSelection.unknown,
         };
         fields =
             childValue.authoredRecord?.fields.toList(growable: false) ??
@@ -1597,18 +1556,18 @@ final class AuthoredDraft {
   }
 
   String _initializationFingerprint(
-    types.ValueLocation location,
-    types.TypeSelection selection,
-    List<types.FieldValue> supplied,
+    skir.ValueLocation location,
+    skir.TypeSelection selection,
+    List<skir.FieldValue> supplied,
   ) {
     final bytes = <int>[
-      ...types.CatalogGeneration.serializer.toBytes(generation),
-      ...types.ValueLocation.serializer.toBytes(location),
-      ...types.TypeSelection.serializer.toBytes(selection),
+      ...skir.CatalogGeneration.serializer.toBytes(generation),
+      ...skir.ValueLocation.serializer.toBytes(location),
+      ...skir.TypeSelection.serializer.toBytes(selection),
       for (final field in [
         ...supplied,
       ]..sort((a, b) => a.name.compareTo(b.name)))
-        ...types.FieldValue.serializer.toBytes(field),
+        ...skir.FieldValue.serializer.toBytes(field),
     ];
     return sha256.convert(bytes).toString();
   }
@@ -1620,37 +1579,38 @@ final class AuthoredDraft {
       .convert(utf8.encode("${operation.id}:${operation.fingerprint}:$step"))
       .toString();
 
-  types.DataValue _defaultForNamed(
-    types.NamedTypeUse actual,
-    Set<types.NamedTypeUse> visiting,
+  skir.DataValue _defaultForNamed(
+    skir.NamedTypeUse actual,
+    Set<skir.NamedTypeUse> visiting,
   ) {
-    if (visiting.contains(actual)) return types.DataValue.unfilled;
+    if (visiting.contains(actual)) return skir.DataValue.unfilled;
     final checked = catalog!;
     final published = checked.published(actual.definition);
-    if (published == null) return types.DataValue.unfilled;
-    final selection = types.TypeSelection.wrapComplete(actual);
+    if (published == null) return skir.DataValue.unfilled;
+    final selection = skir.TypeSelection.wrapComplete(actual);
     final descriptor = checked.initialization(actual.definition);
     final payload = switch (published.definition.representation) {
-      types.RepresentationTemplate_scalarWrapper(:final value) =>
-        _scalarDefault(value.kind),
-      types.RepresentationTemplate_sequenceWrapper(:final value) =>
-        value.kind == types.CollectionKind.list
-            ? types.DataValue.createListValue(items: const [])
-            : types.DataValue.createSetValue(items: const []),
-      types.RepresentationTemplate_mappingWrapper() =>
-        types.DataValue.createMapValue(rows: const []),
-      types.RepresentationTemplate_enumerationWrapper(:final value) =>
+      skir.RepresentationTemplate_scalarWrapper(:final value) => _scalarDefault(
+        value.kind,
+      ),
+      skir.RepresentationTemplate_sequenceWrapper(:final value) =>
+        value.kind == skir.CollectionKind.list
+            ? skir.DataValue.createListValue(items: const [])
+            : skir.DataValue.createSetValue(items: const []),
+      skir.RepresentationTemplate_mappingWrapper() =>
+        skir.DataValue.createMapValue(rows: const []),
+      skir.RepresentationTemplate_enumerationWrapper(:final value) =>
         value.cases.firstOrNull == null
-            ? types.DataValue.unfilled
-            : types.DataValue.wrapEnumCase(value.cases.first.key),
-      types.RepresentationTemplate_linkWrapper() => types.DataValue.unfilled,
-      types.RepresentationTemplate_recordWrapper(:final value) =>
+            ? skir.DataValue.unfilled
+            : skir.DataValue.wrapEnumCase(value.cases.first.key),
+      skir.RepresentationTemplate_linkWrapper() => skir.DataValue.unfilled,
+      skir.RepresentationTemplate_recordWrapper(:final value) =>
         value.abstract_
-            ? types.DataValue.unfilled
-            : types.DataValue.createRecord(
+            ? skir.DataValue.unfilled
+            : skir.DataValue.createRecord(
                 fields: [
                   for (final field in checked.fields(selection))
-                    types.FieldValue(
+                    skir.FieldValue(
                       name: field.template.key,
                       value: _fieldDefault(
                         field,
@@ -1660,16 +1620,16 @@ final class AuthoredDraft {
                     ),
                 ],
               ),
-      types.RepresentationTemplate_unknown() => types.DataValue.unfilled,
+      skir.RepresentationTemplate_unknown() => skir.DataValue.unfilled,
     };
-    if (payload == types.DataValue.unfilled) return payload;
-    return types.DataValue.createNamed(actualType: actual, payload: payload);
+    if (payload == skir.DataValue.unfilled) return payload;
+    return skir.DataValue.createNamed(actualType: actual, payload: payload);
   }
 
-  types.DataValue _fieldDefault(
+  skir.DataValue _fieldDefault(
     AppliedEditorField field, {
-    required catalog_wire.InitializationDescriptor? descriptor,
-    required Set<types.NamedTypeUse> visiting,
+    required skir.InitializationDescriptor? descriptor,
+    required Set<skir.NamedTypeUse> visiting,
   }) {
     final checked = catalog!;
     final captured = descriptor?.captured
@@ -1678,49 +1638,49 @@ final class AuthoredDraft {
         ?.value;
     if (captured != null) return captured;
     if (checked.hasConstructorDefault(field.template.owner)) {
-      return types.DataValue.unfilled;
+      return skir.DataValue.unfilled;
     }
     return _defaultForType(field.type, visiting);
   }
 
-  types.DataValue _defaultForType(
-    types.TypeUse? type,
-    Set<types.NamedTypeUse> visiting,
+  skir.DataValue _defaultForType(
+    skir.TypeUse? type,
+    Set<skir.NamedTypeUse> visiting,
   ) => switch (type) {
-    types.TypeUse_nullableWrapper() => types.DataValue.null_,
-    types.TypeUse_scalarWrapper(:final value) => _scalarDefault(value),
-    types.TypeUse_namedWrapper(:final value) => _defaultForNamed(
+    skir.TypeUse_nullableWrapper() => skir.DataValue.null_,
+    skir.TypeUse_scalarWrapper(:final value) => _scalarDefault(value),
+    skir.TypeUse_namedWrapper(:final value) => _defaultForNamed(
       value,
       visiting,
     ),
-    _ => types.DataValue.unfilled,
+    _ => skir.DataValue.unfilled,
   };
 
-  types.DataValue _scalarDefault(types.ScalarKind kind) => switch (kind) {
-    types.ScalarKind.unit => types.DataValue.unit,
-    types.ScalarKind.boolean => types.DataValue.wrapBoolean(false),
-    types.ScalarKind.text => types.DataValue.wrapStringValue(""),
-    types.ScalarKind_integerWrapper() => types.DataValue.wrapInteger("0"),
-    types.ScalarKind_floatWrapper() => types.DataValue.wrapFloat(0),
-    types.ScalarKind.decimal => types.DataValue.wrapDecimal("0"),
-    types.ScalarKind.bytes => types.DataValue.wrapBytes(ByteString.empty),
-    types.ScalarKind.duration => types.DataValue.createDuration(
-      value: kernel.Duration(milliseconds: 0),
+  skir.DataValue _scalarDefault(skir.ScalarKind kind) => switch (kind) {
+    skir.ScalarKind.unit => skir.DataValue.unit,
+    skir.ScalarKind.boolean => skir.DataValue.wrapBoolean(false),
+    skir.ScalarKind.text => skir.DataValue.wrapStringValue(""),
+    skir.ScalarKind_integerWrapper() => skir.DataValue.wrapInteger("0"),
+    skir.ScalarKind_floatWrapper() => skir.DataValue.wrapFloat(0),
+    skir.ScalarKind.decimal => skir.DataValue.wrapDecimal("0"),
+    skir.ScalarKind.bytes => skir.DataValue.wrapBytes(skir.ByteString.empty),
+    skir.ScalarKind.duration => skir.DataValue.createDuration(
+      value: skir.Duration(milliseconds: 0),
     ),
-    types.ScalarKind.timestamp => types.DataValue.unfilled,
-    _ => types.DataValue.unfilled,
+    skir.ScalarKind.timestamp => skir.DataValue.unfilled,
+    _ => skir.DataValue.unfilled,
   };
 
-  PortablePathResult<types.AuthoringRecord> _updateCollection(
-    types.ValueLocation location,
-    List<types.ListItem>? Function(List<types.ListItem> items) update,
-    authoring.EditIntent intent,
+  PortablePathResult<skir.AuthoringRecord> _updateCollection(
+    skir.ValueLocation location,
+    List<skir.ListItem>? Function(List<skir.ListItem> items) update,
+    skir.EditIntent intent,
   ) {
     final current = read(location);
     if (current case PortablePathUnavailable(:final message)) {
       return PortablePathUnavailable(message);
     }
-    final currentValue = (current as PortablePathValue<types.DataValue>).value;
+    final currentValue = (current as PortablePathValue<skir.DataValue>).value;
     final changed = _replaceCollectionItems(
       _collectionValue(location, currentValue),
       update,
@@ -1737,12 +1697,12 @@ final class AuthoredDraft {
     return staged;
   }
 
-  types.DataValue _collectionValue(
-    types.ValueLocation location,
-    types.DataValue current,
+  skir.DataValue _collectionValue(
+    skir.ValueLocation location,
+    skir.DataValue current,
   ) {
     if (current.authoredItems != null ||
-        current.authoredPayload != types.DataValue.unfilled) {
+        current.authoredPayload != skir.DataValue.unfilled) {
       return current;
     }
     final record = _resources[location.resource];
@@ -1750,17 +1710,16 @@ final class AuthoredDraft {
     final expected = catalog?.valueTypeAt(
       record.configuration,
       location.path,
-      value: types.DataValue.createRecord(fields: record.fields),
+      value: skir.DataValue.createRecord(fields: record.fields),
     );
     final initialized = _defaultForType(expected, const {});
     return initialized.authoredItems == null ? current : initialized;
   }
 }
 
-Iterable<diagnostic_wire.InitializationDiagnostic>
-_locatedInitializationFindings(
-  types.ValuePath base,
-  Iterable<diagnostic_wire.InitializationDiagnostic> findings,
+Iterable<skir.InitializationDiagnostic> _locatedInitializationFindings(
+  skir.ValuePath base,
+  Iterable<skir.InitializationDiagnostic> findings,
 ) sync* {
   for (final finding in findings) {
     final relative = finding.relativePath;
@@ -1768,13 +1727,13 @@ _locatedInitializationFindings(
       ...base.segments,
       if (relative != null) ...relative.segments,
     ];
-    yield diagnostic_wire.InitializationDiagnostic(
+    yield skir.InitializationDiagnostic(
       field: finding.field,
       code: finding.code,
       message: finding.message,
       relativePath: segments.isEmpty
           ? null
-          : types.ValuePath(segments: segments),
+          : skir.ValuePath(segments: segments),
     );
   }
 }
@@ -1801,8 +1760,8 @@ final class AuthoredDraftRebaseConflict extends AuthoredDraftRebase {
     required this.actual,
   });
 
-  final facts.EditExpectation expected;
-  final facts.EditExpectation actual;
+  final skir.EditExpectation expected;
+  final skir.EditExpectation actual;
 }
 
 final class _ParentInitialization {
@@ -1815,12 +1774,12 @@ final class _ParentInitialization {
     required this.childRequest,
   });
 
-  final types.ValueLocation location;
-  final types.ValueLocation containing;
+  final skir.ValueLocation location;
+  final skir.ValueLocation containing;
   final String field;
-  final types.NamedTypeUse expected;
-  final catalog_wire.InitializationRequest request;
-  final catalog_wire.InitializationRequest childRequest;
+  final skir.NamedTypeUse expected;
+  final skir.InitializationRequest request;
+  final skir.InitializationRequest childRequest;
 }
 
 final class _MaterializationOperation {
@@ -1850,11 +1809,11 @@ final class _DraftState {
     initializationFindings: List.of(draft._initializationFindings),
   );
 
-  final Map<types.ResourceId, types.AuthoringRecord> resources;
-  final List<facts.LinkProjection> links;
-  final Map<Object, facts.EditExpectation> observed;
-  final List<authoring.EditIntent> intents;
-  final List<diagnostic_wire.InitializationDiagnostic> initializationFindings;
+  final Map<skir.ResourceId, skir.AuthoringRecord> resources;
+  final List<skir.LinkProjection> links;
+  final Map<Object, skir.EditExpectation> observed;
+  final List<skir.EditIntent> intents;
+  final List<skir.InitializationDiagnostic> initializationFindings;
 
   bool matches(AuthoredDraft draft) =>
       _mapsEqual(resources, draft._resources) &&
@@ -1882,25 +1841,25 @@ bool _listsEqual<T>(List<T> first, List<T> second) {
   return true;
 }
 
-facts.EditExpectation _value({required types.ValueLocation at}) =>
-    facts.EditExpectation.createValue(at: at, expected: null);
-facts.EditExpectation _configuration({required types.ValueLocation at}) =>
-    facts.EditExpectation.createConfiguration(at: at, expected: null);
-facts.EditExpectation _exists({required types.ResourceId resource}) =>
-    facts.EditExpectation.createResourceExists(id: resource, expected: false);
-Object _factKey(facts.EditExpectation expected) => switch (expected) {
-  facts.EditExpectation_valueWrapper(:final value) => ("value", value.at),
-  facts.EditExpectation_resourceWrapper(:final value) => ("resource", value.id),
-  facts.EditExpectation_resourceExistsWrapper(:final value) => (
+skir.EditExpectation _value({required skir.ValueLocation at}) =>
+    skir.EditExpectation.createValue(at: at, expected: null);
+skir.EditExpectation _configuration({required skir.ValueLocation at}) =>
+    skir.EditExpectation.createConfiguration(at: at, expected: null);
+skir.EditExpectation _exists({required skir.ResourceId resource}) =>
+    skir.EditExpectation.createResourceExists(id: resource, expected: false);
+Object _factKey(skir.EditExpectation expected) => switch (expected) {
+  skir.EditExpectation_valueWrapper(:final value) => ("value", value.at),
+  skir.EditExpectation_resourceWrapper(:final value) => ("resource", value.id),
+  skir.EditExpectation_resourceExistsWrapper(:final value) => (
     "exists",
     value.id,
   ),
-  facts.EditExpectation_configurationWrapper(:final value) => (
+  skir.EditExpectation_configurationWrapper(:final value) => (
     "configuration",
     value.at,
   ),
-  facts.EditExpectation_resourceIdsWrapper() => "resources",
-  facts.EditExpectation_linksWrapper(:final value) => (
+  skir.EditExpectation_resourceIdsWrapper() => "resources",
+  skir.EditExpectation_linksWrapper(:final value) => (
     "links",
     value.resource,
     value.contract,
@@ -1908,29 +1867,26 @@ Object _factKey(facts.EditExpectation expected) => switch (expected) {
   ),
   _ => throw StateError("Unknown edit expectation"),
 };
-bool _sameExpectation(
-  facts.EditExpectation first,
-  facts.EditExpectation second,
-) {
-  if (first is facts.EditExpectation_linksWrapper &&
-      second is facts.EditExpectation_linksWrapper) {
+bool _sameExpectation(skir.EditExpectation first, skir.EditExpectation second) {
+  if (first is skir.EditExpectation_linksWrapper &&
+      second is skir.EditExpectation_linksWrapper) {
     return _factKey(first) == _factKey(second) &&
         first.value.expected.toSet().length ==
             second.value.expected.toSet().length &&
         first.value.expected.toSet().containsAll(second.value.expected);
   }
-  if (first is facts.EditExpectation_resourceIdsWrapper &&
-      second is facts.EditExpectation_resourceIdsWrapper) {
+  if (first is skir.EditExpectation_resourceIdsWrapper &&
+      second is skir.EditExpectation_resourceIdsWrapper) {
     return first.value.toSet().length == second.value.toSet().length &&
         first.value.toSet().containsAll(second.value);
   }
   if (_factKey(first) != _factKey(second)) return false;
-  if (first is facts.EditExpectation_valueWrapper &&
-      second is facts.EditExpectation_valueWrapper) {
+  if (first is skir.EditExpectation_valueWrapper &&
+      second is skir.EditExpectation_valueWrapper) {
     return _sameExpectedValue(first.value.expected, second.value.expected);
   }
-  if (first is facts.EditExpectation_resourceWrapper &&
-      second is facts.EditExpectation_resourceWrapper) {
+  if (first is skir.EditExpectation_resourceWrapper &&
+      second is skir.EditExpectation_resourceWrapper) {
     final left = first.value.expected;
     final right = second.value.expected;
     if (left == null || right == null) return left == right;
@@ -1941,8 +1897,8 @@ bool _sameExpectation(
 }
 
 bool _sameExpectedFields(
-  Iterable<types.FieldValue> first,
-  Iterable<types.FieldValue> second,
+  Iterable<skir.FieldValue> first,
+  Iterable<skir.FieldValue> second,
 ) {
   final left = {for (final field in first) field.name: field.value};
   final right = {for (final field in second) field.name: field.value};
@@ -1954,33 +1910,33 @@ bool _sameExpectedFields(
       );
 }
 
-bool _sameExpectedValue(types.DataValue? first, types.DataValue? second) {
+bool _sameExpectedValue(skir.DataValue? first, skir.DataValue? second) {
   if (first == null || second == null) return first == second;
   return switch ((first, second)) {
     (
-      types.DataValue_recordWrapper(value: final left),
-      types.DataValue_recordWrapper(value: final right),
+      skir.DataValue_recordWrapper(value: final left),
+      skir.DataValue_recordWrapper(value: final right),
     ) =>
       _sameExpectedFields(left.fields, right.fields),
     (
-      types.DataValue_namedWrapper(value: final left),
-      types.DataValue_namedWrapper(value: final right),
+      skir.DataValue_namedWrapper(value: final left),
+      skir.DataValue_namedWrapper(value: final right),
     ) =>
       left.actualType == right.actualType &&
           _sameExpectedValue(left.payload, right.payload),
     (
-      types.DataValue_listValueWrapper(value: final left),
-      types.DataValue_listValueWrapper(value: final right),
+      skir.DataValue_listValueWrapper(value: final left),
+      skir.DataValue_listValueWrapper(value: final right),
     ) =>
       _sameExpectedItems(left.items, right.items),
     (
-      types.DataValue_setValueWrapper(value: final left),
-      types.DataValue_setValueWrapper(value: final right),
+      skir.DataValue_setValueWrapper(value: final left),
+      skir.DataValue_setValueWrapper(value: final right),
     ) =>
       _sameExpectedItems(left.items, right.items),
     (
-      types.DataValue_mapValueWrapper(value: final left),
-      types.DataValue_mapValueWrapper(value: final right),
+      skir.DataValue_mapValueWrapper(value: final left),
+      skir.DataValue_mapValueWrapper(value: final right),
     ) =>
       left.rows.length == right.rows.length &&
           Iterable<int>.generate(left.rows.length).every(
@@ -1997,8 +1953,8 @@ bool _sameExpectedValue(types.DataValue? first, types.DataValue? second) {
                 ),
           ),
     (
-      types.DataValue_floatWrapper(value: final left),
-      types.DataValue_floatWrapper(value: final right),
+      skir.DataValue_floatWrapper(value: final left),
+      skir.DataValue_floatWrapper(value: final right),
     ) =>
       left == right && left.isNegative == right.isNegative ||
           left.isNaN && right.isNaN,
@@ -2007,8 +1963,8 @@ bool _sameExpectedValue(types.DataValue? first, types.DataValue? second) {
 }
 
 bool _sameExpectedItems(
-  Iterable<types.ListItem> first,
-  Iterable<types.ListItem> second,
+  Iterable<skir.ListItem> first,
+  Iterable<skir.ListItem> second,
 ) =>
     first.length == second.length &&
     Iterable<int>.generate(first.length).every(
@@ -2020,75 +1976,75 @@ bool _sameExpectedItems(
           ),
     );
 
-types.ValueLocation _root(types.ResourceId resource) => types.ValueLocation(
+skir.ValueLocation _root(skir.ResourceId resource) => skir.ValueLocation(
   resource: resource,
-  path: types.ValuePath(segments: const []),
+  path: skir.ValuePath(segments: const []),
 );
 
-types.NamedTypeUse? _concreteNamed(types.TypeUse? type) => switch (type) {
-  types.TypeUse_namedWrapper(:final value) => value,
-  types.TypeUse_nullableWrapper(:final value) => _concreteNamed(value.value),
+skir.NamedTypeUse? _concreteNamed(skir.TypeUse? type) => switch (type) {
+  skir.TypeUse_namedWrapper(:final value) => value,
+  skir.TypeUse_nullableWrapper(:final value) => _concreteNamed(value.value),
   _ => null,
 };
 
-types.ValuePath? _directFieldPath(types.RelativeFieldPattern pattern) {
-  final segments = <types.PathSegment>[];
+skir.ValuePath? _directFieldPath(skir.RelativeFieldPattern pattern) {
+  final segments = <skir.PathSegment>[];
   for (final segment in pattern.segments) {
-    if (segment case types.FieldPatternSegment_fieldWrapper(:final value)) {
-      segments.add(types.PathSegment.createField(name: value.name));
+    if (segment case skir.FieldPatternSegment_fieldWrapper(:final value)) {
+      segments.add(skir.PathSegment.createField(name: value.name));
     } else {
       return null;
     }
   }
-  return types.ValuePath(segments: segments);
+  return skir.ValuePath(segments: segments);
 }
 
-types.DataValue valueAt(types.AuthoringRecord record, types.ValuePath path) =>
+skir.DataValue valueAt(skir.AuthoringRecord record, skir.ValuePath path) =>
     switch (record.readAt(path)) {
       PortablePathValue(:final value) => value,
-      PortablePathUnavailable() => types.DataValue.unfilled,
+      PortablePathUnavailable() => skir.DataValue.unfilled,
     };
 
-types.DataValue? _replaceCollectionItems(
-  types.DataValue value,
-  List<types.ListItem>? Function(List<types.ListItem> items) update,
+skir.DataValue? _replaceCollectionItems(
+  skir.DataValue value,
+  List<skir.ListItem>? Function(List<skir.ListItem> items) update,
 ) => switch (value) {
-  types.DataValue_namedWrapper(:final value) => switch (_replaceCollectionItems(
+  skir.DataValue_namedWrapper(:final value) => switch (_replaceCollectionItems(
     value.payload,
     update,
   )) {
-    final payload? => types.DataValue.createNamed(
+    final payload? => skir.DataValue.createNamed(
       actualType: value.actualType,
       payload: payload,
     ),
     null => null,
   },
-  types.DataValue_listValueWrapper(:final value) => switch (update(
+  skir.DataValue_listValueWrapper(:final value) => switch (update(
     value.items.toList(),
   )) {
-    final items? => types.DataValue.createListValue(items: items),
+    final items? => skir.DataValue.createListValue(items: items),
     null => null,
   },
-  types.DataValue_setValueWrapper(:final value) => switch (update(
+  skir.DataValue_setValueWrapper(:final value) => switch (update(
     value.items.toList(),
   )) {
-    final items? => types.DataValue.createSetValue(items: items),
+    final items? => skir.DataValue.createSetValue(items: items),
     null => null,
   },
   _ => null,
 };
 
-bool _containsLink(types.DataValue value) => switch (value) {
-  types.DataValue_linkWrapper() => true,
-  types.DataValue_namedWrapper(:final value) => _containsLink(value.payload),
-  types.DataValue_recordWrapper(:final value) => value.fields.any(
+bool _containsLink(skir.DataValue value) => switch (value) {
+  skir.DataValue_linkWrapper() => true,
+  skir.DataValue_namedWrapper(:final value) => _containsLink(value.payload),
+  skir.DataValue_recordWrapper(:final value) => value.fields.any(
     (field) => _containsLink(field.value),
   ),
-  types.DataValue_listValueWrapper(:final value) ||
-  types.DataValue_setValueWrapper(
+  skir.DataValue_listValueWrapper(:final value) ||
+  skir.DataValue_setValueWrapper(
     :final value,
   ) => value.items.any((item) => _containsLink(item.value)),
-  types.DataValue_mapValueWrapper(:final value) => value.rows.any(
+  skir.DataValue_mapValueWrapper(:final value) => value.rows.any(
     (entry) => _containsLink(entry.key) || _containsLink(entry.value),
   ),
   _ => false,

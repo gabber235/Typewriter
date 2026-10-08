@@ -1,6 +1,4 @@
-import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 part "cursor_controller.g.dart";
 

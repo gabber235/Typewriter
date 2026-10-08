@@ -1,11 +1,6 @@
-import "dart:async";
-import "dart:typed_data";
-
-import "package:riverpod/riverpod.dart";
-import "package:skir_client/skir_client.dart";
-import "package:typewriter_panel/infrastructure/messaging/nats_client.dart";
-import "package:typewriter_panel/infrastructure/messaging/nats_provider.dart";
-import "package:typewriter_panel/infrastructure/observability/observability.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
 
 const _requestTimeout = Duration(seconds: 10);
 const _membershipStream = "TYPEWRITER_MEMBERSHIP";
@@ -94,7 +89,7 @@ extension RefNatsExtension on Ref {
   Future<TResponse> requestSkir<TResponse>(
     String subject,
     Uint8List requestBytes,
-    Serializer<TResponse> serializer,
+    skir.Serializer<TResponse> serializer,
   ) async {
     final telemetry = await read(panelTelemetryProvider.future);
     final client = read(natsProvider);
@@ -124,7 +119,7 @@ extension RefNatsExtension on Ref {
     required String subject,
     required String listenSubject,
     required Uint8List requestBytes,
-    required Serializer<TResponse> serializer,
+    required skir.Serializer<TResponse> serializer,
     required TData Function(TData?, TResponse) transformer,
   }) {
     final client = watch(natsProvider);
@@ -260,8 +255,8 @@ extension RefNatsExtension on Ref {
     required String subject,
     required String eventSubject,
     required Uint8List requestBytes,
-    required Serializer<TResponse> responseSerializer,
-    required Serializer<TEvent> eventSerializer,
+    required skir.Serializer<TResponse> responseSerializer,
+    required skir.Serializer<TEvent> eventSerializer,
     required SequencedSnapshot<TData> Function(TResponse) snapshot,
     required int Function(TEvent) eventSequence,
     required TData Function(TData, TEvent) reduce,

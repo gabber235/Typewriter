@@ -1,8 +1,5 @@
-import "dart:typed_data";
-
 import "package:faker/faker.dart";
-import "package:iconify_flutter_plus/icons/fa6_solid.dart";
-import "package:typewriter_panel/typewriter_panel.dart" hide random;
+import "package:typewriter_panel/typewriter_panel.dart";
 
 const defaultElementIcons = <String>[
   "fa-solid:star",

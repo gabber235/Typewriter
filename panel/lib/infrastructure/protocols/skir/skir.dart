@@ -1,9 +1,14 @@
 /// Public Skir boundary for panel protocol models and domain codecs.
 ///
-/// Generated wire declarations are re exported for transport use, while
-/// handwritten codecs and converters keep those declarations away from most
-/// application code. The generated tree is not edited here.
+/// Import this library as `skir` so protocol names stay distinct from panel and
+/// Flutter names. It exposes generated declarations, serializers, and primitive
+/// converters used at protocol boundaries. The generated tree is not edited.
 library;
+
+import "skirout/editor/v1/authoring.dart"
+    show ArgumentLocation, ArgumentLocation_mutable, ArgumentLocation_orMutable;
+
+export "package:skir_client/skir_client.dart" hide EnumVariant, Service;
 
 export "converters.dart";
 export "skirout/access/v1/permission.dart";
@@ -47,3 +52,8 @@ export "skirout/service/v1/registration.dart";
 export "skirout/service/v1/service.dart";
 export "skirout/service/v1/status.dart";
 export "skirout/service/v1/topology.dart";
+
+/// Authoring argument placement, distinct from diagnostic argument locations.
+typedef AuthoringArgumentLocation = ArgumentLocation;
+typedef AuthoringArgumentLocationMutable = ArgumentLocation_mutable;
+typedef AuthoringArgumentLocationOrMutable = ArgumentLocation_orMutable;

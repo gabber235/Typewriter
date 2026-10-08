@@ -1,5 +1,3 @@
-import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Gates authenticated route content on the panel's NATS lifecycle.

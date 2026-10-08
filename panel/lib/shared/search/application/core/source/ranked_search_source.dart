@@ -1,5 +1,3 @@
-import "dart:math";
-
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Extracts a candidate field used by [RankedSearchSource].

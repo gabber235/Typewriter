@@ -1,7 +1,3 @@
-import "dart:async";
-
-import "package:freezed_annotation/freezed_annotation.dart";
-import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -193,32 +189,32 @@ class OrganizationPresence extends _$OrganizationPresence {
     final page = after("page");
     if (realm != null && book != null && page != null) {
       return skir.PresenceLocation.createPage(
-        realmId: recordId("service:$realm"),
-        bookId: recordId("book:$book"),
-        pageId: recordId("page:$page"),
+        realmId: skir.recordId("service:$realm"),
+        bookId: skir.recordId("book:$book"),
+        pageId: skir.recordId("page:$page"),
         activity: _activity,
       );
     }
     if (realm != null && book != null) {
       return skir.PresenceLocation.createBook(
-        realmId: recordId("service:$realm"),
-        bookId: recordId("book:$book"),
+        realmId: skir.recordId("service:$realm"),
+        bookId: skir.recordId("book:$book"),
       );
     }
     if (realm != null && segments.contains("tags")) {
       return skir.PresenceLocation.createRealmTags(
-        realmId: recordId("service:$realm"),
+        realmId: skir.recordId("service:$realm"),
       );
     }
 
     if (realm != null && segments.contains("library")) {
       return skir.PresenceLocation.createRealmLibrary(
-        realmId: recordId("service:$realm"),
+        realmId: skir.recordId("service:$realm"),
       );
     }
     if (realm != null) {
       return skir.PresenceLocation.createRealm(
-        realmId: recordId("service:$realm"),
+        realmId: skir.recordId("service:$realm"),
       );
     }
     if (segments.contains("members")) {

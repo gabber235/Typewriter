@@ -1,5 +1,3 @@
-import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Signs out the current user and reports failure without exposing its cause.

@@ -1,33 +1,24 @@
-import "dart:async";
-import "dart:convert";
-
-import "package:flutter/material.dart";
-import "package:freezed_annotation/freezed_annotation.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring.dart"
-    as authoring;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as catalog_wire;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "authored_type_argument_editor.freezed.dart";
 
-typedef AuthoredTypePreview = Future<authoring.TypePreviewResult> Function(
-  types.TypeSelection requested,
+typedef AuthoredTypePreview = Future<skir.TypePreviewResult> Function(
+  skir.TypeSelection requested,
 );
 typedef AuthoredTypeCommit =
-    Future<authoring.CommitTypeArgumentChangeResponse> Function(
-      authoring.TypeArgumentChangePreview preview,
+    Future<skir.CommitTypeArgumentChangeResponse> Function(
+      skir.TypeArgumentChangePreview preview,
     );
 
 @freezed
 sealed class AuthoredTypeUseCandidate with _$AuthoredTypeUseCandidate {
   const factory AuthoredTypeUseCandidate.selection(
-    types.TypeSelection selection,
+    skir.TypeSelection selection,
   ) = AuthoredTypeSelectionCandidate;
 
-  const factory AuthoredTypeUseCandidate.direct(types.TypeUse type) =
+  const factory AuthoredTypeUseCandidate.direct(skir.TypeUse type) =
       AuthoredDirectTypeUseCandidate;
 }
 
@@ -43,7 +34,7 @@ Future<T?> showAuthoredTypeSearch<T extends Object>(
   required Iterable<T> candidates,
   required String Function(T candidate) id,
   required String Function(T candidate) label,
-  catalog_wire.TypeDisplay? Function(T candidate)? display,
+  skir.TypeDisplay? Function(T candidate)? display,
 }) {
   final values = List<T>.unmodifiable(candidates);
   final identities = <String>{};
@@ -102,7 +93,7 @@ Future<T?> showAuthoredTypeSearch<T extends Object>(
   );
 }
 
-Future<types.TypeUse?> showAuthoredTypeUsePicker(
+Future<skir.TypeUse?> showAuthoredTypeUsePicker(
   BuildContext context, {
   required String title,
   required CheckedEditorCatalog catalog,
@@ -137,9 +128,9 @@ Future<types.TypeUse?> showAuthoredTypeUsePicker(
   return switch (selected) {
     AuthoredDirectTypeUseCandidate(:final type) => type,
     AuthoredTypeSelectionCandidate(:final selection) => switch (selection) {
-      types.TypeSelection_completeWrapper(:final value) =>
-        types.TypeUse.wrapNamed(value),
-      types.TypeSelection_pendingWrapper() => showDialog<types.TypeUse>(
+      skir.TypeSelection_completeWrapper(:final value) =>
+        skir.TypeUse.wrapNamed(value),
+      skir.TypeSelection_pendingWrapper() => showDialog<skir.TypeUse>(
         context: context,
         barrierDismissible: false,
         builder: (context) => SelectionOperationsRoot(
@@ -161,21 +152,21 @@ List<AuthoredTypeUseCandidate> _typeUseSearchCandidates(
 ) {
   final candidates = <AuthoredTypeUseCandidate>[];
   for (final published in catalog.snapshot.types) {
-    if (published.status != catalog_wire.DeclarationStatus.ready) continue;
+    if (published.status != skir.DeclarationStatus.ready) continue;
     final selection = catalog.beginSelection(published.definition.id);
-    if (selection == types.TypeSelection.unknown) continue;
+    if (selection == skir.TypeSelection.unknown) continue;
     candidates.add(AuthoredTypeUseCandidate.selection(selection));
-    if (selection case types.TypeSelection_completeWrapper(:final value)) {
-      final nullable = types.TypeUse.createNullable(
-        value: types.TypeUse.wrapNamed(value),
+    if (selection case skir.TypeSelection_completeWrapper(:final value)) {
+      final nullable = skir.TypeUse.createNullable(
+        value: skir.TypeUse.wrapNamed(value),
       );
       candidates.add(AuthoredTypeUseCandidate.direct(nullable));
     }
   }
   for (final scalar in _authoredScalarTypes) {
     for (final type in [
-      types.TypeUse.wrapScalar(scalar),
-      types.TypeUse.createNullable(value: types.TypeUse.wrapScalar(scalar)),
+      skir.TypeUse.wrapScalar(scalar),
+      skir.TypeUse.createNullable(value: skir.TypeUse.wrapScalar(scalar)),
     ]) {
       candidates.add(AuthoredTypeUseCandidate.direct(type));
     }
@@ -183,46 +174,46 @@ List<AuthoredTypeUseCandidate> _typeUseSearchCandidates(
   return List.unmodifiable(candidates);
 }
 
-catalog_wire.TypeDisplay? _typeUseDisplay(
+skir.TypeDisplay? _typeUseDisplay(
   CheckedEditorCatalog catalog,
-  types.TypeUse type,
+  skir.TypeUse type,
 ) => switch (type) {
-  types.TypeUse_namedWrapper(:final value) => catalog.typeDisplay(
+  skir.TypeUse_namedWrapper(:final value) => catalog.typeDisplay(
     value.definition,
   ),
-  types.TypeUse_nullableWrapper(:final value) => _typeUseDisplay(
+  skir.TypeUse_nullableWrapper(:final value) => _typeUseDisplay(
     catalog,
     value.value,
   ),
   _ => null,
 };
 
-final _authoredScalarTypes = <types.ScalarKind>[
-  types.ScalarKind.unit,
-  types.ScalarKind.boolean,
-  types.ScalarKind.text,
-  types.ScalarKind.bytes,
-  types.ScalarKind.decimal,
-  types.ScalarKind.timestamp,
-  types.ScalarKind.duration,
+final _authoredScalarTypes = <skir.ScalarKind>[
+  skir.ScalarKind.unit,
+  skir.ScalarKind.boolean,
+  skir.ScalarKind.text,
+  skir.ScalarKind.bytes,
+  skir.ScalarKind.decimal,
+  skir.ScalarKind.timestamp,
+  skir.ScalarKind.duration,
   for (final width in [
-    types.IntegerWidth.signedEight,
-    types.IntegerWidth.signedSixteen,
-    types.IntegerWidth.signedThirtyTwo,
-    types.IntegerWidth.signedSixtyFour,
-    types.IntegerWidth.unsignedEight,
-    types.IntegerWidth.unsignedSixteen,
-    types.IntegerWidth.unsignedThirtyTwo,
-    types.IntegerWidth.unsignedSixtyFour,
+    skir.IntegerWidth.signedEight,
+    skir.IntegerWidth.signedSixteen,
+    skir.IntegerWidth.signedThirtyTwo,
+    skir.IntegerWidth.signedSixtyFour,
+    skir.IntegerWidth.unsignedEight,
+    skir.IntegerWidth.unsignedSixteen,
+    skir.IntegerWidth.unsignedThirtyTwo,
+    skir.IntegerWidth.unsignedSixtyFour,
   ])
-    types.ScalarKind.createInteger(width: width),
-  types.ScalarKind.createFloat(width: types.FloatWidth.thirtyTwo),
-  types.ScalarKind.createFloat(width: types.FloatWidth.sixtyFour),
+    skir.ScalarKind.createInteger(width: width),
+  skir.ScalarKind.createFloat(width: skir.FloatWidth.thirtyTwo),
+  skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour),
 ];
 
-Future<types.TypeSelection?> showCreationConcreteTypePicker(
+Future<skir.TypeSelection?> showCreationConcreteTypePicker(
   BuildContext context, {
-  required types.TypeSelection expected,
+  required skir.TypeSelection expected,
   required CheckedEditorCatalog catalog,
 }) {
   final candidates = catalog.concreteRecordSelections(expected)
@@ -254,7 +245,7 @@ final class _AuthoredTypeSearchSource<T extends Object>
   final List<T> candidates;
   final String Function(T candidate) id;
   final String Function(T candidate) label;
-  final catalog_wire.TypeDisplay? Function(T candidate)? display;
+  final skir.TypeDisplay? Function(T candidate)? display;
   final _snapshots = StreamController<SearchSourceSnapshot>.broadcast(
     sync: true,
   );
@@ -327,7 +318,7 @@ final class _AuthoredTypeSearchResultItem extends StatelessWidget {
   });
 
   final String label;
-  final catalog_wire.TypeDisplay? display;
+  final skir.TypeDisplay? display;
   final bool selected;
   final bool focused;
   final VoidCallback onTap;
@@ -383,7 +374,7 @@ final class AuthoredTypeArgumentEditor extends StatefulWidget {
     super.key,
   });
 
-  final types.TypeSelection selection;
+  final skir.TypeSelection selection;
   final CheckedEditorCatalog catalog;
   final AuthoredTypePreview preview;
   final AuthoredTypeCommit commit;
@@ -398,7 +389,7 @@ final class AuthoredTypeArgumentEditor extends StatefulWidget {
 
 final class _AuthoredTypeArgumentEditorState
     extends State<AuthoredTypeArgumentEditor> {
-  late types.TypeSelection _selection = widget.selection;
+  late skir.TypeSelection _selection = widget.selection;
   String? _error;
   bool _working = false;
 
@@ -419,7 +410,7 @@ final class _AuthoredTypeArgumentEditorState
     final arguments = _argumentSelections(_selection, parameters.length);
     final changed = _selection != widget.selection;
     final pending = arguments.any(
-      (argument) => argument == types.ArgumentSelection.unfilled,
+      (argument) => argument == skir.ArgumentSelection.unfilled,
     );
     return Card(
       margin: EdgeInsets.only(bottom: context.spacing.space3),
@@ -486,11 +477,11 @@ final class _AuthoredTypeArgumentEditorState
   Widget _argumentRow(
     BuildContext context, {
     required int index,
-    required types.TypeParameter parameter,
-    required types.ArgumentSelection argument,
+    required skir.TypeParameter parameter,
+    required skir.ArgumentSelection argument,
   }) {
     final chosen = switch (argument) {
-      types.ArgumentSelection_chosenWrapper(:final value) => value,
+      skir.ArgumentSelection_chosenWrapper(:final value) => value,
       _ => null,
     };
     return Padding(
@@ -550,7 +541,7 @@ final class _AuthoredTypeArgumentEditorState
     }
   }
 
-  Future<void> _preview(types.TypeSelection requested) async {
+  Future<void> _preview(skir.TypeSelection requested) async {
     setState(() {
       _working = true;
       _error = null;
@@ -559,21 +550,21 @@ final class _AuthoredTypeArgumentEditorState
       final result = await widget.preview(requested);
       if (!mounted) return;
       switch (result) {
-        case authoring.TypePreviewResult_readyWrapper(:final value):
+        case skir.TypePreviewResult_readyWrapper(:final value):
           final accepted = await showDialog<bool>(
             context: context,
             builder: (context) =>
                 _TypeRepairReview(preview: value, catalog: widget.catalog),
           );
           if (accepted == true && mounted) await _commit(value);
-        case authoring.TypePreviewResult_incompleteWrapper(:final value):
+        case skir.TypePreviewResult_incompleteWrapper(:final value):
           setState(
             () => _error =
                 "${value.length} type arguments still need a selection",
           );
-        case authoring.TypePreviewResult_invalidArgumentsWrapper(:final value):
+        case skir.TypePreviewResult_invalidArgumentsWrapper(:final value):
           setState(() => _error = value.map((item) => item.code).join("\n"));
-        case authoring.TypePreviewResult_rejectedWrapper(:final value):
+        case skir.TypePreviewResult_rejectedWrapper(:final value):
           setState(() => _error = value.map((item) => item.code).join("\n"));
         default:
           setState(() => _error = "The type change preview is unavailable");
@@ -585,24 +576,24 @@ final class _AuthoredTypeArgumentEditorState
     }
   }
 
-  Future<void> _commit(authoring.TypeArgumentChangePreview preview) async {
+  Future<void> _commit(skir.TypeArgumentChangePreview preview) async {
     final response = await widget.commit(preview);
     if (!mounted) return;
     final message = switch (response) {
-      authoring.CommitTypeArgumentChangeResponse_resultWrapper(
-        value: authoring.CommitResult.committed,
+      skir.CommitTypeArgumentChangeResponse_resultWrapper(
+        value: skir.CommitResult.committed,
       ) =>
         "Type arguments updated",
-      authoring.CommitTypeArgumentChangeResponse_resultWrapper(
-        value: authoring.CommitResult_conflictWrapper(),
+      skir.CommitTypeArgumentChangeResponse_resultWrapper(
+        value: skir.CommitResult_conflictWrapper(),
       ) =>
         "The resource changed before the type update was saved",
-      authoring.CommitTypeArgumentChangeResponse_resultWrapper(
-        value: authoring.CommitResult_catalogChangedWrapper(),
+      skir.CommitTypeArgumentChangeResponse_resultWrapper(
+        value: skir.CommitResult_catalogChangedWrapper(),
       ) =>
         "The editor catalog changed before the type update was saved",
-      authoring.CommitTypeArgumentChangeResponse_resultWrapper(
-        value: authoring.CommitResult_rejectedWrapper(),
+      skir.CommitTypeArgumentChangeResponse_resultWrapper(
+        value: skir.CommitResult_rejectedWrapper(),
       ) =>
         "The Realm rejected the type update",
       _ => "The type update result is unavailable",
@@ -622,7 +613,7 @@ final class _TypeUseCompositionPicker extends StatefulWidget {
   });
 
   final String title;
-  final types.TypeSelection selection;
+  final skir.TypeSelection selection;
   final CheckedEditorCatalog catalog;
 
   @override
@@ -632,7 +623,7 @@ final class _TypeUseCompositionPicker extends StatefulWidget {
 
 final class _TypeUseCompositionPickerState
     extends State<_TypeUseCompositionPicker> {
-  late types.TypeSelection _selection = widget.selection;
+  late skir.TypeSelection _selection = widget.selection;
   bool _nullable = false;
 
   @override
@@ -642,12 +633,10 @@ final class _TypeUseCompositionPickerState
         selectedDefinition?.definition.parameters.toList() ?? const [];
     final arguments = _argumentSelections(_selection, parameters.length);
     final complete = switch (_selection) {
-      types.TypeSelection_completeWrapper(:final value) =>
+      skir.TypeSelection_completeWrapper(:final value) =>
         _nullable
-            ? types.TypeUse.createNullable(
-                value: types.TypeUse.wrapNamed(value),
-              )
-            : types.TypeUse.wrapNamed(value),
+            ? skir.TypeUse.createNullable(value: skir.TypeUse.wrapNamed(value))
+            : skir.TypeUse.wrapNamed(value),
       _ => null,
     };
     return AlertDialog(
@@ -670,7 +659,7 @@ final class _TypeUseCompositionPickerState
                     child: Align(
                       alignment: AlignmentDirectional.centerStart,
                       child: Text(switch (arguments[item.$1]) {
-                        types.ArgumentSelection_chosenWrapper(:final value) =>
+                        skir.ArgumentSelection_chosenWrapper(:final value) =>
                           "${item.$2.name}: ${widget.catalog.typeUseName(value)}",
                         _ => "${item.$2.name}: Choose a type",
                       }),
@@ -722,7 +711,7 @@ final class _TypeUseCompositionPickerState
 final class _TypeRepairReview extends StatelessWidget {
   const _TypeRepairReview({required this.preview, required this.catalog});
 
-  final authoring.TypeArgumentChangePreview preview;
+  final skir.TypeArgumentChangePreview preview;
   final CheckedEditorCatalog catalog;
 
   @override
@@ -764,34 +753,31 @@ final class _TypeRepairReview extends StatelessWidget {
   }
 }
 
-List<types.ArgumentSelection> _argumentSelections(
-  types.TypeSelection selection,
+List<skir.ArgumentSelection> _argumentSelections(
+  skir.TypeSelection selection,
   int count,
 ) {
   final values = switch (selection) {
-    types.TypeSelection_completeWrapper(:final value) => [
+    skir.TypeSelection_completeWrapper(:final value) => [
       for (final argument in value.arguments)
-        types.ArgumentSelection.wrapChosen(argument),
+        skir.ArgumentSelection.wrapChosen(argument),
     ],
-    types.TypeSelection_pendingWrapper(:final value) =>
-      value.arguments.toList(),
-    _ => <types.ArgumentSelection>[],
+    skir.TypeSelection_pendingWrapper(:final value) => value.arguments.toList(),
+    _ => <skir.ArgumentSelection>[],
   };
   return List.generate(
     count,
-    (index) => index < values.length
-        ? values[index]
-        : types.ArgumentSelection.unfilled,
+    (index) =>
+        index < values.length ? values[index] : skir.ArgumentSelection.unfilled,
   );
 }
 
-String _selectionSearchId(types.TypeSelection selection) => base64Url
-    .encode(types.TypeSelection.serializer.toBytes(selection))
+String _selectionSearchId(skir.TypeSelection selection) => base64Url
+    .encode(skir.TypeSelection.serializer.toBytes(selection))
     .replaceAll("=", "");
 
-String _typeUseSearchId(types.TypeUse type) => base64Url
-    .encode(types.TypeUse.serializer.toBytes(type))
-    .replaceAll("=", "");
+String _typeUseSearchId(skir.TypeUse type) =>
+    base64Url.encode(skir.TypeUse.serializer.toBytes(type)).replaceAll("=", "");
 
 extension on String {
   Color? get _parsedColor {
@@ -804,11 +790,11 @@ extension on String {
   }
 }
 
-String _valuePathLabel(types.ValuePath path) => path.segments
+String _valuePathLabel(skir.ValuePath path) => path.segments
     .map(
       (segment) => switch (segment) {
-        types.PathSegment_fieldWrapper(:final value) => value.name,
-        types.PathSegment_itemWrapper(:final value) => value.id.value,
+        skir.PathSegment_fieldWrapper(:final value) => value.name,
+        skir.PathSegment_itemWrapper(:final value) => value.id.value,
         _ => "?",
       },
     )

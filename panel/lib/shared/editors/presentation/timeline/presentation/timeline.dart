@@ -1,10 +1,3 @@
-import "dart:async";
-import "dart:math" as math;
-
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// The frame values a timeline caller must apply to one source element.
@@ -77,21 +70,18 @@ class Timeline extends HookConsumerWidget {
               () => controller.headerWidth
                   .clamp(
                     style.minHeaderWidth,
-                    math.min(style.maxHeaderWidth, constraints.maxWidth * 0.55),
+                    min(style.maxHeaderWidth, constraints.maxWidth * 0.55),
                   )
                   .toDouble(),
               [controller.headerWidth, style, constraints.maxWidth],
             );
             const handleWidth = 16.0;
             final bodyHeight = useMemoized(
-              () => math.max(0.0, constraints.maxHeight - style.rulerHeight),
+              () => max(0.0, constraints.maxHeight - style.rulerHeight),
               [constraints.maxHeight, style.rulerHeight],
             );
             final planeWidth = useMemoized(
-              () => math.max(
-                0.0,
-                constraints.maxWidth - headerWidth - handleWidth,
-              ),
+              () => max(0.0, constraints.maxWidth - headerWidth - handleWidth),
               [constraints.maxWidth, headerWidth],
             );
             final viewport = useMemoized(
@@ -367,7 +357,7 @@ class Timeline extends HookConsumerWidget {
                       getSize: () => controller.headerWidth,
                       onSizeChange: controller.setHeaderWidth,
                       minSize: style.minHeaderWidth,
-                      maxSize: math.min(
+                      maxSize: min(
                         style.maxHeaderWidth,
                         constraints.maxWidth * 0.55,
                       ),

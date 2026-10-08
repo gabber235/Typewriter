@@ -1,4 +1,3 @@
-import "package:collection/collection.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 const authoringBookSelectorId = "book";

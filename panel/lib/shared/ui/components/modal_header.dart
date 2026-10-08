@@ -1,5 +1,4 @@
-import "package:flutter/material.dart";
-import "package:typewriter_panel/app/presentation/theme/theme.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Header for modal surfaces with a drag affordance, optional title, and
 /// close action.

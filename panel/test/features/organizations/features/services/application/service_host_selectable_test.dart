@@ -1,10 +1,4 @@
-import "dart:async";
-import "dart:typed_data";
-
-import "package:flutter/material.dart";
-
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -22,7 +16,7 @@ part "service_host_selectable_test_support.dart";
 const _updateSubject = "cloud.to.user.user1.organization.org1.services.update";
 const _configureSubject =
     "cloud.to.user.user1.organization.org1.topology.configure";
-final _organizationId = recordId("organization:org1");
+final _organizationId = skir.recordId("organization:org1");
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

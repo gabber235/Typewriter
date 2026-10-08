@@ -1,7 +1,5 @@
-import "dart:async";
-
 // ignore: implementation_imports
-import "package:riverpod/src/framework.dart";
+
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";

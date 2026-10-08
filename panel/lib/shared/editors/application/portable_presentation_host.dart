@@ -1,19 +1,5 @@
-import "package:flutter/foundation.dart";
-import "package:freezed_annotation/freezed_annotation.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/action.dart"
-    as action;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/binding.dart"
-    as binding;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as catalog_wire;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
-    as expression;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/presentation.dart"
-    as presentation;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/search.dart"
-    as search;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "portable_presentation_host.freezed.dart";
@@ -26,11 +12,11 @@ part "portable_presentation_host.freezed.dart";
 @freezed
 sealed class PortablePresentationBindingSchema
     with _$PortablePresentationBindingSchema {
-  const factory PortablePresentationBindingSchema.complete(types.TypeUse use) =
+  const factory PortablePresentationBindingSchema.complete(skir.TypeUse use) =
       CompletePortablePresentationBinding;
 
   const factory PortablePresentationBindingSchema.partial(
-    types.TypeSelection selection,
+    skir.TypeSelection selection,
   ) = PartialPortablePresentationBinding;
 }
 
@@ -38,9 +24,9 @@ sealed class PortablePresentationBindingSchema
 abstract class PortablePresentationBinding with _$PortablePresentationBinding {
   const factory PortablePresentationBinding({
     required PortablePresentationBindingSchema schema,
-    required types.DataValue value,
+    required skir.DataValue value,
     @Default(false) bool editable,
-    types.ValueLocation? location,
+    skir.ValueLocation? location,
   }) = _PortablePresentationBinding;
 }
 
@@ -58,18 +44,18 @@ abstract class PortablePresentationDocument
     with _$PortablePresentationDocument {
   factory PortablePresentationDocument({
     required CheckedEditorCatalog catalog,
-    required presentation.PresentationNode root,
-    required Map<types.ExpressionBindingId, PortablePresentationBinding>
+    required skir.PresentationNode root,
+    required Map<skir.ExpressionBindingId, PortablePresentationBinding>
     bindings,
-    required expression.EvaluationBudget budget,
-    catalog_wire.PresentationRole? role,
-    catalog_wire.PresentationMaterial? material,
-    Set<types.PresentationId> activePresentations = const {},
-    Map<String, presentation.PresentationNode> slots = const {},
+    required skir.EvaluationBudget budget,
+    skir.PresentationRole? role,
+    skir.PresentationMaterial? material,
+    Set<skir.PresentationId> activePresentations = const {},
+    Map<String, skir.PresentationNode> slots = const {},
   }) {
     for (final value in bindings.values) {
       if (value.schema case PartialPortablePresentationBinding(:final selection)
-          when selection is! types.TypeSelection_pendingWrapper) {
+          when selection is! skir.TypeSelection_pendingWrapper) {
         throw ArgumentError.value(
           selection,
           "bindings",
@@ -93,14 +79,14 @@ abstract class PortablePresentationDocument
 
   const factory PortablePresentationDocument._value({
     required CheckedEditorCatalog catalog,
-    required presentation.PresentationNode root,
-    required Map<types.ExpressionBindingId, PortablePresentationBinding>
+    required skir.PresentationNode root,
+    required Map<skir.ExpressionBindingId, PortablePresentationBinding>
     bindings,
-    required expression.EvaluationBudget budget,
-    required catalog_wire.PresentationRole? role,
-    required catalog_wire.PresentationMaterial? material,
-    required Set<types.PresentationId> activePresentations,
-    required Map<String, presentation.PresentationNode> slots,
+    required skir.EvaluationBudget budget,
+    required skir.PresentationRole? role,
+    required skir.PresentationMaterial? material,
+    required Set<skir.PresentationId> activePresentations,
+    required Map<String, skir.PresentationNode> slots,
   }) = _PortablePresentationDocument;
 }
 
@@ -114,20 +100,18 @@ abstract class PortablePresentationCapabilities
     with _$PortablePresentationCapabilities {
   const factory PortablePresentationCapabilities({
     Future<void> Function(
-      types.CapabilityId capabilityId,
-      types.DataValue payload,
+      skir.CapabilityId capabilityId,
+      skir.DataValue payload,
     )?
     invokeCommand,
-    Stream<search.RealmPresentationSearchUpdate> Function(
-      search.RealmPresentationSearchRequest request,
+    Stream<skir.RealmPresentationSearchUpdate> Function(
+      skir.RealmPresentationSearchRequest request,
     )?
     watchSearch,
     Future<void> Function()? reload,
     Future<void> Function()? commit,
-    ValueChanged<types.ResourceId>? openResource,
-    Future<catalog_wire.PreparedCreation> Function(
-      catalog_wire.InitializationRequest request,
-    )?
+    ValueChanged<skir.ResourceId>? openResource,
+    Future<skir.PreparedCreation> Function(skir.InitializationRequest request)?
     prepareCreation,
   }) = _PortablePresentationCapabilities;
 }
@@ -156,19 +140,19 @@ abstract interface class PortablePresentationHost implements Listenable {
 
   PortablePresentationCapabilities get capabilities;
 
-  types.DataValue? read(binding.BindingRef reference);
+  skir.DataValue? read(skir.BindingRef reference);
 
-  types.ValueLocation? location(binding.BindingRef reference);
+  skir.ValueLocation? location(skir.BindingRef reference);
 
-  types.TypeUse? expectedType(binding.BindingRef reference);
+  skir.TypeUse? expectedType(skir.BindingRef reference);
 
   Future<PortablePresentationWriteResult> write(
-    binding.BindingRef reference,
-    types.DataValue value,
+    skir.BindingRef reference,
+    skir.DataValue value,
   );
 
   Future<PortablePresentationWriteResult> execute(
-    action.EditorAction editorAction,
+    skir.EditorAction editorAction,
   );
 
   void dispose();

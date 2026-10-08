@@ -157,7 +157,7 @@ void topologyStateTests() {
   test(
     "organization owners isolate commands and dispose subscriptions",
     () async {
-      final otherId = recordId("organization:org2");
+      final otherId = skir.recordId("organization:org2");
       final nats = FakeNatsClient();
       for (final id in [_organizationId, otherId]) {
         nats.registerHandler(

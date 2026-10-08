@@ -1,4 +1,3 @@
-import "package:flutter/foundation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Defines how local and remote values may be combined at a path.

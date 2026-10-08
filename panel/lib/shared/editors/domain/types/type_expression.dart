@@ -1,4 +1,3 @@
-import "package:freezed_annotation/freezed_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "type_expression.freezed.dart";

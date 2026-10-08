@@ -1,4 +1,4 @@
-import "package:flutter/material.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Adds an animated pixel amount to a child's scale.
 ///

@@ -19,9 +19,7 @@
  * reenter the source. dispose invalidates outstanding work and prevents a
  * stale completion from changing state.
  */
-import "dart:async";
 
-import "package:flutter/foundation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "transactional_editor_persistence.dart";

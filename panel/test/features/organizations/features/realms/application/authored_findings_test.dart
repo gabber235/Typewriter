@@ -1,21 +1,17 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/features/organizations/features/realms/application/authored_findings.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/checking.dart"
-    as checking;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/diagnostic.dart"
-    as diagnostic;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   test("findings retain current and outdated status at exact resources", () {
-    final first = types.ResourceId(value: "resource:first");
-    final second = types.ResourceId(value: "resource:second");
+    final first = skir.ResourceId(value: "resource:first");
+    final second = skir.ResourceId(value: "resource:second");
     final primary = _location(first, "title");
     final related = _location(second, "name");
     final current = _set(
       location: primary,
-      status: checking.FindingStatus.current,
+      status: skir.FindingStatus.current,
       findings: [
         _diagnostic(
           id: "current",
@@ -27,8 +23,8 @@ void main() {
     );
     final outdated = _set(
       location: primary,
-      status: checking.FindingStatus.outdated,
-      outcome: checking.CheckOutcome.wrapFailed([
+      status: skir.FindingStatus.outdated,
+      outcome: skir.CheckOutcome.wrapFailed([
         _diagnostic(
           id: "outdated",
           message: "Previous check failed",
@@ -51,23 +47,20 @@ void main() {
   });
 }
 
-checking.FindingSet _set({
-  required types.ValueLocation location,
-  required checking.FindingStatus status,
-  Iterable<diagnostic.Diagnostic> findings = const [],
-  checking.CheckOutcome outcome = checking.CheckOutcome.finished,
-}) => checking.FindingSet(
-  ticket: checking.CheckTicket(
-    instance: checking.CheckInstanceId(
-      rule: types.RuleId(
-        origin: types.RuleOrigin.defaultInstance,
-        localIndex: 0,
-      ),
+skir.FindingSet _set({
+  required skir.ValueLocation location,
+  required skir.FindingStatus status,
+  Iterable<skir.Diagnostic> findings = const [],
+  skir.CheckOutcome outcome = skir.CheckOutcome.finished,
+}) => skir.FindingSet(
+  ticket: skir.CheckTicket(
+    instance: skir.CheckInstanceId(
+      rule: skir.RuleId(origin: skir.RuleOrigin.defaultInstance, localIndex: 0),
       location: location,
     ),
     incarnation: "test",
-    execution: types.CheckExecutionId(value: "check:1"),
-    catalog: types.CatalogGeneration(value: "catalog:1"),
+    execution: skir.CheckExecutionId(value: "check:1"),
+    catalog: skir.CatalogGeneration(value: "catalog:1"),
   ),
   expectations: const [],
   outcome: outcome,
@@ -75,25 +68,25 @@ checking.FindingSet _set({
   status: status,
 );
 
-diagnostic.Diagnostic _diagnostic({
+skir.Diagnostic _diagnostic({
   required String id,
   required String message,
-  required types.ValueLocation? primary,
-  Iterable<types.ValueLocation> related = const [],
-}) => diagnostic.Diagnostic(
-  id: types.DiagnosticId(value: id),
-  origin: types.RuleOrigin.defaultInstance,
+  required skir.ValueLocation? primary,
+  Iterable<skir.ValueLocation> related = const [],
+}) => skir.Diagnostic(
+  id: skir.DiagnosticId(value: id),
+  origin: skir.RuleOrigin.defaultInstance,
   code: id,
   message: message,
-  severity: diagnostic.DiagnosticSeverity.error,
+  severity: skir.DiagnosticSeverity.error,
   primary: primary,
   related: related,
 );
 
-types.ValueLocation _location(types.ResourceId resource, String field) =>
-    types.ValueLocation(
+skir.ValueLocation _location(skir.ResourceId resource, String field) =>
+    skir.ValueLocation(
       resource: resource,
-      path: types.ValuePath(
-        segments: [types.PathSegment.createField(name: field)],
+      path: skir.ValuePath(
+        segments: [skir.PathSegment.createField(name: field)],
       ),
     );

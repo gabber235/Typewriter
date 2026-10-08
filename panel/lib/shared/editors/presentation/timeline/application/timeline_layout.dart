@@ -1,5 +1,3 @@
-import "package:collection/collection.dart";
-import "package:json_annotation/json_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "timeline_layout.g.dart";

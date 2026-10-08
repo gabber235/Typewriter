@@ -1,21 +1,6 @@
-import "package:flutter/material.dart";
-import "package:typewriter_panel/app/presentation/theme/typewriter_theme_access.dart";
-import "package:typewriter_panel/features/organizations/features/realms/application/authored_draft.dart";
-import "package:typewriter_panel/features/organizations/features/realms/application/authored_draft_presentation_host.dart";
-import "package:typewriter_panel/features/organizations/features/realms/application/authored_local_rules.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as catalog_wire;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/diagnostic.dart"
-    as diagnostic_wire;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
-    as expression;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/search.dart"
-    as search;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
-import "package:typewriter_panel/shared/editors/application/checked_editor_catalog.dart";
-import "package:typewriter_panel/shared/editors/application/portable_presentation_host.dart";
-import "package:typewriter_panel/shared/editors/presentation/portable_presentation_renderer.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
 
 final class AuthoredResourceEditor extends StatefulWidget {
   const AuthoredResourceEditor({
@@ -36,24 +21,24 @@ final class AuthoredResourceEditor extends StatefulWidget {
     super.key,
   });
 
-  final types.ResourceId resource;
+  final skir.ResourceId resource;
   final AuthoredDraft draft;
   final CheckedEditorCatalog catalog;
-  final catalog_wire.PresentationRole role;
-  final expression.EvaluationBudget budget;
+  final skir.PresentationRole role;
+  final skir.EvaluationBudget budget;
   final ValueChanged<AuthoredDraft>? onChanged;
-  final ValueChanged<types.ResourceId>? openResource;
-  final Future<catalog_wire.PreparedCreation> Function(
-    catalog_wire.InitializationRequest request,
+  final ValueChanged<skir.ResourceId>? openResource;
+  final Future<skir.PreparedCreation> Function(
+    skir.InitializationRequest request,
   )?
   prepareCreation;
   final Future<void> Function(
-    types.CapabilityId capabilityId,
-    types.DataValue payload,
+    skir.CapabilityId capabilityId,
+    skir.DataValue payload,
   )?
   invokeCommand;
-  final Stream<search.RealmPresentationSearchUpdate> Function(
-    search.RealmPresentationSearchRequest request,
+  final Stream<skir.RealmPresentationSearchUpdate> Function(
+    skir.RealmPresentationSearchRequest request,
   )?
   watchSearch;
   final Future<void> Function()? reload;
@@ -125,7 +110,7 @@ final class _AuthoredResourceEditorState extends State<AuthoredResourceEditor> {
 
   Widget _renderSelected(
     SelectedEditorPresentation selected,
-    catalog_wire.PresentationMaterial material,
+    skir.PresentationMaterial material,
     AuthoredRuleProjection localRules,
   ) {
     void changed() {
@@ -142,8 +127,8 @@ final class _AuthoredResourceEditorState extends State<AuthoredResourceEditor> {
       prepareCreation: widget.prepareCreation,
     );
     final showsFullDiagnostics =
-        widget.role == catalog_wire.PresentationRole.editor ||
-        widget.role == catalog_wire.PresentationRole.inspector;
+        widget.role == skir.PresentationRole.editor ||
+        widget.role == skir.PresentationRole.inspector;
     final authoredHost = AuthoredDraftPresentationHost(
       resource: widget.resource,
       draft: _draft,
@@ -163,7 +148,7 @@ final class _AuthoredResourceEditorState extends State<AuthoredResourceEditor> {
           ? const []
           : [
               for (final diagnostic in localRules.diagnostics)
-                diagnostic_wire.DiagnosticTemplate(
+                skir.DiagnosticTemplate(
                   code: diagnostic.code,
                   message: diagnostic.message,
                   severity: diagnostic.severity,
@@ -202,7 +187,7 @@ final class _AuthoredResourceEditorState extends State<AuthoredResourceEditor> {
           ),
     );
     if (!showsFullDiagnostics) return renderer;
-    if (widget.role == catalog_wire.PresentationRole.inspector &&
+    if (widget.role == skir.PresentationRole.inspector &&
         localRules.diagnostics.isEmpty) {
       return renderer;
     }
@@ -211,7 +196,7 @@ final class _AuthoredResourceEditorState extends State<AuthoredResourceEditor> {
       children: [
         for (final diagnostic in localRules.diagnostics)
           _localDiagnostic(diagnostic),
-        if (widget.role == catalog_wire.PresentationRole.editor)
+        if (widget.role == skir.PresentationRole.editor)
           Expanded(child: renderer)
         else
           renderer,
@@ -233,7 +218,7 @@ Widget _localDiagnostic(AuthoredLocalDiagnostic diagnostic) => Builder(
     child: Text(
       diagnostic.message,
       style: context.theme.textTheme.bodyMedium?.copyWith(
-        color: diagnostic.severity == diagnostic_wire.DiagnosticSeverity.warning
+        color: diagnostic.severity == skir.DiagnosticSeverity.warning
             ? context.colors.warning
             : context.colors.danger,
       ),

@@ -1,4 +1,3 @@
-import "package:flutter/material.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Fixed corner header aligned with the ruler height.

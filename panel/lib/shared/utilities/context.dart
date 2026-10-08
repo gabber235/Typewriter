@@ -1,6 +1,4 @@
-import "package:flutter/foundation.dart";
-import "package:flutter/material.dart";
-import "package:responsive_framework/responsive_framework.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Theme and responsive layout queries bound to a widget context.
 extension BuildContextX on BuildContext {

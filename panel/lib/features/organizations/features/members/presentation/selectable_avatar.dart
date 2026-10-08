@@ -1,5 +1,4 @@
-import "package:flutter/material.dart";
-import "package:typewriter_panel/app/presentation/theme/theme.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Avatar treatment that makes membership selection visible without relying
 /// on row background color alone.

@@ -1,5 +1,3 @@
-import "dart:collection";
-
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "type_constraint_validation_rules.dart";

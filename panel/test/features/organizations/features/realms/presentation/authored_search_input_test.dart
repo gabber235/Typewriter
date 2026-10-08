@@ -1,20 +1,7 @@
-import "dart:convert";
-
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:http/http.dart" as http;
 import "package:http/testing.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/binding.dart"
-    as binding;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as catalog;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/expression.dart"
-    as expression;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/presentation.dart"
-    as presentation;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../../../support/test_utils.dart";
@@ -23,26 +10,26 @@ void main() {
   testWidgets("renders static results and selects with the keyboard", (
     tester,
   ) async {
-    final target = types.ExpressionBindingId(value: "target");
-    final row = types.ExpressionBindingId(value: "row");
-    types.DataValue? written;
-    final targetReference = binding.BindingRef(
+    final target = skir.ExpressionBindingId(value: "target");
+    final row = skir.ExpressionBindingId(value: "row");
+    skir.DataValue? written;
+    final targetReference = skir.BindingRef(
       bindingId: target,
-      path: types.ValuePath(segments: const []),
+      path: skir.ValuePath(segments: const []),
     );
-    final rowRead = expression.ExpressionNode.createRead(
+    final rowRead = skir.ExpressionNode.createRead(
       binding: row,
-      path: types.ValuePath(segments: const []),
+      path: skir.ValuePath(segments: const []),
     );
-    final summaryBinding = types.ExpressionBindingId(value: "summary");
-    final summaryRead = expression.ExpressionNode.createRead(
+    final summaryBinding = skir.ExpressionBindingId(value: "summary");
+    final summaryRead = skir.ExpressionNode.createRead(
       binding: summaryBinding,
-      path: types.ValuePath(segments: const []),
+      path: skir.ValuePath(segments: const []),
     );
-    final resultNode = presentation.PresentationNode(
+    final resultNode = skir.PresentationNode(
       nodeId: "result",
-      properties: presentation.PresentationProperties.defaultInstance,
-      element: presentation.PresentationElement.createText(
+      properties: skir.PresentationProperties.defaultInstance,
+      element: skir.PresentationElement.createText(
         value: rowRead,
         color: null,
         fontSize: null,
@@ -56,44 +43,44 @@ void main() {
         letterSpacing: null,
         decoration: null,
         semanticLabel: null,
-        paragraph: presentation.TextParagraph.defaultInstance,
+        paragraph: skir.TextParagraph.defaultInstance,
       ),
       header: null,
     );
-    final mapping = presentation.SearchResultMapping(
+    final mapping = skir.SearchResultMapping(
       bindingId: row,
       key: rowRead,
       selectedValue: rowRead,
       presentation: resultNode,
       label: rowRead,
     );
-    final control = presentation.SearchControl(
-      control: presentation.BoundControl(
+    final control = skir.SearchControl(
+      control: skir.BoundControl(
         binding: targetReference,
-        label: expression.ExpressionNode.wrapLiteral(
-          types.DataValue.wrapStringValue("Choice"),
+        label: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue("Choice"),
         ),
         description: null,
         prefix: null,
         semanticLabel: null,
       ),
-      selectionMode: presentation.SearchSelectionMode.single,
-      queryBindingId: types.ExpressionBindingId(value: "query"),
+      selectionMode: skir.SearchSelectionMode.single,
+      queryBindingId: skir.ExpressionBindingId(value: "query"),
       summaryBindingId: summaryBinding,
-      maximumExtent: expression.ExpressionNode.wrapLiteral(
-        types.DataValue.wrapInteger("240"),
+      maximumExtent: skir.ExpressionNode.wrapLiteral(
+        skir.DataValue.wrapInteger("240"),
       ),
-      provider: presentation.SearchProvider.createStaticValues(
-        values: expression.ExpressionNode.wrapLiteral(
-          types.DataValue.createListValue(
+      provider: skir.SearchProvider.createStaticValues(
+        values: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.createListValue(
             items: [
-              types.ListItem(
-                id: types.ItemId(value: "alpha"),
-                value: types.DataValue.wrapStringValue("Alpha"),
+              skir.ListItem(
+                id: skir.ItemId(value: "alpha"),
+                value: skir.DataValue.wrapStringValue("Alpha"),
               ),
-              types.ListItem(
-                id: types.ItemId(value: "beta"),
-                value: types.DataValue.wrapStringValue("Beta"),
+              skir.ListItem(
+                id: skir.ItemId(value: "beta"),
+                value: skir.DataValue.wrapStringValue("Beta"),
               ),
             ],
           ),
@@ -101,10 +88,10 @@ void main() {
         result: mapping,
         selectors: const [],
       ),
-      summary: presentation.PresentationNode(
+      summary: skir.PresentationNode(
         nodeId: "summary",
-        properties: presentation.PresentationProperties.defaultInstance,
-        element: presentation.PresentationElement.createText(
+        properties: skir.PresentationProperties.defaultInstance,
+        element: skir.PresentationElement.createText(
           value: summaryRead,
           color: null,
           fontSize: null,
@@ -118,7 +105,7 @@ void main() {
           letterSpacing: null,
           decoration: null,
           semanticLabel: null,
-          paragraph: presentation.TextParagraph.defaultInstance,
+          paragraph: skir.TextParagraph.defaultInstance,
         ),
         header: null,
       ),
@@ -129,13 +116,10 @@ void main() {
     final scope = PortablePresentationScope(
       bindings: {
         target: PortableExpressionBinding(
-          value: types.DataValue.wrapStringValue("Alpha"),
+          value: skir.DataValue.wrapStringValue("Alpha"),
         ),
       },
-      budget: expression.EvaluationBudget(
-        maxSteps: 100,
-        maxCollectionItems: 100,
-      ),
+      budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
       setBinding: (_, value) => written = value,
     );
 
@@ -165,7 +149,7 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pumpAndSettle();
 
-    expect(written, types.DataValue.wrapStringValue("Beta"));
+    expect(written, skir.DataValue.wrapStringValue("Beta"));
     expect(find.byKey(const ValueKey("authored_search_query")), findsNothing);
 
     await tester.pumpTestApp(
@@ -175,10 +159,10 @@ void main() {
           scope: PortablePresentationScope(
             bindings: {
               target: PortableExpressionBinding(
-                value: types.DataValue.wrapStringValue(""),
+                value: skir.DataValue.wrapStringValue(""),
               ),
             },
-            budget: expression.EvaluationBudget(
+            budget: skir.EvaluationBudget(
               maxSteps: 100,
               maxCollectionItems: 100,
             ),
@@ -195,25 +179,25 @@ void main() {
   testWidgets("decodes typed HTTP results and isolates malformed candidates", (
     tester,
   ) async {
-    final target = types.ExpressionBindingId(value: "target");
-    final row = types.ExpressionBindingId(value: "row");
-    final resultType = types.TypeDefinitionId(
-      typeId: types.TypeId.createQualified(namespace: "test", name: "Result"),
+    final target = skir.ExpressionBindingId(value: "target");
+    final row = skir.ExpressionBindingId(value: "row");
+    final resultType = skir.TypeDefinitionId(
+      typeId: skir.TypeId.createQualified(namespace: "test", name: "Result"),
       revision: 1,
     );
-    final catalogSnapshot = catalog.EditorCatalogWireSnapshot(
-      generation: types.CatalogGeneration(value: "catalog:http"),
+    final catalogSnapshot = skir.EditorCatalogWireSnapshot(
+      generation: skir.CatalogGeneration(value: "catalog:http"),
       types: [
-        catalog.PublishedType(
+        skir.PublishedType(
           display: null,
-          definition: types.TypeDefinition(
+          definition: skir.TypeDefinition(
             id: resultType,
             parameters: const [],
-            representation: types.RepresentationTemplate.createRecord(
+            representation: skir.RepresentationTemplate.createRecord(
               fields: [
-                types.FieldDeclaration(
-                  owner: types.FieldOwner(definition: resultType, name: "name"),
-                  type: types.TypeTemplate.wrapScalar(types.ScalarKind.text),
+                skir.FieldDeclaration(
+                  owner: skir.FieldOwner(definition: resultType, name: "name"),
+                  type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
                   overrides: const [],
                   hasConstructorDefault: false,
                 ),
@@ -222,12 +206,12 @@ void main() {
             ),
             parents: const [],
           ),
-          status: catalog.DeclarationStatus.ready,
+          status: skir.DeclarationStatus.ready,
           effectiveFields: [
-            catalog.EffectiveFieldTemplate(
+            skir.EffectiveFieldTemplate(
               key: "name",
-              owner: types.FieldOwner(definition: resultType, name: "name"),
-              type: types.TypeTemplate.wrapScalar(types.ScalarKind.text),
+              owner: skir.FieldOwner(definition: resultType, name: "name"),
+              type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
               rules: const [],
             ),
           ],
@@ -246,16 +230,16 @@ void main() {
       recommendations: const [],
       roleFallbacks: const [],
     );
-    final rowRead = expression.ExpressionNode.createRead(
+    final rowRead = skir.ExpressionNode.createRead(
       binding: row,
-      path: types.ValuePath(segments: const []),
+      path: skir.ValuePath(segments: const []),
     );
-    final resultNode = presentation.PresentationNode(
+    final resultNode = skir.PresentationNode(
       nodeId: "http_result",
-      properties: presentation.PresentationProperties.defaultInstance,
-      element: presentation.PresentationElement.createText(
-        value: expression.ExpressionNode.wrapLiteral(
-          types.DataValue.wrapStringValue("HTTP result"),
+      properties: skir.PresentationProperties.defaultInstance,
+      element: skir.PresentationElement.createText(
+        value: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue("HTTP result"),
         ),
         color: null,
         fontSize: null,
@@ -269,40 +253,40 @@ void main() {
         letterSpacing: null,
         decoration: null,
         semanticLabel: null,
-        paragraph: presentation.TextParagraph.defaultInstance,
+        paragraph: skir.TextParagraph.defaultInstance,
       ),
       header: null,
     );
-    final control = presentation.SearchControl(
-      control: presentation.BoundControl(
-        binding: binding.BindingRef(
+    final control = skir.SearchControl(
+      control: skir.BoundControl(
+        binding: skir.BindingRef(
           bindingId: target,
-          path: types.ValuePath(segments: const []),
+          path: skir.ValuePath(segments: const []),
         ),
-        label: expression.ExpressionNode.wrapLiteral(
-          types.DataValue.wrapStringValue("Remote choice"),
+        label: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue("Remote choice"),
         ),
         description: null,
         prefix: null,
         semanticLabel: null,
       ),
-      selectionMode: presentation.SearchSelectionMode.single,
-      queryBindingId: types.ExpressionBindingId(value: "query"),
-      summaryBindingId: types.ExpressionBindingId(value: "summary"),
-      maximumExtent: expression.ExpressionNode.wrapLiteral(
-        types.DataValue.wrapInteger("240"),
+      selectionMode: skir.SearchSelectionMode.single,
+      queryBindingId: skir.ExpressionBindingId(value: "query"),
+      summaryBindingId: skir.ExpressionBindingId(value: "summary"),
+      maximumExtent: skir.ExpressionNode.wrapLiteral(
+        skir.DataValue.wrapInteger("240"),
       ),
-      provider: presentation.SearchProvider.createHttpJson(
-        uri: expression.ExpressionNode.wrapLiteral(
-          types.DataValue.wrapStringValue("https://example.test/search"),
+      provider: skir.SearchProvider.createHttpJson(
+        uri: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue("https://example.test/search"),
         ),
         parameters: const [],
         resultPath: r"$.items[*]",
-        resultType: types.TypeTemplate.createNamed(
+        resultType: skir.TypeTemplate.createNamed(
           definition: resultType,
           arguments: const [],
         ),
-        result: presentation.SearchResultMapping(
+        result: skir.SearchResultMapping(
           bindingId: row,
           key: rowRead,
           selectedValue: rowRead,
@@ -318,12 +302,12 @@ void main() {
       customValue: null,
       initialQuery: null,
     );
-    types.DataValue? written;
+    skir.DataValue? written;
     final client = MockClient((request) async {
       expect(request.method, "GET");
       expect(request.url, Uri.parse("https://example.test/search"));
       expect(request.headers["Accept"], "application/json");
-      return http.Response(
+      return Response(
         jsonEncode({
           "items": [
             {"name": "Alpha"},
@@ -337,14 +321,9 @@ void main() {
     });
     final scope = PortablePresentationScope(
       bindings: {
-        target: const PortableExpressionBinding(
-          value: types.DataValue.unfilled,
-        ),
+        target: const PortableExpressionBinding(value: skir.DataValue.unfilled),
       },
-      budget: expression.EvaluationBudget(
-        maxSteps: 100,
-        maxCollectionItems: 100,
-      ),
+      budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
       setBinding: (_, value) => written = value,
       catalog: CheckedEditorCatalog(catalogSnapshot),
     );
@@ -374,12 +353,12 @@ void main() {
     await tester.tap(find.text("HTTP result"));
     await tester.pump();
 
-    final named = written! as types.DataValue_namedWrapper;
+    final named = written! as skir.DataValue_namedWrapper;
     expect(named.value.actualType.definition, resultType);
-    final record = named.value.payload as types.DataValue_recordWrapper;
+    final record = named.value.payload as skir.DataValue_recordWrapper;
     expect(
       record.value.fields.single.value,
-      types.DataValue.wrapStringValue("Alpha"),
+      skir.DataValue.wrapStringValue("Alpha"),
     );
   });
 }

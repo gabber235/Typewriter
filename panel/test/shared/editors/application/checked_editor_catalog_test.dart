@@ -1,10 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/catalog.dart"
-    as catalog;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/presentation.dart"
-    as presentation;
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/type_catalog.dart"
-    as types;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
@@ -14,13 +10,13 @@ void main() {
       final displayed = _definition("SequencePage");
       final fallback = _definition("ScenePage");
       final checked = CheckedEditorCatalog(
-        catalog.EditorCatalogWireSnapshot(
-          generation: types.CatalogGeneration(value: "catalog:display"),
+        skir.EditorCatalogWireSnapshot(
+          generation: skir.CatalogGeneration(value: "catalog:display"),
           types: [
             _published(
               displayed,
               const [],
-              display: catalog.TypeDisplay(
+              display: skir.TypeDisplay(
                 name: "Sequence",
                 description: "A branching page",
                 icon: "material-symbols:account-tree",
@@ -47,7 +43,7 @@ void main() {
       expect(checked.typeDefinitionName(fallback), "ScenePage");
       expect(
         checked.typeSelectionName(
-          types.TypeSelection.createComplete(
+          skir.TypeSelection.createComplete(
             definition: displayed,
             arguments: const [],
           ),
@@ -60,15 +56,15 @@ void main() {
 
   test("pending arguments leave independent fields available", () {
     final fixture = _catalog();
-    final selection = types.TypeSelection.createPending(
+    final selection = skir.TypeSelection.createPending(
       definition: fixture.root,
-      arguments: [types.ArgumentSelection.unfilled],
+      arguments: [skir.ArgumentSelection.unfilled],
     );
 
     final fields = fixture.catalog.fields(selection);
 
     expect(fields.map((field) => field.template.key), ["title", "payload"]);
-    expect(fields.first.type, types.TypeUse.wrapScalar(types.ScalarKind.text));
+    expect(fields.first.type, skir.TypeUse.wrapScalar(skir.ScalarKind.text));
     expect(fields.first.isAvailable, isTrue);
     expect(fields.last.type, isNull);
     expect(fields.last.isAvailable, isFalse);
@@ -82,10 +78,10 @@ void main() {
 
   test("chosen arguments apply fields and inherited applications", () {
     final fixture = _catalog();
-    final integer = types.TypeUse.wrapScalar(
-      types.ScalarKind.createInteger(width: types.IntegerWidth.signedThirtyTwo),
+    final integer = skir.TypeUse.wrapScalar(
+      skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedThirtyTwo),
     );
-    final selection = types.TypeSelection.createComplete(
+    final selection = skir.TypeSelection.createComplete(
       definition: fixture.root,
       arguments: [integer],
     );
@@ -97,42 +93,42 @@ void main() {
     expect(
       applications,
       containsAll([
-        types.NamedTypeUse(definition: fixture.root, arguments: [integer]),
-        types.NamedTypeUse(definition: fixture.base, arguments: [integer]),
-        types.NamedTypeUse(definition: fixture.marker, arguments: const []),
+        skir.NamedTypeUse(definition: fixture.root, arguments: [integer]),
+        skir.NamedTypeUse(definition: fixture.base, arguments: [integer]),
+        skir.NamedTypeUse(definition: fixture.marker, arguments: const []),
       ]),
     );
   });
 
   test("selection composition keeps every argument position explicit", () {
     final fixture = _catalog();
-    final integer = types.TypeUse.wrapScalar(
-      types.ScalarKind.createInteger(width: types.IntegerWidth.signedThirtyTwo),
+    final integer = skir.TypeUse.wrapScalar(
+      skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedThirtyTwo),
     );
 
     final begun = fixture.catalog.beginSelection(fixture.root);
-    expect(begun, isA<types.TypeSelection_pendingWrapper>());
+    expect(begun, isA<skir.TypeSelection_pendingWrapper>());
     final chosen = fixture.catalog.chooseArgument(begun, 0, integer);
     expect(chosen, isA<TypeArgumentAccepted>());
     final complete = (chosen as TypeArgumentAccepted).selection;
-    expect(complete, isA<types.TypeSelection_completeWrapper>());
+    expect(complete, isA<skir.TypeSelection_completeWrapper>());
 
     final cleared = fixture.catalog.clearArgument(complete, 0);
-    expect(cleared, isA<types.TypeSelection_pendingWrapper>());
-    final pending = (cleared as types.TypeSelection_pendingWrapper).value;
-    expect(pending.arguments, [types.ArgumentSelection.unfilled]);
+    expect(cleared, isA<skir.TypeSelection_pendingWrapper>());
+    final pending = (cleared as skir.TypeSelection_pendingWrapper).value;
+    expect(pending.arguments, [skir.ArgumentSelection.unfilled]);
   });
 
   test("readability follows checked nominal ancestry", () {
     final fixture = _catalog();
-    final integer = types.TypeUse.wrapScalar(
-      types.ScalarKind.createInteger(width: types.IntegerWidth.signedThirtyTwo),
+    final integer = skir.TypeUse.wrapScalar(
+      skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedThirtyTwo),
     );
-    final root = types.TypeUse.createNamed(
+    final root = skir.TypeUse.createNamed(
       definition: fixture.root,
       arguments: [integer],
     );
-    final base = types.TypeUse.createNamed(
+    final base = skir.TypeUse.createNamed(
       definition: fixture.base,
       arguments: [integer],
     );
@@ -145,29 +141,26 @@ void main() {
     final wrapper = _definition("Wrapper");
     final reward = _definition("Reward");
     final coin = _definition("CoinReward");
-    final parameter = types.ParameterKey(owner: wrapper, index: 0);
+    final parameter = skir.ParameterKey(owner: wrapper, index: 0);
     final checked = CheckedEditorCatalog(
-      catalog.EditorCatalogWireSnapshot(
-        generation: types.CatalogGeneration(value: "catalog:covariance"),
+      skir.EditorCatalogWireSnapshot(
+        generation: skir.CatalogGeneration(value: "catalog:covariance"),
         types: [
           _published(wrapper, [parameter]),
           _published(reward, const []),
-          catalog.PublishedType(
-            definition: types.TypeDefinition(
+          skir.PublishedType(
+            definition: skir.TypeDefinition(
               id: coin,
               parameters: const [],
-              representation: types.RepresentationTemplate.unknown,
+              representation: skir.RepresentationTemplate.unknown,
               parents: [
-                types.NamedTypeTemplate(
-                  definition: reward,
-                  arguments: const [],
-                ),
+                skir.NamedTypeTemplate(definition: reward, arguments: const []),
               ],
             ),
-            status: catalog.DeclarationStatus.ready,
+            status: skir.DeclarationStatus.ready,
             effectiveFields: const [],
             ancestorTemplates: [
-              types.NamedTypeTemplate(definition: reward, arguments: const []),
+              skir.NamedTypeTemplate(definition: reward, arguments: const []),
             ],
             display: null,
           ),
@@ -185,16 +178,16 @@ void main() {
         roleFallbacks: const [],
       ),
     );
-    final actual = types.TypeUse.createNamed(
+    final actual = skir.TypeUse.createNamed(
       definition: wrapper,
       arguments: [
-        types.TypeUse.createNamed(definition: coin, arguments: const []),
+        skir.TypeUse.createNamed(definition: coin, arguments: const []),
       ],
     );
-    final expected = types.TypeUse.createNamed(
+    final expected = skir.TypeUse.createNamed(
       definition: wrapper,
       arguments: [
-        types.TypeUse.createNamed(definition: reward, arguments: const []),
+        skir.TypeUse.createNamed(definition: reward, arguments: const []),
       ],
     );
 
@@ -206,63 +199,60 @@ void main() {
     final wrapper = _definition("SpecificVariable");
     final reward = _definition("SpecificReward");
     final coin = _definition("SpecificCoinReward");
-    final parameter = types.ParameterKey(owner: wrapper, index: 0);
-    final exact = types.PresentationId(namespace: "test", name: "exact");
-    final base = types.PresentationId(namespace: "test", name: "base");
-    final coinTemplate = types.TypeTemplate.createNamed(
+    final parameter = skir.ParameterKey(owner: wrapper, index: 0);
+    final exact = skir.PresentationId(namespace: "test", name: "exact");
+    final base = skir.PresentationId(namespace: "test", name: "base");
+    final coinTemplate = skir.TypeTemplate.createNamed(
       definition: coin,
       arguments: const [],
     );
-    final rewardTemplate = types.TypeTemplate.createNamed(
+    final rewardTemplate = skir.TypeTemplate.createNamed(
       definition: reward,
       arguments: const [],
     );
-    final exactTarget = catalog.PresentationTarget.createNamed(
+    final exactTarget = skir.PresentationTarget.createNamed(
       definition: wrapper,
       arguments: [coinTemplate],
     );
-    final baseTarget = catalog.PresentationTarget.createNamed(
+    final baseTarget = skir.PresentationTarget.createNamed(
       definition: wrapper,
       arguments: [rewardTemplate],
     );
     final descriptors = [
-      catalog.PresentationDescriptor(
+      skir.PresentationDescriptor(
         id: exact,
-        owner: types.DeclarationOwner.defaultInstance,
+        owner: skir.DeclarationOwner.defaultInstance,
         target: exactTarget,
-        roles: [catalog.PresentationRole.editor],
+        roles: [skir.PresentationRole.editor],
         priority: 10,
       ),
-      catalog.PresentationDescriptor(
+      skir.PresentationDescriptor(
         id: base,
-        owner: types.DeclarationOwner.defaultInstance,
+        owner: skir.DeclarationOwner.defaultInstance,
         target: baseTarget,
-        roles: [catalog.PresentationRole.editor],
+        roles: [skir.PresentationRole.editor],
         priority: 100,
       ),
     ];
     final checked = CheckedEditorCatalog(
-      catalog.EditorCatalogWireSnapshot(
-        generation: types.CatalogGeneration(value: "catalog:specificity"),
+      skir.EditorCatalogWireSnapshot(
+        generation: skir.CatalogGeneration(value: "catalog:specificity"),
         types: [
           _published(wrapper, [parameter]),
           _published(reward, const []),
-          catalog.PublishedType(
-            definition: types.TypeDefinition(
+          skir.PublishedType(
+            definition: skir.TypeDefinition(
               id: coin,
               parameters: const [],
-              representation: types.RepresentationTemplate.unknown,
+              representation: skir.RepresentationTemplate.unknown,
               parents: [
-                types.NamedTypeTemplate(
-                  definition: reward,
-                  arguments: const [],
-                ),
+                skir.NamedTypeTemplate(definition: reward, arguments: const []),
               ],
             ),
-            status: catalog.DeclarationStatus.ready,
+            status: skir.DeclarationStatus.ready,
             effectiveFields: const [],
             ancestorTemplates: [
-              types.NamedTypeTemplate(definition: reward, arguments: const []),
+              skir.NamedTypeTemplate(definition: reward, arguments: const []),
             ],
             display: null,
           ),
@@ -272,13 +262,12 @@ void main() {
         presentations: descriptors,
         presentationMaterials: [
           for (final descriptor in descriptors)
-            catalog.PresentationMaterial(
+            skir.PresentationMaterial(
               provider: descriptor.id,
               target: descriptor.target,
-              role: catalog.PresentationRole.editor,
-              layout: presentation.PresentationNode.defaultInstance,
-              dependencies:
-                  presentation.PresentationDependencies.defaultInstance,
+              role: skir.PresentationRole.editor,
+              layout: skir.PresentationNode.defaultInstance,
+              dependencies: skir.PresentationDependencies.defaultInstance,
               subject: _subject(descriptor.target, wrapper),
             ),
         ],
@@ -292,13 +281,13 @@ void main() {
       ),
     );
     final selected = checked.selectPresentation(
-      types.TypeSelection.createComplete(
+      skir.TypeSelection.createComplete(
         definition: wrapper,
         arguments: [
-          types.TypeUse.createNamed(definition: coin, arguments: const []),
+          skir.TypeUse.createNamed(definition: coin, arguments: const []),
         ],
       ),
-      catalog.PresentationRole.editor,
+      skir.PresentationRole.editor,
     );
 
     expect((selected as SelectedEditorPresentation).descriptor.id, exact);
@@ -306,16 +295,16 @@ void main() {
 
   test("dependent bounds wait for known arguments and validate together", () {
     final fixture = _dependentCatalog();
-    final integer = types.TypeUse.wrapScalar(
-      types.ScalarKind.createInteger(width: types.IntegerWidth.signedThirtyTwo),
+    final integer = skir.TypeUse.wrapScalar(
+      skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedThirtyTwo),
     );
-    final text = types.TypeUse.wrapScalar(types.ScalarKind.text);
+    final text = skir.TypeUse.wrapScalar(skir.ScalarKind.text);
 
     final begun = fixture.catalog.beginSelection(fixture.root);
     final first = fixture.catalog.chooseArgument(begun, 0, integer);
     expect(first, isA<TypeArgumentAccepted>());
     final pending = (first as TypeArgumentAccepted).selection;
-    expect(pending, isA<types.TypeSelection_pendingWrapper>());
+    expect(pending, isA<skir.TypeSelection_pendingWrapper>());
 
     expect(
       fixture.catalog.chooseArgument(pending, 1, text),
@@ -324,7 +313,7 @@ void main() {
     final accepted = fixture.catalog.chooseArgument(pending, 1, integer);
     expect(
       (accepted as TypeArgumentAccepted).selection,
-      isA<types.TypeSelection_completeWrapper>(),
+      isA<skir.TypeSelection_completeWrapper>(),
     );
   });
 
@@ -337,10 +326,10 @@ void main() {
     expect(pendingBindings.single.isAvailable, isFalse);
     expect(fixture.catalog.resourceDefinition(pending)?.id.value, "test.base");
 
-    final integer = types.TypeUse.wrapScalar(
-      types.ScalarKind.createInteger(width: types.IntegerWidth.signedThirtyTwo),
+    final integer = skir.TypeUse.wrapScalar(
+      skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedThirtyTwo),
     );
-    final complete = types.TypeSelection.createComplete(
+    final complete = skir.TypeSelection.createComplete(
       definition: fixture.root,
       arguments: [integer],
     );
@@ -354,34 +343,32 @@ void main() {
     final fixture = _catalog();
 
     expect(
-      fixture.catalog.roleFallbackOrder(
-        catalog.PresentationRole.inspectorHeader,
-      ),
+      fixture.catalog.roleFallbackOrder(skir.PresentationRole.inspectorHeader),
       [
-        catalog.PresentationRole.inspectorHeader,
-        catalog.PresentationRole.editor,
-        catalog.PresentationRole.referenceSummary,
-        catalog.PresentationRole.catalogOption,
+        skir.PresentationRole.inspectorHeader,
+        skir.PresentationRole.editor,
+        skir.PresentationRole.referenceSummary,
+        skir.PresentationRole.catalogOption,
       ],
     );
   });
 
   test("presentation selection uses fallback specificity then priority", () {
     final fixture = _catalog();
-    final actual = types.TypeSelection.createComplete(
+    final actual = skir.TypeSelection.createComplete(
       definition: fixture.root,
-      arguments: [types.TypeUse.wrapScalar(types.ScalarKind.text)],
+      arguments: [skir.TypeUse.wrapScalar(skir.ScalarKind.text)],
     );
 
     final selected = fixture.catalog.selectPresentation(
       actual,
-      catalog.PresentationRole.inspectorHeader,
+      skir.PresentationRole.inspectorHeader,
     );
 
     expect(selected, isA<SelectedEditorPresentation>());
     final value = selected as SelectedEditorPresentation;
-    expect(value.requestedRole, catalog.PresentationRole.inspectorHeader);
-    expect(value.resolvedRole, catalog.PresentationRole.editor);
+    expect(value.requestedRole, skir.PresentationRole.inspectorHeader);
+    expect(value.resolvedRole, skir.PresentationRole.editor);
     expect(value.descriptor.id, fixture.rootPresentation);
     expect(value.material.provider, fixture.rootPresentation);
   });
@@ -392,7 +379,7 @@ void main() {
 
     final selected = fixture.catalog.selectPresentation(
       pending,
-      catalog.PresentationRole.editor,
+      skir.PresentationRole.editor,
     );
 
     expect(
@@ -403,37 +390,37 @@ void main() {
 
   test("equal maximal presentation candidates report a conflict", () {
     final fixture = _catalog();
-    final tie = types.PresentationId(namespace: "test", name: "root_tie");
-    final rootParameter = types.ParameterKey(owner: fixture.root, index: 0);
-    final target = catalog.PresentationTarget.createNamed(
+    final tie = skir.PresentationId(namespace: "test", name: "root_tie");
+    final rootParameter = skir.ParameterKey(owner: fixture.root, index: 0);
+    final target = skir.PresentationTarget.createNamed(
       definition: fixture.root,
-      arguments: [types.TypeTemplate.wrapParameter(rootParameter)],
+      arguments: [skir.TypeTemplate.wrapParameter(rootParameter)],
     );
     final original = fixture.catalog.snapshot;
     final checked = CheckedEditorCatalog(
-      catalog.EditorCatalogWireSnapshot(
+      skir.EditorCatalogWireSnapshot(
         generation: original.generation,
         types: original.types,
         relations: original.relations,
         resourceDefinitions: original.resourceDefinitions,
         presentations: [
           ...original.presentations,
-          catalog.PresentationDescriptor(
+          skir.PresentationDescriptor(
             id: tie,
-            owner: types.DeclarationOwner.defaultInstance,
+            owner: skir.DeclarationOwner.defaultInstance,
             target: target,
-            roles: [catalog.PresentationRole.editor],
+            roles: [skir.PresentationRole.editor],
             priority: 1,
           ),
         ],
         presentationMaterials: [
           ...original.presentationMaterials,
-          catalog.PresentationMaterial(
+          skir.PresentationMaterial(
             provider: tie,
             target: target,
-            role: catalog.PresentationRole.editor,
-            layout: presentation.PresentationNode.defaultInstance,
-            dependencies: presentation.PresentationDependencies.defaultInstance,
+            role: skir.PresentationRole.editor,
+            layout: skir.PresentationNode.defaultInstance,
+            dependencies: skir.PresentationDependencies.defaultInstance,
             subject: _subject(target, fixture.root),
           ),
         ],
@@ -446,14 +433,14 @@ void main() {
         roleFallbacks: original.roleFallbacks,
       ),
     );
-    final actual = types.TypeSelection.createComplete(
+    final actual = skir.TypeSelection.createComplete(
       definition: fixture.root,
-      arguments: [types.TypeUse.wrapScalar(types.ScalarKind.text)],
+      arguments: [skir.TypeUse.wrapScalar(skir.ScalarKind.text)],
     );
 
     final selected = checked.selectPresentation(
       actual,
-      catalog.PresentationRole.editor,
+      skir.PresentationRole.editor,
     );
 
     expect(selected, isA<ConflictingEditorPresentation>());
@@ -470,7 +457,7 @@ void main() {
 
       final selected = fixture.catalog.selectPresentation(
         fixture.actual,
-        catalog.PresentationRole.editor,
+        skir.PresentationRole.editor,
       );
 
       expect(
@@ -501,7 +488,7 @@ void main() {
 
     final selected = fixture.catalog.selectPresentation(
       fixture.actual,
-      catalog.PresentationRole.editor,
+      skir.PresentationRole.editor,
     );
 
     expect(
@@ -513,81 +500,81 @@ void main() {
 
 ({
   CheckedEditorCatalog catalog,
-  types.TypeSelection actual,
-  types.PresentationId first,
-  types.PresentationId second,
+  skir.TypeSelection actual,
+  skir.PresentationId first,
+  skir.PresentationId second,
 })
 _patternCatalog({required bool repeated}) {
   final pair = _definition("Pair");
   final list = _definition("List");
-  final firstParameter = types.ParameterKey(owner: pair, index: 0);
-  final secondParameter = types.ParameterKey(owner: pair, index: 1);
-  final string = types.TypeTemplate.wrapScalar(types.ScalarKind.text);
-  final stringList = types.TypeTemplate.createNamed(
+  final firstParameter = skir.ParameterKey(owner: pair, index: 0);
+  final secondParameter = skir.ParameterKey(owner: pair, index: 1);
+  final string = skir.TypeTemplate.wrapScalar(skir.ScalarKind.text);
+  final stringList = skir.TypeTemplate.createNamed(
     definition: list,
     arguments: [string],
   );
-  final firstTarget = catalog.PresentationTarget.createNamed(
+  final firstTarget = skir.PresentationTarget.createNamed(
     definition: pair,
     arguments: repeated
         ? [
-            types.TypeTemplate.wrapParameter(firstParameter),
-            types.TypeTemplate.wrapParameter(firstParameter),
+            skir.TypeTemplate.wrapParameter(firstParameter),
+            skir.TypeTemplate.wrapParameter(firstParameter),
           ]
-        : [string, types.TypeTemplate.wrapParameter(firstParameter)],
+        : [string, skir.TypeTemplate.wrapParameter(firstParameter)],
   );
-  final secondTarget = catalog.PresentationTarget.createNamed(
+  final secondTarget = skir.PresentationTarget.createNamed(
     definition: pair,
     arguments: repeated
         ? [
-            types.TypeTemplate.wrapParameter(firstParameter),
-            types.TypeTemplate.wrapParameter(secondParameter),
+            skir.TypeTemplate.wrapParameter(firstParameter),
+            skir.TypeTemplate.wrapParameter(secondParameter),
           ]
-        : [types.TypeTemplate.wrapParameter(firstParameter), stringList],
+        : [skir.TypeTemplate.wrapParameter(firstParameter), stringList],
   );
-  final first = types.PresentationId(namespace: "test", name: "first");
-  final second = types.PresentationId(namespace: "test", name: "second");
+  final first = skir.PresentationId(namespace: "test", name: "first");
+  final second = skir.PresentationId(namespace: "test", name: "second");
   final descriptors = [
-    catalog.PresentationDescriptor(
+    skir.PresentationDescriptor(
       id: first,
-      owner: types.DeclarationOwner.defaultInstance,
+      owner: skir.DeclarationOwner.defaultInstance,
       target: firstTarget,
-      roles: [catalog.PresentationRole.editor],
+      roles: [skir.PresentationRole.editor],
       priority: repeated ? 1 : 100,
     ),
-    catalog.PresentationDescriptor(
+    skir.PresentationDescriptor(
       id: second,
-      owner: types.DeclarationOwner.defaultInstance,
+      owner: skir.DeclarationOwner.defaultInstance,
       target: secondTarget,
-      roles: [catalog.PresentationRole.editor],
+      roles: [skir.PresentationRole.editor],
       priority: repeated ? 100 : 1,
     ),
   ];
-  final snapshot = catalog.EditorCatalogWireSnapshot(
-    generation: types.CatalogGeneration(value: "catalog:patterns"),
+  final snapshot = skir.EditorCatalogWireSnapshot(
+    generation: skir.CatalogGeneration(value: "catalog:patterns"),
     types: [
-      catalog.PublishedType(
-        definition: types.TypeDefinition(
+      skir.PublishedType(
+        definition: skir.TypeDefinition(
           id: pair,
           parameters: [
-            types.TypeParameter(
+            skir.TypeParameter(
               key: firstParameter,
               name: "A",
               bounds: const [],
             ),
-            types.TypeParameter(
+            skir.TypeParameter(
               key: secondParameter,
               name: "B",
               bounds: const [],
             ),
           ],
-          representation: types.RepresentationTemplate.createRecord(
+          representation: skir.RepresentationTemplate.createRecord(
             fields: const [],
             abstract_: false,
           ),
           parents: const [],
         ),
-        status: catalog.DeclarationStatus.ready,
+        status: skir.DeclarationStatus.ready,
         effectiveFields: const [],
         ancestorTemplates: const [],
         display: null,
@@ -598,12 +585,12 @@ _patternCatalog({required bool repeated}) {
     presentations: descriptors,
     presentationMaterials: [
       for (final descriptor in descriptors)
-        catalog.PresentationMaterial(
+        skir.PresentationMaterial(
           provider: descriptor.id,
           target: descriptor.target,
-          role: catalog.PresentationRole.editor,
-          layout: presentation.PresentationNode.defaultInstance,
-          dependencies: presentation.PresentationDependencies.defaultInstance,
+          role: skir.PresentationRole.editor,
+          layout: skir.PresentationNode.defaultInstance,
+          dependencies: skir.PresentationDependencies.defaultInstance,
           subject: _subject(descriptor.target, pair),
         ),
     ],
@@ -615,14 +602,14 @@ _patternCatalog({required bool repeated}) {
     recommendations: const [],
     roleFallbacks: const [],
   );
-  final stringUse = types.TypeUse.wrapScalar(types.ScalarKind.text);
-  final listUse = types.TypeUse.createNamed(
+  final stringUse = skir.TypeUse.wrapScalar(skir.ScalarKind.text);
+  final listUse = skir.TypeUse.createNamed(
     definition: list,
     arguments: [stringUse],
   );
   return (
     catalog: CheckedEditorCatalog(snapshot),
-    actual: types.TypeSelection.createComplete(
+    actual: skir.TypeSelection.createComplete(
       definition: pair,
       arguments: repeated ? [stringUse, stringUse] : [stringUse, listUse],
     ),
@@ -631,34 +618,34 @@ _patternCatalog({required bool repeated}) {
   );
 }
 
-({CheckedEditorCatalog catalog, types.TypeDefinitionId root})
+({CheckedEditorCatalog catalog, skir.TypeDefinitionId root})
 _dependentCatalog() {
   final root = _definition("Dependent");
-  final first = types.ParameterKey(owner: root, index: 0);
-  final second = types.ParameterKey(owner: root, index: 1);
-  final definition = catalog.PublishedType(
-    definition: types.TypeDefinition(
+  final first = skir.ParameterKey(owner: root, index: 0);
+  final second = skir.ParameterKey(owner: root, index: 1);
+  final definition = skir.PublishedType(
+    definition: skir.TypeDefinition(
       id: root,
       parameters: [
-        types.TypeParameter(
+        skir.TypeParameter(
           key: first,
           name: "T",
-          bounds: [types.TypeTemplate.wrapParameter(second)],
+          bounds: [skir.TypeTemplate.wrapParameter(second)],
         ),
-        types.TypeParameter(key: second, name: "U", bounds: const []),
+        skir.TypeParameter(key: second, name: "U", bounds: const []),
       ],
-      representation: types.RepresentationTemplate.unknown,
+      representation: skir.RepresentationTemplate.unknown,
       parents: const [],
     ),
-    status: catalog.DeclarationStatus.ready,
+    status: skir.DeclarationStatus.ready,
     effectiveFields: const [],
     ancestorTemplates: const [],
     display: null,
   );
   return (
     catalog: CheckedEditorCatalog(
-      catalog.EditorCatalogWireSnapshot(
-        generation: types.CatalogGeneration(value: "catalog:dependent"),
+      skir.EditorCatalogWireSnapshot(
+        generation: skir.CatalogGeneration(value: "catalog:dependent"),
         types: [definition],
         relations: const [],
         resourceDefinitions: const [],
@@ -679,115 +666,109 @@ _dependentCatalog() {
 
 ({
   CheckedEditorCatalog catalog,
-  types.TypeDefinitionId root,
-  types.TypeDefinitionId base,
-  types.TypeDefinitionId marker,
-  types.PresentationId rootPresentation,
+  skir.TypeDefinitionId root,
+  skir.TypeDefinitionId base,
+  skir.TypeDefinitionId marker,
+  skir.PresentationId rootPresentation,
 })
 _catalog() {
   final root = _definition("Root");
   final base = _definition("Base");
   final marker = _definition("Marker");
-  final rootParameter = types.ParameterKey(owner: root, index: 0);
-  final baseParameter = types.ParameterKey(owner: base, index: 0);
-  final rootPresentation = types.PresentationId(
-    namespace: "test",
-    name: "root",
-  );
-  final basePresentation = types.PresentationId(
-    namespace: "test",
-    name: "base",
-  );
-  final recordPresentation = types.PresentationId(
+  final rootParameter = skir.ParameterKey(owner: root, index: 0);
+  final baseParameter = skir.ParameterKey(owner: base, index: 0);
+  final rootPresentation = skir.PresentationId(namespace: "test", name: "root");
+  final basePresentation = skir.PresentationId(namespace: "test", name: "base");
+  final recordPresentation = skir.PresentationId(
     namespace: "test",
     name: "record",
   );
-  final rootTarget = catalog.PresentationTarget.createNamed(
+  final rootTarget = skir.PresentationTarget.createNamed(
     definition: root,
-    arguments: [types.TypeTemplate.wrapParameter(rootParameter)],
+    arguments: [skir.TypeTemplate.wrapParameter(rootParameter)],
   );
-  final baseTarget = catalog.PresentationTarget.createNamed(
+  final baseTarget = skir.PresentationTarget.createNamed(
     definition: base,
-    arguments: [types.TypeTemplate.wrapParameter(baseParameter)],
+    arguments: [skir.TypeTemplate.wrapParameter(baseParameter)],
   );
-  final recordTarget = catalog.PresentationTarget.wrapRepresentation(
-    catalog.RepresentationKind.record,
+  final recordTarget = skir.PresentationTarget.wrapRepresentation(
+    skir.RepresentationKind.record,
   );
-  final rootType = catalog.PublishedType(
-    definition: types.TypeDefinition(
+  final rootType = skir.PublishedType(
+    definition: skir.TypeDefinition(
       id: root,
       parameters: [
-        types.TypeParameter(key: rootParameter, name: "T", bounds: const []),
+        skir.TypeParameter(key: rootParameter, name: "T", bounds: const []),
       ],
-      representation: types.RepresentationTemplate.createRecord(
+      representation: skir.RepresentationTemplate.createRecord(
         fields: const [],
         abstract_: false,
       ),
       parents: [
-        types.NamedTypeTemplate(
+        skir.NamedTypeTemplate(
           definition: base,
-          arguments: [types.TypeTemplate.wrapParameter(rootParameter)],
+          arguments: [skir.TypeTemplate.wrapParameter(rootParameter)],
         ),
-        types.NamedTypeTemplate(definition: marker, arguments: const []),
+        skir.NamedTypeTemplate(definition: marker, arguments: const []),
       ],
     ),
-    status: catalog.DeclarationStatus.ready,
+    status: skir.DeclarationStatus.ready,
     effectiveFields: [
-      catalog.EffectiveFieldTemplate(
+      skir.EffectiveFieldTemplate(
         key: "title",
-        owner: types.FieldOwner(definition: root, name: "title"),
-        type: types.TypeTemplate.wrapScalar(types.ScalarKind.text),
+        owner: skir.FieldOwner(definition: root, name: "title"),
+        type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
         rules: const [],
       ),
-      catalog.EffectiveFieldTemplate(
+      skir.EffectiveFieldTemplate(
         key: "payload",
-        owner: types.FieldOwner(definition: base, name: "payload"),
-        type: types.TypeTemplate.wrapParameter(baseParameter),
+        owner: skir.FieldOwner(definition: base, name: "payload"),
+        type: skir.TypeTemplate.wrapParameter(baseParameter),
         rules: const [],
       ),
     ],
     ancestorTemplates: [
-      types.NamedTypeTemplate(
+      skir.NamedTypeTemplate(
         definition: base,
-        arguments: [types.TypeTemplate.wrapParameter(rootParameter)],
+        arguments: [skir.TypeTemplate.wrapParameter(rootParameter)],
       ),
-      types.NamedTypeTemplate(definition: marker, arguments: const []),
+      skir.NamedTypeTemplate(definition: marker, arguments: const []),
     ],
     display: null,
   );
   final baseType = _published(base, [baseParameter]);
   final markerType = _published(marker, const []);
-  final snapshot = catalog.EditorCatalogWireSnapshot(
-    generation: types.CatalogGeneration(value: "catalog:1"),
+  final snapshot = skir.EditorCatalogWireSnapshot(
+    generation: skir.CatalogGeneration(value: "catalog:1"),
     types: [rootType, baseType, markerType],
     relations: const [],
     resourceDefinitions: [
-      catalog.AuthoringResourceDefinition(
-        id: catalog.ResourceDefinitionId(value: "test.base"),
+      skir.AuthoringResourceDefinition(
+        id: skir.ResourceDefinitionId(value: "test.base"),
         root: base,
         navigationHandler: "generic",
       ),
     ],
     presentations: [
-      catalog.PresentationDescriptor(
+      skir.PresentationDescriptor(
         id: rootPresentation,
-        owner: types.DeclarationOwner.defaultInstance,
+        owner: skir.DeclarationOwner.defaultInstance,
         target: rootTarget,
-        roles: [catalog.PresentationRole.editor],
+        roles: [skir.PresentationRole.editor],
         priority: 1,
       ),
-      catalog.PresentationDescriptor(
+      skir.PresentationDescriptor(
         id: basePresentation,
-        owner: types.DeclarationOwner.defaultInstance,
+        owner: skir.DeclarationOwner.defaultInstance,
         target: baseTarget,
-        roles: [catalog.PresentationRole.editor],
+        roles: [skir.PresentationRole.editor],
         priority: 100,
       ),
-      catalog.PresentationDescriptor(
+      skir.PresentationDescriptor(
         id: recordPresentation,
-        owner: types.DeclarationOwner.defaultInstance,
+        owner: skir.DeclarationOwner.defaultInstance,
         target: recordTarget,
-        roles: [catalog.PresentationRole.editor],
+        roles: [skir.PresentationRole.editor],
         priority: 1000,
       ),
     ],
@@ -797,12 +778,12 @@ _catalog() {
         (basePresentation, baseTarget),
         (recordPresentation, recordTarget),
       ])
-        catalog.PresentationMaterial(
+        skir.PresentationMaterial(
           provider: entry.$1,
           target: entry.$2,
-          role: catalog.PresentationRole.editor,
-          layout: presentation.PresentationNode.defaultInstance,
-          dependencies: presentation.PresentationDependencies.defaultInstance,
+          role: skir.PresentationRole.editor,
+          layout: skir.PresentationNode.defaultInstance,
+          dependencies: skir.PresentationDependencies.defaultInstance,
           subject: _subject(entry.$2, root),
         ),
     ],
@@ -810,35 +791,35 @@ _catalog() {
     diagnostics: const [],
     initialization: const [],
     endpointBindings: [
-      catalog.EndpointBindingTemplate(
-        endpoint: types.EndpointId(value: "test.endpoint"),
-        containingResource: types.NamedTypeTemplate(
+      skir.EndpointBindingTemplate(
+        endpoint: skir.EndpointId(value: "test.endpoint"),
+        containingResource: skir.NamedTypeTemplate(
           definition: base,
-          arguments: [types.TypeTemplate.wrapParameter(baseParameter)],
+          arguments: [skir.TypeTemplate.wrapParameter(baseParameter)],
         ),
         valueOwner: base,
-        relativePath: types.RelativeFieldPattern(segments: const []),
-        target: types.TypeTemplate.wrapParameter(baseParameter),
+        relativePath: skir.RelativeFieldPattern(segments: const []),
+        target: skir.TypeTemplate.wrapParameter(baseParameter),
         containsCollection: false,
       ),
     ],
     capabilities: const [],
     recommendations: const [],
     roleFallbacks: [
-      catalog.RoleFallback(
-        role: catalog.PresentationRole.inspectorHeader,
+      skir.RoleFallback(
+        role: skir.PresentationRole.inspectorHeader,
         parents: [
-          catalog.PresentationRole.editor,
-          catalog.PresentationRole.referenceSummary,
+          skir.PresentationRole.editor,
+          skir.PresentationRole.referenceSummary,
         ],
       ),
-      catalog.RoleFallback(
-        role: catalog.PresentationRole.editor,
-        parents: [catalog.PresentationRole.catalogOption],
+      skir.RoleFallback(
+        role: skir.PresentationRole.editor,
+        parents: [skir.PresentationRole.catalogOption],
       ),
-      catalog.RoleFallback(
-        role: catalog.PresentationRole.catalogOption,
-        parents: [catalog.PresentationRole.inspectorHeader],
+      skir.RoleFallback(
+        role: skir.PresentationRole.catalogOption,
+        parents: [skir.PresentationRole.inspectorHeader],
       ),
     ],
   );
@@ -851,43 +832,40 @@ _catalog() {
   );
 }
 
-catalog.PublishedType _published(
-  types.TypeDefinitionId id,
-  List<types.ParameterKey> parameters, {
-  catalog.TypeDisplay? display,
-}) => catalog.PublishedType(
-  definition: types.TypeDefinition(
+skir.PublishedType _published(
+  skir.TypeDefinitionId id,
+  List<skir.ParameterKey> parameters, {
+  skir.TypeDisplay? display,
+}) => skir.PublishedType(
+  definition: skir.TypeDefinition(
     id: id,
     parameters: [
       for (var index = 0; index < parameters.length; index++)
-        types.TypeParameter(
+        skir.TypeParameter(
           key: parameters[index],
           name: "T$index",
           bounds: const [],
         ),
     ],
-    representation: types.RepresentationTemplate.unknown,
+    representation: skir.RepresentationTemplate.unknown,
     parents: const [],
   ),
-  status: catalog.DeclarationStatus.ready,
+  status: skir.DeclarationStatus.ready,
   effectiveFields: const [],
   ancestorTemplates: const [],
   display: display,
 );
 
-types.TypeDefinitionId _definition(String name) => types.TypeDefinitionId(
-  typeId: types.TypeId.createQualified(namespace: "test", name: name),
+skir.TypeDefinitionId _definition(String name) => skir.TypeDefinitionId(
+  typeId: skir.TypeId.createQualified(namespace: "test", name: name),
   revision: 1,
 );
 
-types.TypeTemplate _subject(
-  catalog.PresentationTarget target,
-  types.TypeDefinitionId fallback,
+skir.TypeTemplate _subject(
+  skir.PresentationTarget target,
+  skir.TypeDefinitionId fallback,
 ) => switch (target) {
-  catalog.PresentationTarget_namedWrapper(:final value) =>
-    types.TypeTemplate.wrapNamed(value),
-  _ => types.TypeTemplate.createNamed(
-    definition: fallback,
-    arguments: const [],
-  ),
+  skir.PresentationTarget_namedWrapper(:final value) =>
+    skir.TypeTemplate.wrapNamed(value),
+  _ => skir.TypeTemplate.createNamed(definition: fallback, arguments: const []),
 };

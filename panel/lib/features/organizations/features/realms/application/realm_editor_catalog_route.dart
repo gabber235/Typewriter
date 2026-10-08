@@ -1,7 +1,6 @@
-import "package:typewriter_panel/features/organizations/features/realms/application/realm_service_address.dart";
-import "package:typewriter_panel/infrastructure/messaging/bounded_transfer_assembler.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
 
 final class RealmEditorCatalogRoute {
   const RealmEditorCatalogRoute({

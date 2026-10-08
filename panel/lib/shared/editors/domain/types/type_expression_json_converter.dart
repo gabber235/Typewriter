@@ -1,4 +1,3 @@
-import "package:json_annotation/json_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Converts the editor type model to the JSON representation used by JSON

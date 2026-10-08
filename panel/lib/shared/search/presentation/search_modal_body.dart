@@ -1,5 +1,3 @@
-import "package:flutter/material.dart" hide SearchController;
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Builds the standard search interaction surface inside a [SearchRoot].

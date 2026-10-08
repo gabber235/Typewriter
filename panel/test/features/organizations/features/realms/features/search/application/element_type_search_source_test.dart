@@ -1,5 +1,4 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -47,8 +46,8 @@ void main() {
   SourceController controller,
 })
 _fixture() {
-  final organization = recordId("organization:test");
-  final realm = recordId("realm:test");
+  final organization = skir.recordId("organization:test");
+  final realm = skir.recordId("realm:test");
   final session = _SearchSession(_state());
   final container = ProviderContainer.test(
     overrides: [

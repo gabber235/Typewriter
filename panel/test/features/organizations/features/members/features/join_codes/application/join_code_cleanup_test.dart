@@ -1,5 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 import "support/join_codes_test_support.dart";
@@ -7,7 +8,7 @@ import "support/join_codes_test_support.dart";
 void main() {
   OrganizationJoinCode code(String id, DateTime? expiresAt) =>
       OrganizationJoinCode(
-        code: recordId("join_code:$id"),
+        code: skir.recordId("join_code:$id"),
         createdAt: DateTime.utc(2024),
         expiresAt: expiresAt,
       );

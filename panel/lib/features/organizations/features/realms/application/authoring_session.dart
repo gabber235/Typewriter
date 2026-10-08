@@ -1,8 +1,3 @@
-import "dart:async";
-
-import "package:flutter/foundation.dart";
-import "package:freezed_annotation/freezed_annotation.dart";
-import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";

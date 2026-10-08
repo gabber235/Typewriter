@@ -1,6 +1,4 @@
-import "dart:async";
-
-import "package:flutter/foundation.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// User visible operation context attached to an unexpected panel mutation error.
 enum PanelMutationOperation { deleteService, signOut, updateService }

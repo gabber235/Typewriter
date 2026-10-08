@@ -1,5 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter/rendering.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Render surface for positioned timeline elements, tracks, and the grid.

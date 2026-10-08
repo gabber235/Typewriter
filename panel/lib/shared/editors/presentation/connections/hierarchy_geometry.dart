@@ -19,7 +19,7 @@ _HierarchyGeometry _resolveHierarchyGeometry({
   final branching = childSizes.length > 1 || !layout.flattenSingleItem;
   final indentation = branching ? layout.indentation : 0.0;
   final contentLeft = textDirection == TextDirection.ltr ? indentation : 0.0;
-  final contentWidth = math.max(0.0, size.width - indentation);
+  final contentWidth = max(0.0, size.width - indentation);
   final offsets = <Offset>[];
   final targets = <Offset?>[];
   final diagnostics = <String>[];
@@ -75,19 +75,19 @@ double _effectiveHierarchyLeadingSpacing(
   if (!branching) {
     final style = layout.unaryStyle;
     final markerDepth = style?.startMarker?.inwardExtent ?? 0;
-    return math.max(layout.leadingSpacing, markerDepth + (style?.width ?? 0));
+    return max(layout.leadingSpacing, markerDepth + (style?.width ?? 0));
   }
   final trunkStyle = layout.trunkStyle;
   final branchStyle = layout.branchStyles.firstOrNull;
   final trunkDepth = trunkStyle?.startMarker?.inwardExtent ?? 0;
   final branchRadius = branchStyle?.startMarker?.crossAxisExtent ?? 0;
-  var spacing = math.max(layout.leadingSpacing, trunkDepth);
-  spacing = math.max(spacing, branchRadius * 2);
+  var spacing = max(layout.leadingSpacing, trunkDepth);
+  spacing = max(spacing, branchRadius * 2);
   if (trunkStyle?.startMarker == null && branchStyle?.startMarker == null) {
     return spacing;
   }
-  final clearance = math.max(trunkStyle?.width ?? 0, branchStyle?.width ?? 0);
-  return math.max(spacing, 2 * (trunkDepth + branchRadius + clearance));
+  final clearance = max(trunkStyle?.width ?? 0, branchStyle?.width ?? 0);
+  return max(spacing, 2 * (trunkDepth + branchRadius + clearance));
 }
 
 List<double> _effectiveHierarchyItemSpacings(_ResolvedHierarchyLayout layout) =>
@@ -107,7 +107,7 @@ double _effectiveHierarchyItemSpacing(
   final style = layout.branchStyles[targetIndex];
   final markerRadius = style?.startMarker?.crossAxisExtent ?? 0;
   if (markerRadius == 0) return layout.itemSpacing;
-  return math.max(layout.itemSpacing, 2 * (markerRadius + (style?.width ?? 0)));
+  return max(layout.itemSpacing, 2 * (markerRadius + (style?.width ?? 0)));
 }
 
 double _hierarchyChildX(
@@ -115,18 +115,18 @@ double _hierarchyChildX(
   double contentLeft,
   double contentWidth,
   double childWidth,
-  CrossAxisAlignment_kind alignment,
+  skir.CrossAxisAlignment_kind alignment,
   TextDirection textDirection,
 ) {
-  final remaining = math.max(0.0, contentWidth - childWidth);
+  final remaining = max(0.0, contentWidth - childWidth);
   return switch (alignment) {
-    CrossAxisAlignment_kind.stretchConst => contentLeft,
-    CrossAxisAlignment_kind.centerConst => contentLeft + remaining / 2,
-    CrossAxisAlignment_kind.startConst =>
+    skir.CrossAxisAlignment_kind.stretchConst => contentLeft,
+    skir.CrossAxisAlignment_kind.centerConst => contentLeft + remaining / 2,
+    skir.CrossAxisAlignment_kind.startConst =>
       textDirection == TextDirection.ltr ? contentLeft : width - childWidth,
-    CrossAxisAlignment_kind.endConst =>
+    skir.CrossAxisAlignment_kind.endConst =>
       textDirection == TextDirection.ltr ? width - childWidth : contentLeft,
-    CrossAxisAlignment_kind.unknown => contentLeft,
+    skir.CrossAxisAlignment_kind.unknown => contentLeft,
   };
 }
 

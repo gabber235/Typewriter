@@ -1,5 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
@@ -167,7 +165,7 @@ void main() {
             (_) => _StoryTopology(topology),
           ),
           organizationIdProvider.overrideWithValue(
-            recordId("organization:story"),
+            skir.recordId("organization:story"),
           ),
           ...appearanceProviderOverrides(),
         ],
