@@ -1,6 +1,7 @@
 package com.typewritermc.services.libs.communicator.nats
 
 import com.typewritermc.services.libs.utils.findExceptionalThrowable
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -161,7 +162,8 @@ class NatsConnection internal constructor(
                     try {
                         authenticationProvider.authenticate(NatsAuthenticationChallenge(hasNonce, signer))
                     } catch (failure: Throwable) {
-                        authenticationFailure.compareAndSet(null, failure)
+                        // The client cancels its own authentication job when a connection attempt times out.
+                        if (failure !is CancellationException) authenticationFailure.compareAndSet(null, failure)
                         throw failure
                     }
                 }
