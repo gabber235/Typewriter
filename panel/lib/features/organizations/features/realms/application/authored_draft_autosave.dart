@@ -210,7 +210,9 @@ final class AuthoredDraftAutosave extends ChangeNotifier {
       _status = "The save result is unknown. Your local edit remains available for comparison with current Realm values";
       try {
         await _reload();
-      } on Object {}
+      } on Object {
+        // Keep the uncertain save status and local draft when recovery also fails.
+      }
     } finally {
       _applyPendingBaseline();
       _notify();
@@ -278,10 +280,12 @@ final class AuthoredDraftAutosave extends ChangeNotifier {
   }
 
   void _adoptBaseline(AuthoredDraft baseline) {
+    if (_blocked && dirty && _savedPrefix == null) return;
     if (_savedPrefix case final acceptedIntentCount?) {
       _adoptSavedBaseline(baseline, acceptedIntentCount);
-      if (!_blocked && dirty && policy == EditorCommitPolicy.autosaveChanges)
+      if (!_blocked && dirty && policy == EditorCommitPolicy.autosaveChanges) {
         schedule();
+      }
       return;
     }
     if (!dirty) {

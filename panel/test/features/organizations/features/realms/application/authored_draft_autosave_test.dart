@@ -89,6 +89,78 @@ void main() {
       autosave.close();
     }
   });
+  test(
+    "conflict refresh preserves the blocked draft until explicit recovery",
+    () async {
+      var requests = 0;
+      late final AuthoredDraftAutosave autosave;
+      autosave = AuthoredDraftAutosave(
+        resource: _resource,
+        baseline: _draft("Initial"),
+        policy: EditorCommitPolicy.autosaveChanges,
+        commit: (_) async {
+          requests++;
+          return skir.CommitPreparedEditResponse.wrapResult(
+            requests == 1
+                ? skir.CommitResult.wrapConflict(const [])
+                : skir.CommitResult.committed,
+          );
+        },
+        fetchCurrent: () async => skir.AuthoringState(
+          generation: skir.CatalogGeneration(value: "catalog"),
+          resources: [
+            skir.AuthoringResource(
+              id: _resource,
+              definition: skir.ResourceDefinitionId(value: "quest"),
+              content: _draft("Valid").resources[_resource]!,
+            ),
+          ],
+          links: const [],
+          findings: const [],
+        ),
+        reload: () async => autosave.acceptBaseline(_draft("Remote")),
+        onSettled: () {},
+      );
+      try {
+        autosave.stage(
+          autosave.draft.fork()
+            ..set(_title, skir.DataValue.wrapStringValue("Local")),
+        );
+        await autosave.flush();
+        expect(autosave.blocked, isTrue);
+        expect(autosave.status, contains("changed before this edit was saved"));
+        expect(
+          autosave.draft.resource(_resource)?.fields.single.value,
+          skir.DataValue.wrapStringValue("Local"),
+        );
+        await Future<void>.delayed(
+          AuthoredDraftAutosave.debounce + const Duration(milliseconds: 20),
+        );
+        expect(requests, 1);
+        await autosave.useLatest();
+        expect(autosave.blocked, isFalse);
+        expect(autosave.dirty, isFalse);
+        expect(
+          autosave.draft.resource(_resource)?.fields.single.value,
+          skir.DataValue.wrapStringValue("Remote"),
+        );
+        autosave.stage(
+          autosave.draft.fork()
+            ..set(_title, skir.DataValue.wrapStringValue("Valid")),
+        );
+        await autosave.flush();
+        expect(requests, 2);
+        expect(autosave.settled, isTrue);
+        expect(autosave.blocked, isFalse);
+        expect(
+          autosave.draft.resource(_resource)?.fields.single.value,
+          skir.DataValue.wrapStringValue("Valid"),
+        );
+      } finally {
+        autosave.close();
+      }
+    },
+  );
 }
 
 final _resource = skir.ResourceId(value: "resource:quest");
