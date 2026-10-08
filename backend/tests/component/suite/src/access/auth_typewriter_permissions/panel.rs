@@ -153,7 +153,7 @@ async fn member_receives_all_organization_capabilities(
         "service.to.*.organization.writers.realm.shared.catalog.fetch",
         "service.to.*.organization.writers.realm.shared.publish",
         "service.to.*.organization.writers.realm.shared.blob.read",
-        "service.to.*.organization.writers.realm.editor.authoring.snapshot.query",
+        "service.to.*.organization.writers.realm.editor.authoring.state.query",
         "service.to.*.organization.writers.realm.editor.authoring.edit.commit",
         "service.to.*.organization.writers.realm.editor.authoring.type.preview",
         "service.to.*.organization.writers.realm.editor.authoring.type.commit",
@@ -161,8 +161,7 @@ async fn member_receives_all_organization_capabilities(
         "service.to.*.organization.writers.realm.editor.authoring.publish",
         "service.to.*.organization.writers.realm.editor.authoring.publication.watch",
         "service.to.*.organization.writers.realm.editor.authoring.compiled.status.query",
-        "service.to.*.organization.writers.realm.editor.authoring.compiled.watch",
-        "service.to.*.organization.writers.realm.compiled.content.watch",
+        "service.to.*.organization.writers.realm.editor.authoring.compiled.query",
         "typewriter.presence.organization.writers.user.panel_user",
     ] {
         assert!(publish.iter().any(|subject| subject == required));
@@ -170,13 +169,17 @@ async fn member_receives_all_organization_capabilities(
     assert!(
         publish
             .iter()
-            .all(|subject| subject != "service.to.*.organization.writers.realm.editor.elements.fetch")
+            .all(|subject| subject
+                != "service.to.*.organization.writers.realm.editor.elements.fetch")
     );
     for obsolete in [
+        "compiled.content.watch",
+        "editor.authoring.compiled.watch",
         "editor.authoring.content.search",
         "editor.authoring.resources.resolve",
         "editor.authoring.selector.suggest",
         "editor.authoring.snapshot.get",
+        "editor.authoring.snapshot.query",
     ] {
         assert!(publish.iter().all(|subject| !subject.ends_with(obsolete)));
     }
@@ -191,15 +194,21 @@ async fn member_receives_all_organization_capabilities(
         "service.from.*.organization.writers.realm.editor.catalog.fetch.*",
         "service.from.*.organization.writers.realm.editor.presentation.search",
         "service.from.*.organization.writers.realm.editor.authoring.changed",
-        "service.from.*.organization.writers.realm.editor.authoring.snapshot.query.*",
-        "service.from.*.organization.writers.realm.editor.authoring.compiled.activated",
+        "service.from.*.organization.writers.realm.editor.authoring.state.query.*",
         "service.from.*.organization.writers.realm.editor.authoring.compiled.changed",
-        "service.from.*.organization.writers.realm.editor.authoring.compiled.watch",
+        "service.from.*.organization.writers.realm.editor.authoring.compiled.query.*",
         "service.from.*.organization.writers.realm.editor.authoring.publication.watch",
-        "service.from.*.organization.writers.realm.compiled.content.watch",
         "typewriter.presence.organization.writers.user.*",
     ] {
         assert!(subscribe.iter().any(|subject| subject == required));
+    }
+    for obsolete in [
+        "compiled.content.watch",
+        "editor.authoring.compiled.activated",
+        "editor.authoring.compiled.watch",
+        "editor.authoring.snapshot.query.*",
+    ] {
+        assert!(subscribe.iter().all(|subject| !subject.ends_with(obsolete)));
     }
     Ok(())
 }

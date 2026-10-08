@@ -1,8 +1,10 @@
-use component_test::{TestContext, TestResult, component_test};
+use component_test::{TestContext, TestResult, component_test, subject_matches};
 use typewriter_component_test::prelude::{SkirMessagingExpectationExt, skir_record_id};
 use wasmcloud_utils::{
     skir::base::{
-        access::v1::permission::{EntityPermissionQualifier, GetEntityPermissionRequest},
+        access::v1::permission::{
+            EntityPermissionQualifier, GetEntityPermissionRequest, Permission, Permissions,
+        },
         service::v1::status::{
             GetServiceStatusRequest, GetServiceStatusResponse, GetServiceStatusResponse_Status,
             ServiceBinding, ServiceBinding_Bound, ServiceBinding_Unbound,
@@ -26,6 +28,72 @@ fn request(service_id: &str) -> GetEntityPermissionRequest {
         }))
         .expect("claims are valid JSON"),
         _unrecognized: None,
+    }
+}
+
+fn permits(permission: &Permission, subject: &str) -> bool {
+    permission
+        .allow
+        .iter()
+        .any(|pattern| subject_matches(pattern, subject))
+        && !permission
+            .deny
+            .iter()
+            .any(|pattern| subject_matches(pattern, subject))
+}
+
+fn assert_published_content_access(permissions: &Permissions, organization: &str, realm: &str) {
+    let request = format!("service.to.{realm}.organization.{organization}.realm");
+    let events = format!("service.from.{realm}.organization.{organization}.realm");
+    assert!(permits(
+        &permissions.publish,
+        &format!("{request}.editor.authoring.compiled.query")
+    ));
+    for suffix in [
+        "editor.authoring.compiled.changed",
+        "editor.authoring.compiled.query.transfer_one",
+    ] {
+        assert!(permits(
+            &permissions.subscribe,
+            &format!("{events}.{suffix}")
+        ));
+    }
+    for suffix in [
+        "editor.authoring.edit.commit",
+        "editor.authoring.type.commit",
+        "editor.authoring.publish",
+        "editor.authoring.state.query",
+    ] {
+        assert!(!permits(
+            &permissions.publish,
+            &format!("{request}.{suffix}")
+        ));
+    }
+    assert!(!permits(
+        &permissions.subscribe,
+        &format!("{events}.editor.authoring.compiled.query.transfer_one.extra")
+    ));
+    for (other_organization, other_realm) in [
+        (organization, "foreign_realm"),
+        ("foreign_organization", realm),
+    ] {
+        assert!(!permits(
+            &permissions.publish,
+            &format!(
+                "service.to.{other_realm}.organization.{other_organization}.realm.editor.authoring.compiled.query"
+            )
+        ));
+        for suffix in [
+            "editor.authoring.compiled.changed",
+            "editor.authoring.compiled.query.transfer_one",
+        ] {
+            assert!(!permits(
+                &permissions.subscribe,
+                &format!(
+                    "service.from.{other_realm}.organization.{other_organization}.realm.{suffix}"
+                )
+            ));
+        }
     }
 }
 
@@ -77,6 +145,27 @@ async fn attached_service_receives_only_its_realm_permissions(
         response.tags,
         ["service:engine_one", "organization:writers"]
     );
+    assert_published_content_access(&response.permissions, "writers", "quests");
+    for suffix in [
+        "editor.authoring.edit.commit",
+        "editor.authoring.type.commit",
+        "editor.authoring.publish",
+        "editor.authoring.state.query",
+    ] {
+        assert!(!permits(
+            &response.permissions.subscribe,
+            &format!("service.to.quests.organization.writers.realm.{suffix}")
+        ));
+    }
+    for suffix in [
+        "editor.authoring.compiled.changed",
+        "editor.authoring.compiled.query.transfer_one",
+    ] {
+        assert!(!permits(
+            &response.permissions.publish,
+            &format!("service.from.quests.organization.writers.realm.{suffix}")
+        ));
+    }
     let publish = &response.permissions.publish.allow;
     assert!(publish.contains(&"cloud.to.service.engine_one.execution.watch".into()));
     assert!(publish.contains(&"cloud.to.service.engine_one.execution.register".into()));
@@ -172,8 +261,9 @@ async fn realm_service_executes_realm_routes_and_coordinates_hosts(
 
     let publish = &response.permissions.publish.allow;
     let subscribe = &response.permissions.subscribe.allow;
+    assert_published_content_access(&response.permissions, "writers", "quests");
     for suffix in [
-        "compiled.content.watch",
+        "editor.authoring.compiled.query",
         "editor.capability.command.invoke",
         "editor.capability.computation.invoke",
         "editor.catalog.fetch",
@@ -181,7 +271,7 @@ async fn realm_service_executes_realm_routes_and_coordinates_hosts(
         "editor.creation.prepare",
         "editor.presentation.search",
         "editor.presentation.search.cancel",
-        "editor.authoring.snapshot.query",
+        "editor.authoring.state.query",
         "editor.authoring.edit.commit",
         "editor.authoring.type.preview",
         "editor.authoring.type.commit",
@@ -189,7 +279,6 @@ async fn realm_service_executes_realm_routes_and_coordinates_hosts(
         "editor.authoring.publish",
         "editor.authoring.publication.watch",
         "editor.authoring.compiled.status.query",
-        "editor.authoring.compiled.watch",
         "shared.blob.begin",
         "shared.blob.complete",
         "shared.blob.metadata",
@@ -204,15 +293,13 @@ async fn realm_service_executes_realm_routes_and_coordinates_hosts(
     }
     assert!(subscribe.contains(&"typewriter.organization.writers.realm.quests.hosts.state".into()));
     for suffix in [
-        "compiled.content.watch",
         "editor.catalog.fetch.*",
         "editor.catalog.invalidate",
         "editor.presentation.search",
         "editor.authoring.changed",
-        "editor.authoring.snapshot.query.*",
-        "editor.authoring.compiled.activated",
+        "editor.authoring.state.query.*",
         "editor.authoring.compiled.changed",
-        "editor.authoring.compiled.watch",
+        "editor.authoring.compiled.query.*",
         "editor.authoring.publication.watch",
     ] {
         assert!(publish.contains(&format!(
@@ -250,7 +337,11 @@ async fn realm_service_executes_realm_routes_and_coordinates_hosts(
     assert!(publish.iter().all(|subject| !subject.contains("realm.*")));
     assert!(subscribe.iter().all(|subject| !subject.contains("realm.*")));
     assert!(publish.iter().all(|subject| !subject.ends_with(".realm.>")));
-    assert!(subscribe.iter().all(|subject| !subject.ends_with(".realm.>")));
+    assert!(
+        subscribe
+            .iter()
+            .all(|subject| !subject.ends_with(".realm.>"))
+    );
     Ok(())
 }
 

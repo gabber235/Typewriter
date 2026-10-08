@@ -252,6 +252,17 @@ fn add_realm_participant_permissions(
     allow_publish: &mut Vec<String>,
     allow_subscribe: &mut Vec<String>,
 ) {
+    allow_publish.push(format!(
+        "service.to.{realm_id}.organization.{organization_id}.realm.editor.authoring.compiled.query"
+    ));
+    for suffix in [
+        "editor.authoring.compiled.changed",
+        "editor.authoring.compiled.query.*",
+    ] {
+        allow_subscribe.push(format!(
+            "service.from.{realm_id}.organization.{organization_id}.realm.{suffix}"
+        ));
+    }
     for suffix in ["probe", "command", "status"] {
         allow_subscribe.push(format!(
             "typewriter.organization.{organization_id}.realm.{realm_id}.hosts.{suffix}"

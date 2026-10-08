@@ -10,14 +10,13 @@ use wasmcloud_utils::skir::base::access::v1::permission::{Permission, Permission
 
 /// Realm request routes exposed by the current service contract.
 pub const REALM_REQUEST_SUFFIXES: &[&str] = &[
-    "compiled.content.watch",
+    "editor.authoring.compiled.query",
     "editor.authoring.compiled.status.query",
-    "editor.authoring.compiled.watch",
     "editor.authoring.edit.commit",
     "editor.authoring.publication.watch",
     "editor.authoring.publish",
     "editor.authoring.search",
-    "editor.authoring.snapshot.query",
+    "editor.authoring.state.query",
     "editor.authoring.type.commit",
     "editor.authoring.type.preview",
     "editor.capability.command.invoke",
@@ -38,13 +37,11 @@ pub const REALM_REQUEST_SUFFIXES: &[&str] = &[
 
 /// Realm event routes published by the current service contract.
 pub const REALM_EVENT_SUFFIXES: &[&str] = &[
-    "compiled.content.watch",
     "editor.authoring.changed",
-    "editor.authoring.compiled.activated",
     "editor.authoring.compiled.changed",
-    "editor.authoring.compiled.watch",
+    "editor.authoring.compiled.query.*",
     "editor.authoring.publication.watch",
-    "editor.authoring.snapshot.query.*",
+    "editor.authoring.state.query.*",
     "editor.catalog.fetch.*",
     "editor.catalog.invalidate",
     "editor.presentation.search",
