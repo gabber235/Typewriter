@@ -8,9 +8,9 @@ final class PortableSearchInput extends StatefulWidget {
     super.key,
   });
 
-  final presentation.SearchControl control;
+  final skir.SearchControl control;
   final PortablePresentationScope scope;
-  final http.Client? client;
+  final Client? client;
 
   @override
   State<PortableSearchInput> createState() => _PortableSearchInputState();
@@ -27,9 +27,9 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
   List<String> _guidance = const [];
   String? _failure;
   Timer? _debounce;
-  late http.Client _httpClient;
+  late Client _httpClient;
   late bool _ownsHttpClient;
-  StreamIterator<search_wire.RealmPresentationSearchUpdate>? _realmUpdates;
+  StreamIterator<skir.RealmPresentationSearchUpdate>? _realmUpdates;
   var _revision = 0;
   var _activeIndex = 0;
   var _editing = false;
@@ -69,7 +69,7 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
 
   void _installHttpClient() {
     _ownsHttpClient = widget.client == null;
-    _httpClient = widget.client ?? http.Client();
+    _httpClient = widget.client ?? Client();
   }
 
   String _initialQuery() {
@@ -127,13 +127,13 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
   }
 
   Future<_AuthoredSearchBatch> _loadProvider(
-    presentation.SearchProvider provider,
+    skir.SearchProvider provider,
     _AuthoredSearchQuery query,
     PortablePresentationScope scope,
     int revision,
   ) async {
     switch (provider) {
-      case presentation.SearchProvider_staticValuesWrapper(:final value):
+      case skir.SearchProvider_staticValuesWrapper(:final value):
         final evaluated = query.scope.evaluate(value.values);
         if (evaluated case PortableExpressionFailed(:final message)) {
           return _AuthoredSearchBatch.failure(message);
@@ -155,12 +155,12 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
           value.result,
           query.scope,
         );
-      case presentation.SearchProvider_realmCallbackWrapper(:final value):
+      case skir.SearchProvider_realmCallbackWrapper(:final value):
         return _loadRealm(value, query, scope, revision);
-      case presentation.SearchProvider_gateWrapper(:final value):
+      case skir.SearchProvider_gateWrapper(:final value):
         final condition = query.scope.evaluate(value.condition);
         if (condition case PortableExpressionAvailable(
-          value: types.DataValue_booleanWrapper(value: true),
+          value: skir.DataValue_booleanWrapper(value: true),
         )) {
           return _loadProvider(value.child, query, scope, revision);
         }
@@ -169,11 +169,11 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
             : _expressionText(query.scope.evaluate(value.guidance!)) ??
                   "Search is unavailable for the current value";
         return _AuthoredSearchBatch(guidance: [guidance]);
-      case presentation.SearchProvider_debounceWrapper(:final value):
+      case skir.SearchProvider_debounceWrapper(:final value):
         return _loadProvider(value.child, query, scope, revision);
-      case presentation.SearchProvider_cacheWrapper(:final value):
+      case skir.SearchProvider_cacheWrapper(:final value):
         return _loadProvider(value.child, query, scope, revision);
-      case presentation.SearchProvider_rankWrapper(:final value):
+      case skir.SearchProvider_rankWrapper(:final value):
         final child = await _loadProvider(value.child, query, scope, revision);
         if (child.failure != null) return child;
         final ranked = [...child.candidates]
@@ -184,7 +184,7 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
             return score != 0 ? score : left.key.compareTo(right.key);
           });
         return child.copyWith(candidates: ranked);
-      case presentation.SearchProvider_limitWrapper(:final value):
+      case skir.SearchProvider_limitWrapper(:final value):
         final child = await _loadProvider(value.child, query, scope, revision);
         final maximum = _expressionInteger(query.scope.evaluate(value.maximum));
         if (maximum == null) {
@@ -195,7 +195,7 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
         return child.copyWith(
           candidates: child.candidates.take(maximum.clamp(0, 100000)).toList(),
         );
-      case presentation.SearchProvider_distinctWrapper(:final value):
+      case skir.SearchProvider_distinctWrapper(:final value):
         final child = await _loadProvider(value.child, query, scope, revision);
         final seen = <String>{};
         return child.copyWith(
@@ -203,9 +203,9 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
               .where((candidate) => seen.add(candidate.key))
               .toList(),
         );
-      case presentation.SearchProvider_historyWrapper(:final value):
+      case skir.SearchProvider_historyWrapper(:final value):
         return _loadProvider(value.child, query, scope, revision);
-      case presentation.SearchProvider_sectionWrapper(:final value):
+      case skir.SearchProvider_sectionWrapper(:final value):
         final child = await _loadProvider(value.child, query, scope, revision);
         final label = _expressionText(query.scope.evaluate(value.label));
         return child.copyWith(
@@ -214,7 +214,7 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
               candidate.copyWith(section: label),
           ],
         );
-      case presentation.SearchProvider_mergeWrapper(:final value):
+      case skir.SearchProvider_mergeWrapper(:final value):
         final batches = await Future.wait([
           for (final child in value.children)
             _loadProvider(child, query, scope, revision),
@@ -227,19 +227,19 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
               .whereType<String>()
               .firstOrNull,
         );
-      case presentation.SearchProvider_httpJsonWrapper(:final value):
+      case skir.SearchProvider_httpJsonWrapper(:final value):
         return _loadHttp(value, query, scope);
-      case presentation.SearchProvider_collectionWrapper():
+      case skir.SearchProvider_collectionWrapper():
         return _AuthoredSearchBatch.failure(
           "Collection search is waiting for its checked row source",
         );
-      case presentation.SearchProvider_unknown():
+      case skir.SearchProvider_unknown():
         return _AuthoredSearchBatch.failure("The search provider is unknown");
     }
   }
 
   Future<_AuthoredSearchBatch> _loadRealm(
-    presentation.RealmCallbackSearchProvider provider,
+    skir.RealmCallbackSearchProvider provider,
     _AuthoredSearchQuery query,
     PortablePresentationScope scope,
     int revision,
@@ -250,7 +250,7 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
       return _AuthoredSearchBatch.failure("Realm search is unavailable");
     }
     final definition = catalog.snapshot.capabilities
-        .whereType<capability.CapabilityDefinition_searchWrapper>()
+        .whereType<skir.CapabilityDefinition_searchWrapper>()
         .map((entry) => entry.value)
         .where((entry) => entry.capabilityId == provider.capabilityId)
         .firstOrNull;
@@ -267,7 +267,7 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
       );
     }
     final subscriptionId = "panel:search:${const Uuid().v4()}";
-    final request = search_wire.RealmPresentationSearchRequest(
+    final request = skir.RealmPresentationSearchRequest(
       subscriptionId: subscriptionId,
       generation: catalog.snapshot.generation,
       capabilityId: provider.capabilityId,
@@ -284,17 +284,14 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
           return const _AuthoredSearchBatch();
         }
         switch (update) {
-          case search_wire.RealmPresentationSearchUpdate_snapshotWrapper(
-            :final value,
-          ):
+          case skir.RealmPresentationSearchUpdate_snapshotWrapper(:final value):
             if (value.subscriptionId != subscriptionId) continue;
             final mapped = _mapCandidates(
               value.values,
               provider.result,
               query.scope,
             );
-            if (value.status ==
-                search_wire.RealmPresentationSearchStatus.loading) {
+            if (value.status == skir.RealmPresentationSearchStatus.loading) {
               if (mounted && revision == _revision) {
                 setState(() {
                   _results = mapped.candidates;
@@ -304,7 +301,7 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
               continue;
             }
             return mapped.copyWith(guidance: value.guidance.toList());
-          case search_wire.RealmPresentationSearchUpdate_unavailableWrapper(
+          case skir.RealmPresentationSearchUpdate_unavailableWrapper(
             :final value,
           ):
             if (value.subscriptionId != subscriptionId) continue;
@@ -314,7 +311,7 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
                       .firstOrNull ??
                   "Realm search is unavailable",
             );
-          case search_wire.RealmPresentationSearchUpdate_unknown():
+          case skir.RealmPresentationSearchUpdate_unknown():
             return _AuthoredSearchBatch.failure(
               "Realm search returned an unknown update",
             );
@@ -335,7 +332,7 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
   }
 
   Future<_AuthoredSearchBatch> _loadHttp(
-    presentation.HttpJsonSearchProvider provider,
+    skir.HttpJsonSearchProvider provider,
     _AuthoredSearchQuery query,
     PortablePresentationScope scope,
   ) async {
@@ -411,7 +408,7 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
       if (expected == null) {
         throw const FormatException("Search result type is incomplete");
       }
-      final values = <types.DataValue>[];
+      final values = <skir.DataValue>[];
       String? warning;
       for (final (index, source) in JsonPath(
         provider.resultPath,
@@ -447,8 +444,8 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
   }
 
   _AuthoredSearchBatch _mapCandidates(
-    Iterable<types.DataValue> values,
-    presentation.SearchResultMapping mapping,
+    Iterable<skir.DataValue> values,
+    skir.SearchResultMapping mapping,
     PortablePresentationScope scope,
   ) {
     final candidates = <_AuthoredSearchCandidate>[];
@@ -480,7 +477,7 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
 
   int _rank(
     _AuthoredSearchCandidate candidate,
-    Iterable<presentation.SearchRankingField> fields,
+    Iterable<skir.SearchRankingField> fields,
     String query,
   ) {
     if (query.isEmpty) return 0;
@@ -503,8 +500,7 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
 
   void _select(_AuthoredSearchCandidate candidate) {
     if (!widget.scope.enabled || widget.scope.readOnly) return;
-    if (widget.control.selectionMode ==
-        presentation.SearchSelectionMode.single) {
+    if (widget.control.selectionMode == skir.SearchSelectionMode.single) {
       widget.scope.writePayload(
         widget.control.control.binding,
         candidate.selected,
@@ -513,7 +509,7 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
       return;
     }
     final current = widget.scope.read(widget.control.control.binding);
-    final items = current?.authoredItems?.toList() ?? const <types.ListItem>[];
+    final items = current?.authoredItems?.toList() ?? const <skir.ListItem>[];
     final selectedKey = canonicalAuthoredValue(candidate.selected);
     final existing = items
         .where((item) => canonicalAuthoredValue(item.value) == selectedKey)
@@ -523,8 +519,8 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
       return draft.insert(
         location,
         items.lastOrNull?.id,
-        types.ListItem(
-          id: types.ItemId(value: const Uuid().v4()),
+        skir.ListItem(
+          id: skir.ItemId(value: const Uuid().v4()),
           value: candidate.selected,
         ),
       );
@@ -535,8 +531,7 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
   bool _selected(_AuthoredSearchCandidate candidate) {
     final current = widget.scope.read(widget.control.control.binding);
     final key = canonicalAuthoredValue(candidate.selected);
-    if (widget.control.selectionMode ==
-        presentation.SearchSelectionMode.single) {
+    if (widget.control.selectionMode == skir.SearchSelectionMode.single) {
       return current != null &&
           canonicalAuthoredValue(current.authoredPayload) == key;
     }
@@ -761,8 +756,8 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
   Widget _summary(String placeholder) {
     final current = widget.scope.read(widget.control.control.binding);
     if (current == null ||
-        current.authoredPayload == types.DataValue.unfilled ||
-        current.authoredPayload == types.DataValue.null_) {
+        current.authoredPayload == skir.DataValue.unfilled ||
+        current.authoredPayload == skir.DataValue.null_) {
       return const Text("No value");
     }
     final text = _dataValueText(current);
@@ -809,9 +804,9 @@ final class _AuthoredSearchCandidate {
   });
 
   final String key;
-  final types.DataValue selected;
+  final skir.DataValue selected;
   final String label;
-  final presentation.PresentationNode node;
+  final skir.PresentationNode node;
   final PortablePresentationScope scope;
   final String? section;
 
@@ -860,13 +855,13 @@ final class _AuthoredSearchQuery {
 
   final String normalized;
   final PortablePresentationScope scope;
-  final search_wire.RealmSearchQuery wire;
+  final skir.RealmSearchQuery wire;
   final String? failure;
 }
 
 _AuthoredSearchQuery _authoredSearchQuery(
-  presentation.SearchProvider provider,
-  types.ExpressionBindingId queryBindingId,
+  skir.SearchProvider provider,
+  skir.ExpressionBindingId queryBindingId,
   String raw,
   PortablePresentationScope scope,
 ) {
@@ -883,7 +878,7 @@ _AuthoredSearchQuery _authoredSearchQuery(
   final selectors = parsed.selectors
       .whereType<QueryLexerKeyValueSelectorToken>()
       .map(
-        (token) => search_wire.RealmSearchSelector(
+        (token) => skir.RealmSearchSelector(
           selectorId: token.selectorId,
           key: byId[token.selectorId]?.key ?? "",
           value: token.value,
@@ -891,7 +886,7 @@ _AuthoredSearchQuery _authoredSearchQuery(
       )
       .toList();
   var queryScope = scope.withValues({
-    queryBindingId: types.DataValue.wrapStringValue(parsed.query),
+    queryBindingId: skir.DataValue.wrapStringValue(parsed.query),
   });
   for (final definition in definitions) {
     final values = selectors
@@ -901,18 +896,17 @@ _AuthoredSearchQuery _authoredSearchQuery(
         .toList();
     queryScope = queryScope.withValues({
       definition.valueBindingId:
-          definition.multiplicity ==
-              presentation.SearchSelectorMultiplicity.multiple
-          ? types.DataValue.createListValue(
+          definition.multiplicity == skir.SearchSelectorMultiplicity.multiple
+          ? skir.DataValue.createListValue(
               items: [
                 for (final value in values)
-                  types.ListItem(
-                    id: types.ItemId(value: const Uuid().v4()),
-                    value: types.DataValue.wrapStringValue(value),
+                  skir.ListItem(
+                    id: skir.ItemId(value: const Uuid().v4()),
+                    value: skir.DataValue.wrapStringValue(value),
                   ),
               ],
             )
-          : types.DataValue.wrapStringValue(values.firstOrNull ?? ""),
+          : skir.DataValue.wrapStringValue(values.firstOrNull ?? ""),
     });
   }
   final terms = RegExp(
@@ -923,7 +917,7 @@ _AuthoredSearchQuery _authoredSearchQuery(
     normalized: parsed.query,
     scope: queryScope,
     failure: hardFailure,
-    wire: search_wire.RealmSearchQuery(
+    wire: skir.RealmSearchQuery(
       normalizedQuery: parsed.query,
       selectors: selectors,
       selectorExpression: _wireSelectorExpression(parsed.expression, byId),
@@ -932,46 +926,50 @@ _AuthoredSearchQuery _authoredSearchQuery(
   );
 }
 
-List<presentation.SearchSelectorDefinition> _providerSelectors(
-  presentation.SearchProvider provider,
+List<skir.SearchSelectorDefinition> _providerSelectors(
+  skir.SearchProvider provider,
 ) => switch (provider) {
-  presentation.SearchProvider_staticValuesWrapper(:final value) =>
+  skir.SearchProvider_staticValuesWrapper(:final value) =>
     value.selectors.toList(),
-  presentation.SearchProvider_httpJsonWrapper(:final value) =>
+  skir.SearchProvider_httpJsonWrapper(:final value) => value.selectors.toList(),
+  skir.SearchProvider_realmCallbackWrapper(:final value) =>
     value.selectors.toList(),
-  presentation.SearchProvider_realmCallbackWrapper(:final value) =>
+  skir.SearchProvider_collectionWrapper(:final value) =>
     value.selectors.toList(),
-  presentation.SearchProvider_collectionWrapper(:final value) =>
-    value.selectors.toList(),
-  presentation.SearchProvider_gateWrapper(:final value) => _providerSelectors(
+  skir.SearchProvider_gateWrapper(:final value) => _providerSelectors(
     value.child,
   ),
-  presentation.SearchProvider_debounceWrapper(:final value) =>
-    _providerSelectors(value.child),
-  presentation.SearchProvider_cacheWrapper(:final value) => _providerSelectors(
+  skir.SearchProvider_debounceWrapper(:final value) => _providerSelectors(
     value.child,
   ),
-  presentation.SearchProvider_rankWrapper(:final value) => _providerSelectors(
+  skir.SearchProvider_cacheWrapper(:final value) => _providerSelectors(
     value.child,
   ),
-  presentation.SearchProvider_limitWrapper(:final value) => _providerSelectors(
+  skir.SearchProvider_rankWrapper(:final value) => _providerSelectors(
     value.child,
   ),
-  presentation.SearchProvider_distinctWrapper(:final value) =>
-    _providerSelectors(value.child),
-  presentation.SearchProvider_historyWrapper(:final value) =>
-    _providerSelectors(value.child),
-  presentation.SearchProvider_sectionWrapper(:final value) =>
-    _providerSelectors(value.child),
-  presentation.SearchProvider_mergeWrapper(:final value) =>
-    _mergeProviderSelectors(value.children),
-  presentation.SearchProvider_unknown() => const [],
+  skir.SearchProvider_limitWrapper(:final value) => _providerSelectors(
+    value.child,
+  ),
+  skir.SearchProvider_distinctWrapper(:final value) => _providerSelectors(
+    value.child,
+  ),
+  skir.SearchProvider_historyWrapper(:final value) => _providerSelectors(
+    value.child,
+  ),
+  skir.SearchProvider_sectionWrapper(:final value) => _providerSelectors(
+    value.child,
+  ),
+  skir.SearchProvider_mergeWrapper(:final value) => _mergeProviderSelectors(
+    value.children,
+  ),
+  skir.SearchProvider_unknown() => const [],
 };
 
-List<presentation.SearchSelectorDefinition> _mergeProviderSelectors(
-  Iterable<presentation.SearchProvider> providers,
+List<skir.SearchSelectorDefinition> _mergeProviderSelectors(
+  Iterable<skir.SearchProvider> providers,
 ) {
-  final result = <String, presentation.SearchSelectorDefinition>{};
+  final result = <String, skir.SearchSelectorDefinition>{};
   for (final provider in providers) {
     for (final definition in _providerSelectors(provider)) {
       result.putIfAbsent(definition.selectorId, () => definition);
@@ -981,89 +979,95 @@ List<presentation.SearchSelectorDefinition> _mergeProviderSelectors(
 }
 
 QuerySelectorDefinition _querySelector(
-  presentation.SearchSelectorDefinition definition,
+  skir.SearchSelectorDefinition definition,
 ) => KeyValueSelectorDefinition(
   id: definition.selectorId,
   key: definition.key,
   caseSensitive: definition.caseSensitive,
   multiplicity:
-      definition.multiplicity == presentation.SearchSelectorMultiplicity.single
+      definition.multiplicity == skir.SearchSelectorMultiplicity.single
       ? QueryMultiplicity.single
       : QueryMultiplicity.multiple,
   color: definition.color == null ? null : Color(definition.color!),
   value: switch (definition.values) {
-    presentation.SearchSelectorValues_enumerationWrapper(:final value) =>
+    skir.SearchSelectorValues_enumerationWrapper(:final value) =>
       QuerySelectorValue.enumValue(value.values.toList()),
     _ => const QuerySelectorValue.freeText(),
   },
 );
 
-search_wire.RealmSearchSelectorExpression? _wireSelectorExpression(
+skir.RealmSearchSelectorExpression? _wireSelectorExpression(
   QueryLexerToken? token,
-  Map<String, presentation.SearchSelectorDefinition> definitions,
+  Map<String, skir.SearchSelectorDefinition> definitions,
 ) => switch (token) {
   null => null,
   QueryLexerKeyValueSelectorToken(:final selectorId, :final value) =>
-    search_wire.RealmSearchSelectorExpression.createSelector(
+    skir.RealmSearchSelectorExpression.createSelector(
       selectorId: selectorId,
       key: definitions[selectorId]?.key ?? "",
       value: value,
     ),
   QueryLexerOperatorToken(:final type, :final left, :final right) =>
-    search_wire.RealmSearchSelectorExpression.createBinary(
+    skir.RealmSearchSelectorExpression.createBinary(
       operator_: type == QueryLexerOperatorType.and
-          ? search_wire.RealmSearchSelectorOperator.and
-          : search_wire.RealmSearchSelectorOperator.or,
+          ? skir.RealmSearchSelectorOperator.and
+          : skir.RealmSearchSelectorOperator.or,
       left: _wireSelectorExpression(left, definitions)!,
       right: _wireSelectorExpression(right, definitions)!,
     ),
   QueryLexerNegationToken(:final token) =>
-    search_wire.RealmSearchSelectorExpression.createNot(
+    skir.RealmSearchSelectorExpression.createNot(
       expression: _wireSelectorExpression(token, definitions)!,
     ),
   QueryLexerSelectorToken() => null,
 };
 
-Duration _providerDebounce(presentation.SearchProvider provider) =>
-    switch (provider) {
-      presentation.SearchProvider_debounceWrapper(:final value) => Duration(
-        milliseconds: value.durationMilliseconds.clamp(0, 60000),
-      ),
-      presentation.SearchProvider_gateWrapper(:final value) =>
-        _providerDebounce(value.child),
-      presentation.SearchProvider_cacheWrapper(:final value) =>
-        _providerDebounce(value.child),
-      presentation.SearchProvider_rankWrapper(:final value) =>
-        _providerDebounce(value.child),
-      presentation.SearchProvider_limitWrapper(:final value) =>
-        _providerDebounce(value.child),
-      presentation.SearchProvider_distinctWrapper(:final value) =>
-        _providerDebounce(value.child),
-      presentation.SearchProvider_historyWrapper(:final value) =>
-        _providerDebounce(value.child),
-      presentation.SearchProvider_sectionWrapper(:final value) =>
-        _providerDebounce(value.child),
-      presentation.SearchProvider_mergeWrapper(:final value) =>
-        value.children
-            .map(_providerDebounce)
-            .fold(
-              Duration.zero,
-              (maximum, next) => next > maximum ? next : maximum,
-            ),
-      _ => Duration.zero,
-    };
+Duration _providerDebounce(skir.SearchProvider provider) => switch (provider) {
+  skir.SearchProvider_debounceWrapper(:final value) => Duration(
+    milliseconds: value.durationMilliseconds.clamp(0, 60000),
+  ),
+  skir.SearchProvider_gateWrapper(:final value) => _providerDebounce(
+    value.child,
+  ),
+  skir.SearchProvider_cacheWrapper(:final value) => _providerDebounce(
+    value.child,
+  ),
+  skir.SearchProvider_rankWrapper(:final value) => _providerDebounce(
+    value.child,
+  ),
+  skir.SearchProvider_limitWrapper(:final value) => _providerDebounce(
+    value.child,
+  ),
+  skir.SearchProvider_distinctWrapper(:final value) => _providerDebounce(
+    value.child,
+  ),
+  skir.SearchProvider_historyWrapper(:final value) => _providerDebounce(
+    value.child,
+  ),
+  skir.SearchProvider_sectionWrapper(:final value) => _providerDebounce(
+    value.child,
+  ),
+  skir.SearchProvider_mergeWrapper(:final value) =>
+    value.children
+        .map(_providerDebounce)
+        .fold(
+          Duration.zero,
+          (maximum, next) => next > maximum ? next : maximum,
+        ),
+  _ => Duration.zero,
+};
 
-types.TypeTemplate _typeUseTemplate(types.TypeUse type) => switch (type) {
-  types.TypeUse_scalarWrapper(:final value) => types.TypeTemplate.wrapScalar(
+skir.TypeTemplate _typeUseTemplate(skir.TypeUse type) => switch (type) {
+  skir.TypeUse_scalarWrapper(:final value) => skir.TypeTemplate.wrapScalar(
     value,
   ),
-  types.TypeUse_nullableWrapper(:final value) =>
-    types.TypeTemplate.createNullable(value: _typeUseTemplate(value.value)),
-  types.TypeUse_namedWrapper(:final value) => types.TypeTemplate.createNamed(
+  skir.TypeUse_nullableWrapper(:final value) =>
+    skir.TypeTemplate.createNullable(value: _typeUseTemplate(value.value)),
+  skir.TypeUse_namedWrapper(:final value) => skir.TypeTemplate.createNamed(
     definition: value.definition,
     arguments: value.arguments.map(_typeUseTemplate),
   ),
-  types.TypeUse_unknown() => types.TypeTemplate.unknown,
+  skir.TypeUse_unknown() => skir.TypeTemplate.unknown,
 };
 
 String? _expressionText(PortableExpressionResult result) => switch (result) {
@@ -1071,20 +1075,19 @@ String? _expressionText(PortableExpressionResult result) => switch (result) {
   _ => null,
 };
 
-String? _dataValueText(types.DataValue value) =>
-    switch (value.authoredPayload) {
-      types.DataValue_stringValueWrapper(:final value) => value,
-      types.DataValue_integerWrapper(:final value) => value,
-      types.DataValue_decimalWrapper(:final value) => value,
-      types.DataValue_floatWrapper(:final value) => value.toString(),
-      types.DataValue_booleanWrapper(:final value) => value.toString(),
-      types.DataValue_enumCaseWrapper(:final value) => value,
-      _ => null,
-    };
+String? _dataValueText(skir.DataValue value) => switch (value.authoredPayload) {
+  skir.DataValue_stringValueWrapper(:final value) => value,
+  skir.DataValue_integerWrapper(:final value) => value,
+  skir.DataValue_decimalWrapper(:final value) => value,
+  skir.DataValue_floatWrapper(:final value) => value.toString(),
+  skir.DataValue_booleanWrapper(:final value) => value.toString(),
+  skir.DataValue_enumCaseWrapper(:final value) => value,
+  _ => null,
+};
 
 int? _expressionInteger(PortableExpressionResult result) => switch (result) {
   PortableExpressionAvailable(
-    value: types.DataValue_integerWrapper(:final value),
+    value: skir.DataValue_integerWrapper(:final value),
   ) =>
     int.tryParse(value),
   _ => null,
@@ -1092,37 +1095,37 @@ int? _expressionInteger(PortableExpressionResult result) => switch (result) {
 
 double? _expressionNumber(PortableExpressionResult result) => switch (result) {
   PortableExpressionAvailable(
-    value: types.DataValue_integerWrapper(:final value),
+    value: skir.DataValue_integerWrapper(:final value),
   ) =>
     double.tryParse(value),
   PortableExpressionAvailable(
-    value: types.DataValue_floatWrapper(:final value),
+    value: skir.DataValue_floatWrapper(:final value),
   ) =>
     value,
   PortableExpressionAvailable(
-    value: types.DataValue_decimalWrapper(:final value),
+    value: skir.DataValue_decimalWrapper(:final value),
   ) =>
     double.tryParse(value),
   _ => null,
 };
 
-types.DataValue _decodeAuthoredJson(
+skir.DataValue _decodeAuthoredJson(
   Object? source,
-  types.TypeUse expected,
+  skir.TypeUse expected,
   CheckedEditorCatalog catalog,
   String path,
 ) {
-  if (expected case types.TypeUse_nullableWrapper(:final value)) {
-    if (source == null) return types.DataValue.null_;
+  if (expected case skir.TypeUse_nullableWrapper(:final value)) {
+    if (source == null) return skir.DataValue.null_;
     return _decodeAuthoredJson(source, value.value, catalog, path);
   }
   return switch (expected) {
-    types.TypeUse_scalarWrapper(:final value) => _decodeJsonScalar(
+    skir.TypeUse_scalarWrapper(:final value) => _decodeJsonScalar(
       source,
       value,
       path,
     ),
-    types.TypeUse_namedWrapper(:final value) => _decodeJsonNamed(
+    skir.TypeUse_namedWrapper(:final value) => _decodeJsonNamed(
       source,
       value,
       catalog,
@@ -1132,81 +1135,82 @@ types.DataValue _decodeAuthoredJson(
   };
 }
 
-types.DataValue _decodeJsonNamed(
+skir.DataValue _decodeJsonNamed(
   Object? source,
-  types.NamedTypeUse expected,
+  skir.NamedTypeUse expected,
   CheckedEditorCatalog catalog,
   String path,
 ) {
   final published = catalog.published(expected.definition);
-  if (published == null ||
-      published.status != catalog_wire.DeclarationStatus.ready) {
+  if (published == null || published.status != skir.DeclarationStatus.ready) {
     throw FormatException("Expected an available named type at $path");
   }
-  final containing = types.TypeSelection.wrapComplete(expected);
+  final containing = skir.TypeSelection.wrapComplete(expected);
   final payload = switch (published.definition.representation) {
-    types.RepresentationTemplate_scalarWrapper(:final value) =>
+    skir.RepresentationTemplate_scalarWrapper(:final value) =>
       _decodeJsonScalar(source, value.kind, path),
-    types.RepresentationTemplate_recordWrapper() => _decodeJsonRecord(
+    skir.RepresentationTemplate_recordWrapper() => _decodeJsonRecord(
       source,
       containing,
       catalog,
       path,
     ),
-    types.RepresentationTemplate_sequenceWrapper(:final value) =>
+    skir.RepresentationTemplate_sequenceWrapper(:final value) =>
       _decodeJsonSequence(source, value, containing, catalog, path),
-    types.RepresentationTemplate_mappingWrapper(:final value) =>
+    skir.RepresentationTemplate_mappingWrapper(:final value) =>
       _decodeJsonMapping(source, value, containing, catalog, path),
-    types.RepresentationTemplate_enumerationWrapper(:final value) =>
+    skir.RepresentationTemplate_enumerationWrapper(:final value) =>
       _decodeJsonEnumeration(source, value, path),
-    types.RepresentationTemplate_linkWrapper(:final value) => _decodeJsonLink(
+    skir.RepresentationTemplate_linkWrapper(:final value) => _decodeJsonLink(
       source,
       value,
       path,
     ),
     _ => throw FormatException("Expected a supported named type at $path"),
   };
-  return types.DataValue.createNamed(actualType: expected, payload: payload);
+  return skir.DataValue.createNamed(actualType: expected, payload: payload);
 }
 
-types.DataValue _decodeJsonScalar(
+skir.DataValue _decodeJsonScalar(
   Object? source,
-  types.ScalarKind kind,
+  skir.ScalarKind kind,
   String path,
 ) {
-  if (kind == types.ScalarKind.unit) {
-    if (source == null) return types.DataValue.unit;
+  if (kind == skir.ScalarKind.unit) {
+    if (source == null) return skir.DataValue.unit;
     throw _invalidJsonValue(path, "null", source);
   }
-  if (kind == types.ScalarKind.boolean) {
+  if (kind == skir.ScalarKind.boolean) {
     if (source case final bool value) {
-      return types.DataValue.wrapBoolean(value);
+      return skir.DataValue.wrapBoolean(value);
     }
     throw _invalidJsonValue(path, "a boolean", source);
   }
-  if (kind == types.ScalarKind.text) {
+  if (kind == skir.ScalarKind.text) {
     if (source case final String value) {
-      return types.DataValue.wrapStringValue(value);
+      return skir.DataValue.wrapStringValue(value);
     }
     throw _invalidJsonValue(path, "a string", source);
   }
-  if (kind == types.ScalarKind.bytes) {
+  if (kind == skir.ScalarKind.bytes) {
     if (source is! String) {
       throw _invalidJsonValue(path, "a base64 string", source);
     }
     try {
-      return types.DataValue.wrapBytes(ByteString.copy(base64Decode(source)));
+      return skir.DataValue.wrapBytes(
+        skir.ByteString.copy(base64Decode(source)),
+      );
     } on FormatException {
       throw _invalidJsonValue(path, "a valid base64 string", source);
     }
   }
-  if (kind case types.ScalarKind_integerWrapper()) {
+  if (kind case skir.ScalarKind_integerWrapper()) {
     if (source is! int && source is! String) {
       throw _invalidJsonValue(path, "an integer", source);
     }
     final value = admitPortableNumericInput(
       current: null,
-      expected: types.TypeUse.wrapScalar(kind),
+      expected: skir.TypeUse.wrapScalar(kind),
       text: source.toString(),
     );
     if (value == null) {
@@ -1214,13 +1218,13 @@ types.DataValue _decodeJsonScalar(
     }
     return value;
   }
-  if (kind case types.ScalarKind_floatWrapper()) {
+  if (kind case skir.ScalarKind_floatWrapper()) {
     if (source is! num) {
       throw _invalidJsonValue(path, "a finite number", source);
     }
     final value = admitPortableNumericInput(
       current: null,
-      expected: types.TypeUse.wrapScalar(kind),
+      expected: skir.TypeUse.wrapScalar(kind),
       text: source.toString(),
     );
     if (value == null) {
@@ -1228,13 +1232,13 @@ types.DataValue _decodeJsonScalar(
     }
     return value;
   }
-  if (kind == types.ScalarKind.decimal) {
+  if (kind == skir.ScalarKind.decimal) {
     if (source is! num && source is! String) {
       throw _invalidJsonValue(path, "a canonical decimal", source);
     }
     final value = admitPortableNumericInput(
       current: null,
-      expected: types.TypeUse.wrapScalar(kind),
+      expected: skir.TypeUse.wrapScalar(kind),
       text: source.toString(),
     );
     if (value == null) {
@@ -1242,7 +1246,7 @@ types.DataValue _decodeJsonScalar(
     }
     return value;
   }
-  if (kind == types.ScalarKind.timestamp) {
+  if (kind == skir.ScalarKind.timestamp) {
     if (source is! String) {
       throw _invalidJsonValue(path, "an ISO 8601 timestamp", source);
     }
@@ -1250,22 +1254,22 @@ types.DataValue _decodeJsonScalar(
     if (value == null) {
       throw _invalidJsonValue(path, "an ISO 8601 timestamp", source);
     }
-    return types.DataValue.wrapTimestamp(value);
+    return skir.DataValue.wrapTimestamp(value);
   }
-  if (kind == types.ScalarKind.duration) {
+  if (kind == skir.ScalarKind.duration) {
     if (source is! int) {
       throw _invalidJsonValue(path, "integer milliseconds", source);
     }
-    return types.DataValue.createDuration(
-      value: kernel.Duration(milliseconds: source),
+    return skir.DataValue.createDuration(
+      value: skir.Duration(milliseconds: source),
     );
   }
   throw FormatException("Expected a supported scalar type at $path");
 }
 
-types.DataValue _decodeJsonRecord(
+skir.DataValue _decodeJsonRecord(
   Object? source,
-  types.TypeSelection containing,
+  skir.TypeSelection containing,
   CheckedEditorCatalog catalog,
   String path,
 ) {
@@ -1281,10 +1285,10 @@ types.DataValue _decodeJsonRecord(
       "Expected a declared field at ${_jsonPropertyPath(path, key)}",
     );
   }
-  return types.DataValue.createRecord(
+  return skir.DataValue.createRecord(
     fields: [
       for (final field in fields)
-        types.FieldValue(
+        skir.FieldValue(
           name: field.template.key,
           value: _decodeJsonField(source, field, catalog, path),
         ),
@@ -1292,7 +1296,7 @@ types.DataValue _decodeJsonRecord(
   );
 }
 
-types.DataValue _decodeJsonField(
+skir.DataValue _decodeJsonField(
   Map<String, Object?> source,
   AppliedEditorField field,
   CheckedEditorCatalog catalog,
@@ -1304,7 +1308,7 @@ types.DataValue _decodeJsonField(
     throw FormatException("Expected an available field type at $fieldPath");
   }
   if (!source.containsKey(field.template.key)) {
-    if (type is types.TypeUse_nullableWrapper) return types.DataValue.null_;
+    if (type is skir.TypeUse_nullableWrapper) return skir.DataValue.null_;
     throw FormatException("Expected a required field at $fieldPath");
   }
   return _decodeAuthoredJson(
@@ -1315,10 +1319,10 @@ types.DataValue _decodeJsonField(
   );
 }
 
-types.DataValue _decodeJsonSequence(
+skir.DataValue _decodeJsonSequence(
   Object? source,
-  types.SequenceRepresentationTemplate representation,
-  types.TypeSelection containing,
+  skir.SequenceRepresentationTemplate representation,
+  skir.TypeSelection containing,
   CheckedEditorCatalog catalog,
   String path,
 ) {
@@ -1331,20 +1335,20 @@ types.DataValue _decodeJsonSequence(
   }
   final items = [
     for (final (index, item) in source.indexed)
-      types.ListItem(
-        id: types.ItemId(value: "http:$path:item:$index"),
+      skir.ListItem(
+        id: skir.ItemId(value: "http:$path:item:$index"),
         value: _decodeAuthoredJson(item, itemType, catalog, "$path[$index]"),
       ),
   ];
-  return representation.kind == types.CollectionKind.list
-      ? types.DataValue.createListValue(items: items)
-      : types.DataValue.createSetValue(items: items);
+  return representation.kind == skir.CollectionKind.list
+      ? skir.DataValue.createListValue(items: items)
+      : skir.DataValue.createSetValue(items: items);
 }
 
-types.DataValue _decodeJsonMapping(
+skir.DataValue _decodeJsonMapping(
   Object? source,
-  types.MappingRepresentationTemplate representation,
-  types.TypeSelection containing,
+  skir.MappingRepresentationTemplate representation,
+  skir.TypeSelection containing,
   CheckedEditorCatalog catalog,
   String path,
 ) {
@@ -1356,11 +1360,11 @@ types.DataValue _decodeJsonMapping(
   if (keyType == null || valueType == null) {
     throw FormatException("Expected complete map types at $path");
   }
-  return types.DataValue.createMapValue(
+  return skir.DataValue.createMapValue(
     rows: [
       for (final (index, entry) in source.entries.indexed)
-        types.MapRow(
-          id: types.ItemId(value: "http:$path:row:$index"),
+        skir.MapRow(
+          id: skir.ItemId(value: "http:$path:row:$index"),
           key: _decodeAuthoredJson(
             entry.key,
             keyType,
@@ -1378,30 +1382,30 @@ types.DataValue _decodeJsonMapping(
   );
 }
 
-types.DataValue _decodeJsonEnumeration(
+skir.DataValue _decodeJsonEnumeration(
   Object? source,
-  types.EnumerationRepresentationTemplate representation,
+  skir.EnumerationRepresentationTemplate representation,
   String path,
 ) {
   if (source is! String ||
       !representation.cases.any((candidate) => candidate.key == source)) {
     throw _invalidJsonValue(path, "a declared enum case", source);
   }
-  return types.DataValue.wrapEnumCase(source);
+  return skir.DataValue.wrapEnumCase(source);
 }
 
-types.DataValue _decodeJsonLink(
+skir.DataValue _decodeJsonLink(
   Object? source,
-  types.LinkRepresentationTemplate representation,
+  skir.LinkRepresentationTemplate representation,
   String path,
 ) {
   if (source is! String || source.isEmpty) {
     throw _invalidJsonValue(path, "a resource id string", source);
   }
-  return types.DataValue.createLink(
+  return skir.DataValue.createLink(
     endpoint: representation.endpoint,
-    target: types.LinkTarget(
-      resource: types.ResourceId(value: source),
+    target: skir.LinkTarget(
+      resource: skir.ResourceId(value: source),
       opposite: null,
     ),
   );
