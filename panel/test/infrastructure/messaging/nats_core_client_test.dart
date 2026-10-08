@@ -28,6 +28,26 @@ void main() {
     },
   );
 
+  test(
+    "connection failure remains unavailable and preserves its cause and stack",
+    () async {
+      const error = core.NatsConnectionException("Transport closed");
+      final stackTrace = StackTrace.current;
+      final client = NatsCoreClient.fromConnectionFuture(
+        Future<core.NatsConnection>.error(error, stackTrace),
+      );
+      addTearDown(client.close);
+
+      final failed = await client.connectionStateChanges.firstWhere(
+        (state) => state is NatsFailed,
+      ) as NatsFailed;
+
+      expect(failed.failure.kind, NatsFailureKind.unavailable);
+      expect(failed.failure.cause, same(error));
+      expect(failed.failure.causeStackTrace, same(stackTrace));
+    },
+  );
+
   test("nonstandard cause stack cannot prevent failure state", () async {
     final error = core.NatsAuthenticationException(
       "authentication rejected",
