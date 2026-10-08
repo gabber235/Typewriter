@@ -20,6 +20,68 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "../../../../../support/test_utils.dart";
 
 void main() {
+  for (final scenario in [
+    (
+      name: "integer minus",
+      initial: types.DataValue.wrapInteger("12"),
+      partial: "-",
+      complete: "-12",
+      expected: types.DataValue.wrapInteger("-12"),
+    ),
+    (
+      name: "decimal point",
+      initial: types.DataValue.wrapDecimal("12.5"),
+      partial: ".",
+      complete: "-0.5",
+      expected: types.DataValue.wrapDecimal("-0.5"),
+    ),
+    (
+      name: "decimal minus",
+      initial: types.DataValue.wrapDecimal("12.5"),
+      partial: "-",
+      complete: "-12.75",
+      expected: types.DataValue.wrapDecimal("-12.75"),
+    ),
+  ]) {
+    testWidgets(
+      "numeric partial input retains valid value through ${scenario.name}",
+      (tester) async {
+        final written = <types.DataValue>[];
+        await _pumpControl(
+          tester,
+          presentation.PresentationElement.wrapNumericInput(
+            _control(_rootReference),
+          ),
+          scenario.initial,
+          written.add,
+          rebindWrites: true,
+        );
+        await tester.tap(find.byType(TextFormField));
+        await tester.pumpAndSettle();
+        await tester.enterText(find.byType(TextFormField), scenario.partial);
+        await tester.pumpAndSettle();
+        expect(
+          tester
+              .widget<TextFormField>(find.byType(TextFormField))
+              .controller!
+              .text,
+          scenario.partial,
+        );
+        expect(written, isEmpty);
+        tester.binding.focusManager.primaryFocus?.unfocus();
+        await tester.pumpAndSettle();
+        expect(written, isEmpty);
+        expect(find.text("Enter a valid number"), findsOneWidget);
+        await tester.enterText(find.byType(TextFormField), scenario.complete);
+        await tester.pumpAndSettle();
+        expect(written, [scenario.expected]);
+        await tester.enterText(find.byType(TextFormField), "");
+        await tester.pumpAndSettle();
+        expect(written, [scenario.expected, types.DataValue.unfilled]);
+      },
+    );
+  }
+
   testWidgets("record controls preserve the named record identity", (
     tester,
   ) async {
@@ -440,12 +502,154 @@ void main() {
       ),
       types.DataValue.unfilled,
       written.add,
+      rebindWrites: true,
     );
 
+    expect(find.text(mixedValueReplacementMessage), findsNothing);
+    expect(find.text("This value is Unfilled"), findsOneWidget);
     await tester.enterText(find.byType(TextFormField), "#AABBCC");
     expect(written.last, types.DataValue.wrapInteger(0xFFAABBCC.toString()));
     await tester.enterText(find.byType(TextFormField), "");
-    expect(written.last, types.DataValue.unfilled);
+    await tester.pumpAndSettle();
+    expect(find.text(mixedValueReplacementMessage), findsNothing);
+    expect(find.text("This value is Unfilled"), findsOneWidget);
+    expect(written, [
+      types.DataValue.wrapInteger(0xFFAABBCC.toString()),
+      types.DataValue.unfilled,
+    ]);
+  });
+
+  testWidgets(
+    "date and time edits preserve values through invalid drafts and clear explicitly",
+    (tester) async {
+      for (final parts in [(true, false), (false, true), (true, true)]) {
+        final written = <types.DataValue>[];
+        await _pumpControl(
+          tester,
+          presentation.PresentationElement.wrapDateTimeInput(
+            presentation.DateTimeControl(
+              control: _control(_rootReference),
+              includeDate: parts.$1,
+              includeTime: parts.$2,
+            ),
+          ),
+          types.DataValue.wrapTimestamp(DateTime.utc(2024, 8, 12, 18, 30, 45)),
+          written.add,
+          rebindWrites: true,
+        );
+        final input = find.byType(TextFormField);
+        await tester.enterText(input, "2028");
+        await tester.pump();
+        expect(written, isEmpty);
+        final valid = parts.$1 && parts.$2
+            ? "2028-02-29 07:06:05"
+            : parts.$1
+            ? "2028-02-29"
+            : "07:06:05";
+        await tester.enterText(input, valid);
+        await tester.pumpAndSettle();
+        final expected = parts.$1 && parts.$2
+            ? DateTime.utc(2028, 2, 29, 7, 6, 5)
+            : parts.$1
+            ? DateTime.utc(2028, 2, 29, 18, 30, 45)
+            : DateTime.utc(2024, 8, 12, 7, 6, 5);
+        final filled = types.DataValue.wrapTimestamp(expected);
+        expect(written, [filled]);
+
+        await tester.enterText(input, "");
+        await tester.pumpAndSettle();
+        expect(find.text(mixedValueReplacementMessage), findsNothing);
+        expect(find.text("This value is Unfilled"), findsOneWidget);
+        expect(written, [filled, types.DataValue.unfilled]);
+        expect(
+          tester
+              .widget<DateTimePickerField>(find.byType(DateTimePickerField))
+              .value,
+          isNull,
+        );
+        await tester.testTextInput.receiveAction(TextInputAction.done);
+        await tester.pumpAndSettle();
+        expect(written, [filled, types.DataValue.unfilled]);
+
+        await tester.tap(find.byTooltip("Open picker"));
+        await tester.pumpAndSettle();
+        final seed = tester
+            .widget<DateTimePickerSurface>(find.byType(DateTimePickerSurface))
+            .value;
+        expect(
+          [
+            seed.hour,
+            seed.minute,
+            seed.second,
+            seed.millisecond,
+            seed.microsecond,
+          ],
+          [0, 0, 0, 0, 0],
+        );
+        await tester.tap(find.byTooltip("Close picker"));
+        await tester.pumpAndSettle();
+        expect(written, [filled, types.DataValue.unfilled]);
+
+        await tester.enterText(input, valid);
+        await tester.pumpAndSettle();
+        final recovered = parts.$1 && parts.$2
+            ? DateTime.utc(2028, 2, 29, 7, 6, 5)
+            : parts.$1
+            ? DateTime.utc(2028, 2, 29)
+            : DateTime.utc(seed.year, seed.month, seed.day, 7, 6, 5);
+        expect(written, [
+          filled,
+          types.DataValue.unfilled,
+          types.DataValue.wrapTimestamp(recovered),
+        ]);
+      }
+    },
+  );
+
+  testWidgets("protected color and timestamp fields reject clearing", (
+    tester,
+  ) async {
+    final fields = [
+      (
+        presentation.PresentationElement.wrapColorInput(
+          presentation.ColorControl(
+            control: _control(_rootReference),
+            includeAlpha: false,
+          ),
+        ),
+        types.DataValue.wrapInteger(0xFFAABBCC.toString()),
+      ),
+      (
+        presentation.PresentationElement.wrapDateTimeInput(
+          presentation.DateTimeControl(
+            control: _control(_rootReference),
+            includeDate: true,
+            includeTime: true,
+          ),
+        ),
+        types.DataValue.wrapTimestamp(DateTime.utc(2024, 8, 12)),
+      ),
+    ];
+    for (final field in fields) {
+      for (final protected in [(true, true), (false, false)]) {
+        final written = <types.DataValue>[];
+        await _pumpControl(
+          tester,
+          field.$1,
+          field.$2,
+          written.add,
+          readOnly: protected.$1,
+          enabled: protected.$2,
+        );
+        await tester.enterText(find.byType(TextFormField), "");
+        final editor = tester.widget<ValidatedTextField<dynamic>>(
+          find.byWidgetPredicate((widget) => widget is ValidatedTextField),
+        );
+        editor.onCleared!();
+        await tester.pumpAndSettle();
+        expect(written, isEmpty);
+      }
+    }
   });
 
   testWidgets("an Unfilled slider requires an explicit choice", (tester) async {
@@ -630,23 +834,34 @@ Future<void> _pumpControl(
   WidgetTester tester,
   presentation.PresentationElement element,
   types.DataValue value,
-  ValueChanged<types.DataValue> onWrite,
-) => tester.pumpTestApp(
-  child: Builder(
-    builder: (_) => Scaffold(
-      body: PortablePresentationNodeRenderer(
-        node: presentation.PresentationNode(
-          nodeId: "scalar",
-          properties: presentation.PresentationProperties.defaultInstance,
-          element: element,
-          header: null,
-        ),
-        scope: PortablePresentationScope(
-          bindings: {_rootBinding: PortableExpressionBinding(value: value)},
-          budget: _budget,
-          setBinding: (_, replacement) => onWrite(replacement),
+  ValueChanged<types.DataValue> onWrite, {
+  bool readOnly = false,
+  bool enabled = true,
+  bool rebindWrites = false,
+}) {
+  var current = value;
+  return tester.pumpTestApp(
+    child: StatefulBuilder(
+      builder: (_, setState) => Scaffold(
+        body: PortablePresentationNodeRenderer(
+          node: presentation.PresentationNode(
+            nodeId: "scalar",
+            properties: presentation.PresentationProperties.defaultInstance,
+            element: element,
+            header: null,
+          ),
+          scope: PortablePresentationScope(
+            bindings: {_rootBinding: PortableExpressionBinding(value: current)},
+            budget: _budget,
+            setBinding: (_, replacement) {
+              onWrite(replacement);
+              if (rebindWrites) setState(() => current = replacement);
+            },
+            readOnly: readOnly,
+            enabled: enabled,
+          ),
         ),
       ),
     ),
-  ),
-);
+  );
+}

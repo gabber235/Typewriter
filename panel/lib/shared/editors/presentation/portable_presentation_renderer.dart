@@ -2455,7 +2455,6 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
         value: current == types.DataValue.unfilled ? null : current,
         name: "number",
         icon: HeroiconsSolid.hashtag,
-        mixed: current == types.DataValue.unfilled,
         readOnly: childScope.readOnly || !childScope.enabled,
         keyboardType: const TextInputType.numberWithOptions(
           signed: true,
@@ -2481,7 +2480,7 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
         ),
         deserialize: (_) => text,
         serialize: (next) {
-          if (next.isEmpty || next == "-" || next == ".") {
+          if (next.isEmpty) {
             return types.DataValue.unfilled;
           }
           final replacement = admitPortableNumericInput(
@@ -2701,6 +2700,10 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
         includeTime: dateTime.includeTime != false,
         enabled: childScope.enabled,
         readOnly: childScope.readOnly,
+        onCleared: () => childScope.write(
+          dateTime.control.binding,
+          types.DataValue.unfilled,
+        ),
         onChanged: (next) => childScope.writePayload(
           dateTime.control.binding,
           types.DataValue.wrapTimestamp(next.toUtc()),
@@ -2731,7 +2734,6 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
         value: payload == types.DataValue.unfilled ? null : payload,
         name: "duration",
         icon: Bi.stopwatch_fill,
-        mixed: payload == types.DataValue.unfilled,
         readOnly: childScope.readOnly || !childScope.enabled,
         inputFormatters: [
           FilteringTextInputFormatter.allow(RegExp(r"[\dwdhminsu +\-]")),
@@ -3528,6 +3530,10 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
         includeAlpha: includeAlpha,
         enabled: childScope.enabled,
         readOnly: childScope.readOnly,
+        onCleared: () => childScope.write(
+          colorControl.control.binding,
+          types.DataValue.unfilled,
+        ),
         onChanged: (next) => childScope.writePayload(
           colorControl.control.binding,
           types.DataValue.wrapInteger(next.toARGB32().toString()),
