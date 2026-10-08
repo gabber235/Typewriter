@@ -41,13 +41,19 @@ internal class RouteFixture(
         request: Request,
         requestSerializer: Serializer<Request>,
         responseSerializer: Serializer<Response>,
+    ): Response = requestPayload(suffix, requestSerializer.toBytes(request).toByteArray(), responseSerializer)
+
+    suspend fun <Response : Any> requestPayload(
+        suffix: String,
+        payload: ByteArray,
+        responseSerializer: Serializer<Response>,
     ): Response {
         val reply = MessageAddress.of("test.reply.${replySequence++}")
         transport.deliver(
             TransportDelivery.Message(
                 InboundMessage(
                     address = MessageAddress.of("service.to.realm.organization.organization.realm.$suffix"),
-                    payload = requestSerializer.toBytes(request).toByteArray(),
+                    payload = payload,
                     replyTo = reply,
                 ),
             ),

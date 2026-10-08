@@ -4,6 +4,8 @@ import com.typewritermc.authoring.ArgumentSelection
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.CheckExecutionId
 import com.typewritermc.authoring.CommitResult
+import com.typewritermc.authoring.EditExpectation
+import com.typewritermc.authoring.EditIntent
 import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.authoring.TypeSelection
@@ -52,6 +54,7 @@ import skirout.editor.v1.authoring.QueryAuthoringStateRequest
 import skirout.editor.v1.authoring.QueryAuthoringStateResponse
 import skirout.editor.v1.authoring.AuthoringState as SkirAuthoringState
 import skirout.editor.v1.authoring.EditIntent as SkirEditIntent
+import skirout.editor.v1.authoring_facts.EditExpectation as SkirEditExpectation
 import skirout.editor.v1.authoring.TypePreviewResult as SkirTypePreviewResult
 import skirout.editor.v1.checking.CheckOutcome as SkirCheckOutcome
 import skirout.editor.v1.checking.FindingStatus as SkirFindingStatus
@@ -164,6 +167,62 @@ val AuthoringRoutesTest by testSuite {
                 repository.received shouldBe prepared
                 response as CommitPreparedEditResponse.ResultWrapper
                 response.value shouldBe SkirAuthoringOperationCodec.encode(repository.result).getOrThrow()
+            }
+        }
+    }
+
+    for (invalidInput in listOf("malformed binary", "truncated binary", "unknown intent", "unknown expectation")) {
+        test("commit route rejects $invalidInput and accepts the next valid edit") {
+            runTest {
+                val repository = RecordingAuthoringRepository()
+                val prepared =
+                    PreparedEdit(
+                        catalog = CatalogGeneration("catalog"),
+                        expectations = listOf(EditExpectation.ResourceExists(ResourceId("resource"), false)),
+                        intents =
+                            listOf(
+                                EditIntent.CreateResource(
+                                    ResourceId("resource"),
+                                    record(name = "created"),
+                                ),
+                            ),
+                    )
+                val wire = SkirAuthoringOperationCodec.encode(prepared).getOrThrow()
+                val serializer = skirout.editor.v1.authoring.PreparedEdit.serializer
+                val invalidPayload =
+                    when (invalidInput) {
+                        "malformed binary" -> byteArrayOf(-1)
+                        "truncated binary" -> serializer.toBytes(wire).toByteArray().dropLast(1).toByteArray()
+                        "unknown intent" -> serializer.toBytes(wire.copy(intents = listOf(SkirEditIntent.UNKNOWN))).toByteArray()
+                        "unknown expectation" -> serializer.toBytes(wire.copy(expectations = listOf(SkirEditExpectation.UNKNOWN))).toByteArray()
+                        else -> error("Unexpected invalid input scenario")
+                    }
+
+                RouteFixture { contracts, _, _ ->
+                    communicatorRoutes {
+                        AuthoringRoutes(repository, MissingSnapshotStore, { emptyList() }, contracts = contracts).register(this)
+                    }
+                }.use { fixture ->
+                    val invalidResponse =
+                        fixture.requestPayload(
+                            "editor.authoring.edit.commit",
+                            invalidPayload,
+                            CommitPreparedEditResponse.serializer,
+                        )
+                    invalidResponse::class shouldBe CommitPreparedEditResponse.InternalErrorWrapper::class
+                    repository.received shouldBe null
+
+                    val recoveredResponse =
+                        fixture.request(
+                            "editor.authoring.edit.commit",
+                            wire,
+                            serializer,
+                            CommitPreparedEditResponse.serializer,
+                        )
+                    repository.received shouldBe prepared
+                    recoveredResponse as CommitPreparedEditResponse.ResultWrapper
+                    recoveredResponse.value shouldBe SkirAuthoringOperationCodec.encode(repository.result).getOrThrow()
+                }
             }
         }
     }
