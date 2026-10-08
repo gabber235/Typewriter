@@ -128,7 +128,7 @@ extension RefNatsExtension on Ref {
     required TData Function(TData?, TResponse) transformer,
   }) {
     final client = watch(natsProvider);
-    return Stream<TData>.multi((controller) {
+    return Stream<TData Function()>.multi((controller) {
       NatsSubscription? subscription;
       StreamSubscription<NatsConnectionState>? lifecycle;
       TData? previous;
@@ -184,23 +184,23 @@ extension RefNatsExtension on Ref {
           return;
         }
 
-        final baseline = transformer(
-          null,
-          serializer.fromBytes(initial.payload),
-        );
-        previous = baseline;
-        controller.add(baseline);
+        final response = serializer.fromBytes(initial.payload);
+        controller.add(() {
+          final baseline = transformer(null, response);
+          previous = baseline;
+          return baseline;
+        });
 
         next.messages.listen(
           (message) {
             if (active && generation == expectedGeneration) {
               try {
-                final nextValue = transformer(
-                  previous,
-                  serializer.fromBytes(message.payload),
-                );
-                previous = nextValue;
-                controller.add(nextValue);
+                final response = serializer.fromBytes(message.payload);
+                controller.add(() {
+                  final nextValue = transformer(previous, response);
+                  previous = nextValue;
+                  return nextValue;
+                });
               } on Object catch (error, stackTrace) {
                 controller.addError(error, stackTrace);
               }
@@ -247,7 +247,7 @@ extension RefNatsExtension on Ref {
 
       controller.onCancel = cancel;
       onDispose(() => unawaited(cancel()));
-    });
+    }).map((reduce) => reduce());
   }
 
   /// Watches a sequenced snapshot and its ordered event stream.
