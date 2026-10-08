@@ -15,42 +15,9 @@ class _PageTile extends HookConsumerWidget {
 
   List<MenuItem> _contextMenuItems(WidgetRef ref) => [
     MenuItem(
-      label: "Rename",
+      label: "Edit",
       icon: Icones(Mingcute.pencil_fill),
-      onPressed: () => showAdvancedDialog(
-        context: ref.context,
-        builder: (_) => RenamePageDialogue(pageId: pageId, oldName: name),
-      ),
-    ),
-    MenuItem(
-      label: "Change Chapter",
-      icon: Icones(Ph.book_bookmark_fill),
-      onPressed: () => showAdvancedDialog(
-        context: ref.context,
-        builder: (_) => ChangeChapterDialogue(
-          title: "Change chapter of $name",
-          chapter: chapter,
-          onChapterChanged: (newChapter) async {
-            await ref.editPage(
-              id: pageId,
-              chapter: newChapter,
-              expectedChapter: chapter,
-            );
-          },
-        ),
-      ),
-    ),
-    MenuItem(
-      label: "Change Priority",
-      icon: Icones(MaterialSymbols.priority_high_rounded),
-      onPressed: () => showAdvancedDialog(
-        context: ref.context,
-        builder: (_) => ChangePagePriorityDialogue(
-          pageId: pageId,
-          pageName: name,
-          priority: page.priority,
-        ),
-      ),
+      onPressed: () => ref.inspectPage(pageId),
     ),
     MenuItem.divider(),
     MenuItem(
@@ -62,52 +29,13 @@ class _PageTile extends HookConsumerWidget {
   ];
 
   List<ActionShortcut> _shortcuts(WidgetRef ref) => [
-    ActionShortcut(
-      id: "book_sidebar_page_rename",
-      label: "Rename",
-      description: "Rename the page",
-      activators: [SingleActivator(LogicalKeyboardKey.keyR)],
+    ActionShortcut.intent(
+      id: "book_sidebar_page_edit",
+      label: "Edit",
+      description: "Edit the page in the inspector",
+      intent: PrimaryActionIntent,
       priority: 1,
-      onInvoke: (_) => showAdvancedDialog(
-        context: ref.context,
-        builder: (_) => RenamePageDialogue(pageId: pageId, oldName: name),
-      ),
-    ),
-    ActionShortcut(
-      id: "book_sidebar_page_change_chapter",
-      label: "Change Chapter",
-      description: "Change the chapter of the page",
-      activators: [SingleActivator(LogicalKeyboardKey.keyC)],
-      priority: 1,
-      onInvoke: (_) => showAdvancedDialog(
-        context: ref.context,
-        builder: (_) => ChangeChapterDialogue(
-          title: "Change chapter of $name",
-          chapter: chapter,
-          onChapterChanged: (newChapter) async {
-            await ref.editPage(
-              id: pageId,
-              chapter: newChapter,
-              expectedChapter: chapter,
-            );
-          },
-        ),
-      ),
-    ),
-    ActionShortcut(
-      id: "book_sidebar_page_change_priority",
-      label: "Change Priority",
-      description: "Change the priority of the page",
-      activators: [SingleActivator(LogicalKeyboardKey.keyP)],
-      priority: 1,
-      onInvoke: (_) => showAdvancedDialog(
-        context: ref.context,
-        builder: (_) => ChangePagePriorityDialogue(
-          pageId: pageId,
-          pageName: name,
-          priority: page.priority,
-        ),
-      ),
+      onInvoke: (_) => ref.inspectPage(pageId),
     ),
     ActionShortcut(
       id: "book_sidebar_page_delete",
@@ -148,10 +76,10 @@ class _PageTile extends HookConsumerWidget {
         return DragTarget<PageDrag>(
           onWillAcceptWithDetails: (details) => details.data.pageId != pageId,
           onAcceptWithDetails: (details) async {
-            await ref.editPage(
+            await ref.movePageChapter(
               id: details.data.pageId,
               chapter: chapter,
-              expectedChapter: details.data.chapter,
+              expectedChapter: details.data.expectedChapter,
             );
           },
           builder: (context, pageCandidateData, rejectedData) {
@@ -166,7 +94,12 @@ class _PageTile extends HookConsumerWidget {
                   duration: 150.ms,
                   curve: Curves.easeOutCubic,
                   child: Draggable<PageDrag>(
-                    data: PageDrag(pageId: pageId, chapter: chapter),
+                    data: PageDrag(
+                      pageId: pageId,
+                      expectedChapter: page.authoredRecord.authoredField(
+                        "chapter",
+                      ),
+                    ),
                     feedback: Surface(
                       color: backgroundColor,
                       child: Material(

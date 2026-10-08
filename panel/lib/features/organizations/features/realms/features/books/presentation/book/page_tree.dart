@@ -167,10 +167,10 @@ class _TreeCategory extends HookConsumerWidget {
                 return DragTarget<PageDrag>(
                   onWillAcceptWithDetails: (details) => true,
                   onAcceptWithDetails: (details) async {
-                    await ref.editPage(
+                    await ref.movePageChapter(
                       id: details.data.pageId,
                       chapter: node.path,
-                      expectedChapter: details.data.chapter,
+                      expectedChapter: details.data.expectedChapter,
                     );
                   },
                   builder: (context, pageCandidates, pageRejected) {

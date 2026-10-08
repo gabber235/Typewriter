@@ -13,6 +13,7 @@ part "pages.g.dart";
 final class Page {
   const Page({
     required this.pageId,
+    required this.authoredRecord,
     required this.bookId,
     required this.name,
     required this.configuration,
@@ -24,6 +25,7 @@ final class Page {
     final value = decodeAuthoredPage(resource);
     return Page(
       pageId: value.id,
+      authoredRecord: resource.content,
       bookId: value.book,
       name: value.name,
       configuration: value.configuration,
@@ -33,6 +35,9 @@ final class Page {
   }
 
   final skir.ResourceId pageId;
+
+  /// Exact observation retained for chapter moves, separate from display defaults.
+  final skir.AuthoringRecord authoredRecord;
   final skir.ResourceId? bookId;
   final String name;
   final skir.TypeSelection configuration;
@@ -53,6 +58,7 @@ final class Page {
     int? priority,
   }) => Page(
     pageId: pageId ?? this.pageId,
+    authoredRecord: authoredRecord,
     bookId: bookId ?? this.bookId,
     name: name ?? this.name,
     configuration: configuration ?? this.configuration,

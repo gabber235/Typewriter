@@ -66,6 +66,10 @@ final _otherBook = Book(
   tagIds: const [],
 );
 final _currentPage = Page(
+  authoredRecord: skir.AuthoringRecord(
+    configuration: skir.TypeSelection.unknown,
+    fields: const [],
+  ),
   pageId: skir.ResourceId(value: "current"),
   bookId: _currentBook.bookId,
   name: "Intro",
@@ -74,6 +78,10 @@ final _currentPage = Page(
   priority: 0,
 );
 final _otherPage = Page(
+  authoredRecord: skir.AuthoringRecord(
+    configuration: skir.TypeSelection.unknown,
+    fields: const [],
+  ),
   pageId: skir.ResourceId(value: "other"),
   bookId: _otherBook.bookId,
   name: "Intro",

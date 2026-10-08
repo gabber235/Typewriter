@@ -33,13 +33,35 @@ Page generateRandomPage([skir.NamedTypeUse? pageType]) {
     "main.epilogue",
   ];
 
+  final chapter = chapters.randomOrNull() ?? "";
+  final priority = faker.randomGenerator.integer(100, min: -10);
+  final configuration = skir.TypeSelection.wrapComplete(
+    pageType ?? fixturePageType,
+  );
   return Page(
+    authoredRecord: skir.AuthoringRecord(
+      configuration: configuration,
+      fields: [
+        skir.FieldValue(
+          name: "name",
+          value: skir.DataValue.wrapStringValue(pageName),
+        ),
+        skir.FieldValue(
+          name: "chapter",
+          value: skir.DataValue.wrapStringValue(chapter),
+        ),
+        skir.FieldValue(
+          name: "priority",
+          value: skir.DataValue.wrapInteger(priority.toString()),
+        ),
+      ],
+    ),
     pageId: skir.ResourceId(value: "page:${faker.guid.guid()}"),
     bookId: skir.ResourceId(value: "book:${faker.guid.guid()}"),
     name: pageName,
-    configuration: skir.TypeSelection.wrapComplete(pageType ?? fixturePageType),
-    chapter: chapters.randomOrNull() ?? "",
-    priority: faker.randomGenerator.integer(100, min: -10),
+    configuration: configuration,
+    chapter: chapter,
+    priority: priority,
   );
 }
 

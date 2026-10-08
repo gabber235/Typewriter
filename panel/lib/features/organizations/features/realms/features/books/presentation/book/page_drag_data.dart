@@ -5,10 +5,10 @@ part of "route.dart";
 /// The source chapter is retained as the expected value for the later
 /// optimistic mutation.
 class PageDrag implements ReferenceResourceDragData {
-  const PageDrag({required this.pageId, required this.chapter});
+  const PageDrag({required this.pageId, required this.expectedChapter});
 
   final skir.ResourceId pageId;
-  final String chapter;
+  final skir.DataValue? expectedChapter;
 
   @override
   skir.ResourceId get referenceId => pageId;

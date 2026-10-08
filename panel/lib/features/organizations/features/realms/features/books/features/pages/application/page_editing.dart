@@ -4,43 +4,35 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 extension PageEditingRef on WidgetRef {
-  Future<void> editPage({
+  /// Opens the existing resource inspector without toggling an existing selection.
+  void inspectPage(skir.ResourceId id) {
+    final organizationId = read(organizationIdProvider);
+    final realmId = read(realmIdProvider);
+    if (organizationId == null) throw ApiException.noOrganization();
+    if (realmId == null) throw ApiException.badRequest("No realm selected");
+    read(selectionProvider.notifier).selectAll([
+      AuthoringResourceIdentifier(
+        organizationId: organizationId,
+        realmId: realmId,
+        resourceId: id,
+      ),
+    ]);
+  }
+
+  /// Moves a page only if its captured authored chapter is still current.
+  Future<void> movePageChapter({
     required skir.ResourceId id,
-    String? name,
-    String? expectedName,
-    String? chapter,
-    String? expectedChapter,
-    int? priority,
-    int? expectedPriority,
+    required String chapter,
+    required skir.DataValue? expectedChapter,
   }) async {
     final access = readAuthoringSession();
     final baseline = access.state.draft;
     if (baseline == null) throw StateError("Authoring is not ready");
-    final draft = baseline.fork();
-    if (name != null) {
-      _setString(draft, id, "name", expected: expectedName, proposed: name);
-    }
-    if (chapter != null) {
-      _setString(
-        draft,
-        id,
-        "chapter",
-        expected: expectedChapter,
-        proposed: chapter,
-      );
-    }
-    if (priority != null) {
-      _setInteger(
-        draft,
-        id,
-        "priority",
-        expected: expectedPriority,
-        proposed: priority,
-      );
-    }
+    final draft = baseline.fork()
+      .._setChapter(id, expected: expectedChapter, proposed: chapter);
     await access.notifier.commitDraft(
       draft,
-      conflictMessage: "The Page changed before this edit was saved",
+      conflictMessage: "The Page changed before this move was saved",
     );
   }
 
@@ -54,11 +46,9 @@ extension PageEditingRef on WidgetRef {
     if (baseline == null) throw StateError("Authoring is not ready");
     final draft = baseline.fork();
     for (final page in pages) {
-      _setString(
-        draft,
+      draft._setChapter(
         page.pageId,
-        "chapter",
-        expected: page.chapter,
+        expected: page.authoredRecord.authoredField("chapter"),
         proposed: replacePageChapter(page.chapter, oldChapter, newChapter),
       );
     }
@@ -69,60 +59,32 @@ extension PageEditingRef on WidgetRef {
   }
 }
 
-void _setString(
-  AuthoredDraft draft,
-  skir.ResourceId resource,
-  String field, {
-  required String? expected,
-  required String proposed,
-}) {
-  final location = _field(resource, field);
-  final current = draft.read(location);
-  if (current case PortablePathValue(:final value)) {
-    if (expected == null || value.authoredString != expected) {
-      throw ApiException.conflict("The Page $field changed");
-    }
-  } else {
-    throw StateError("The Page $field is unavailable");
-  }
-  final result = draft.setPayload(
-    location,
-    skir.DataValue.wrapStringValue(proposed),
-  );
-  if (result is PortablePathUnavailable<skir.AuthoringRecord>) {
-    throw StateError(result.message);
-  }
-}
-
-void _setInteger(
-  AuthoredDraft draft,
-  skir.ResourceId resource,
-  String field, {
-  required int? expected,
-  required int proposed,
-}) {
-  final location = _field(resource, field);
-  final current = draft.read(location);
-  if (current case PortablePathValue(:final value)) {
-    if (expected == null || value.authoredInteger != BigInt.from(expected)) {
-      throw ApiException.conflict("The Page $field changed");
-    }
-  } else {
-    throw StateError("The Page $field is unavailable");
-  }
-  final result = draft.setPayload(
-    location,
-    skir.DataValue.wrapInteger(proposed.toString()),
-  );
-  if (result is PortablePathUnavailable<skir.AuthoringRecord>) {
-    throw StateError(result.message);
-  }
-}
-
-skir.ValueLocation _field(skir.ResourceId resource, String field) =>
-    skir.ValueLocation(
+extension on AuthoredDraft {
+  void _setChapter(
+    skir.ResourceId resource, {
+    required skir.DataValue? expected,
+    required String proposed,
+  }) {
+    final location = skir.ValueLocation(
       resource: resource,
       path: skir.ValuePath(
-        segments: [skir.PathSegment.createField(name: field)],
+        segments: [skir.PathSegment.createField(name: "chapter")],
       ),
     );
+    final current = read(location);
+    if (current case PortablePathValue(:final value)) {
+      if (expected == null || value != expected) {
+        throw ApiException.conflict("The Page chapter changed");
+      }
+    } else {
+      throw StateError("The Page chapter is unavailable");
+    }
+    final result = setPayload(
+      location,
+      skir.DataValue.wrapStringValue(proposed),
+    );
+    if (result is PortablePathUnavailable<skir.AuthoringRecord>) {
+      throw StateError(result.message);
+    }
+  }
+}
