@@ -101,9 +101,12 @@ class ContextMenuRegion extends HookWidget {
   }
 
   /// Creates a tap handler that applies the platform context menu policy.
+  ///
+  /// Supply [onContextTap] to resolve a target before opening its actions.
   static void Function(TapUpDetails) onTapUp(
     MenuController controller, {
     Function(TapUpDetails)? orElse,
+    ValueChanged<TapUpDetails>? onContextTap,
   }) {
     return (details) {
       if (controller.isOpen) {
@@ -128,7 +131,11 @@ class ContextMenuRegion extends HookWidget {
               HardwareKeyboard.instance.logicalKeysPressed.contains(
                 LogicalKeyboardKey.controlRight,
               )) {
-            controller.open(position: details.localPosition);
+            if (onContextTap != null) {
+              onContextTap(details);
+            } else {
+              controller.open(position: details.localPosition);
+            }
           } else {
             orElse?.call(details);
           }

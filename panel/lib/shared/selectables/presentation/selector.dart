@@ -73,17 +73,55 @@ class Selector extends HookConsumerWidget {
     final isFocused = useState(false);
     final isHovered = useState(false);
     final controller = useMenuController();
+    final anchorKey = useGlobalKey();
+    final pendingContextPosition = useState<Offset?>(null);
+    final selection = ref.watch(selectionProvider);
+    final selected = ref.watch(selectedProvider);
 
+    final registeredOperations = SelectionOperationsRoot.of(context);
     final operations = availableSelectionOperations(
-      SelectionOperationsRoot.of(context),
-      ref.watch(selectedProvider).value,
+      registeredOperations,
+      selected.value,
     );
 
     useFocusedChange(focusNode, ({required hasFocus}) {
       isFocused.value = hasFocus;
+      if (!hasFocus) pendingContextPosition.value = null;
       onFocusChange?.call(hasFocus);
       return null;
     }, [focusNode, onFocusChange]);
+
+    void activateContext(Offset globalPosition) {
+      if (!ref.read(selectionProvider).contains(selectableId)) {
+        ref.read(selectionProvider.notifier).selectAll([selectableId]);
+      }
+      focusNode.requestFocus();
+      pendingContextPosition.value = globalPosition;
+    }
+
+    useEffect(
+      () {
+        final position = pendingContextPosition.value;
+        if (position == null) return null;
+        var active = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!active || !context.mounted) return;
+          if (!ref.read(selectionProvider).contains(selectableId) ||
+              !focusNode.hasFocus) {
+            pendingContextPosition.value = null;
+            return;
+          }
+          if (selected.isLoading) return;
+          pendingContextPosition.value = null;
+          if (selected.hasError || operations.isEmpty) return;
+          final anchor = anchorKey.currentContext?.findRenderObject();
+          if (anchor is! RenderBox || !anchor.attached) return;
+          controller.open(position: anchor.globalToLocal(position));
+        });
+        return () => active = false;
+      },
+      [pendingContextPosition.value, selection, selected, registeredOperations],
+    );
 
     final focusAnimation = useAnimationController(
       duration: 200.ms,
@@ -100,6 +138,7 @@ class Selector extends HookConsumerWidget {
     return KeyedSubtree(
       key: Key(selectableId.id),
       child: ContextMenuRegion(
+        key: anchorKey,
         childFocusNode: focusNode,
         items: [
           if (operations.isNotEmpty)
@@ -113,11 +152,14 @@ class Selector extends HookConsumerWidget {
         enableGestures: false,
         controller: controller,
         child: GestureDetector(
-          onSecondaryTapUp: ContextMenuRegion.onSecondaryTapUp(controller),
-          onLongPressStart: ContextMenuRegion.onLongPressStart(controller),
+          onSecondaryTapUp: (details) =>
+              activateContext(details.globalPosition),
+          onLongPressStart: (details) =>
+              activateContext(details.globalPosition),
           onDoubleTap: onDoubleTap,
           onTapUp: ContextMenuRegion.onTapUp(
             controller,
+            onContextTap: (details) => activateContext(details.globalPosition),
             orElse: (_) {
               Actions.maybeInvoke(
                 context,
