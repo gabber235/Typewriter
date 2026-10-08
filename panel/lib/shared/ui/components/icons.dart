@@ -65,19 +65,11 @@ class Icones extends StatelessWidget {
       si: source,
       cache: _svgCache,
       isComplex: true,
+      currentColor: color,
       onError: (context) => _brokenImage(color, size),
     );
 
-    return SizedBox(
-      width: size,
-      height: size,
-      child: color == null
-          ? image
-          : ColorFiltered(
-              colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-              child: image,
-            ),
-    );
+    return SizedBox(width: size, height: size, child: image);
   }
 
   Widget _brokenImage(Color? color, double? size) =>
