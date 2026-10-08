@@ -17,12 +17,12 @@ dependencies:
   nats_core:
     git:
       url: https://github.com/gabber235/nats.dart.git
-      ref: ea905f36ffb6242e012d434101cb6d00a76c4d01
+      ref: 50231b430d1f5f37226ac36da30dd22c1c1859d9
       path: packages/nats_core
   nats_jetstream:
     git:
       url: https://github.com/gabber235/nats.dart.git
-      ref: ea905f36ffb6242e012d434101cb6d00a76c4d01
+      ref: 50231b430d1f5f37226ac36da30dd22c1c1859d9
       path: packages/nats_jetstream
   dartastic_opentelemetry: 1.1.0-beta.15
   dotted_border: ^3.1.0
@@ -85,7 +85,7 @@ dependency_overrides:
   nats_core:
     git:
       url: https://github.com/gabber235/nats.dart.git
-      ref: ea905f36ffb6242e012d434101cb6d00a76c4d01
+      ref: 50231b430d1f5f37226ac36da30dd22c1c1859d9
       path: packages/nats_core
 
 icons_launcher:

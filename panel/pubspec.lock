@@ -937,8 +937,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/nats_core"
-      ref: ea905f36ffb6242e012d434101cb6d00a76c4d01
-      resolved-ref: ea905f36ffb6242e012d434101cb6d00a76c4d01
+      ref: "50231b430d1f5f37226ac36da30dd22c1c1859d9"
+      resolved-ref: "50231b430d1f5f37226ac36da30dd22c1c1859d9"
       url: "https://github.com/gabber235/nats.dart.git"
     source: git
     version: "0.0.1"
@@ -946,8 +946,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/nats_jetstream"
-      ref: ea905f36ffb6242e012d434101cb6d00a76c4d01
-      resolved-ref: ea905f36ffb6242e012d434101cb6d00a76c4d01
+      ref: "50231b430d1f5f37226ac36da30dd22c1c1859d9"
+      resolved-ref: "50231b430d1f5f37226ac36da30dd22c1c1859d9"
       url: "https://github.com/gabber235/nats.dart.git"
     source: git
     version: "0.0.1"
