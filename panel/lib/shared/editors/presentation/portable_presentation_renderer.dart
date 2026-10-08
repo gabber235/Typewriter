@@ -2429,7 +2429,7 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
         maxLines: multiline ? 8 : 1,
         hintText: placeholder ?? "Enter text",
         prefix: prefix,
-        onChanged: (next) => childScope.write(
+        onChanged: (next) => childScope.writePayload(
           control.binding,
           types.DataValue.wrapStringValue(next),
         ),

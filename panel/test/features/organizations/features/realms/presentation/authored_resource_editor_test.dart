@@ -5,6 +5,8 @@ import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring.dart"
     as authoring;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/authoring_facts.dart"
+    as facts;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/binding.dart"
     as binding;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/capability.dart"
@@ -24,6 +26,180 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "../../../../../support/test_utils.dart";
 
 void main() {
+  for (final kind in ["named", "expected named Unfilled", "ordinary"]) {
+    testWidgets(
+      "direct $kind text preserves authored identity through edit and clear",
+      (tester) async {
+        final named = kind != "ordinary";
+        final initial = kind == "expected named Unfilled"
+            ? types.DataValue.unfilled
+            : named
+            ? types.DataValue.createNamed(
+                actualType: _chapterTextType,
+                payload: types.DataValue.wrapStringValue("old.chapter"),
+              )
+            : types.DataValue.wrapStringValue("old.chapter");
+        final fixture = _fixture(
+          fieldName: "chapter",
+          initial: initial,
+          namedText: named ? _chapterTextType : null,
+        );
+        await tester.pumpTestApp(
+          child: Scaffold(
+            body: AuthoredResourceEditor(
+              resource: fixture.resource,
+              draft: fixture.draft,
+              catalog: fixture.catalog,
+              role: catalog.PresentationRole.inspector,
+              budget: expression.EvaluationBudget(
+                maxSteps: 100,
+                maxCollectionItems: 100,
+              ),
+            ),
+          ),
+        );
+        await tester.enterText(find.byType(TextFormField), "new.chapter");
+        await tester.pumpAndSettle();
+        final expectedEdit = named
+            ? types.DataValue.createNamed(
+                actualType: _chapterTextType,
+                payload: types.DataValue.wrapStringValue("new.chapter"),
+              )
+            : types.DataValue.wrapStringValue("new.chapter");
+        expect(
+          fixture.draft.resource(fixture.resource)?.authoredField("chapter"),
+          expectedEdit,
+        );
+        expect(fixture.draft.intents, hasLength(1));
+        final first =
+            fixture.draft.intents.single
+                as authoring.EditIntent_setValueWrapper;
+        expect(first.value.at.resource, fixture.resource);
+        expect(
+          first.value.at.path,
+          types.ValuePath(
+            segments: [types.PathSegment.createField(name: "chapter")],
+          ),
+        );
+        expect(first.value.value, expectedEdit);
+        final expectation = fixture.draft
+            .prepare()
+            .expectations
+            .whereType<facts.EditExpectation_valueWrapper>()
+            .where((fact) => fact.value.at == first.value.at)
+            .single;
+        expect(expectation.value.expected, initial);
+        await tester.enterText(find.byType(TextFormField), "");
+        await tester.pumpAndSettle();
+        final expectedClear = named
+            ? types.DataValue.createNamed(
+                actualType: _chapterTextType,
+                payload: types.DataValue.wrapStringValue(""),
+              )
+            : types.DataValue.wrapStringValue("");
+        expect(
+          fixture.draft.resource(fixture.resource)?.authoredField("chapter"),
+          expectedClear,
+        );
+        expect(fixture.draft.intents, hasLength(2));
+        final clear =
+            fixture.draft.intents.last as authoring.EditIntent_setValueWrapper;
+        expect(clear.value.at, first.value.at);
+        expect(clear.value.value, expectedClear);
+      },
+    );
+  }
+
+  for (final field in ["name", "chapter", "priority"]) {
+    testWidgets(
+      "inspector saves Unfilled $field with its exact authored expectation",
+      (tester) async {
+        final fixture = field == "priority"
+            ? _numericFixture(
+                generation: "catalog:1",
+                snapshot: "realm:1",
+                minimum: 0,
+                fieldName: field,
+                initial: types.DataValue.unfilled,
+              )
+            : _fixture(fieldName: field, initial: types.DataValue.unfilled);
+        final submitted = <authoring.PreparedEdit>[];
+        var latest = _snapshotOf(fixture.draft);
+        Future<authoring.CommitPreparedEditResponse> commit(
+          authoring.PreparedEdit edit,
+        ) async {
+          submitted.add(edit);
+          final accepted = fixture.draft.fork();
+          for (final intent
+              in edit.intents.cast<authoring.EditIntent_setValueWrapper>()) {
+            accepted.set(intent.value.at, intent.value.value);
+          }
+          latest = _snapshotOf(accepted);
+          return authoring.CommitPreparedEditResponse.wrapResult(
+            authoring.CommitResult.committed,
+          );
+        }
+
+        final commands = AuthoredResourceCommands(
+          commit: commit,
+          previewTypeArguments: ({required resource, required requested}) =>
+              throw UnimplementedError(),
+          commitTypeArguments: (_) => throw UnimplementedError(),
+          prepareCreation: (_) => throw UnimplementedError(),
+          invokeCommand: ({required capabilityId, required payload}) async =>
+              capability.CommandResult.unknown,
+          watchSearch: (_) => const Stream.empty(),
+          reload: () async {},
+          openAutosave: _openAutosave(
+            commit: commit,
+            fetchCurrent: () async => latest,
+          ),
+        );
+        await tester.pumpTestApp(
+          child: Scaffold(
+            body: AuthoredResourceInspection(
+              resource: fixture.resource,
+              draft: fixture.draft,
+              catalog: fixture.catalog,
+              commands: commands,
+            ),
+          ),
+        );
+        await tester.enterText(
+          find.byType(TextFormField),
+          field == "priority" ? "3" : "new",
+        );
+        await tester.pump(AuthoredDraftAutosave.debounce);
+        await tester.pumpAndSettle();
+        expect(submitted, hasLength(1));
+        final set =
+            submitted.single.intents.single
+                as authoring.EditIntent_setValueWrapper;
+        expect(set.value.at.resource, fixture.resource);
+        expect(
+          set.value.at.path,
+          types.ValuePath(
+            segments: [types.PathSegment.createField(name: field)],
+          ),
+        );
+        expect(
+          set.value.value,
+          field == "priority"
+              ? types.DataValue.wrapInteger("3")
+              : types.DataValue.wrapStringValue("new"),
+        );
+        final expected = submitted.single.expectations
+            .whereType<facts.EditExpectation_valueWrapper>()
+            .where((fact) => fact.value.at == set.value.at)
+            .single;
+        expect(expected.value.expected, types.DataValue.unfilled);
+        expect(find.textContaining("changed"), findsNothing);
+        await tester.pumpWidget(const SizedBox());
+        await tester.pumpAndSettle();
+      },
+    );
+  }
+
   testWidgets("empty page graph receives the bounded editor workspace", (
     tester,
   ) async {
@@ -972,6 +1148,7 @@ _numericFixture({
   required String snapshot,
   required int minimum,
   types.DataValue? initial,
+  String fieldName = "repetitions",
 }) {
   final catalogGeneration = types.CatalogGeneration(value: generation);
   final definition = types.TypeDefinitionId(
@@ -990,7 +1167,7 @@ _numericFixture({
     arguments: const [],
   );
   final path = types.ValuePath(
-    segments: [types.PathSegment.createField(name: "repetitions")],
+    segments: [types.PathSegment.createField(name: fieldName)],
   );
   final checked = CheckedEditorCatalog(
     catalog.EditorCatalogWireSnapshot(
@@ -1006,7 +1183,7 @@ _numericFixture({
                 types.FieldDeclaration(
                   owner: types.FieldOwner(
                     definition: definition,
-                    name: "repetitions",
+                    name: fieldName,
                   ),
                   type: types.TypeTemplate.wrapScalar(
                     types.ScalarKind.createInteger(
@@ -1024,11 +1201,8 @@ _numericFixture({
           status: catalog.DeclarationStatus.ready,
           effectiveFields: [
             catalog.EffectiveFieldTemplate(
-              key: "repetitions",
-              owner: types.FieldOwner(
-                definition: definition,
-                name: "repetitions",
-              ),
+              key: fieldName,
+              owner: types.FieldOwner(definition: definition, name: fieldName),
               type: types.TypeTemplate.wrapScalar(
                 types.ScalarKind.createInteger(
                   width: types.IntegerWidth.signedThirtyTwo,
@@ -1057,7 +1231,7 @@ _numericFixture({
           target: target,
           role: catalog.PresentationRole.inspector,
           layout: presentation.PresentationNode(
-            nodeId: "repetitions",
+            nodeId: fieldName,
             properties: presentation.PresentationProperties.defaultInstance,
             element: presentation.PresentationElement.wrapNumericInput(
               presentation.BoundControl(
@@ -1084,9 +1258,7 @@ _numericFixture({
         catalog.ConfigurationRecipe(
           origin: ruleOrigin,
           relativePath: types.RelativeFieldPattern(
-            segments: [
-              types.FieldPatternSegment.createField(name: "repetitions"),
-            ],
+            segments: [types.FieldPatternSegment.createField(name: fieldName)],
           ),
           representationCondition: catalog.RepresentationKind.integer,
           rules: [
@@ -1137,7 +1309,7 @@ _numericFixture({
     ),
     fields: [
       types.FieldValue(
-        name: "repetitions",
+        name: fieldName,
         value: initial ?? types.DataValue.wrapInteger("2"),
       ),
     ],
@@ -1165,8 +1337,17 @@ _fixture({
   String snapshot = "realm:1",
   String title = "Original",
   bool requireTitle = false,
+  String fieldName = "title",
+  types.DataValue? initial,
+  types.NamedTypeUse? namedText,
 }) {
   final generation = types.CatalogGeneration(value: "catalog:1");
+  final fieldType = namedText == null
+      ? types.TypeTemplate.wrapScalar(types.ScalarKind.text)
+      : types.TypeTemplate.createNamed(
+          definition: namedText.definition,
+          arguments: const [],
+        );
   final definition = types.TypeDefinitionId(
     typeId: types.TypeId.wrapQualified(
       types.QualifiedTypeId(namespace: "test", name: "Message"),
@@ -1191,7 +1372,7 @@ _fixture({
         binding: binding.BindingRef(
           bindingId: configuredValueBindingId,
           path: types.ValuePath(
-            segments: [types.PathSegment.createField(name: "title")],
+            segments: [types.PathSegment.createField(name: fieldName)],
           ),
         ),
         label: null,
@@ -1212,7 +1393,7 @@ _fixture({
       value: expression.ExpressionNode.createRead(
         binding: configuredValueBindingId,
         path: types.ValuePath(
-          segments: [types.PathSegment.createField(name: "title")],
+          segments: [types.PathSegment.createField(name: fieldName)],
         ),
       ),
       color: null,
@@ -1305,6 +1486,21 @@ _fixture({
     catalog.EditorCatalogWireSnapshot(
       generation: generation,
       types: [
+        if (namedText != null)
+          catalog.PublishedType(
+            display: null,
+            definition: types.TypeDefinition(
+              id: namedText.definition,
+              parameters: const [],
+              representation: types.RepresentationTemplate.createScalar(
+                kind: types.ScalarKind.text,
+              ),
+              parents: const [],
+            ),
+            status: catalog.DeclarationStatus.ready,
+            effectiveFields: const [],
+            ancestorTemplates: const [],
+          ),
         catalog.PublishedType(
           display: null,
           definition: types.TypeDefinition(
@@ -1315,9 +1511,9 @@ _fixture({
                 types.FieldDeclaration(
                   owner: types.FieldOwner(
                     definition: definition,
-                    name: "title",
+                    name: fieldName,
                   ),
-                  type: types.TypeTemplate.wrapScalar(types.ScalarKind.text),
+                  type: fieldType,
                   overrides: const [],
                   hasConstructorDefault: false,
                 ),
@@ -1329,9 +1525,9 @@ _fixture({
           status: catalog.DeclarationStatus.ready,
           effectiveFields: [
             catalog.EffectiveFieldTemplate(
-              key: "title",
-              owner: types.FieldOwner(definition: definition, name: "title"),
-              type: types.TypeTemplate.wrapScalar(types.ScalarKind.text),
+              key: fieldName,
+              owner: types.FieldOwner(definition: definition, name: fieldName),
+              type: fieldType,
               rules: requireTitle ? [titleRule] : const [],
             ),
           ],
@@ -1406,7 +1602,7 @@ _fixture({
                 origin: ruleOrigin,
                 relativePath: types.RelativeFieldPattern(
                   segments: [
-                    types.FieldPatternSegment.createField(name: "title"),
+                    types.FieldPatternSegment.createField(name: fieldName),
                   ],
                 ),
                 representationCondition: catalog.RepresentationKind.text,
@@ -1453,8 +1649,8 @@ _fixture({
     ),
     fields: [
       types.FieldValue(
-        name: "title",
-        value: types.DataValue.wrapStringValue(title),
+        name: fieldName,
+        value: initial ?? types.DataValue.wrapStringValue(title),
       ),
     ],
   );
@@ -1472,3 +1668,14 @@ _fixture({
   );
   return (resource: resource, draft: draft, catalog: checked);
 }
+
+final _chapterTextType = types.NamedTypeUse(
+  definition: types.TypeDefinitionId(
+    typeId: types.TypeId.createQualified(
+      namespace: "test",
+      name: "ChapterPath",
+    ),
+    revision: 1,
+  ),
+  arguments: const [],
+);
