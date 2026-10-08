@@ -38,12 +38,10 @@ final class _RenderHierarchySurface extends RenderBox
         ContainerRenderObjectMixin<RenderBox, _HierarchyParentData>,
         RenderBoxContainerDefaultsMixin<RenderBox, _HierarchyParentData> {
   _RenderHierarchySurface({
-    required _ResolvedHierarchyLayout layout,
-    required TextDirection textDirection,
-    required ValueChanged<List<String>> onDiagnosticsChanged,
-  }) : _layout = layout,
-       _textDirection = textDirection,
-       _onDiagnosticsChanged = onDiagnosticsChanged;
+    required this._layout,
+    required this._textDirection,
+    required this._onDiagnosticsChanged,
+  });
 
   _ResolvedHierarchyLayout _layout;
   TextDirection _textDirection;

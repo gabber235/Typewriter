@@ -220,9 +220,9 @@ void main() {
       path: _fieldPath("book"),
     );
     expect(
-      decoded.expectations.map((observation) => _factKey(observation)),
+      decoded.expectations.map(_factKey),
       containsAll(
-        [
+        {
           ("exists", fixture.page),
           (
             "configuration",
@@ -233,7 +233,7 @@ void main() {
           ),
           ("configuration", pageBookLocation),
           ("value", pageBookLocation),
-        ].toSet(),
+        },
       ),
     );
   });
@@ -628,12 +628,12 @@ void main() {
     );
 
     final identities = fixture.draft.expectations
-        .map((observation) => _factKey(observation))
+        .map(_factKey)
         .toSet();
     expect(
       identities,
       containsAll(
-        [
+        {
           ("exists", fixture.resource),
           (
             "configuration",
@@ -643,7 +643,7 @@ void main() {
             ),
           ),
           ("value", fixture.title),
-        ].toSet(),
+        },
       ),
     );
   });
@@ -733,17 +733,17 @@ void main() {
     draft.connect(source, target);
 
     final identities = draft.expectations
-        .map((observation) => _factKey(observation))
+        .map(_factKey)
         .toSet();
     expect(
       identities,
       containsAll(
-        [
+        {
           ("value", fixture.title),
           ("exists", target),
           ("links", fixture.resource, relation),
           ("links", target, relation),
-        ].toSet(),
+        },
       ),
     );
     expect(
@@ -784,17 +784,17 @@ void main() {
     fixture.draft.connect(source, target);
 
     final identities = fixture.draft.expectations
-        .map((observation) => _factKey(observation))
+        .map(_factKey)
         .toSet();
     expect(
       identities,
       containsAll(
-        [
+        {
           ("value", item),
           ("configuration", containing),
           ("value", containing),
           ("value", containing),
-        ].toSet(),
+        },
       ),
     );
   });
@@ -837,17 +837,17 @@ void main() {
     );
 
     final identities = fixture.draft.expectations
-        .map((observation) => _factKey(observation))
+        .map(_factKey)
         .toSet();
     expect(
       identities,
       containsAll(
-        [
+        {
           ("value", counterpartLocation),
           ("configuration", fixture.items),
           ("value", fixture.items),
           ("value", fixture.items),
-        ].toSet(),
+        },
       ),
     );
   });
@@ -878,17 +878,17 @@ void main() {
     fixture.draft.disconnect(occurrence);
 
     final identities = fixture.draft.expectations
-        .map((observation) => _factKey(observation))
+        .map(_factKey)
         .toSet();
     expect(
       identities,
       containsAll(
-        [
+        {
           ("value", item),
           ("configuration", fixture.items),
           ("value", fixture.items),
           ("value", fixture.items),
-        ].toSet(),
+        },
       ),
     );
   });
@@ -974,7 +974,7 @@ void main() {
     final relation = fixture.draft.links.single.contract;
     final branch = fixture.draft.fork()..delete(deleted);
     final identities = branch.expectations
-        .map((observation) => _factKey(observation))
+        .map(_factKey)
         .toSet();
 
     expect(branch.resource(deleted), isNull);
@@ -986,7 +986,7 @@ void main() {
     expect(
       identities,
       containsAll(
-        [
+        {
           ("links", fixture.occurrence.source, relation),
 
           ("links", deleted, relation),
@@ -1000,7 +1000,7 @@ void main() {
           ),
           ("configuration", fixture.occurrence.id.location),
           ("value", fixture.occurrence.id.location),
-        ].toSet(),
+        },
       ),
     );
     expect(identities, isNot(contains(("links", fixture.newTarget, relation))));
@@ -1014,13 +1014,13 @@ void main() {
     final cascaded = fixture.occurrence.target.resource;
     final branch = fixture.draft.fork()..delete(fixture.occurrence.source);
     final identities = branch.expectations
-        .map((observation) => _factKey(observation))
+        .map(_factKey)
         .toSet();
 
     expect(
       identities,
       containsAll(
-        [
+        {
           ("exists", cascaded),
           (
             "configuration",
@@ -1029,7 +1029,7 @@ void main() {
               path: types.ValuePath(segments: const []),
             ),
           ),
-        ].toSet(),
+        },
       ),
     );
   });
@@ -1091,7 +1091,7 @@ void main() {
       types.DataValue.wrapBoolean(true),
     );
     final identities = fixture.draft.expectations
-        .map((observation) => _factKey(observation))
+        .map(_factKey)
         .toSet();
     expect(
       identities,

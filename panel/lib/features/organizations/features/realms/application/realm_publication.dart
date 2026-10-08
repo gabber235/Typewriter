@@ -37,8 +37,9 @@ class RealmPublication extends _$RealmPublication {
 
   Future<skir.PublicationResult> publish() async {
     final current = state.value;
-    if (_publishing || (current != null && _isPending(current.state)))
+    if (_publishing || (current != null && _isPending(current.state))) {
       return skir.PublicationResult.publishing;
+    }
     _publishing = true;
     try {
       return await _source.publish();

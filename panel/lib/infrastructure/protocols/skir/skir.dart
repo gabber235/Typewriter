@@ -11,6 +11,7 @@ export "skirout/access/v1/sentinel.dart";
 export "skirout/editor/v1/action.dart";
 export "skirout/editor/v1/authoring.dart"
     hide ArgumentLocation, ArgumentLocation_mutable, ArgumentLocation_orMutable;
+export "skirout/editor/v1/authoring_facts.dart";
 export "skirout/editor/v1/binding.dart";
 export "skirout/editor/v1/capability.dart";
 export "skirout/editor/v1/catalog.dart";
@@ -46,4 +47,3 @@ export "skirout/service/v1/registration.dart";
 export "skirout/service/v1/service.dart";
 export "skirout/service/v1/status.dart";
 export "skirout/service/v1/topology.dart";
-export "skirout/editor/v1/authoring_facts.dart";

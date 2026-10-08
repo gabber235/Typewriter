@@ -160,16 +160,16 @@ void main() {
         (state) => state.draft != null,
         description: "initial draft",
       );
-      final local = initial.draft!;
-      local.set(
-        skir.ValueLocation(
-          resource: _resourceId,
-          path: skir.ValuePath(
-            segments: [skir.PathSegment.createField(name: "title")],
+      final local = initial.draft!
+        ..set(
+          skir.ValueLocation(
+            resource: _resourceId,
+            path: skir.ValuePath(
+              segments: [skir.PathSegment.createField(name: "title")],
+            ),
           ),
-        ),
-        skir.DataValue.wrapStringValue("Local"),
-      );
+          skir.DataValue.wrapStringValue("Local"),
+        );
       generation = skir.CatalogGeneration(value: "replacement");
       harness.nats.emitMessageOnSubject(
         _catalogInvalidationEventSubject,

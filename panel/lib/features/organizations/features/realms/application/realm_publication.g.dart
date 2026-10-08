@@ -144,7 +144,7 @@ final class RealmPublicationProvider
   }
 }
 
-String _$realmPublicationHash() => r'd90c55ffb43765e4cb15b303286cebd37dae8053';
+String _$realmPublicationHash() => r'06cf1ab56e4792c7a3efff4c2671821dc78ed432';
 
 final class RealmPublicationFamily extends $Family
     with

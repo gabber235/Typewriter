@@ -1,5 +1,4 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/features/organizations/features/realms/application/realm_editor_catalog_route.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {

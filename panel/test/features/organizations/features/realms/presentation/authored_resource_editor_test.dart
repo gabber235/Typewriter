@@ -450,16 +450,16 @@ void main() {
     );
     final adoption = first.draft.rebaseOnto(second.draft);
     expect(adoption, isA<AuthoredDraftRebaseFailed>());
-    final rebound = second.draft.fork();
-    rebound.set(
-      types.ValueLocation(
-        resource: second.resource,
-        path: types.ValuePath(
-          segments: [types.PathSegment.createField(name: "repetitions")],
+    final rebound = second.draft.fork()
+      ..set(
+        types.ValueLocation(
+          resource: second.resource,
+          path: types.ValuePath(
+            segments: [types.PathSegment.createField(name: "repetitions")],
+          ),
         ),
-      ),
-      types.DataValue.wrapInteger("3"),
-    );
+        types.DataValue.wrapInteger("3"),
+      );
 
     await tester.pumpTestApp(
       child: _numericEditor((

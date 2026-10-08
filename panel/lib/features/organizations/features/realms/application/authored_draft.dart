@@ -119,12 +119,14 @@ final class AuthoredDraft {
   }
 
   AuthoredDraftRebase rebaseOnto(AuthoredDraft baseline) {
-    if (generation != baseline.generation)
+    if (generation != baseline.generation) {
       return const AuthoredDraftRebaseFailed("The editor catalog changed");
+    }
     for (final expected in _observed.values) {
       final actual = baseline._actual(expected);
-      if (!_sameExpectation(actual, expected))
+      if (!_sameExpectation(actual, expected)) {
         return AuthoredDraftRebaseConflict(expected: expected, actual: actual);
+      }
     }
     final next = baseline.fork();
     for (final intent in _intents) {
@@ -141,12 +143,14 @@ final class AuthoredDraft {
     AuthoredDraft baseline, {
     required int acceptedIntentCount,
   }) {
-    if (generation != baseline.generation)
+    if (generation != baseline.generation) {
       return const AuthoredDraftRebaseFailed("The editor catalog changed");
-    if (acceptedIntentCount < 0 || acceptedIntentCount > _intents.length)
+    }
+    if (acceptedIntentCount < 0 || acceptedIntentCount > _intents.length) {
       return const AuthoredDraftRebaseFailed(
         "The accepted edit prefix no longer matches the local draft",
       );
+    }
     final accepted = AuthoredDraft(
       generation: generation,
       resources: [
@@ -167,8 +171,9 @@ final class AuthoredDraft {
     for (final expected in _observed.values) {
       final afterSave = accepted._actual(expected, original: false);
       final actual = baseline._actual(expected);
-      if (!_sameExpectation(actual, afterSave))
+      if (!_sameExpectation(actual, afterSave)) {
         return AuthoredDraftRebaseConflict(expected: afterSave, actual: actual);
+      }
     }
     final next = baseline.fork();
     for (final intent in _intents.skip(acceptedIntentCount)) {
@@ -1288,8 +1293,9 @@ final class AuthoredDraft {
     types.DataValue? value(types.ValueLocation at) {
       final record = resources[at.resource];
       if (record == null) return null;
-      if (at.path.segments.isEmpty)
+      if (at.path.segments.isEmpty) {
         return types.DataValue.createRecord(fields: record.fields);
+      }
       return switch (record.readAt(at.path)) {
         PortablePathValue(:final value) => value,
         _ => null,
@@ -1914,9 +1920,10 @@ bool _sameExpectation(
         first.value.expected.toSet().containsAll(second.value.expected);
   }
   if (first is facts.EditExpectation_resourceIdsWrapper &&
-      second is facts.EditExpectation_resourceIdsWrapper)
+      second is facts.EditExpectation_resourceIdsWrapper) {
     return first.value.toSet().length == second.value.toSet().length &&
         first.value.toSet().containsAll(second.value);
+  }
   if (_factKey(first) != _factKey(second)) return false;
   if (first is facts.EditExpectation_valueWrapper &&
       second is facts.EditExpectation_valueWrapper) {
