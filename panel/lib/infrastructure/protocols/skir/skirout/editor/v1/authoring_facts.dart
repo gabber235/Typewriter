@@ -12,6 +12,7 @@
 //   dart pub add skir_client
 
 import "dart:core" as _core;
+
 import "package:skir_client/skir_client.dart" as _skir;
 
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
@@ -103,7 +104,10 @@ final class LinkProjection implements LinkProjection_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! LinkProjection) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -121,7 +125,8 @@ final class LinkProjection implements LinkProjection_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `LinkProjection` instances.
-  static _skir.StructSerializer<LinkProjection, LinkProjection_mutable> get serializer {
+  static _skir.StructSerializer<LinkProjection, LinkProjection_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "contract",
@@ -212,7 +217,8 @@ final class LinkProjection_mutable implements LinkProjection_orMutable {
     if (value is _lib_editor_v1_type_catalog.RelationId_mutable) {
       return value;
     } else {
-      return this.contract = (value as _lib_editor_v1_type_catalog.RelationId).toMutable();
+      return this.contract = (value as _lib_editor_v1_type_catalog.RelationId)
+          .toMutable();
     }
   }
 
@@ -223,7 +229,8 @@ final class LinkProjection_mutable implements LinkProjection_orMutable {
     if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
       return value;
     } else {
-      return this.first = (value as _lib_editor_v1_type_catalog.ResourceId).toMutable();
+      return this.first = (value as _lib_editor_v1_type_catalog.ResourceId)
+          .toMutable();
     }
   }
 
@@ -234,7 +241,8 @@ final class LinkProjection_mutable implements LinkProjection_orMutable {
     if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
       return value;
     } else {
-      return this.second = (value as _lib_editor_v1_type_catalog.ResourceId).toMutable();
+      return this.second = (value as _lib_editor_v1_type_catalog.ResourceId)
+          .toMutable();
     }
   }
 
@@ -267,7 +275,8 @@ final class LinkProjection_mutable implements LinkProjection_orMutable {
 sealed class TraversalDirection {
   /// Constant indicating an unknown `TraversalDirection`.
   /// Default value for fields of type `TraversalDirection`.
-  static const TraversalDirection unknown = TraversalDirection_unknown._instance;
+  static const TraversalDirection unknown =
+      TraversalDirection_unknown._instance;
 
   static const forward = _TraversalDirection_consts.forwardConst;
   static const reverse = _TraversalDirection_consts.reverseConst;
@@ -293,27 +302,22 @@ sealed class TraversalDirection {
         "",
         reverse,
       );
-      _serializerBuilder.addConstantVariant(
-        3,
-        "both",
-        "both",
-        "",
-        both,
-      );
+      _serializerBuilder.addConstantVariant(3, "both", "both", "", both);
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/authoring_facts.skir:TraversalDirection",
-    doc: "",
-    unknownInstance: TraversalDirection_unknown._instance,
-    enumInstance: TraversalDirection.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: TraversalDirection_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/authoring_facts.skir:TraversalDirection",
+        doc: "",
+        unknownInstance: TraversalDirection_unknown._instance,
+        enumInstance: TraversalDirection.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: TraversalDirection_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `TraversalDirection`.
@@ -343,7 +347,8 @@ final class TraversalDirection_unknown implements TraversalDirection {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, TraversalDirection.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, TraversalDirection.serializer);
 }
 
 enum _TraversalDirection_consts implements TraversalDirection {
@@ -357,7 +362,8 @@ enum _TraversalDirection_consts implements TraversalDirection {
   const _TraversalDirection_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, TraversalDirection.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, TraversalDirection.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -382,15 +388,9 @@ final class EditExpectation_Value implements EditExpectation_Value_orMutable {
   factory EditExpectation_Value({
     required _lib_editor_v1_type_catalog.ValueLocation_orMutable at,
     required _lib_editor_v1_type_catalog.DataValue? expected,
-  }) => EditExpectation_Value._(
-    at.toFrozen(),
-    expected,
-  );
+  }) => EditExpectation_Value._(at.toFrozen(), expected);
 
-  EditExpectation_Value._(
-    this.at,
-    this.expected,
-  );
+  EditExpectation_Value._(this.at, this.expected);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = EditExpectation_Value._(
@@ -400,10 +400,11 @@ final class EditExpectation_Value implements EditExpectation_Value_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static EditExpectation_Value_mutable mutable() => EditExpectation_Value_mutable._(
-    _lib_editor_v1_type_catalog.ValueLocation.defaultInstance,
-    null,
-  );
+  static EditExpectation_Value_mutable mutable() =>
+      EditExpectation_Value_mutable._(
+        _lib_editor_v1_type_catalog.ValueLocation.defaultInstance,
+        null,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -411,31 +412,33 @@ final class EditExpectation_Value implements EditExpectation_Value_orMutable {
   EditExpectation_Value toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  EditExpectation_Value_mutable toMutable() => EditExpectation_Value_mutable._(
-    this.at,
-    this.expected,
-  );
+  EditExpectation_Value_mutable toMutable() =>
+      EditExpectation_Value_mutable._(this.at, this.expected);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! EditExpectation_Value) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.at,
-    this.expected,
-  ];
+  _core.List get _equality_proxy => [this.at, this.expected];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `EditExpectation_Value` instances.
-  static _skir.StructSerializer<EditExpectation_Value, EditExpectation_Value_mutable> get serializer {
+  static _skir.StructSerializer<
+    EditExpectation_Value,
+    EditExpectation_Value_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "at",
@@ -474,15 +477,13 @@ final class EditExpectation_Value implements EditExpectation_Value_orMutable {
 }
 
 /// Mutable version of [EditExpectation_Value].
-final class EditExpectation_Value_mutable implements EditExpectation_Value_orMutable {
+final class EditExpectation_Value_mutable
+    implements EditExpectation_Value_orMutable {
   _lib_editor_v1_type_catalog.ValueLocation_orMutable at;
   _lib_editor_v1_type_catalog.DataValue? expected;
   _skir.internal__UnrecognizedFields? _u;
 
-  EditExpectation_Value_mutable._(
-    this.at,
-    this.expected,
-  );
+  EditExpectation_Value_mutable._(this.at, this.expected);
 
   /// If the value of [at] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [at] and returns it.
@@ -491,16 +492,15 @@ final class EditExpectation_Value_mutable implements EditExpectation_Value_orMut
     if (value is _lib_editor_v1_type_catalog.ValueLocation_mutable) {
       return value;
     } else {
-      return this.at = (value as _lib_editor_v1_type_catalog.ValueLocation).toMutable();
+      return this.at = (value as _lib_editor_v1_type_catalog.ValueLocation)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  EditExpectation_Value toFrozen() => EditExpectation_Value(
-    at: this.at,
-    expected: this.expected,
-  ).._u = this._u;
+  EditExpectation_Value toFrozen() =>
+      EditExpectation_Value(at: this.at, expected: this.expected).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -515,7 +515,8 @@ sealed class EditExpectation_Resource_orMutable {
 }
 
 /// Deeply immutable.
-final class EditExpectation_Resource implements EditExpectation_Resource_orMutable {
+final class EditExpectation_Resource
+    implements EditExpectation_Resource_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.ResourceId id;
   @_core.override
@@ -530,10 +531,7 @@ final class EditExpectation_Resource implements EditExpectation_Resource_orMutab
     (expected != null) ? expected.toFrozen() : null,
   );
 
-  EditExpectation_Resource._(
-    this.id,
-    this.expected,
-  );
+  EditExpectation_Resource._(this.id, this.expected);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = EditExpectation_Resource._(
@@ -543,10 +541,11 @@ final class EditExpectation_Resource implements EditExpectation_Resource_orMutab
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static EditExpectation_Resource_mutable mutable() => EditExpectation_Resource_mutable._(
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
-    null,
-  );
+  static EditExpectation_Resource_mutable mutable() =>
+      EditExpectation_Resource_mutable._(
+        _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+        null,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -554,31 +553,33 @@ final class EditExpectation_Resource implements EditExpectation_Resource_orMutab
   EditExpectation_Resource toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  EditExpectation_Resource_mutable toMutable() => EditExpectation_Resource_mutable._(
-    this.id,
-    this.expected,
-  );
+  EditExpectation_Resource_mutable toMutable() =>
+      EditExpectation_Resource_mutable._(this.id, this.expected);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! EditExpectation_Resource) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.id,
-    this.expected,
-  ];
+  _core.List get _equality_proxy => [this.id, this.expected];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `EditExpectation_Resource` instances.
-  static _skir.StructSerializer<EditExpectation_Resource, EditExpectation_Resource_mutable> get serializer {
+  static _skir.StructSerializer<
+    EditExpectation_Resource,
+    EditExpectation_Resource_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "id",
@@ -617,15 +618,13 @@ final class EditExpectation_Resource implements EditExpectation_Resource_orMutab
 }
 
 /// Mutable version of [EditExpectation_Resource].
-final class EditExpectation_Resource_mutable implements EditExpectation_Resource_orMutable {
+final class EditExpectation_Resource_mutable
+    implements EditExpectation_Resource_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable id;
   _lib_editor_v1_type_catalog.AuthoringRecord_orMutable? expected;
   _skir.internal__UnrecognizedFields? _u;
 
-  EditExpectation_Resource_mutable._(
-    this.id,
-    this.expected,
-  );
+  EditExpectation_Resource_mutable._(this.id, this.expected);
 
   /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
@@ -634,16 +633,16 @@ final class EditExpectation_Resource_mutable implements EditExpectation_Resource
     if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
       return value;
     } else {
-      return this.id = (value as _lib_editor_v1_type_catalog.ResourceId).toMutable();
+      return this.id = (value as _lib_editor_v1_type_catalog.ResourceId)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  EditExpectation_Resource toFrozen() => EditExpectation_Resource(
-    id: this.id,
-    expected: this.expected,
-  ).._u = this._u;
+  EditExpectation_Resource toFrozen() =>
+      EditExpectation_Resource(id: this.id, expected: this.expected)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -658,7 +657,8 @@ sealed class EditExpectation_ResourceExists_orMutable {
 }
 
 /// Deeply immutable.
-final class EditExpectation_ResourceExists implements EditExpectation_ResourceExists_orMutable {
+final class EditExpectation_ResourceExists
+    implements EditExpectation_ResourceExists_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.ResourceId id;
   @_core.override
@@ -668,15 +668,9 @@ final class EditExpectation_ResourceExists implements EditExpectation_ResourceEx
   factory EditExpectation_ResourceExists({
     required _lib_editor_v1_type_catalog.ResourceId_orMutable id,
     required _core.bool expected,
-  }) => EditExpectation_ResourceExists._(
-    id.toFrozen(),
-    expected,
-  );
+  }) => EditExpectation_ResourceExists._(id.toFrozen(), expected);
 
-  EditExpectation_ResourceExists._(
-    this.id,
-    this.expected,
-  );
+  EditExpectation_ResourceExists._(this.id, this.expected);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = EditExpectation_ResourceExists._(
@@ -686,10 +680,11 @@ final class EditExpectation_ResourceExists implements EditExpectation_ResourceEx
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static EditExpectation_ResourceExists_mutable mutable() => EditExpectation_ResourceExists_mutable._(
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
-    false,
-  );
+  static EditExpectation_ResourceExists_mutable mutable() =>
+      EditExpectation_ResourceExists_mutable._(
+        _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+        false,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -697,31 +692,33 @@ final class EditExpectation_ResourceExists implements EditExpectation_ResourceEx
   EditExpectation_ResourceExists toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  EditExpectation_ResourceExists_mutable toMutable() => EditExpectation_ResourceExists_mutable._(
-    this.id,
-    this.expected,
-  );
+  EditExpectation_ResourceExists_mutable toMutable() =>
+      EditExpectation_ResourceExists_mutable._(this.id, this.expected);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! EditExpectation_ResourceExists) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.id,
-    this.expected,
-  ];
+  _core.List get _equality_proxy => [this.id, this.expected];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `EditExpectation_ResourceExists` instances.
-  static _skir.StructSerializer<EditExpectation_ResourceExists, EditExpectation_ResourceExists_mutable> get serializer {
+  static _skir.StructSerializer<
+    EditExpectation_ResourceExists,
+    EditExpectation_ResourceExists_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "id",
@@ -758,15 +755,13 @@ final class EditExpectation_ResourceExists implements EditExpectation_ResourceEx
 }
 
 /// Mutable version of [EditExpectation_ResourceExists].
-final class EditExpectation_ResourceExists_mutable implements EditExpectation_ResourceExists_orMutable {
+final class EditExpectation_ResourceExists_mutable
+    implements EditExpectation_ResourceExists_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable id;
   _core.bool expected;
   _skir.internal__UnrecognizedFields? _u;
 
-  EditExpectation_ResourceExists_mutable._(
-    this.id,
-    this.expected,
-  );
+  EditExpectation_ResourceExists_mutable._(this.id, this.expected);
 
   /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
@@ -775,16 +770,16 @@ final class EditExpectation_ResourceExists_mutable implements EditExpectation_Re
     if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
       return value;
     } else {
-      return this.id = (value as _lib_editor_v1_type_catalog.ResourceId).toMutable();
+      return this.id = (value as _lib_editor_v1_type_catalog.ResourceId)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  EditExpectation_ResourceExists toFrozen() => EditExpectation_ResourceExists(
-    id: this.id,
-    expected: this.expected,
-  ).._u = this._u;
+  EditExpectation_ResourceExists toFrozen() =>
+      EditExpectation_ResourceExists(id: this.id, expected: this.expected)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -799,7 +794,8 @@ sealed class EditExpectation_Configuration_orMutable {
 }
 
 /// Deeply immutable.
-final class EditExpectation_Configuration implements EditExpectation_Configuration_orMutable {
+final class EditExpectation_Configuration
+    implements EditExpectation_Configuration_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.ValueLocation at;
   @_core.override
@@ -809,15 +805,9 @@ final class EditExpectation_Configuration implements EditExpectation_Configurati
   factory EditExpectation_Configuration({
     required _lib_editor_v1_type_catalog.ValueLocation_orMutable at,
     required _lib_editor_v1_type_catalog.TypeSelection? expected,
-  }) => EditExpectation_Configuration._(
-    at.toFrozen(),
-    expected,
-  );
+  }) => EditExpectation_Configuration._(at.toFrozen(), expected);
 
-  EditExpectation_Configuration._(
-    this.at,
-    this.expected,
-  );
+  EditExpectation_Configuration._(this.at, this.expected);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = EditExpectation_Configuration._(
@@ -827,10 +817,11 @@ final class EditExpectation_Configuration implements EditExpectation_Configurati
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static EditExpectation_Configuration_mutable mutable() => EditExpectation_Configuration_mutable._(
-    _lib_editor_v1_type_catalog.ValueLocation.defaultInstance,
-    null,
-  );
+  static EditExpectation_Configuration_mutable mutable() =>
+      EditExpectation_Configuration_mutable._(
+        _lib_editor_v1_type_catalog.ValueLocation.defaultInstance,
+        null,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -838,31 +829,33 @@ final class EditExpectation_Configuration implements EditExpectation_Configurati
   EditExpectation_Configuration toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  EditExpectation_Configuration_mutable toMutable() => EditExpectation_Configuration_mutable._(
-    this.at,
-    this.expected,
-  );
+  EditExpectation_Configuration_mutable toMutable() =>
+      EditExpectation_Configuration_mutable._(this.at, this.expected);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! EditExpectation_Configuration) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.at,
-    this.expected,
-  ];
+  _core.List get _equality_proxy => [this.at, this.expected];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `EditExpectation_Configuration` instances.
-  static _skir.StructSerializer<EditExpectation_Configuration, EditExpectation_Configuration_mutable> get serializer {
+  static _skir.StructSerializer<
+    EditExpectation_Configuration,
+    EditExpectation_Configuration_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "at",
@@ -901,15 +894,13 @@ final class EditExpectation_Configuration implements EditExpectation_Configurati
 }
 
 /// Mutable version of [EditExpectation_Configuration].
-final class EditExpectation_Configuration_mutable implements EditExpectation_Configuration_orMutable {
+final class EditExpectation_Configuration_mutable
+    implements EditExpectation_Configuration_orMutable {
   _lib_editor_v1_type_catalog.ValueLocation_orMutable at;
   _lib_editor_v1_type_catalog.TypeSelection? expected;
   _skir.internal__UnrecognizedFields? _u;
 
-  EditExpectation_Configuration_mutable._(
-    this.at,
-    this.expected,
-  );
+  EditExpectation_Configuration_mutable._(this.at, this.expected);
 
   /// If the value of [at] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [at] and returns it.
@@ -918,16 +909,16 @@ final class EditExpectation_Configuration_mutable implements EditExpectation_Con
     if (value is _lib_editor_v1_type_catalog.ValueLocation_mutable) {
       return value;
     } else {
-      return this.at = (value as _lib_editor_v1_type_catalog.ValueLocation).toMutable();
+      return this.at = (value as _lib_editor_v1_type_catalog.ValueLocation)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  EditExpectation_Configuration toFrozen() => EditExpectation_Configuration(
-    at: this.at,
-    expected: this.expected,
-  ).._u = this._u;
+  EditExpectation_Configuration toFrozen() =>
+      EditExpectation_Configuration(at: this.at, expected: this.expected)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -984,12 +975,13 @@ final class EditExpectation_Links implements EditExpectation_Links_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static EditExpectation_Links_mutable mutable() => EditExpectation_Links_mutable._(
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
-    _lib_editor_v1_type_catalog.RelationId.defaultInstance,
-    TraversalDirection.unknown,
-    _skir.KeyedIterable.empty,
-  );
+  static EditExpectation_Links_mutable mutable() =>
+      EditExpectation_Links_mutable._(
+        _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
+        _lib_editor_v1_type_catalog.RelationId.defaultInstance,
+        TraversalDirection.unknown,
+        _skir.KeyedIterable.empty,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1008,7 +1000,10 @@ final class EditExpectation_Links implements EditExpectation_Links_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! EditExpectation_Links) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -1025,7 +1020,11 @@ final class EditExpectation_Links implements EditExpectation_Links_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `EditExpectation_Links` instances.
-  static _skir.StructSerializer<EditExpectation_Links, EditExpectation_Links_mutable> get serializer {
+  static _skir.StructSerializer<
+    EditExpectation_Links,
+    EditExpectation_Links_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "resource",
@@ -1058,9 +1057,7 @@ final class EditExpectation_Links implements EditExpectation_Links_orMutable {
         "expected",
         "expected",
         3,
-        _skir.Serializers.iterable(
-          LinkProjection.serializer,
-        ),
+        _skir.Serializers.iterable(LinkProjection.serializer),
         "",
         (it) => it.expected,
         (it, v) => it.expected = v,
@@ -1082,7 +1079,8 @@ final class EditExpectation_Links implements EditExpectation_Links_orMutable {
 }
 
 /// Mutable version of [EditExpectation_Links].
-final class EditExpectation_Links_mutable implements EditExpectation_Links_orMutable {
+final class EditExpectation_Links_mutable
+    implements EditExpectation_Links_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable resource;
   _lib_editor_v1_type_catalog.RelationId_orMutable contract;
   TraversalDirection direction;
@@ -1103,7 +1101,8 @@ final class EditExpectation_Links_mutable implements EditExpectation_Links_orMut
     if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
       return value;
     } else {
-      return this.resource = (value as _lib_editor_v1_type_catalog.ResourceId).toMutable();
+      return this.resource = (value as _lib_editor_v1_type_catalog.ResourceId)
+          .toMutable();
     }
   }
 
@@ -1114,7 +1113,8 @@ final class EditExpectation_Links_mutable implements EditExpectation_Links_orMut
     if (value is _lib_editor_v1_type_catalog.RelationId_mutable) {
       return value;
     } else {
-      return this.contract = (value as _lib_editor_v1_type_catalog.RelationId).toMutable();
+      return this.contract = (value as _lib_editor_v1_type_catalog.RelationId)
+          .toMutable();
     }
   }
 
@@ -1163,40 +1163,32 @@ sealed class EditExpectation {
   static const EditExpectation unknown = EditExpectation_unknown._instance;
 
   /// Create a 'value' variant wrapping around the given value.
-  factory EditExpectation.wrapValue(
-    EditExpectation_Value value
-  ) => EditExpectation_valueWrapper._(value);
+  factory EditExpectation.wrapValue(EditExpectation_Value value) =>
+      EditExpectation_valueWrapper._(value);
 
   /// Same as `wrapValue(EditExpectation_Value(...))`.
   factory EditExpectation.createValue({
     required _lib_editor_v1_type_catalog.ValueLocation_orMutable at,
     required _lib_editor_v1_type_catalog.DataValue? expected,
   }) => EditExpectation.wrapValue(
-    EditExpectation_Value(
-      at: at,
-      expected: expected,
-    )
+    EditExpectation_Value(at: at, expected: expected),
   );
 
   /// Create a 'resource' variant wrapping around the given value.
-  factory EditExpectation.wrapResource(
-    EditExpectation_Resource value
-  ) => EditExpectation_resourceWrapper._(value);
+  factory EditExpectation.wrapResource(EditExpectation_Resource value) =>
+      EditExpectation_resourceWrapper._(value);
 
   /// Same as `wrapResource(EditExpectation_Resource(...))`.
   factory EditExpectation.createResource({
     required _lib_editor_v1_type_catalog.ResourceId_orMutable id,
     required _lib_editor_v1_type_catalog.AuthoringRecord_orMutable? expected,
   }) => EditExpectation.wrapResource(
-    EditExpectation_Resource(
-      id: id,
-      expected: expected,
-    )
+    EditExpectation_Resource(id: id, expected: expected),
   );
 
   /// Create a 'resource_exists' variant wrapping around the given value.
   factory EditExpectation.wrapResourceExists(
-    EditExpectation_ResourceExists value
+    EditExpectation_ResourceExists value,
   ) => EditExpectation_resourceExistsWrapper._(value);
 
   /// Same as `wrapResourceExists(EditExpectation_ResourceExists(...))`.
@@ -1204,15 +1196,12 @@ sealed class EditExpectation {
     required _lib_editor_v1_type_catalog.ResourceId_orMutable id,
     required _core.bool expected,
   }) => EditExpectation.wrapResourceExists(
-    EditExpectation_ResourceExists(
-      id: id,
-      expected: expected,
-    )
+    EditExpectation_ResourceExists(id: id, expected: expected),
   );
 
   /// Create a 'configuration' variant wrapping around the given value.
   factory EditExpectation.wrapConfiguration(
-    EditExpectation_Configuration value
+    EditExpectation_Configuration value,
   ) => EditExpectation_configurationWrapper._(value);
 
   /// Same as `wrapConfiguration(EditExpectation_Configuration(...))`.
@@ -1220,21 +1209,17 @@ sealed class EditExpectation {
     required _lib_editor_v1_type_catalog.ValueLocation_orMutable at,
     required _lib_editor_v1_type_catalog.TypeSelection? expected,
   }) => EditExpectation.wrapConfiguration(
-    EditExpectation_Configuration(
-      at: at,
-      expected: expected,
-    )
+    EditExpectation_Configuration(at: at, expected: expected),
   );
 
   /// Create a 'resource_ids' variant wrapping around the given value.
   factory EditExpectation.wrapResourceIds(
-    _core.Iterable<_lib_editor_v1_type_catalog.ResourceId> value
+    _core.Iterable<_lib_editor_v1_type_catalog.ResourceId> value,
   ) => EditExpectation_resourceIdsWrapper._(value);
 
   /// Create a 'links' variant wrapping around the given value.
-  factory EditExpectation.wrapLinks(
-    EditExpectation_Links value
-  ) => EditExpectation_linksWrapper._(value);
+  factory EditExpectation.wrapLinks(EditExpectation_Links value) =>
+      EditExpectation_linksWrapper._(value);
 
   /// Same as `wrapLinks(EditExpectation_Links(...))`.
   factory EditExpectation.createLinks({
@@ -1248,7 +1233,7 @@ sealed class EditExpectation {
       contract: contract,
       direction: direction,
       expected: expected,
-    )
+    ),
   );
 
   /// Returns the kind of variant held by this EditExpectation.
@@ -1324,15 +1309,16 @@ sealed class EditExpectation {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/authoring_facts.skir:EditExpectation",
-    doc: "",
-    unknownInstance: EditExpectation_unknown._instance,
-    enumInstance: EditExpectation.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: EditExpectation_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/authoring_facts.skir:EditExpectation",
+        doc: "",
+        unknownInstance: EditExpectation_unknown._instance,
+        enumInstance: EditExpectation.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: EditExpectation_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `EditExpectation`.
@@ -1365,7 +1351,8 @@ final class EditExpectation_unknown implements EditExpectation {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, EditExpectation.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, EditExpectation.serializer);
 }
 
 sealed class _EditExpectation_wrapper implements EditExpectation {
@@ -1381,7 +1368,8 @@ sealed class _EditExpectation_wrapper implements EditExpectation {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, EditExpectation.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, EditExpectation.serializer);
 }
 
 final class EditExpectation_valueWrapper extends _EditExpectation_wrapper {
@@ -1402,7 +1390,8 @@ final class EditExpectation_resourceWrapper extends _EditExpectation_wrapper {
   EditExpectation_kind get kind => EditExpectation_kind.resourceWrapper;
 }
 
-final class EditExpectation_resourceExistsWrapper extends _EditExpectation_wrapper {
+final class EditExpectation_resourceExistsWrapper
+    extends _EditExpectation_wrapper {
   final EditExpectation_ResourceExists value;
 
   EditExpectation_resourceExistsWrapper._(this.value);
@@ -1411,7 +1400,8 @@ final class EditExpectation_resourceExistsWrapper extends _EditExpectation_wrapp
   EditExpectation_kind get kind => EditExpectation_kind.resourceExistsWrapper;
 }
 
-final class EditExpectation_configurationWrapper extends _EditExpectation_wrapper {
+final class EditExpectation_configurationWrapper
+    extends _EditExpectation_wrapper {
   final EditExpectation_Configuration value;
 
   EditExpectation_configurationWrapper._(this.value);
@@ -1420,7 +1410,8 @@ final class EditExpectation_configurationWrapper extends _EditExpectation_wrappe
   EditExpectation_kind get kind => EditExpectation_kind.configurationWrapper;
 }
 
-final class EditExpectation_resourceIdsWrapper extends _EditExpectation_wrapper {
+final class EditExpectation_resourceIdsWrapper
+    extends _EditExpectation_wrapper {
   final _core.Iterable<_lib_editor_v1_type_catalog.ResourceId> value;
 
   EditExpectation_resourceIdsWrapper._(this.value);
@@ -1460,15 +1451,9 @@ final class ExpectationConflict implements ExpectationConflict_orMutable {
   factory ExpectationConflict({
     required EditExpectation expected,
     required EditExpectation actual,
-  }) => ExpectationConflict._(
-    expected,
-    actual,
-  );
+  }) => ExpectationConflict._(expected, actual);
 
-  ExpectationConflict._(
-    this.expected,
-    this.actual,
-  );
+  ExpectationConflict._(this.expected, this.actual);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ExpectationConflict._(
@@ -1489,31 +1474,33 @@ final class ExpectationConflict implements ExpectationConflict_orMutable {
   ExpectationConflict toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ExpectationConflict_mutable toMutable() => ExpectationConflict_mutable._(
-    this.expected,
-    this.actual,
-  );
+  ExpectationConflict_mutable toMutable() =>
+      ExpectationConflict_mutable._(this.expected, this.actual);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ExpectationConflict) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.expected,
-    this.actual,
-  ];
+  _core.List get _equality_proxy => [this.expected, this.actual];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ExpectationConflict` instances.
-  static _skir.StructSerializer<ExpectationConflict, ExpectationConflict_mutable> get serializer {
+  static _skir.StructSerializer<
+    ExpectationConflict,
+    ExpectationConflict_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "expected",
@@ -1550,20 +1537,17 @@ final class ExpectationConflict implements ExpectationConflict_orMutable {
 }
 
 /// Mutable version of [ExpectationConflict].
-final class ExpectationConflict_mutable implements ExpectationConflict_orMutable {
+final class ExpectationConflict_mutable
+    implements ExpectationConflict_orMutable {
   EditExpectation expected;
   EditExpectation actual;
   _skir.internal__UnrecognizedFields? _u;
 
-  ExpectationConflict_mutable._(
-    this.expected,
-    this.actual,
-  );
+  ExpectationConflict_mutable._(this.expected, this.actual);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ExpectationConflict toFrozen() => ExpectationConflict(
-    expected: this.expected,
-    actual: this.actual,
-  ).._u = this._u;
+  ExpectationConflict toFrozen() =>
+      ExpectationConflict(expected: this.expected, actual: this.actual)
+        .._u = this._u;
 }

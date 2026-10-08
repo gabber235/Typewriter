@@ -12,6 +12,7 @@
 //   dart pub add skir_client
 
 import "dart:core" as _core;
+
 import "package:skir_client/skir_client.dart" as _skir;
 
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
@@ -34,7 +35,8 @@ import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 sealed class DiagnosticSeverity {
   /// Constant indicating an unknown `DiagnosticSeverity`.
   /// Default value for fields of type `DiagnosticSeverity`.
-  static const DiagnosticSeverity unknown = DiagnosticSeverity_unknown._instance;
+  static const DiagnosticSeverity unknown =
+      DiagnosticSeverity_unknown._instance;
 
   static const information = _DiagnosticSeverity_consts.informationConst;
   static const warning = _DiagnosticSeverity_consts.warningConst;
@@ -60,27 +62,22 @@ sealed class DiagnosticSeverity {
         "",
         warning,
       );
-      _serializerBuilder.addConstantVariant(
-        3,
-        "error",
-        "error",
-        "",
-        error,
-      );
+      _serializerBuilder.addConstantVariant(3, "error", "error", "", error);
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/diagnostic.skir:DiagnosticSeverity",
-    doc: "",
-    unknownInstance: DiagnosticSeverity_unknown._instance,
-    enumInstance: DiagnosticSeverity.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: DiagnosticSeverity_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/diagnostic.skir:DiagnosticSeverity",
+        doc: "",
+        unknownInstance: DiagnosticSeverity_unknown._instance,
+        enumInstance: DiagnosticSeverity.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: DiagnosticSeverity_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `DiagnosticSeverity`.
@@ -110,7 +107,8 @@ final class DiagnosticSeverity_unknown implements DiagnosticSeverity {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, DiagnosticSeverity.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, DiagnosticSeverity.serializer);
 }
 
 enum _DiagnosticSeverity_consts implements DiagnosticSeverity {
@@ -124,7 +122,8 @@ enum _DiagnosticSeverity_consts implements DiagnosticSeverity {
   const _DiagnosticSeverity_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, DiagnosticSeverity.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, DiagnosticSeverity.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -145,13 +144,9 @@ final class DeclarationOrigin implements DeclarationOrigin_orMutable {
 
   factory DeclarationOrigin({
     required _lib_editor_v1_type_catalog.DeclarationOwner_orMutable owner,
-  }) => DeclarationOrigin._(
-    owner.toFrozen(),
-  );
+  }) => DeclarationOrigin._(owner.toFrozen());
 
-  DeclarationOrigin._(
-    this.owner,
-  );
+  DeclarationOrigin._(this.owner);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = DeclarationOrigin._(
@@ -170,29 +165,30 @@ final class DeclarationOrigin implements DeclarationOrigin_orMutable {
   DeclarationOrigin toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  DeclarationOrigin_mutable toMutable() => DeclarationOrigin_mutable._(
-    this.owner,
-  );
+  DeclarationOrigin_mutable toMutable() =>
+      DeclarationOrigin_mutable._(this.owner);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! DeclarationOrigin) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.owner,
-  ];
+  _core.List get _equality_proxy => [this.owner];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `DeclarationOrigin` instances.
-  static _skir.StructSerializer<DeclarationOrigin, DeclarationOrigin_mutable> get serializer {
+  static _skir.StructSerializer<DeclarationOrigin, DeclarationOrigin_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "owner",
@@ -224,9 +220,7 @@ final class DeclarationOrigin_mutable implements DeclarationOrigin_orMutable {
   _lib_editor_v1_type_catalog.DeclarationOwner_orMutable owner;
   _skir.internal__UnrecognizedFields? _u;
 
-  DeclarationOrigin_mutable._(
-    this.owner,
-  );
+  DeclarationOrigin_mutable._(this.owner);
 
   /// If the value of [owner] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [owner] and returns it.
@@ -235,15 +229,15 @@ final class DeclarationOrigin_mutable implements DeclarationOrigin_orMutable {
     if (value is _lib_editor_v1_type_catalog.DeclarationOwner_mutable) {
       return value;
     } else {
-      return this.owner = (value as _lib_editor_v1_type_catalog.DeclarationOwner).toMutable();
+      return this.owner =
+          (value as _lib_editor_v1_type_catalog.DeclarationOwner).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  DeclarationOrigin toFrozen() => DeclarationOrigin(
-    owner: this.owner,
-  ).._u = this._u;
+  DeclarationOrigin toFrozen() =>
+      DeclarationOrigin(owner: this.owner).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -283,12 +277,7 @@ final class DeclarationDiagnostic implements DeclarationDiagnostic_orMutable {
     (field != null) ? field.toFrozen() : null,
   );
 
-  DeclarationDiagnostic._(
-    this.affected,
-    this.code,
-    this.origins,
-    this.field,
-  );
+  DeclarationDiagnostic._(this.affected, this.code, this.origins, this.field);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = DeclarationDiagnostic._(
@@ -300,12 +289,13 @@ final class DeclarationDiagnostic implements DeclarationDiagnostic_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static DeclarationDiagnostic_mutable mutable() => DeclarationDiagnostic_mutable._(
-    _lib_editor_v1_type_catalog.TypeDefinitionId.defaultInstance,
-    "",
-    _skir.KeyedIterable.empty,
-    null,
-  );
+  static DeclarationDiagnostic_mutable mutable() =>
+      DeclarationDiagnostic_mutable._(
+        _lib_editor_v1_type_catalog.TypeDefinitionId.defaultInstance,
+        "",
+        _skir.KeyedIterable.empty,
+        null,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -324,7 +314,10 @@ final class DeclarationDiagnostic implements DeclarationDiagnostic_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! DeclarationDiagnostic) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -341,7 +334,11 @@ final class DeclarationDiagnostic implements DeclarationDiagnostic_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `DeclarationDiagnostic` instances.
-  static _skir.StructSerializer<DeclarationDiagnostic, DeclarationDiagnostic_mutable> get serializer {
+  static _skir.StructSerializer<
+    DeclarationDiagnostic,
+    DeclarationDiagnostic_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "affected",
@@ -365,9 +362,7 @@ final class DeclarationDiagnostic implements DeclarationDiagnostic_orMutable {
         "origins",
         "origins",
         2,
-        _skir.Serializers.iterable(
-          DeclarationOrigin.serializer,
-        ),
+        _skir.Serializers.iterable(DeclarationOrigin.serializer),
         "",
         (it) => it.origins,
         (it, v) => it.origins = v,
@@ -400,7 +395,8 @@ final class DeclarationDiagnostic implements DeclarationDiagnostic_orMutable {
 }
 
 /// Mutable version of [DeclarationDiagnostic].
-final class DeclarationDiagnostic_mutable implements DeclarationDiagnostic_orMutable {
+final class DeclarationDiagnostic_mutable
+    implements DeclarationDiagnostic_orMutable {
   _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable affected;
   _core.String code;
   _core.Iterable<DeclarationOrigin_orMutable> origins;
@@ -421,7 +417,8 @@ final class DeclarationDiagnostic_mutable implements DeclarationDiagnostic_orMut
     if (value is _lib_editor_v1_type_catalog.TypeDefinitionId_mutable) {
       return value;
     } else {
-      return this.affected = (value as _lib_editor_v1_type_catalog.TypeDefinitionId).toMutable();
+      return this.affected =
+          (value as _lib_editor_v1_type_catalog.TypeDefinitionId).toMutable();
     }
   }
 
@@ -454,7 +451,8 @@ sealed class DiagnosticTemplate_orMutable {
   _core.String get code;
   _core.String get message;
   DiagnosticSeverity get severity;
-  _core.Iterable<_lib_editor_v1_type_catalog.RelativeFieldPattern_orMutable> get targets;
+  _core.Iterable<_lib_editor_v1_type_catalog.RelativeFieldPattern_orMutable>
+  get targets;
 
   DiagnosticTemplate toFrozen();
 }
@@ -468,14 +466,18 @@ final class DiagnosticTemplate implements DiagnosticTemplate_orMutable {
   @_core.override
   final DiagnosticSeverity severity;
   @_core.override
-  final _core.Iterable<_lib_editor_v1_type_catalog.RelativeFieldPattern> targets;
+  final _core.Iterable<_lib_editor_v1_type_catalog.RelativeFieldPattern>
+  targets;
   _skir.internal__UnrecognizedFields? _u;
 
   factory DiagnosticTemplate({
     required _core.String code,
     required _core.String message,
     required DiagnosticSeverity severity,
-    required _core.Iterable<_lib_editor_v1_type_catalog.RelativeFieldPattern_orMutable> targets,
+    required _core.Iterable<
+      _lib_editor_v1_type_catalog.RelativeFieldPattern_orMutable
+    >
+    targets,
   }) => DiagnosticTemplate._(
     code,
     message,
@@ -483,12 +485,7 @@ final class DiagnosticTemplate implements DiagnosticTemplate_orMutable {
     _skir.internal__frozenMappedCopy(targets, (it) => it.toFrozen()),
   );
 
-  DiagnosticTemplate._(
-    this.code,
-    this.message,
-    this.severity,
-    this.targets,
-  );
+  DiagnosticTemplate._(this.code, this.message, this.severity, this.targets);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = DiagnosticTemplate._(
@@ -524,7 +521,10 @@ final class DiagnosticTemplate implements DiagnosticTemplate_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! DiagnosticTemplate) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -541,7 +541,8 @@ final class DiagnosticTemplate implements DiagnosticTemplate_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `DiagnosticTemplate` instances.
-  static _skir.StructSerializer<DiagnosticTemplate, DiagnosticTemplate_mutable> get serializer {
+  static _skir.StructSerializer<DiagnosticTemplate, DiagnosticTemplate_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "code",
@@ -602,7 +603,8 @@ final class DiagnosticTemplate_mutable implements DiagnosticTemplate_orMutable {
   _core.String code;
   _core.String message;
   DiagnosticSeverity severity;
-  _core.Iterable<_lib_editor_v1_type_catalog.RelativeFieldPattern_orMutable> targets;
+  _core.Iterable<_lib_editor_v1_type_catalog.RelativeFieldPattern_orMutable>
+  targets;
   _skir.internal__UnrecognizedFields? _u;
 
   DiagnosticTemplate_mutable._(
@@ -614,9 +616,13 @@ final class DiagnosticTemplate_mutable implements DiagnosticTemplate_orMutable {
 
   /// If the value of [targets] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [targets] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.RelativeFieldPattern_orMutable> get mutableTargets {
+  _core.List<_lib_editor_v1_type_catalog.RelativeFieldPattern_orMutable>
+  get mutableTargets {
     final value = this.targets;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.RelativeFieldPattern_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_type_catalog.RelativeFieldPattern_orMutable
+        >) {
       return value;
     } else {
       return this.targets = _skir.internal__MutableList([...value]);
@@ -644,7 +650,8 @@ sealed class Diagnostic_orMutable {
   _core.String get message;
   DiagnosticSeverity get severity;
   _lib_editor_v1_type_catalog.ValueLocation_orMutable? get primary;
-  _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable> get related;
+  _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable>
+  get related;
 
   Diagnostic toFrozen();
 }
@@ -674,7 +681,8 @@ final class Diagnostic implements Diagnostic_orMutable {
     required _core.String message,
     required DiagnosticSeverity severity,
     required _lib_editor_v1_type_catalog.ValueLocation_orMutable? primary,
-    required _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable> related,
+    required _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable>
+    related,
   }) => Diagnostic._(
     id.toFrozen(),
     origin.toFrozen(),
@@ -738,7 +746,10 @@ final class Diagnostic implements Diagnostic_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! Diagnostic) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -871,7 +882,8 @@ final class Diagnostic_mutable implements Diagnostic_orMutable {
     if (value is _lib_editor_v1_type_catalog.DiagnosticId_mutable) {
       return value;
     } else {
-      return this.id = (value as _lib_editor_v1_type_catalog.DiagnosticId).toMutable();
+      return this.id = (value as _lib_editor_v1_type_catalog.DiagnosticId)
+          .toMutable();
     }
   }
 
@@ -882,15 +894,20 @@ final class Diagnostic_mutable implements Diagnostic_orMutable {
     if (value is _lib_editor_v1_type_catalog.RuleOrigin_mutable) {
       return value;
     } else {
-      return this.origin = (value as _lib_editor_v1_type_catalog.RuleOrigin).toMutable();
+      return this.origin = (value as _lib_editor_v1_type_catalog.RuleOrigin)
+          .toMutable();
     }
   }
 
   /// If the value of [related] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [related] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.ValueLocation_orMutable> get mutableRelated {
+  _core.List<_lib_editor_v1_type_catalog.ValueLocation_orMutable>
+  get mutableRelated {
     final value = this.related;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.ValueLocation_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_type_catalog.ValueLocation_orMutable
+        >) {
       return value;
     } else {
       return this.related = _skir.internal__MutableList([...value]);
@@ -932,15 +949,9 @@ final class ValueProblem implements ValueProblem_orMutable {
   factory ValueProblem({
     required _lib_editor_v1_type_catalog.ValueLocation_orMutable location,
     required _core.String code,
-  }) => ValueProblem._(
-    location.toFrozen(),
-    code,
-  );
+  }) => ValueProblem._(location.toFrozen(), code);
 
-  ValueProblem._(
-    this.location,
-    this.code,
-  );
+  ValueProblem._(this.location, this.code);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ValueProblem._(
@@ -961,31 +972,30 @@ final class ValueProblem implements ValueProblem_orMutable {
   ValueProblem toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ValueProblem_mutable toMutable() => ValueProblem_mutable._(
-    this.location,
-    this.code,
-  );
+  ValueProblem_mutable toMutable() =>
+      ValueProblem_mutable._(this.location, this.code);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ValueProblem) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.location,
-    this.code,
-  ];
+  _core.List get _equality_proxy => [this.location, this.code];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ValueProblem` instances.
-  static _skir.StructSerializer<ValueProblem, ValueProblem_mutable> get serializer {
+  static _skir.StructSerializer<ValueProblem, ValueProblem_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "location",
@@ -1027,10 +1037,7 @@ final class ValueProblem_mutable implements ValueProblem_orMutable {
   _core.String code;
   _skir.internal__UnrecognizedFields? _u;
 
-  ValueProblem_mutable._(
-    this.location,
-    this.code,
-  );
+  ValueProblem_mutable._(this.location, this.code);
 
   /// If the value of [location] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [location] and returns it.
@@ -1039,16 +1046,15 @@ final class ValueProblem_mutable implements ValueProblem_orMutable {
     if (value is _lib_editor_v1_type_catalog.ValueLocation_mutable) {
       return value;
     } else {
-      return this.location = (value as _lib_editor_v1_type_catalog.ValueLocation).toMutable();
+      return this.location =
+          (value as _lib_editor_v1_type_catalog.ValueLocation).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ValueProblem toFrozen() => ValueProblem(
-    location: this.location,
-    code: this.code,
-  ).._u = this._u;
+  ValueProblem toFrozen() =>
+      ValueProblem(location: this.location, code: this.code).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1065,7 +1071,8 @@ sealed class InitializationDiagnostic_orMutable {
 }
 
 /// Deeply immutable.
-final class InitializationDiagnostic implements InitializationDiagnostic_orMutable {
+final class InitializationDiagnostic
+    implements InitializationDiagnostic_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.FieldOwner? field;
   @_core.override
@@ -1096,21 +1103,12 @@ final class InitializationDiagnostic implements InitializationDiagnostic_orMutab
   );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = InitializationDiagnostic._(
-    null,
-    "",
-    "",
-    null,
-  );
+  static final defaultInstance = InitializationDiagnostic._(null, "", "", null);
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static InitializationDiagnostic_mutable mutable() => InitializationDiagnostic_mutable._(
-    null,
-    "",
-    "",
-    null,
-  );
+  static InitializationDiagnostic_mutable mutable() =>
+      InitializationDiagnostic_mutable._(null, "", "", null);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1118,18 +1116,22 @@ final class InitializationDiagnostic implements InitializationDiagnostic_orMutab
   InitializationDiagnostic toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  InitializationDiagnostic_mutable toMutable() => InitializationDiagnostic_mutable._(
-    this.field,
-    this.code,
-    this.message,
-    this.relativePath,
-  );
+  InitializationDiagnostic_mutable toMutable() =>
+      InitializationDiagnostic_mutable._(
+        this.field,
+        this.code,
+        this.message,
+        this.relativePath,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! InitializationDiagnostic) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -1146,7 +1148,11 @@ final class InitializationDiagnostic implements InitializationDiagnostic_orMutab
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `InitializationDiagnostic` instances.
-  static _skir.StructSerializer<InitializationDiagnostic, InitializationDiagnostic_mutable> get serializer {
+  static _skir.StructSerializer<
+    InitializationDiagnostic,
+    InitializationDiagnostic_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "field",
@@ -1205,7 +1211,8 @@ final class InitializationDiagnostic implements InitializationDiagnostic_orMutab
 }
 
 /// Mutable version of [InitializationDiagnostic].
-final class InitializationDiagnostic_mutable implements InitializationDiagnostic_orMutable {
+final class InitializationDiagnostic_mutable
+    implements InitializationDiagnostic_orMutable {
   _lib_editor_v1_type_catalog.FieldOwner_orMutable? field;
   _core.String code;
   _core.String message;
@@ -1251,15 +1258,9 @@ final class CompleteValue implements CompleteValue_orMutable {
   factory CompleteValue({
     required _lib_editor_v1_type_catalog.CheckedType_orMutable schema,
     required _lib_editor_v1_type_catalog.DataValue value,
-  }) => CompleteValue._(
-    schema.toFrozen(),
-    value,
-  );
+  }) => CompleteValue._(schema.toFrozen(), value);
 
-  CompleteValue._(
-    this.schema,
-    this.value,
-  );
+  CompleteValue._(this.schema, this.value);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CompleteValue._(
@@ -1280,31 +1281,30 @@ final class CompleteValue implements CompleteValue_orMutable {
   CompleteValue toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CompleteValue_mutable toMutable() => CompleteValue_mutable._(
-    this.schema,
-    this.value,
-  );
+  CompleteValue_mutable toMutable() =>
+      CompleteValue_mutable._(this.schema, this.value);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CompleteValue) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.schema,
-    this.value,
-  ];
+  _core.List get _equality_proxy => [this.schema, this.value];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CompleteValue` instances.
-  static _skir.StructSerializer<CompleteValue, CompleteValue_mutable> get serializer {
+  static _skir.StructSerializer<CompleteValue, CompleteValue_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "schema",
@@ -1346,10 +1346,7 @@ final class CompleteValue_mutable implements CompleteValue_orMutable {
   _lib_editor_v1_type_catalog.DataValue value;
   _skir.internal__UnrecognizedFields? _u;
 
-  CompleteValue_mutable._(
-    this.schema,
-    this.value,
-  );
+  CompleteValue_mutable._(this.schema, this.value);
 
   /// If the value of [schema] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [schema] and returns it.
@@ -1358,16 +1355,15 @@ final class CompleteValue_mutable implements CompleteValue_orMutable {
     if (value is _lib_editor_v1_type_catalog.CheckedType_mutable) {
       return value;
     } else {
-      return this.schema = (value as _lib_editor_v1_type_catalog.CheckedType).toMutable();
+      return this.schema = (value as _lib_editor_v1_type_catalog.CheckedType)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  CompleteValue toFrozen() => CompleteValue(
-    schema: this.schema,
-    value: this.value,
-  ).._u = this._u;
+  CompleteValue toFrozen() =>
+      CompleteValue(schema: this.schema, value: this.value).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1392,9 +1388,8 @@ sealed class StructuralResult {
   static const valid = _StructuralResult_consts.validConst;
 
   /// Create a 'invalid' variant wrapping around the given value.
-  factory StructuralResult.wrapInvalid(
-    _core.Iterable<ValueProblem> value
-  ) => StructuralResult_invalidWrapper._(value);
+  factory StructuralResult.wrapInvalid(_core.Iterable<ValueProblem> value) =>
+      StructuralResult_invalidWrapper._(value);
 
   /// Returns the kind of variant held by this StructuralResult.
   StructuralResult_kind get kind;
@@ -1402,20 +1397,12 @@ sealed class StructuralResult {
   /// Serializer for `StructuralResult` instances.
   static _skir.EnumSerializer<StructuralResult> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(
-        1,
-        "valid",
-        "valid",
-        "",
-        valid,
-      );
+      _serializerBuilder.addConstantVariant(1, "valid", "valid", "", valid);
       _serializerBuilder.addWrapperVariant(
         2,
         "invalid",
         "wrapInvalid",
-        _skir.Serializers.iterable(
-          ValueProblem.serializer,
-        ),
+        _skir.Serializers.iterable(ValueProblem.serializer),
         "",
         StructuralResult_invalidWrapper._,
         (it) => it.value,
@@ -1426,15 +1413,16 @@ sealed class StructuralResult {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/diagnostic.skir:StructuralResult",
-    doc: "",
-    unknownInstance: StructuralResult_unknown._instance,
-    enumInstance: StructuralResult.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: StructuralResult_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/diagnostic.skir:StructuralResult",
+        doc: "",
+        unknownInstance: StructuralResult_unknown._instance,
+        enumInstance: StructuralResult.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: StructuralResult_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `StructuralResult`.
@@ -1463,7 +1451,8 @@ final class StructuralResult_unknown implements StructuralResult {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, StructuralResult.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, StructuralResult.serializer);
 }
 
 enum _StructuralResult_consts implements StructuralResult {
@@ -1475,7 +1464,8 @@ enum _StructuralResult_consts implements StructuralResult {
   const _StructuralResult_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, StructuralResult.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, StructuralResult.serializer);
 }
 
 sealed class _StructuralResult_wrapper implements StructuralResult {
@@ -1491,7 +1481,8 @@ sealed class _StructuralResult_wrapper implements StructuralResult {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, StructuralResult.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, StructuralResult.serializer);
 }
 
 final class StructuralResult_invalidWrapper extends _StructuralResult_wrapper {
@@ -1521,33 +1512,29 @@ final class StructuralResult_invalidWrapper extends _StructuralResult_wrapper {
 sealed class CompletenessResult {
   /// Constant indicating an unknown `CompletenessResult`.
   /// Default value for fields of type `CompletenessResult`.
-  static const CompletenessResult unknown = CompletenessResult_unknown._instance;
+  static const CompletenessResult unknown =
+      CompletenessResult_unknown._instance;
 
   /// Create a 'complete' variant wrapping around the given value.
-  factory CompletenessResult.wrapComplete(
-    CompleteValue value
-  ) => CompletenessResult_completeWrapper._(value);
+  factory CompletenessResult.wrapComplete(CompleteValue value) =>
+      CompletenessResult_completeWrapper._(value);
 
   /// Same as `wrapComplete(CompleteValue(...))`.
   factory CompletenessResult.createComplete({
     required _lib_editor_v1_type_catalog.CheckedType_orMutable schema,
     required _lib_editor_v1_type_catalog.DataValue value,
   }) => CompletenessResult.wrapComplete(
-    CompleteValue(
-      schema: schema,
-      value: value,
-    )
+    CompleteValue(schema: schema, value: value),
   );
 
   /// Create a 'unfinished' variant wrapping around the given value.
   factory CompletenessResult.wrapUnfinished(
-    _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation> value
+    _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation> value,
   ) => CompletenessResult_unfinishedWrapper._(value);
 
   /// Create a 'invalid' variant wrapping around the given value.
-  factory CompletenessResult.wrapInvalid(
-    _core.Iterable<ValueProblem> value
-  ) => CompletenessResult_invalidWrapper._(value);
+  factory CompletenessResult.wrapInvalid(_core.Iterable<ValueProblem> value) =>
+      CompletenessResult_invalidWrapper._(value);
 
   /// Returns the kind of variant held by this CompletenessResult.
   CompletenessResult_kind get kind;
@@ -1581,9 +1568,7 @@ sealed class CompletenessResult {
         3,
         "invalid",
         "wrapInvalid",
-        _skir.Serializers.iterable(
-          ValueProblem.serializer,
-        ),
+        _skir.Serializers.iterable(ValueProblem.serializer),
         "",
         CompletenessResult_invalidWrapper._,
         (it) => it.value,
@@ -1594,15 +1579,16 @@ sealed class CompletenessResult {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/diagnostic.skir:CompletenessResult",
-    doc: "",
-    unknownInstance: CompletenessResult_unknown._instance,
-    enumInstance: CompletenessResult.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: CompletenessResult_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/diagnostic.skir:CompletenessResult",
+        doc: "",
+        unknownInstance: CompletenessResult_unknown._instance,
+        enumInstance: CompletenessResult.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: CompletenessResult_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `CompletenessResult`.
@@ -1632,7 +1618,8 @@ final class CompletenessResult_unknown implements CompletenessResult {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, CompletenessResult.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, CompletenessResult.serializer);
 }
 
 sealed class _CompletenessResult_wrapper implements CompletenessResult {
@@ -1648,10 +1635,12 @@ sealed class _CompletenessResult_wrapper implements CompletenessResult {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, CompletenessResult.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, CompletenessResult.serializer);
 }
 
-final class CompletenessResult_completeWrapper extends _CompletenessResult_wrapper {
+final class CompletenessResult_completeWrapper
+    extends _CompletenessResult_wrapper {
   final CompleteValue value;
 
   CompletenessResult_completeWrapper._(this.value);
@@ -1660,7 +1649,8 @@ final class CompletenessResult_completeWrapper extends _CompletenessResult_wrapp
   CompletenessResult_kind get kind => CompletenessResult_kind.completeWrapper;
 }
 
-final class CompletenessResult_unfinishedWrapper extends _CompletenessResult_wrapper {
+final class CompletenessResult_unfinishedWrapper
+    extends _CompletenessResult_wrapper {
   final _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation> value;
 
   CompletenessResult_unfinishedWrapper._(this.value);
@@ -1669,7 +1659,8 @@ final class CompletenessResult_unfinishedWrapper extends _CompletenessResult_wra
   CompletenessResult_kind get kind => CompletenessResult_kind.unfinishedWrapper;
 }
 
-final class CompletenessResult_invalidWrapper extends _CompletenessResult_wrapper {
+final class CompletenessResult_invalidWrapper
+    extends _CompletenessResult_wrapper {
   final _core.Iterable<ValueProblem> value;
 
   CompletenessResult_invalidWrapper._(this.value);

@@ -12,6 +12,7 @@
 //   dart pub add skir_client
 
 import "dart:core" as _core;
+
 import "package:skir_client/skir_client.dart" as _skir;
 
 import "./binding.dart" as _lib_editor_v1_binding;
@@ -40,15 +41,9 @@ final class SetValueAction implements SetValueAction_orMutable {
   factory SetValueAction({
     required _lib_editor_v1_binding.BindingRef_orMutable target,
     required _lib_editor_v1_expression.ExpressionNode value,
-  }) => SetValueAction._(
-    target.toFrozen(),
-    value,
-  );
+  }) => SetValueAction._(target.toFrozen(), value);
 
-  SetValueAction._(
-    this.target,
-    this.value,
-  );
+  SetValueAction._(this.target, this.value);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = SetValueAction._(
@@ -69,31 +64,30 @@ final class SetValueAction implements SetValueAction_orMutable {
   SetValueAction toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  SetValueAction_mutable toMutable() => SetValueAction_mutable._(
-    this.target,
-    this.value,
-  );
+  SetValueAction_mutable toMutable() =>
+      SetValueAction_mutable._(this.target, this.value);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! SetValueAction) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.target,
-    this.value,
-  ];
+  _core.List get _equality_proxy => [this.target, this.value];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `SetValueAction` instances.
-  static _skir.StructSerializer<SetValueAction, SetValueAction_mutable> get serializer {
+  static _skir.StructSerializer<SetValueAction, SetValueAction_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "target",
@@ -135,10 +129,7 @@ final class SetValueAction_mutable implements SetValueAction_orMutable {
   _lib_editor_v1_expression.ExpressionNode value;
   _skir.internal__UnrecognizedFields? _u;
 
-  SetValueAction_mutable._(
-    this.target,
-    this.value,
-  );
+  SetValueAction_mutable._(this.target, this.value);
 
   /// If the value of [target] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
@@ -147,16 +138,15 @@ final class SetValueAction_mutable implements SetValueAction_orMutable {
     if (value is _lib_editor_v1_binding.BindingRef_mutable) {
       return value;
     } else {
-      return this.target = (value as _lib_editor_v1_binding.BindingRef).toMutable();
+      return this.target = (value as _lib_editor_v1_binding.BindingRef)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  SetValueAction toFrozen() => SetValueAction(
-    target: this.target,
-    value: this.value,
-  ).._u = this._u;
+  SetValueAction toFrozen() =>
+      SetValueAction(target: this.target, value: this.value).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -191,11 +181,7 @@ final class InsertListItemAction implements InsertListItemAction_orMutable {
     value,
   );
 
-  InsertListItemAction._(
-    this.target,
-    this.after,
-    this.value,
-  );
+  InsertListItemAction._(this.target, this.after, this.value);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = InsertListItemAction._(
@@ -206,11 +192,12 @@ final class InsertListItemAction implements InsertListItemAction_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static InsertListItemAction_mutable mutable() => InsertListItemAction_mutable._(
-    _lib_editor_v1_binding.BindingRef.defaultInstance,
-    null,
-    _lib_editor_v1_expression.ExpressionNode.unknown,
-  );
+  static InsertListItemAction_mutable mutable() =>
+      InsertListItemAction_mutable._(
+        _lib_editor_v1_binding.BindingRef.defaultInstance,
+        null,
+        _lib_editor_v1_expression.ExpressionNode.unknown,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -218,33 +205,33 @@ final class InsertListItemAction implements InsertListItemAction_orMutable {
   InsertListItemAction toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  InsertListItemAction_mutable toMutable() => InsertListItemAction_mutable._(
-    this.target,
-    this.after,
-    this.value,
-  );
+  InsertListItemAction_mutable toMutable() =>
+      InsertListItemAction_mutable._(this.target, this.after, this.value);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! InsertListItemAction) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.target,
-    this.after,
-    this.value,
-  ];
+  _core.List get _equality_proxy => [this.target, this.after, this.value];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `InsertListItemAction` instances.
-  static _skir.StructSerializer<InsertListItemAction, InsertListItemAction_mutable> get serializer {
+  static _skir.StructSerializer<
+    InsertListItemAction,
+    InsertListItemAction_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "target",
@@ -292,17 +279,14 @@ final class InsertListItemAction implements InsertListItemAction_orMutable {
 }
 
 /// Mutable version of [InsertListItemAction].
-final class InsertListItemAction_mutable implements InsertListItemAction_orMutable {
+final class InsertListItemAction_mutable
+    implements InsertListItemAction_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable target;
   _lib_editor_v1_type_catalog.ItemId_orMutable? after;
   _lib_editor_v1_expression.ExpressionNode value;
   _skir.internal__UnrecognizedFields? _u;
 
-  InsertListItemAction_mutable._(
-    this.target,
-    this.after,
-    this.value,
-  );
+  InsertListItemAction_mutable._(this.target, this.after, this.value);
 
   /// If the value of [target] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
@@ -311,7 +295,8 @@ final class InsertListItemAction_mutable implements InsertListItemAction_orMutab
     if (value is _lib_editor_v1_binding.BindingRef_mutable) {
       return value;
     } else {
-      return this.target = (value as _lib_editor_v1_binding.BindingRef).toMutable();
+      return this.target = (value as _lib_editor_v1_binding.BindingRef)
+          .toMutable();
     }
   }
 
@@ -346,15 +331,9 @@ final class AppendListItemAction implements AppendListItemAction_orMutable {
   factory AppendListItemAction({
     required _lib_editor_v1_binding.BindingRef_orMutable target,
     required _lib_editor_v1_expression.ExpressionNode value,
-  }) => AppendListItemAction._(
-    target.toFrozen(),
-    value,
-  );
+  }) => AppendListItemAction._(target.toFrozen(), value);
 
-  AppendListItemAction._(
-    this.target,
-    this.value,
-  );
+  AppendListItemAction._(this.target, this.value);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = AppendListItemAction._(
@@ -364,10 +343,11 @@ final class AppendListItemAction implements AppendListItemAction_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static AppendListItemAction_mutable mutable() => AppendListItemAction_mutable._(
-    _lib_editor_v1_binding.BindingRef.defaultInstance,
-    _lib_editor_v1_expression.ExpressionNode.unknown,
-  );
+  static AppendListItemAction_mutable mutable() =>
+      AppendListItemAction_mutable._(
+        _lib_editor_v1_binding.BindingRef.defaultInstance,
+        _lib_editor_v1_expression.ExpressionNode.unknown,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -375,31 +355,33 @@ final class AppendListItemAction implements AppendListItemAction_orMutable {
   AppendListItemAction toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  AppendListItemAction_mutable toMutable() => AppendListItemAction_mutable._(
-    this.target,
-    this.value,
-  );
+  AppendListItemAction_mutable toMutable() =>
+      AppendListItemAction_mutable._(this.target, this.value);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! AppendListItemAction) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.target,
-    this.value,
-  ];
+  _core.List get _equality_proxy => [this.target, this.value];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `AppendListItemAction` instances.
-  static _skir.StructSerializer<AppendListItemAction, AppendListItemAction_mutable> get serializer {
+  static _skir.StructSerializer<
+    AppendListItemAction,
+    AppendListItemAction_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "target",
@@ -436,15 +418,13 @@ final class AppendListItemAction implements AppendListItemAction_orMutable {
 }
 
 /// Mutable version of [AppendListItemAction].
-final class AppendListItemAction_mutable implements AppendListItemAction_orMutable {
+final class AppendListItemAction_mutable
+    implements AppendListItemAction_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable target;
   _lib_editor_v1_expression.ExpressionNode value;
   _skir.internal__UnrecognizedFields? _u;
 
-  AppendListItemAction_mutable._(
-    this.target,
-    this.value,
-  );
+  AppendListItemAction_mutable._(this.target, this.value);
 
   /// If the value of [target] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
@@ -453,16 +433,16 @@ final class AppendListItemAction_mutable implements AppendListItemAction_orMutab
     if (value is _lib_editor_v1_binding.BindingRef_mutable) {
       return value;
     } else {
-      return this.target = (value as _lib_editor_v1_binding.BindingRef).toMutable();
+      return this.target = (value as _lib_editor_v1_binding.BindingRef)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  AppendListItemAction toFrozen() => AppendListItemAction(
-    target: this.target,
-    value: this.value,
-  ).._u = this._u;
+  AppendListItemAction toFrozen() =>
+      AppendListItemAction(target: this.target, value: this.value)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -487,15 +467,9 @@ final class RemoveListItemAction implements RemoveListItemAction_orMutable {
   factory RemoveListItemAction({
     required _lib_editor_v1_binding.BindingRef_orMutable target,
     required _lib_editor_v1_type_catalog.ItemId_orMutable item,
-  }) => RemoveListItemAction._(
-    target.toFrozen(),
-    item.toFrozen(),
-  );
+  }) => RemoveListItemAction._(target.toFrozen(), item.toFrozen());
 
-  RemoveListItemAction._(
-    this.target,
-    this.item,
-  );
+  RemoveListItemAction._(this.target, this.item);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RemoveListItemAction._(
@@ -505,10 +479,11 @@ final class RemoveListItemAction implements RemoveListItemAction_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static RemoveListItemAction_mutable mutable() => RemoveListItemAction_mutable._(
-    _lib_editor_v1_binding.BindingRef.defaultInstance,
-    _lib_editor_v1_type_catalog.ItemId.defaultInstance,
-  );
+  static RemoveListItemAction_mutable mutable() =>
+      RemoveListItemAction_mutable._(
+        _lib_editor_v1_binding.BindingRef.defaultInstance,
+        _lib_editor_v1_type_catalog.ItemId.defaultInstance,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -516,31 +491,33 @@ final class RemoveListItemAction implements RemoveListItemAction_orMutable {
   RemoveListItemAction toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  RemoveListItemAction_mutable toMutable() => RemoveListItemAction_mutable._(
-    this.target,
-    this.item,
-  );
+  RemoveListItemAction_mutable toMutable() =>
+      RemoveListItemAction_mutable._(this.target, this.item);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RemoveListItemAction) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.target,
-    this.item,
-  ];
+  _core.List get _equality_proxy => [this.target, this.item];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `RemoveListItemAction` instances.
-  static _skir.StructSerializer<RemoveListItemAction, RemoveListItemAction_mutable> get serializer {
+  static _skir.StructSerializer<
+    RemoveListItemAction,
+    RemoveListItemAction_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "target",
@@ -577,15 +554,13 @@ final class RemoveListItemAction implements RemoveListItemAction_orMutable {
 }
 
 /// Mutable version of [RemoveListItemAction].
-final class RemoveListItemAction_mutable implements RemoveListItemAction_orMutable {
+final class RemoveListItemAction_mutable
+    implements RemoveListItemAction_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable target;
   _lib_editor_v1_type_catalog.ItemId_orMutable item;
   _skir.internal__UnrecognizedFields? _u;
 
-  RemoveListItemAction_mutable._(
-    this.target,
-    this.item,
-  );
+  RemoveListItemAction_mutable._(this.target, this.item);
 
   /// If the value of [target] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
@@ -594,7 +569,8 @@ final class RemoveListItemAction_mutable implements RemoveListItemAction_orMutab
     if (value is _lib_editor_v1_binding.BindingRef_mutable) {
       return value;
     } else {
-      return this.target = (value as _lib_editor_v1_binding.BindingRef).toMutable();
+      return this.target = (value as _lib_editor_v1_binding.BindingRef)
+          .toMutable();
     }
   }
 
@@ -605,16 +581,15 @@ final class RemoveListItemAction_mutable implements RemoveListItemAction_orMutab
     if (value is _lib_editor_v1_type_catalog.ItemId_mutable) {
       return value;
     } else {
-      return this.item = (value as _lib_editor_v1_type_catalog.ItemId).toMutable();
+      return this.item = (value as _lib_editor_v1_type_catalog.ItemId)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  RemoveListItemAction toFrozen() => RemoveListItemAction(
-    target: this.target,
-    item: this.item,
-  ).._u = this._u;
+  RemoveListItemAction toFrozen() =>
+      RemoveListItemAction(target: this.target, item: this.item).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -629,7 +604,8 @@ sealed class DuplicateListItemAction_orMutable {
 }
 
 /// Deeply immutable.
-final class DuplicateListItemAction implements DuplicateListItemAction_orMutable {
+final class DuplicateListItemAction
+    implements DuplicateListItemAction_orMutable {
   @_core.override
   final _lib_editor_v1_binding.BindingRef target;
   @_core.override
@@ -639,15 +615,9 @@ final class DuplicateListItemAction implements DuplicateListItemAction_orMutable
   factory DuplicateListItemAction({
     required _lib_editor_v1_binding.BindingRef_orMutable target,
     required _lib_editor_v1_type_catalog.ItemId_orMutable item,
-  }) => DuplicateListItemAction._(
-    target.toFrozen(),
-    item.toFrozen(),
-  );
+  }) => DuplicateListItemAction._(target.toFrozen(), item.toFrozen());
 
-  DuplicateListItemAction._(
-    this.target,
-    this.item,
-  );
+  DuplicateListItemAction._(this.target, this.item);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = DuplicateListItemAction._(
@@ -657,10 +627,11 @@ final class DuplicateListItemAction implements DuplicateListItemAction_orMutable
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static DuplicateListItemAction_mutable mutable() => DuplicateListItemAction_mutable._(
-    _lib_editor_v1_binding.BindingRef.defaultInstance,
-    _lib_editor_v1_type_catalog.ItemId.defaultInstance,
-  );
+  static DuplicateListItemAction_mutable mutable() =>
+      DuplicateListItemAction_mutable._(
+        _lib_editor_v1_binding.BindingRef.defaultInstance,
+        _lib_editor_v1_type_catalog.ItemId.defaultInstance,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -668,31 +639,33 @@ final class DuplicateListItemAction implements DuplicateListItemAction_orMutable
   DuplicateListItemAction toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  DuplicateListItemAction_mutable toMutable() => DuplicateListItemAction_mutable._(
-    this.target,
-    this.item,
-  );
+  DuplicateListItemAction_mutable toMutable() =>
+      DuplicateListItemAction_mutable._(this.target, this.item);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! DuplicateListItemAction) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.target,
-    this.item,
-  ];
+  _core.List get _equality_proxy => [this.target, this.item];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `DuplicateListItemAction` instances.
-  static _skir.StructSerializer<DuplicateListItemAction, DuplicateListItemAction_mutable> get serializer {
+  static _skir.StructSerializer<
+    DuplicateListItemAction,
+    DuplicateListItemAction_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "target",
@@ -729,15 +702,13 @@ final class DuplicateListItemAction implements DuplicateListItemAction_orMutable
 }
 
 /// Mutable version of [DuplicateListItemAction].
-final class DuplicateListItemAction_mutable implements DuplicateListItemAction_orMutable {
+final class DuplicateListItemAction_mutable
+    implements DuplicateListItemAction_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable target;
   _lib_editor_v1_type_catalog.ItemId_orMutable item;
   _skir.internal__UnrecognizedFields? _u;
 
-  DuplicateListItemAction_mutable._(
-    this.target,
-    this.item,
-  );
+  DuplicateListItemAction_mutable._(this.target, this.item);
 
   /// If the value of [target] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
@@ -746,7 +717,8 @@ final class DuplicateListItemAction_mutable implements DuplicateListItemAction_o
     if (value is _lib_editor_v1_binding.BindingRef_mutable) {
       return value;
     } else {
-      return this.target = (value as _lib_editor_v1_binding.BindingRef).toMutable();
+      return this.target = (value as _lib_editor_v1_binding.BindingRef)
+          .toMutable();
     }
   }
 
@@ -757,16 +729,16 @@ final class DuplicateListItemAction_mutable implements DuplicateListItemAction_o
     if (value is _lib_editor_v1_type_catalog.ItemId_mutable) {
       return value;
     } else {
-      return this.item = (value as _lib_editor_v1_type_catalog.ItemId).toMutable();
+      return this.item = (value as _lib_editor_v1_type_catalog.ItemId)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  DuplicateListItemAction toFrozen() => DuplicateListItemAction(
-    target: this.target,
-    item: this.item,
-  ).._u = this._u;
+  DuplicateListItemAction toFrozen() =>
+      DuplicateListItemAction(target: this.target, item: this.item)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -801,11 +773,7 @@ final class MoveListItemAction implements MoveListItemAction_orMutable {
     (after != null) ? after.toFrozen() : null,
   );
 
-  MoveListItemAction._(
-    this.target,
-    this.item,
-    this.after,
-  );
+  MoveListItemAction._(this.target, this.item, this.after);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = MoveListItemAction._(
@@ -828,33 +796,30 @@ final class MoveListItemAction implements MoveListItemAction_orMutable {
   MoveListItemAction toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  MoveListItemAction_mutable toMutable() => MoveListItemAction_mutable._(
-    this.target,
-    this.item,
-    this.after,
-  );
+  MoveListItemAction_mutable toMutable() =>
+      MoveListItemAction_mutable._(this.target, this.item, this.after);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! MoveListItemAction) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.target,
-    this.item,
-    this.after,
-  ];
+  _core.List get _equality_proxy => [this.target, this.item, this.after];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `MoveListItemAction` instances.
-  static _skir.StructSerializer<MoveListItemAction, MoveListItemAction_mutable> get serializer {
+  static _skir.StructSerializer<MoveListItemAction, MoveListItemAction_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "target",
@@ -908,11 +873,7 @@ final class MoveListItemAction_mutable implements MoveListItemAction_orMutable {
   _lib_editor_v1_type_catalog.ItemId_orMutable? after;
   _skir.internal__UnrecognizedFields? _u;
 
-  MoveListItemAction_mutable._(
-    this.target,
-    this.item,
-    this.after,
-  );
+  MoveListItemAction_mutable._(this.target, this.item, this.after);
 
   /// If the value of [target] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
@@ -921,7 +882,8 @@ final class MoveListItemAction_mutable implements MoveListItemAction_orMutable {
     if (value is _lib_editor_v1_binding.BindingRef_mutable) {
       return value;
     } else {
-      return this.target = (value as _lib_editor_v1_binding.BindingRef).toMutable();
+      return this.target = (value as _lib_editor_v1_binding.BindingRef)
+          .toMutable();
     }
   }
 
@@ -932,7 +894,8 @@ final class MoveListItemAction_mutable implements MoveListItemAction_orMutable {
     if (value is _lib_editor_v1_type_catalog.ItemId_mutable) {
       return value;
     } else {
-      return this.item = (value as _lib_editor_v1_type_catalog.ItemId).toMutable();
+      return this.item = (value as _lib_editor_v1_type_catalog.ItemId)
+          .toMutable();
     }
   }
 
@@ -971,17 +934,9 @@ final class InsertMapRowAction implements InsertMapRowAction_orMutable {
     required _lib_editor_v1_binding.BindingRef_orMutable target,
     required _lib_editor_v1_expression.ExpressionNode key,
     required _lib_editor_v1_expression.ExpressionNode value,
-  }) => InsertMapRowAction._(
-    target.toFrozen(),
-    key,
-    value,
-  );
+  }) => InsertMapRowAction._(target.toFrozen(), key, value);
 
-  InsertMapRowAction._(
-    this.target,
-    this.key,
-    this.value,
-  );
+  InsertMapRowAction._(this.target, this.key, this.value);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = InsertMapRowAction._(
@@ -1004,33 +959,30 @@ final class InsertMapRowAction implements InsertMapRowAction_orMutable {
   InsertMapRowAction toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  InsertMapRowAction_mutable toMutable() => InsertMapRowAction_mutable._(
-    this.target,
-    this.key,
-    this.value,
-  );
+  InsertMapRowAction_mutable toMutable() =>
+      InsertMapRowAction_mutable._(this.target, this.key, this.value);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! InsertMapRowAction) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.target,
-    this.key,
-    this.value,
-  ];
+  _core.List get _equality_proxy => [this.target, this.key, this.value];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `InsertMapRowAction` instances.
-  static _skir.StructSerializer<InsertMapRowAction, InsertMapRowAction_mutable> get serializer {
+  static _skir.StructSerializer<InsertMapRowAction, InsertMapRowAction_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "target",
@@ -1082,11 +1034,7 @@ final class InsertMapRowAction_mutable implements InsertMapRowAction_orMutable {
   _lib_editor_v1_expression.ExpressionNode value;
   _skir.internal__UnrecognizedFields? _u;
 
-  InsertMapRowAction_mutable._(
-    this.target,
-    this.key,
-    this.value,
-  );
+  InsertMapRowAction_mutable._(this.target, this.key, this.value);
 
   /// If the value of [target] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
@@ -1095,17 +1043,16 @@ final class InsertMapRowAction_mutable implements InsertMapRowAction_orMutable {
     if (value is _lib_editor_v1_binding.BindingRef_mutable) {
       return value;
     } else {
-      return this.target = (value as _lib_editor_v1_binding.BindingRef).toMutable();
+      return this.target = (value as _lib_editor_v1_binding.BindingRef)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  InsertMapRowAction toFrozen() => InsertMapRowAction(
-    target: this.target,
-    key: this.key,
-    value: this.value,
-  ).._u = this._u;
+  InsertMapRowAction toFrozen() =>
+      InsertMapRowAction(target: this.target, key: this.key, value: this.value)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1138,19 +1085,9 @@ final class UpdateMapRowAction implements UpdateMapRowAction_orMutable {
     required _lib_editor_v1_type_catalog.ItemId_orMutable row,
     required _lib_editor_v1_expression.ExpressionNode key,
     required _lib_editor_v1_expression.ExpressionNode value,
-  }) => UpdateMapRowAction._(
-    target.toFrozen(),
-    row.toFrozen(),
-    key,
-    value,
-  );
+  }) => UpdateMapRowAction._(target.toFrozen(), row.toFrozen(), key, value);
 
-  UpdateMapRowAction._(
-    this.target,
-    this.row,
-    this.key,
-    this.value,
-  );
+  UpdateMapRowAction._(this.target, this.row, this.key, this.value);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = UpdateMapRowAction._(
@@ -1175,18 +1112,17 @@ final class UpdateMapRowAction implements UpdateMapRowAction_orMutable {
   UpdateMapRowAction toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  UpdateMapRowAction_mutable toMutable() => UpdateMapRowAction_mutable._(
-    this.target,
-    this.row,
-    this.key,
-    this.value,
-  );
+  UpdateMapRowAction_mutable toMutable() =>
+      UpdateMapRowAction_mutable._(this.target, this.row, this.key, this.value);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! UpdateMapRowAction) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -1203,7 +1139,8 @@ final class UpdateMapRowAction implements UpdateMapRowAction_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `UpdateMapRowAction` instances.
-  static _skir.StructSerializer<UpdateMapRowAction, UpdateMapRowAction_mutable> get serializer {
+  static _skir.StructSerializer<UpdateMapRowAction, UpdateMapRowAction_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "target",
@@ -1265,12 +1202,7 @@ final class UpdateMapRowAction_mutable implements UpdateMapRowAction_orMutable {
   _lib_editor_v1_expression.ExpressionNode value;
   _skir.internal__UnrecognizedFields? _u;
 
-  UpdateMapRowAction_mutable._(
-    this.target,
-    this.row,
-    this.key,
-    this.value,
-  );
+  UpdateMapRowAction_mutable._(this.target, this.row, this.key, this.value);
 
   /// If the value of [target] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
@@ -1279,7 +1211,8 @@ final class UpdateMapRowAction_mutable implements UpdateMapRowAction_orMutable {
     if (value is _lib_editor_v1_binding.BindingRef_mutable) {
       return value;
     } else {
-      return this.target = (value as _lib_editor_v1_binding.BindingRef).toMutable();
+      return this.target = (value as _lib_editor_v1_binding.BindingRef)
+          .toMutable();
     }
   }
 
@@ -1290,7 +1223,8 @@ final class UpdateMapRowAction_mutable implements UpdateMapRowAction_orMutable {
     if (value is _lib_editor_v1_type_catalog.ItemId_mutable) {
       return value;
     } else {
-      return this.row = (value as _lib_editor_v1_type_catalog.ItemId).toMutable();
+      return this.row = (value as _lib_editor_v1_type_catalog.ItemId)
+          .toMutable();
     }
   }
 
@@ -1326,15 +1260,9 @@ final class RemoveMapRowAction implements RemoveMapRowAction_orMutable {
   factory RemoveMapRowAction({
     required _lib_editor_v1_binding.BindingRef_orMutable target,
     required _lib_editor_v1_type_catalog.ItemId_orMutable row,
-  }) => RemoveMapRowAction._(
-    target.toFrozen(),
-    row.toFrozen(),
-  );
+  }) => RemoveMapRowAction._(target.toFrozen(), row.toFrozen());
 
-  RemoveMapRowAction._(
-    this.target,
-    this.row,
-  );
+  RemoveMapRowAction._(this.target, this.row);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RemoveMapRowAction._(
@@ -1355,31 +1283,30 @@ final class RemoveMapRowAction implements RemoveMapRowAction_orMutable {
   RemoveMapRowAction toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  RemoveMapRowAction_mutable toMutable() => RemoveMapRowAction_mutable._(
-    this.target,
-    this.row,
-  );
+  RemoveMapRowAction_mutable toMutable() =>
+      RemoveMapRowAction_mutable._(this.target, this.row);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RemoveMapRowAction) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.target,
-    this.row,
-  ];
+  _core.List get _equality_proxy => [this.target, this.row];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `RemoveMapRowAction` instances.
-  static _skir.StructSerializer<RemoveMapRowAction, RemoveMapRowAction_mutable> get serializer {
+  static _skir.StructSerializer<RemoveMapRowAction, RemoveMapRowAction_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "target",
@@ -1421,10 +1348,7 @@ final class RemoveMapRowAction_mutable implements RemoveMapRowAction_orMutable {
   _lib_editor_v1_type_catalog.ItemId_orMutable row;
   _skir.internal__UnrecognizedFields? _u;
 
-  RemoveMapRowAction_mutable._(
-    this.target,
-    this.row,
-  );
+  RemoveMapRowAction_mutable._(this.target, this.row);
 
   /// If the value of [target] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
@@ -1433,7 +1357,8 @@ final class RemoveMapRowAction_mutable implements RemoveMapRowAction_orMutable {
     if (value is _lib_editor_v1_binding.BindingRef_mutable) {
       return value;
     } else {
-      return this.target = (value as _lib_editor_v1_binding.BindingRef).toMutable();
+      return this.target = (value as _lib_editor_v1_binding.BindingRef)
+          .toMutable();
     }
   }
 
@@ -1444,16 +1369,15 @@ final class RemoveMapRowAction_mutable implements RemoveMapRowAction_orMutable {
     if (value is _lib_editor_v1_type_catalog.ItemId_mutable) {
       return value;
     } else {
-      return this.row = (value as _lib_editor_v1_type_catalog.ItemId).toMutable();
+      return this.row = (value as _lib_editor_v1_type_catalog.ItemId)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  RemoveMapRowAction toFrozen() => RemoveMapRowAction(
-    target: this.target,
-    row: this.row,
-  ).._u = this._u;
+  RemoveMapRowAction toFrozen() =>
+      RemoveMapRowAction(target: this.target, row: this.row).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1478,15 +1402,9 @@ final class ChooseFormAction implements ChooseFormAction_orMutable {
   factory ChooseFormAction({
     required _lib_editor_v1_binding.BindingRef_orMutable target,
     required _lib_editor_v1_type_catalog.TypeUse type,
-  }) => ChooseFormAction._(
-    target.toFrozen(),
-    type,
-  );
+  }) => ChooseFormAction._(target.toFrozen(), type);
 
-  ChooseFormAction._(
-    this.target,
-    this.type,
-  );
+  ChooseFormAction._(this.target, this.type);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ChooseFormAction._(
@@ -1507,31 +1425,30 @@ final class ChooseFormAction implements ChooseFormAction_orMutable {
   ChooseFormAction toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ChooseFormAction_mutable toMutable() => ChooseFormAction_mutable._(
-    this.target,
-    this.type,
-  );
+  ChooseFormAction_mutable toMutable() =>
+      ChooseFormAction_mutable._(this.target, this.type);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ChooseFormAction) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.target,
-    this.type,
-  ];
+  _core.List get _equality_proxy => [this.target, this.type];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ChooseFormAction` instances.
-  static _skir.StructSerializer<ChooseFormAction, ChooseFormAction_mutable> get serializer {
+  static _skir.StructSerializer<ChooseFormAction, ChooseFormAction_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "target",
@@ -1573,10 +1490,7 @@ final class ChooseFormAction_mutable implements ChooseFormAction_orMutable {
   _lib_editor_v1_type_catalog.TypeUse type;
   _skir.internal__UnrecognizedFields? _u;
 
-  ChooseFormAction_mutable._(
-    this.target,
-    this.type,
-  );
+  ChooseFormAction_mutable._(this.target, this.type);
 
   /// If the value of [target] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
@@ -1585,16 +1499,15 @@ final class ChooseFormAction_mutable implements ChooseFormAction_orMutable {
     if (value is _lib_editor_v1_binding.BindingRef_mutable) {
       return value;
     } else {
-      return this.target = (value as _lib_editor_v1_binding.BindingRef).toMutable();
+      return this.target = (value as _lib_editor_v1_binding.BindingRef)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ChooseFormAction toFrozen() => ChooseFormAction(
-    target: this.target,
-    type: this.type,
-  ).._u = this._u;
+  ChooseFormAction toFrozen() =>
+      ChooseFormAction(target: this.target, type: this.type).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1625,25 +1538,20 @@ sealed class LocalEditorAction {
   static const LocalEditorAction unknown = LocalEditorAction_unknown._instance;
 
   /// Create a 'set_value' variant wrapping around the given value.
-  factory LocalEditorAction.wrapSetValue(
-    SetValueAction value
-  ) => LocalEditorAction_setValueWrapper._(value);
+  factory LocalEditorAction.wrapSetValue(SetValueAction value) =>
+      LocalEditorAction_setValueWrapper._(value);
 
   /// Same as `wrapSetValue(SetValueAction(...))`.
   factory LocalEditorAction.createSetValue({
     required _lib_editor_v1_binding.BindingRef_orMutable target,
     required _lib_editor_v1_expression.ExpressionNode value,
   }) => LocalEditorAction.wrapSetValue(
-    SetValueAction(
-      target: target,
-      value: value,
-    )
+    SetValueAction(target: target, value: value),
   );
 
   /// Create a 'insert_list_item' variant wrapping around the given value.
-  factory LocalEditorAction.wrapInsertListItem(
-    InsertListItemAction value
-  ) => LocalEditorAction_insertListItemWrapper._(value);
+  factory LocalEditorAction.wrapInsertListItem(InsertListItemAction value) =>
+      LocalEditorAction_insertListItemWrapper._(value);
 
   /// Same as `wrapInsertListItem(InsertListItemAction(...))`.
   factory LocalEditorAction.createInsertListItem({
@@ -1651,48 +1559,36 @@ sealed class LocalEditorAction {
     required _lib_editor_v1_type_catalog.ItemId_orMutable? after,
     required _lib_editor_v1_expression.ExpressionNode value,
   }) => LocalEditorAction.wrapInsertListItem(
-    InsertListItemAction(
-      target: target,
-      after: after,
-      value: value,
-    )
+    InsertListItemAction(target: target, after: after, value: value),
   );
 
   /// Create a 'append_list_item' variant wrapping around the given value.
-  factory LocalEditorAction.wrapAppendListItem(
-    AppendListItemAction value
-  ) => LocalEditorAction_appendListItemWrapper._(value);
+  factory LocalEditorAction.wrapAppendListItem(AppendListItemAction value) =>
+      LocalEditorAction_appendListItemWrapper._(value);
 
   /// Same as `wrapAppendListItem(AppendListItemAction(...))`.
   factory LocalEditorAction.createAppendListItem({
     required _lib_editor_v1_binding.BindingRef_orMutable target,
     required _lib_editor_v1_expression.ExpressionNode value,
   }) => LocalEditorAction.wrapAppendListItem(
-    AppendListItemAction(
-      target: target,
-      value: value,
-    )
+    AppendListItemAction(target: target, value: value),
   );
 
   /// Create a 'remove_list_item' variant wrapping around the given value.
-  factory LocalEditorAction.wrapRemoveListItem(
-    RemoveListItemAction value
-  ) => LocalEditorAction_removeListItemWrapper._(value);
+  factory LocalEditorAction.wrapRemoveListItem(RemoveListItemAction value) =>
+      LocalEditorAction_removeListItemWrapper._(value);
 
   /// Same as `wrapRemoveListItem(RemoveListItemAction(...))`.
   factory LocalEditorAction.createRemoveListItem({
     required _lib_editor_v1_binding.BindingRef_orMutable target,
     required _lib_editor_v1_type_catalog.ItemId_orMutable item,
   }) => LocalEditorAction.wrapRemoveListItem(
-    RemoveListItemAction(
-      target: target,
-      item: item,
-    )
+    RemoveListItemAction(target: target, item: item),
   );
 
   /// Create a 'duplicate_list_item' variant wrapping around the given value.
   factory LocalEditorAction.wrapDuplicateListItem(
-    DuplicateListItemAction value
+    DuplicateListItemAction value,
   ) => LocalEditorAction_duplicateListItemWrapper._(value);
 
   /// Same as `wrapDuplicateListItem(DuplicateListItemAction(...))`.
@@ -1700,16 +1596,12 @@ sealed class LocalEditorAction {
     required _lib_editor_v1_binding.BindingRef_orMutable target,
     required _lib_editor_v1_type_catalog.ItemId_orMutable item,
   }) => LocalEditorAction.wrapDuplicateListItem(
-    DuplicateListItemAction(
-      target: target,
-      item: item,
-    )
+    DuplicateListItemAction(target: target, item: item),
   );
 
   /// Create a 'move_list_item' variant wrapping around the given value.
-  factory LocalEditorAction.wrapMoveListItem(
-    MoveListItemAction value
-  ) => LocalEditorAction_moveListItemWrapper._(value);
+  factory LocalEditorAction.wrapMoveListItem(MoveListItemAction value) =>
+      LocalEditorAction_moveListItemWrapper._(value);
 
   /// Same as `wrapMoveListItem(MoveListItemAction(...))`.
   factory LocalEditorAction.createMoveListItem({
@@ -1717,17 +1609,12 @@ sealed class LocalEditorAction {
     required _lib_editor_v1_type_catalog.ItemId_orMutable item,
     required _lib_editor_v1_type_catalog.ItemId_orMutable? after,
   }) => LocalEditorAction.wrapMoveListItem(
-    MoveListItemAction(
-      target: target,
-      item: item,
-      after: after,
-    )
+    MoveListItemAction(target: target, item: item, after: after),
   );
 
   /// Create a 'insert_map_row' variant wrapping around the given value.
-  factory LocalEditorAction.wrapInsertMapRow(
-    InsertMapRowAction value
-  ) => LocalEditorAction_insertMapRowWrapper._(value);
+  factory LocalEditorAction.wrapInsertMapRow(InsertMapRowAction value) =>
+      LocalEditorAction_insertMapRowWrapper._(value);
 
   /// Same as `wrapInsertMapRow(InsertMapRowAction(...))`.
   factory LocalEditorAction.createInsertMapRow({
@@ -1735,17 +1622,12 @@ sealed class LocalEditorAction {
     required _lib_editor_v1_expression.ExpressionNode key,
     required _lib_editor_v1_expression.ExpressionNode value,
   }) => LocalEditorAction.wrapInsertMapRow(
-    InsertMapRowAction(
-      target: target,
-      key: key,
-      value: value,
-    )
+    InsertMapRowAction(target: target, key: key, value: value),
   );
 
   /// Create a 'update_map_row' variant wrapping around the given value.
-  factory LocalEditorAction.wrapUpdateMapRow(
-    UpdateMapRowAction value
-  ) => LocalEditorAction_updateMapRowWrapper._(value);
+  factory LocalEditorAction.wrapUpdateMapRow(UpdateMapRowAction value) =>
+      LocalEditorAction_updateMapRowWrapper._(value);
 
   /// Same as `wrapUpdateMapRow(UpdateMapRowAction(...))`.
   factory LocalEditorAction.createUpdateMapRow({
@@ -1754,44 +1636,31 @@ sealed class LocalEditorAction {
     required _lib_editor_v1_expression.ExpressionNode key,
     required _lib_editor_v1_expression.ExpressionNode value,
   }) => LocalEditorAction.wrapUpdateMapRow(
-    UpdateMapRowAction(
-      target: target,
-      row: row,
-      key: key,
-      value: value,
-    )
+    UpdateMapRowAction(target: target, row: row, key: key, value: value),
   );
 
   /// Create a 'remove_map_row' variant wrapping around the given value.
-  factory LocalEditorAction.wrapRemoveMapRow(
-    RemoveMapRowAction value
-  ) => LocalEditorAction_removeMapRowWrapper._(value);
+  factory LocalEditorAction.wrapRemoveMapRow(RemoveMapRowAction value) =>
+      LocalEditorAction_removeMapRowWrapper._(value);
 
   /// Same as `wrapRemoveMapRow(RemoveMapRowAction(...))`.
   factory LocalEditorAction.createRemoveMapRow({
     required _lib_editor_v1_binding.BindingRef_orMutable target,
     required _lib_editor_v1_type_catalog.ItemId_orMutable row,
   }) => LocalEditorAction.wrapRemoveMapRow(
-    RemoveMapRowAction(
-      target: target,
-      row: row,
-    )
+    RemoveMapRowAction(target: target, row: row),
   );
 
   /// Create a 'choose_form' variant wrapping around the given value.
-  factory LocalEditorAction.wrapChooseForm(
-    ChooseFormAction value
-  ) => LocalEditorAction_chooseFormWrapper._(value);
+  factory LocalEditorAction.wrapChooseForm(ChooseFormAction value) =>
+      LocalEditorAction_chooseFormWrapper._(value);
 
   /// Same as `wrapChooseForm(ChooseFormAction(...))`.
   factory LocalEditorAction.createChooseForm({
     required _lib_editor_v1_binding.BindingRef_orMutable target,
     required _lib_editor_v1_type_catalog.TypeUse type,
   }) => LocalEditorAction.wrapChooseForm(
-    ChooseFormAction(
-      target: target,
-      type: type,
-    )
+    ChooseFormAction(target: target, type: type),
   );
 
   /// Returns the kind of variant held by this LocalEditorAction.
@@ -1905,15 +1774,16 @@ sealed class LocalEditorAction {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/action.skir:LocalEditorAction",
-    doc: "",
-    unknownInstance: LocalEditorAction_unknown._instance,
-    enumInstance: LocalEditorAction.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: LocalEditorAction_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/action.skir:LocalEditorAction",
+        doc: "",
+        unknownInstance: LocalEditorAction_unknown._instance,
+        enumInstance: LocalEditorAction.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: LocalEditorAction_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `LocalEditorAction`.
@@ -1950,7 +1820,8 @@ final class LocalEditorAction_unknown implements LocalEditorAction {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, LocalEditorAction.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, LocalEditorAction.serializer);
 }
 
 sealed class _LocalEditorAction_wrapper implements LocalEditorAction {
@@ -1966,10 +1837,12 @@ sealed class _LocalEditorAction_wrapper implements LocalEditorAction {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, LocalEditorAction.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, LocalEditorAction.serializer);
 }
 
-final class LocalEditorAction_setValueWrapper extends _LocalEditorAction_wrapper {
+final class LocalEditorAction_setValueWrapper
+    extends _LocalEditorAction_wrapper {
   final SetValueAction value;
 
   LocalEditorAction_setValueWrapper._(this.value);
@@ -1978,43 +1851,52 @@ final class LocalEditorAction_setValueWrapper extends _LocalEditorAction_wrapper
   LocalEditorAction_kind get kind => LocalEditorAction_kind.setValueWrapper;
 }
 
-final class LocalEditorAction_insertListItemWrapper extends _LocalEditorAction_wrapper {
+final class LocalEditorAction_insertListItemWrapper
+    extends _LocalEditorAction_wrapper {
   final InsertListItemAction value;
 
   LocalEditorAction_insertListItemWrapper._(this.value);
 
   @_core.override
-  LocalEditorAction_kind get kind => LocalEditorAction_kind.insertListItemWrapper;
+  LocalEditorAction_kind get kind =>
+      LocalEditorAction_kind.insertListItemWrapper;
 }
 
-final class LocalEditorAction_appendListItemWrapper extends _LocalEditorAction_wrapper {
+final class LocalEditorAction_appendListItemWrapper
+    extends _LocalEditorAction_wrapper {
   final AppendListItemAction value;
 
   LocalEditorAction_appendListItemWrapper._(this.value);
 
   @_core.override
-  LocalEditorAction_kind get kind => LocalEditorAction_kind.appendListItemWrapper;
+  LocalEditorAction_kind get kind =>
+      LocalEditorAction_kind.appendListItemWrapper;
 }
 
-final class LocalEditorAction_removeListItemWrapper extends _LocalEditorAction_wrapper {
+final class LocalEditorAction_removeListItemWrapper
+    extends _LocalEditorAction_wrapper {
   final RemoveListItemAction value;
 
   LocalEditorAction_removeListItemWrapper._(this.value);
 
   @_core.override
-  LocalEditorAction_kind get kind => LocalEditorAction_kind.removeListItemWrapper;
+  LocalEditorAction_kind get kind =>
+      LocalEditorAction_kind.removeListItemWrapper;
 }
 
-final class LocalEditorAction_duplicateListItemWrapper extends _LocalEditorAction_wrapper {
+final class LocalEditorAction_duplicateListItemWrapper
+    extends _LocalEditorAction_wrapper {
   final DuplicateListItemAction value;
 
   LocalEditorAction_duplicateListItemWrapper._(this.value);
 
   @_core.override
-  LocalEditorAction_kind get kind => LocalEditorAction_kind.duplicateListItemWrapper;
+  LocalEditorAction_kind get kind =>
+      LocalEditorAction_kind.duplicateListItemWrapper;
 }
 
-final class LocalEditorAction_moveListItemWrapper extends _LocalEditorAction_wrapper {
+final class LocalEditorAction_moveListItemWrapper
+    extends _LocalEditorAction_wrapper {
   final MoveListItemAction value;
 
   LocalEditorAction_moveListItemWrapper._(this.value);
@@ -2023,7 +1905,8 @@ final class LocalEditorAction_moveListItemWrapper extends _LocalEditorAction_wra
   LocalEditorAction_kind get kind => LocalEditorAction_kind.moveListItemWrapper;
 }
 
-final class LocalEditorAction_insertMapRowWrapper extends _LocalEditorAction_wrapper {
+final class LocalEditorAction_insertMapRowWrapper
+    extends _LocalEditorAction_wrapper {
   final InsertMapRowAction value;
 
   LocalEditorAction_insertMapRowWrapper._(this.value);
@@ -2032,7 +1915,8 @@ final class LocalEditorAction_insertMapRowWrapper extends _LocalEditorAction_wra
   LocalEditorAction_kind get kind => LocalEditorAction_kind.insertMapRowWrapper;
 }
 
-final class LocalEditorAction_updateMapRowWrapper extends _LocalEditorAction_wrapper {
+final class LocalEditorAction_updateMapRowWrapper
+    extends _LocalEditorAction_wrapper {
   final UpdateMapRowAction value;
 
   LocalEditorAction_updateMapRowWrapper._(this.value);
@@ -2041,7 +1925,8 @@ final class LocalEditorAction_updateMapRowWrapper extends _LocalEditorAction_wra
   LocalEditorAction_kind get kind => LocalEditorAction_kind.updateMapRowWrapper;
 }
 
-final class LocalEditorAction_removeMapRowWrapper extends _LocalEditorAction_wrapper {
+final class LocalEditorAction_removeMapRowWrapper
+    extends _LocalEditorAction_wrapper {
   final RemoveMapRowAction value;
 
   LocalEditorAction_removeMapRowWrapper._(this.value);
@@ -2050,7 +1935,8 @@ final class LocalEditorAction_removeMapRowWrapper extends _LocalEditorAction_wra
   LocalEditorAction_kind get kind => LocalEditorAction_kind.removeMapRowWrapper;
 }
 
-final class LocalEditorAction_chooseFormWrapper extends _LocalEditorAction_wrapper {
+final class LocalEditorAction_chooseFormWrapper
+    extends _LocalEditorAction_wrapper {
   final ChooseFormAction value;
 
   LocalEditorAction_chooseFormWrapper._(this.value);
@@ -2094,7 +1980,10 @@ final class ReloadRealmAction implements ReloadRealmAction_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ReloadRealmAction) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -2106,7 +1995,8 @@ final class ReloadRealmAction implements ReloadRealmAction_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ReloadRealmAction` instances.
-  static _skir.StructSerializer<ReloadRealmAction, ReloadRealmAction_mutable> get serializer {
+  static _skir.StructSerializer<ReloadRealmAction, ReloadRealmAction_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -2147,7 +2037,8 @@ sealed class CommandCapabilityAction_orMutable {
 }
 
 /// Deeply immutable.
-final class CommandCapabilityAction implements CommandCapabilityAction_orMutable {
+final class CommandCapabilityAction
+    implements CommandCapabilityAction_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.CapabilityId capabilityId;
   @_core.override
@@ -2157,15 +2048,9 @@ final class CommandCapabilityAction implements CommandCapabilityAction_orMutable
   factory CommandCapabilityAction({
     required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
     required _lib_editor_v1_expression.ExpressionNode payload,
-  }) => CommandCapabilityAction._(
-    capabilityId.toFrozen(),
-    payload,
-  );
+  }) => CommandCapabilityAction._(capabilityId.toFrozen(), payload);
 
-  CommandCapabilityAction._(
-    this.capabilityId,
-    this.payload,
-  );
+  CommandCapabilityAction._(this.capabilityId, this.payload);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CommandCapabilityAction._(
@@ -2175,10 +2060,11 @@ final class CommandCapabilityAction implements CommandCapabilityAction_orMutable
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CommandCapabilityAction_mutable mutable() => CommandCapabilityAction_mutable._(
-    _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
-    _lib_editor_v1_expression.ExpressionNode.unknown,
-  );
+  static CommandCapabilityAction_mutable mutable() =>
+      CommandCapabilityAction_mutable._(
+        _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
+        _lib_editor_v1_expression.ExpressionNode.unknown,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -2186,31 +2072,33 @@ final class CommandCapabilityAction implements CommandCapabilityAction_orMutable
   CommandCapabilityAction toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CommandCapabilityAction_mutable toMutable() => CommandCapabilityAction_mutable._(
-    this.capabilityId,
-    this.payload,
-  );
+  CommandCapabilityAction_mutable toMutable() =>
+      CommandCapabilityAction_mutable._(this.capabilityId, this.payload);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CommandCapabilityAction) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.capabilityId,
-    this.payload,
-  ];
+  _core.List get _equality_proxy => [this.capabilityId, this.payload];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CommandCapabilityAction` instances.
-  static _skir.StructSerializer<CommandCapabilityAction, CommandCapabilityAction_mutable> get serializer {
+  static _skir.StructSerializer<
+    CommandCapabilityAction,
+    CommandCapabilityAction_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "capability_id",
@@ -2247,15 +2135,13 @@ final class CommandCapabilityAction implements CommandCapabilityAction_orMutable
 }
 
 /// Mutable version of [CommandCapabilityAction].
-final class CommandCapabilityAction_mutable implements CommandCapabilityAction_orMutable {
+final class CommandCapabilityAction_mutable
+    implements CommandCapabilityAction_orMutable {
   _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId;
   _lib_editor_v1_expression.ExpressionNode payload;
   _skir.internal__UnrecognizedFields? _u;
 
-  CommandCapabilityAction_mutable._(
-    this.capabilityId,
-    this.payload,
-  );
+  CommandCapabilityAction_mutable._(this.capabilityId, this.payload);
 
   /// If the value of [capabilityId] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
@@ -2264,7 +2150,8 @@ final class CommandCapabilityAction_mutable implements CommandCapabilityAction_o
     if (value is _lib_editor_v1_type_catalog.CapabilityId_mutable) {
       return value;
     } else {
-      return this.capabilityId = (value as _lib_editor_v1_type_catalog.CapabilityId).toMutable();
+      return this.capabilityId =
+          (value as _lib_editor_v1_type_catalog.CapabilityId).toMutable();
     }
   }
 
@@ -2296,29 +2183,23 @@ sealed class RealmEditorAction {
   static const RealmEditorAction unknown = RealmEditorAction_unknown._instance;
 
   /// Create a 'reload' variant wrapping around the given value.
-  factory RealmEditorAction.wrapReload(
-    ReloadRealmAction value
-  ) => RealmEditorAction_reloadWrapper._(value);
+  factory RealmEditorAction.wrapReload(ReloadRealmAction value) =>
+      RealmEditorAction_reloadWrapper._(value);
 
   /// Same as `wrapReload(ReloadRealmAction(...))`.
-  factory RealmEditorAction.createReload() => RealmEditorAction.wrapReload(
-    ReloadRealmAction()
-  );
+  factory RealmEditorAction.createReload() =>
+      RealmEditorAction.wrapReload(ReloadRealmAction());
 
   /// Create a 'command' variant wrapping around the given value.
-  factory RealmEditorAction.wrapCommand(
-    CommandCapabilityAction value
-  ) => RealmEditorAction_commandWrapper._(value);
+  factory RealmEditorAction.wrapCommand(CommandCapabilityAction value) =>
+      RealmEditorAction_commandWrapper._(value);
 
   /// Same as `wrapCommand(CommandCapabilityAction(...))`.
   factory RealmEditorAction.createCommand({
     required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
     required _lib_editor_v1_expression.ExpressionNode payload,
   }) => RealmEditorAction.wrapCommand(
-    CommandCapabilityAction(
-      capabilityId: capabilityId,
-      payload: payload,
-    )
+    CommandCapabilityAction(capabilityId: capabilityId, payload: payload),
   );
 
   /// Returns the kind of variant held by this RealmEditorAction.
@@ -2352,15 +2233,16 @@ sealed class RealmEditorAction {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/action.skir:RealmEditorAction",
-    doc: "",
-    unknownInstance: RealmEditorAction_unknown._instance,
-    enumInstance: RealmEditorAction.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: RealmEditorAction_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/action.skir:RealmEditorAction",
+        doc: "",
+        unknownInstance: RealmEditorAction_unknown._instance,
+        enumInstance: RealmEditorAction.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: RealmEditorAction_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `RealmEditorAction`.
@@ -2389,7 +2271,8 @@ final class RealmEditorAction_unknown implements RealmEditorAction {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, RealmEditorAction.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, RealmEditorAction.serializer);
 }
 
 sealed class _RealmEditorAction_wrapper implements RealmEditorAction {
@@ -2405,7 +2288,8 @@ sealed class _RealmEditorAction_wrapper implements RealmEditorAction {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, RealmEditorAction.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, RealmEditorAction.serializer);
 }
 
 final class RealmEditorAction_reloadWrapper extends _RealmEditorAction_wrapper {
@@ -2417,7 +2301,8 @@ final class RealmEditorAction_reloadWrapper extends _RealmEditorAction_wrapper {
   RealmEditorAction_kind get kind => RealmEditorAction_kind.reloadWrapper;
 }
 
-final class RealmEditorAction_commandWrapper extends _RealmEditorAction_wrapper {
+final class RealmEditorAction_commandWrapper
+    extends _RealmEditorAction_wrapper {
   final CommandCapabilityAction value;
 
   RealmEditorAction_commandWrapper._(this.value);
@@ -2446,14 +2331,12 @@ sealed class EditorAction {
   static const EditorAction unknown = EditorAction_unknown._instance;
 
   /// Create a 'local' variant wrapping around the given value.
-  factory EditorAction.wrapLocal(
-    LocalEditorAction value
-  ) => EditorAction_localWrapper._(value);
+  factory EditorAction.wrapLocal(LocalEditorAction value) =>
+      EditorAction_localWrapper._(value);
 
   /// Create a 'realm' variant wrapping around the given value.
-  factory EditorAction.wrapRealm(
-    RealmEditorAction value
-  ) => EditorAction_realmWrapper._(value);
+  factory EditorAction.wrapRealm(RealmEditorAction value) =>
+      EditorAction_realmWrapper._(value);
 
   /// Returns the kind of variant held by this EditorAction.
   EditorAction_kind get kind;
@@ -2486,15 +2369,16 @@ sealed class EditorAction {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/action.skir:EditorAction",
-    doc: "",
-    unknownInstance: EditorAction_unknown._instance,
-    enumInstance: EditorAction.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: EditorAction_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/action.skir:EditorAction",
+        doc: "",
+        unknownInstance: EditorAction_unknown._instance,
+        enumInstance: EditorAction.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: EditorAction_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `EditorAction`.
@@ -2523,7 +2407,8 @@ final class EditorAction_unknown implements EditorAction {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, EditorAction.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, EditorAction.serializer);
 }
 
 sealed class _EditorAction_wrapper implements EditorAction {
@@ -2539,7 +2424,8 @@ sealed class _EditorAction_wrapper implements EditorAction {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, EditorAction.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, EditorAction.serializer);
 }
 
 final class EditorAction_localWrapper extends _EditorAction_wrapper {

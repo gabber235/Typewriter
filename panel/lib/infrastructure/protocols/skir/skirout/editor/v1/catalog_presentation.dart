@@ -12,6 +12,7 @@
 //   dart pub add skir_client
 
 import "dart:core" as _core;
+
 import "package:skir_client/skir_client.dart" as _skir;
 
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
@@ -29,7 +30,8 @@ sealed class CatalogPresentationSubject_orMutable {
 }
 
 /// Deeply immutable.
-final class CatalogPresentationSubject implements CatalogPresentationSubject_orMutable {
+final class CatalogPresentationSubject
+    implements CatalogPresentationSubject_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.TypeUse target;
   @_core.override
@@ -39,15 +41,9 @@ final class CatalogPresentationSubject implements CatalogPresentationSubject_orM
   factory CatalogPresentationSubject({
     required _lib_editor_v1_type_catalog.TypeUse target,
     required _lib_editor_v1_typed_value.PortableValue_orMutable descriptor,
-  }) => CatalogPresentationSubject._(
-    target,
-    descriptor.toFrozen(),
-  );
+  }) => CatalogPresentationSubject._(target, descriptor.toFrozen());
 
-  CatalogPresentationSubject._(
-    this.target,
-    this.descriptor,
-  );
+  CatalogPresentationSubject._(this.target, this.descriptor);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CatalogPresentationSubject._(
@@ -57,10 +53,11 @@ final class CatalogPresentationSubject implements CatalogPresentationSubject_orM
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CatalogPresentationSubject_mutable mutable() => CatalogPresentationSubject_mutable._(
-    _lib_editor_v1_type_catalog.TypeUse.unknown,
-    _lib_editor_v1_typed_value.PortableValue.defaultInstance,
-  );
+  static CatalogPresentationSubject_mutable mutable() =>
+      CatalogPresentationSubject_mutable._(
+        _lib_editor_v1_type_catalog.TypeUse.unknown,
+        _lib_editor_v1_typed_value.PortableValue.defaultInstance,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -68,31 +65,33 @@ final class CatalogPresentationSubject implements CatalogPresentationSubject_orM
   CatalogPresentationSubject toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CatalogPresentationSubject_mutable toMutable() => CatalogPresentationSubject_mutable._(
-    this.target,
-    this.descriptor,
-  );
+  CatalogPresentationSubject_mutable toMutable() =>
+      CatalogPresentationSubject_mutable._(this.target, this.descriptor);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CatalogPresentationSubject) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.target,
-    this.descriptor,
-  ];
+  _core.List get _equality_proxy => [this.target, this.descriptor];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CatalogPresentationSubject` instances.
-  static _skir.StructSerializer<CatalogPresentationSubject, CatalogPresentationSubject_mutable> get serializer {
+  static _skir.StructSerializer<
+    CatalogPresentationSubject,
+    CatalogPresentationSubject_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "target",
@@ -129,15 +128,13 @@ final class CatalogPresentationSubject implements CatalogPresentationSubject_orM
 }
 
 /// Mutable version of [CatalogPresentationSubject].
-final class CatalogPresentationSubject_mutable implements CatalogPresentationSubject_orMutable {
+final class CatalogPresentationSubject_mutable
+    implements CatalogPresentationSubject_orMutable {
   _lib_editor_v1_type_catalog.TypeUse target;
   _lib_editor_v1_typed_value.PortableValue_orMutable descriptor;
   _skir.internal__UnrecognizedFields? _u;
 
-  CatalogPresentationSubject_mutable._(
-    this.target,
-    this.descriptor,
-  );
+  CatalogPresentationSubject_mutable._(this.target, this.descriptor);
 
   /// If the value of [descriptor] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [descriptor] and returns it.
@@ -146,7 +143,8 @@ final class CatalogPresentationSubject_mutable implements CatalogPresentationSub
     if (value is _lib_editor_v1_typed_value.PortableValue_mutable) {
       return value;
     } else {
-      return this.descriptor = (value as _lib_editor_v1_typed_value.PortableValue).toMutable();
+      return this.descriptor =
+          (value as _lib_editor_v1_typed_value.PortableValue).toMutable();
     }
   }
 

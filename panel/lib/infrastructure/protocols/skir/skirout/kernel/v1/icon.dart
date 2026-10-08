@@ -12,6 +12,7 @@
 //   dart pub add skir_client
 
 import "dart:core" as _core;
+
 import "package:skir_client/skir_client.dart" as _skir;
 
 // -----------------------------------------------------------------------------
@@ -34,14 +35,10 @@ sealed class Icon {
   static const Icon unknown = Icon_unknown._instance;
 
   /// Create a 'iconify' variant wrapping around the given value.
-  factory Icon.wrapIconify(
-    _core.String value
-  ) => Icon_iconifyWrapper._(value);
+  factory Icon.wrapIconify(_core.String value) => Icon_iconifyWrapper._(value);
 
   /// Create a 'svg' variant wrapping around the given value.
-  factory Icon.wrapSvg(
-    _core.String value
-  ) => Icon_svgWrapper._(value);
+  factory Icon.wrapSvg(_core.String value) => Icon_svgWrapper._(value);
 
   /// Returns the kind of variant held by this Icon.
   Icon_kind get kind;
@@ -74,15 +71,16 @@ sealed class Icon {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "kernel/v1/icon.skir:Icon",
-    doc: "",
-    unknownInstance: Icon_unknown._instance,
-    enumInstance: Icon.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: Icon_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "kernel/v1/icon.skir:Icon",
+        doc: "",
+        unknownInstance: Icon_unknown._instance,
+        enumInstance: Icon.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: Icon_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `Icon`.

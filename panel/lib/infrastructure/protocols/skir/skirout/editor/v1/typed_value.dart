@@ -12,6 +12,7 @@
 //   dart pub add skir_client
 
 import "dart:core" as _core;
+
 import "package:skir_client/skir_client.dart" as _skir;
 
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
@@ -38,15 +39,9 @@ final class PortableValue implements PortableValue_orMutable {
   factory PortableValue({
     required _lib_editor_v1_type_catalog.TypeUse actualType,
     required _lib_editor_v1_type_catalog.DataValue payload,
-  }) => PortableValue._(
-    actualType,
-    payload,
-  );
+  }) => PortableValue._(actualType, payload);
 
-  PortableValue._(
-    this.actualType,
-    this.payload,
-  );
+  PortableValue._(this.actualType, this.payload);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PortableValue._(
@@ -67,31 +62,30 @@ final class PortableValue implements PortableValue_orMutable {
   PortableValue toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PortableValue_mutable toMutable() => PortableValue_mutable._(
-    this.actualType,
-    this.payload,
-  );
+  PortableValue_mutable toMutable() =>
+      PortableValue_mutable._(this.actualType, this.payload);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PortableValue) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.actualType,
-    this.payload,
-  ];
+  _core.List get _equality_proxy => [this.actualType, this.payload];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PortableValue` instances.
-  static _skir.StructSerializer<PortableValue, PortableValue_mutable> get serializer {
+  static _skir.StructSerializer<PortableValue, PortableValue_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "actual_type",
@@ -133,15 +127,11 @@ final class PortableValue_mutable implements PortableValue_orMutable {
   _lib_editor_v1_type_catalog.DataValue payload;
   _skir.internal__UnrecognizedFields? _u;
 
-  PortableValue_mutable._(
-    this.actualType,
-    this.payload,
-  );
+  PortableValue_mutable._(this.actualType, this.payload);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  PortableValue toFrozen() => PortableValue(
-    actualType: this.actualType,
-    payload: this.payload,
-  ).._u = this._u;
+  PortableValue toFrozen() =>
+      PortableValue(actualType: this.actualType, payload: this.payload)
+        .._u = this._u;
 }

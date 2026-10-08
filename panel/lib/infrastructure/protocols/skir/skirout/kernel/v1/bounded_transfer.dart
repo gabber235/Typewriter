@@ -12,6 +12,7 @@
 //   dart pub add skir_client
 
 import "dart:core" as _core;
+
 import "package:skir_client/skir_client.dart" as _skir;
 
 // -----------------------------------------------------------------------------
@@ -82,14 +83,8 @@ final class BoundedTransferChunk implements BoundedTransferChunk_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static BoundedTransferChunk_mutable mutable() => BoundedTransferChunk_mutable._(
-    "",
-    0,
-    0,
-    0,
-    "",
-    _skir.ByteString.empty,
-  );
+  static BoundedTransferChunk_mutable mutable() =>
+      BoundedTransferChunk_mutable._("", 0, 0, 0, "", _skir.ByteString.empty);
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -110,7 +105,10 @@ final class BoundedTransferChunk implements BoundedTransferChunk_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! BoundedTransferChunk) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -129,7 +127,11 @@ final class BoundedTransferChunk implements BoundedTransferChunk_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `BoundedTransferChunk` instances.
-  static _skir.StructSerializer<BoundedTransferChunk, BoundedTransferChunk_mutable> get serializer {
+  static _skir.StructSerializer<
+    BoundedTransferChunk,
+    BoundedTransferChunk_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "transfer_id",
@@ -202,7 +204,8 @@ final class BoundedTransferChunk implements BoundedTransferChunk_orMutable {
 }
 
 /// Mutable version of [BoundedTransferChunk].
-final class BoundedTransferChunk_mutable implements BoundedTransferChunk_orMutable {
+final class BoundedTransferChunk_mutable
+    implements BoundedTransferChunk_orMutable {
   _core.String transferId;
   _core.int index;
   _core.int chunkCount;

@@ -12,6 +12,7 @@
 //   dart pub add skir_client
 
 import "dart:core" as _core;
+
 import "package:skir_client/skir_client.dart" as _skir;
 
 import "./authoring_facts.dart" as _lib_editor_v1_authoring_facts;
@@ -36,14 +37,14 @@ import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 sealed class InspectionCompletion {
   /// Constant indicating an unknown `InspectionCompletion`.
   /// Default value for fields of type `InspectionCompletion`.
-  static const InspectionCompletion unknown = InspectionCompletion_unknown._instance;
+  static const InspectionCompletion unknown =
+      InspectionCompletion_unknown._instance;
 
   static const complete = _InspectionCompletion_consts.completeConst;
 
   /// Create a 'interrupted' variant wrapping around the given value.
-  factory InspectionCompletion.wrapInterrupted(
-    _core.String value
-  ) => InspectionCompletion_interruptedWrapper._(value);
+  factory InspectionCompletion.wrapInterrupted(_core.String value) =>
+      InspectionCompletion_interruptedWrapper._(value);
 
   /// Returns the kind of variant held by this InspectionCompletion.
   InspectionCompletion_kind get kind;
@@ -73,15 +74,16 @@ sealed class InspectionCompletion {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/checking.skir:InspectionCompletion",
-    doc: "",
-    unknownInstance: InspectionCompletion_unknown._instance,
-    enumInstance: InspectionCompletion.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: InspectionCompletion_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/checking.skir:InspectionCompletion",
+        doc: "",
+        unknownInstance: InspectionCompletion_unknown._instance,
+        enumInstance: InspectionCompletion.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: InspectionCompletion_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `InspectionCompletion`.
@@ -110,7 +112,8 @@ final class InspectionCompletion_unknown implements InspectionCompletion {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, InspectionCompletion.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, InspectionCompletion.serializer);
 }
 
 enum _InspectionCompletion_consts implements InspectionCompletion {
@@ -122,7 +125,8 @@ enum _InspectionCompletion_consts implements InspectionCompletion {
   const _InspectionCompletion_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, InspectionCompletion.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, InspectionCompletion.serializer);
 }
 
 sealed class _InspectionCompletion_wrapper implements InspectionCompletion {
@@ -138,16 +142,19 @@ sealed class _InspectionCompletion_wrapper implements InspectionCompletion {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, InspectionCompletion.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, InspectionCompletion.serializer);
 }
 
-final class InspectionCompletion_interruptedWrapper extends _InspectionCompletion_wrapper {
+final class InspectionCompletion_interruptedWrapper
+    extends _InspectionCompletion_wrapper {
   final _core.String value;
 
   InspectionCompletion_interruptedWrapper._(this.value);
 
   @_core.override
-  InspectionCompletion_kind get kind => InspectionCompletion_kind.interruptedWrapper;
+  InspectionCompletion_kind get kind =>
+      InspectionCompletion_kind.interruptedWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -156,7 +163,8 @@ final class InspectionCompletion_interruptedWrapper extends _InspectionCompletio
 
 sealed class UndecidedCandidate_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable get resource;
-  _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable> get inputs;
+  _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable>
+  get inputs;
 
   UndecidedCandidate toFrozen();
 }
@@ -171,16 +179,14 @@ final class UndecidedCandidate implements UndecidedCandidate_orMutable {
 
   factory UndecidedCandidate({
     required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
-    required _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable> inputs,
+    required _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable>
+    inputs,
   }) => UndecidedCandidate._(
     resource.toFrozen(),
     _skir.internal__frozenMappedCopy(inputs, (it) => it.toFrozen()),
   );
 
-  UndecidedCandidate._(
-    this.resource,
-    this.inputs,
-  );
+  UndecidedCandidate._(this.resource, this.inputs);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = UndecidedCandidate._(
@@ -201,31 +207,30 @@ final class UndecidedCandidate implements UndecidedCandidate_orMutable {
   UndecidedCandidate toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  UndecidedCandidate_mutable toMutable() => UndecidedCandidate_mutable._(
-    this.resource,
-    this.inputs,
-  );
+  UndecidedCandidate_mutable toMutable() =>
+      UndecidedCandidate_mutable._(this.resource, this.inputs);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! UndecidedCandidate) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.resource,
-    this.inputs,
-  ];
+  _core.List get _equality_proxy => [this.resource, this.inputs];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `UndecidedCandidate` instances.
-  static _skir.StructSerializer<UndecidedCandidate, UndecidedCandidate_mutable> get serializer {
+  static _skir.StructSerializer<UndecidedCandidate, UndecidedCandidate_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "resource",
@@ -269,10 +274,7 @@ final class UndecidedCandidate_mutable implements UndecidedCandidate_orMutable {
   _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable> inputs;
   _skir.internal__UnrecognizedFields? _u;
 
-  UndecidedCandidate_mutable._(
-    this.resource,
-    this.inputs,
-  );
+  UndecidedCandidate_mutable._(this.resource, this.inputs);
 
   /// If the value of [resource] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
@@ -281,15 +283,20 @@ final class UndecidedCandidate_mutable implements UndecidedCandidate_orMutable {
     if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
       return value;
     } else {
-      return this.resource = (value as _lib_editor_v1_type_catalog.ResourceId).toMutable();
+      return this.resource = (value as _lib_editor_v1_type_catalog.ResourceId)
+          .toMutable();
     }
   }
 
   /// If the value of [inputs] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [inputs] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.ValueLocation_orMutable> get mutableInputs {
+  _core.List<_lib_editor_v1_type_catalog.ValueLocation_orMutable>
+  get mutableInputs {
     final value = this.inputs;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.ValueLocation_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_type_catalog.ValueLocation_orMutable
+        >) {
       return value;
     } else {
       return this.inputs = _skir.internal__MutableList([...value]);
@@ -298,10 +305,9 @@ final class UndecidedCandidate_mutable implements UndecidedCandidate_orMutable {
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  UndecidedCandidate toFrozen() => UndecidedCandidate(
-    resource: this.resource,
-    inputs: this.inputs,
-  ).._u = this._u;
+  UndecidedCandidate toFrozen() =>
+      UndecidedCandidate(resource: this.resource, inputs: this.inputs)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -329,18 +335,17 @@ sealed class CheckOutcome {
 
   /// Create a 'needs_input' variant wrapping around the given value.
   factory CheckOutcome.wrapNeedsInput(
-    _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation> value
+    _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation> value,
   ) => CheckOutcome_needsInputWrapper._(value);
 
   /// Create a 'failed' variant wrapping around the given value.
   factory CheckOutcome.wrapFailed(
-    _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic> value
+    _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic> value,
   ) => CheckOutcome_failedWrapper._(value);
 
   /// Create a 'incomplete' variant wrapping around the given value.
-  factory CheckOutcome.wrapIncomplete(
-    _core.String value
-  ) => CheckOutcome_incompleteWrapper._(value);
+  factory CheckOutcome.wrapIncomplete(_core.String value) =>
+      CheckOutcome_incompleteWrapper._(value);
 
   /// Returns the kind of variant held by this CheckOutcome.
   CheckOutcome_kind get kind;
@@ -394,15 +399,16 @@ sealed class CheckOutcome {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/checking.skir:CheckOutcome",
-    doc: "",
-    unknownInstance: CheckOutcome_unknown._instance,
-    enumInstance: CheckOutcome.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: CheckOutcome_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/checking.skir:CheckOutcome",
+        doc: "",
+        unknownInstance: CheckOutcome_unknown._instance,
+        enumInstance: CheckOutcome.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: CheckOutcome_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `CheckOutcome`.
@@ -433,7 +439,8 @@ final class CheckOutcome_unknown implements CheckOutcome {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, CheckOutcome.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, CheckOutcome.serializer);
 }
 
 enum _CheckOutcome_consts implements CheckOutcome {
@@ -445,7 +452,8 @@ enum _CheckOutcome_consts implements CheckOutcome {
   const _CheckOutcome_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, CheckOutcome.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, CheckOutcome.serializer);
 }
 
 sealed class _CheckOutcome_wrapper implements CheckOutcome {
@@ -461,7 +469,8 @@ sealed class _CheckOutcome_wrapper implements CheckOutcome {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, CheckOutcome.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, CheckOutcome.serializer);
 }
 
 final class CheckOutcome_needsInputWrapper extends _CheckOutcome_wrapper {
@@ -538,15 +547,16 @@ sealed class FindingStatus {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/checking.skir:FindingStatus",
-    doc: "",
-    unknownInstance: FindingStatus_unknown._instance,
-    enumInstance: FindingStatus.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: FindingStatus_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/checking.skir:FindingStatus",
+        doc: "",
+        unknownInstance: FindingStatus_unknown._instance,
+        enumInstance: FindingStatus.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: FindingStatus_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `FindingStatus`.
@@ -575,7 +585,8 @@ final class FindingStatus_unknown implements FindingStatus {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, FindingStatus.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, FindingStatus.serializer);
 }
 
 enum _FindingStatus_consts implements FindingStatus {
@@ -588,7 +599,8 @@ enum _FindingStatus_consts implements FindingStatus {
   const _FindingStatus_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, FindingStatus.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, FindingStatus.serializer);
 }
 
 // -----------------------------------------------------------------------------
@@ -613,15 +625,9 @@ final class CheckInstanceId implements CheckInstanceId_orMutable {
   factory CheckInstanceId({
     required _lib_editor_v1_type_catalog.RuleId_orMutable rule,
     required _lib_editor_v1_type_catalog.ValueLocation_orMutable location,
-  }) => CheckInstanceId._(
-    rule.toFrozen(),
-    location.toFrozen(),
-  );
+  }) => CheckInstanceId._(rule.toFrozen(), location.toFrozen());
 
-  CheckInstanceId._(
-    this.rule,
-    this.location,
-  );
+  CheckInstanceId._(this.rule, this.location);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CheckInstanceId._(
@@ -642,31 +648,30 @@ final class CheckInstanceId implements CheckInstanceId_orMutable {
   CheckInstanceId toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CheckInstanceId_mutable toMutable() => CheckInstanceId_mutable._(
-    this.rule,
-    this.location,
-  );
+  CheckInstanceId_mutable toMutable() =>
+      CheckInstanceId_mutable._(this.rule, this.location);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CheckInstanceId) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.rule,
-    this.location,
-  ];
+  _core.List get _equality_proxy => [this.rule, this.location];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CheckInstanceId` instances.
-  static _skir.StructSerializer<CheckInstanceId, CheckInstanceId_mutable> get serializer {
+  static _skir.StructSerializer<CheckInstanceId, CheckInstanceId_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "rule",
@@ -708,10 +713,7 @@ final class CheckInstanceId_mutable implements CheckInstanceId_orMutable {
   _lib_editor_v1_type_catalog.ValueLocation_orMutable location;
   _skir.internal__UnrecognizedFields? _u;
 
-  CheckInstanceId_mutable._(
-    this.rule,
-    this.location,
-  );
+  CheckInstanceId_mutable._(this.rule, this.location);
 
   /// If the value of [rule] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [rule] and returns it.
@@ -720,7 +722,8 @@ final class CheckInstanceId_mutable implements CheckInstanceId_orMutable {
     if (value is _lib_editor_v1_type_catalog.RuleId_mutable) {
       return value;
     } else {
-      return this.rule = (value as _lib_editor_v1_type_catalog.RuleId).toMutable();
+      return this.rule = (value as _lib_editor_v1_type_catalog.RuleId)
+          .toMutable();
     }
   }
 
@@ -731,16 +734,15 @@ final class CheckInstanceId_mutable implements CheckInstanceId_orMutable {
     if (value is _lib_editor_v1_type_catalog.ValueLocation_mutable) {
       return value;
     } else {
-      return this.location = (value as _lib_editor_v1_type_catalog.ValueLocation).toMutable();
+      return this.location =
+          (value as _lib_editor_v1_type_catalog.ValueLocation).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  CheckInstanceId toFrozen() => CheckInstanceId(
-    rule: this.rule,
-    location: this.location,
-  ).._u = this._u;
+  CheckInstanceId toFrozen() =>
+      CheckInstanceId(rule: this.rule, location: this.location).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -780,12 +782,7 @@ final class CheckTicket implements CheckTicket_orMutable {
     catalog.toFrozen(),
   );
 
-  CheckTicket._(
-    this.instance,
-    this.incarnation,
-    this.execution,
-    this.catalog,
-  );
+  CheckTicket._(this.instance, this.incarnation, this.execution, this.catalog);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CheckTicket._(
@@ -821,7 +818,10 @@ final class CheckTicket implements CheckTicket_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CheckTicket) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -838,7 +838,8 @@ final class CheckTicket implements CheckTicket_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CheckTicket` instances.
-  static _skir.StructSerializer<CheckTicket, CheckTicket_mutable> get serializer {
+  static _skir.StructSerializer<CheckTicket, CheckTicket_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "instance",
@@ -925,7 +926,8 @@ final class CheckTicket_mutable implements CheckTicket_orMutable {
     if (value is _lib_editor_v1_type_catalog.CheckExecutionId_mutable) {
       return value;
     } else {
-      return this.execution = (value as _lib_editor_v1_type_catalog.CheckExecutionId).toMutable();
+      return this.execution =
+          (value as _lib_editor_v1_type_catalog.CheckExecutionId).toMutable();
     }
   }
 
@@ -936,7 +938,8 @@ final class CheckTicket_mutable implements CheckTicket_orMutable {
     if (value is _lib_editor_v1_type_catalog.CatalogGeneration_mutable) {
       return value;
     } else {
-      return this.catalog = (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
+      return this.catalog =
+          (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
     }
   }
 
@@ -956,7 +959,8 @@ final class CheckTicket_mutable implements CheckTicket_orMutable {
 
 sealed class FindingSet_orMutable {
   CheckTicket_orMutable get ticket;
-  _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation> get expectations;
+  _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation>
+  get expectations;
   CheckOutcome get outcome;
   _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable> get findings;
   FindingStatus get status;
@@ -969,7 +973,8 @@ final class FindingSet implements FindingSet_orMutable {
   @_core.override
   final CheckTicket ticket;
   @_core.override
-  final _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation> expectations;
+  final _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation>
+  expectations;
   @_core.override
   final CheckOutcome outcome;
   @_core.override
@@ -980,9 +985,11 @@ final class FindingSet implements FindingSet_orMutable {
 
   factory FindingSet({
     required CheckTicket_orMutable ticket,
-    required _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation> expectations,
+    required _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation>
+    expectations,
     required CheckOutcome outcome,
-    required _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable> findings,
+    required _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable>
+    findings,
     required FindingStatus status,
   }) => FindingSet._(
     ticket.toFrozen(),
@@ -1037,7 +1044,10 @@ final class FindingSet implements FindingSet_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! FindingSet) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -1152,9 +1162,13 @@ final class FindingSet_mutable implements FindingSet_orMutable {
 
   /// If the value of [expectations] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [expectations] and returns it.
-  _core.List<_lib_editor_v1_authoring_facts.EditExpectation> get mutableExpectations {
+  _core.List<_lib_editor_v1_authoring_facts.EditExpectation>
+  get mutableExpectations {
     final value = this.expectations;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_authoring_facts.EditExpectation>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_authoring_facts.EditExpectation
+        >) {
       return value;
     } else {
       return this.expectations = _skir.internal__MutableList([...value]);
@@ -1163,9 +1177,13 @@ final class FindingSet_mutable implements FindingSet_orMutable {
 
   /// If the value of [findings] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [findings] and returns it.
-  _core.List<_lib_editor_v1_diagnostic.Diagnostic_orMutable> get mutableFindings {
+  _core.List<_lib_editor_v1_diagnostic.Diagnostic_orMutable>
+  get mutableFindings {
     final value = this.findings;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_diagnostic.Diagnostic_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_diagnostic.Diagnostic_orMutable
+        >) {
       return value;
     } else {
       return this.findings = _skir.internal__MutableList([...value]);
@@ -1190,7 +1208,8 @@ final class FindingSet_mutable implements FindingSet_orMutable {
 sealed class CheckResult_orMutable {
   CheckTicket_orMutable get ticket;
   CheckOutcome get outcome;
-  _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation> get expectations;
+  _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation>
+  get expectations;
   _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable> get findings;
 
   CheckResult toFrozen();
@@ -1203,7 +1222,8 @@ final class CheckResult implements CheckResult_orMutable {
   @_core.override
   final CheckOutcome outcome;
   @_core.override
-  final _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation> expectations;
+  final _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation>
+  expectations;
   @_core.override
   final _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic> findings;
   _skir.internal__UnrecognizedFields? _u;
@@ -1211,8 +1231,10 @@ final class CheckResult implements CheckResult_orMutable {
   factory CheckResult({
     required CheckTicket_orMutable ticket,
     required CheckOutcome outcome,
-    required _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation> expectations,
-    required _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable> findings,
+    required _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation>
+    expectations,
+    required _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable>
+    findings,
   }) => CheckResult._(
     ticket.toFrozen(),
     outcome,
@@ -1220,12 +1242,7 @@ final class CheckResult implements CheckResult_orMutable {
     _skir.internal__frozenMappedCopy(findings, (it) => it.toFrozen()),
   );
 
-  CheckResult._(
-    this.ticket,
-    this.outcome,
-    this.expectations,
-    this.findings,
-  );
+  CheckResult._(this.ticket, this.outcome, this.expectations, this.findings);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CheckResult._(
@@ -1261,7 +1278,10 @@ final class CheckResult implements CheckResult_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CheckResult) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -1278,7 +1298,8 @@ final class CheckResult implements CheckResult_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CheckResult` instances.
-  static _skir.StructSerializer<CheckResult, CheckResult_mutable> get serializer {
+  static _skir.StructSerializer<CheckResult, CheckResult_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "ticket",
@@ -1364,9 +1385,13 @@ final class CheckResult_mutable implements CheckResult_orMutable {
 
   /// If the value of [expectations] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [expectations] and returns it.
-  _core.List<_lib_editor_v1_authoring_facts.EditExpectation> get mutableExpectations {
+  _core.List<_lib_editor_v1_authoring_facts.EditExpectation>
+  get mutableExpectations {
     final value = this.expectations;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_authoring_facts.EditExpectation>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_authoring_facts.EditExpectation
+        >) {
       return value;
     } else {
       return this.expectations = _skir.internal__MutableList([...value]);
@@ -1375,9 +1400,13 @@ final class CheckResult_mutable implements CheckResult_orMutable {
 
   /// If the value of [findings] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [findings] and returns it.
-  _core.List<_lib_editor_v1_diagnostic.Diagnostic_orMutable> get mutableFindings {
+  _core.List<_lib_editor_v1_diagnostic.Diagnostic_orMutable>
+  get mutableFindings {
     final value = this.findings;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_diagnostic.Diagnostic_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_diagnostic.Diagnostic_orMutable
+        >) {
       return value;
     } else {
       return this.findings = _skir.internal__MutableList([...value]);
@@ -1399,10 +1428,12 @@ final class CheckResult_mutable implements CheckResult_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class SelectionInspection_orMutable {
-  _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable> get knownMatches;
+  _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable>
+  get knownMatches;
   _core.Iterable<UndecidedCandidate_orMutable> get undecided;
   InspectionCompletion get completion;
-  _core.Iterable<_lib_editor_v1_expression.EvaluationDiagnostic_orMutable> get failures;
+  _core.Iterable<_lib_editor_v1_expression.EvaluationDiagnostic_orMutable>
+  get failures;
 
   SelectionInspection toFrozen();
 }
@@ -1420,10 +1451,14 @@ final class SelectionInspection implements SelectionInspection_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory SelectionInspection({
-    required _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable> knownMatches,
+    required _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable>
+    knownMatches,
     required _core.Iterable<UndecidedCandidate_orMutable> undecided,
     required InspectionCompletion completion,
-    required _core.Iterable<_lib_editor_v1_expression.EvaluationDiagnostic_orMutable> failures,
+    required _core.Iterable<
+      _lib_editor_v1_expression.EvaluationDiagnostic_orMutable
+    >
+    failures,
   }) => SelectionInspection._(
     _skir.internal__frozenMappedCopy(knownMatches, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(undecided, (it) => it.toFrozen()),
@@ -1472,7 +1507,10 @@ final class SelectionInspection implements SelectionInspection_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! SelectionInspection) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -1489,7 +1527,11 @@ final class SelectionInspection implements SelectionInspection_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `SelectionInspection` instances.
-  static _skir.StructSerializer<SelectionInspection, SelectionInspection_mutable> get serializer {
+  static _skir.StructSerializer<
+    SelectionInspection,
+    SelectionInspection_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "known_matches",
@@ -1506,9 +1548,7 @@ final class SelectionInspection implements SelectionInspection_orMutable {
         "undecided",
         "undecided",
         1,
-        _skir.Serializers.iterable(
-          UndecidedCandidate.serializer,
-        ),
+        _skir.Serializers.iterable(UndecidedCandidate.serializer),
         "",
         (it) => it.undecided,
         (it, v) => it.undecided = v,
@@ -1550,11 +1590,13 @@ final class SelectionInspection implements SelectionInspection_orMutable {
 }
 
 /// Mutable version of [SelectionInspection].
-final class SelectionInspection_mutable implements SelectionInspection_orMutable {
+final class SelectionInspection_mutable
+    implements SelectionInspection_orMutable {
   _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable> knownMatches;
   _core.Iterable<UndecidedCandidate_orMutable> undecided;
   InspectionCompletion completion;
-  _core.Iterable<_lib_editor_v1_expression.EvaluationDiagnostic_orMutable> failures;
+  _core.Iterable<_lib_editor_v1_expression.EvaluationDiagnostic_orMutable>
+  failures;
   _skir.internal__UnrecognizedFields? _u;
 
   SelectionInspection_mutable._(
@@ -1566,9 +1608,13 @@ final class SelectionInspection_mutable implements SelectionInspection_orMutable
 
   /// If the value of [knownMatches] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [knownMatches] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.ResourceId_orMutable> get mutableKnownMatches {
+  _core.List<_lib_editor_v1_type_catalog.ResourceId_orMutable>
+  get mutableKnownMatches {
     final value = this.knownMatches;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.ResourceId_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_type_catalog.ResourceId_orMutable
+        >) {
       return value;
     } else {
       return this.knownMatches = _skir.internal__MutableList([...value]);
@@ -1588,9 +1634,13 @@ final class SelectionInspection_mutable implements SelectionInspection_orMutable
 
   /// If the value of [failures] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [failures] and returns it.
-  _core.List<_lib_editor_v1_expression.EvaluationDiagnostic_orMutable> get mutableFailures {
+  _core.List<_lib_editor_v1_expression.EvaluationDiagnostic_orMutable>
+  get mutableFailures {
     final value = this.failures;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_expression.EvaluationDiagnostic_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_expression.EvaluationDiagnostic_orMutable
+        >) {
       return value;
     } else {
       return this.failures = _skir.internal__MutableList([...value]);

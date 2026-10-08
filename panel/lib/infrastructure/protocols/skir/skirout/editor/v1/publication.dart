@@ -12,6 +12,7 @@
 //   dart pub add skir_client
 
 import "dart:core" as _core;
+
 import "package:skir_client/skir_client.dart" as _skir;
 
 import "./authoring_facts.dart" as _lib_editor_v1_authoring_facts;
@@ -26,7 +27,8 @@ import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 
 sealed class OwnedPortableTypes_orMutable {
   _lib_editor_v1_type_catalog.DeclarationOwner_orMutable get owner;
-  _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinition_orMutable> get definitions;
+  _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinition_orMutable>
+  get definitions;
 
   OwnedPortableTypes toFrozen();
 }
@@ -41,16 +43,16 @@ final class OwnedPortableTypes implements OwnedPortableTypes_orMutable {
 
   factory OwnedPortableTypes({
     required _lib_editor_v1_type_catalog.DeclarationOwner_orMutable owner,
-    required _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinition_orMutable> definitions,
+    required _core.Iterable<
+      _lib_editor_v1_type_catalog.TypeDefinition_orMutable
+    >
+    definitions,
   }) => OwnedPortableTypes._(
     owner.toFrozen(),
     _skir.internal__frozenMappedCopy(definitions, (it) => it.toFrozen()),
   );
 
-  OwnedPortableTypes._(
-    this.owner,
-    this.definitions,
-  );
+  OwnedPortableTypes._(this.owner, this.definitions);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = OwnedPortableTypes._(
@@ -71,31 +73,30 @@ final class OwnedPortableTypes implements OwnedPortableTypes_orMutable {
   OwnedPortableTypes toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  OwnedPortableTypes_mutable toMutable() => OwnedPortableTypes_mutable._(
-    this.owner,
-    this.definitions,
-  );
+  OwnedPortableTypes_mutable toMutable() =>
+      OwnedPortableTypes_mutable._(this.owner, this.definitions);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! OwnedPortableTypes) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.owner,
-    this.definitions,
-  ];
+  _core.List get _equality_proxy => [this.owner, this.definitions];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `OwnedPortableTypes` instances.
-  static _skir.StructSerializer<OwnedPortableTypes, OwnedPortableTypes_mutable> get serializer {
+  static _skir.StructSerializer<OwnedPortableTypes, OwnedPortableTypes_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "owner",
@@ -136,13 +137,11 @@ final class OwnedPortableTypes implements OwnedPortableTypes_orMutable {
 /// Mutable version of [OwnedPortableTypes].
 final class OwnedPortableTypes_mutable implements OwnedPortableTypes_orMutable {
   _lib_editor_v1_type_catalog.DeclarationOwner_orMutable owner;
-  _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinition_orMutable> definitions;
+  _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinition_orMutable>
+  definitions;
   _skir.internal__UnrecognizedFields? _u;
 
-  OwnedPortableTypes_mutable._(
-    this.owner,
-    this.definitions,
-  );
+  OwnedPortableTypes_mutable._(this.owner, this.definitions);
 
   /// If the value of [owner] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [owner] and returns it.
@@ -151,15 +150,20 @@ final class OwnedPortableTypes_mutable implements OwnedPortableTypes_orMutable {
     if (value is _lib_editor_v1_type_catalog.DeclarationOwner_mutable) {
       return value;
     } else {
-      return this.owner = (value as _lib_editor_v1_type_catalog.DeclarationOwner).toMutable();
+      return this.owner =
+          (value as _lib_editor_v1_type_catalog.DeclarationOwner).toMutable();
     }
   }
 
   /// If the value of [definitions] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [definitions] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.TypeDefinition_orMutable> get mutableDefinitions {
+  _core.List<_lib_editor_v1_type_catalog.TypeDefinition_orMutable>
+  get mutableDefinitions {
     final value = this.definitions;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.TypeDefinition_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_type_catalog.TypeDefinition_orMutable
+        >) {
       return value;
     } else {
       return this.definitions = _skir.internal__MutableList([...value]);
@@ -168,10 +172,9 @@ final class OwnedPortableTypes_mutable implements OwnedPortableTypes_orMutable {
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  OwnedPortableTypes toFrozen() => OwnedPortableTypes(
-    owner: this.owner,
-    definitions: this.definitions,
-  ).._u = this._u;
+  OwnedPortableTypes toFrozen() =>
+      OwnedPortableTypes(owner: this.owner, definitions: this.definitions)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -183,7 +186,8 @@ sealed class RuntimeMemberTemplate_orMutable {
   _lib_editor_v1_type_catalog.TypeTemplate? get receiver;
   _core.Iterable<_lib_editor_v1_type_catalog.TypeTemplate> get arguments;
   _lib_editor_v1_type_catalog.TypeTemplate get result;
-  _core.Iterable<_lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable> get requiredCapabilities;
+  _core.Iterable<_lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable>
+  get requiredCapabilities;
 
   RuntimeMemberTemplate toFrozen();
 }
@@ -199,7 +203,8 @@ final class RuntimeMemberTemplate implements RuntimeMemberTemplate_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.TypeTemplate result;
   @_core.override
-  final _core.Iterable<_lib_editor_v1_type_catalog.ScriptCapabilityId> requiredCapabilities;
+  final _core.Iterable<_lib_editor_v1_type_catalog.ScriptCapabilityId>
+  requiredCapabilities;
   _skir.internal__UnrecognizedFields? _u;
 
   factory RuntimeMemberTemplate({
@@ -207,13 +212,19 @@ final class RuntimeMemberTemplate implements RuntimeMemberTemplate_orMutable {
     required _lib_editor_v1_type_catalog.TypeTemplate? receiver,
     required _core.Iterable<_lib_editor_v1_type_catalog.TypeTemplate> arguments,
     required _lib_editor_v1_type_catalog.TypeTemplate result,
-    required _core.Iterable<_lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable> requiredCapabilities,
+    required _core.Iterable<
+      _lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable
+    >
+    requiredCapabilities,
   }) => RuntimeMemberTemplate._(
     id.toFrozen(),
     receiver,
     _skir.internal__frozenCopy(arguments),
     result,
-    _skir.internal__frozenMappedCopy(requiredCapabilities, (it) => it.toFrozen()),
+    _skir.internal__frozenMappedCopy(
+      requiredCapabilities,
+      (it) => it.toFrozen(),
+    ),
   );
 
   RuntimeMemberTemplate._(
@@ -235,13 +246,14 @@ final class RuntimeMemberTemplate implements RuntimeMemberTemplate_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static RuntimeMemberTemplate_mutable mutable() => RuntimeMemberTemplate_mutable._(
-    _lib_editor_v1_type_catalog.RuntimeMemberId.defaultInstance,
-    null,
-    _skir.KeyedIterable.empty,
-    _lib_editor_v1_type_catalog.TypeTemplate.unknown,
-    _skir.KeyedIterable.empty,
-  );
+  static RuntimeMemberTemplate_mutable mutable() =>
+      RuntimeMemberTemplate_mutable._(
+        _lib_editor_v1_type_catalog.RuntimeMemberId.defaultInstance,
+        null,
+        _skir.KeyedIterable.empty,
+        _lib_editor_v1_type_catalog.TypeTemplate.unknown,
+        _skir.KeyedIterable.empty,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -261,7 +273,10 @@ final class RuntimeMemberTemplate implements RuntimeMemberTemplate_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RuntimeMemberTemplate) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -279,7 +294,11 @@ final class RuntimeMemberTemplate implements RuntimeMemberTemplate_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `RuntimeMemberTemplate` instances.
-  static _skir.StructSerializer<RuntimeMemberTemplate, RuntimeMemberTemplate_mutable> get serializer {
+  static _skir.StructSerializer<
+    RuntimeMemberTemplate,
+    RuntimeMemberTemplate_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "id",
@@ -349,12 +368,14 @@ final class RuntimeMemberTemplate implements RuntimeMemberTemplate_orMutable {
 }
 
 /// Mutable version of [RuntimeMemberTemplate].
-final class RuntimeMemberTemplate_mutable implements RuntimeMemberTemplate_orMutable {
+final class RuntimeMemberTemplate_mutable
+    implements RuntimeMemberTemplate_orMutable {
   _lib_editor_v1_type_catalog.RuntimeMemberId_orMutable id;
   _lib_editor_v1_type_catalog.TypeTemplate? receiver;
   _core.Iterable<_lib_editor_v1_type_catalog.TypeTemplate> arguments;
   _lib_editor_v1_type_catalog.TypeTemplate result;
-  _core.Iterable<_lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable> requiredCapabilities;
+  _core.Iterable<_lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable>
+  requiredCapabilities;
   _skir.internal__UnrecognizedFields? _u;
 
   RuntimeMemberTemplate_mutable._(
@@ -372,7 +393,8 @@ final class RuntimeMemberTemplate_mutable implements RuntimeMemberTemplate_orMut
     if (value is _lib_editor_v1_type_catalog.RuntimeMemberId_mutable) {
       return value;
     } else {
-      return this.id = (value as _lib_editor_v1_type_catalog.RuntimeMemberId).toMutable();
+      return this.id = (value as _lib_editor_v1_type_catalog.RuntimeMemberId)
+          .toMutable();
     }
   }
 
@@ -380,7 +402,10 @@ final class RuntimeMemberTemplate_mutable implements RuntimeMemberTemplate_orMut
   /// Otherwise, makes a mutable copy, assigns it back to [arguments] and returns it.
   _core.List<_lib_editor_v1_type_catalog.TypeTemplate> get mutableArguments {
     final value = this.arguments;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.TypeTemplate>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_type_catalog.TypeTemplate
+        >) {
       return value;
     } else {
       return this.arguments = _skir.internal__MutableList([...value]);
@@ -389,12 +414,18 @@ final class RuntimeMemberTemplate_mutable implements RuntimeMemberTemplate_orMut
 
   /// If the value of [requiredCapabilities] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [requiredCapabilities] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable> get mutableRequiredCapabilities {
+  _core.List<_lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable>
+  get mutableRequiredCapabilities {
     final value = this.requiredCapabilities;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable
+        >) {
       return value;
     } else {
-      return this.requiredCapabilities = _skir.internal__MutableList([...value]);
+      return this.requiredCapabilities = _skir.internal__MutableList([
+        ...value,
+      ]);
     }
   }
 
@@ -418,7 +449,8 @@ sealed class RuntimeMemberSignature_orMutable {
   _lib_editor_v1_type_catalog.TypeUse? get receiver;
   _core.Iterable<_lib_editor_v1_type_catalog.TypeUse> get parameters;
   _lib_editor_v1_type_catalog.TypeUse get result;
-  _core.Iterable<_lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable> get requiredCapabilities;
+  _core.Iterable<_lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable>
+  get requiredCapabilities;
 
   RuntimeMemberSignature toFrozen();
 }
@@ -434,7 +466,8 @@ final class RuntimeMemberSignature implements RuntimeMemberSignature_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.TypeUse result;
   @_core.override
-  final _core.Iterable<_lib_editor_v1_type_catalog.ScriptCapabilityId> requiredCapabilities;
+  final _core.Iterable<_lib_editor_v1_type_catalog.ScriptCapabilityId>
+  requiredCapabilities;
   _skir.internal__UnrecognizedFields? _u;
 
   factory RuntimeMemberSignature({
@@ -442,13 +475,19 @@ final class RuntimeMemberSignature implements RuntimeMemberSignature_orMutable {
     required _lib_editor_v1_type_catalog.TypeUse? receiver,
     required _core.Iterable<_lib_editor_v1_type_catalog.TypeUse> parameters,
     required _lib_editor_v1_type_catalog.TypeUse result,
-    required _core.Iterable<_lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable> requiredCapabilities,
+    required _core.Iterable<
+      _lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable
+    >
+    requiredCapabilities,
   }) => RuntimeMemberSignature._(
     id.toFrozen(),
     receiver,
     _skir.internal__frozenCopy(parameters),
     result,
-    _skir.internal__frozenMappedCopy(requiredCapabilities, (it) => it.toFrozen()),
+    _skir.internal__frozenMappedCopy(
+      requiredCapabilities,
+      (it) => it.toFrozen(),
+    ),
   );
 
   RuntimeMemberSignature._(
@@ -470,13 +509,14 @@ final class RuntimeMemberSignature implements RuntimeMemberSignature_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static RuntimeMemberSignature_mutable mutable() => RuntimeMemberSignature_mutable._(
-    _lib_editor_v1_type_catalog.RuntimeMemberId.defaultInstance,
-    null,
-    _skir.KeyedIterable.empty,
-    _lib_editor_v1_type_catalog.TypeUse.unknown,
-    _skir.KeyedIterable.empty,
-  );
+  static RuntimeMemberSignature_mutable mutable() =>
+      RuntimeMemberSignature_mutable._(
+        _lib_editor_v1_type_catalog.RuntimeMemberId.defaultInstance,
+        null,
+        _skir.KeyedIterable.empty,
+        _lib_editor_v1_type_catalog.TypeUse.unknown,
+        _skir.KeyedIterable.empty,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -484,19 +524,23 @@ final class RuntimeMemberSignature implements RuntimeMemberSignature_orMutable {
   RuntimeMemberSignature toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  RuntimeMemberSignature_mutable toMutable() => RuntimeMemberSignature_mutable._(
-    this.id,
-    this.receiver,
-    this.parameters,
-    this.result,
-    this.requiredCapabilities,
-  );
+  RuntimeMemberSignature_mutable toMutable() =>
+      RuntimeMemberSignature_mutable._(
+        this.id,
+        this.receiver,
+        this.parameters,
+        this.result,
+        this.requiredCapabilities,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! RuntimeMemberSignature) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -514,7 +558,11 @@ final class RuntimeMemberSignature implements RuntimeMemberSignature_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `RuntimeMemberSignature` instances.
-  static _skir.StructSerializer<RuntimeMemberSignature, RuntimeMemberSignature_mutable> get serializer {
+  static _skir.StructSerializer<
+    RuntimeMemberSignature,
+    RuntimeMemberSignature_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "id",
@@ -584,12 +632,14 @@ final class RuntimeMemberSignature implements RuntimeMemberSignature_orMutable {
 }
 
 /// Mutable version of [RuntimeMemberSignature].
-final class RuntimeMemberSignature_mutable implements RuntimeMemberSignature_orMutable {
+final class RuntimeMemberSignature_mutable
+    implements RuntimeMemberSignature_orMutable {
   _lib_editor_v1_type_catalog.RuntimeMemberId_orMutable id;
   _lib_editor_v1_type_catalog.TypeUse? receiver;
   _core.Iterable<_lib_editor_v1_type_catalog.TypeUse> parameters;
   _lib_editor_v1_type_catalog.TypeUse result;
-  _core.Iterable<_lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable> requiredCapabilities;
+  _core.Iterable<_lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable>
+  requiredCapabilities;
   _skir.internal__UnrecognizedFields? _u;
 
   RuntimeMemberSignature_mutable._(
@@ -607,7 +657,8 @@ final class RuntimeMemberSignature_mutable implements RuntimeMemberSignature_orM
     if (value is _lib_editor_v1_type_catalog.RuntimeMemberId_mutable) {
       return value;
     } else {
-      return this.id = (value as _lib_editor_v1_type_catalog.RuntimeMemberId).toMutable();
+      return this.id = (value as _lib_editor_v1_type_catalog.RuntimeMemberId)
+          .toMutable();
     }
   }
 
@@ -615,7 +666,8 @@ final class RuntimeMemberSignature_mutable implements RuntimeMemberSignature_orM
   /// Otherwise, makes a mutable copy, assigns it back to [parameters] and returns it.
   _core.List<_lib_editor_v1_type_catalog.TypeUse> get mutableParameters {
     final value = this.parameters;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.TypeUse>) {
+    if (value
+        is _skir.internal__MutableList<_lib_editor_v1_type_catalog.TypeUse>) {
       return value;
     } else {
       return this.parameters = _skir.internal__MutableList([...value]);
@@ -624,12 +676,18 @@ final class RuntimeMemberSignature_mutable implements RuntimeMemberSignature_orM
 
   /// If the value of [requiredCapabilities] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [requiredCapabilities] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable> get mutableRequiredCapabilities {
+  _core.List<_lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable>
+  get mutableRequiredCapabilities {
     final value = this.requiredCapabilities;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable
+        >) {
       return value;
     } else {
-      return this.requiredCapabilities = _skir.internal__MutableList([...value]);
+      return this.requiredCapabilities = _skir.internal__MutableList([
+        ...value,
+      ]);
     }
   }
 
@@ -649,38 +707,48 @@ final class RuntimeMemberSignature_mutable implements RuntimeMemberSignature_orM
 // -----------------------------------------------------------------------------
 
 sealed class ScriptContextDescriptor_orMutable {
-  _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinitionId_orMutable> get types;
-  _core.Iterable<_lib_editor_v1_type_catalog.RuntimeMemberId_orMutable> get members;
-  _core.Iterable<_lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable> get capabilities;
+  _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinitionId_orMutable>
+  get types;
+  _core.Iterable<_lib_editor_v1_type_catalog.RuntimeMemberId_orMutable>
+  get members;
+  _core.Iterable<_lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable>
+  get capabilities;
 
   ScriptContextDescriptor toFrozen();
 }
 
 /// Deeply immutable.
-final class ScriptContextDescriptor implements ScriptContextDescriptor_orMutable {
+final class ScriptContextDescriptor
+    implements ScriptContextDescriptor_orMutable {
   @_core.override
   final _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinitionId> types;
   @_core.override
   final _core.Iterable<_lib_editor_v1_type_catalog.RuntimeMemberId> members;
   @_core.override
-  final _core.Iterable<_lib_editor_v1_type_catalog.ScriptCapabilityId> capabilities;
+  final _core.Iterable<_lib_editor_v1_type_catalog.ScriptCapabilityId>
+  capabilities;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ScriptContextDescriptor({
-    required _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinitionId_orMutable> types,
-    required _core.Iterable<_lib_editor_v1_type_catalog.RuntimeMemberId_orMutable> members,
-    required _core.Iterable<_lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable> capabilities,
+    required _core.Iterable<
+      _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable
+    >
+    types,
+    required _core.Iterable<
+      _lib_editor_v1_type_catalog.RuntimeMemberId_orMutable
+    >
+    members,
+    required _core.Iterable<
+      _lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable
+    >
+    capabilities,
   }) => ScriptContextDescriptor._(
     _skir.internal__frozenMappedCopy(types, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(members, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(capabilities, (it) => it.toFrozen()),
   );
 
-  ScriptContextDescriptor._(
-    this.types,
-    this.members,
-    this.capabilities,
-  );
+  ScriptContextDescriptor._(this.types, this.members, this.capabilities);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ScriptContextDescriptor._(
@@ -691,11 +759,12 @@ final class ScriptContextDescriptor implements ScriptContextDescriptor_orMutable
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ScriptContextDescriptor_mutable mutable() => ScriptContextDescriptor_mutable._(
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-  );
+  static ScriptContextDescriptor_mutable mutable() =>
+      ScriptContextDescriptor_mutable._(
+        _skir.KeyedIterable.empty,
+        _skir.KeyedIterable.empty,
+        _skir.KeyedIterable.empty,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -703,17 +772,21 @@ final class ScriptContextDescriptor implements ScriptContextDescriptor_orMutable
   ScriptContextDescriptor toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ScriptContextDescriptor_mutable toMutable() => ScriptContextDescriptor_mutable._(
-    this.types,
-    this.members,
-    this.capabilities,
-  );
+  ScriptContextDescriptor_mutable toMutable() =>
+      ScriptContextDescriptor_mutable._(
+        this.types,
+        this.members,
+        this.capabilities,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ScriptContextDescriptor) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -729,7 +802,11 @@ final class ScriptContextDescriptor implements ScriptContextDescriptor_orMutable
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ScriptContextDescriptor` instances.
-  static _skir.StructSerializer<ScriptContextDescriptor, ScriptContextDescriptor_mutable> get serializer {
+  static _skir.StructSerializer<
+    ScriptContextDescriptor,
+    ScriptContextDescriptor_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "types",
@@ -781,10 +858,12 @@ final class ScriptContextDescriptor implements ScriptContextDescriptor_orMutable
 }
 
 /// Mutable version of [ScriptContextDescriptor].
-final class ScriptContextDescriptor_mutable implements ScriptContextDescriptor_orMutable {
+final class ScriptContextDescriptor_mutable
+    implements ScriptContextDescriptor_orMutable {
   _core.Iterable<_lib_editor_v1_type_catalog.TypeDefinitionId_orMutable> types;
   _core.Iterable<_lib_editor_v1_type_catalog.RuntimeMemberId_orMutable> members;
-  _core.Iterable<_lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable> capabilities;
+  _core.Iterable<_lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable>
+  capabilities;
   _skir.internal__UnrecognizedFields? _u;
 
   ScriptContextDescriptor_mutable._(
@@ -795,9 +874,13 @@ final class ScriptContextDescriptor_mutable implements ScriptContextDescriptor_o
 
   /// If the value of [types] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [types] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.TypeDefinitionId_orMutable> get mutableTypes {
+  _core.List<_lib_editor_v1_type_catalog.TypeDefinitionId_orMutable>
+  get mutableTypes {
     final value = this.types;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.TypeDefinitionId_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable
+        >) {
       return value;
     } else {
       return this.types = _skir.internal__MutableList([...value]);
@@ -806,9 +889,13 @@ final class ScriptContextDescriptor_mutable implements ScriptContextDescriptor_o
 
   /// If the value of [members] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [members] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.RuntimeMemberId_orMutable> get mutableMembers {
+  _core.List<_lib_editor_v1_type_catalog.RuntimeMemberId_orMutable>
+  get mutableMembers {
     final value = this.members;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.RuntimeMemberId_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_type_catalog.RuntimeMemberId_orMutable
+        >) {
       return value;
     } else {
       return this.members = _skir.internal__MutableList([...value]);
@@ -817,9 +904,13 @@ final class ScriptContextDescriptor_mutable implements ScriptContextDescriptor_o
 
   /// If the value of [capabilities] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [capabilities] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable> get mutableCapabilities {
+  _core.List<_lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable>
+  get mutableCapabilities {
     final value = this.capabilities;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_type_catalog.ScriptCapabilityId_orMutable
+        >) {
       return value;
     } else {
       return this.capabilities = _skir.internal__MutableList([...value]);
@@ -848,7 +939,8 @@ sealed class NativeBindingRequirement_orMutable {
 }
 
 /// Deeply immutable.
-final class NativeBindingRequirement implements NativeBindingRequirement_orMutable {
+final class NativeBindingRequirement
+    implements NativeBindingRequirement_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.NamedTypeUse actual;
   @_core.override
@@ -867,11 +959,7 @@ final class NativeBindingRequirement implements NativeBindingRequirement_orMutab
     signature,
   );
 
-  NativeBindingRequirement._(
-    this.actual,
-    this.provider,
-    this.signature,
-  );
+  NativeBindingRequirement._(this.actual, this.provider, this.signature);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = NativeBindingRequirement._(
@@ -882,11 +970,12 @@ final class NativeBindingRequirement implements NativeBindingRequirement_orMutab
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static NativeBindingRequirement_mutable mutable() => NativeBindingRequirement_mutable._(
-    _lib_editor_v1_type_catalog.NamedTypeUse.defaultInstance,
-    _lib_editor_v1_type_catalog.NativeBindingId.defaultInstance,
-    "",
-  );
+  static NativeBindingRequirement_mutable mutable() =>
+      NativeBindingRequirement_mutable._(
+        _lib_editor_v1_type_catalog.NamedTypeUse.defaultInstance,
+        _lib_editor_v1_type_catalog.NativeBindingId.defaultInstance,
+        "",
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -894,17 +983,21 @@ final class NativeBindingRequirement implements NativeBindingRequirement_orMutab
   NativeBindingRequirement toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  NativeBindingRequirement_mutable toMutable() => NativeBindingRequirement_mutable._(
-    this.actual,
-    this.provider,
-    this.signature,
-  );
+  NativeBindingRequirement_mutable toMutable() =>
+      NativeBindingRequirement_mutable._(
+        this.actual,
+        this.provider,
+        this.signature,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! NativeBindingRequirement) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -920,7 +1013,11 @@ final class NativeBindingRequirement implements NativeBindingRequirement_orMutab
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `NativeBindingRequirement` instances.
-  static _skir.StructSerializer<NativeBindingRequirement, NativeBindingRequirement_mutable> get serializer {
+  static _skir.StructSerializer<
+    NativeBindingRequirement,
+    NativeBindingRequirement_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "actual",
@@ -966,7 +1063,8 @@ final class NativeBindingRequirement implements NativeBindingRequirement_orMutab
 }
 
 /// Mutable version of [NativeBindingRequirement].
-final class NativeBindingRequirement_mutable implements NativeBindingRequirement_orMutable {
+final class NativeBindingRequirement_mutable
+    implements NativeBindingRequirement_orMutable {
   _lib_editor_v1_type_catalog.NamedTypeUse_orMutable actual;
   _lib_editor_v1_type_catalog.NativeBindingId_orMutable provider;
   _core.String signature;
@@ -985,7 +1083,8 @@ final class NativeBindingRequirement_mutable implements NativeBindingRequirement
     if (value is _lib_editor_v1_type_catalog.NamedTypeUse_mutable) {
       return value;
     } else {
-      return this.actual = (value as _lib_editor_v1_type_catalog.NamedTypeUse).toMutable();
+      return this.actual = (value as _lib_editor_v1_type_catalog.NamedTypeUse)
+          .toMutable();
     }
   }
 
@@ -996,7 +1095,8 @@ final class NativeBindingRequirement_mutable implements NativeBindingRequirement
     if (value is _lib_editor_v1_type_catalog.NativeBindingId_mutable) {
       return value;
     } else {
-      return this.provider = (value as _lib_editor_v1_type_catalog.NativeBindingId).toMutable();
+      return this.provider =
+          (value as _lib_editor_v1_type_catalog.NativeBindingId).toMutable();
     }
   }
 
@@ -1021,7 +1121,8 @@ sealed class EngineImplementationInputs_orMutable {
 }
 
 /// Deeply immutable.
-final class EngineImplementationInputs implements EngineImplementationInputs_orMutable {
+final class EngineImplementationInputs
+    implements EngineImplementationInputs_orMutable {
   @_core.override
   final _core.Iterable<RuntimeMemberSignature> signatures;
   @_core.override
@@ -1036,10 +1137,7 @@ final class EngineImplementationInputs implements EngineImplementationInputs_orM
     token.toFrozen(),
   );
 
-  EngineImplementationInputs._(
-    this.signatures,
-    this.token,
-  );
+  EngineImplementationInputs._(this.signatures, this.token);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = EngineImplementationInputs._(
@@ -1049,10 +1147,11 @@ final class EngineImplementationInputs implements EngineImplementationInputs_orM
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static EngineImplementationInputs_mutable mutable() => EngineImplementationInputs_mutable._(
-    _skir.KeyedIterable.empty,
-    _lib_editor_v1_type_catalog.InputToken.defaultInstance,
-  );
+  static EngineImplementationInputs_mutable mutable() =>
+      EngineImplementationInputs_mutable._(
+        _skir.KeyedIterable.empty,
+        _lib_editor_v1_type_catalog.InputToken.defaultInstance,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1060,39 +1159,39 @@ final class EngineImplementationInputs implements EngineImplementationInputs_orM
   EngineImplementationInputs toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  EngineImplementationInputs_mutable toMutable() => EngineImplementationInputs_mutable._(
-    this.signatures,
-    this.token,
-  );
+  EngineImplementationInputs_mutable toMutable() =>
+      EngineImplementationInputs_mutable._(this.signatures, this.token);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! EngineImplementationInputs) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.signatures,
-    this.token,
-  ];
+  _core.List get _equality_proxy => [this.signatures, this.token];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `EngineImplementationInputs` instances.
-  static _skir.StructSerializer<EngineImplementationInputs, EngineImplementationInputs_mutable> get serializer {
+  static _skir.StructSerializer<
+    EngineImplementationInputs,
+    EngineImplementationInputs_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "signatures",
         "signatures",
         0,
-        _skir.Serializers.iterable(
-          RuntimeMemberSignature.serializer,
-        ),
+        _skir.Serializers.iterable(RuntimeMemberSignature.serializer),
         "",
         (it) => it.signatures,
         (it, v) => it.signatures = v,
@@ -1123,21 +1222,20 @@ final class EngineImplementationInputs implements EngineImplementationInputs_orM
 }
 
 /// Mutable version of [EngineImplementationInputs].
-final class EngineImplementationInputs_mutable implements EngineImplementationInputs_orMutable {
+final class EngineImplementationInputs_mutable
+    implements EngineImplementationInputs_orMutable {
   _core.Iterable<RuntimeMemberSignature_orMutable> signatures;
   _lib_editor_v1_type_catalog.InputToken_orMutable token;
   _skir.internal__UnrecognizedFields? _u;
 
-  EngineImplementationInputs_mutable._(
-    this.signatures,
-    this.token,
-  );
+  EngineImplementationInputs_mutable._(this.signatures, this.token);
 
   /// If the value of [signatures] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [signatures] and returns it.
   _core.List<RuntimeMemberSignature_orMutable> get mutableSignatures {
     final value = this.signatures;
-    if (value is _skir.internal__MutableList<RuntimeMemberSignature_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<RuntimeMemberSignature_orMutable>) {
       return value;
     } else {
       return this.signatures = _skir.internal__MutableList([...value]);
@@ -1151,16 +1249,16 @@ final class EngineImplementationInputs_mutable implements EngineImplementationIn
     if (value is _lib_editor_v1_type_catalog.InputToken_mutable) {
       return value;
     } else {
-      return this.token = (value as _lib_editor_v1_type_catalog.InputToken).toMutable();
+      return this.token = (value as _lib_editor_v1_type_catalog.InputToken)
+          .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  EngineImplementationInputs toFrozen() => EngineImplementationInputs(
-    signatures: this.signatures,
-    token: this.token,
-  ).._u = this._u;
+  EngineImplementationInputs toFrozen() =>
+      EngineImplementationInputs(signatures: this.signatures, token: this.token)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1194,7 +1292,7 @@ sealed class PublicationState {
 
   /// Create a 'blocked' variant wrapping around the given value.
   factory PublicationState.wrapBlocked(
-    _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic> value
+    _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic> value,
   ) => PublicationState_blockedWrapper._(value);
 
   /// Returns the kind of variant held by this PublicationState.
@@ -1255,15 +1353,16 @@ sealed class PublicationState {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/publication.skir:PublicationState",
-    doc: "",
-    unknownInstance: PublicationState_unknown._instance,
-    enumInstance: PublicationState.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: PublicationState_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/publication.skir:PublicationState",
+        doc: "",
+        unknownInstance: PublicationState_unknown._instance,
+        enumInstance: PublicationState.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PublicationState_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `PublicationState`.
@@ -1296,7 +1395,8 @@ final class PublicationState_unknown implements PublicationState {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PublicationState.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PublicationState.serializer);
 }
 
 enum _PublicationState_consts implements PublicationState {
@@ -1312,7 +1412,8 @@ enum _PublicationState_consts implements PublicationState {
   const _PublicationState_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PublicationState.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PublicationState.serializer);
 }
 
 sealed class _PublicationState_wrapper implements PublicationState {
@@ -1328,7 +1429,8 @@ sealed class _PublicationState_wrapper implements PublicationState {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PublicationState.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PublicationState.serializer);
 }
 
 final class PublicationState_blockedWrapper extends _PublicationState_wrapper {
@@ -1377,12 +1479,7 @@ final class PublicationAttempt implements PublicationAttempt_orMutable {
     state,
   );
 
-  PublicationAttempt._(
-    this.id,
-    this.catalog,
-    this.engineInputs,
-    this.state,
-  );
+  PublicationAttempt._(this.id, this.catalog, this.engineInputs, this.state);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PublicationAttempt._(
@@ -1418,7 +1515,10 @@ final class PublicationAttempt implements PublicationAttempt_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PublicationAttempt) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -1435,7 +1535,8 @@ final class PublicationAttempt implements PublicationAttempt_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PublicationAttempt` instances.
-  static _skir.StructSerializer<PublicationAttempt, PublicationAttempt_mutable> get serializer {
+  static _skir.StructSerializer<PublicationAttempt, PublicationAttempt_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "id",
@@ -1511,7 +1612,8 @@ final class PublicationAttempt_mutable implements PublicationAttempt_orMutable {
     if (value is _lib_editor_v1_type_catalog.PublicationId_mutable) {
       return value;
     } else {
-      return this.id = (value as _lib_editor_v1_type_catalog.PublicationId).toMutable();
+      return this.id = (value as _lib_editor_v1_type_catalog.PublicationId)
+          .toMutable();
     }
   }
 
@@ -1522,7 +1624,8 @@ final class PublicationAttempt_mutable implements PublicationAttempt_orMutable {
     if (value is _lib_editor_v1_type_catalog.CatalogGeneration_mutable) {
       return value;
     } else {
-      return this.catalog = (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
+      return this.catalog =
+          (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
     }
   }
 
@@ -1533,7 +1636,8 @@ final class PublicationAttempt_mutable implements PublicationAttempt_orMutable {
     if (value is EngineImplementationInputs_mutable) {
       return value;
     } else {
-      return this.engineInputs = (value as EngineImplementationInputs).toMutable();
+      return this.engineInputs = (value as EngineImplementationInputs)
+          .toMutable();
     }
   }
 
@@ -1552,8 +1656,10 @@ final class PublicationAttempt_mutable implements PublicationAttempt_orMutable {
 // -----------------------------------------------------------------------------
 
 sealed class CheckCoverage_orMutable {
-  _core.Iterable<_lib_editor_v1_checking.CheckInstanceId_orMutable> get required_;
-  _core.Iterable<_lib_editor_v1_checking.CheckInstanceId_orMutable> get completed;
+  _core.Iterable<_lib_editor_v1_checking.CheckInstanceId_orMutable>
+  get required_;
+  _core.Iterable<_lib_editor_v1_checking.CheckInstanceId_orMutable>
+  get completed;
 
   CheckCoverage toFrozen();
 }
@@ -1567,17 +1673,16 @@ final class CheckCoverage implements CheckCoverage_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory CheckCoverage({
-    required _core.Iterable<_lib_editor_v1_checking.CheckInstanceId_orMutable> required_,
-    required _core.Iterable<_lib_editor_v1_checking.CheckInstanceId_orMutable> completed,
+    required _core.Iterable<_lib_editor_v1_checking.CheckInstanceId_orMutable>
+    required_,
+    required _core.Iterable<_lib_editor_v1_checking.CheckInstanceId_orMutable>
+    completed,
   }) => CheckCoverage._(
     _skir.internal__frozenMappedCopy(required_, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(completed, (it) => it.toFrozen()),
   );
 
-  CheckCoverage._(
-    this.required_,
-    this.completed,
-  );
+  CheckCoverage._(this.required_, this.completed);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CheckCoverage._(
@@ -1598,31 +1703,30 @@ final class CheckCoverage implements CheckCoverage_orMutable {
   CheckCoverage toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CheckCoverage_mutable toMutable() => CheckCoverage_mutable._(
-    this.required_,
-    this.completed,
-  );
+  CheckCoverage_mutable toMutable() =>
+      CheckCoverage_mutable._(this.required_, this.completed);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CheckCoverage) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.required_,
-    this.completed,
-  ];
+  _core.List get _equality_proxy => [this.required_, this.completed];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CheckCoverage` instances.
-  static _skir.StructSerializer<CheckCoverage, CheckCoverage_mutable> get serializer {
+  static _skir.StructSerializer<CheckCoverage, CheckCoverage_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "required",
@@ -1668,16 +1772,17 @@ final class CheckCoverage_mutable implements CheckCoverage_orMutable {
   _core.Iterable<_lib_editor_v1_checking.CheckInstanceId_orMutable> completed;
   _skir.internal__UnrecognizedFields? _u;
 
-  CheckCoverage_mutable._(
-    this.required_,
-    this.completed,
-  );
+  CheckCoverage_mutable._(this.required_, this.completed);
 
   /// If the value of [required_] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [required_] and returns it.
-  _core.List<_lib_editor_v1_checking.CheckInstanceId_orMutable> get mutableRequired {
+  _core.List<_lib_editor_v1_checking.CheckInstanceId_orMutable>
+  get mutableRequired {
     final value = this.required_;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_checking.CheckInstanceId_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_checking.CheckInstanceId_orMutable
+        >) {
       return value;
     } else {
       return this.required_ = _skir.internal__MutableList([...value]);
@@ -1686,9 +1791,13 @@ final class CheckCoverage_mutable implements CheckCoverage_orMutable {
 
   /// If the value of [completed] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [completed] and returns it.
-  _core.List<_lib_editor_v1_checking.CheckInstanceId_orMutable> get mutableCompleted {
+  _core.List<_lib_editor_v1_checking.CheckInstanceId_orMutable>
+  get mutableCompleted {
     final value = this.completed;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_checking.CheckInstanceId_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_checking.CheckInstanceId_orMutable
+        >) {
       return value;
     } else {
       return this.completed = _skir.internal__MutableList([...value]);
@@ -1697,10 +1806,9 @@ final class CheckCoverage_mutable implements CheckCoverage_orMutable {
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  CheckCoverage toFrozen() => CheckCoverage(
-    required_: this.required_,
-    completed: this.completed,
-  ).._u = this._u;
+  CheckCoverage toFrozen() =>
+      CheckCoverage(required_: this.required_, completed: this.completed)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -1731,13 +1839,18 @@ final class AcceptedAuthoring implements AcceptedAuthoring_orMutable {
   factory AcceptedAuthoring({
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog,
     required CheckCoverage_orMutable requiredCoverage,
-    required _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation> evidence,
-    required _core.Iterable<NativeBindingRequirement_orMutable> bindingRequirements,
+    required _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation>
+    evidence,
+    required _core.Iterable<NativeBindingRequirement_orMutable>
+    bindingRequirements,
   }) => AcceptedAuthoring._(
     catalog.toFrozen(),
     requiredCoverage.toFrozen(),
     _skir.internal__frozenCopy(evidence),
-    _skir.internal__frozenMappedCopy(bindingRequirements, (it) => it.toFrozen()),
+    _skir.internal__frozenMappedCopy(
+      bindingRequirements,
+      (it) => it.toFrozen(),
+    ),
   );
 
   AcceptedAuthoring._(
@@ -1781,7 +1894,10 @@ final class AcceptedAuthoring implements AcceptedAuthoring_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! AcceptedAuthoring) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -1798,7 +1914,8 @@ final class AcceptedAuthoring implements AcceptedAuthoring_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `AcceptedAuthoring` instances.
-  static _skir.StructSerializer<AcceptedAuthoring, AcceptedAuthoring_mutable> get serializer {
+  static _skir.StructSerializer<AcceptedAuthoring, AcceptedAuthoring_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "catalog",
@@ -1833,9 +1950,7 @@ final class AcceptedAuthoring implements AcceptedAuthoring_orMutable {
         "binding_requirements",
         "bindingRequirements",
         3,
-        _skir.Serializers.iterable(
-          NativeBindingRequirement.serializer,
-        ),
+        _skir.Serializers.iterable(NativeBindingRequirement.serializer),
         "",
         (it) => it.bindingRequirements,
         (it, v) => it.bindingRequirements = v,
@@ -1878,7 +1993,8 @@ final class AcceptedAuthoring_mutable implements AcceptedAuthoring_orMutable {
     if (value is _lib_editor_v1_type_catalog.CatalogGeneration_mutable) {
       return value;
     } else {
-      return this.catalog = (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
+      return this.catalog =
+          (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
     }
   }
 
@@ -1895,9 +2011,13 @@ final class AcceptedAuthoring_mutable implements AcceptedAuthoring_orMutable {
 
   /// If the value of [evidence] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [evidence] and returns it.
-  _core.List<_lib_editor_v1_authoring_facts.EditExpectation> get mutableEvidence {
+  _core.List<_lib_editor_v1_authoring_facts.EditExpectation>
+  get mutableEvidence {
     final value = this.evidence;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_authoring_facts.EditExpectation>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_authoring_facts.EditExpectation
+        >) {
       return value;
     } else {
       return this.evidence = _skir.internal__MutableList([...value]);
@@ -1906,9 +2026,11 @@ final class AcceptedAuthoring_mutable implements AcceptedAuthoring_orMutable {
 
   /// If the value of [bindingRequirements] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [bindingRequirements] and returns it.
-  _core.List<NativeBindingRequirement_orMutable> get mutableBindingRequirements {
+  _core.List<NativeBindingRequirement_orMutable>
+  get mutableBindingRequirements {
     final value = this.bindingRequirements;
-    if (value is _skir.internal__MutableList<NativeBindingRequirement_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<NativeBindingRequirement_orMutable>) {
       return value;
     } else {
       return this.bindingRequirements = _skir.internal__MutableList([...value]);
@@ -1936,20 +2058,17 @@ sealed class PublicationResult_Activated_orMutable {
 }
 
 /// Deeply immutable.
-final class PublicationResult_Activated implements PublicationResult_Activated_orMutable {
+final class PublicationResult_Activated
+    implements PublicationResult_Activated_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.PublicationId publication;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PublicationResult_Activated({
     required _lib_editor_v1_type_catalog.PublicationId_orMutable publication,
-  }) => PublicationResult_Activated._(
-    publication.toFrozen(),
-  );
+  }) => PublicationResult_Activated._(publication.toFrozen());
 
-  PublicationResult_Activated._(
-    this.publication,
-  );
+  PublicationResult_Activated._(this.publication);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PublicationResult_Activated._(
@@ -1958,9 +2077,10 @@ final class PublicationResult_Activated implements PublicationResult_Activated_o
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static PublicationResult_Activated_mutable mutable() => PublicationResult_Activated_mutable._(
-    _lib_editor_v1_type_catalog.PublicationId.defaultInstance,
-  );
+  static PublicationResult_Activated_mutable mutable() =>
+      PublicationResult_Activated_mutable._(
+        _lib_editor_v1_type_catalog.PublicationId.defaultInstance,
+      );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -1968,29 +2088,33 @@ final class PublicationResult_Activated implements PublicationResult_Activated_o
   PublicationResult_Activated toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PublicationResult_Activated_mutable toMutable() => PublicationResult_Activated_mutable._(
-    this.publication,
-  );
+  PublicationResult_Activated_mutable toMutable() =>
+      PublicationResult_Activated_mutable._(this.publication);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PublicationResult_Activated) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.publication,
-  ];
+  _core.List get _equality_proxy => [this.publication];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PublicationResult_Activated` instances.
-  static _skir.StructSerializer<PublicationResult_Activated, PublicationResult_Activated_mutable> get serializer {
+  static _skir.StructSerializer<
+    PublicationResult_Activated,
+    PublicationResult_Activated_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "publication",
@@ -2018,13 +2142,12 @@ final class PublicationResult_Activated implements PublicationResult_Activated_o
 }
 
 /// Mutable version of [PublicationResult_Activated].
-final class PublicationResult_Activated_mutable implements PublicationResult_Activated_orMutable {
+final class PublicationResult_Activated_mutable
+    implements PublicationResult_Activated_orMutable {
   _lib_editor_v1_type_catalog.PublicationId_orMutable publication;
   _skir.internal__UnrecognizedFields? _u;
 
-  PublicationResult_Activated_mutable._(
-    this.publication,
-  );
+  PublicationResult_Activated_mutable._(this.publication);
 
   /// If the value of [publication] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [publication] and returns it.
@@ -2033,15 +2156,15 @@ final class PublicationResult_Activated_mutable implements PublicationResult_Act
     if (value is _lib_editor_v1_type_catalog.PublicationId_mutable) {
       return value;
     } else {
-      return this.publication = (value as _lib_editor_v1_type_catalog.PublicationId).toMutable();
+      return this.publication =
+          (value as _lib_editor_v1_type_catalog.PublicationId).toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  PublicationResult_Activated toFrozen() => PublicationResult_Activated(
-    publication: this.publication,
-  ).._u = this._u;
+  PublicationResult_Activated toFrozen() =>
+      PublicationResult_Activated(publication: this.publication).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -2068,37 +2191,31 @@ sealed class PublicationResult {
   static const publishing = _PublicationResult_consts.publishingConst;
 
   /// Create a 'activated' variant wrapping around the given value.
-  factory PublicationResult.wrapActivated(
-    PublicationResult_Activated value
-  ) => PublicationResult_activatedWrapper._(value);
+  factory PublicationResult.wrapActivated(PublicationResult_Activated value) =>
+      PublicationResult_activatedWrapper._(value);
 
   /// Same as `wrapActivated(PublicationResult_Activated(...))`.
   factory PublicationResult.createActivated({
     required _lib_editor_v1_type_catalog.PublicationId_orMutable publication,
   }) => PublicationResult.wrapActivated(
-    PublicationResult_Activated(
-      publication: publication,
-    )
+    PublicationResult_Activated(publication: publication),
   );
 
   /// Create a 'blocked' variant wrapping around the given value.
   factory PublicationResult.wrapBlocked(
-    _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic> value
+    _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic> value,
   ) => PublicationResult_blockedWrapper._(value);
 
   /// Create a 'interrupted' variant wrapping around the given value.
   factory PublicationResult.wrapInterrupted(
-    _lib_editor_v1_type_catalog.PublicationId value
+    _lib_editor_v1_type_catalog.PublicationId value,
   ) => PublicationResult_interruptedWrapper._(value);
 
   /// Same as `wrapInterrupted(_lib_editor_v1_type_catalog.PublicationId(...))`.
-  factory PublicationResult.createInterrupted({
-    required _core.String value,
-  }) => PublicationResult.wrapInterrupted(
-    _lib_editor_v1_type_catalog.PublicationId(
-      value: value,
-    )
-  );
+  factory PublicationResult.createInterrupted({required _core.String value}) =>
+      PublicationResult.wrapInterrupted(
+        _lib_editor_v1_type_catalog.PublicationId(value: value),
+      );
 
   /// Returns the kind of variant held by this PublicationResult.
   PublicationResult_kind get kind;
@@ -2150,15 +2267,16 @@ sealed class PublicationResult {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/publication.skir:PublicationResult",
-    doc: "",
-    unknownInstance: PublicationResult_unknown._instance,
-    enumInstance: PublicationResult.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: PublicationResult_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/publication.skir:PublicationResult",
+        doc: "",
+        unknownInstance: PublicationResult_unknown._instance,
+        enumInstance: PublicationResult.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PublicationResult_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `PublicationResult`.
@@ -2189,7 +2307,8 @@ final class PublicationResult_unknown implements PublicationResult {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PublicationResult.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PublicationResult.serializer);
 }
 
 enum _PublicationResult_consts implements PublicationResult {
@@ -2201,7 +2320,8 @@ enum _PublicationResult_consts implements PublicationResult {
   const _PublicationResult_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PublicationResult.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PublicationResult.serializer);
 }
 
 sealed class _PublicationResult_wrapper implements PublicationResult {
@@ -2217,10 +2337,12 @@ sealed class _PublicationResult_wrapper implements PublicationResult {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PublicationResult.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PublicationResult.serializer);
 }
 
-final class PublicationResult_activatedWrapper extends _PublicationResult_wrapper {
+final class PublicationResult_activatedWrapper
+    extends _PublicationResult_wrapper {
   final PublicationResult_Activated value;
 
   PublicationResult_activatedWrapper._(this.value);
@@ -2229,7 +2351,8 @@ final class PublicationResult_activatedWrapper extends _PublicationResult_wrappe
   PublicationResult_kind get kind => PublicationResult_kind.activatedWrapper;
 }
 
-final class PublicationResult_blockedWrapper extends _PublicationResult_wrapper {
+final class PublicationResult_blockedWrapper
+    extends _PublicationResult_wrapper {
   final _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic> value;
 
   PublicationResult_blockedWrapper._(this.value);
@@ -2238,7 +2361,8 @@ final class PublicationResult_blockedWrapper extends _PublicationResult_wrapper 
   PublicationResult_kind get kind => PublicationResult_kind.blockedWrapper;
 }
 
-final class PublicationResult_interruptedWrapper extends _PublicationResult_wrapper {
+final class PublicationResult_interruptedWrapper
+    extends _PublicationResult_wrapper {
   final _lib_editor_v1_type_catalog.PublicationId value;
 
   PublicationResult_interruptedWrapper._(this.value);
@@ -2256,7 +2380,8 @@ sealed class PublishAuthoringRequest_orMutable {
 }
 
 /// Deeply immutable.
-final class PublishAuthoringRequest implements PublishAuthoringRequest_orMutable {
+final class PublishAuthoringRequest
+    implements PublishAuthoringRequest_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory PublishAuthoringRequest() => PublishAuthoringRequest._();
@@ -2268,7 +2393,8 @@ final class PublishAuthoringRequest implements PublishAuthoringRequest_orMutable
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static PublishAuthoringRequest_mutable mutable() => PublishAuthoringRequest_mutable._();
+  static PublishAuthoringRequest_mutable mutable() =>
+      PublishAuthoringRequest_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -2276,13 +2402,17 @@ final class PublishAuthoringRequest implements PublishAuthoringRequest_orMutable
   PublishAuthoringRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PublishAuthoringRequest_mutable toMutable() => PublishAuthoringRequest_mutable._();
+  PublishAuthoringRequest_mutable toMutable() =>
+      PublishAuthoringRequest_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PublishAuthoringRequest) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -2294,7 +2424,11 @@ final class PublishAuthoringRequest implements PublishAuthoringRequest_orMutable
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PublishAuthoringRequest` instances.
-  static _skir.StructSerializer<PublishAuthoringRequest, PublishAuthoringRequest_mutable> get serializer {
+  static _skir.StructSerializer<
+    PublishAuthoringRequest,
+    PublishAuthoringRequest_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -2313,7 +2447,8 @@ final class PublishAuthoringRequest implements PublishAuthoringRequest_orMutable
 }
 
 /// Mutable version of [PublishAuthoringRequest].
-final class PublishAuthoringRequest_mutable implements PublishAuthoringRequest_orMutable {
+final class PublishAuthoringRequest_mutable
+    implements PublishAuthoringRequest_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   PublishAuthoringRequest_mutable._();
@@ -2340,22 +2475,23 @@ final class PublishAuthoringRequest_mutable implements PublishAuthoringRequest_o
 sealed class PublishAuthoringResponse {
   /// Constant indicating an unknown `PublishAuthoringResponse`.
   /// Default value for fields of type `PublishAuthoringResponse`.
-  static const PublishAuthoringResponse unknown = PublishAuthoringResponse_unknown._instance;
+  static const PublishAuthoringResponse unknown =
+      PublishAuthoringResponse_unknown._instance;
 
   /// Create a 'result' variant wrapping around the given value.
-  factory PublishAuthoringResponse.wrapResult(
-    PublicationResult value
-  ) => PublishAuthoringResponse_resultWrapper._(value);
+  factory PublishAuthoringResponse.wrapResult(PublicationResult value) =>
+      PublishAuthoringResponse_resultWrapper._(value);
 
   /// Create a 'internal_error' variant wrapping around the given value.
   factory PublishAuthoringResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError value
+    _lib_kernel_v1_errors.InternalError value,
   ) => PublishAuthoringResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory PublishAuthoringResponse.createInternalError() => PublishAuthoringResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError()
-  );
+  factory PublishAuthoringResponse.createInternalError() =>
+      PublishAuthoringResponse.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
+      );
 
   /// Returns the kind of variant held by this PublishAuthoringResponse.
   PublishAuthoringResponse_kind get kind;
@@ -2388,15 +2524,16 @@ sealed class PublishAuthoringResponse {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/publication.skir:PublishAuthoringResponse",
-    doc: "",
-    unknownInstance: PublishAuthoringResponse_unknown._instance,
-    enumInstance: PublishAuthoringResponse.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: PublishAuthoringResponse_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/publication.skir:PublishAuthoringResponse",
+        doc: "",
+        unknownInstance: PublishAuthoringResponse_unknown._instance,
+        enumInstance: PublishAuthoringResponse.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PublishAuthoringResponse_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `PublishAuthoringResponse`.
@@ -2410,7 +2547,8 @@ enum PublishAuthoringResponse_kind {
   const PublishAuthoringResponse_kind(this._ordinal);
 }
 
-final class PublishAuthoringResponse_unknown implements PublishAuthoringResponse {
+final class PublishAuthoringResponse_unknown
+    implements PublishAuthoringResponse {
   static const _instance = PublishAuthoringResponse_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
@@ -2419,16 +2557,19 @@ final class PublishAuthoringResponse_unknown implements PublishAuthoringResponse
   PublishAuthoringResponse_unknown._unrecognized(this._u);
 
   @_core.override
-  PublishAuthoringResponse_kind get kind => PublishAuthoringResponse_kind.unknown;
+  PublishAuthoringResponse_kind get kind =>
+      PublishAuthoringResponse_kind.unknown;
   @_core.override
   _core.bool operator ==(other) => other is PublishAuthoringResponse_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PublishAuthoringResponse.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PublishAuthoringResponse.serializer);
 }
 
-sealed class _PublishAuthoringResponse_wrapper implements PublishAuthoringResponse {
+sealed class _PublishAuthoringResponse_wrapper
+    implements PublishAuthoringResponse {
   _core.dynamic get value;
 
   @_core.override
@@ -2441,25 +2582,30 @@ sealed class _PublishAuthoringResponse_wrapper implements PublishAuthoringRespon
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PublishAuthoringResponse.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PublishAuthoringResponse.serializer);
 }
 
-final class PublishAuthoringResponse_resultWrapper extends _PublishAuthoringResponse_wrapper {
+final class PublishAuthoringResponse_resultWrapper
+    extends _PublishAuthoringResponse_wrapper {
   final PublicationResult value;
 
   PublishAuthoringResponse_resultWrapper._(this.value);
 
   @_core.override
-  PublishAuthoringResponse_kind get kind => PublishAuthoringResponse_kind.resultWrapper;
+  PublishAuthoringResponse_kind get kind =>
+      PublishAuthoringResponse_kind.resultWrapper;
 }
 
-final class PublishAuthoringResponse_internalErrorWrapper extends _PublishAuthoringResponse_wrapper {
+final class PublishAuthoringResponse_internalErrorWrapper
+    extends _PublishAuthoringResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
   PublishAuthoringResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  PublishAuthoringResponse_kind get kind => PublishAuthoringResponse_kind.internalErrorWrapper;
+  PublishAuthoringResponse_kind get kind =>
+      PublishAuthoringResponse_kind.internalErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -2487,18 +2633,15 @@ final class PublicationReport implements PublicationReport_orMutable {
   factory PublicationReport({
     required _lib_editor_v1_type_catalog.PublicationId_orMutable id,
     required PublicationState state,
-    required _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable> findings,
+    required _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable>
+    findings,
   }) => PublicationReport._(
     id.toFrozen(),
     state,
     _skir.internal__frozenMappedCopy(findings, (it) => it.toFrozen()),
   );
 
-  PublicationReport._(
-    this.id,
-    this.state,
-    this.findings,
-  );
+  PublicationReport._(this.id, this.state, this.findings);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = PublicationReport._(
@@ -2521,33 +2664,30 @@ final class PublicationReport implements PublicationReport_orMutable {
   PublicationReport toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PublicationReport_mutable toMutable() => PublicationReport_mutable._(
-    this.id,
-    this.state,
-    this.findings,
-  );
+  PublicationReport_mutable toMutable() =>
+      PublicationReport_mutable._(this.id, this.state, this.findings);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! PublicationReport) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.id,
-    this.state,
-    this.findings,
-  ];
+  _core.List get _equality_proxy => [this.id, this.state, this.findings];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `PublicationReport` instances.
-  static _skir.StructSerializer<PublicationReport, PublicationReport_mutable> get serializer {
+  static _skir.StructSerializer<PublicationReport, PublicationReport_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "id",
@@ -2601,11 +2741,7 @@ final class PublicationReport_mutable implements PublicationReport_orMutable {
   _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable> findings;
   _skir.internal__UnrecognizedFields? _u;
 
-  PublicationReport_mutable._(
-    this.id,
-    this.state,
-    this.findings,
-  );
+  PublicationReport_mutable._(this.id, this.state, this.findings);
 
   /// If the value of [id] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
@@ -2614,15 +2750,20 @@ final class PublicationReport_mutable implements PublicationReport_orMutable {
     if (value is _lib_editor_v1_type_catalog.PublicationId_mutable) {
       return value;
     } else {
-      return this.id = (value as _lib_editor_v1_type_catalog.PublicationId).toMutable();
+      return this.id = (value as _lib_editor_v1_type_catalog.PublicationId)
+          .toMutable();
     }
   }
 
   /// If the value of [findings] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [findings] and returns it.
-  _core.List<_lib_editor_v1_diagnostic.Diagnostic_orMutable> get mutableFindings {
+  _core.List<_lib_editor_v1_diagnostic.Diagnostic_orMutable>
+  get mutableFindings {
     final value = this.findings;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_diagnostic.Diagnostic_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_diagnostic.Diagnostic_orMutable
+        >) {
       return value;
     } else {
       return this.findings = _skir.internal__MutableList([...value]);
@@ -2631,11 +2772,9 @@ final class PublicationReport_mutable implements PublicationReport_orMutable {
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  PublicationReport toFrozen() => PublicationReport(
-    id: this.id,
-    state: this.state,
-    findings: this.findings,
-  ).._u = this._u;
+  PublicationReport toFrozen() =>
+      PublicationReport(id: this.id, state: this.state, findings: this.findings)
+        .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
@@ -2647,7 +2786,8 @@ sealed class WatchPublicationRequest_orMutable {
 }
 
 /// Deeply immutable.
-final class WatchPublicationRequest implements WatchPublicationRequest_orMutable {
+final class WatchPublicationRequest
+    implements WatchPublicationRequest_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory WatchPublicationRequest() => WatchPublicationRequest._();
@@ -2659,7 +2799,8 @@ final class WatchPublicationRequest implements WatchPublicationRequest_orMutable
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static WatchPublicationRequest_mutable mutable() => WatchPublicationRequest_mutable._();
+  static WatchPublicationRequest_mutable mutable() =>
+      WatchPublicationRequest_mutable._();
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
@@ -2667,13 +2808,17 @@ final class WatchPublicationRequest implements WatchPublicationRequest_orMutable
   WatchPublicationRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  WatchPublicationRequest_mutable toMutable() => WatchPublicationRequest_mutable._();
+  WatchPublicationRequest_mutable toMutable() =>
+      WatchPublicationRequest_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! WatchPublicationRequest) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -2685,7 +2830,11 @@ final class WatchPublicationRequest implements WatchPublicationRequest_orMutable
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `WatchPublicationRequest` instances.
-  static _skir.StructSerializer<WatchPublicationRequest, WatchPublicationRequest_mutable> get serializer {
+  static _skir.StructSerializer<
+    WatchPublicationRequest,
+    WatchPublicationRequest_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -2704,7 +2853,8 @@ final class WatchPublicationRequest implements WatchPublicationRequest_orMutable
 }
 
 /// Mutable version of [WatchPublicationRequest].
-final class WatchPublicationRequest_mutable implements WatchPublicationRequest_orMutable {
+final class WatchPublicationRequest_mutable
+    implements WatchPublicationRequest_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   WatchPublicationRequest_mutable._();
@@ -2714,26 +2864,20 @@ final class WatchPublicationRequest_mutable implements WatchPublicationRequest_o
   WatchPublicationRequest toFrozen() => WatchPublicationRequest().._u = this._u;
 }
 
-final _skir.Method<
-  PublishAuthoringRequest,
-  PublishAuthoringResponse
-> publishAuthoringMethod =
-  _skir.Method(
-    "PublishAuthoring",
-    920020,
-    PublishAuthoringRequest.serializer,
-    PublishAuthoringResponse.serializer,
-    "",
-  );
+final _skir.Method<PublishAuthoringRequest, PublishAuthoringResponse>
+publishAuthoringMethod = _skir.Method(
+  "PublishAuthoring",
+  920020,
+  PublishAuthoringRequest.serializer,
+  PublishAuthoringResponse.serializer,
+  "",
+);
 
-final _skir.Method<
-  WatchPublicationRequest,
-  PublicationReport
-> watchPublicationMethod =
-  _skir.Method(
-    "WatchPublication",
-    920021,
-    WatchPublicationRequest.serializer,
-    PublicationReport.serializer,
-    "",
-  );
+final _skir.Method<WatchPublicationRequest, PublicationReport>
+watchPublicationMethod = _skir.Method(
+  "WatchPublication",
+  920021,
+  WatchPublicationRequest.serializer,
+  PublicationReport.serializer,
+  "",
+);
