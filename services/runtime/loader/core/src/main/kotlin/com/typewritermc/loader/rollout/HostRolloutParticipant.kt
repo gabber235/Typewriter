@@ -33,6 +33,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
@@ -41,8 +43,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import java.nio.file.Path
+import java.util.concurrent.TimeoutException
 import kotlin.io.path.createDirectories
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -595,21 +598,27 @@ class HostRolloutParticipant(
         suspend fun activate() =
             transition(
                 ordered = runtimes,
+                operationName = "activate",
                 operation = { it.runtime.activate() },
+                compensationName = "quiesce",
                 compensate = { it.runtime.quiesce() },
             )
 
         suspend fun quiesce() =
             transition(
                 ordered = runtimes.asReversed(),
+                operationName = "quiesce",
                 operation = { it.runtime.quiesce() },
+                compensationName = "resume",
                 compensate = { it.runtime.resume() },
             )
 
         suspend fun resume() =
             transition(
                 ordered = runtimes,
+                operationName = "resume",
                 operation = { it.runtime.resume() },
+                compensationName = "quiesce",
                 compensate = { it.runtime.quiesce() },
             )
 
@@ -620,7 +629,7 @@ class HostRolloutParticipant(
             val failures = mutableListOf<Throwable>()
             pendingClose.toList().asReversed().forEach { runtime ->
                 try {
-                    withTimeout(lifecycleTimeout) { runtime.close() }
+                    withinLifecycleDeadline("close") { runtime.close() }
                     pendingClose.remove(runtime)
                 } catch (failure: Throwable) {
                     failures += failure
@@ -634,24 +643,37 @@ class HostRolloutParticipant(
 
         private suspend fun transition(
             ordered: List<LoadedHostedRuntime>,
+            operationName: String,
             operation: suspend (LoadedHostedRuntime) -> Unit,
+            compensationName: String,
             compensate: suspend (LoadedHostedRuntime) -> Unit,
         ) {
             val completed = mutableListOf<LoadedHostedRuntime>()
             try {
                 ordered.forEach { runtime ->
-                    withTimeout(lifecycleTimeout) { operation(runtime) }
+                    withinLifecycleDeadline(operationName) { operation(runtime) }
                     completed += runtime
                 }
             } catch (failure: Throwable) {
                 withContext(NonCancellable) {
                     completed.asReversed().forEach { runtime ->
                         runCatchingSuspend {
-                            withTimeout(lifecycleTimeout) { compensate(runtime) }
+                            withinLifecycleDeadline("$compensationName compensation") { compensate(runtime) }
                         }.exceptionOrNull()?.let(failure::addSuppressed)
                     }
                 }
                 throw failure
+            }
+        }
+
+        private suspend fun withinLifecycleDeadline(
+            operationName: String,
+            operation: suspend () -> Unit,
+        ) {
+            val completed = withTimeoutOrNull(lifecycleTimeout) { operation() }
+            currentCoroutineContext().ensureActive()
+            if (completed == null) {
+                throw TimeoutException("Hosted runtime $operationName exceeded lifecycle deadline of $lifecycleTimeout")
             }
         }
 
