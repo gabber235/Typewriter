@@ -1,6 +1,8 @@
 package com.typewritermc.discovery.codegen
 
 import com.google.devtools.ksp.getAllSuperTypes
+import com.google.devtools.ksp.processing.CodeGenerator
+import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.ClassKind
@@ -14,6 +16,7 @@ import com.typewritermc.codegen.argument
 import com.typewritermc.codegen.rawAnnotation
 
 class RegistrarProviderProcessor(
+    private val codeGenerator: CodeGenerator,
     private val logger: KSPLogger,
 ) {
     private val generated = mutableSetOf<String>()
@@ -49,7 +52,36 @@ class RegistrarProviderProcessor(
                     logger.error("Runtime registrars must select at least one runtime domain.", declaration)
                     return@mapNotNull null
                 }
-                GeneratedProviderContribution("registrar", qualified).takeIf { generated.add(qualified) }
+                if (!generated.add(qualified)) return@mapNotNull null
+                val packageName = declaration.packageName.asString()
+                val providerName = qualified.removePrefix("$packageName.").replace('.', '_') + "GeneratedRegistrarProvider"
+                val domains =
+                    listOfNotNull(
+                        "com.typewritermc.discovery.DiscoveryDomains.Realm".takeIf { realm },
+                        "com.typewritermc.discovery.DiscoveryDomains.Execution".takeIf { execution },
+                    ).joinToString()
+                val source =
+                    """
+package $packageName
+
+class $providerName : com.typewritermc.discovery.GeneratedRuntimeRegistrarProvider {
+    override val descriptor = com.typewritermc.discovery.RuntimeRegistrarDescriptor(
+        id = "$id",
+        domains = setOf($domains),
+    )
+
+    override fun bind(instantiator: com.typewritermc.discovery.GeneratedProviderInstantiator): com.typewritermc.discovery.RuntimeRegistrar =
+        instantiator.instantiate($qualified::class.java) as $qualified
+}
+""".trimStart()
+                codeGenerator
+                    .createNewFile(
+                        Dependencies(false, *listOfNotNull(declaration.containingFile).toTypedArray()),
+                        packageName,
+                        providerName,
+                    ).bufferedWriter()
+                    .use { it.write(source) }
+                GeneratedProviderContribution("registrar", "$packageName.$providerName")
             }
         return ProviderProcessingResult(providers, deferred)
     }

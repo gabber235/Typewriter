@@ -7,6 +7,7 @@ import com.typewritermc.authoring.SamplingInputs
 import com.typewritermc.authoring.TypewriterResourceDefinition
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.DeploymentFacts
+import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.GeneratedProviderArtifact
 import com.typewritermc.discovery.GeneratedProviderInstantiator
 import com.typewritermc.discovery.GeneratedProviderKind
@@ -162,6 +163,7 @@ fun main() {
         .load(
             artifacts = listOf(GeneratedProviderArtifact(ArtifactId("fixture:generated-provider"), artifact)),
             facts = DeploymentFacts(),
+            domain = DiscoveryDomains.Realm,
             acceptedKinds =
                 setOf(
                     GeneratedProviderKind.Type,

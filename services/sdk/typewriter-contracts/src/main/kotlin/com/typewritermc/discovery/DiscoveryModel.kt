@@ -6,7 +6,6 @@ import com.typewritermc.imprint.ProducerId
 import kotlinx.serialization.Serializable
 
 private val SEGMENT_PATTERN = Regex("[A-Za-z0-9][A-Za-z0-9_.]*")
-private val QUALIFIED_CLASS_PATTERN = Regex("[A-Za-z_$][A-Za-z0-9_$]*(\\.[A-Za-z_$][A-Za-z0-9_$]*)+")
 
 @JvmInline
 @Serializable
@@ -30,18 +29,6 @@ data class ContributionKey(
     val producer: ProducerId,
     val name: ContributionName,
 )
-
-@Serializable
-data class ExecutableBinding(
-    val localName: String,
-    val domain: DiscoveryDomainId,
-    val moduleProviderClass: String,
-) {
-    init {
-        require(localName.matches(SEGMENT_PATTERN)) { "Executable binding names must be safe path segments." }
-        require(moduleProviderClass.matches(QUALIFIED_CLASS_PATTERN)) { "Module provider classes must use qualified JVM names." }
-    }
-}
 
 @Serializable
 enum class GraphDirection {

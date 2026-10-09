@@ -15,9 +15,10 @@ import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.CapabilityOwnerResolver
 import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.DeploymentFacts
+import com.typewritermc.discovery.DiscoveryDomains
+import com.typewritermc.discovery.GeneratedProviderInstantiator
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.discovery.RuntimeScope
-import com.typewritermc.discovery.TypewriterRegistrar
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
@@ -164,13 +165,13 @@ val SyntheticDiscoveryTest by testSuite {
         runTest {
             val scope = RecordingRuntimeScope(this)
 
-            with(scope) { SyntheticRuntimeRegistrar().register() }
+            val provider = SyntheticRuntimeRegistrarGeneratedRegistrarProvider()
+            provider.descriptor.domains shouldBe setOf(DiscoveryDomains.Execution)
+            provider.descriptor.id shouldBe "synthetic"
+            val registrar = provider.bind(GeneratedProviderInstantiator.PublicZeroArgument)
+            with(scope) { registrar.register() }
 
             scope.owned shouldBe 1
-            SyntheticRuntimeRegistrar::class.java.getAnnotation(TypewriterRegistrar::class.java).let { annotation ->
-                annotation.execution shouldBe true
-                annotation.realm shouldBe false
-            }
         }
     }
 

@@ -63,6 +63,7 @@ data class OwnedRealmCapability(
 
 data class OwnedRuntimeRegistrar(
     val origin: ProviderOrigin,
+    val descriptor: RuntimeRegistrarDescriptor,
     val registrar: RuntimeRegistrar,
 )
 
@@ -202,6 +203,7 @@ class GeneratedProviderLoader {
     fun load(
         artifacts: List<GeneratedProviderArtifact>,
         facts: DeploymentFacts,
+        domain: DiscoveryDomainId,
         acceptedKinds: Set<GeneratedProviderKind> = GeneratedProviderKind.entries.toSet(),
         instantiator: GeneratedProviderInstantiator = GeneratedProviderInstantiator.PublicZeroArgument,
         capabilityOwners: CapabilityOwnerResolver? = null,
@@ -237,7 +239,7 @@ class GeneratedProviderLoader {
                         requireProviderType(providerClass, entry.kind)
                         LoadedProvider(entry, origin(artifact, entry), instantiator.instantiate(providerClass))
                     }.sortedWith(compareBy({ it.origin.artifact.value }, { it.entry.sourcePart }, { it.entry.providerClass }))
-            GeneratedProviderDeployment(assemble(loaded, capabilityOwners), facts, classLoader)
+            GeneratedProviderDeployment(assemble(loaded, capabilityOwners, domain, instantiator), facts, classLoader)
         } catch (failure: Throwable) {
             runCatching { classLoader.close() }.exceptionOrNull()?.let(failure::addSuppressed)
             throw failure
@@ -274,7 +276,7 @@ class GeneratedProviderLoader {
                 GeneratedProviderKind.Presentation -> GeneratedPresentationProvider::class.java
                 GeneratedProviderKind.Check -> GeneratedCheckProvider::class.java
                 GeneratedProviderKind.Capability -> GeneratedCapabilityProvider::class.java
-                GeneratedProviderKind.Registrar -> RuntimeRegistrar::class.java
+                GeneratedProviderKind.Registrar -> GeneratedRuntimeRegistrarProvider::class.java
                 GeneratedProviderKind.CollectionProjection -> GeneratedCollectionProjectionProvider::class.java
             }
         require(expected.isAssignableFrom(providerClass)) {
@@ -449,6 +451,8 @@ class GeneratedProviderLoader {
     private fun assemble(
         loaded: List<LoadedProvider>,
         capabilityOwners: CapabilityOwnerResolver?,
+        domain: DiscoveryDomainId,
+        instantiator: GeneratedProviderInstantiator,
     ): LoadedGeneratedProviders {
         val declarations = mutableListOf<OwnedTypeDeclaration>()
         val relations = mutableListOf<com.typewritermc.types.RelationContract>()
@@ -460,6 +464,7 @@ class GeneratedProviderLoader {
         val checks = mutableListOf<Pair<LoadedProvider, GeneratedCheckProvider>>()
         val capabilities = mutableListOf<OwnedRealmCapability>()
         val registrars = mutableListOf<OwnedRuntimeRegistrar>()
+        val registrarIds = mutableSetOf<Pair<ContributionSourceId, String>>()
         val collectionProjections = mutableListOf<OwnedCollectionProjection>()
 
         loaded.forEach { loadedProvider ->
@@ -515,8 +520,13 @@ class GeneratedProviderLoader {
                 }
 
                 GeneratedProviderKind.Registrar -> {
-                    registrars +=
-                        OwnedRuntimeRegistrar(origin, loadedProvider.require<RuntimeRegistrar>())
+                    val provider = loadedProvider.require<GeneratedRuntimeRegistrarProvider>()
+                    if (domain in provider.descriptor.domains) {
+                        require(registrarIds.add(origin.owner.source.source to provider.descriptor.id)) {
+                            "Duplicate runtime registrar ${provider.descriptor.id} in contribution source ${origin.owner.source.source}."
+                        }
+                        registrars += OwnedRuntimeRegistrar(origin, provider.descriptor, provider.bind(instantiator))
+                    }
                 }
 
                 GeneratedProviderKind.CollectionProjection -> {

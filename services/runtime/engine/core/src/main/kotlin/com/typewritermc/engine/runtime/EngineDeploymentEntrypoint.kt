@@ -3,10 +3,10 @@ package com.typewritermc.engine.runtime
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.DeploymentFacts
+import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.GeneratedProviderArtifact
 import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.discovery.GeneratedProviderLoader
-import com.typewritermc.discovery.TypewriterRegistrar
 import com.typewritermc.discovery.assemble
 import com.typewritermc.imprint.ImprintRuntimeEntrypoint
 import com.typewritermc.loader.api.HostedDeploymentContext
@@ -50,6 +50,7 @@ class EngineDeploymentEntrypoint : HostedRuntimeEntrypoint {
             GeneratedProviderLoader().load(
                 artifacts = artifacts,
                 facts = DeploymentFacts(context.facts),
+                domain = DiscoveryDomains.Execution,
                 acceptedKinds = EXECUTION_PROVIDER_KINDS,
                 parentClassLoader = requireNotNull(javaClass.classLoader),
             )
@@ -61,12 +62,7 @@ class EngineDeploymentEntrypoint : HostedRuntimeEntrypoint {
                 )
             ReloadableEngineRuntime(
                 deployment = deployment,
-                registrars =
-                    deployment.providers.registrars.mapNotNull { owned ->
-                        owned.registrar.takeIf {
-                            it.javaClass.getAnnotation(TypewriterRegistrar::class.java)?.execution == true
-                        }
-                    },
+                registrars = deployment.providers.registrars.map { it.registrar },
                 parentScope = parentScope,
                 implementationToken = implementation.fingerprint(),
                 enforceImplementationCompatibility =

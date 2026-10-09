@@ -13,6 +13,7 @@ import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.CatalogContributions
 import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.DeploymentFacts
+import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.GeneratedProviderLoader
 import com.typewritermc.discovery.OwnedTypeDeclaration
 import com.typewritermc.discovery.ProviderOrigin
@@ -433,7 +434,7 @@ private fun lifecycleIsolationCatalog(
                     AuthoringResourceDefinition(ResourceDefinitionId("removed"), unavailable),
                 ),
         )
-    val deployment = GeneratedProviderLoader().load(emptyList(), DeploymentFacts())
+    val deployment = GeneratedProviderLoader().load(emptyList(), DeploymentFacts(), DiscoveryDomains.Realm)
     val assembly = contributions.assemble(CatalogAssemblyContext(CatalogGeneration("lifecycle_isolation")))
     return RealmCatalogIncarnation(assembly, deployment)
 }

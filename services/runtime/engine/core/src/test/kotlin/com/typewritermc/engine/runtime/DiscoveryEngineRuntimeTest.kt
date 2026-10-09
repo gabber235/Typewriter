@@ -3,6 +3,7 @@ package com.typewritermc.engine.runtime
 import com.typewritermc.authoring.PublicationId
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.DeploymentFacts
+import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.GeneratedProviderDeployment
 import com.typewritermc.discovery.GeneratedProviderLoader
 import com.typewritermc.discovery.RuntimeRegistrar
@@ -144,7 +145,7 @@ private fun TestScope.runtime(
     revisions: MutableList<Long>? = null,
     enforceImplementationCompatibility: Boolean = true,
 ): RuntimeFixture {
-    val deployment = GeneratedProviderLoader().load(emptyList(), DeploymentFacts(emptyMap()))
+    val deployment = GeneratedProviderLoader().load(emptyList(), DeploymentFacts(emptyMap()), DiscoveryDomains.Execution)
     return RuntimeFixture(
         ReloadableEngineRuntime(
             deployment = deployment,

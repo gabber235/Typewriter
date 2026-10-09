@@ -82,3 +82,20 @@ interface GeneratedCapabilityProvider {
 interface GeneratedCollectionProjectionProvider {
     val specification: CollectionProjectionSpec
 }
+
+/** Carries a registrar declaration identity and its eligible runtime domains through generated discovery. */
+data class RuntimeRegistrarDescriptor(
+    val id: String,
+    val domains: Set<DiscoveryDomainId>,
+) {
+    init {
+        require(id.matches(Regex("[A-Za-z0-9][A-Za-z0-9_.]*"))) { "Runtime registrar ids must be safe path segments." }
+        require(domains.isNotEmpty()) { "Runtime registrars must select at least one runtime domain." }
+    }
+}
+
+interface GeneratedRuntimeRegistrarProvider {
+    val descriptor: RuntimeRegistrarDescriptor
+
+    fun bind(instantiator: GeneratedProviderInstantiator): RuntimeRegistrar
+}

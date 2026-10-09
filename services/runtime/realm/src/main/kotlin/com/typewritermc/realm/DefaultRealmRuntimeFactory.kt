@@ -9,6 +9,7 @@ import com.typewritermc.checking.InputToken
 import com.typewritermc.discovery.CapabilityOwnerResolver
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.DeploymentFacts
+import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.GeneratedProviderArtifact
 import com.typewritermc.discovery.GeneratedProviderDeployment
 import com.typewritermc.discovery.GeneratedProviderInstantiator
@@ -67,6 +68,7 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                 GeneratedProviderLoader().load(
                     artifacts = context.generatedProviderArtifacts(),
                     facts = DeploymentFacts(context.facts),
+                    domain = DiscoveryDomains.Realm,
                     instantiator = GeneratedProviderInstantiator.resolving(resolver::resolve),
                     capabilityOwners = CapabilityOwnerResolver { owner -> resolver.resolve(owner.java) },
                 )

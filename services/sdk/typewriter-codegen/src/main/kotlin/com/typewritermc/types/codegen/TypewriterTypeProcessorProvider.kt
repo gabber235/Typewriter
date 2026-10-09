@@ -62,7 +62,7 @@ private class TypewriterTypeProcessor(
     private val endpointRequiresCollection = mutableMapOf<String, Boolean>()
     private val registeredResourceRoots = mutableSetOf<String>()
     private val explicitlyImportedTypes = mutableSetOf<String>()
-    private val registrarProviders = RegistrarProviderProcessor(logger)
+    private val registrarProviders = RegistrarProviderProcessor(codeGenerator, logger)
     private val collectionProjectionProviders = CollectionProjectionProviderProcessor(codeGenerator, logger)
     private val capabilityProviders = CapabilityProviderProcessor(codeGenerator, logger, options[SOURCE_PART_OPTION].orEmpty())
     private val claimDependencyClosure = options[CLAIM_DEPENDENCY_CLOSURE_OPTION]?.toBooleanStrictOrNull() == true
