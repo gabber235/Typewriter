@@ -147,27 +147,24 @@ class MobileInspector extends HookConsumerWidget {
                     borderRadius: context.shapes.mediumBorderRadius,
                   ),
                   child: Section(
-                    child: DepthContainer(
-                      depth: 0,
-                      child: CustomScrollView(
-                        controller: scrollController,
-                        slivers: [
-                          const SliverPersistentHeader(
-                            pinned: true,
-                            delegate: DraggableSheetHandleDelegate(),
-                          ),
-                          SliverToBoxAdapter(
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                left: context.spacing.space3,
-                                right: context.spacing.space3,
-                                bottom: context.spacing.space3,
-                              ),
-                              child: _InspectorContent(),
+                    child: CustomScrollView(
+                      controller: scrollController,
+                      slivers: [
+                        const SliverPersistentHeader(
+                          pinned: true,
+                          delegate: DraggableSheetHandleDelegate(),
+                        ),
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsets.only(
+                              left: context.spacing.space3,
+                              right: context.spacing.space3,
+                              bottom: context.spacing.space3,
                             ),
+                            child: _InspectorContent(),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -329,31 +326,26 @@ class DesktopInspector extends HookConsumerWidget {
                     margin: null,
                     child: Section(
                       margin: EdgeInsets.zero,
-                      child: DepthContainer(
-                        depth: 0,
-                        child: AnimatedContainer(
-                          duration: isDragging.value
-                              ? 0.ms
-                              : hasSelection
-                              ? 1000.ms
-                              : 750.ms,
-                          curve: hasSelection
-                              ? ElasticOutCurve(0.9)
-                              : Curves.fastEaseInToSlowEaseOut,
-                          width: hasSelection ? effectiveSize : 0,
-                          height: double.infinity,
-                          child: ClipRect(
-                            child: OverflowBox(
-                              alignment: Alignment.centerLeft,
-                              minWidth: effectiveSize,
-                              maxWidth: effectiveSize,
-                              child: SingleChildScrollView(
-                                child: Padding(
-                                  padding: EdgeInsets.all(
-                                    context.spacing.space3,
-                                  ),
-                                  child: _InspectorContent(),
-                                ),
+                      child: AnimatedContainer(
+                        duration: isDragging.value
+                            ? 0.ms
+                            : hasSelection
+                            ? 1000.ms
+                            : 750.ms,
+                        curve: hasSelection
+                            ? ElasticOutCurve(0.9)
+                            : Curves.fastEaseInToSlowEaseOut,
+                        width: hasSelection ? effectiveSize : 0,
+                        height: double.infinity,
+                        child: ClipRect(
+                          child: OverflowBox(
+                            alignment: Alignment.centerLeft,
+                            minWidth: effectiveSize,
+                            maxWidth: effectiveSize,
+                            child: SingleChildScrollView(
+                              child: Padding(
+                                padding: EdgeInsets.all(context.spacing.space3),
+                                child: _InspectorContent(),
                               ),
                             ),
                           ),
