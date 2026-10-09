@@ -2,14 +2,19 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-abstract interface class RealmPublicationSource {
-  Future<skir.PublicationResult> publish();
+abstract interface class RealmPublicationRepository {
+  PreparedCommit<skir.PublishAuthoringResponse> preparePublish();
+
+  Future<List<skir.CompiledResourceStatus>> states(
+    List<skir.CompilationRoot> roots,
+  );
 
   Stream<skir.PublicationReport> watch();
 }
 
-final class NatsRealmPublicationSource implements RealmPublicationSource {
-  NatsRealmPublicationSource({
+final class NatsRealmPublicationRepository
+    implements RealmPublicationRepository {
+  NatsRealmPublicationRepository({
     required this.ref,
     required skir.RecordId organizationId,
     required skir.RecordId realmId,
@@ -22,16 +27,41 @@ final class NatsRealmPublicationSource implements RealmPublicationSource {
   final RealmServiceAddress _address;
 
   @override
-  Future<skir.PublicationResult> publish() async {
+  PreparedCommit<skir.PublishAuthoringResponse> preparePublish() =>
+      ref.prepareSkir(
+        _address.request("editor.authoring.publish"),
+        skir.PublishAuthoringRequest.serializer.toBytes(
+          skir.PublishAuthoringRequest(),
+        ),
+        skir.PublishAuthoringResponse.serializer,
+        label: "Publish saved content",
+        resources: {
+          WorkDriverId(
+            domain: "publication",
+            scope: AuthoringScope(
+              organizationId: _address.organizationId,
+              realmId: _address.realmId,
+            ),
+          ),
+        },
+        replay: SubmissionReplay.unsupported,
+        classify: classifyPublicationResponse,
+      );
+
+  @override
+  Future<List<skir.CompiledResourceStatus>> states(
+    List<skir.CompilationRoot> roots,
+  ) async {
     final response = await ref.requestSkir(
-      _address.request("editor.authoring.publish"),
-      skir.PublishAuthoringRequest.serializer.toBytes(
-        skir.PublishAuthoringRequest(),
+      _address.request("editor.authoring.compiled.status.query"),
+      skir.QueryCompiledResourceStatusRequest.serializer.toBytes(
+        skir.QueryCompiledResourceStatusRequest(roots: roots),
       ),
-      skir.PublishAuthoringResponse.serializer,
+      skir.QueryCompiledResourceStatusResponse.serializer,
     );
     return switch (response) {
-      skir.PublishAuthoringResponse_resultWrapper(:final value) => value,
+      skir.QueryCompiledResourceStatusResponse_successWrapper(:final value) =>
+        List.unmodifiable(value.statuses),
       _ => throw ApiException.internalServerError(),
     };
   }
@@ -56,3 +86,21 @@ final class NatsRealmPublicationSource implements RealmPublicationSource {
         reconciliation: const ProjectionReconciliation.latest(),
       );
 }
+
+MutationResponseDisposition classifyPublicationResponse(
+  skir.PublishAuthoringResponse response,
+) => switch (response) {
+  skir.PublishAuthoringResponse_resultWrapper(
+    value: skir.PublicationResult_blockedWrapper(),
+  ) ||
+  skir.PublishAuthoringResponse_resultWrapper(
+    value: skir.PublicationResult_interruptedWrapper(),
+  ) => MutationResponseDisposition.rejected,
+  skir.PublishAuthoringResponse_resultWrapper(
+    value: skir.PublicationResult_unknown(),
+  ) =>
+    MutationResponseDisposition.uncertain,
+  skir.PublishAuthoringResponse_resultWrapper() =>
+    MutationResponseDisposition.confirmed,
+  _ => MutationResponseDisposition.uncertain,
+};

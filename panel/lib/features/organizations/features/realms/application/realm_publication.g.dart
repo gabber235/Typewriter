@@ -9,61 +9,61 @@ part of 'realm_publication.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(realmPublicationSource)
-final realmPublicationSourceProvider = RealmPublicationSourceFamily._();
+@ProviderFor(realmPublicationRepository)
+final realmPublicationRepositoryProvider = RealmPublicationRepositoryFamily._();
 
-final class RealmPublicationSourceProvider
+final class RealmPublicationRepositoryProvider
     extends
         $FunctionalProvider<
-          RealmPublicationSource,
-          RealmPublicationSource,
-          RealmPublicationSource
+          RealmPublicationRepository,
+          RealmPublicationRepository,
+          RealmPublicationRepository
         >
-    with $Provider<RealmPublicationSource> {
-  RealmPublicationSourceProvider._({
-    required RealmPublicationSourceFamily super.from,
+    with $Provider<RealmPublicationRepository> {
+  RealmPublicationRepositoryProvider._({
+    required RealmPublicationRepositoryFamily super.from,
     required (skir.RecordId, skir.RecordId) super.argument,
   }) : super(
          retry: null,
-         name: r'realmPublicationSourceProvider',
+         name: r'realmPublicationRepositoryProvider',
          isAutoDispose: false,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
 
   @override
-  String debugGetCreateSourceHash() => _$realmPublicationSourceHash();
+  String debugGetCreateSourceHash() => _$realmPublicationRepositoryHash();
 
   @override
   String toString() {
-    return r'realmPublicationSourceProvider'
+    return r'realmPublicationRepositoryProvider'
         ''
         '$argument';
   }
 
   @$internal
   @override
-  $ProviderElement<RealmPublicationSource> $createElement(
+  $ProviderElement<RealmPublicationRepository> $createElement(
     $ProviderPointer pointer,
   ) => $ProviderElement(pointer);
 
   @override
-  RealmPublicationSource create(Ref ref) {
+  RealmPublicationRepository create(Ref ref) {
     final argument = this.argument as (skir.RecordId, skir.RecordId);
-    return realmPublicationSource(ref, argument.$1, argument.$2);
+    return realmPublicationRepository(ref, argument.$1, argument.$2);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(RealmPublicationSource value) {
+  Override overrideWithValue(RealmPublicationRepository value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<RealmPublicationSource>(value),
+      providerOverride: $SyncValueProvider<RealmPublicationRepository>(value),
     );
   }
 
   @override
   bool operator ==(Object other) {
-    return other is RealmPublicationSourceProvider &&
+    return other is RealmPublicationRepositoryProvider &&
         other.argument == argument;
   }
 
@@ -73,41 +73,41 @@ final class RealmPublicationSourceProvider
   }
 }
 
-String _$realmPublicationSourceHash() =>
-    r'701b769e08eb8aece7c0f89578371e70db9d205d';
+String _$realmPublicationRepositoryHash() =>
+    r'e52881cb58b7aa0ec99c6953fb4fb70429ac9d59';
 
-final class RealmPublicationSourceFamily extends $Family
+final class RealmPublicationRepositoryFamily extends $Family
     with
         $FunctionalFamilyOverride<
-          RealmPublicationSource,
+          RealmPublicationRepository,
           (skir.RecordId, skir.RecordId)
         > {
-  RealmPublicationSourceFamily._()
+  RealmPublicationRepositoryFamily._()
     : super(
         retry: null,
-        name: r'realmPublicationSourceProvider',
+        name: r'realmPublicationRepositoryProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
         isAutoDispose: false,
       );
 
-  RealmPublicationSourceProvider call(
+  RealmPublicationRepositoryProvider call(
     skir.RecordId organizationId,
     skir.RecordId realmId,
-  ) => RealmPublicationSourceProvider._(
+  ) => RealmPublicationRepositoryProvider._(
     argument: (organizationId, realmId),
     from: this,
   );
 
   @override
-  String toString() => r'realmPublicationSourceProvider';
+  String toString() => r'realmPublicationRepositoryProvider';
 }
 
 @ProviderFor(RealmPublication)
 final realmPublicationProvider = RealmPublicationFamily._();
 
 final class RealmPublicationProvider
-    extends $StreamNotifierProvider<RealmPublication, skir.PublicationReport?> {
+    extends $StreamNotifierProvider<RealmPublication, RealmPublicationView> {
   RealmPublicationProvider._({
     required RealmPublicationFamily super.from,
     required (skir.RecordId, skir.RecordId) super.argument,
@@ -144,15 +144,15 @@ final class RealmPublicationProvider
   }
 }
 
-String _$realmPublicationHash() => r'06cf1ab56e4792c7a3efff4c2671821dc78ed432';
+String _$realmPublicationHash() => r'bf4d2f0fafd46931d8a77ece7e04dacd514b3064';
 
 final class RealmPublicationFamily extends $Family
     with
         $ClassFamilyOverride<
           RealmPublication,
-          AsyncValue<skir.PublicationReport?>,
-          skir.PublicationReport?,
-          Stream<skir.PublicationReport?>,
+          AsyncValue<RealmPublicationView>,
+          RealmPublicationView,
+          Stream<RealmPublicationView>,
           (skir.RecordId, skir.RecordId)
         > {
   RealmPublicationFamily._()
@@ -177,12 +177,12 @@ final class RealmPublicationFamily extends $Family
 }
 
 abstract class _$RealmPublication
-    extends $StreamNotifier<skir.PublicationReport?> {
+    extends $StreamNotifier<RealmPublicationView> {
   late final _$args = ref.$arg as (skir.RecordId, skir.RecordId);
   skir.RecordId get organizationId => _$args.$1;
   skir.RecordId get realmId => _$args.$2;
 
-  Stream<skir.PublicationReport?> build(
+  Stream<RealmPublicationView> build(
     skir.RecordId organizationId,
     skir.RecordId realmId,
   );
@@ -191,18 +191,15 @@ abstract class _$RealmPublication
   WhenComplete runBuild() {
     final ref =
         this.ref
-            as $Ref<
-              AsyncValue<skir.PublicationReport?>,
-              skir.PublicationReport?
-            >;
+            as $Ref<AsyncValue<RealmPublicationView>, RealmPublicationView>;
     final element =
         ref.element
             as $ClassProviderElement<
               AnyNotifier<
-                AsyncValue<skir.PublicationReport?>,
-                skir.PublicationReport?
+                AsyncValue<RealmPublicationView>,
+                RealmPublicationView
               >,
-              AsyncValue<skir.PublicationReport?>,
+              AsyncValue<RealmPublicationView>,
               Object?,
               Object?
             >;

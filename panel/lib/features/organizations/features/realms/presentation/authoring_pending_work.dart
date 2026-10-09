@@ -2,30 +2,6 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Keeps pending operations accessible independently of editor lifetimes.
-final class AuthoringPendingWork extends StatelessWidget {
-  const AuthoringPendingWork({required this.workspace, super.key});
-  final AuthoringWorkspace workspace;
-
-  @override
-  Widget build(BuildContext context) => ListenableBuilder(
-    listenable: workspace,
-    builder: (context, _) {
-      final groups = workspace.state.groups.values.toList(growable: false);
-      if (groups.isEmpty) return const SizedBox.shrink();
-      return Material(
-        child: ExpansionTile(
-          title: Text("Pending changes (${groups.length})"),
-          children: [
-            for (final group in groups)
-              AuthoringGroupControls(workspace: workspace, group: group),
-          ],
-        ),
-      );
-    },
-  );
-}
-
 final class AuthoringGroupControls extends StatelessWidget {
   const AuthoringGroupControls({
     required this.workspace,

@@ -7,4 +7,5 @@ export "authoring_findings_panel.dart";
 export "authoring_pending_work.dart";
 export "realm_selector.dart";
 export "realm_suspension.dart";
+export "realm_work_toolbar.dart";
 export "route.dart";

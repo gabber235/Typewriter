@@ -56,6 +56,8 @@ import 'package:widgetbook_workspace/stories/features/organizations/features/rea
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authoring_findings_panel_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/realm_selector.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_realm_selector_stories;
+import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/realm_work_toolbar.stories.dart'
+    as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_realm_work_toolbar_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/services/presentation/route.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_services_presentation_route_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/presentation/organization_icon.stories.dart'
@@ -563,6 +565,41 @@ final directories = <_widgetbook.WidgetbookNode>[
                             builder:
                                 _widgetbook_workspace_stories_features_organizations_features_realms_presentation_realm_selector_stories
                                     .realmSelectorUseCase,
+                          ),
+                        ],
+                      ),
+                      _widgetbook.WidgetbookComponent(
+                        name: 'RealmWorkToolbar',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Active publication',
+                            builder:
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_realm_work_toolbar_stories
+                                    .realmPublicationActiveUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Blocked with findings',
+                            builder:
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_realm_work_toolbar_stories
+                                    .realmPublicationBlockedUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Idle with saved Page status',
+                            builder:
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_realm_work_toolbar_stories
+                                    .realmPublicationIdleUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Interrupted publication',
+                            builder:
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_realm_work_toolbar_stories
+                                    .realmPublicationInterruptedUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Pending draft and saved publication',
+                            builder:
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_realm_work_toolbar_stories
+                                    .realmPublicationPendingDraftUseCase,
                           ),
                         ],
                       ),
