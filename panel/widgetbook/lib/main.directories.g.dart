@@ -136,6 +136,8 @@ import 'package:widgetbook_workspace/stories/shared/ui/components/shimmer.storie
     as _widgetbook_workspace_stories_shared_ui_components_shimmer_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/shortcut_display.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_components_shortcut_display_stories;
+import 'package:widgetbook_workspace/stories/shared/ui/components/surface.stories.dart'
+    as _widgetbook_workspace_stories_shared_ui_components_surface_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/text_scroller.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_components_text_scroller_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/type_link.stories.dart'
@@ -1207,6 +1209,17 @@ final directories = <_widgetbook.WidgetbookNode>[
                 ],
               ),
               _widgetbook.WidgetbookComponent(
+                name: 'PresentationInteractionScope',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Owned interaction',
+                    builder:
+                        _widgetbook_workspace_stories_shared_ui_components_surface_stories
+                            .presentationInteractionUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookComponent(
                 name: 'QueryBar',
                 useCases: [
                   _widgetbook.WidgetbookUseCase(
@@ -1334,6 +1347,28 @@ final directories = <_widgetbook.WidgetbookNode>[
                     builder:
                         _widgetbook_workspace_stories_shared_ui_components_shortcut_display_stories
                             .singleShortcutDisplayUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'Surface',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Inherited appearance',
+                    builder:
+                        _widgetbook_workspace_stories_shared_ui_components_surface_stories
+                            .surfaceUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'SurfaceContainer',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Animated contrast',
+                    builder:
+                        _widgetbook_workspace_stories_shared_ui_components_surface_stories
+                            .surfaceContainerUseCase,
                   ),
                 ],
               ),
