@@ -1,5 +1,7 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "nats_client.freezed.dart";
+
 /// Stable failure categories exposed by the panel transport boundary.
 ///
 /// The category is safe to use in UI and recovery policy. The original cause
@@ -26,39 +28,15 @@ enum NatsFailureKind {
 /// Terminal failures retain their typed cause. [NatsClosed] is reserved for an
 /// explicit local close, so consumers never need to infer failure from a bare
 /// status value.
-sealed class NatsConnectionState {
-  const NatsConnectionState();
-}
-
-/// The connection attempt has started but is not usable yet.
-final class NatsConnecting extends NatsConnectionState {
-  const NatsConnecting();
-}
-
-/// The transport has an active connection and accepts operations.
-final class NatsConnected extends NatsConnectionState {
-  const NatsConnected();
-}
-
-/// The connection was lost, but the underlying client will try to recover.
-final class NatsReconnecting extends NatsConnectionState {
-  const NatsReconnecting(this.failure);
-
-  /// The translated reason for the disconnect.
-  final NatsClientException failure;
-}
-
-/// The transport cannot recover without a new client or explicit retry.
-final class NatsFailed extends NatsConnectionState {
-  const NatsFailed(this.failure);
-
-  /// The translated terminal failure.
-  final NatsClientException failure;
-}
-
-/// Local shutdown completed. No further operations are accepted.
-final class NatsClosed extends NatsConnectionState {
-  const NatsClosed();
+@freezed
+sealed class NatsConnectionState with _$NatsConnectionState {
+  const factory NatsConnectionState.connecting() = NatsConnecting;
+  const factory NatsConnectionState.connected() = NatsConnected;
+  const factory NatsConnectionState.reconnecting(NatsClientException failure) =
+      NatsReconnecting;
+  const factory NatsConnectionState.failed(NatsClientException failure) =
+      NatsFailed;
+  const factory NatsConnectionState.closed() = NatsClosed;
 }
 
 /// Transport failure with a safe message and an optional diagnostic cause.
