@@ -21,17 +21,31 @@ abstract class Tag with _$Tag {
   const Tag._();
 
   factory Tag.fromAuthoring(skir.AuthoringResource resource) {
-    final value = decodeAuthoredTag(resource);
+    final content = resource.content;
+    final color = content.authoredField("color")?.authoredInteger;
+    final parents =
+        content.authoredField("parents")?.authoredItems ??
+        const <skir.ListItem>[];
+    final placement = content.authoredField("placement");
+    final x = placement?.authoredField("x")?.authoredInteger;
+    final y = placement?.authoredField("y")?.authoredInteger;
+    final width = placement?.authoredField("width")?.authoredInteger;
+    final height = placement?.authoredField("height")?.authoredInteger;
     return Tag(
-      tagId: value.id,
-      name: value.name,
-      color: Color(value.argb),
-      parentIds: value.parents,
+      tagId: resource.id,
+      name: (content.authoredField("name")?.authoredString).displayLabel(
+        "Unnamed Tag",
+      ),
+      color: Color((color ?? BigInt.from(0xff9e9e9e)).toUnsigned(32).toInt()),
+      parentIds: parents
+          .map((item) => item.value.authoredLink?.target.resource)
+          .nonNulls
+          .toList(growable: false),
       placement: GraphPlacement(
-        x: value.x,
-        y: value.y,
-        width: value.width,
-        height: value.height,
+        x: x?.toInt() ?? 0,
+        y: y?.toInt() ?? 0,
+        width: width == null || width < BigInt.one ? 1 : width.toInt(),
+        height: height == null || height < BigInt.one ? 1 : height.toInt(),
       ),
     );
   }

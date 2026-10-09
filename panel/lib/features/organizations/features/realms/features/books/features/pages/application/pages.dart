@@ -18,14 +18,17 @@ final class Page {
   }) : assert(name != "", "Name must not be empty.");
 
   factory Page.fromAuthoring(skir.AuthoringResource resource) {
-    final value = decodeAuthoredPage(resource);
+    final content = resource.content;
     return Page(
-      pageId: value.id,
-      bookId: value.book,
-      name: value.name,
-      configuration: value.configuration,
-      chapter: value.chapter,
-      priority: value.priority,
+      pageId: resource.id,
+      bookId: content.authoredField("book")?.authoredLink?.target.resource,
+      name: (content.authoredField("name")?.authoredString).displayLabel(
+        "Unnamed Page",
+      ),
+      configuration: content.configuration,
+      chapter: content.authoredField("chapter")?.authoredString ?? "",
+      priority:
+          content.authoredField("priority")?.authoredInteger?.toInt() ?? 0,
     );
   }
 

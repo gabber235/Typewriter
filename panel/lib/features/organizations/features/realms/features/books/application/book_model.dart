@@ -21,13 +21,25 @@ abstract class Book with _$Book {
   const Book._();
 
   factory Book.fromAuthoring(skir.AuthoringResource resource) {
-    final value = decodeAuthoredBook(resource);
+    final content = resource.content;
+    final iconValue = content.authoredField("icon");
+    final icon =
+        iconValue?.authoredField("value")?.authoredString ??
+        iconValue?.authoredField("source")?.authoredString;
+    final color = content.authoredField("color")?.authoredInteger;
+    final tags =
+        content.authoredField("tags")?.authoredItems ?? const <skir.ListItem>[];
     return Book(
-      bookId: value.id,
-      title: value.title,
-      icon: value.icon,
-      color: Color(value.argb),
-      tagIds: value.tags,
+      bookId: resource.id,
+      title: (content.authoredField("title")?.authoredString).displayLabel(
+        "Unnamed Book",
+      ),
+      icon: icon.displayLabel("material-symbols:book"),
+      color: Color((color ?? BigInt.from(0xff3f51b5)).toUnsigned(32).toInt()),
+      tagIds: tags
+          .map((item) => item.value.authoredLink?.target.resource)
+          .nonNulls
+          .toList(growable: false),
     );
   }
 }

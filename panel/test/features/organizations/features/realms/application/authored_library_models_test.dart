@@ -6,7 +6,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 void main() {
   test("book reads tagged visual values and relation items", () {
     final tag = skir.ResourceId(value: "tag:one");
-    final book = decodeAuthoredBook(
+    final book = Book.fromAuthoring(
       skir.AuthoringResource(
         id: skir.ResourceId(value: "book:one"),
         definition: skir.ResourceDefinitionId(value: "typewriter.book"),
@@ -49,13 +49,13 @@ void main() {
 
     expect(book.title, "Guide");
     expect(book.icon, "material-symbols:book");
-    expect(book.argb, 0xff336699);
-    expect(book.tags, [tag]);
+    expect(book.color.toARGB32(), 0xff336699);
+    expect(book.tagIds, [tag]);
   });
 
   test("book reads the generated SVG icon payload", () {
     const source = "<svg viewBox=\"0 0 1 1\"></svg>";
-    final book = decodeAuthoredBook(
+    final book = Book.fromAuthoring(
       skir.AuthoringResource(
         id: skir.ResourceId(value: "book:svg"),
         definition: skir.ResourceDefinitionId(value: "typewriter.book"),
@@ -86,7 +86,7 @@ void main() {
 
   test("tag reads tagged placement and parent links", () {
     final parent = skir.ResourceId(value: "tag:parent");
-    final tag = decodeAuthoredTag(
+    final tag = Tag.fromAuthoring(
       skir.AuthoringResource(
         id: skir.ResourceId(value: "tag:child"),
         definition: skir.ResourceDefinitionId(value: "typewriter.tag"),
@@ -127,9 +127,17 @@ void main() {
     );
 
     expect(tag.name, "Child");
-    expect(tag.argb, 0xffabcdef);
-    expect(tag.parents, [parent]);
-    expect((tag.x, tag.y, tag.width, tag.height), (2, 3, 4, 1));
+    expect(tag.color.toARGB32(), 0xffabcdef);
+    expect(tag.parentIds, [parent]);
+    expect(
+      (
+        tag.placement.x,
+        tag.placement.y,
+        tag.placement.width,
+        tag.placement.height,
+      ),
+      (2, 3, 4, 1),
+    );
   });
 
   test("page retains pending configuration and ordered element links", () {
@@ -143,46 +151,51 @@ void main() {
       ),
       arguments: const [skir.ArgumentSelection.unfilled],
     );
-    final page = decodeAuthoredPage(
-      skir.AuthoringResource(
-        id: skir.ResourceId(value: "page:one"),
-        definition: skir.ResourceDefinitionId(value: "typewriter.page"),
-        content: skir.AuthoringRecord(
-          configuration: configuration,
-          fields: [
-            _field("book", _link(skir.ResourceId(value: "book:one"))),
-            _field("name", skir.DataValue.wrapStringValue("Opening")),
-            _field("chapter", _named(skir.DataValue.wrapStringValue("intro"))),
-            _field("priority", skir.DataValue.wrapInteger("4")),
-            _field(
-              "elements",
-              _named(
-                skir.DataValue.createListValue(
-                  items: [
-                    skir.ListItem(
-                      id: skir.ItemId(value: "element-item"),
-                      value: _link(element),
-                    ),
-                  ],
-                ),
+    final pageResource = skir.AuthoringResource(
+      id: skir.ResourceId(value: "page:one"),
+      definition: skir.ResourceDefinitionId(value: "typewriter.page"),
+      content: skir.AuthoringRecord(
+        configuration: configuration,
+        fields: [
+          _field("book", _link(skir.ResourceId(value: "book:one"))),
+          _field("name", skir.DataValue.wrapStringValue("Opening")),
+          _field("chapter", _named(skir.DataValue.wrapStringValue("intro"))),
+          _field("priority", skir.DataValue.wrapInteger("4")),
+          _field(
+            "elements",
+            _named(
+              skir.DataValue.createListValue(
+                items: [
+                  skir.ListItem(
+                    id: skir.ItemId(value: "element-item"),
+                    value: _link(element),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
+    final page = Page.fromAuthoring(pageResource);
 
     expect(page.configuration, configuration);
-    expect(page.book, skir.ResourceId(value: "book:one"));
+    expect(page.bookId, skir.ResourceId(value: "book:one"));
     expect((page.name, page.chapter, page.priority), ("Opening", "intro", 4));
-    expect(page.elements, [element]);
+    final elementIds =
+        (pageResource.content.authoredField("elements")?.authoredItems ??
+                const <skir.ListItem>[])
+            .map((item) => item.value.authoredLink?.target.resource)
+            .nonNulls
+            .toList(growable: false);
+    expect(elementIds, [element]);
   });
 
   test("incomplete library resources coexist with complete projections", () {
     final retainedTag = skir.ResourceId(value: "tag:retained");
     final retainedElement = skir.ResourceId(value: "element:retained");
     final books = [
-      decodeAuthoredBook(
+      Book.fromAuthoring(
         _resource("book:complete", "typewriter.book", [
           _field("title", skir.DataValue.wrapStringValue("Complete")),
           _field(
@@ -203,7 +216,7 @@ void main() {
           _field("tags", _named(skir.DataValue.createSetValue(items: []))),
         ]),
       ),
-      decodeAuthoredBook(
+      Book.fromAuthoring(
         _resource("book:incomplete", "typewriter.book", [
           _field("title", skir.DataValue.unfilled),
           _field("icon", skir.DataValue.unfilled),
@@ -229,7 +242,7 @@ void main() {
       ),
     ];
     final tags = [
-      decodeAuthoredTag(
+      Tag.fromAuthoring(
         _resource("tag:complete", "typewriter.tag", [
           _field("name", skir.DataValue.wrapStringValue("Complete")),
           _field("color", _named(skir.DataValue.wrapInteger("4289449455"))),
@@ -249,7 +262,7 @@ void main() {
           ),
         ]),
       ),
-      decodeAuthoredTag(
+      Tag.fromAuthoring(
         _resource("tag:incomplete", "typewriter.tag", [
           _field("name", skir.DataValue.unfilled),
           _field("color", skir.DataValue.unfilled),
@@ -286,58 +299,66 @@ void main() {
         ]),
       ),
     ];
-    final pages = [
-      decodeAuthoredPage(
-        _resource("page:complete", "typewriter.page", [
-          _field("book", _link(skir.ResourceId(value: "book:complete"))),
-          _field("name", skir.DataValue.wrapStringValue("Complete")),
-          _field("chapter", _named(skir.DataValue.wrapStringValue("one"))),
-          _field("priority", skir.DataValue.wrapInteger("1")),
-          _field("elements", _named(skir.DataValue.createListValue(items: []))),
-        ]),
-      ),
-      decodeAuthoredPage(
-        _resource("page:incomplete", "typewriter.page", [
-          _field("book", skir.DataValue.unfilled),
-          _field("name", skir.DataValue.unfilled),
-          _field("chapter", skir.DataValue.unfilled),
-          _field("priority", skir.DataValue.unfilled),
-          _field(
-            "elements",
-            _named(
-              skir.DataValue.createListValue(
-                items: [
-                  skir.ListItem(
-                    id: skir.ItemId(value: "retained-element"),
-                    value: _link(retainedElement),
-                  ),
-                  skir.ListItem(
-                    id: skir.ItemId(value: "unfinished-element"),
-                    value: skir.DataValue.unfilled,
-                  ),
-                ],
-              ),
+    final pageResources = [
+      _resource("page:complete", "typewriter.page", [
+        _field("book", _link(skir.ResourceId(value: "book:complete"))),
+        _field("name", skir.DataValue.wrapStringValue("Complete")),
+        _field("chapter", _named(skir.DataValue.wrapStringValue("one"))),
+        _field("priority", skir.DataValue.wrapInteger("1")),
+        _field("elements", _named(skir.DataValue.createListValue(items: []))),
+      ]),
+      _resource("page:incomplete", "typewriter.page", [
+        _field("book", skir.DataValue.unfilled),
+        _field("name", skir.DataValue.unfilled),
+        _field("chapter", skir.DataValue.unfilled),
+        _field("priority", skir.DataValue.unfilled),
+        _field(
+          "elements",
+          _named(
+            skir.DataValue.createListValue(
+              items: [
+                skir.ListItem(
+                  id: skir.ItemId(value: "retained-element"),
+                  value: _link(retainedElement),
+                ),
+                skir.ListItem(
+                  id: skir.ItemId(value: "unfinished-element"),
+                  value: skir.DataValue.unfilled,
+                ),
+              ],
             ),
           ),
-        ]),
-      ),
+        ),
+      ]),
     ];
+    final pages = pageResources.map(Page.fromAuthoring).toList();
 
     expect(books.map((value) => value.title), ["Complete", "Unnamed Book"]);
     expect(books.last.icon, "material-symbols:book");
-    expect(books.last.argb, 0xff3f51b5);
-    expect(books.last.tags, [retainedTag]);
+    expect(books.last.color.toARGB32(), 0xff3f51b5);
+    expect(books.last.tagIds, [retainedTag]);
     expect(tags.map((value) => value.name), ["Complete", "Unnamed Tag"]);
-    expect(tags.last.argb, 0xff9e9e9e);
-    expect(tags.last.parents, [retainedTag]);
+    expect(tags.last.color.toARGB32(), 0xff9e9e9e);
+    expect(tags.last.parentIds, [retainedTag]);
     expect(
-      (tags.last.x, tags.last.y, tags.last.width, tags.last.height),
+      (
+        tags.last.placement.x,
+        tags.last.placement.y,
+        tags.last.placement.width,
+        tags.last.placement.height,
+      ),
       (0, 7, 1, 1),
     );
     expect(pages.map((value) => value.name), ["Complete", "Unnamed Page"]);
-    expect(pages.last.book, isNull);
+    expect(pages.last.bookId, isNull);
     expect((pages.last.chapter, pages.last.priority), ("", 0));
-    expect(pages.last.elements, [retainedElement]);
+    final retainedElementIds =
+        (pageResources.last.content.authoredField("elements")?.authoredItems ??
+                const <skir.ListItem>[])
+            .map((item) => item.value.authoredLink?.target.resource)
+            .nonNulls
+            .toList(growable: false);
+    expect(retainedElementIds, [retainedElement]);
   });
 }
 
