@@ -62,7 +62,13 @@ void main() {
 
     expect(find.byType(PortablePresentationRenderer), findsOneWidget);
     expect(find.text("Name"), findsOneWidget);
-    expect(find.text(service.name), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(AutoSizeText),
+        matching: find.text(service.name),
+      ),
+      findsOneWidget,
+    );
     expect(find.text("CONNECTION"), findsOneWidget);
     expect(find.text("Connected"), findsOneWidget);
     expect(find.text("Version"), findsOneWidget);
