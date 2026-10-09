@@ -158,7 +158,7 @@ internal class EditorContracts(
     val authoringChanged =
         EventContract(
             OperationName.of("editor.authoring.changed"),
-            updateAddress("editor.authoring.changed"),
+            "editor.authoring.changed".realmEventAddress(),
             AuthoringChanged.serializer.asPayloadCodec(),
             ErrorSlug.of("editor-authoring-changed-failed"),
         )
@@ -174,7 +174,7 @@ internal class EditorContracts(
     val compiledContentChanged =
         EventContract(
             OperationName.of("editor.authoring.compiled.changed"),
-            updateAddress("editor.authoring.compiled.changed"),
+            "editor.authoring.compiled.changed".realmEventAddress(),
             CompiledContentChanged.serializer.asPayloadCodec(),
             ErrorSlug.of("editor-authoring-compiled-changed-failed"),
         )
@@ -210,7 +210,7 @@ internal class EditorContracts(
         skirUnaryContract(
             method = method,
             name = OperationName.of(suffix),
-            address = requestAddress(suffix).subscribedAt(address),
+            address = suffix.realmRequestAddress().subscribedAt(address),
             responsePolicy = ResponsePolicy(internalFailureResponse, classifier),
             failureSlug = ErrorSlug.of(suffix.replace('.', '-') + "-failed"),
         )
@@ -229,8 +229,8 @@ internal class EditorContracts(
             method = method,
             updateSerializer = updateSerializer,
             name = OperationName.of(suffix),
-            requestAddress = requestAddress(suffix).subscribedAt(address),
-            updateAddress = updateAddress(suffix),
+            requestAddress = suffix.realmRequestAddress().subscribedAt(address),
+            updateAddress = suffix.realmEventAddress(),
             initialPolicy = ResponsePolicy(internalFailureResponse, initialClassifier),
             updateClassifier = updateClassifier,
             failureSlug = ErrorSlug.of(suffix.replace('.', '-') + "-failed"),
@@ -238,12 +238,6 @@ internal class EditorContracts(
             updateAddressResolver = updateAddressResolver,
         )
 }
-
-/** Resolves a request subject while retaining the logical Realm address as its routing key. */
-internal fun requestAddress(suffix: String): AddressTemplate<RealmAddress> = realmRequestAddress(suffix)
-
-/** Resolves the event subject used for publications observed by clients of the logical Realm. */
-internal fun updateAddress(suffix: String): AddressTemplate<RealmAddress> = realmEventAddress(suffix)
 
 private fun scopedUpdateAddress(
     suffix: String,
@@ -253,7 +247,7 @@ private fun scopedUpdateAddress(
     require(token.matches(Regex("[A-Za-z0-9_-]{1,64}"))) {
         "Transfer token must be one safe subject segment"
     }
-    return MessageAddress.of("${updateAddress(suffix).render(address).value}.$token")
+    return MessageAddress.of("${suffix.realmEventAddress().render(address).value}.$token")
 }
 
 /** Encodes a watch update for direct publication outside the request handler. */

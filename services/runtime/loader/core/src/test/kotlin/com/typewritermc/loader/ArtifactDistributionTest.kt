@@ -27,6 +27,8 @@ import com.typewritermc.loader.api.artifact.PublishSharedArtifact
 import com.typewritermc.loader.api.artifact.SharedArtifactId
 import com.typewritermc.loader.api.artifact.SharedArtifactProvenance
 import com.typewritermc.loader.api.artifact.TransferId
+import com.typewritermc.loader.api.realmEventAddress
+import com.typewritermc.loader.api.realmRequestAddress
 import com.typewritermc.loader.artifact.ArtifactCoordinate
 import com.typewritermc.loader.artifact.ArtifactInboxReconciler
 import com.typewritermc.loader.artifact.BlobContracts
@@ -168,12 +170,12 @@ val ArtifactDistributionTest by testSuite {
     test("Realm service addresses preserve the established authority family") {
         val address = RealmServiceAddress(realmId = "quests", organizationId = "writers")
 
-        address.request("shared.publish") shouldBe
+        "shared.publish".realmRequestAddress().render(address).value shouldBe
             "service.to.quests.organization.writers.realm.shared.publish"
-        address.event("catalog.invalidate") shouldBe
+        "catalog.invalidate".realmEventAddress().render(address).value shouldBe
             "service.from.quests.organization.writers.realm.catalog.invalidate"
         shouldThrow<IllegalArgumentException> {
-            address.request("shared.*")
+            "shared.*".realmRequestAddress()
         }
     }
 

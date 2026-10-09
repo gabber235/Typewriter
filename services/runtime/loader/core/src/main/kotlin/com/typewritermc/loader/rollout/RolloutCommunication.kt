@@ -252,8 +252,7 @@ private fun ParticipantStatusReply.requireStatus(): ParticipantStatus =
     }
 
 private fun realmBroadcastAddress(suffix: String): AddressTemplate<RealmBroadcastAddress> =
-    addressTemplate(
-        "typewriter.organization.{organization}.realm.{realm}.hosts.$suffix",
+    "typewriter.organization.{organization}.realm.{realm}.hosts.$suffix".addressTemplate(
         { address ->
             addressValuesOf(
                 "organization" to address.organizationId,

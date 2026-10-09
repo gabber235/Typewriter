@@ -1,5 +1,7 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.loader.api.realmEventAddress
+import com.typewritermc.loader.api.realmRequestAddress
 import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponseClassifier
@@ -31,8 +33,8 @@ internal fun realmPresentationSearchContract(
         method = WatchRealmPresentationSearch,
         updateSerializer = RealmPresentationSearchUpdate.serializer,
         name = OperationName.of(SEARCH_OPERATION),
-        requestAddress = requestAddress(SEARCH_OPERATION).subscribedAt(address),
-        updateAddress = updateAddress(SEARCH_OPERATION),
+        requestAddress = SEARCH_OPERATION.realmRequestAddress().subscribedAt(address),
+        updateAddress = SEARCH_OPERATION.realmEventAddress(),
         initialPolicy =
             ResponsePolicy(
                 unavailableRealmPresentationSearchUpdate(

@@ -352,8 +352,7 @@ private fun RecordId.stringKey(): String =
     }
 
 private fun hostExecutionAddress(pattern: String): AddressTemplate<HostExecutionAddress> =
-    addressTemplate(
-        pattern,
+    pattern.addressTemplate(
         { addressValuesOf("service" to it.serviceId.value) },
         { HostExecutionAddress(ServiceId(it.require("service"))) },
     )

@@ -41,31 +41,18 @@ enum class RuntimePlacement {
 data class RealmServiceAddress(
     val realmId: String,
     val organizationId: String,
-) {
-    fun request(suffix: String): String = "service.to.$realmId.organization.$organizationId.realm.${validRealmOperation(suffix)}"
+)
 
-    fun event(suffix: String): String = "service.from.$realmId.organization.$organizationId.realm.${validRealmOperation(suffix)}"
-}
+/** Builds a Realm request template after checking its operation suffix once. */
+fun String.realmRequestAddress(): AddressTemplate<RealmServiceAddress> =
+    "service.to.{realm}.organization.{organization}.realm.${validRealmOperation()}".realmAddress()
 
-/**
- * Builds a typed request template using the logical Realm and organization identifiers.
- *
- * The operation suffix is validated immediately. Subscribe or target the template with [RealmServiceAddress].
- */
-fun realmRequestAddress(suffix: String): AddressTemplate<RealmServiceAddress> =
-    realmAddress("service.to.{realm}.organization.{organization}.realm.${validRealmOperation(suffix)}")
+/** Builds a Realm event template with the same suffix rule and outbound direction. */
+fun String.realmEventAddress(): AddressTemplate<RealmServiceAddress> =
+    "service.from.{realm}.organization.{organization}.realm.${validRealmOperation()}".realmAddress()
 
-/**
- * Builds the corresponding Realm event template for outbound notifications.
- *
- * The suffix follows the same grammar as request routes; the subject direction identifies events from the Realm.
- */
-fun realmEventAddress(suffix: String): AddressTemplate<RealmServiceAddress> =
-    realmAddress("service.from.{realm}.organization.{organization}.realm.${validRealmOperation(suffix)}")
-
-private fun realmAddress(pattern: String): AddressTemplate<RealmServiceAddress> =
+private fun String.realmAddress(): AddressTemplate<RealmServiceAddress> =
     addressTemplate(
-        pattern,
         { address ->
             addressValuesOf(
                 "realm" to address.realmId,
@@ -75,8 +62,8 @@ private fun realmAddress(pattern: String): AddressTemplate<RealmServiceAddress> 
         { values -> RealmServiceAddress(values.require("realm"), values.require("organization")) },
     )
 
-private fun validRealmOperation(value: String): String =
-    value.also {
+private fun String.validRealmOperation(): String =
+    also {
         require(it.matches(Regex("[a-z0-9]+(?:[._][a-z0-9]+)*"))) {
             "Realm operation suffix must contain only lowercase names separated by dots or underscores."
         }

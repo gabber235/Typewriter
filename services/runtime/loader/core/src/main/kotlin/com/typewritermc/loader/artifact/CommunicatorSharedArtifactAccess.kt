@@ -19,8 +19,6 @@ import com.typewritermc.loader.api.artifact.SharedArtifactRevision
 import com.typewritermc.loader.api.artifact.SharedCatalogRevision
 import com.typewritermc.loader.api.artifact.TransferId
 import com.typewritermc.loader.api.realmRequestAddress
-import com.typewritermc.services.libs.communicator.address.AddressTemplate
-import com.typewritermc.services.libs.communicator.address.addressTemplate
 import com.typewritermc.services.libs.communicator.address.addressValuesOf
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.contract.OperationName
@@ -268,7 +266,7 @@ internal class SharedContracts {
         skirUnaryContract(
             method,
             OperationName.of(suffix),
-            sharedAddress(suffix),
+            suffix.realmRequestAddress(),
             ResponsePolicy(unavailable) { response ->
                 val failed = response::class.simpleName == "UnavailableWrapper"
                 ResponseClassification(
@@ -281,8 +279,6 @@ internal class SharedContracts {
 }
 
 internal val sharedContracts = SharedContracts()
-
-private fun sharedAddress(suffix: String): AddressTemplate<RealmArtifactAddress> = realmRequestAddress(suffix)
 
 private fun ArtifactDigest.toSkir() = SkirArtifactDigest(algorithm = SkirDigestAlgorithm.SHA256, value = value)
 

@@ -28,8 +28,7 @@ data class ExampleAddress(
 )
 
 private val template =
-    addressTemplate(
-        "realm.{service}.organization.{organization}",
+    "realm.{service}.organization.{organization}".addressTemplate(
         { addressValuesOf("service" to it.service, "organization" to it.organization) },
         { ExampleAddress(it.require("service"), it.require("organization")) },
     )
@@ -109,7 +108,7 @@ val CoreFoundationsTest by testSuite {
             "a.x{y}",
         ).forEach { pattern ->
             shouldThrow<IllegalArgumentException> {
-                addressTemplate(pattern, { addressValuesOf() }, { Any() })
+                pattern.addressTemplate({ addressValuesOf() }, { Any() })
             }
         }
     }
@@ -125,8 +124,8 @@ val CoreFoundationsTest by testSuite {
 
     test("renderer keys and address values are exact and unique") {
         shouldThrow<IllegalArgumentException> { AddressValues.of("key" to "one", "key" to "two") }
-        val missing = addressTemplate("a.{x}", { addressValuesOf() }, { ExampleAddress("", "") })
-        val extra = addressTemplate("a.{x}", { addressValuesOf("x" to "x", "y" to "y") }, { ExampleAddress("", "") })
+        val missing = "a.{x}".addressTemplate({ addressValuesOf() }, { ExampleAddress("", "") })
+        val extra = "a.{x}".addressTemplate({ addressValuesOf("x" to "x", "y" to "y") }, { ExampleAddress("", "") })
         shouldThrow<IllegalArgumentException> { missing.render(ExampleAddress("x", "y")) }
         shouldThrow<IllegalArgumentException> { extra.render(ExampleAddress("x", "y")) }
     }

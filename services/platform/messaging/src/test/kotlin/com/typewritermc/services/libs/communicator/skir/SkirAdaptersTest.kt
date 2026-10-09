@@ -20,8 +20,7 @@ import skirout.service.v1.status.GetServiceStatusResponse
 private data object StatusEndpoint
 
 private val statusAddress =
-    addressTemplate(
-        pattern = "service.status",
+    "service.status".addressTemplate(
         render = { addressValuesOf() },
         parse = { StatusEndpoint },
     )

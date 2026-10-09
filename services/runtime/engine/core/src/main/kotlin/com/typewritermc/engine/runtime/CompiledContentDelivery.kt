@@ -199,11 +199,11 @@ private fun publishedContentQuery(address: RealmServiceAddress) =
         method = QueryPublishedContent,
         updateSerializer = QueryPublishedContentResponse.serializer,
         name = OperationName.of("editor.authoring.compiled.query"),
-        requestAddress = realmRequestAddress("editor.authoring.compiled.query").subscribedAt(address),
-        updateAddress = realmEventAddress("editor.authoring.compiled.query"),
+        requestAddress = "editor.authoring.compiled.query".realmRequestAddress().subscribedAt(address),
+        updateAddress = "editor.authoring.compiled.query".realmEventAddress(),
         updateAddressResolver = { realm, request ->
             com.typewritermc.services.libs.communicator.address.MessageAddress.of(
-                realmEventAddress("editor.authoring.compiled.query").render(realm).value + "." + request.transferId,
+                "editor.authoring.compiled.query".realmEventAddress().render(realm).value + "." + request.transferId,
             )
         },
         initialPolicy = ResponsePolicy(QueryPublishedContentResponse.createInternalError(), compiledContentResponseClassifier),
@@ -216,7 +216,7 @@ private fun publishedContentQuery(address: RealmServiceAddress) =
 private fun compiledContentHints() =
     EventContract(
         OperationName.of("editor.authoring.compiled.changed"),
-        realmEventAddress("editor.authoring.compiled.changed"),
+        "editor.authoring.compiled.changed".realmEventAddress(),
         CompiledContentChanged.serializer.asPayloadCodec(),
         com.typewritermc.services.libs.telemetry.ErrorSlug
             .of("compiled-content-hint-failed"),

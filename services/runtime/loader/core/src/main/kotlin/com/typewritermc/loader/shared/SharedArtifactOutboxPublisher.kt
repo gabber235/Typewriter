@@ -120,8 +120,7 @@ class SharedArtifactOutboxPublisher(
 }
 
 private fun sharedChangeAddress(): AddressTemplate<SharedArtifactChangeAddress> =
-    addressTemplate(
-        "typewriter.organization.{organization}.realm.{realm}.shared.changed",
+    "typewriter.organization.{organization}.realm.{realm}.shared.changed".addressTemplate(
         { address ->
             addressValuesOf(
                 "organization" to address.organizationId,

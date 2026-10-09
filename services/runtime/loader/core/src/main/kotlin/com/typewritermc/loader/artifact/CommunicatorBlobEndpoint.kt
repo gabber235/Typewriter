@@ -10,8 +10,6 @@ import com.typewritermc.loader.api.artifact.BlobWriteSession
 import com.typewritermc.loader.api.artifact.DigestAlgorithm
 import com.typewritermc.loader.api.artifact.TransferId
 import com.typewritermc.loader.api.realmRequestAddress
-import com.typewritermc.services.libs.communicator.address.AddressTemplate
-import com.typewritermc.services.libs.communicator.address.addressTemplate
 import com.typewritermc.services.libs.communicator.address.addressValuesOf
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.contract.OperationName
@@ -242,15 +240,13 @@ internal class BlobContracts {
         skirUnaryContract(
             method,
             OperationName.of(suffix),
-            blobAddress(suffix),
+            suffix.realmRequestAddress(),
             ResponsePolicy(unavailable, unavailableClassifier()),
             ErrorSlug.of(suffix.replace('.', '-')),
         )
 }
 
 internal val blobContracts = BlobContracts()
-
-private fun blobAddress(suffix: String): AddressTemplate<RealmArtifactAddress> = realmRequestAddress(suffix)
 
 private fun <Response : Any> unavailableClassifier(): ResponseClassifier<Response> =
     ResponseClassifier { response ->

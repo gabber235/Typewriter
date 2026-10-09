@@ -64,8 +64,7 @@ value class ServiceAddress(
 )
 
 private fun serviceAddress(pattern: String): AddressTemplate<ServiceAddress> =
-    addressTemplate(
-        pattern,
+    pattern.addressTemplate(
         { addressValuesOf("id" to it.serviceId.value) },
         { ServiceAddress(ServiceId(it.require("id"))) },
     )

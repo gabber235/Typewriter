@@ -70,9 +70,9 @@ private data class Target(
 )
 
 private val requestAddress =
-    addressTemplate("service.{id}.get", { addressValuesOf("id" to it.id) }, { Target(it.require("id")) })
+    "service.{id}.get".addressTemplate({ addressValuesOf("id" to it.id) }, { Target(it.require("id")) })
 private val updateAddress =
-    addressTemplate("service.{id}.updates", { addressValuesOf("id" to it.id) }, { Target(it.require("id")) })
+    "service.{id}.updates".addressTemplate({ addressValuesOf("id" to it.id) }, { Target(it.require("id")) })
 private val strings =
     object : PayloadCodec<String> {
         override fun encode(value: String) = Payload.copyOf(value.encodeToByteArray())
