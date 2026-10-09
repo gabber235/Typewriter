@@ -201,5 +201,4 @@ enum class PresentationRole {
     AUTHORING_RESULT,
     PAGE_TILE,
     GRAPH_NODE,
-    INSPECTOR_HEADER,
 }

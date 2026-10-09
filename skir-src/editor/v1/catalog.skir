@@ -147,7 +147,6 @@ enum PresentationRole(810900016) {
   authoring_result = 7;
   page_tile = 8;
   graph_node = 9;
-  inspector_header = 10;
 }
 
 enum PresentationTarget(810900017) {

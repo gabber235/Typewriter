@@ -2,7 +2,10 @@ package com.typewritermc.extensions.basic.entries.sequence.actions
 
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.engine.pages.SequenceEntry
+import com.typewritermc.expression.literal
+import com.typewritermc.expression.orElse
 import com.typewritermc.extensions.basic.entries.sequence.SequenceTriggers
+import com.typewritermc.presentation.resourceHeading
 import com.typewritermc.types.Color
 import com.typewritermc.types.Ref
 import com.typewritermc.types.TypewriterDisplay
@@ -21,3 +24,14 @@ class SimpleMessageActionEntry(
     val triggers: Set<Ref<SequenceTriggers.Entry, SequenceEntry>>,
     val message: String,
 ) : SequenceEntry
+
+object SimpleMessageActionEntryInspector : SimpleMessageActionEntryPresentation {
+    override fun SimpleMessageActionEntryPresentationScope.present() {
+        resourceHeading(
+            title = expressions.name.orElse(literal("Unnamed action")),
+            color = literal(Color.parseRgb(requireNotNull(SimpleMessageActionEntryDefinition.display?.color))),
+            identifier = subject.identifier,
+        )
+        remainingFields {}
+    }
+}

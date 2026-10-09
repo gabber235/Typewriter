@@ -510,7 +510,11 @@ final class _AuthoredCollectionRowAppearance extends StatelessWidget {
         : catalog.presentationMaterial(appearance, record.configuration);
     if (material == null) return Text(fallbackLabel);
     final scope = row.scope
-        .withValues({_configuredValueBindingId: row.row})
+        .withValues({
+          _configuredValueBindingId: row.row,
+          presentationSubjectIdentifierBindingId:
+              skir.DataValue.wrapStringValue(row.resource.value),
+        })
         .withMaterial(material)
         .withActivePresentation(material.provider);
     return PortablePresentationNodeRenderer(

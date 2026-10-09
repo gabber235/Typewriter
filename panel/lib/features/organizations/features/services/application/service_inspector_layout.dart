@@ -11,7 +11,7 @@ skir.PresentationNode _inspectorNode(
   header: header,
 );
 
-skir.PresentationHeader _inspectorHeader(
+skir.PresentationHeader _inspectorSectionHeader(
   String title, {
   bool? expanded,
   skir.PresentationInsets? padding,
@@ -44,7 +44,7 @@ skir.PresentationNode _inspectorSection(
     ),
     border: null,
   ),
-  header: _inspectorHeader(
+  header: _inspectorSectionHeader(
     title,
     expanded: true,
     padding: skir.PresentationInsets.createSymmetric(
@@ -122,7 +122,7 @@ skir.PresentationNode _inspectorFact(
   String id,
   String label,
   skir.PresentationElement content,
-) => _inspectorNode(id, content, header: _inspectorHeader(label));
+) => _inspectorNode(id, content, header: _inspectorSectionHeader(label));
 
 skir.TextContent _inspectorTextContent(
   skir.ExpressionNode value, {

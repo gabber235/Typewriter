@@ -35,14 +35,7 @@ class _RealmInstanceSelectable
 
   @override
   InspectionContent buildInspection(EditorOwnerScope owners) =>
-      InspectionContent(
-        host: realm.portablePresentationHost(),
-        header: InspectorHeader(
-          id: realm.realmId.id,
-          name: name,
-          color: realmServiceRoleColor,
-        ),
-      );
+      InspectionContent(host: realm.portablePresentationHost());
 }
 
 /// Builds the route to a Realm owned by an organization.
@@ -85,12 +78,5 @@ class _EngineInstanceSelectable
 
   @override
   InspectionContent buildInspection(EditorOwnerScope owners) =>
-      InspectionContent(
-        host: engine.portablePresentationHost(),
-        header: InspectorHeader(
-          id: engine.engineId.id,
-          name: name,
-          color: engineServiceRoleColor,
-        ),
-      );
+      InspectionContent(host: engine.portablePresentationHost());
 }

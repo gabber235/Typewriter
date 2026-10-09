@@ -49,9 +49,6 @@ class _ServiceHostSelectable
 
   @override
   InspectionContent buildInspection(EditorOwnerScope owners) {
-    final id = host.hostId.id;
-    final fallbackName = name;
-    final fallbackColor = service?.color ?? standaloneServiceColor;
     final configurationOwner = owners.editor(configurationTarget);
     final identityOwner = serviceIdentityTarget == null
         ? null
@@ -69,14 +66,6 @@ class _ServiceHostSelectable
             .where((realm) => realm.ownerHost.id != host.hostId)
             .toList(),
       ),
-      header: serviceIdentityTarget != null
-          ? ManagedInspectorHeader(
-              id: id,
-              owner: identityOwner!,
-              fallbackName: fallbackName,
-              fallbackColor: fallbackColor,
-            )
-          : InspectorHeader(id: id, name: fallbackName, color: fallbackColor),
     );
   }
 }

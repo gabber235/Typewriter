@@ -347,7 +347,7 @@ void main() {
   });
 
   testWidgets(
-    "inspection restores the catalog header and compact apply controls",
+    "inspection composes identity and retains compact apply controls",
     (tester) async {
       final fixture = _fixture();
       final commands = AuthoredResourceCommands(
@@ -376,7 +376,6 @@ void main() {
       );
 
       expect(find.byKey(const ValueKey("message.header")), findsOneWidget);
-      expect(find.byType(InspectorHeader), findsNothing);
       expect(find.text("Cancel"), findsNothing);
       expect(find.text("Apply"), findsNothing);
 
@@ -1500,7 +1499,6 @@ _fixture({
           roles: [
             skir.PresentationRole.editor,
             skir.PresentationRole.inspector,
-            skir.PresentationRole.inspectorHeader,
             skir.PresentationRole.graphNode,
           ],
           priority: 0,
@@ -1522,18 +1520,20 @@ _fixture({
           provider: presentationId,
           target: target,
           role: skir.PresentationRole.inspector,
-          layout: layout,
-          dependencies: skir.PresentationDependencies.defaultInstance,
-          subject: skir.TypeTemplate.createNamed(
-            definition: definition,
-            arguments: const [],
+          layout: skir.PresentationNode(
+            nodeId: "message.inspector",
+            properties: skir.PresentationProperties.defaultInstance,
+            header: null,
+            element: skir.PresentationElement.wrapChildren(
+              skir.ChildrenElement.createColumn(
+                children: [
+                  skir.AxisChild.wrapFixed(headerLayout),
+                  skir.AxisChild.wrapFixed(layout),
+                ],
+                layout: skir.AxisChildrenLayout.defaultInstance,
+              ),
+            ),
           ),
-        ),
-        skir.PresentationMaterial(
-          provider: presentationId,
-          target: target,
-          role: skir.PresentationRole.inspectorHeader,
-          layout: headerLayout,
           dependencies: skir.PresentationDependencies.defaultInstance,
           subject: skir.TypeTemplate.createNamed(
             definition: definition,

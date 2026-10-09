@@ -2492,7 +2492,6 @@ final class ConfigurationRecipe_mutable
 ///     case PresentationRole.authoringResult: { ... }
 ///     case PresentationRole.pageTile: { ... }
 ///     case PresentationRole.graphNode: { ... }
-///     case PresentationRole.inspectorHeader: { ... }
 ///   }
 ///   ```
 ///
@@ -2512,7 +2511,6 @@ sealed class PresentationRole {
   static const authoringResult = _PresentationRole_consts.authoringResultConst;
   static const pageTile = _PresentationRole_consts.pageTileConst;
   static const graphNode = _PresentationRole_consts.graphNodeConst;
-  static const inspectorHeader = _PresentationRole_consts.inspectorHeaderConst;
 
   /// Returns the kind of variant held by this PresentationRole.
   PresentationRole_kind get kind;
@@ -2577,13 +2575,6 @@ sealed class PresentationRole {
         "",
         graphNode,
       );
-      _serializerBuilder.addConstantVariant(
-        10,
-        "inspector_header",
-        "inspectorHeader",
-        "",
-        inspectorHeader,
-      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -2612,8 +2603,7 @@ enum PresentationRole_kind {
   catalogOptionConst(6),
   authoringResultConst(7),
   pageTileConst(8),
-  graphNodeConst(9),
-  inspectorHeaderConst(10);
+  graphNodeConst(9);
 
   final _core.int _ordinal;
 
@@ -2648,8 +2638,7 @@ enum _PresentationRole_consts implements PresentationRole {
   catalogOptionConst(PresentationRole_kind.catalogOptionConst),
   authoringResultConst(PresentationRole_kind.authoringResultConst),
   pageTileConst(PresentationRole_kind.pageTileConst),
-  graphNodeConst(PresentationRole_kind.graphNodeConst),
-  inspectorHeaderConst(PresentationRole_kind.inspectorHeaderConst);
+  graphNodeConst(PresentationRole_kind.graphNodeConst);
 
   @_core.override
   final PresentationRole_kind kind;

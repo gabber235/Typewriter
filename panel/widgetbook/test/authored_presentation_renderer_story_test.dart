@@ -4,6 +4,48 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authored_presentation_renderer.stories.dart";
 
 void main() {
+  testWidgets(
+    "heading gallery fits and hides resource identity for multiple selection",
+    (tester) async {
+      await tester.pumpWidget(
+        const FakeApp(
+          child: Scaffold(
+            body: Center(
+              child: SizedBox(width: 200, child: ResourceHeadingGallery()),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(AutoSizeText), findsNWidgets(2));
+      expect(
+        find.text("book:019d1c2a8f7b7cc18c2a4a7b2fd1e281"),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(
+        const FakeApp(
+          child: Scaffold(
+            body: Center(
+              child: SizedBox(
+                width: 200,
+                child: ResourceHeadingGallery(multiple: true),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(AutoSizeText), findsOneWidget);
+      expect(find.text("book:019d1c2a8f7b7cc18c2a4a7b2fd1e281"), findsNothing);
+      expect(
+        find.text("Normal fields and section labels remain visible"),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets("the canonical scalar gallery renders and edits real controls", (
     tester,
   ) async {

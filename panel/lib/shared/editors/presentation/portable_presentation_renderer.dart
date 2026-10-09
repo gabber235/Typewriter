@@ -331,13 +331,21 @@ final class _PortablePresentationRendererState
     listenable: widget.host,
     builder: (context, _) {
       final document = widget.host.document;
-      final bindings = {
-        for (final entry in document.bindings.entries)
-          entry.key: PortableExpressionBinding(
-            value: entry.value.value,
-            location: entry.value.location,
-          ),
-      };
+      final Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings;
+      try {
+        bindings =
+            {
+              for (final entry in document.bindings.entries)
+                entry.key: PortableExpressionBinding(
+                  value: entry.value.value,
+                  location: entry.value.location,
+                ),
+            }.withPresentationEnvironment(
+              PresentationEnvironment.maybeOf(context)?.bindings ?? const {},
+            );
+      } on StateError catch (error) {
+        return _diagnostic(error.message);
+      }
       final scope =
           widget.scopeBuilder?.call(
             host: widget.host,

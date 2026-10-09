@@ -131,11 +131,6 @@ class BookSelection extends InspectableSelectable<BookIdentifier> {
   @override
   InspectionContent buildInspection(EditorOwnerScope owners) =>
       InspectionContent(
-        header: InspectorHeader(
-          id: book.bookId.value,
-          name: book.title,
-          color: book.color,
-        ),
         body: AuthoredResourceInspection(
           key: ValueKey((book.bookId, skir.PresentationRole.inspector)),
           resource: book.bookId,

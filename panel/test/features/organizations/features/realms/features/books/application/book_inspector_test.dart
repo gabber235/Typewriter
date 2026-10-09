@@ -32,7 +32,6 @@ void main() {
 
       final inspection = selection.buildInspection(owners);
 
-      expect(inspection.header, isA<InspectorHeader>());
       expect(inspection.body, isA<AuthoredResourceInspection>());
       expect(inspection.host, isNull);
       final open = selection.capabilities.whereType<OpenSelectionCapability>();

@@ -18,7 +18,6 @@ enum PresentationRole {
   authoringResult,
   pageTile,
   graphNode,
-  inspectorHeader,
 }
 
 /// A declared role is usable or rejected. An absent map entry means no claim.

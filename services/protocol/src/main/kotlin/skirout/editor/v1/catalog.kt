@@ -2346,7 +2346,6 @@ sealed class PresentationRole private constructor() {
         AUTHORING_RESULT_CONST,
         PAGE_TILE_CONST,
         GRAPH_NODE_CONST,
-        INSPECTOR_HEADER_CONST,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.catalog.PresentationRole.UNKNOWN")) internal constructor(
@@ -2469,18 +2468,6 @@ sealed class PresentationRole private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return Kind.GRAPH_NODE_CONST.ordinal;
-        }
-    }
-
-    object INSPECTOR_HEADER : skirout.editor.v1.catalog.PresentationRole() {
-        override val kind get() = Kind.INSPECTOR_HEADER_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.PresentationRole && other.kind == Kind.INSPECTOR_HEADER_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.INSPECTOR_HEADER_CONST.ordinal;
         }
     }
 
@@ -7309,13 +7296,6 @@ private object _SerializerRegistry {
             skirout.editor.v1.catalog.PresentationRole.Kind.GRAPH_NODE_CONST.ordinal,
             "",
             skirout.editor.v1.catalog.PresentationRole.GRAPH_NODE,
-        );
-        PresentationRoleSerializerImpl.addConstantVariant(
-            10,
-            "inspector_header",
-            skirout.editor.v1.catalog.PresentationRole.Kind.INSPECTOR_HEADER_CONST.ordinal,
-            "",
-            skirout.editor.v1.catalog.PresentationRole.INSPECTOR_HEADER,
         );
         PresentationRoleSerializerImpl.finalizeEnum();
 

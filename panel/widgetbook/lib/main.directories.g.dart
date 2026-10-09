@@ -682,6 +682,12 @@ final directories = <_widgetbook.WidgetbookNode>[
                             .authoredPresentationInteractionUseCase,
                   ),
                   _widgetbook.WidgetbookUseCase(
+                    name: 'Resource headings and fitted rich text',
+                    builder:
+                        _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authored_presentation_renderer_stories
+                            .resourceHeadingUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
                     name: 'Scalar controls',
                     builder:
                         _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authored_presentation_renderer_stories

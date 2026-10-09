@@ -53,6 +53,56 @@ import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
 
 val DefaultPresentationRuntimeTest by testSuite {
+    test("resource headings compose ordinary nodes with identity and pane context") {
+        val catalog = DefaultCheckedCatalog(CatalogGeneration("headings"), StandardTypes.definitions)
+        val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
+        val result =
+            DefaultPresentationRuntime().build(
+                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.INSPECTOR),
+            ) { build ->
+                with(build) {
+                    resourceHeading(literal("A title"), literal(com.typewritermc.types.Color(0xff123456u)), subject.identifier)
+                }
+            }
+        val conditional = result.layout.singleFixed().element as PresentationElement.ConditionalWrapper
+        val condition = conditional.value.condition as skirout.editor.v1.expression.ExpressionNode.CallWrapper
+        condition.value.operation.value shouldBe "typewriter.value.eq"
+        val count = condition.value.arguments.first() as skirout.editor.v1.expression.ExpressionNode.OrElseWrapper
+        (count.value.input as skirout.editor.v1.expression.ExpressionNode.ReadWrapper).value.binding.value shouldBe
+            "presentation.context.selection_count"
+        val paragraphs =
+            conditional.value.whenTrue
+                .singleFixed()
+                .fixedChildren()
+        val title = (paragraphs.first().element as PresentationElement.TextWrapper).value
+        val fit = title.sizing as skirout.editor.v1.presentation.TextSizing.FitWrapper
+        com.typewritermc.types.skir.SkirDataValueCodec
+            .decode(
+                (fit.value.minimum as skirout.editor.v1.expression.ExpressionNode.LiteralWrapper).value,
+            ).getOrThrow() shouldBe
+            DataValue.Float(18.0)
+        com.typewritermc.types.skir.SkirDataValueCodec
+            .decode(
+                (fit.value.maximum as skirout.editor.v1.expression.ExpressionNode.LiteralWrapper).value,
+            ).getOrThrow() shouldBe
+            DataValue.Float(40.0)
+        title.paragraph.maxLines shouldBe 1
+        title.paragraph.selectable shouldBe true
+        title.paragraph.overflow shouldBe skirout.editor.v1.presentation.PresentationTextOverflow.ELLIPSIS
+        val identity = paragraphs.last().element as PresentationElement.ConditionalWrapper
+        val idText =
+            (
+                identity.value.whenTrue
+                    .singleFixed()
+                    .element as PresentationElement.TextWrapper
+            ).value
+        idText.paragraph.selectable shouldBe true
+        idText.paragraph.softWrap shouldBe true
+        val identifier = idText.value as skirout.editor.v1.expression.ExpressionNode.OrElseWrapper
+        (identifier.value.input as skirout.editor.v1.expression.ExpressionNode.ReadWrapper).value.binding.value shouldBe
+            "presentation.subject.identifier"
+    }
+
     test("rich paragraphs serialize sizing and paragraph behavior") {
         val catalog = DefaultCheckedCatalog(CatalogGeneration("rich sizing"), StandardTypes.definitions)
         val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))

@@ -9,6 +9,7 @@ import com.typewritermc.expression.target
 import com.typewritermc.presentation.AppliedPresentation
 import com.typewritermc.presentation.Layout
 import com.typewritermc.presentation.PresentationInput
+import com.typewritermc.presentation.resourceHeading
 import com.typewritermc.types.Color
 import com.typewritermc.types.CoreIconSdkProvider
 import com.typewritermc.types.Icon
@@ -24,7 +25,6 @@ object BookSdkProvider : BookConfiguration, BookPresentation {
             PresentationRole.INSPECTOR,
             PresentationRole.REFERENCE_SUMMARY,
             PresentationRole.REFERENCE_OPTION,
-            PresentationRole.INSPECTOR_HEADER,
             PresentationRole.AUTHORING_RESULT,
         )
 
@@ -40,6 +40,11 @@ object BookSdkProvider : BookConfiguration, BookPresentation {
         if (role == PresentationRole.INSPECTOR) {
             val tagOptions = libraryTagCollectionSource()
             inspectorLayout {
+                resourceHeading(
+                    title = expressions.title.orIfBlank("Unnamed Book"),
+                    color = expressions.color.orElse(literal(Color(0xff3f51b5u))),
+                    identifier = subject.identifier,
+                )
                 inspectorSection("title", "Title") {
                     title { textInput() }
                 }

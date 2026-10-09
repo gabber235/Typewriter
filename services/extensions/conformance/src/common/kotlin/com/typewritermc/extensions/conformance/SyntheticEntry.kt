@@ -22,12 +22,14 @@ import com.typewritermc.elements.ElementRuntimeHandle
 import com.typewritermc.elements.Entry
 import com.typewritermc.elements.TypewriterElementFacet
 import com.typewritermc.expression.literal
+import com.typewritermc.expression.orElse
 import com.typewritermc.library.Book
 import com.typewritermc.library.BookPages
 import com.typewritermc.library.ChapterPath
 import com.typewritermc.library.Page
 import com.typewritermc.library.PageElements
 import com.typewritermc.presentation.AppliedPresentation
+import com.typewritermc.presentation.resourceHeading
 import com.typewritermc.types.Color
 import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.Ref
@@ -169,6 +171,11 @@ object SyntheticEntryEditorPresentation : SyntheticEntryPresentation {
     override val priority: Int = 100
 
     override fun SyntheticEntryPresentationScope.present() {
+        resourceHeading(
+            title = expressions.name.orElse(literal("Unnamed entry")),
+            color = literal(Color.parseRgb(requireNotNull(SyntheticEntryDefinition.display?.color))),
+            identifier = subject.identifier,
+        )
         message {
             label("Message")
             polymorphicInput {
@@ -190,6 +197,11 @@ object SyntheticEntryCompactPresentation : SyntheticEntryPresentation {
     override val priority: Int = 10
 
     override fun SyntheticEntryPresentationScope.present() {
+        resourceHeading(
+            title = expressions.name.orElse(literal("Unnamed entry")),
+            color = literal(Color.parseRgb(requireNotNull(SyntheticEntryDefinition.display?.color))),
+            identifier = subject.identifier,
+        )
         message {
             polymorphicInput {
                 form(

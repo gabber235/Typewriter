@@ -166,16 +166,18 @@ val FrameworkCatalogCreationTest by testSuite {
             )
         val root = material.layout.singleFixed().element as PresentationElement.ChildrenWrapper
         val column = root.value as ChildrenElement.ColumnWrapper
-        column.value.children shouldHaveSize 6
+        column.value.children shouldHaveSize 7
         column.value.children
+            .drop(1)
             .take(5)
             .map(AxisChild::nodeId) shouldBe
             listOf("title", "icon", "color", "tags", "effective-tags")
         column.value.children
+            .drop(1)
             .take(5)
             .map(AxisChild::sectionTitle) shouldBe
             listOf("Title", "Icon", "Color", "Direct Tags", "Effective Tags")
-        val iconNode = column.value.children[1].sectionContent()
+        val iconNode = column.value.children[2].sectionContent()
         val polymorphic = iconNode.element as PresentationElement.PolymorphicInputWrapper
         polymorphic.value.concreteTypes shouldHaveSize 2
         polymorphic.value.concreteTypes.map { it.concreteType } shouldBe
@@ -193,7 +195,7 @@ val FrameworkCatalogCreationTest by testSuite {
         polymorphic.value.concreteTypes.mapNotNull { option ->
             (option.presentation?.element as? PresentationElement.InvocationWrapper)?.value?.presentationId?.name
         } shouldBe listOf(iconifyDescriptor.id.name, svgDescriptor.id.name)
-        column.value.children[4]
+        column.value.children[5]
             .sectionContent()
             .collectionGraphSource() shouldBe TAG_COLLECTION_SOURCE_ID
 
@@ -208,19 +210,21 @@ val FrameworkCatalogCreationTest by testSuite {
             )
         val tagRoot = tagMaterial.layout.singleFixed().element as PresentationElement.ChildrenWrapper
         val tagColumn = tagRoot.value as ChildrenElement.ColumnWrapper
-        tagColumn.value.children shouldHaveSize 6
+        tagColumn.value.children shouldHaveSize 7
         tagColumn.value.children
+            .drop(1)
             .take(5)
             .map(AxisChild::nodeId) shouldBe
             listOf("name", "color", "parents", "inheritance", "placement")
         tagColumn.value.children
+            .drop(1)
             .take(5)
             .map(AxisChild::sectionTitle) shouldBe
             listOf("Name", "Color", "Direct Parents", "Inheritance", "Placement")
-        tagColumn.value.children[3]
+        tagColumn.value.children[4]
             .sectionContent()
             .collectionGraphSource() shouldBe TAG_COLLECTION_SOURCE_ID
-        val placementNode = tagColumn.value.children[4].sectionContent()
+        val placementNode = tagColumn.value.children[5].sectionContent()
         val placementInvocation = placementNode.element as PresentationElement.DefaultPresentationWrapper
         placementInvocation.value.presentationId?.name shouldBe placementDescriptor.id.name
 
@@ -235,12 +239,14 @@ val FrameworkCatalogCreationTest by testSuite {
             )
         val pageRoot = pageMaterial.layout.singleFixed().element as PresentationElement.ChildrenWrapper
         val pageColumn = pageRoot.value as ChildrenElement.ColumnWrapper
-        pageColumn.value.children shouldHaveSize 5
+        pageColumn.value.children shouldHaveSize 6
         pageColumn.value.children
+            .drop(1)
             .take(4)
             .map(AxisChild::nodeId) shouldBe
             listOf("book", "name", "chapter", "priority")
         pageColumn.value.children
+            .drop(1)
             .take(4)
             .map(AxisChild::sectionTitle) shouldBe
             listOf("Book", "Name", "Chapter", "Priority")
@@ -269,22 +275,14 @@ val FrameworkCatalogCreationTest by testSuite {
                 .singleFixed()
                 .element is PresentationElement.PolymorphicMatchWrapper
         ) shouldBe true
-        val bookHeader =
-            bookProvider.build(
-                PresentationBuildBinding(
-                    checkedBook.presentationTemplate(),
-                    PresentationRole.INSPECTOR_HEADER,
-                    resourceTypes,
-                ),
-            )
-        val header = bookHeader.layout.adaptiveLeading()
+        val summary = bookSummary.layout.adaptiveLeading()
         val authoredBook =
             DataValue.Named(
                 BookDefinition.use,
                 DataValue.Record(book.record.fields + ("title" to DataValue.StringValue("b"))),
             )
         val configured = WireExpressionBindingId(value = "configured_value")
-        val title = header.center!!.singleFixed().element as PresentationElement.TextWrapper
+        val title = summary.center!!.singleFixed().element as PresentationElement.TextWrapper
         title.value.value.evaluate(mapOf(configured to authoredBook)) shouldBe DataValue.StringValue("b")
         title.value.value.evaluate(
             mapOf(
@@ -296,13 +294,8 @@ val FrameworkCatalogCreationTest by testSuite {
             ),
         ) shouldBe DataValue.StringValue("Unnamed Book")
 
-        val headerLeading = header.leading.singleFixed().element as PresentationElement.ContainerWrapper
-        val headerPadding =
-            headerLeading.value.child
-                .singleFixed()
-                .element as PresentationElement.PaddingWrapper
         val match =
-            headerPadding.value.child
+            bookIcon.value.child
                 .singleFixed()
                 .element as PresentationElement.PolymorphicMatchWrapper
         val iconValue = requireNotNull(authoredBook.at(match.value.binding.path))

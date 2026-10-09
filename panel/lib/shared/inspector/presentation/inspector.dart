@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "inspector.g.dart";
@@ -377,41 +379,38 @@ class _InspectorContent extends HookConsumerWidget {
     // TODO: Add shimmer when loading.
     final session = ref.watch(inspectionSessionProvider);
 
-    return ListenableBuilder(
-      listenable: session,
-      builder: (context, _) {
-        final hosts = session.hosts;
-        final body = session.body;
-        final bodyOwnsHeader = switch (body) {
-          InspectorBodyOwnsHeader(:final ownsInspectorHeader) =>
-            ownsInspectorHeader,
-          _ => false,
-        };
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: context.spacing.space3,
-          children: [
-            if (!bodyOwnsHeader) ?session.header,
-            ?body,
-            for (var index = 0; index < hosts.length; index++)
-              PortablePresentationRenderer(
-                key: ValueKey((ref.watch(selectionProvider), index)),
-                host: hosts[index],
-              ),
-            const SizedBox(height: 5),
-            InspectorOperations(),
-            const SizedBox(height: 30),
-          ],
-        );
+    final selection = ref.watch(selectionProvider);
+    return PresentationEnvironment(
+      bindings: {
+        presentationSelectionCountBindingId: PortableExpressionBinding(
+          value: skir.DataValue.wrapInteger(selection.length.toString()),
+        ),
       },
+      child: ListenableBuilder(
+        listenable: session,
+        builder: (context, _) {
+          final hosts = session.hosts;
+          final body = session.body;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: context.spacing.space3,
+            children: [
+              ?body,
+              for (var index = 0; index < hosts.length; index++)
+                PortablePresentationRenderer(
+                  key: ValueKey((selection, index)),
+                  host: hosts[index],
+                ),
+              const SizedBox(height: 5),
+              InspectorOperations(),
+              const SizedBox(height: 30),
+            ],
+          );
+        },
+      ),
     );
   }
-}
-
-/// Marks inspector content that renders its own catalog supplied header.
-abstract interface class InspectorBodyOwnsHeader {
-  bool get ownsInspectorHeader;
 }
 
 /// Shows operations available for every currently inspected selectable.

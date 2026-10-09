@@ -163,6 +163,11 @@ final exemptions = <Exemption>[
 
 final layoutSpacingExemptions = <Exemption>[
   Exemption(
+    "lib/shared/editors/presentation/portable_presentation_expressions.dart",
+    RegExp("spacing: 8"),
+    "portable layout data cannot depend on theme context",
+  ),
+  Exemption(
     "lib/app/presentation/shell/custom_appbar.dart",
     RegExp(r"SizedBox\(width: 40\)"),
     "fixed app bar drag geometry",

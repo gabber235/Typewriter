@@ -49,11 +49,9 @@ final class InspectionContent {
     this.host,
     this.additionalHosts = const [],
     this.body,
-    this.header,
   }) : assert(host != null || additionalHosts.length > 0 || body != null);
 
   final PortablePresentationHost? host;
   final List<PortablePresentationHost> additionalHosts;
   final Widget? body;
-  final Widget? header;
 }

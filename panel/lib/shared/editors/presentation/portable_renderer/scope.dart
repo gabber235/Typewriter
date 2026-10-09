@@ -206,7 +206,7 @@ final class PortablePresentationScope {
     final configured = skir.ExpressionBindingId(value: "configured_value");
     return PortablePresentationScope(
       bindings: {
-        ...bindings,
+        ...bindings.withSubjectAt(payload.location),
         configured: PortableExpressionBinding(
           value: payload.value,
           location: payload.location,
@@ -270,7 +270,7 @@ final class PortablePresentationScope {
           );
     return PortablePresentationScope(
       bindings: {
-        ...bindings,
+        ...bindings.withSubjectAt(location),
         configured: PortableExpressionBinding(value: value, location: location),
       },
       budget: budget,
@@ -335,7 +335,9 @@ final class PortablePresentationScope {
           );
     return PortablePresentationScope(
       bindings: {
-        ...bindings,
+        ...(id == _configuredValueBindingId
+            ? bindings.withSubjectAt(location)
+            : bindings),
         id: PortableExpressionBinding(value: value, location: location),
       },
       budget: budget,
@@ -504,4 +506,19 @@ skir.TypeUse? _unwrapNullable(skir.TypeUse? type) {
     current = current.value.value;
   }
   return current;
+}
+
+extension _PresentationSubjectBindings
+    on Map<skir.ExpressionBindingId, PortableExpressionBinding> {
+  Map<skir.ExpressionBindingId, PortableExpressionBinding> withSubjectAt(
+    skir.ValueLocation? location,
+  ) => {
+    for (final entry in entries)
+      if (entry.key != presentationSubjectIdentifierBindingId)
+        entry.key: entry.value,
+    if (location case final subject? when subject.path.segments.isEmpty)
+      presentationSubjectIdentifierBindingId: PortableExpressionBinding(
+        value: skir.DataValue.wrapStringValue(subject.resource.value),
+      ),
+  };
 }

@@ -23,6 +23,28 @@ internal class PresentationLayoutHandler(
     ): Any? {
         val args = arguments.orEmpty()
         return when (method.presentationOperationName()) {
+            "getSubject" -> {
+                PresentationSubjectExpressions(
+                    Expr(
+                        ExpressionNode.Read(
+                            com.typewritermc.expression.ExpressionBindingId("presentation.subject.identifier"),
+                            com.typewritermc.authoring.ValuePath(),
+                        ),
+                    ),
+                )
+            }
+
+            "getContext" -> {
+                PresentationContextExpressions(
+                    Expr(
+                        ExpressionNode.Read(
+                            com.typewritermc.expression.ExpressionBindingId("presentation.context.selection_count"),
+                            com.typewritermc.authoring.ValuePath(),
+                        ),
+                    ),
+                )
+            }
+
             "getRole" -> {
                 state.role
             }

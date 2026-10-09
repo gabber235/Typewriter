@@ -30,7 +30,7 @@ extension ServicePortablePresentation on Service {
     required EditOwner identityOwner,
   }) => EditorSourcePresentationHost(
     catalog: _servicePortableCatalog,
-    root: () => _servicePortablePresentation(color),
+    root: () => _servicePortablePresentation(color, serviceId.id),
     budget: skir.EvaluationBudget(maxSteps: 512, maxCollectionItems: 64),
     capabilities: identityOwner.portablePresentationCapabilities,
     bindings: [
@@ -123,29 +123,36 @@ extension EditorMutationPortablePresentation on EditorMutationResult {
       };
 }
 
-skir.PresentationNode _servicePortablePresentation(Color color) =>
-    _portableColumn("service", [
-      _inspectorSection("service.details", "Service", [
-        _portableTextInput(
-          "service.name",
-          _serviceNameBinding,
-          label: "Name",
-          inputFormatters: _serviceNameInputFormats,
+skir.PresentationNode _servicePortablePresentation(
+  Color color,
+  String identifier,
+) => _portableColumn("service", [
+  _serviceNameBinding.readExpression().resourceHeading(
+    id: "service.heading",
+    color: color.portableExpression,
+    identifier: identifier.portableExpression,
+  ),
+  _inspectorSection("service.details", "Service", [
+    _portableTextInput(
+      "service.name",
+      _serviceNameBinding,
+      label: "Name",
+      inputFormatters: _serviceNameInputFormats,
+    ),
+    _inspectorCard("service.connection", "CONNECTION", color, [
+      _inspectorConnectionStatus("service.state", _serviceStateBinding),
+      _inspectorGrid("service.facts", [
+        _portableFact("service.version", "Version", _serviceVersionBinding),
+        _inspectorFact(
+          "service.lastSeen",
+          "Last seen",
+          _inspectorRelativeTime(_serviceLastSeenBinding),
         ),
-        _inspectorCard("service.connection", "CONNECTION", color, [
-          _inspectorConnectionStatus("service.state", _serviceStateBinding),
-          _inspectorGrid("service.facts", [
-            _portableFact("service.version", "Version", _serviceVersionBinding),
-            _inspectorFact(
-              "service.lastSeen",
-              "Last seen",
-              _inspectorRelativeTime(_serviceLastSeenBinding),
-            ),
-          ]),
-        ]),
       ]),
-      _portableCommit("service.save", _serviceNameBinding),
-    ], spacing: 16);
+    ]),
+  ]),
+  _portableCommit("service.save", _serviceNameBinding),
+], spacing: 16);
 
 final _serviceNameInputFormats = [
   skir.TextInputFormat.lowercase,

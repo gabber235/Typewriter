@@ -132,6 +132,10 @@ interface Layout :
     PresentationInteractions {
     val role: PresentationRole
 
+    val subject: PresentationSubjectExpressions
+
+    val context: PresentationContextExpressions
+
     fun row(
         spacing: Double = 0.0,
         main: MainAxisAlignment = MainAxisAlignment.Start,
@@ -381,3 +385,13 @@ interface ConnectionBundleScope {
 
     fun visibleIf(condition: Expr<Boolean, Handled>)
 }
+
+/** Resource identity observed outside editable fields, absent for plain values. */
+class PresentationSubjectExpressions(
+    val identifier: Expr<String, com.typewritermc.expression.MayBeMissing>,
+)
+
+/** Read only observations from the surface hosting this presentation. */
+class PresentationContextExpressions(
+    val selectionCount: Expr<Int, com.typewritermc.expression.MayBeMissing>,
+)

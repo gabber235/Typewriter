@@ -688,7 +688,6 @@ pub enum PresentationRole {
     AuthoringResult,
     PageTile,
     GraphNode,
-    InspectorHeader,
 }
 
 impl Default for PresentationRole {
@@ -713,7 +712,6 @@ impl PresentationRole {
                         PresentationRole::AuthoringResult => 7,
                         PresentationRole::PageTile => 8,
                         PresentationRole::GraphNode => 9,
-                        PresentationRole::InspectorHeader => 10,
                     },
                     |u| PresentationRole::Unknown(Some(u)),
                     |x: &PresentationRole| match x { PresentationRole::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -1691,7 +1689,6 @@ fn initialize_module_serializers() {
                 (*a).add_constant_variant("authoring_result", 7, 7, "", PresentationRole::AuthoringResult);
                 (*a).add_constant_variant("page_tile", 8, 8, "", PresentationRole::PageTile);
                 (*a).add_constant_variant("graph_node", 9, 9, "", PresentationRole::GraphNode);
-                (*a).add_constant_variant("inspector_header", 10, 10, "", PresentationRole::InspectorHeader);
                 (*a).finalize();
             }
             unsafe {

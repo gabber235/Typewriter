@@ -111,13 +111,6 @@ class ServiceSelectable extends InspectableSelectable<ServiceIdentifier> {
           connected: connected,
           identityOwner: owners.editor(editTarget),
         ),
-        header: ManagedInspectorHeader(
-          id: service.serviceId.id,
-          owner: owners.editor(editTarget),
-          fallbackName: service.displayName,
-          fallbackColor: service.color,
-          colorField: null,
-        ),
       );
 }
 

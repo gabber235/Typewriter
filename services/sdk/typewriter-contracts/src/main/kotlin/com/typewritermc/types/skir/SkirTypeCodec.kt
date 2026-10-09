@@ -722,7 +722,6 @@ private fun encode(role: PresentationRole): SkirPresentationRole =
         PresentationRole.AUTHORING_RESULT -> SkirPresentationRole.AUTHORING_RESULT
         PresentationRole.PAGE_TILE -> SkirPresentationRole.PAGE_TILE
         PresentationRole.GRAPH_NODE -> SkirPresentationRole.GRAPH_NODE
-        PresentationRole.INSPECTOR_HEADER -> SkirPresentationRole.INSPECTOR_HEADER
     }
 
 private fun encode(kind: RepresentationKind): SkirRepresentationKind =

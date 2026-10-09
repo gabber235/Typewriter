@@ -343,9 +343,9 @@ void main() {
     final fixture = _catalog();
 
     expect(
-      fixture.catalog.roleFallbackOrder(skir.PresentationRole.inspectorHeader),
+      fixture.catalog.roleFallbackOrder(skir.PresentationRole.inspector),
       [
-        skir.PresentationRole.inspectorHeader,
+        skir.PresentationRole.inspector,
         skir.PresentationRole.editor,
         skir.PresentationRole.referenceSummary,
         skir.PresentationRole.catalogOption,
@@ -362,12 +362,12 @@ void main() {
 
     final selected = fixture.catalog.selectPresentation(
       actual,
-      skir.PresentationRole.inspectorHeader,
+      skir.PresentationRole.inspector,
     );
 
     expect(selected, isA<SelectedEditorPresentation>());
     final value = selected as SelectedEditorPresentation;
-    expect(value.requestedRole, skir.PresentationRole.inspectorHeader);
+    expect(value.requestedRole, skir.PresentationRole.inspector);
     expect(value.resolvedRole, skir.PresentationRole.editor);
     expect(value.descriptor.id, fixture.rootPresentation);
     expect(value.material.provider, fixture.rootPresentation);
@@ -807,7 +807,7 @@ _catalog() {
     recommendations: const [],
     roleFallbacks: [
       skir.RoleFallback(
-        role: skir.PresentationRole.inspectorHeader,
+        role: skir.PresentationRole.inspector,
         parents: [
           skir.PresentationRole.editor,
           skir.PresentationRole.referenceSummary,
@@ -819,7 +819,7 @@ _catalog() {
       ),
       skir.RoleFallback(
         role: skir.PresentationRole.catalogOption,
-        parents: [skir.PresentationRole.inspectorHeader],
+        parents: [skir.PresentationRole.inspector],
       ),
     ],
   );

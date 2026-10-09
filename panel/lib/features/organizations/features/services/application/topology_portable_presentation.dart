@@ -19,6 +19,8 @@ EditorSourcePresentationHost _topologyRuntimePortableHost({
   required String rootId,
   required Map<String, skir.DataValue> values,
   required Color color,
+  required String title,
+  required String identifier,
 }) {
   final bindings = [
     for (final entry in values.entries)
@@ -31,6 +33,11 @@ EditorSourcePresentationHost _topologyRuntimePortableHost({
   return EditorSourcePresentationHost(
     catalog: _servicePortableCatalog,
     root: () => _portableColumn(rootId, [
+      title.portableExpression.resourceHeading(
+        id: "$rootId.heading",
+        color: color.portableExpression,
+        identifier: identifier.portableExpression,
+      ),
       _inspectorSection("$rootId.overview", "Runtime", [
         _inspectorCard("$rootId.health", "STATUS", color, [
           _inspectorRuntimeStatus(
@@ -150,7 +157,9 @@ EditorSourcePresentationHost topologyHostPortableHost({
         use: _portableTextType,
         owner: identityOwner,
         read: (_) => identityOwner == null
-            ? skir.DataValue.wrapStringValue("Unavailable")
+            ? skir.DataValue.wrapStringValue(
+                service?.displayName ?? host.hostId.id,
+              )
             : switch (identityOwner
                   .value(DataPath.root.field("name"))
                   .valueOrNull) {
@@ -206,6 +215,12 @@ EditorSourcePresentationHost topologyHostPortableHost({
   return EditorSourcePresentationHost(
     catalog: _servicePortableCatalog,
     root: () => _portableColumn("serviceHost", [
+      if (!configurationOnly)
+        _serviceNameBinding.readExpression().resourceHeading(
+          id: "serviceHost.heading",
+          color: (service?.color ?? standaloneServiceColor).portableExpression,
+          identifier: host.hostId.id.portableExpression,
+        ),
       if (!configurationOnly) ...[
         _inspectorSection("serviceHost.service", "Service", [
           if (identityOwner == null)
@@ -537,6 +552,8 @@ extension RealmPortablePresentation on TopologyRealm {
   EditorSourcePresentationHost portablePresentationHost() =>
       _topologyRuntimePortableHost(
         rootId: "realmInstance",
+        title: ownerHost.name.formatted,
+        identifier: this.realmId.id,
         color: realmServiceRoleColor,
         values: {
           _RuntimeInspectorFields.ownerHost: skir.DataValue.wrapStringValue(
@@ -564,6 +581,8 @@ extension EnginePortablePresentation on TopologyEngine {
   EditorSourcePresentationHost portablePresentationHost() =>
       _topologyRuntimePortableHost(
         rootId: "engineInstance",
+        title: "${target.engineId} engine",
+        identifier: engineId.id,
         color: engineServiceRoleColor,
         values: {
           _RuntimeInspectorFields.ownerHost: skir.DataValue.wrapStringValue(

@@ -6,6 +6,7 @@ import com.typewritermc.expression.literal
 import com.typewritermc.expression.map
 import com.typewritermc.expression.orElse
 import com.typewritermc.expression.target
+import com.typewritermc.presentation.resourceHeading
 import com.typewritermc.types.Color
 import com.typewritermc.types.PresentationRole
 
@@ -16,7 +17,6 @@ object TagSdkProvider : TagPresentation {
             PresentationRole.REFERENCE_SUMMARY,
             PresentationRole.REFERENCE_OPTION,
             PresentationRole.GRAPH_NODE,
-            PresentationRole.INSPECTOR_HEADER,
             PresentationRole.AUTHORING_RESULT,
         )
 
@@ -24,6 +24,11 @@ object TagSdkProvider : TagPresentation {
         if (role == PresentationRole.INSPECTOR) {
             val tagOptions = libraryTagCollectionSource()
             inspectorLayout {
+                resourceHeading(
+                    title = expressions.name.orIfBlank("Unnamed tag"),
+                    color = expressions.color.orElse(literal(Color(0xff9e9e9eu))),
+                    identifier = subject.identifier,
+                )
                 inspectorSection("name", "Name") {
                     name { textInput() }
                 }
@@ -72,7 +77,6 @@ object PageSdkProvider : PagePresentation {
             PresentationRole.REFERENCE_SUMMARY,
             PresentationRole.REFERENCE_OPTION,
             PresentationRole.PAGE_TILE,
-            PresentationRole.INSPECTOR_HEADER,
             PresentationRole.CATALOG_OPTION,
             PresentationRole.AUTHORING_RESULT,
         )
@@ -80,6 +84,11 @@ object PageSdkProvider : PagePresentation {
     override fun PagePresentationScope.present() {
         if (role == PresentationRole.INSPECTOR) {
             inspectorLayout {
+                resourceHeading(
+                    title = expressions.name.orIfBlank("Unnamed page"),
+                    color = literal(Color(0xff607d8bu)),
+                    identifier = subject.identifier,
+                )
                 inspectorSection("book", "Book") {
                     book { linkInput() }
                 }

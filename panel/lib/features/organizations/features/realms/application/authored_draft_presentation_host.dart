@@ -166,6 +166,12 @@ final class AuthoredDraftPresentationHost extends ChangeNotifier
       catalog: checked,
       root: material.layout,
       bindings: {
+        presentationSubjectIdentifierBindingId: PortablePresentationBinding(
+          schema: CompletePortablePresentationBinding(
+            skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+          ),
+          value: skir.DataValue.wrapStringValue(resource.value),
+        ),
         configuredValueBindingId: PortablePresentationBinding(
           schema: switch (record.configuration) {
             skir.TypeSelection_completeWrapper(:final value) =>

@@ -2,7 +2,10 @@ package com.typewritermc.extensions.basic.entries.sequence.events
 
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.engine.pages.SequenceEntry
+import com.typewritermc.expression.literal
+import com.typewritermc.expression.orElse
 import com.typewritermc.extensions.basic.entries.sequence.SequenceTriggers
+import com.typewritermc.presentation.resourceHeading
 import com.typewritermc.types.Color
 import com.typewritermc.types.Ref
 import com.typewritermc.types.TypewriterDisplay
@@ -22,3 +25,14 @@ class PlayerMessageContainsTextEventEntry(
     val text: String,
     val exactSame: Boolean,
 ) : SequenceEntry
+
+object PlayerMessageContainsTextEventEntryInspector : PlayerMessageContainsTextEventEntryPresentation {
+    override fun PlayerMessageContainsTextEventEntryPresentationScope.present() {
+        resourceHeading(
+            title = expressions.name.orElse(literal("Unnamed event")),
+            color = literal(Color.parseRgb(requireNotNull(PlayerMessageContainsTextEventEntryDefinition.display?.color))),
+            identifier = subject.identifier,
+        )
+        remainingFields {}
+    }
+}

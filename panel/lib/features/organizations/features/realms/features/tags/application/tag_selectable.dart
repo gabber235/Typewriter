@@ -118,11 +118,6 @@ class TagSelectable extends InspectableSelectable<TagIdentifier> {
   @override
   InspectionContent buildInspection(EditorOwnerScope owners) =>
       InspectionContent(
-        header: InspectorHeader(
-          id: tag.tagId.value,
-          name: tag.name,
-          color: tag.color,
-        ),
         body: AuthoredResourceInspection(
           key: ValueKey((tag.tagId, skir.PresentationRole.inspector)),
           resource: tag.tagId,

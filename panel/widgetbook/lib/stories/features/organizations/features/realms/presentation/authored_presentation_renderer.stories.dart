@@ -656,3 +656,123 @@ final _bytes = skir.ExpressionBindingId(value: "bytes");
 final _interactionRoot = skir.ExpressionBindingId(value: "interaction_root");
 final _listItemBinding = skir.ExpressionBindingId(value: "list_item");
 final _interactionResource = skir.ResourceId(value: "interaction:widgetbook");
+
+@widgetbook.UseCase(
+  name: "Resource headings and fitted rich text",
+  type: PortablePresentationNodeRenderer,
+)
+Widget resourceHeadingUseCase(BuildContext context) {
+  final width = context.knobs.double.slider(
+    label: "Width",
+    initialValue: 320,
+    min: 80,
+    max: 800,
+  );
+  final multiple = context.knobs.boolean(
+    label: "Multiple selection",
+    initialValue: false,
+  );
+  final title = context.knobs.string(
+    label: "Title",
+    initialValue: "A long book title that adapts to its inspector",
+  );
+  return FakeApp(
+    child: Scaffold(
+      body: SingleChildScrollView(
+        child: Align(
+          alignment: Alignment.topLeft,
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: SizedBox(
+              width: width,
+              child: ResourceHeadingGallery(title: title, multiple: multiple),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+final class ResourceHeadingGallery extends StatelessWidget {
+  const ResourceHeadingGallery({
+    this.title = "A long book title that adapts to its inspector",
+    this.multiple = false,
+    super.key,
+  });
+  final String title;
+  final bool multiple;
+
+  @override
+  Widget build(BuildContext context) {
+    final scope = PortablePresentationScope(
+      bindings: {
+        presentationSelectionCountBindingId: PortableExpressionBinding(
+          value: skir.DataValue.wrapInteger(multiple ? "2" : "1"),
+        ),
+      },
+      budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
+      setBinding: (_, _) {},
+    );
+    final rich =
+        (skir.RichTextContent.mutable()
+              ..runs = [
+                skir.TextRun(
+                  text: "Rich text with ".portableExpression,
+                  style: null,
+                ),
+                skir.TextRun(
+                  text: "authored emphasis".portableExpression,
+                  style: skir.TextStyleOverride(
+                    color: Colors.orange.portableExpression,
+                    fontWeight: skir.ExpressionNode.wrapLiteral(
+                      skir.DataValue.wrapFloat(700),
+                    ),
+                    fontItalic: null,
+                    decoration: null,
+                  ),
+                ),
+              ]
+              ..sizing = skir.TextSizing.createFit(
+                minimum: skir.ExpressionNode.wrapLiteral(
+                  skir.DataValue.wrapFloat(18),
+                ),
+                maximum: skir.ExpressionNode.wrapLiteral(
+                  skir.DataValue.wrapFloat(32),
+                ),
+              )
+              ..paragraph = skir.TextParagraph(
+                maxLines: 2,
+                overflow: skir.PresentationTextOverflow.ellipsis,
+                softWrap: true,
+                selectable: true,
+                tone: skir.PresentationTextTone.primary,
+              ))
+            .toFrozen();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: 16,
+      children: [
+        PortablePresentationNodeRenderer(
+          node: title.portableExpression.resourceHeading(
+            id: "book.heading",
+            color: Colors.blue.portableExpression,
+            identifier:
+                "book:019d1c2a8f7b7cc18c2a4a7b2fd1e281".portableExpression,
+          ),
+          scope: scope,
+        ),
+        const Text("Normal fields and section labels remain visible"),
+        PortablePresentationNodeRenderer(
+          node: skir.PresentationNode(
+            nodeId: "rich",
+            properties: skir.PresentationProperties.defaultInstance,
+            header: null,
+            element: skir.PresentationElement.wrapRichText(rich),
+          ),
+          scope: scope,
+        ),
+      ],
+    );
+  }
+}

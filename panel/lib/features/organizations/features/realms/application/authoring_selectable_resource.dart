@@ -94,11 +94,6 @@ final class AuthoringSelectableResource
   @override
   InspectionContent buildInspection(EditorOwnerScope owners) =>
       InspectionContent(
-        header: InspectorHeader(
-          id: id.resourceId.value,
-          name: name,
-          color: color,
-        ),
         body: AuthoredResourceInspection(
           key: ValueKey((id.resourceId, skir.PresentationRole.inspector)),
           resource: id.resourceId,

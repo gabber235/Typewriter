@@ -205,29 +205,31 @@ class TestSelectable extends InspectableSelectable<TestSelectableIdentifier>
   @override
   InspectionContent buildInspection(EditorOwnerScope owners) {
     final owner = owners.editor(this);
+    final title = skir.ExpressionBindingId(value: "testSelectable.name");
     return InspectionContent(
       host: EditorSourcePresentationHost(
         catalog: skir.EditorCatalogWireSnapshot.defaultInstance
             .asTrustedLocalCatalog(),
-        root: () => skir.PresentationNode(
-          nodeId: "testSelectable",
-          properties: skir.PresentationProperties.defaultInstance,
-          element: skir.PresentationElement.wrapChildren(
-            skir.ChildrenElement.createColumn(
-              children: const [],
-              layout: skir.AxisChildrenLayout.defaultInstance,
+        root: () => title.readExpression().resourceHeading(
+          id: "testSelectable",
+          color: color.portableExpression,
+          identifier: id.id.portableExpression,
+        ),
+        bindings: [
+          EditorSourcePresentationBinding(
+            id: title,
+            use: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+            owner: owner,
+            read: (_) => skir.DataValue.wrapStringValue(
+              owner
+                      .value(DataPath.root.field("name"))
+                      .valueOrNull
+                      ?.asStringOrNull ??
+                  name,
             ),
           ),
-          header: null,
-        ),
-        bindings: const [],
-        budget: skir.EvaluationBudget(maxSteps: 64, maxCollectionItems: 16),
-      ),
-      header: ManagedInspectorHeader(
-        id: id.id,
-        owner: owner,
-        fallbackName: name,
-        fallbackColor: color,
+        ],
+        budget: skir.EvaluationBudget(maxSteps: 256, maxCollectionItems: 16),
       ),
     );
   }

@@ -2,8 +2,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-final class AuthoredResourceInspection extends StatefulWidget
-    implements InspectorBodyOwnsHeader {
+final class AuthoredResourceInspection extends StatefulWidget {
   const AuthoredResourceInspection({
     required this.resource,
     required this.draft,
@@ -22,17 +21,6 @@ final class AuthoredResourceInspection extends StatefulWidget
   final skir.PresentationRole role;
   final EditorCommitPolicy commitPolicy;
   final ValueChanged<skir.ResourceId>? openResource;
-
-  @override
-  bool get ownsInspectorHeader {
-    if (role != skir.PresentationRole.inspector) return false;
-    final record = draft.resource(resource);
-    if (record == null) return false;
-    return catalog.selectPresentation(
-      record.configuration,
-      skir.PresentationRole.inspectorHeader,
-    ) is SelectedEditorPresentation;
-  }
 
   @override
   State<AuthoredResourceInspection> createState() =>
@@ -81,13 +69,6 @@ final class _AuthoredResourceInspectionState
     final configuration = _autosave.draft
         .resource(widget.resource)
         ?.configuration;
-    final ownsInspectorHeader =
-        widget.role == skir.PresentationRole.inspector &&
-        configuration != null &&
-        widget.catalog.selectPresentation(
-          configuration,
-          skir.PresentationRole.inspectorHeader,
-        ) is SelectedEditorPresentation;
     final editor = _editor(widget.role, enabled: true, onChanged: _changed);
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -158,15 +139,6 @@ final class _AuthoredResourceInspectionState
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: context.spacing.space3,
       children: [
-        if (ownsInspectorHeader)
-          IgnorePointer(
-            child: ExcludeFocus(
-              child: _editor(
-                skir.PresentationRole.inspectorHeader,
-                enabled: true,
-              ),
-            ),
-          ),
         if (widget.role == skir.PresentationRole.editor)
           Expanded(child: content)
         else

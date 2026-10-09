@@ -41,7 +41,6 @@ final class InspectionSession extends ChangeNotifier {
   final EditorOwnerRegistry owners;
   InspectionBuildContext? _buildContext;
 
-  Widget? header;
   List<PortablePresentationHost> hosts = const [];
   Widget? body;
 
@@ -70,7 +69,6 @@ final class InspectionSession extends ChangeNotifier {
       committed = true;
       final previous = _buildContext;
       _buildContext = next;
-      header = content?.header;
       hosts = content == null
           ? const []
           : [content.host, ...content.additionalHosts].nonNulls.toList();
