@@ -3,8 +3,14 @@ package com.typewritermc.realm.compiler
 import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.PublicationId
 import com.typewritermc.checking.CatalogGeneration
+import com.typewritermc.engine.CompilationProjectionId
+import com.typewritermc.engine.PageCompileResult
 import com.typewritermc.engine.PublishedContent
 import com.typewritermc.library.PAGE_CONTRACT_TYPE
+import com.typewritermc.loader.api.artifact.ArtifactDigest
+import com.typewritermc.loader.api.artifact.BlobEndpoint
+import com.typewritermc.loader.api.artifact.BlobMetadata
+import com.typewritermc.loader.api.artifact.BlobResult
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
@@ -27,6 +33,8 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 val RealmPublicationCoordinatorTest by testSuite {
     test("the local publication gate captures once and rejects overlapping publication") {
@@ -53,7 +61,13 @@ val RealmPublicationCoordinatorTest by testSuite {
                 }
             val engine = StagedEngineImplementationSource(testEngineInputs())
             val publisher =
-                RealmPublicationCoordinator(acceptance, attempts, RegisteredCompiledArtifactStore(InMemoryBlobEndpoint()), engine)
+                RealmPublicationCoordinator(
+                    acceptance,
+                    attempts,
+                    RegisteredCompiledArtifactStore(InMemoryBlobEndpoint()),
+                    engine,
+                    pageCompilation(),
+                )
             val first = async { publisher.publish() }
             checking.await()
             publisher.publish() shouldBe PublicationResult.Publishing
@@ -86,6 +100,7 @@ val RealmPublicationCoordinatorTest by testSuite {
                 attempts,
                 RegisteredCompiledArtifactStore(InMemoryBlobEndpoint()),
                 StagedEngineImplementationSource(testEngineInputs()),
+                pageCompilation(),
             )
         publisher.publish().shouldBeInstanceOf<PublicationResult.Blocked>()
         publisher.publish().shouldBeInstanceOf<PublicationResult.Blocked>()
@@ -112,7 +127,14 @@ val RealmPublicationCoordinatorTest by testSuite {
 
                 override suspend fun evaluate(capture: AuthoringLease) = accepted(capture)
             }
-        val publisher = RealmPublicationCoordinator(acceptance, attempts, RegisteredCompiledArtifactStore(InMemoryBlobEndpoint()), engine)
+        val publisher =
+            RealmPublicationCoordinator(
+                acceptance,
+                attempts,
+                RegisteredCompiledArtifactStore(InMemoryBlobEndpoint()),
+                engine,
+                pageCompilation(),
+            )
         val result = publisher.publish().shouldBeInstanceOf<PublicationResult.Blocked>()
         result.findings.single().code shouldBe "engine_inputs_changed"
         attempts.installed shouldBe null
@@ -133,6 +155,7 @@ val RealmPublicationCoordinatorTest by testSuite {
                 attempts,
                 RegisteredCompiledArtifactStore(InMemoryBlobEndpoint()),
                 StagedEngineImplementationSource(testEngineInputs()),
+                pageCompilation(),
             )
         publisher.recoverInterrupted()
         attempts.recovered shouldBe true
@@ -140,6 +163,85 @@ val RealmPublicationCoordinatorTest by testSuite {
             .publish()
             .shouldBeInstanceOf<PublicationResult.Activated>()
             .content.outputs shouldBe emptyList()
+        views.close()
+    }
+    test("Page producer preserves the exact shard bytes and metadata") {
+        val page = ResourceId("page")
+        val views =
+            InMemoryAuthoringViewStore(
+                TestCatalogLease(definitions = PUBLICATION_DEFINITIONS, resourceRoot = PUBLICATION_PAGE),
+                AuthoringSeed(mapOf(page to publicationPageRecord("Quest"))),
+            )
+        views.capture().use { capture ->
+            val bindings = listOf(NativeBindingRequirement(PUBLICATION_PAGE_USE, NativeBindingId("publication_page"), "page:v1"))
+            val expected =
+                PageCompiler(emptySet(), bindings.associateBy(NativeBindingRequirement::actual))
+                    .compile(page, capture.root)
+                    .shouldBeInstanceOf<PageCompileResult.Success>()
+                    .shard
+            val producer = PageCompiledArtifactProducer()
+            val artifact =
+                producer
+                    .compile(CompilationInputs(capture.root, bindings))
+                    .shouldBeInstanceOf<CompilationOutcome.Ready>()
+                    .artifacts
+                    .single()
+
+            artifact.root.projection shouldBe producer.projection
+            artifact.root.resource shouldBe page
+            artifact.mediaType shouldBe "application/vnd.typewriter.page+json"
+            artifact.formatRevision shouldBe 2
+            artifact.inputFingerprint shouldBe expected.inputFingerprint
+            artifact.semanticDigest shouldBe expected.digest
+            artifact.payload.toList() shouldBe Json { encodeDefaults = true }.encodeToString(expected).encodeToByteArray().toList()
+        }
+        views.close()
+    }
+
+    test("a blocked producer prevents storage and installation of otherwise ready Page output") {
+        val page = ResourceId("page")
+        val views =
+            InMemoryAuthoringViewStore(
+                TestCatalogLease(definitions = PUBLICATION_DEFINITIONS, resourceRoot = PUBLICATION_PAGE),
+                AuthoringSeed(mapOf(page to publicationPageRecord("Quest"))),
+            )
+        val attempts = RecordingAttempts()
+        var storageRequests = 0
+        val backing = InMemoryBlobEndpoint()
+        val blobs =
+            object : BlobEndpoint by backing {
+                override suspend fun metadata(digest: ArtifactDigest): BlobResult<BlobMetadata> {
+                    storageRequests++
+                    return backing.metadata(digest)
+                }
+            }
+        val bindings = listOf(NativeBindingRequirement(PUBLICATION_PAGE_USE, NativeBindingId("publication_page"), "page:v1"))
+        val acceptance =
+            object : PublicationAcceptance {
+                override fun capture() = views.capture()
+
+                override suspend fun evaluate(capture: AuthoringLease) = accepted(capture, bindings)
+            }
+        val blocked =
+            object : CompiledArtifactProducer {
+                override val projection = CompilationProjectionId("fixture.blocked")
+                override val mediaType = "application/blocked"
+
+                override fun compile(inputs: CompilationInputs) = CompilationOutcome.Blocked(emptyList())
+            }
+        val publisher =
+            RealmPublicationCoordinator(
+                acceptance,
+                attempts,
+                RegisteredCompiledArtifactStore(blobs),
+                StagedEngineImplementationSource(testEngineInputs()),
+                CompiledArtifactProducerRegistry(listOf(PageCompiledArtifactProducer(), blocked)),
+            )
+
+        publisher.publish().shouldBeInstanceOf<PublicationResult.Blocked>()
+        storageRequests shouldBe 0
+        attempts.installed shouldBe null
+        attempts.phases shouldBe listOf(PublicationState.Compiling)
         views.close()
     }
 }
@@ -210,3 +312,5 @@ private val PUBLICATION_DEFINITIONS =
             parents = listOf(TypeTemplate.Named(PAGE_CONTRACT_TYPE)),
         ),
     )
+
+private fun pageCompilation() = CompiledArtifactProducerRegistry(listOf(PageCompiledArtifactProducer()))

@@ -16,7 +16,9 @@ import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.checking.RealmCheckRuntime
 import com.typewritermc.realm.compiler.AuthoringAcceptance
+import com.typewritermc.realm.compiler.CompiledArtifactProducerRegistry
 import com.typewritermc.realm.compiler.EngineImplementationSource
+import com.typewritermc.realm.compiler.PageCompiledArtifactProducer
 import com.typewritermc.realm.compiler.RealmPublicationCoordinator
 import com.typewritermc.realm.compiler.RegisteredCompiledArtifactStore
 import com.typewritermc.realm.compiler.SurrealPublicationAttemptStore
@@ -110,6 +112,7 @@ internal class Realm(
                     attempts = SurrealPublicationAttemptStore(connected),
                     artifacts = RegisteredCompiledArtifactStore(host.sharedArtifacts),
                     engine = engine,
+                    compilation = CompiledArtifactProducerRegistry(listOf(PageCompiledArtifactProducer())),
                 )
             publisher.recoverInterrupted()
             val creation =

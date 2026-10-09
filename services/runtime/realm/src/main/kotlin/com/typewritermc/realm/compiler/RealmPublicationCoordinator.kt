@@ -8,19 +8,10 @@ import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.Diagnostic
 import com.typewritermc.checking.DiagnosticSeverity
 import com.typewritermc.configuration.RuleOrigin
-import com.typewritermc.engine.CompilationProjectionId
-import com.typewritermc.engine.CompilationRoot
-import com.typewritermc.engine.CompileDiagnostic
-import com.typewritermc.engine.CompiledArtifact
-import com.typewritermc.engine.PageCompileResult
 import com.typewritermc.engine.PublishedContent
-import com.typewritermc.library.PAGE_CONTRACT_TYPE
 import com.typewritermc.realm.authoring.authoringStorageJson
 import com.typewritermc.realm.repository.utils.StructuredDatabaseCodec
 import com.typewritermc.realm.repository.utils.inTransaction
-import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
-import com.typewritermc.types.RelationContract
-import com.typewritermc.types.RelationFamilyId
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeId
 import kotlinx.coroutines.CancellationException
@@ -28,8 +19,6 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 
 data class PublicationAttempt(
     val id: PublicationId,
@@ -99,6 +88,7 @@ internal class RealmPublicationCoordinator(
     private val attempts: PublicationAttemptStore,
     private val artifacts: RegisteredCompiledArtifactStore,
     private val engine: EngineImplementationSource,
+    private val compilation: CompiledArtifactProducerRegistry,
 ) {
     private val gate = Mutex()
 
@@ -146,7 +136,7 @@ internal class RealmPublicationCoordinator(
                 if (accepted is AcceptanceResult.Blocked) return blocked(accepted.findings)
                 accepted as AcceptanceResult.Accepted
                 phase(PublicationState.Compiling)
-                val compiled = compile(captured.root, accepted.proof.bindingRequirements)
+                val compiled = compilation.compile(CompilationInputs(captured.root, accepted.proof.bindingRequirements))
                 if (compiled is CompilationOutcome.Blocked) return blocked(compiled.findings)
                 compiled as CompilationOutcome.Ready
                 val result =
@@ -204,41 +194,6 @@ internal class RealmPublicationCoordinator(
             throw fatal
         } catch (_: Exception) {
         }
-    }
-
-    private fun compile(
-        root: com.typewritermc.realm.authoring.AuthoringView,
-        bindingRequirements: List<NativeBindingRequirement>,
-    ): CompilationOutcome {
-        val ownership =
-            root.catalog.relations
-                .filter { relation ->
-                    RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID) in relation.families
-                }.mapTo(linkedSetOf(), RelationContract::id)
-        val compiler = PageCompiler(ownership, bindingRequirements.associateBy(NativeBindingRequirement::actual))
-        val pageRoots =
-            root.resources
-                .filterValues { record ->
-                    val selection = record.configuration as? com.typewritermc.authoring.TypeSelection.Complete
-                    selection != null && root.catalog.checked.isNominalSubtype(selection.use.definition, PAGE_CONTRACT_TYPE)
-                }.keys
-                .sortedBy { it.value }
-        val results = pageRoots.map { page -> page to compiler.compile(page, root) }
-        val blocked = results.mapNotNull { (_, result) -> (result as? PageCompileResult.Blocked)?.diagnostics }.flatten()
-        if (blocked.isNotEmpty()) return CompilationOutcome.Blocked(blocked.map(::publicationDiagnostic))
-        val compiled =
-            results.map { (page, result) ->
-                val shard = (result as PageCompileResult.Success).shard
-                CompiledArtifact(
-                    root = CompilationRoot(PAGE_PROJECTION, page),
-                    formatRevision = shard.formatRevision,
-                    mediaType = PAGE_MEDIA_TYPE,
-                    inputFingerprint = shard.inputFingerprint,
-                    semanticDigest = shard.digest,
-                    payload = publicationJson.encodeToString(shard).encodeToByteArray(),
-                )
-            }
-        return CompilationOutcome.Ready(compiled)
     }
 }
 
@@ -322,21 +277,9 @@ internal fun PublicationState.storageName(): String =
         PublicationState.Interrupted -> "interrupted"
     }
 
-private sealed interface CompilationOutcome {
-    data class Ready(
-        val artifacts: List<CompiledArtifact>,
-    ) : CompilationOutcome
-
-    data class Blocked(
-        val findings: List<Diagnostic>,
-    ) : CompilationOutcome
-}
-
 internal val publicationsCodec = StructuredDatabaseCodec(authoringStorageJson)
 
-private fun publicationDiagnostic(diagnostic: CompileDiagnostic): Diagnostic = publicationDiagnostic(diagnostic.code, diagnostic.message)
-
-private fun publicationDiagnostic(
+internal fun publicationDiagnostic(
     code: String,
     message: String,
 ): Diagnostic =
@@ -351,6 +294,3 @@ private fun publicationDiagnostic(
     )
 
 private val PUBLICATION_TYPE = TypeDefinitionId(TypeId.Qualified("typewriter", "publication"), 1)
-private val PAGE_PROJECTION = CompilationProjectionId("typewriter.page")
-private const val PAGE_MEDIA_TYPE = "application/vnd.typewriter.page+json"
-private val publicationJson = Json { encodeDefaults = true }
