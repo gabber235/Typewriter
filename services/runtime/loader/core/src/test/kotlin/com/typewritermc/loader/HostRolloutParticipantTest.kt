@@ -73,14 +73,6 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.context.propagation.ContextPropagators
-import java.net.URLClassLoader
-import java.nio.file.Files
-import java.nio.file.Path
-import java.util.concurrent.TimeoutException
-import java.util.zip.ZipEntry
-import java.util.zip.ZipOutputStream
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -95,6 +87,14 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
+import java.net.URLClassLoader
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.concurrent.TimeoutException
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
 val HostRolloutParticipantTest by testSuite {
@@ -349,13 +349,14 @@ val HostRolloutParticipantTest by testSuite {
             val telemetry = OpenTelemetry.noop().serviceTelemetry("participant deadline test")
             val communicator = Communicator(fake, telemetry, ContextPropagators.noop())
             val address = RealmBroadcastAddress("organization", fixture.realmId)
-            val routes = communicatorRoutes {
-                scatterAt(RolloutCommandContract, address) { fixture.participant.handle(it.request) }
-                scatterAt(ParticipantStatusContract, address) {
-                    ParticipantStatusReply.Status(fixture.serviceId, fixture.participant.currentStatus(it.request.attempt))
+            val routes =
+                communicatorRoutes {
+                    scatterAt(RolloutCommandContract, address) { fixture.participant.handle(it.request) }
+                    scatterAt(ParticipantStatusContract, address) {
+                        ParticipantStatusReply.Status(fixture.serviceId, fixture.participant.currentStatus(it.request.attempt))
+                    }
+                    scatterAt(ProbeRealmHostsContract, address) { PresenceReply.Failed("presence route responded") }
                 }
-                scatterAt(ProbeRealmHostsContract, address) { PresenceReply.Failed("presence route responded") }
-            }
             val router = communicator.createRouter(routes, backgroundScope)
             router.start() shouldBe RouterResult.Success
             try {
@@ -435,18 +436,20 @@ val HostRolloutParticipantTest by testSuite {
             runTest {
                 val runtime = RecordingRuntime()
                 runtime.suspendOn += operationName
-                val projection = HostRolloutParticipant.LocalProjection(
-                    listOf(LoadedHostedRuntime(runtime, URLClassLoader(emptyArray<java.net.URL>()))),
-                    this,
-                    1.seconds,
-                )
+                val projection =
+                    HostRolloutParticipant.LocalProjection(
+                        listOf(LoadedHostedRuntime(runtime, URLClassLoader(emptyArray<java.net.URL>()))),
+                        this,
+                        1.seconds,
+                    )
                 try {
-                    val failure = shouldThrow<TimeoutException> {
-                        when (operationName) {
-                            "quiesce" -> projection.quiesce()
-                            else -> projection.resume()
+                    val failure =
+                        shouldThrow<TimeoutException> {
+                            when (operationName) {
+                                "quiesce" -> projection.quiesce()
+                                else -> projection.resume()
+                            }
                         }
-                    }
                     failure.message shouldBe "Hosted runtime $operationName exceeded lifecycle deadline of 1s"
                     failure.cause shouldBe null
                     failure.suppressed.size shouldBe 0
@@ -464,11 +467,12 @@ val HostRolloutParticipantTest by testSuite {
             val unfinished = RecordingRuntime()
             val finished = RecordingRuntime()
             unfinished.suspendOn += "close"
-            val projection = HostRolloutParticipant.LocalProjection(
-                listOf(unfinished, finished).map { LoadedHostedRuntime(it, URLClassLoader(emptyArray<java.net.URL>())) },
-                this,
-                1.seconds,
-            )
+            val projection =
+                HostRolloutParticipant.LocalProjection(
+                    listOf(unfinished, finished).map { LoadedHostedRuntime(it, URLClassLoader(emptyArray<java.net.URL>())) },
+                    this,
+                    1.seconds,
+                )
             val failure = shouldThrow<TimeoutException> { projection.close() }
             failure.message shouldBe "Hosted runtime close exceeded lifecycle deadline of 1s"
             failure.findExceptional() shouldBe null
@@ -487,11 +491,12 @@ val HostRolloutParticipantTest by testSuite {
             val failing = RecordingRuntime()
             completed.suspendOn += "quiesce"
             failing.failOn += "activate"
-            val projection = HostRolloutParticipant.LocalProjection(
-                listOf(completed, failing).map { LoadedHostedRuntime(it, URLClassLoader(emptyArray<java.net.URL>())) },
-                this,
-                1.seconds,
-            )
+            val projection =
+                HostRolloutParticipant.LocalProjection(
+                    listOf(completed, failing).map { LoadedHostedRuntime(it, URLClassLoader(emptyArray<java.net.URL>())) },
+                    this,
+                    1.seconds,
+                )
             try {
                 val failure = shouldThrow<IllegalStateException> { projection.activate() }
                 failure.message shouldBe "Fixture activate failure"
