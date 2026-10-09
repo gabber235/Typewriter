@@ -7,7 +7,7 @@ import "package:widgetbook_workspace/stories/features/organizations/features/rea
 import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authored_resource_editor.stories.dart";
 
 void main() {
-  testWidgets("resource inspector edits the canonical authored draft", (
+  testWidgets("resource inspector edits the shared authored value", (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(900, 700));

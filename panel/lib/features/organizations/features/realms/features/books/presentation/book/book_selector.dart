@@ -9,11 +9,11 @@ class BookSelector extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final booksAsync = ref.watch(projectedBooksProvider);
+    final booksAsync = ref.watch(workingBooksProvider);
     final bookId = ref.watch(bookIdProvider);
     final selectedBookAsync = bookId == null
         ? const AsyncValue<Book?>.data(null)
-        : ref.watch(projectedBookProvider(bookId));
+        : ref.watch(workingBookProvider(bookId));
 
     return SelectorPopupWithSelection<Book>(
       itemsAsync: booksAsync,

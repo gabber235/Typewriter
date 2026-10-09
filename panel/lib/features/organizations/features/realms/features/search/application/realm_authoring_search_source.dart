@@ -26,6 +26,7 @@ final class AuthoringSearchResultPayload {
   String get title =>
       subject.descriptor.authoredString ??
       subject.content.authoredField("name")?.authoredString ??
+      subject.content.authoredField("title")?.authoredString ??
       id.value;
 }
 
@@ -53,6 +54,9 @@ final class RealmAuthoringSearchSource implements SearchSource {
   );
   var _revision = 0;
   var _disposed = false;
+  skir.SearchAuthoringResponse? _response;
+  CheckedEditorCatalog? _catalog;
+  ProviderSubscription<AsyncValue<AuthoringDocument>>? _working;
 
   @override
   Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
@@ -61,24 +65,41 @@ final class RealmAuthoringSearchSource implements SearchSource {
   List<QuerySelectorDefinition> get selectors => const [];
 
   @override
-  void initialize(SearchQueryContext context) => search(context);
+  void initialize(SearchQueryContext context) {
+    final scope = AuthoringScope(
+      organizationId: organizationId,
+      realmId: realmId,
+    );
+    _working = ref.listen(workingAuthoringDocumentProvider(scope), (_, next) {
+      final response = _response;
+      final catalog = _catalog;
+      if (!_disposed && response != null && catalog != null) {
+        _publish(response, catalog);
+      }
+    });
+    search(context);
+  }
 
   @override
   void search(SearchQueryContext context) {
     if (_disposed) return;
     final revision = ++_revision;
+    _response = null;
+    _catalog = null;
     _snapshots.add(SearchSourceSnapshot.loading());
     unawaited(_search(context, revision));
   }
 
   Future<void> _search(SearchQueryContext query, int revision) async {
     try {
-      final access = ref.readAuthoringSession();
-      final snapshot = access.state.snapshot;
-      final catalog = access.state.catalog;
-      if (snapshot == null || catalog == null) {
-        throw StateError("Realm authoring is not ready");
-      }
+      final scope = AuthoringScope(
+        organizationId: organizationId,
+        realmId: realmId,
+      );
+      final document = ref
+          .read(workingAuthoringDocumentProvider(scope))
+          .requireValue;
+      final catalog = document.catalog;
       final requestedDefinitions = definitionFilter;
       final roots = catalog.snapshot.resourceDefinitions
           .where(
@@ -89,16 +110,20 @@ final class RealmAuthoringSearchSource implements SearchSource {
           )
           .map((definition) => definition.root)
           .toList(growable: false);
-      final response = await access.notifier.search(
-        skir.SearchAuthoringRequest(
-          generation: snapshot.generation,
-          query: encodeRealmSearchQuery(query).normalizedQuery,
-          roots: roots,
-          contexts: contexts.isNotEmpty ? contexts : [?contextResource],
-          target: target,
-        ),
-      );
+      final response = await ref
+          .read(authoredResourceCommandsProvider(scope))
+          .search(
+            skir.SearchAuthoringRequest(
+              generation: document.generation,
+              query: encodeRealmSearchQuery(query).normalizedQuery,
+              roots: roots,
+              contexts: contexts.isNotEmpty ? contexts : [?contextResource],
+              target: target,
+            ),
+          );
       if (_disposed || revision != _revision) return;
+      _response = response;
+      _catalog = catalog;
       _publish(response, catalog);
     } on Object catch (error) {
       if (_disposed || revision != _revision) return;
@@ -110,11 +135,35 @@ final class RealmAuthoringSearchSource implements SearchSource {
     skir.SearchAuthoringResponse response,
     CheckedEditorCatalog catalog,
   ) {
+    final scope = AuthoringScope(
+      organizationId: organizationId,
+      realmId: realmId,
+    );
+    final working = ref.read(workingAuthoringDocumentProvider(scope)).value;
     switch (response) {
       case skir.SearchAuthoringResponse_successWrapper(:final value):
+        if (value.generation != working?.generation ||
+            catalog.snapshot.generation != working?.generation) {
+          _publishError(const ["The Realm editor catalog changed"]);
+          return;
+        }
         final payloads = [
           for (final hit in value.hits)
-            AuthoringSearchResultPayload(hit: hit, catalog: catalog),
+            if (working?.entry(hit.resource) != null)
+              AuthoringSearchResultPayload(
+                hit: skir.AuthoringSearchHit(
+                  resource: hit.resource,
+                  definition: hit.definition,
+                  subject: skir.PresentationSubject(
+                    resource: hit.resource,
+                    definition: hit.definition,
+                    content: working!.resource(hit.resource)!,
+                    descriptor: skir.DataValue.unfilled,
+                  ),
+                  context: hit.context,
+                ),
+                catalog: working.catalog,
+              ),
         ];
         _snapshots.add(
           SearchSourceSnapshot.ready(
@@ -182,6 +231,7 @@ final class RealmAuthoringSearchSource implements SearchSource {
     if (_disposed) return;
     _disposed = true;
     _revision++;
+    _working?.close();
     unawaited(_snapshots.close());
   }
 }

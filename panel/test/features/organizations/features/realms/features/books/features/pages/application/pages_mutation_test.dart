@@ -36,13 +36,19 @@ void main() {
           realmIdProvider.overrideWithValue(_realm),
           bookIdProvider.overrideWith((ref) => _book),
           pageIdProvider.overrideWith((ref) => null),
-          projectedBookPagesProvider(
-            _book,
-            "",
-          ).overrideWith((ref) => AsyncData([page])),
-          ...authoringSessionMockOverrides(
-            initial: state,
-            onApply: (_) async {},
+          ...authoringFixtureOverrides(
+            document: fixtureAuthoringDocument(
+              books: [
+                Book(
+                  bookId: _book,
+                  title: "Book",
+                  color: Colors.blue,
+                  icon: "mdi:book",
+                  tagIds: const [],
+                ),
+              ],
+              pages: [page.copyWith(bookId: _book)],
+            ),
           ),
         ],
         child: Consumer(
@@ -125,7 +131,7 @@ void main() {
       harness.ref.inspectPage(_page);
       await tester.pump();
       expect(harness.ref.read(selectionProvider), [expected]);
-      expect(harness.intents, isEmpty);
+      expect(harness.transport.requests, isEmpty);
     },
   );
 
@@ -134,143 +140,97 @@ void main() {
     skir.DataValue.wrapStringValue(""),
     _namedChapter("old"),
   ]) {
-    testWidgets("chapter move preserves the exact observed $chapter", (
+    testWidgets("chapter changes preserve the exact authored expectation", (
       tester,
     ) async {
-      final state = _state(chapter: chapter);
-      final page = Page.fromAuthoring(state.snapshot!.resources.single);
-      final drag = PageDrag(
-        pageId: page.pageId,
-        expectedChapter: page.authoredRecord.authoredField("chapter"),
-      );
-      final harness = await _mount(tester, state);
-      await harness.ref.movePageChapter(
-        id: drag.pageId,
-        chapter: "new",
-        expectedChapter: drag.expectedChapter,
-      );
-      expect(harness.intents, hasLength(1));
-      final set = harness.intents.single as skir.EditIntent_setValueWrapper;
-      expect(set.value.at, _field(_page));
-      expect(
-        set.value.value,
-        chapter.withAuthoredPayload(skir.DataValue.wrapStringValue("new")),
-      );
-    });
-  }
-
-  for (final replacement in [
-    skir.DataValue.wrapStringValue(""),
-    _namedChapter("old", type: "OtherChapter"),
-  ]) {
-    testWidgets("stale chapter drag does not overwrite $replacement", (
-      tester,
-    ) async {
-      final captured = replacement is skir.DataValue_namedWrapper
-          ? _namedChapter("old")
-          : skir.DataValue.unfilled;
-      final page = Page.fromAuthoring(_resource(_page, captured));
-      final drag = PageDrag(
-        pageId: page.pageId,
-        expectedChapter: page.authoredRecord.authoredField("chapter"),
-      );
-      final harness = await _mount(tester, _state(chapter: replacement));
-      await expectLater(
-        harness.ref.movePageChapter(
-          id: drag.pageId,
-          chapter: "local",
-          expectedChapter: drag.expectedChapter,
+      final harness = await _mount(tester, _state(chapter: chapter));
+      final result = harness.workspace.edit(
+        label: "Move page to chapter",
+        policy: EditorCommitPolicy.applyResource,
+        apply: (edit) => edit.setFieldPayload(
+          resource: _page,
+          fields: ["chapter"],
+          payload: skir.DataValue.wrapStringValue("new"),
         ),
-        throwsA(
-          isA<ApiException>().having(
-            (error) => error.code,
-            "conflict code",
-            409,
-          ),
-        ),
-      );
-      expect(harness.intents, isEmpty);
+      ) as AuthoringEditStaged;
+      unawaited(harness.workspace.save(result.group));
+      await tester.pump();
+      final submitted = harness.transport.requests.single.edit;
+      final set = submitted.intents.single as skir.EditIntent_setValueWrapper;
+      expect(set.value.value.authoredString, "new");
+      expect(set.value.value.authoredActualType, chapter.authoredActualType);
       expect(
-        harness.ref
-            .readAuthoringSession()
-            .state
-            .draft!
+        submitted.expectations
+            .whereType<skir.EditExpectation_valueWrapper>()
+            .single
+            .value
+            .expected,
+        chapter,
+      );
+      expect(
+        harness.workspace.document
             .resource(_page)!
-            .authoredField("chapter"),
-        replacement,
+            .authoredField("chapter")!
+            .authoredString,
+        "new",
       );
     });
   }
 
-  testWidgets("an unavailable chapter is not treated as authored Unfilled", (
+  testWidgets("chapter batch is atomic when a participating page is missing", (
     tester,
   ) async {
-    final harness = await _mount(tester, _state(missingChapter: true));
-    await expectLater(
-      harness.ref.movePageChapter(
-        id: _page,
-        chapter: "new",
-        expectedChapter: skir.DataValue.unfilled,
-      ),
-      throwsA(
-        isA<StateError>().having(
-          (error) => error.message,
-          "unavailable",
-          "The Page chapter is unavailable",
-        ),
-      ),
+    final harness = await _mount(tester, _state());
+    final result = harness.workspace.edit(
+      label: "Rename chapter",
+      apply: (edit) {
+        for (final id in [_page, _second]) {
+          edit.setFieldPayload(
+            resource: id,
+            fields: ["chapter"],
+            payload: skir.DataValue.wrapStringValue("new"),
+          );
+        }
+      },
     );
-    expect(harness.intents, isEmpty);
-  });
-
-  testWidgets("chapter group moves empty and named authored values together", (
-    tester,
-  ) async {
-    final state = _state(
-      chapter: skir.DataValue.unfilled,
-      second: _namedChapter(""),
-    );
-    final pages = state.snapshot!.resources.map(Page.fromAuthoring).toList();
-    final harness = await _mount(tester, state);
-    await harness.ref.editPagesChapter(pages, "", "group");
-    expect(harness.intents, hasLength(2));
-    final sets = harness.intents.cast<skir.EditIntent_setValueWrapper>();
-    expect(sets.map((s) => s.value.at), [_field(_page), _field(_second)]);
-    expect(sets.map((s) => s.value.value), [
-      skir.DataValue.wrapStringValue("group"),
-      _namedChapter("group"),
-    ]);
-  });
-
-  testWidgets("one stale group chapter prevents every batch write", (
-    tester,
-  ) async {
-    final captured = _state(
-      chapter: skir.DataValue.unfilled,
-      second: skir.DataValue.wrapStringValue(""),
-    );
-    final pages = captured.snapshot!.resources.map(Page.fromAuthoring).toList();
-    final current = _state(
-      chapter: skir.DataValue.unfilled,
-      second: skir.DataValue.wrapStringValue("remote"),
-    );
-    final harness = await _mount(tester, current);
-    await expectLater(
-      harness.ref.editPagesChapter(pages, "", "group"),
-      throwsA(
-        isA<ApiException>().having((error) => error.code, "conflict code", 409),
-      ),
-    );
-    expect(harness.intents, isEmpty);
+    expect(result, isA<AuthoringEditRejected>());
     expect(
-      harness.ref
-          .readAuthoringSession()
-          .state
-          .draft!
+      harness.workspace.document
           .resource(_page)!
-          .authoredField("chapter"),
-      skir.DataValue.unfilled,
+          .authoredField("chapter")!
+          .authoredString,
+      "old",
     );
+    expect(harness.workspace.state.groups, isEmpty);
+  });
+
+  testWidgets("chapter batch groups every participating resource", (
+    tester,
+  ) async {
+    final harness = await _mount(
+      tester,
+      _state(second: skir.DataValue.wrapStringValue("old")),
+    );
+    final result = harness.workspace.edit(
+      label: "Rename chapter",
+      policy: EditorCommitPolicy.applyResource,
+      apply: (edit) {
+        for (final id in [_page, _second]) {
+          edit.setFieldPayload(
+            resource: id,
+            fields: ["chapter"],
+            payload: skir.DataValue.wrapStringValue("new"),
+          );
+        }
+      },
+    ) as AuthoringEditStaged;
+    expect(harness.workspace.state.groups[result.group]!.resources, {
+      _page,
+      _second,
+    });
+    unawaited(harness.workspace.save(result.group));
+    await tester.pump();
+    expect(harness.transport.requests.single.edit.intents, hasLength(2));
   });
 }
 
@@ -278,35 +238,40 @@ Future<_Harness> _mount(
   WidgetTester tester,
   AuthoringSessionState state,
 ) async {
-  final harness = _Harness();
-  await tester.pumpWidget(
-    ProviderScope(
-      overrides: [
-        organizationIdProvider.overrideWithValue(_organization),
-        realmIdProvider.overrideWithValue(_realm),
-        ...authoringSessionMockOverrides(
-          initial: state,
-          onApply: (intents) async => harness.intents.addAll(intents),
-        ),
-      ],
-      child: Consumer(
-        builder: (context, ref, child) {
-          harness.ref = ref;
-          ref
-            ..watch(authoringSessionProvider(_organization, _realm))
-            ..watch(selectionProvider)
-            ..watch(selectedProvider);
-          return const SizedBox();
-        },
-      ),
+  final transport = ScriptedAuthoringTransport(
+    AsyncData(state.confirmedDocument!),
+  );
+  addTearDown(transport.dispose);
+  final harness = _Harness(transport);
+  await tester.pumpTestApp(
+    overrides: [
+      organizationIdProvider.overrideWithValue(_organization),
+      realmIdProvider.overrideWithValue(_realm),
+      ...authoringFixtureOverrides(initial: state, transport: transport),
+    ],
+    child: Consumer(
+      builder: (context, ref, _) {
+        harness.ref = ref;
+        ref
+          ..watch(selectionProvider)
+          ..watch(selectedProvider);
+        harness.workspace = ref.watch(
+          authoringWorkspaceProvider(
+            AuthoringScope(organizationId: _organization, realmId: _realm),
+          ),
+        );
+        return const SizedBox();
+      },
     ),
   );
   return harness;
 }
 
-class _Harness {
+final class _Harness {
+  _Harness(this.transport);
+  final ScriptedAuthoringTransport transport;
   late WidgetRef ref;
-  final intents = <skir.EditIntent>[];
+  late AuthoringWorkspace workspace;
 }
 
 AuthoringSessionState _state({
@@ -361,12 +326,6 @@ skir.DataValue _namedChapter(String text, {String type = "Chapter"}) =>
       payload: skir.DataValue.wrapStringValue(text),
     );
 
-skir.ValueLocation _field(skir.ResourceId id) => skir.ValueLocation(
-  resource: id,
-  path: skir.ValuePath(
-    segments: [skir.PathSegment.createField(name: "chapter")],
-  ),
-);
 final _page = skir.ResourceId(value: "page:test");
 final _second = skir.ResourceId(value: "page:second");
 final _generation = skir.CatalogGeneration(value: "catalog:page");

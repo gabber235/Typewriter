@@ -4,15 +4,6 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
-class _MockBooks extends CanonicalBooks {
-  _MockBooks(this._books);
-
-  final List<Book> _books;
-
-  @override
-  Future<List<Book>> build() async => _books;
-}
-
 skir.ResourceId _rid(String id) => skir.ResourceId(value: id.split(":").last);
 
 Book _book(String id, String title, {List<skir.ResourceId> tagIds = const []}) {
@@ -36,7 +27,7 @@ Tag _tag(String id) {
 }
 
 void main() {
-  test("canonical books project the coherent authoring snapshot", () async {
+  test("working books project the coherent authoring snapshot", () async {
     final book = _book("book1", "Quest for Glory");
     final container = ProviderContainer.test(
       overrides: [
@@ -44,25 +35,25 @@ void main() {
           skir.recordId("organization:test"),
         ),
         realmIdProvider.overrideWithValue(skir.recordId("realm_instance:test")),
-        ...authoringSessionMockOverrides(books: [book]),
+        ...authoringFixtureOverrides(books: [book]),
       ],
     );
-    final subscription = container.listen(canonicalBooksProvider, (_, _) {});
+    final subscription = container.listen(workingBooksProvider, (_, _) {});
     addTearDown(subscription.close);
     addTearDown(container.dispose);
 
-    final books = await container.read(canonicalBooksProvider.future);
+    final books = container.read(workingBooksProvider).requireValue;
     expect(books.single.bookId, book.bookId);
   });
 
-  test("canonical books expose an authoring session failure", () async {
+  test("working books expose an authoring session failure", () async {
     final container = ProviderContainer.test(
       overrides: [
         organizationIdProvider.overrideWithValue(
           skir.recordId("organization:test"),
         ),
         realmIdProvider.overrideWithValue(skir.recordId("realm_instance:test")),
-        ...authoringSessionMockOverrides(
+        ...authoringFixtureOverrides(
           initial: AuthoringSessionState(
             failure: StateError("Authoring unavailable"),
           ),
@@ -71,10 +62,7 @@ void main() {
     );
     addTearDown(container.dispose);
 
-    await expectLater(
-      container.read(canonicalBooksProvider.future),
-      throwsA(isA<StateError>()),
-    );
+    expect(container.read(workingBooksProvider).error, isA<StateError>());
   });
 
   group("filteredBooks", () {
@@ -126,9 +114,7 @@ void main() {
 
     test("returns all books when query is empty", () async {
       final container = ProviderContainer.test(
-        overrides: [
-          canonicalBooksProvider.overrideWith(() => _MockBooks(testBooks)),
-        ],
+        overrides: [..._fixtures(testBooks, testTags)],
       );
 
       final result = await getFilteredBooks(container, "");
@@ -138,9 +124,7 @@ void main() {
 
     test("matches book title case-insensitively", () async {
       final container = ProviderContainer.test(
-        overrides: [
-          canonicalBooksProvider.overrideWith(() => _MockBooks(testBooks)),
-        ],
+        overrides: [..._fixtures(testBooks, testTags)],
       );
 
       final result = await getFilteredBooks(container, "QUEST");
@@ -151,9 +135,7 @@ void main() {
 
     test("matches book title with partial query", () async {
       final container = ProviderContainer.test(
-        overrides: [
-          canonicalBooksProvider.overrideWith(() => _MockBooks(testBooks)),
-        ],
+        overrides: [..._fixtures(testBooks, testTags)],
       );
 
       final result = await getFilteredBooks(container, "glory");
@@ -164,13 +146,7 @@ void main() {
 
     test("matches book tags case-insensitively", () async {
       final container = ProviderContainer.test(
-        overrides: [
-          canonicalBooksProvider.overrideWith(() => _MockBooks(testBooks)),
-          ...tagsProviderOverrides(
-            state: DisplayState.fewItems,
-            tags: testTags,
-          ),
-        ],
+        overrides: [..._fixtures(testBooks, testTags)],
       );
 
       final result = await getFilteredBooks(container, "ADVENTURE");
@@ -181,13 +157,7 @@ void main() {
 
     test("matches any of multiple tags", () async {
       final container = ProviderContainer.test(
-        overrides: [
-          canonicalBooksProvider.overrideWith(() => _MockBooks(testBooks)),
-          ...tagsProviderOverrides(
-            state: DisplayState.fewItems,
-            tags: testTags,
-          ),
-        ],
+        overrides: [..._fixtures(testBooks, testTags)],
       );
 
       final result = await getFilteredBooks(container, "horror");
@@ -198,9 +168,7 @@ void main() {
 
     test("returns empty list when no matches", () async {
       final container = ProviderContainer.test(
-        overrides: [
-          canonicalBooksProvider.overrideWith(() => _MockBooks(testBooks)),
-        ],
+        overrides: [..._fixtures(testBooks, testTags)],
       );
 
       final result = await getFilteredBooks(container, "zombies");
@@ -212,17 +180,7 @@ void main() {
       final booksWithNoTags = [_book("book_no_tags", "Tagless Adventure")];
 
       final container = ProviderContainer.test(
-        overrides: [
-          canonicalBooksProvider.overrideWith(
-            () => _MockBooks(booksWithNoTags),
-          ),
-          canonicalTagsProvider.overrideWith(
-            () => TagsMock(
-              displayState: DisplayState.fewItems,
-              specificTags: testTags,
-            ),
-          ),
-        ],
+        overrides: [..._fixtures(booksWithNoTags, testTags)],
       );
 
       final result = await getFilteredBooks(container, "adventure");
@@ -232,9 +190,7 @@ void main() {
 
     test("handles empty book list", () async {
       final container = ProviderContainer.test(
-        overrides: [
-          canonicalBooksProvider.overrideWith(() => _MockBooks(<Book>[])),
-        ],
+        overrides: [..._fixtures(<Book>[], testTags)],
       );
 
       final result = await getFilteredBooks(container, "anything");
@@ -306,3 +262,9 @@ void main() {
     });
   });
 }
+
+List<Override> _fixtures(List<Book> books, List<Tag> tags) => [
+  organizationIdProvider.overrideWithValue(skir.recordId("organization:test")),
+  realmIdProvider.overrideWithValue(skir.recordId("realm:test")),
+  ...authoringFixtureOverrides(books: books, tags: tags),
+];

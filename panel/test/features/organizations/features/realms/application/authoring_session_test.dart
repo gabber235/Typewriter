@@ -24,18 +24,44 @@ void main() {
     );
     expect(state.generation, _generation);
     expect(_title(state), "Initial");
-    expect(state.draft?.catalog, same(checked));
+    expect(state.confirmedDocument?.catalog, same(checked));
     expect(state.links, isEmpty);
   });
-  test("drafts require a matching catalog", () {
+  test("confirmed documents require a matching catalog", () {
     final state = AuthoringSessionState(
       snapshot: _snapshot("Initial", 1),
       catalog: CheckedEditorCatalog(
         _catalog(generation: skir.CatalogGeneration(value: "replacement")),
       ),
     );
-    expect(state.draft, isNull);
+    expect(state.confirmedDocument, isNull);
   });
+  test(
+    "initial fetch failure remains observable without a readiness future",
+    () async {
+      final harness = _Harness();
+      harness.nats.registerHandler(
+        _catalogSubject,
+        (_) => throw StateError("Catalog offline"),
+      );
+      final provider = authoringSessionProvider(_organization, _realm);
+      final subscription = harness.container.listen(provider, (_, _) {});
+      try {
+        final state = await waitForProvider(
+          harness.container,
+          provider,
+          (state) => state.failure != null,
+          description: "initial catalog failure",
+        );
+        expect(state.confirmedDocument, isNull);
+        expect(state.refreshing, isFalse);
+        expect(state.failure, isNotNull);
+      } finally {
+        subscription.close();
+        await harness.dispose();
+      }
+    },
+  );
   test(
     "hints fetch current state and missed hints recover after reconnect",
     () async {
@@ -151,10 +177,10 @@ void main() {
       final initial = await waitForProvider(
         harness.container,
         provider,
-        (state) => state.draft != null,
+        (state) => state.confirmedDocument != null,
         description: "initial draft",
       );
-      final local = initial.draft!
+      final local = AuthoringEdit.fromDocument(initial.confirmedDocument!)
         ..set(
           skir.ValueLocation(
             resource: _resourceId,
@@ -174,17 +200,15 @@ void main() {
       final current = await waitForProvider(
         harness.container,
         provider,
-        (state) => state.generation == generation && state.draft != null,
+        (state) =>
+            state.generation == generation && state.confirmedDocument != null,
         description: "matching replacement catalog",
       );
       expect(
         local.resources[_resourceId]?.authoredField("title")?.authoredString,
         "Local",
       );
-      expect(
-        local.rebaseOnto(current.draft!),
-        isA<AuthoredDraftRebaseFailed>(),
-      );
+      expect(local.generation, isNot(current.confirmedDocument!.generation));
     } finally {
       subscription.close();
       await harness.dispose();

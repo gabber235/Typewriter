@@ -16,23 +16,16 @@ final class AuthoringSubjectRole extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final organizationId = ref.watch(organizationIdProvider);
-    final realmId = ref.watch(realmIdProvider);
-    if (organizationId == null || realmId == null) {
-      return const _UnavailableRole();
-    }
-    final state = ref.watch(authoringSessionProvider(organizationId, realmId));
-    final draft = state.draft;
-    final catalog = state.catalog;
-    if (state.failure != null || draft == null || catalog == null) {
-      return state.snapshot == null
+    final source = ref.watch(selectedWorkingAuthoringDocumentProvider);
+    final document = source.value;
+    if (document == null) {
+      return source.isLoading
           ? ShimmerBox.rectangle(width: double.infinity, height: 20)
           : const _UnavailableRole();
     }
     return AuthoredResourceEditor(
       resource: resourceId,
-      draft: draft,
-      catalog: catalog,
+      document: document,
       role: role,
       fillAvailableSpace: fillAvailableSpace,
       budget: skir.EvaluationBudget(maxSteps: 10000, maxCollectionItems: 10000),

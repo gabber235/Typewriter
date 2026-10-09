@@ -40,33 +40,27 @@ class BookIdentifier extends SelectableIdentifier
       );
     }
     final router = ref.watch(appRouterProvider);
-    final provider = authoringSessionProvider(organization, realm);
-    final state = ref.watch(provider);
-    if (state.failure case final failure?) {
-      return AsyncError(failure, StackTrace.current);
-    }
-    final resource = state.resources[bookId];
+    final scope = AuthoringScope(organizationId: organization, realmId: realm);
+    final source = ref.watch(workingAuthoringDocumentProvider(scope));
+    if (source.mapUnready<Selectable>() case final pending?) return pending;
+    final document = source.requireValue;
+    final workspace = ref.watch(authoringWorkspaceProvider(scope));
+    final commands = ref.watch(authoredResourceCommandsProvider(scope));
+    final resource = document.entry(bookId);
     if (resource == null) {
-      if (state.snapshot == null) return const AsyncLoading();
       return AsyncError(SelectableNotFoundException(this), StackTrace.current);
     }
-    final draft = state.draft;
-    final catalog = state.catalog;
-    if (draft == null || catalog == null) return const AsyncLoading();
     final book = Book.fromAuthoring(resource);
-    final session = ref.watch(provider.notifier);
     return AsyncData(
       BookSelection(
         onOpen: () => router.navigate(routeFor(organization, realm)),
-        onDelete: () => session.deleteResource(
-          bookId,
-          conflictMessage: "The book changed before deletion",
-        ),
+        onDelete: () async => workspace
+            .edit(label: "Delete book", apply: (edit) => edit.delete(bookId))
+            .requireAccepted(),
         id: this,
         book: book,
-        draft: draft,
-        catalog: catalog,
-        session: session,
+        workspace: workspace,
+        commands: commands,
       ),
     );
   }
@@ -94,19 +88,17 @@ class BookIdentifier extends SelectableIdentifier
 
 /// Selection model shared by library navigation and the book inspector.
 ///
-/// The selection owns no canonical data. It carries the confirmed book and
-/// revision used to create an editor snapshot, while [resource] owns loading,
-/// draft reconciliation, commit, and disposal. Opening is deliberately
-/// single select because navigation targets one book route.
+/// This read model carries the book from the current working revision.
+/// The workspace owns shared edits and persistence. Opening selects one book
+/// because navigation targets one book route.
 class BookSelection extends InspectableSelectable<BookIdentifier> {
   const BookSelection({
     required this.onOpen,
     required this.onDelete,
     required this.id,
     required this.book,
-    required this.draft,
-    required this.catalog,
-    required this.session,
+    required this.workspace,
+    required this.commands,
   });
 
   @override
@@ -114,9 +106,8 @@ class BookSelection extends InspectableSelectable<BookIdentifier> {
   final Book book;
   final VoidCallback? onOpen;
   final Future<void> Function() onDelete;
-  final AuthoredDraft draft;
-  final CheckedEditorCatalog catalog;
-  final AuthoringSession session;
+  final AuthoringWorkspace workspace;
+  final AuthoredResourceCommands commands;
 
   @override
   String get name => book.title;
@@ -134,18 +125,8 @@ class BookSelection extends InspectableSelectable<BookIdentifier> {
         body: AuthoredResourceInspection(
           key: ValueKey((book.bookId, skir.PresentationRole.inspector)),
           resource: book.bookId,
-          draft: draft,
-          catalog: catalog,
-          commands: AuthoredResourceCommands(
-            commit: session.commit,
-            previewTypeArguments: session.previewTypeArguments,
-            commitTypeArguments: session.commitTypeArguments,
-            prepareCreation: session.prepareCreation,
-            invokeCommand: session.invokeCommand,
-            watchSearch: session.watchPresentationSearch,
-            reload: session.refresh,
-            openAutosave: session.openAutosave,
-          ),
+          workspace: workspace,
+          commands: commands,
         ),
       );
 }

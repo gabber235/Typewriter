@@ -15,11 +15,24 @@ class RealmPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final organizationId = ref.watch(organizationIdProvider);
     final selectedRealmId = ref.watch(realmIdProvider);
+    AuthoringWorkspace? workspace;
     if (organizationId != null &&
         selectedRealmId != null &&
         selectedRealmId.id == realmId) {
-      ref.watch(authoringSessionProvider(organizationId, selectedRealmId));
+      workspace = ref.watch(
+        authoringWorkspaceProvider(
+          AuthoringScope(
+            organizationId: organizationId,
+            realmId: selectedRealmId,
+          ),
+        ),
+      );
     }
-    return AutoRouter();
+    return Column(
+      children: [
+        if (workspace != null) AuthoringPendingWork(workspace: workspace),
+        const Expanded(child: AutoRouter()),
+      ],
+    );
   }
 }

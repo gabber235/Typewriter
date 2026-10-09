@@ -8,80 +8,81 @@ Future<void> _chooseLink({
   required Map<skir.ResourceId, _AuthoredCollectionRow>? candidates,
   required skir.PresentationCollectionDefinition? candidateDefinition,
 }) async {
-  final draft = scope.authoring;
   final catalog = scope.catalog;
-  if (draft == null || catalog == null) return;
-  final plans = portableLinkPlans(
-    draft: draft,
-    catalog: catalog,
-    source: location,
-  );
-  if (!context.mounted) return;
-  final choices = _authoredLinkChoices(
-    plans: plans,
-    scope: scope,
-    candidates: candidates,
-    candidateDefinition: candidateDefinition,
-  );
-  final decision = await showSearchModal<_AuthoredLinkDecision>(
-    context,
-    (ref, modalContext) {
-      final source = _AuthoredLinkSearchSource(
-        choices,
-        candidatePolicy: control.candidatePolicy,
-        problem: switch (plans) {
-          PortableLinkPlanUnavailable(:final message) => message,
-          PortableLinkPlanReady() => null,
-        },
-      );
-      return SearchContribution(
-        session: SearchSession(
-          source: source,
-          interaction: SearchInteraction(
-            activation: SearchActivation.custom(
-              dependencies: const [],
-              evaluate: (_, result) {
-                final choice = result.payload as _AuthoredLinkChoice;
-                final reason = choice.disabledReason;
-                return reason == null
-                    ? const SearchActivationState.enabled()
-                    : SearchActivationState.disabled(reason);
-              },
-              activate: (_, result) async {
-                final choice = result.payload as _AuthoredLinkChoice;
-                try {
-                  final decision = await _resolveAuthoredLinkChoice(
-                    choice: choice,
-                    scope: scope,
-                    source: location,
-                  );
-                  return SearchActivationResult.complete(decision);
-                } on Object catch (error) {
-                  source.reportFailure(
-                    "The counterpart could not be prepared: $error",
-                  );
-                  return const SearchActivationResult.keepOpen();
-                }
-              },
+  if (scope.edit == null || catalog == null) return;
+  await scope.prepare("Change link", (draft) async {
+    draft.expect(location);
+    final plans = portableLinkPlans(
+      draft: draft,
+      catalog: catalog,
+      source: location,
+    );
+    if (!context.mounted) return;
+    final choices = _authoredLinkChoices(
+      plans: plans,
+      scope: scope,
+      candidates: candidates,
+      candidateDefinition: candidateDefinition,
+    );
+    final decision = await showSearchModal<_AuthoredLinkDecision>(
+      context,
+      (ref, modalContext) {
+        final source = _AuthoredLinkSearchSource(
+          choices,
+          candidatePolicy: control.candidatePolicy,
+          problem: switch (plans) {
+            PortableLinkPlanUnavailable(:final message) => message,
+            PortableLinkPlanReady() => null,
+          },
+        );
+        return SearchContribution(
+          session: SearchSession(
+            source: source,
+            interaction: SearchInteraction(
+              activation: SearchActivation.custom(
+                dependencies: const [],
+                evaluate: (_, result) {
+                  final choice = result.payload as _AuthoredLinkChoice;
+                  final reason = choice.disabledReason;
+                  return reason == null
+                      ? const SearchActivationState.enabled()
+                      : SearchActivationState.disabled(reason);
+                },
+                activate: (_, result) async {
+                  final choice = result.payload as _AuthoredLinkChoice;
+                  try {
+                    final decision = await _resolveAuthoredLinkChoice(
+                      choice: choice,
+                      scope: scope,
+                      source: location,
+                    );
+                    return SearchActivationResult.complete(decision);
+                  } on Object catch (error) {
+                    source.reportFailure(
+                      "The counterpart could not be prepared: $error",
+                    );
+                    return const SearchActivationResult.keepOpen();
+                  }
+                },
+              ),
+              selectionMode: SearchSelectionMode.single,
             ),
-            selectionMode: SearchSelectionMode.single,
           ),
-        ),
-      );
-    },
-    searchHint: "Search linked resources",
-    rowRenderers: {
-      _authoredLinkChoiceResultType.rowRendererId:
-          _buildAuthoredLinkChoiceResult,
-    },
-  );
-  if (decision == null) return;
-  draft.connect(
-    decision.plan.source,
-    decision.target.resource,
-    counterpart: decision.counterpart,
-  );
-  scope.onDraftChanged?.call();
+        );
+      },
+      searchHint: "Search linked resources",
+      rowRenderers: {
+        _authoredLinkChoiceResultType.rowRendererId:
+            _buildAuthoredLinkChoiceResult,
+      },
+    );
+    if (decision == null) return;
+    draft.connect(
+      decision.plan.source,
+      decision.target.resource,
+      counterpart: decision.counterpart,
+    );
+  });
 }
 
 final class _AuthoredLinkDecision {

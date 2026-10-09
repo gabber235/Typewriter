@@ -118,8 +118,9 @@ void main() {
     final fixture = _fixture();
     final created = skir.ResourceId(value: "resource:created");
     final record = fixture.snapshot.resources.single.content;
-    final staged = stageResourceCreation(
-      baseline: fixture.draft,
+    final staged = fixture.draft.fork();
+    createAuthoringResource(
+      edit: staged,
       request: ResourceCreationRequest(
         id: created,
         initializationId: skir.InitializationRequestId(value: "create:1"),
@@ -138,8 +139,9 @@ void main() {
   test("page creation inserts its book slot before connecting", () {
     final fixture = _pageCreationFixture();
     final item = skir.ItemId(value: "page:item");
-    final staged = stageResourceCreation(
-      baseline: fixture.draft,
+    final staged = fixture.draft.fork();
+    createAuthoringResource(
+      edit: staged,
       request: ResourceCreationRequest(
         id: fixture.page,
         initializationId: skir.InitializationRequestId(value: "create:page"),
@@ -221,8 +223,9 @@ void main() {
       configuration: fixture.pageRecord.configuration,
       fields: fixture.pageRecord.fields.where((field) => field.name != "book"),
     );
-    final staged = stageResourceCreation(
-      baseline: fixture.draft,
+    final staged = fixture.draft.fork();
+    createAuthoringResource(
+      edit: staged,
       request: ResourceCreationRequest(
         id: fixture.page,
         initializationId: skir.InitializationRequestId(value: "create:page"),
@@ -273,182 +276,6 @@ void main() {
       response.rejectionMessage,
       "The Realm rejected this edit: item_missing at page:created:book.page:item",
     );
-  });
-
-  test("a catalog change requires preparing against the new catalog", () {
-    final fixture = _fixture();
-    fixture.draft.set(fixture.title, skir.DataValue.wrapStringValue("edit"));
-    final next = skir.AuthoringState(
-      generation: skir.CatalogGeneration(value: "replacement"),
-      resources: fixture.snapshot.resources,
-      links: fixture.snapshot.links,
-      findings: fixture.snapshot.findings,
-    );
-    expect(
-      fixture.draft.rebaseOnto(AuthoredDraft.fromState(next)),
-      isA<AuthoredDraftRebaseFailed>(),
-    );
-  });
-
-  test(
-    "independent field changes and restored expected values remain compatible",
-    () {
-      final fixture = _fixture();
-      fixture.draft.set(fixture.title, skir.DataValue.wrapStringValue("edit"));
-      final next = _stateWithFields(fixture.snapshot, {
-        "description": skir.DataValue.wrapStringValue("other edit"),
-      });
-      expect(
-        fixture.draft.rebaseOnto(AuthoredDraft.fromState(next)),
-        isA<AuthoredDraftRebased>(),
-      );
-      final changed = _stateWithFields(next, {
-        "title": skir.DataValue.wrapStringValue("Story"),
-      });
-      expect(
-        fixture.draft.rebaseOnto(AuthoredDraft.fromState(changed)),
-        isA<AuthoredDraftRebaseConflict>(),
-      );
-      final restored = _stateWithFields(changed, {
-        "title": skir.DataValue.wrapStringValue("original"),
-      });
-      expect(
-        fixture.draft.rebaseOnto(AuthoredDraft.fromState(restored)),
-        isA<AuthoredDraftRebased>(),
-      );
-    },
-  );
-
-  test("record field order is irrelevant while collection identities and order remain guarded", () {
-    final fixture = _fixture();
-    final root = skir.ValueLocation(
-      resource: fixture.resource,
-      path: skir.ValuePath(segments: const []),
-    );
-    fixture.draft.read(root);
-    fixture.draft.set(fixture.title, skir.DataValue.wrapStringValue("edit"));
-    final resource = fixture.snapshot.resources.single;
-    final reordered = skir.AuthoringState(
-      generation: fixture.snapshot.generation,
-      links: fixture.snapshot.links,
-      findings: const [],
-      resources: [
-        skir.AuthoringResource(
-          id: resource.id,
-          definition: resource.definition,
-          content: skir.AuthoringRecord(
-            configuration: resource.content.configuration,
-            fields: resource.content.fields.toList().reversed,
-          ),
-        ),
-      ],
-    );
-    expect(
-      fixture.draft.rebaseOnto(AuthoredDraft.fromState(reordered)),
-      isA<AuthoredDraftRebased>(),
-    );
-    final changed = _stateWithFields(reordered, {
-      "items": skir.DataValue.createNamed(
-        actualType: fixture.listType,
-        payload: skir.DataValue.createListValue(
-          items: [
-            skir.ListItem(
-              id: skir.ItemId(value: "replacement"),
-              value: skir.DataValue.wrapStringValue("first"),
-            ),
-          ],
-        ),
-      ),
-    });
-    expect(
-      fixture.draft.rebaseOnto(AuthoredDraft.fromState(changed)),
-      isA<AuthoredDraftRebaseConflict>(),
-    );
-  });
-
-  test("changed tracked reads reject a dependent edit", () {
-    final fixture = _fixture();
-    final input = skir.ValueLocation(
-      resource: fixture.resource,
-      path: _fieldPath("computedInput"),
-    );
-    fixture.draft
-      ..read(input)
-      ..set(fixture.title, skir.DataValue.wrapStringValue("computed"));
-    final changed = _stateWithFields(fixture.snapshot, {
-      "computedInput": skir.DataValue.wrapStringValue("new"),
-    });
-    final conflict = fixture.draft.rebaseOnto(
-      AuthoredDraft.fromState(changed),
-    ) as AuthoredDraftRebaseConflict;
-    expect(_factKey(conflict.expected), ("value", input));
-  });
-
-  test("accepted prefix recovery preserves a conflicting tail read", () {
-    final fixture = _fixture();
-    final input = skir.ValueLocation(
-      resource: fixture.resource,
-      path: _fieldPath("computedInput"),
-    );
-    fixture.draft.set(fixture.title, skir.DataValue.wrapStringValue("prefix"));
-    final count = fixture.draft.intents.length;
-    fixture.draft.stageExpressionEdit(
-      [
-        PortableExpressionRead(
-          skir.ExpressionBindingId(value: "read"),
-          input.path,
-          location: input,
-        ),
-      ],
-      (branch) =>
-          branch.set(fixture.title, skir.DataValue.wrapStringValue("tail"))
-              is PortablePathValue,
-    );
-    final changed = _stateWithFields(fixture.snapshot, {
-      "title": skir.DataValue.wrapStringValue("prefix"),
-      "computedInput": skir.DataValue.wrapStringValue("other edit"),
-    });
-    final conflict = fixture.draft.rebaseTailOnto(
-      AuthoredDraft.fromState(changed),
-      acceptedIntentCount: count,
-    ) as AuthoredDraftRebaseConflict;
-    expect(_factKey(conflict.expected), ("value", input));
-  });
-
-  test("tail reads remain tracked after recovering a committed prefix", () {
-    final fixture = _fixture();
-    final input = skir.ValueLocation(
-      resource: fixture.resource,
-      path: _fieldPath("computedInput"),
-    );
-    fixture.draft.set(fixture.title, skir.DataValue.wrapStringValue("prefix"));
-    final count = fixture.draft.intents.length;
-    fixture.draft.stageExpressionEdit(
-      [
-        PortableExpressionRead(
-          skir.ExpressionBindingId(value: "read"),
-          input.path,
-          location: input,
-        ),
-      ],
-      (branch) =>
-          branch.set(fixture.title, skir.DataValue.wrapStringValue("tail"))
-              is PortablePathValue,
-    );
-    final saved = _stateWithFields(fixture.snapshot, {
-      "title": skir.DataValue.wrapStringValue("prefix"),
-    });
-    final rebased = fixture.draft.rebaseTailOnto(
-      AuthoredDraft.fromState(saved),
-      acceptedIntentCount: count,
-    ) as AuthoredDraftRebased;
-    final changed = _stateWithFields(saved, {
-      "computedInput": skir.DataValue.wrapStringValue("new"),
-    });
-    final conflict = rebased.draft.rebaseOnto(
-      AuthoredDraft.fromState(changed),
-    ) as AuthoredDraftRebaseConflict;
-    expect(_factKey(conflict.expected), ("value", input));
   });
 
   test("a missing value is an explicit null expectation", () {
@@ -640,164 +467,103 @@ void main() {
   });
 
   test("relation edits capture endpoint and incoming graph evidence", () {
-    final fixture = _fixture();
-    final endpoint = skir.EndpointId(value: "test.source");
-    final opposite = skir.EndpointId(value: "test.target");
-    final relation = skir.RelationId(value: "test.relation");
-    final target = skir.ResourceId(value: "resource:2");
-    final selection = skir.NamedTypeTemplate(
-      definition: fixture.listType.definition,
-      arguments: const [],
-    );
-    final checked = CheckedEditorCatalog(
-      skir.EditorCatalogWireSnapshot(
-        generation: skir.CatalogGeneration(value: "catalog:1"),
-        types: const [],
-        relations: [
-          skir.RelationContract(
-            id: relation,
-            first: skir.EndpointDefinition(
-              id: endpoint,
-              slot: skir.EndpointSlot.first,
-              resource: selection,
-              cardinality: skir.EndpointCardinality.one,
-              onDelete: skir.RelationDeletePolicy.clear,
-            ),
-            second: skir.EndpointDefinition(
-              id: opposite,
-              slot: skir.EndpointSlot.second,
-              resource: selection,
-              cardinality: skir.EndpointCardinality.many,
-              onDelete: skir.RelationDeletePolicy.clear,
-            ),
-            families: const [],
-          ),
-        ],
-        resourceDefinitions: const [],
-        presentations: const [],
-        presentationMaterials: const [],
-        configuration: const [],
-        diagnostics: const [],
-        initialization: const [],
-        endpointBindings: const [],
-        capabilities: const [],
-        recommendations: const [],
-        roleFallbacks: const [],
-      ),
-    );
-    final draft = AuthoredDraft.fromState(fixture.snapshot, catalog: checked);
-    final source = skir.LinkOccurrence(
-      id: skir.LinkOccurrenceId(endpoint: endpoint, location: fixture.title),
-      source: fixture.resource,
-      target: skir.LinkTarget(resource: target, opposite: null),
-    );
-
-    draft.connect(source, target);
-
-    final identities = draft.expectations.map(_factKey).toSet();
-    expect(
-      identities,
-      containsAll({
-        ("value", fixture.title),
-        ("exists", target),
-        ("links", fixture.resource, relation),
-        ("links", target, relation),
-      }),
-    );
-    expect(draft.intents.single, isA<skir.EditIntent_connectRelationWrapper>());
-    expect(draft.links, hasLength(1));
-    expect(draft.links.single.first, fixture.resource);
-    expect(draft.links.single.second, target);
-
-    draft.disconnect(source);
-
-    expect(draft.links, isEmpty);
-  });
-
-  test("collection relation sources capture parent order evidence", () {
-    final fixture = _fixture();
-    final target = skir.ResourceId(value: "resource:2");
-    final containing = fixture.items;
-    final item = skir.ValueLocation(
-      resource: fixture.resource,
-      path: skir.ValuePath(
-        segments: [
-          ...containing.path.segments,
-          skir.PathSegment.createItem(id: fixture.firstItem),
-        ],
-      ),
-    );
-    final source = skir.LinkOccurrence(
-      id: skir.LinkOccurrenceId(
-        endpoint: skir.EndpointId(value: "test.source"),
-        location: item,
-      ),
-      source: fixture.resource,
-      target: skir.LinkTarget(resource: target, opposite: null),
-    );
-
-    fixture.draft.connect(source, target);
-
-    final identities = fixture.draft.expectations.map(_factKey).toSet();
-    expect(
-      identities,
-      containsAll({
-        ("value", item),
-        ("configuration", containing),
-        ("value", containing),
-        ("value", containing),
-      }),
-    );
-  });
-
-  test("collection relation counterparts capture parent order evidence", () {
-    final fixture = _fixture();
-    final counterpartLocation = skir.ValueLocation(
-      resource: fixture.resource,
-      path: skir.ValuePath(
-        segments: [
-          ...fixture.items.path.segments,
-          skir.PathSegment.createItem(id: fixture.firstItem),
-        ],
-      ),
-    );
-    final source = skir.LinkOccurrence(
-      id: skir.LinkOccurrenceId(
-        endpoint: skir.EndpointId(value: "test.source"),
-        location: fixture.title,
-      ),
-      source: fixture.resource,
-      target: skir.LinkTarget(resource: fixture.resource, opposite: null),
-    );
-    final counterpart = skir.LinkOccurrence(
-      id: skir.LinkOccurrenceId(
-        endpoint: skir.EndpointId(value: "test.target"),
-        location: counterpartLocation,
-      ),
-      source: fixture.resource,
-      target: skir.LinkTarget(
-        resource: fixture.resource,
-        opposite: fixture.title.path,
-      ),
-    );
-
+    final fixture = _relationFixture();
     fixture.draft.connect(
-      source,
-      fixture.resource,
-      counterpart: skir.CounterpartChoice.wrapExisting(counterpart),
+      fixture.occurrence,
+      fixture.newTarget,
+      counterpart: skir.CounterpartChoice.wrapExisting(fixture.counterpart),
     );
-
-    final identities = fixture.draft.expectations.map(_factKey).toSet();
+    final relation = skir.RelationId(value: "test.relation");
     expect(
-      identities,
-      containsAll({
-        ("value", counterpartLocation),
-        ("configuration", fixture.items),
-        ("value", fixture.items),
-        ("value", fixture.items),
-      }),
+      fixture.draft.expectations.map(_factKey),
+      containsAll([
+        ("value", fixture.occurrence.id.location),
+        ("exists", fixture.newTarget),
+        ("links", fixture.occurrence.source, relation),
+        ("links", fixture.newTarget, relation),
+      ]),
     );
+    expect(fixture.draft.links.single.second, fixture.newTarget);
+    fixture.draft.disconnect(fixture.occurrence);
+    expect(fixture.draft.links, isEmpty);
   });
+
+  for (final reverse in [false, true]) {
+    test(
+      "collection relation ${reverse ? 'counterparts' : 'sources'} capture parent order evidence",
+      () {
+        final fixture = _pageCreationFixture();
+        final edit = fixture.draft
+          ..create(
+            fixture.page,
+            fixture.pageRecord,
+            definition: fixture.pageResource,
+          );
+        final parent = authoredFieldLocation(fixture.book, ["pages"]);
+        final item = skir.ItemId(value: "slot:new");
+        edit.insert(
+          parent,
+          null,
+          skir.ListItem(id: item, value: skir.DataValue.unfilled),
+        );
+        final bookAt = skir.ValueLocation(
+          resource: fixture.book,
+          path: skir.ValuePath(
+            segments: [
+              ...parent.path.segments,
+              skir.PathSegment.createItem(id: item),
+            ],
+          ),
+        );
+        final pageAt = authoredFieldLocation(fixture.page, ["book"]);
+        final bookOccurrence = skir.LinkOccurrence(
+          id: skir.LinkOccurrenceId(
+            endpoint: fixture.bookEndpoint,
+            location: bookAt,
+          ),
+          source: fixture.book,
+          target: skir.LinkTarget(
+            resource: fixture.page,
+            opposite: pageAt.path,
+          ),
+        );
+        final pageOccurrence = skir.LinkOccurrence(
+          id: skir.LinkOccurrenceId(
+            endpoint: skir.EndpointId(value: "page.book"),
+            location: pageAt,
+          ),
+          source: fixture.page,
+          target: skir.LinkTarget(
+            resource: fixture.book,
+            opposite: bookAt.path,
+          ),
+        );
+        edit.connect(
+          reverse ? pageOccurrence : bookOccurrence,
+          reverse ? fixture.book : fixture.page,
+          counterpart: skir.CounterpartChoice.wrapExisting(
+            reverse ? bookOccurrence : pageOccurrence,
+          ),
+        );
+        expect(
+          edit.expectations.map(_factKey),
+          containsAll([("value", parent), ("configuration", parent)]),
+        );
+        expect(
+          edit
+              .resource(fixture.book)!
+              .authoredField("pages")!
+              .authoredItems!
+              .single
+              .value
+              .authoredLink!
+              .target
+              .resource,
+          fixture.page,
+        );
+      },
+    );
+  }
 
   test("collection relation disconnects capture parent order evidence", () {
     final fixture = _fixture();
@@ -1369,56 +1135,6 @@ void main() {
     expect(fixture.draft.intents, hasLength(1));
   });
 
-  test("disposed presentation host ignores a delayed initialization", () async {
-    final fixture = _parentFixture(
-      capturedStyle: false,
-      dynamicContaining: true,
-      nullableStyle: true,
-    );
-    final prepared = Completer<skir.PreparedCreation>();
-    late skir.InitializationRequest request;
-    var changes = 0;
-    var notifications = 0;
-    var statuses = 0;
-    final host = AuthoredDraftPresentationHost(
-      resource: fixture.repetitions.resource,
-      draft: fixture.draft,
-      material: skir.PresentationMaterial.defaultInstance,
-      role: skir.PresentationRole.inspector,
-      budget: skir.EvaluationBudget.defaultInstance,
-      capabilities: const PortablePresentationCapabilities(),
-      prepareCreation: (value) {
-        request = value;
-        return prepared.future;
-      },
-      onDraftChanged: () => changes++,
-      reportStatus: (_) => statuses++,
-    )..addListener(() => notifications++);
-    final reference = skir.BindingRef(
-      bindingId: configuredValueBindingId,
-      path: fixture.repetitions.path,
-    );
-
-    final pending = host.write(reference, skir.DataValue.wrapInteger("3"));
-    expect(host.enabled, isFalse);
-    expect(notifications, 1);
-
-    host.dispose();
-    prepared.complete(_preparedContainingStyle(request, bold: true));
-
-    expect(await pending, isA<PortablePresentationWriteApplied>());
-    expect(host.enabled, isFalse);
-    expect(changes, 0);
-    expect(statuses, 0);
-    expect(notifications, 1);
-    final intentCount = fixture.draft.intents.length;
-    expect(
-      await host.write(reference, skir.DataValue.wrapInteger("4")),
-      isA<PortablePresentationWriteRejected>(),
-    );
-    expect(fixture.draft.intents, hasLength(intentCount));
-  });
-
   test("field scoped capture findings preserve an unfinished parent", () async {
     final fixture = _parentFixture(
       capturedStyle: false,
@@ -1621,7 +1337,7 @@ void main() {
 }
 
 ({
-  AuthoredDraft draft,
+  AuthoringEdit draft,
   skir.ValueLocation bold,
   skir.ValueLocation repetitions,
   skir.AuthoringState snapshot,
@@ -1935,7 +1651,7 @@ _parentFixture({
     ),
   );
   return (
-    draft: AuthoredDraft.fromState(
+    draft: AuthoringEdit.fromState(
       snapshot,
       catalog: CheckedEditorCatalog(catalogSnapshot),
     ),
@@ -1991,7 +1707,7 @@ skir.TypeDefinitionId _definition(String name) => skir.TypeDefinitionId(
 );
 
 ({
-  AuthoredDraft draft,
+  AuthoringEdit draft,
   skir.ResourceId book,
   skir.ResourceId page,
   skir.ResourceDefinitionId pageResource,
@@ -2242,7 +1958,7 @@ _pageCreationFixture() {
     findings: const [],
   );
   return (
-    draft: AuthoredDraft.fromState(
+    draft: AuthoringEdit.fromState(
       authored,
       catalog: CheckedEditorCatalog(snapshot),
     ),
@@ -2259,7 +1975,7 @@ skir.ValuePath _fieldPath(String name) =>
     skir.ValuePath(segments: [skir.PathSegment.createField(name: name)]);
 
 ({
-  AuthoredDraft draft,
+  AuthoringEdit draft,
   skir.LinkOccurrence occurrence,
   skir.LinkOccurrence counterpart,
   skir.LinkOccurrence alternateCounterpart,
@@ -2409,7 +2125,7 @@ _relationFixture({
     ),
   );
   return (
-    draft: AuthoredDraft.fromState(snapshot, catalog: checked),
+    draft: AuthoringEdit.fromState(snapshot, catalog: checked),
     occurrence: skir.LinkOccurrence(
       id: skir.LinkOccurrenceId(endpoint: endpoint, location: fixture.title),
       source: fixture.resource,
@@ -2445,7 +2161,7 @@ _relationFixture({
 }
 
 ({
-  AuthoredDraft draft,
+  AuthoringEdit draft,
   skir.ValueLocation texts,
   skir.ValueLocation records,
   skir.NamedTypeUse textSet,
@@ -2618,7 +2334,7 @@ _collectionRepairFixture() {
     path: skir.ValuePath(segments: [skir.PathSegment.createField(name: field)]),
   );
   return (
-    draft: AuthoredDraft.fromState(
+    draft: AuthoringEdit.fromState(
       snapshot,
       catalog: CheckedEditorCatalog(catalogSnapshot),
     ),
@@ -2630,7 +2346,7 @@ _collectionRepairFixture() {
 }
 
 ({
-  AuthoredDraft draft,
+  AuthoringEdit draft,
   skir.ResourceId resource,
   skir.ValueLocation title,
   skir.ValueLocation items,
@@ -2706,7 +2422,7 @@ _fixture() {
     findings: const [],
   );
   return (
-    draft: AuthoredDraft.fromState(snapshot),
+    draft: AuthoringEdit.fromState(snapshot),
     resource: resource,
     title: title,
     items: items,
@@ -2740,30 +2456,3 @@ Object _factKey(skir.EditExpectation fact) => switch (fact) {
   ),
   _ => throw StateError("Unknown expectation"),
 };
-skir.AuthoringState _stateWithFields(
-  skir.AuthoringState state,
-  Map<String, skir.DataValue> changes,
-) {
-  final resource = state.resources.single;
-  final fields = {
-    for (final field in resource.content.fields) field.name: field.value,
-  }..addAll(changes);
-  return skir.AuthoringState(
-    generation: state.generation,
-    links: state.links,
-    findings: state.findings,
-    resources: [
-      skir.AuthoringResource(
-        id: resource.id,
-        definition: resource.definition,
-        content: skir.AuthoringRecord(
-          configuration: resource.content.configuration,
-          fields: [
-            for (final entry in fields.entries)
-              skir.FieldValue(name: entry.key, value: entry.value),
-          ],
-        ),
-      ),
-    ],
-  );
-}

@@ -57,7 +57,7 @@ final class PortableNewCounterpartChoice {
 }
 
 void replacePortableLinkCollection({
-  required PortableAuthoringDocument draft,
+  required PortableAuthoringEdit draft,
   required CheckedEditorCatalog catalog,
   required skir.ResourceId resource,
   required String field,
@@ -153,7 +153,7 @@ bool _sameResources(List<skir.ResourceId> first, List<skir.ResourceId> second) {
 }
 
 PortableLinkPlanResult portableLinkPlans({
-  required PortableAuthoringDocument draft,
+  required PortableAuthoringView draft,
   required CheckedEditorCatalog catalog,
   required skir.ValueLocation source,
 }) {

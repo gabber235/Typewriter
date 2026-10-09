@@ -13,9 +13,14 @@ Future<Page?> createPage({
   if (organizationId == null || realmId == null) {
     throw ApiException.badRequest("No Realm selected");
   }
-  final state = ref.read(authoringSessionProvider(organizationId, realmId));
-  final checked = state.catalog;
-  final draft = state.draft;
+  final draft = ref
+      .read(
+        workingAuthoringDocumentProvider(
+          AuthoringScope(organizationId: organizationId, realmId: realmId),
+        ),
+      )
+      .value;
+  final checked = draft?.catalog;
   final template = resourceCreationTemplate(
     checked,
     corePageResourceDefinition.value,

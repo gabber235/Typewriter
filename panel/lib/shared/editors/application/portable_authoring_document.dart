@@ -2,7 +2,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-abstract interface class PortableAuthoringDocument {
+abstract interface class PortableAuthoringView {
   skir.CatalogGeneration get generation;
 
   Map<skir.ResourceId, skir.AuthoringRecord> get resources;
@@ -11,11 +11,18 @@ abstract interface class PortableAuthoringDocument {
 
   List<skir.InitializationDiagnostic> get initializationFindings;
 
-  int get operationCount;
-
   skir.AuthoringRecord? resource(skir.ResourceId id);
 
   PortablePathResult<skir.DataValue> read(skir.ValueLocation location);
+
+  skir.DataValue defaultValue(skir.TypeUse? type);
+}
+
+abstract interface class PortableAuthoringEdit
+    implements PortableAuthoringView {
+  int get operationCount;
+  PortablePathResult<skir.DataValue> expect(skir.ValueLocation location);
+  void observeExpressionReads(Iterable<PortableExpressionRead> reads);
 
   PortablePathResult<skir.AuthoringRecord> set(
     skir.ValueLocation location,
@@ -35,8 +42,6 @@ abstract interface class PortableAuthoringDocument {
     skir.InitializationRequest request,
     skir.PreparedCreation prepared,
   );
-
-  skir.DataValue defaultValue(skir.TypeUse? type);
 
   PortablePathResult<skir.AuthoringRecord> remove(
     skir.ValueLocation location,
@@ -62,7 +67,7 @@ abstract interface class PortableAuthoringDocument {
 
   bool stageExpressionEdit(
     Iterable<PortableExpressionRead> reads,
-    bool Function(PortableAuthoringDocument document) edit,
+    bool Function(PortableAuthoringEdit edit) edit,
   );
 
   void delete(skir.ResourceId id);

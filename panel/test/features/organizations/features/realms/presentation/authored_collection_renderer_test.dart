@@ -505,7 +505,7 @@ _fixture({
     links: const [],
     findings: const [],
   );
-  final draft = AuthoredDraft.fromState(snapshot, catalog: checked);
+  final draft = AuthoringEdit.fromState(snapshot, catalog: checked);
   final definition = skir.PresentationCollectionDefinition(
     sourceId: "tags",
     rowType: skir.TypeTemplate.createNamed(
@@ -590,7 +590,7 @@ _fixture({
       },
       budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 1000),
       setBinding: (_, _) {},
-      authoring: AuthoredDraftAuthoringDocument(draft),
+      authoring: draft,
       catalog: checked,
       material: material,
     ),

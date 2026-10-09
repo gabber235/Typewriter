@@ -7,10 +7,10 @@ part of "books.dart";
 /// failure states from either dependency are returned unchanged to the UI.
 @riverpod
 AsyncValue<List<Book>> filteredBooks(Ref ref, String query) {
-  final books = ref.watch(projectedBooksProvider);
+  final books = ref.watch(workingBooksProvider);
   if (books.mapUnready<List<Book>>() case final value?) return value;
   if (query.isEmpty) return AsyncData(books.requireValue);
-  final tags = ref.watch(projectedTagsProvider);
+  final tags = ref.watch(workingTagsProvider);
   if (tags.mapUnready<List<Book>>() case final value?) return value;
   final lowercaseQuery = query.toLowerCase();
   return AsyncData(
@@ -34,18 +34,3 @@ skir.ResourceId? bookId(Ref ref) {
   if (id == null) return null;
   return skir.ResourceId(value: id);
 }
-
-/// Finds one confirmed book in the authoritative realm session.
-@riverpod
-Future<Book?> canonicalBook(Ref ref, skir.ResourceId bookId) async {
-  final books = await ref.watch(canonicalBooksProvider.future);
-  return books.firstWhereOrNull((book) => book.bookId == bookId);
-}
-
-@riverpod
-AsyncValue<List<Book>> projectedBooks(Ref ref) =>
-    ref.watch(canonicalBooksProvider);
-
-@riverpod
-AsyncValue<Book?> projectedBook(Ref ref, skir.ResourceId bookId) =>
-    ref.watch(canonicalBookProvider(bookId));

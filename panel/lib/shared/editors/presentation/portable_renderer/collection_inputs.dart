@@ -105,16 +105,18 @@ extension _PortableCollectionInputRendering
                     canMoveLater: index < items.length - 1,
                     onMoveEarlier: () {
                       final after = index == 1 ? null : items[index - 2].id;
-                      childScope.authoring!.move(collection, current.id, after);
-                      childScope.onDraftChanged?.call();
+                      childScope.stage("Edit collection", (operation) {
+                        operation.move(collection, current.id, after);
+                      });
                     },
                     onMoveLater: () {
-                      childScope.authoring!.move(
-                        collection,
-                        current.id,
-                        items[index + 1].id,
-                      );
-                      childScope.onDraftChanged?.call();
+                      childScope.stage("Edit collection", (operation) {
+                        operation.move(
+                          collection,
+                          current.id,
+                          items[index + 1].id,
+                        );
+                      });
                     },
                   ),
                 Expanded(child: content),
@@ -123,11 +125,9 @@ extension _PortableCollectionInputRendering
                     tooltip: "Remove item",
                     onPressed: childScope.enabled && !childScope.readOnly
                         ? () {
-                            childScope.authoring!.remove(
-                              collection,
-                              current.id,
-                            );
-                            childScope.onDraftChanged?.call();
+                            childScope.stage("Edit collection", (operation) {
+                              operation.remove(collection, current.id);
+                            });
                           }
                         : null,
                     icon: const Icon(Icons.delete_outline),
@@ -151,8 +151,9 @@ extension _PortableCollectionInputRendering
                     final moving = items[from];
                     final remaining = [...items]..removeAt(from);
                     final after = to == 0 ? null : remaining[to - 1].id;
-                    childScope.authoring!.move(collection, moving.id, after);
-                    childScope.onDraftChanged?.call();
+                    childScope.stage("Edit collection", (operation) {
+                      operation.move(collection, moving.id, after);
+                    });
                   }
                 : (_, _) {},
           )
@@ -277,7 +278,7 @@ extension _PortableCollectionInputRendering
         !value.abstract_,
       _ => false,
     };
-    PortablePathResult<skir.AuthoringRecord> result;
+    AuthoringEditResult result;
     if (named != null && concreteRecord) {
       final prepare = childScope.prepareCreation;
       if (prepare == null) {
@@ -301,18 +302,26 @@ extension _PortableCollectionInputRendering
       );
       try {
         final previousFindingCount = draft.initializationFindings.length;
-        final prepared = await prepare(request);
-        if (!context.mounted) return;
-        result = draft.insertPrepared(
-          collection,
-          items.lastOrNull?.id,
-          item,
-          request,
-          prepared,
-        );
-        final findings = draft.initializationFindings.skip(
-          previousFindingCount,
-        );
+        result = await childScope.prepare("Add collection item", (
+          operation,
+        ) async {
+          operation.expect(collection);
+          final prepared = await prepare(request);
+          if (!context.mounted) {
+            throw StateError("The editor closed during preparation");
+          }
+          operation.insertPrepared(
+            collection,
+            items.lastOrNull?.id,
+            item,
+            request,
+            prepared,
+          );
+        });
+        final findings =
+            (childScope.edit?.document.initializationFindings ??
+                    const <skir.InitializationDiagnostic>[])
+                .skip(previousFindingCount);
         if (findings.isNotEmpty) {
           childScope.reportStatus?.call(
             findings.map(formatPortableInitializationDiagnostic).join("\n"),
@@ -325,17 +334,17 @@ extension _PortableCollectionInputRendering
         return;
       }
     } else {
-      result = draft.insert(
-        collection,
-        items.lastOrNull?.id,
-        skir.ListItem(id: item, value: draft.defaultValue(expected)),
-      );
+      result = childScope.stage("Add collection item", (operation) {
+        operation.insert(
+          collection,
+          items.lastOrNull?.id,
+          skir.ListItem(id: item, value: draft.defaultValue(expected)),
+        );
+      });
     }
-    if (result case PortablePathUnavailable(:final message)) {
+    if (result case AuthoringEditRejected(:final message)) {
       childScope.reportStatus?.call(message);
-      return;
     }
-    childScope.onDraftChanged?.call();
   }
 
   Widget _renderMapInput(
@@ -397,23 +406,34 @@ extension _PortableCollectionInputRendering
         ],
       ),
     );
-    final result = draft.replaceMap(collection, [
-      ...rows,
-      skir.MapRow(
-        id: item,
-        key: draft.defaultValue(
-          childScope.expectedType(reference(skir.PathSegment.mapKey)),
+    childScope.stage("Add map row", (operation) {
+      final current = operation.expect(collection);
+      final currentRows = current is PortablePathValue<skir.DataValue>
+          ? switch (current.value.authoredPayload) {
+              skir.DataValue_mapValueWrapper(:final value) =>
+                value.rows.toList(),
+              final value when value == skir.DataValue.unfilled =>
+                <skir.MapRow>[],
+              _ => null,
+            }
+          : null;
+      if (currentRows == null ||
+          !const ListEquality<skir.MapRow>().equals(currentRows, rows)) {
+        throw StateError("The map changed before this edit");
+      }
+      operation.replaceMap(collection, [
+        ...rows,
+        skir.MapRow(
+          id: item,
+          key: draft.defaultValue(
+            childScope.expectedType(reference(skir.PathSegment.mapKey)),
+          ),
+          value: draft.defaultValue(
+            childScope.expectedType(reference(skir.PathSegment.mapValue)),
+          ),
         ),
-        value: draft.defaultValue(
-          childScope.expectedType(reference(skir.PathSegment.mapValue)),
-        ),
-      ),
-    ]);
-    if (result case PortablePathUnavailable(:final message)) {
-      childScope.reportStatus?.call(message);
-      return;
-    }
-    childScope.onDraftChanged?.call();
+      ]);
+    });
   }
 
   Widget _renderMapRow(
@@ -473,29 +493,22 @@ extension _PortableCollectionInputRendering
                   tooltip: "Remove row",
                   onPressed: childScope.enabled && !childScope.readOnly
                       ? () {
-                          final current = switch (childScope.authoring!.read(
-                            collection,
-                          )) {
-                            PortablePathValue(value: final value) =>
-                              value.authoredPayload,
-                            _ => null,
-                          };
-                          if (current is! skir.DataValue_mapValueWrapper) {
-                            return;
-                          }
-                          final result = childScope.authoring!.replaceMap(
-                            collection,
-                            current.value.rows.where(
-                              (candidate) => candidate.id != row.id,
-                            ),
-                          );
-                          if (result case PortablePathUnavailable(
-                            :final message,
-                          )) {
-                            childScope.reportStatus?.call(message);
-                          } else {
-                            childScope.onDraftChanged?.call();
-                          }
+                          childScope.stage("Remove map row", (operation) {
+                            final current = operation.expect(collection);
+                            final payload =
+                                current is PortablePathValue<skir.DataValue>
+                                ? current.value.authoredPayload
+                                : null;
+                            if (payload is! skir.DataValue_mapValueWrapper) {
+                              throw StateError("The map is unavailable");
+                            }
+                            operation.replaceMap(
+                              collection,
+                              payload.value.rows.where(
+                                (candidate) => candidate.id != row.id,
+                              ),
+                            );
+                          });
                         }
                       : null,
                   icon: const Icon(Icons.delete_outline),

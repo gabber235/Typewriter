@@ -2,6 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../support/test_utils.dart";
 
@@ -903,9 +904,13 @@ void main() {
     await tester.tap(find.text("Add item"));
     await tester.pump();
 
-    expect(fixture.document.insertions, hasLength(1));
+    final submitted = await _submit(tester, fixture.document);
+    expect(submitted.intents, hasLength(1));
     expect(
-      fixture.document.insertions.single.item.value,
+      (submitted.intents.single as skir.EditIntent_insertWrapper)
+          .value
+          .item
+          .value,
       skir.DataValue.wrapStringValue(""),
     );
   });
@@ -941,7 +946,7 @@ void main() {
     await tester.pumpTestApp(child: fixture.widget);
 
     expect(find.text("Add item"), findsNothing);
-    expect(fixture.document.insertions, isEmpty);
+    expect(fixture.document.workspace.state.groups, isEmpty);
   });
 
   testWidgets("adds a stable row to an Unfilled map", (tester) async {
@@ -952,8 +957,16 @@ void main() {
     await tester.tap(find.text("Add entry"));
     await tester.pump();
 
-    expect(fixture.document.maps, hasLength(1));
-    final row = fixture.document.maps.single.single;
+    final submitted = await _submit(tester, fixture.document);
+    final row =
+        ((submitted.intents.single as skir.EditIntent_setValueWrapper)
+                    .value
+                    .value
+                    .authoredPayload
+                as skir.DataValue_mapValueWrapper)
+            .value
+            .rows
+            .single;
     expect(row.id.value, startsWith("panel:"));
     expect(row.key, skir.DataValue.wrapStringValue(""));
     expect(row.value, skir.DataValue.wrapStringValue(""));
@@ -974,8 +987,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(fixture.document.connections, hasLength(1));
-    final connection = fixture.document.connections.single;
+    final submitted = await _submit(tester, fixture.document);
+    final connection = submitted.intents
+        .whereType<skir.EditIntent_connectRelationWrapper>()
+        .single
+        .value;
     expect(connection.target, fixture.target);
     expect(
       connection.source.id.location.path.segments.last,
@@ -994,8 +1010,8 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
 
-    expect(fixture.document.connections, isEmpty);
-    expect(fixture.document.insertions, isEmpty);
+    expect(fixture.document.workspace.state.groups, isEmpty);
+    expect(fixture.document.workspace.state.groups, isEmpty);
   });
 
   testWidgets("searches and selects a linked resource with the keyboard", (
@@ -1023,8 +1039,15 @@ void main() {
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pumpAndSettle();
 
-    expect(fixture.document.connections, hasLength(1));
-    expect(fixture.document.connections.single.target, fixture.secondTarget);
+    final submitted = await _submit(tester, fixture.document);
+    expect(
+      submitted.intents
+          .whereType<skir.EditIntent_connectRelationWrapper>()
+          .single
+          .value
+          .target,
+      fixture.secondTarget,
+    );
   });
 
   testWidgets("presents an existing link by its authored resource label", (
@@ -1080,52 +1103,41 @@ void main() {
   });
 
   test("known link edits preserve an unfinished sibling", () {
-    final removing = _linkCollectionFixture(withPartialLinks: true);
-
+    final fixture = _linkCollectionFixture(withPartialLinks: true);
+    final branch = AuthoringEdit.fromDocument(
+      fixture.document.workspace.document,
+    );
     replacePortableLinkCollection(
-      draft: removing.document,
-      catalog: removing.catalog,
+      draft: branch,
+      catalog: fixture.catalog,
       resource: _resource,
       field: "links",
-      expected: [removing.target],
+      expected: [fixture.target],
       proposed: const [],
     );
-
-    expect(removing.document.disconnections, hasLength(1));
+    final remaining = branch
+        .resource(_resource)!
+        .authoredField("links")!
+        .authoredItems!;
+    expect(remaining.single.id, _unfinishedLinkItem);
+    expect(remaining.single.value, skir.DataValue.unfilled);
     expect(
-      removing.document.disconnections.single.id.location.path.segments.last,
-      skir.PathSegment.createItem(id: _knownLinkItem),
-    );
-    expect(removing.document.connections, isEmpty);
-
-    final adding = _linkCollectionFixture(withPartialLinks: true);
-    replacePortableLinkCollection(
-      draft: adding.document,
-      catalog: adding.catalog,
-      resource: _resource,
-      field: "links",
-      expected: [adding.target],
-      proposed: [adding.target, adding.secondTarget],
-    );
-
-    expect(adding.document.disconnections, isEmpty);
-    expect(adding.document.connections, hasLength(1));
-    expect(adding.document.connections.single.target, adding.secondTarget);
-    expect(
-      adding.document.connections.single.source.id.location.path.segments.last,
-      isNot(skir.PathSegment.createItem(id: _unfinishedLinkItem)),
+      branch.intents.single,
+      isA<skir.EditIntent_disconnectRelationWrapper>(),
     );
   });
 
   testWidgets("an Unfilled polymorphic control offers its concrete forms", (
     tester,
   ) async {
-    final document = _TestAuthoringDocument(
-      defaultFactory: (_) => skir.DataValue.unfilled,
+    final document = _RendererWorkspace(
+      catalog: _polymorphicCatalog,
       resources: {
         _resource: skir.AuthoringRecord(
           configuration: skir.TypeSelection.unknown,
-          fields: const [],
+          fields: [
+            skir.FieldValue(name: "icon", value: skir.DataValue.unfilled),
+          ],
         ),
       },
     );
@@ -1140,7 +1152,9 @@ void main() {
                 value: skir.DataValue.unfilled,
                 location: skir.ValueLocation(
                   resource: _resource,
-                  path: skir.ValuePath(segments: const []),
+                  path: skir.ValuePath(
+                    segments: [skir.PathSegment.createField(name: "icon")],
+                  ),
                 ),
               ),
             },
@@ -1149,7 +1163,8 @@ void main() {
               maxCollectionItems: 100,
             ),
             setBinding: (_, _) {},
-            authoring: document,
+            authoring: document.workspace.document,
+            edit: document.binding,
             catalog: _polymorphicCatalog,
             prepareCreation: (value) async {
               request = value;
@@ -1180,7 +1195,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(request?.type, skir.TypeSelection.wrapComplete(_iconifyType));
-    expect(document.preparedApplications, hasLength(1));
+    expect(
+      document.workspace.document
+          .resource(_resource)!
+          .authoredField("icon")!
+          .authoredActualType,
+      _iconifyType,
+    );
   });
 
   testWidgets("hierarchy sequences preserve branches spacing and flattening", (
@@ -1308,14 +1329,15 @@ void main() {
   });
 }
 
-({Widget widget, _TestAuthoringDocument document}) _collectionFixture({
+({Widget widget, _RendererWorkspace document}) _collectionFixture({
   required skir.DataValue value,
   required bool allowAdd,
   String? label,
   String? description,
 }) {
-  final document = _TestAuthoringDocument(
-    defaultFactory: (_) => skir.DataValue.wrapStringValue(""),
+  final document = _RendererWorkspace(
+    catalog: _collectionCatalog(),
+    resources: {_resource: _collectionRecord("items", value)},
   );
   final reference = skir.BindingRef(
     bindingId: _bindingId,
@@ -1361,11 +1383,12 @@ void main() {
   );
 }
 
-({Widget widget, _TestAuthoringDocument document}) _mapFixture({
-  String? label,
-}) {
-  final document = _TestAuthoringDocument(
-    defaultFactory: (_) => skir.DataValue.wrapStringValue(""),
+({Widget widget, _RendererWorkspace document}) _mapFixture({String? label}) {
+  final document = _RendererWorkspace(
+    catalog: _collectionCatalog(),
+    resources: {
+      _resource: _collectionRecord("values", skir.DataValue.unfilled),
+    },
   );
   final reference = skir.BindingRef(
     bindingId: _bindingId,
@@ -1409,7 +1432,7 @@ void main() {
 
 ({
   Widget widget,
-  _TestAuthoringDocument document,
+  _RendererWorkspace document,
   CheckedEditorCatalog catalog,
   skir.ResourceId target,
   skir.ResourceId secondTarget,
@@ -1772,8 +1795,8 @@ _linkCollectionFixture({
       ),
     ],
   );
-  final document = _TestAuthoringDocument(
-    defaultFactory: (_) => skir.DataValue.unfilled,
+  final document = _RendererWorkspace(
+    catalog: checked,
     resources: {
       _resource: sourceRecord,
       target: targetRecord("Target Alpha"),
@@ -1858,7 +1881,8 @@ _linkCollectionFixture({
           },
           budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
           setBinding: (_, _) {},
-          authoring: document,
+          authoring: document.workspace.document,
+          edit: document.binding,
           catalog: checked,
           material: adaptiveAppearance ? collectionMaterial : null,
         ),
@@ -1868,7 +1892,7 @@ _linkCollectionFixture({
 }
 
 PortablePresentationScope _authoringScope(
-  _TestAuthoringDocument document,
+  _RendererWorkspace document,
   String field,
   skir.DataValue value,
 ) => PortablePresentationScope(
@@ -1885,7 +1909,9 @@ PortablePresentationScope _authoringScope(
   },
   budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
   setBinding: (_, _) {},
-  authoring: document,
+  authoring: document.workspace.document,
+  edit: document.binding,
+  catalog: document.workspace.document.catalog,
 );
 
 skir.BoundControl _boundControl(skir.BindingRef reference) => skir.BoundControl(
@@ -1988,145 +2014,162 @@ final class _TestPortableHost extends ChangeNotifier
   }
 }
 
-final class _TestAuthoringDocument implements PortableAuthoringDocument {
-  _TestAuthoringDocument({
-    required this.defaultFactory,
-    this.resources = const {},
-  });
-
-  final skir.DataValue Function(skir.TypeUse? type) defaultFactory;
-  @override
-  final Map<skir.ResourceId, skir.AuthoringRecord> resources;
-  final List<({skir.ValueLocation location, skir.ListItem item})> insertions =
-      [];
-  final List<List<skir.MapRow>> maps = [];
-  final List<
-    ({
-      skir.LinkOccurrence source,
-      skir.ResourceId target,
-      skir.CounterpartChoice? counterpart,
-    })
-  >
-  connections = [];
-  final List<skir.InitializationRequest> preparedApplications = [];
-  final List<skir.LinkOccurrence> disconnections = [];
-
-  @override
-  skir.CatalogGeneration get generation =>
-      skir.CatalogGeneration(value: "catalog:test");
-
-  @override
-  List<skir.LinkProjection> get links => const [];
-
-  @override
-  List<skir.InitializationDiagnostic> get initializationFindings => const [];
-
-  @override
-  int get operationCount => insertions.length + maps.length;
-
-  @override
-  skir.DataValue defaultValue(skir.TypeUse? type) => defaultFactory(type);
-
-  @override
-  skir.AuthoringRecord? resource(skir.ResourceId id) => resources[id];
-
-  @override
-  PortablePathResult<skir.DataValue> read(skir.ValueLocation location) =>
-      const PortablePathUnavailable("No stored value");
-
-  @override
-  PortablePathResult<skir.AuthoringRecord> set(
-    skir.ValueLocation location,
-    skir.DataValue value,
-  ) => PortablePathValue(_emptyRecord);
-
-  @override
-  PortablePathResult<skir.AuthoringRecord> insert(
-    skir.ValueLocation location,
-    skir.ItemId? after,
-    skir.ListItem item,
-  ) {
-    insertions.add((location: location, item: item));
-    return PortablePathValue(_emptyRecord);
-  }
-
-  @override
-  PortablePathResult<skir.AuthoringRecord> insertPrepared(
-    skir.ValueLocation location,
-    skir.ItemId? after,
-    skir.ItemId item,
-    skir.InitializationRequest request,
-    skir.PreparedCreation prepared,
-  ) => insert(
-    location,
-    after,
-    skir.ListItem(id: item, value: skir.DataValue.unfilled),
-  );
-
-  @override
-  PortablePathResult<skir.AuthoringRecord> remove(
-    skir.ValueLocation location,
-    skir.ItemId item,
-  ) => PortablePathValue(_emptyRecord);
-
-  @override
-  PortablePathResult<skir.AuthoringRecord> move(
-    skir.ValueLocation location,
-    skir.ItemId item,
-    skir.ItemId? after,
-  ) => PortablePathValue(_emptyRecord);
-
-  @override
-  PortablePathResult<skir.AuthoringRecord> replaceMap(
-    skir.ValueLocation location,
-    Iterable<skir.MapRow> rows,
-  ) {
-    maps.add(rows.toList(growable: false));
-    return PortablePathValue(_emptyRecord);
-  }
-
-  @override
-  PortablePathResult<skir.AuthoringRecord> applyPreparedRecord(
-    skir.ValueLocation location,
-    skir.InitializationRequest request,
-    skir.PreparedCreation prepared,
-  ) {
-    preparedApplications.add(request);
-    return PortablePathValue(_emptyRecord);
-  }
-
-  @override
-  bool stageExpressionEdit(
-    Iterable<PortableExpressionRead> reads,
-    bool Function(PortableAuthoringDocument document) edit,
-  ) => edit(this);
-
-  @override
-  void delete(skir.ResourceId id) {}
-
-  @override
-  void connect(
-    skir.LinkOccurrence source,
-    skir.ResourceId target, {
-    skir.CounterpartChoice? counterpart,
+final class _RendererWorkspace {
+  _RendererWorkspace({
+    required CheckedEditorCatalog catalog,
+    required Map<skir.ResourceId, skir.AuthoringRecord> resources,
+    List<skir.LinkProjection> links = const [],
   }) {
-    connections.add((source: source, target: target, counterpart: counterpart));
+    final document = AuthoringDocument(
+      catalog: catalog,
+      entries: {
+        for (final entry in resources.entries)
+          entry.key: skir.AuthoringResource(
+            id: entry.key,
+            definition: skir.ResourceDefinitionId(value: "test.resource"),
+            content: entry.value,
+          ),
+      },
+      links: links,
+    );
+    transport = ScriptedAuthoringTransport(AsyncData(document));
+    workspace = AuthoringWorkspace(transport: transport, initial: document);
+    binding = workspace.attach(
+      _resource,
+      policy: EditorCommitPolicy.applyResource,
+    );
+    addTearDown(binding.detach);
+    addTearDown(workspace.dispose);
+    addTearDown(transport.dispose);
   }
-
-  @override
-  void disconnect(skir.LinkOccurrence occurrence) {
-    disconnections.add(occurrence);
-  }
+  late final ScriptedAuthoringTransport transport;
+  late final AuthoringWorkspace workspace;
+  late final AuthoringBinding binding;
 }
+
+Future<skir.PreparedEdit> _submit(
+  WidgetTester tester,
+  _RendererWorkspace fixture,
+) async {
+  unawaited(fixture.binding.save());
+  await tester.pump();
+  return fixture.transport.requests.single.edit;
+}
+
+CheckedEditorCatalog _collectionCatalog() {
+  final root = skir.TypeDefinitionId(
+    typeId: skir.TypeId.createQualified(namespace: "test", name: "Collections"),
+    revision: 1,
+  );
+  final list = skir.TypeDefinitionId(
+    typeId: skir.TypeId.createQualified(namespace: "test", name: "TextList"),
+    revision: 1,
+  );
+  final map = skir.TypeDefinitionId(
+    typeId: skir.TypeId.createQualified(namespace: "test", name: "TextMap"),
+    revision: 1,
+  );
+  final text = skir.TypeTemplate.wrapScalar(skir.ScalarKind.text);
+  final fields = {
+    "items": skir.TypeTemplate.createNamed(
+      definition: list,
+      arguments: const [],
+    ),
+    "values": skir.TypeTemplate.createNamed(
+      definition: map,
+      arguments: const [],
+    ),
+  };
+  skir.PublishedType published(
+    skir.TypeDefinitionId id,
+    skir.RepresentationTemplate representation, {
+    List<skir.EffectiveFieldTemplate> effective = const [],
+  }) => skir.PublishedType(
+    definition: skir.TypeDefinition(
+      id: id,
+      parameters: const [],
+      representation: representation,
+      parents: const [],
+    ),
+    display: null,
+    status: skir.DeclarationStatus.ready,
+    effectiveFields: effective,
+    ancestorTemplates: const [],
+  );
+  return CheckedEditorCatalog(
+    skir.EditorCatalogWireSnapshot(
+      generation: skir.CatalogGeneration(value: "catalog:test"),
+      types: [
+        published(
+          root,
+          skir.RepresentationTemplate.createRecord(
+            abstract_: false,
+            fields: [
+              for (final field in fields.entries)
+                skir.FieldDeclaration(
+                  owner: skir.FieldOwner(definition: root, name: field.key),
+                  type: field.value,
+                  overrides: const [],
+                  hasConstructorDefault: false,
+                ),
+            ],
+          ),
+          effective: [
+            for (final field in fields.entries)
+              skir.EffectiveFieldTemplate(
+                key: field.key,
+                owner: skir.FieldOwner(definition: root, name: field.key),
+                type: field.value,
+                rules: const [],
+              ),
+          ],
+        ),
+        published(
+          list,
+          skir.RepresentationTemplate.createSequence(
+            item: text,
+            kind: skir.CollectionKind.list,
+          ),
+        ),
+        published(
+          map,
+          skir.RepresentationTemplate.createMapping(key: text, value: text),
+        ),
+      ],
+      relations: const [],
+      resourceDefinitions: const [],
+      presentations: const [],
+      presentationMaterials: const [],
+      configuration: const [],
+      diagnostics: const [],
+      initialization: const [],
+      endpointBindings: const [],
+      capabilities: const [],
+      recommendations: const [],
+      roleFallbacks: const [],
+    ),
+  );
+}
+
+skir.AuthoringRecord _collectionRecord(String field, skir.DataValue value) =>
+    skir.AuthoringRecord(
+      configuration: skir.TypeSelection.createComplete(
+        definition: skir.TypeDefinitionId(
+          typeId: skir.TypeId.createQualified(
+            namespace: "test",
+            name: "Collections",
+          ),
+          revision: 1,
+        ),
+        arguments: const [],
+      ),
+      fields: [skir.FieldValue(name: field, value: value)],
+    );
 
 final _bindingId = skir.ExpressionBindingId(value: "value");
 final _resource = skir.ResourceId(value: "resource:test");
 final _knownLinkItem = skir.ItemId(value: "link:known");
 final _unfinishedLinkItem = skir.ItemId(value: "link:unfinished");
-final _emptyRecord = skir.AuthoringRecord(
-  configuration: skir.TypeSelection.unknown,
-  fields: const [],
-);
 final _reference = skir.BindingRef(
   bindingId: _bindingId,
   path: skir.ValuePath(segments: const []),
@@ -2203,13 +2246,33 @@ final _polymorphicCatalog = CheckedEditorCatalog(
           id: _iconifyDefinition,
           parameters: const [],
           representation: skir.RepresentationTemplate.createRecord(
-            fields: const [],
+            fields: [
+              skir.FieldDeclaration(
+                owner: skir.FieldOwner(
+                  definition: _iconifyDefinition,
+                  name: "value",
+                ),
+                type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+                overrides: const [],
+                hasConstructorDefault: false,
+              ),
+            ],
             abstract_: false,
           ),
           parents: const [],
         ),
         status: skir.DeclarationStatus.ready,
-        effectiveFields: const [],
+        effectiveFields: [
+          skir.EffectiveFieldTemplate(
+            key: "value",
+            owner: skir.FieldOwner(
+              definition: _iconifyDefinition,
+              name: "value",
+            ),
+            type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+            rules: const [],
+          ),
+        ],
         ancestorTemplates: const [],
       ),
     ],

@@ -95,8 +95,9 @@ Widget _story({
         placement: const GraphPlacement(x: 0, y: 0, width: 4, height: 1),
       ),
   ];
-  return FakeApp(
-    overrides: tagsProviderOverrides(tags: visible),
+  return AuthoringFixtureApp(
+    createDocument: () => fixtureAuthoringDocument(tags: visible),
+    scenario: Object.hashAll(visible),
     child: Directionality(
       textDirection: textDirection,
       child: Center(

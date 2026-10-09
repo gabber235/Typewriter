@@ -1,9 +1,8 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
-import "package:typewriter_panel/typewriter_panel.dart";
+part of "authoring_workspace.dart";
 
-final class AuthoredDraft {
-  AuthoredDraft({
+/// A private operation branch. Only the workspace can publish its changes.
+final class AuthoringEdit implements PortableAuthoringEdit {
+  AuthoringEdit({
     required this.generation,
     required Iterable<skir.AuthoringResource> resources,
     required Iterable<skir.LinkProjection> links,
@@ -11,46 +10,65 @@ final class AuthoredDraft {
   }) : _resources = {
          for (final resource in resources) resource.id: resource.content,
        },
+       _definitions = {
+         for (final resource in resources) resource.id: resource.definition,
+       },
        _links = List.of(links),
        _baselineResources = {
          for (final resource in resources) resource.id: resource.content,
        },
        _baselineLinks = List.of(links);
+  factory AuthoringEdit.fromDocument(AuthoringDocument document) =>
+      AuthoringEdit(
+          generation: document.generation,
+          resources: document.entries.values,
+          links: document.links,
+          catalog: document.catalog,
+        )
+        .._initializationFindings.addAll(document.initializationFindings)
+        .._inheritedFindings = document.initializationFindings.length;
 
-  factory AuthoredDraft.fromState(
+  factory AuthoringEdit.fromState(
     skir.AuthoringState source, {
     CheckedEditorCatalog? catalog,
-  }) => AuthoredDraft(
+  }) => AuthoringEdit(
     generation: source.generation,
     resources: source.resources,
     links: source.links,
     catalog: catalog,
   );
+  @override
   final skir.CatalogGeneration generation;
   final CheckedEditorCatalog? catalog;
   final Map<skir.ResourceId, skir.AuthoringRecord> _resources;
+  final Map<skir.ResourceId, skir.ResourceDefinitionId> _definitions;
   final List<skir.LinkProjection> _links;
   final Map<skir.ResourceId, skir.AuthoringRecord> _baselineResources;
   final List<skir.LinkProjection> _baselineLinks;
   final Map<Object, skir.EditExpectation> _observed = {};
   final List<skir.EditIntent> _intents = [];
   final List<skir.InitializationDiagnostic> _initializationFindings = [];
+  int _inheritedFindings = 0;
   final Map<skir.ValueLocation, _MaterializationOperation>
   _materializationOperations = {};
 
   List<skir.EditIntent> get intents => List.unmodifiable(_intents);
 
+  @override
   Map<skir.ResourceId, skir.AuthoringRecord> get resources =>
       Map.unmodifiable(_resources);
 
+  @override
   List<skir.LinkProjection> get links => List.unmodifiable(_links);
 
   List<skir.EditExpectation> get expectations =>
       List.unmodifiable(_observed.values);
 
+  @override
   List<skir.InitializationDiagnostic> get initializationFindings =>
       List.unmodifiable(_initializationFindings);
 
+  @override
   void observeExpressionReads(Iterable<PortableExpressionRead> reads) {
     for (final read in reads) {
       final location = read.location;
@@ -60,9 +78,10 @@ final class AuthoredDraft {
     }
   }
 
+  @override
   bool stageExpressionEdit(
     Iterable<PortableExpressionRead> reads,
-    bool Function(AuthoredDraft draft) edit,
+    bool Function(PortableAuthoringEdit edit) edit,
   ) {
     final branch = fork();
     if (!edit(branch)) return false;
@@ -71,16 +90,14 @@ final class AuthoredDraft {
     return true;
   }
 
-  AuthoredDraft fork() {
-    final branch = AuthoredDraft(
+  AuthoringEdit fork() {
+    final branch = AuthoringEdit(
       generation: generation,
       resources: [
         for (final entry in _resources.entries)
           skir.AuthoringResource(
             id: entry.key,
-            definition:
-                catalog?.resourceDefinition(entry.value.configuration)?.id ??
-                skir.ResourceDefinitionId.defaultInstance,
+            definition: _definitions[entry.key]!,
             content: entry.value,
           ),
       ],
@@ -96,82 +113,95 @@ final class AuthoredDraft {
     branch._observed.addAll(_observed);
     branch._intents.addAll(_intents);
     branch._initializationFindings.addAll(_initializationFindings);
+    branch._inheritedFindings = _inheritedFindings;
     branch._materializationOperations.addAll(_materializationOperations);
+    branch._failure = _failure;
     return branch;
   }
 
-  AuthoredDraftRebase rebaseOnto(AuthoredDraft baseline) {
-    if (generation != baseline.generation) {
-      return const AuthoredDraftRebaseFailed("The editor catalog changed");
-    }
-    for (final expected in _observed.values) {
-      final actual = baseline._actual(expected);
-      if (!_sameExpectation(actual, expected)) {
-        return AuthoredDraftRebaseConflict(expected: expected, actual: actual);
-      }
-    }
-    final next = baseline.fork();
-    for (final intent in _intents) {
-      final failure = next._replay(intent);
-      if (failure != null) return AuthoredDraftRebaseFailed(failure);
-    }
-    for (final expected in _observed.values) {
-      next._observed[_factKey(expected)] = expected;
-    }
-    return AuthoredDraftRebased(next);
+  Future<PortablePathResult<skir.AuthoringRecord>> setWithInitialization(
+    skir.ValueLocation location,
+    skir.DataValue value,
+    Future<skir.PreparedCreation> Function(skir.InitializationRequest request)
+    prepare,
+  ) async =>
+      _recordResult(await _setWithInitialization(location, value, prepare));
+
+  @override
+  int get operationCount => _intents.length;
+  String? _failure;
+  void requireValid() {
+    if (_failure case final message?) throw StateError(message);
   }
 
-  AuthoredDraftRebase rebaseTailOnto(
-    AuthoredDraft baseline, {
-    required int acceptedIntentCount,
-  }) {
-    if (generation != baseline.generation) {
-      return const AuthoredDraftRebaseFailed("The editor catalog changed");
+  PortablePathResult<skir.AuthoringRecord> _recordResult(
+    PortablePathResult<skir.AuthoringRecord> result,
+  ) {
+    if (result case PortablePathUnavailable(:final message)) {
+      _failure ??= message;
     }
-    if (acceptedIntentCount < 0 || acceptedIntentCount > _intents.length) {
-      return const AuthoredDraftRebaseFailed(
-        "The accepted edit prefix no longer matches the local draft",
-      );
-    }
-    final accepted = AuthoredDraft(
-      generation: generation,
-      resources: [
-        for (final entry in _baselineResources.entries)
-          skir.AuthoringResource(
-            id: entry.key,
-            definition: skir.ResourceDefinitionId.defaultInstance,
-            content: entry.value,
-          ),
-      ],
-      links: _baselineLinks,
-      catalog: catalog,
-    );
-    for (final intent in _intents.take(acceptedIntentCount)) {
-      final failure = accepted._replay(intent);
-      if (failure != null) return AuthoredDraftRebaseFailed(failure);
-    }
-    for (final expected in _observed.values) {
-      final afterSave = accepted._actual(expected, original: false);
-      final actual = baseline._actual(expected);
-      if (!_sameExpectation(actual, afterSave)) {
-        return AuthoredDraftRebaseConflict(expected: afterSave, actual: actual);
-      }
-    }
-    final next = baseline.fork();
-    for (final intent in _intents.skip(acceptedIntentCount)) {
-      final failure = next._replay(intent);
-      if (failure != null) return AuthoredDraftRebaseFailed(failure);
-    }
-    for (final expected in _observed.values) {
-      next._observed[_factKey(expected)] = accepted._actual(
-        expected,
-        original: false,
-      );
-    }
-    next._initializationFindings.addAll(_initializationFindings);
-    next._materializationOperations.addAll(_materializationOperations);
-    return AuthoredDraftRebased(next);
+    return result;
   }
+
+  AuthoringDocument toDocument({int revision = 0}) => AuthoringDocument(
+    catalog: catalog ?? (throw StateError("The editor catalog is unavailable")),
+    entries: {
+      for (final entry in _resources.entries)
+        entry.key: skir.AuthoringResource(
+          id: entry.key,
+          definition: _definitions[entry.key]!,
+          content: entry.value,
+        ),
+    },
+    links: List.unmodifiable(_links),
+    revision: revision,
+    initializationFindings: List.unmodifiable(_initializationFindings),
+  );
+  @override
+  PortablePathResult<skir.AuthoringRecord> set(
+    skir.ValueLocation location,
+    skir.DataValue value,
+  ) => _recordResult(_set(location, value));
+  PortablePathResult<skir.AuthoringRecord> setPayload(
+    skir.ValueLocation location,
+    skir.DataValue payload,
+  ) => _recordResult(_setPayload(location, payload));
+  @override
+  PortablePathResult<skir.AuthoringRecord> insert(
+    skir.ValueLocation location,
+    skir.ItemId? after,
+    skir.ListItem item,
+  ) => _recordResult(_insert(location, after, item));
+  @override
+  PortablePathResult<skir.AuthoringRecord> insertPrepared(
+    skir.ValueLocation location,
+    skir.ItemId? after,
+    skir.ItemId item,
+    skir.InitializationRequest request,
+    skir.PreparedCreation prepared,
+  ) => _recordResult(_insertPrepared(location, after, item, request, prepared));
+  @override
+  PortablePathResult<skir.AuthoringRecord> remove(
+    skir.ValueLocation location,
+    skir.ItemId item,
+  ) => _recordResult(_remove(location, item));
+  @override
+  PortablePathResult<skir.AuthoringRecord> move(
+    skir.ValueLocation location,
+    skir.ItemId item,
+    skir.ItemId? after,
+  ) => _recordResult(_move(location, item, after));
+  @override
+  PortablePathResult<skir.AuthoringRecord> replaceMap(
+    skir.ValueLocation location,
+    Iterable<skir.MapRow> rows,
+  ) => _recordResult(_replaceMap(location, rows));
+  @override
+  PortablePathResult<skir.AuthoringRecord> applyPreparedRecord(
+    skir.ValueLocation location,
+    skir.InitializationRequest request,
+    skir.PreparedCreation prepared,
+  ) => _recordResult(_applyPreparedRecord(location, request, prepared));
 
   skir.PreparedEdit prepare() => skir.PreparedEdit(
     catalog: generation,
@@ -179,11 +209,18 @@ final class AuthoredDraft {
     intents: intents,
   );
 
+  @override
   skir.AuthoringRecord? resource(skir.ResourceId id) => _resources[id];
 
-  PortablePathResult<skir.DataValue> read(skir.ValueLocation location) {
+  @override
+  PortablePathResult<skir.DataValue> expect(skir.ValueLocation location) {
     _observePath(location);
     _observe(_value(at: location));
+    return read(location);
+  }
+
+  @override
+  PortablePathResult<skir.DataValue> read(skir.ValueLocation location) {
     final record = _resources[location.resource];
     if (record == null) {
       return const PortablePathUnavailable("The resource is absent");
@@ -191,7 +228,7 @@ final class AuthoredDraft {
     return record.readAt(location.path);
   }
 
-  PortablePathResult<skir.AuthoringRecord> set(
+  PortablePathResult<skir.AuthoringRecord> _set(
     skir.ValueLocation location,
     skir.DataValue value,
   ) {
@@ -200,6 +237,10 @@ final class AuthoredDraft {
       return const PortablePathUnavailable("The resource is absent");
     }
     final current = record.readAt(location.path);
+    if (current is PortablePathValue<skir.DataValue> &&
+        _sameExpectedValue(current.value, value)) {
+      return PortablePathValue(record);
+    }
     final currentContainsLink = switch (current) {
       PortablePathValue(value: final currentValue) => _containsLink(
         currentValue,
@@ -240,15 +281,15 @@ final class AuthoredDraft {
     return rollback(updated);
   }
 
-  Future<PortablePathResult<skir.AuthoringRecord>> setWithInitialization(
+  Future<PortablePathResult<skir.AuthoringRecord>> _setWithInitialization(
     skir.ValueLocation location,
     skir.DataValue value,
     Future<skir.PreparedCreation> Function(skir.InitializationRequest request)
     prepare,
   ) async {
-    final baseline = _DraftState.capture(this);
+    final baseline = _EditState.capture(this);
     final working = fork();
-    var result = working.set(location, value);
+    var result = working._set(location, value);
     while (result is PortablePathUnavailable<skir.AuthoringRecord> &&
         result.message == "The parent field needs prepared initialization") {
       final plan = working._parentInitialization(location);
@@ -261,7 +302,7 @@ final class AuthoredDraft {
       final containing = await prepare(plan.request);
       if (!baseline.matches(this)) {
         return const PortablePathUnavailable(
-          "The draft changed while the parent field was being initialized",
+          "The operation changed while the parent field was being initialized",
         );
       }
       if (!working._preparedRecordIsUsable(containing, plan.request)) {
@@ -285,7 +326,7 @@ final class AuthoredDraft {
         final child = await prepare(plan.childRequest);
         if (!baseline.matches(this)) {
           return const PortablePathUnavailable(
-            "The draft changed while the parent field was being initialized",
+            "The operation changed while the parent field was being initialized",
           );
         }
         if (!working._preparedRecordIsUsable(child, plan.childRequest)) {
@@ -320,15 +361,15 @@ final class AuthoredDraft {
           "The prepared parent contains relations that need explicit choices",
         );
       }
-      final staged = working.set(plan.location, parent);
+      final staged = working._set(plan.location, parent);
       if (staged case PortablePathUnavailable()) return staged;
       working._materializationOperations.remove(plan.location);
-      result = working.set(location, value);
+      result = working._set(location, value);
     }
     if (result case PortablePathValue()) {
       if (!baseline.matches(this)) {
         return const PortablePathUnavailable(
-          "The draft changed while the parent field was being initialized",
+          "The operation changed while the parent field was being initialized",
         );
       }
       _adopt(working);
@@ -352,7 +393,11 @@ final class AuthoredDraft {
         actual.toSet().containsAll(expected);
   }
 
-  void _adopt(AuthoredDraft source) {
+  void _adopt(AuthoringEdit source) {
+    _failure ??= source._failure;
+    _definitions
+      ..clear()
+      ..addAll(source._definitions);
     _resources
       ..clear()
       ..addAll(source._resources);
@@ -373,13 +418,13 @@ final class AuthoredDraft {
       ..addAll(source._materializationOperations);
   }
 
-  PortablePathResult<skir.AuthoringRecord> setPayload(
+  PortablePathResult<skir.AuthoringRecord> _setPayload(
     skir.ValueLocation location,
     skir.DataValue payload,
   ) {
-    final current = read(location);
+    final current = expect(location);
     return switch (current) {
-      PortablePathValue(:final value) => set(
+      PortablePathValue(:final value) => _set(
         location,
         value.withAuthoredPayload(payload),
       ),
@@ -392,14 +437,16 @@ final class AuthoredDraft {
   PortablePathResult<skir.AuthoringRecord> clear(
     skir.ValueLocation location, {
     skir.TypeUse? expected,
-  }) => set(
-    location,
-    expected is skir.TypeUse_nullableWrapper
-        ? skir.DataValue.null_
-        : skir.DataValue.unfilled,
+  }) => _recordResult(
+    _set(
+      location,
+      expected is skir.TypeUse_nullableWrapper
+          ? skir.DataValue.null_
+          : skir.DataValue.unfilled,
+    ),
   );
 
-  PortablePathResult<skir.AuthoringRecord> insert(
+  PortablePathResult<skir.AuthoringRecord> _insert(
     skir.ValueLocation location,
     skir.ItemId? after,
     skir.ListItem item,
@@ -415,7 +462,7 @@ final class AuthoredDraft {
     }, skir.EditIntent.createInsert(at: location, after: after, item: item));
   }
 
-  PortablePathResult<skir.AuthoringRecord> insertPrepared(
+  PortablePathResult<skir.AuthoringRecord> _insertPrepared(
     skir.ValueLocation location,
     skir.ItemId? after,
     skir.ItemId item,
@@ -437,7 +484,7 @@ final class AuthoredDraft {
       );
     }
     final branch = fork();
-    final result = branch.insert(
+    final result = branch._insert(
       location,
       after,
       skir.ListItem(
@@ -465,10 +512,11 @@ final class AuthoredDraft {
     return result;
   }
 
+  @override
   skir.DataValue defaultValue(skir.TypeUse? type) =>
       _defaultForType(type, const {});
 
-  PortablePathResult<skir.AuthoringRecord> remove(
+  PortablePathResult<skir.AuthoringRecord> _remove(
     skir.ValueLocation location,
     skir.ItemId item,
   ) {
@@ -479,7 +527,7 @@ final class AuthoredDraft {
     }, skir.EditIntent.createRemove(at: location, item: item));
   }
 
-  PortablePathResult<skir.AuthoringRecord> move(
+  PortablePathResult<skir.AuthoringRecord> _move(
     skir.ValueLocation location,
     skir.ItemId item,
     skir.ItemId? after,
@@ -501,15 +549,22 @@ final class AuthoredDraft {
     }, skir.EditIntent.createMove(at: location, item: item, after: after));
   }
 
-  PortablePathResult<skir.AuthoringRecord> replaceMap(
+  PortablePathResult<skir.AuthoringRecord> _replaceMap(
     skir.ValueLocation location,
     Iterable<skir.MapRow> rows,
   ) {
     final previous = Map<Object, skir.EditExpectation>.of(_observed);
     _observeCollection(location);
-    final result = setPayload(
+    final observed = expect(location);
+    if (observed is! PortablePathValue<skir.DataValue>) {
+      return PortablePathUnavailable(
+        (observed as PortablePathUnavailable<skir.DataValue>).message,
+      );
+    }
+    final current = _collectionValue(location, observed.value);
+    final result = _set(
       location,
-      skir.DataValue.createMapValue(rows: rows),
+      current.withAuthoredPayload(skir.DataValue.createMapValue(rows: rows)),
     );
     if (result case PortablePathUnavailable()) {
       _observed
@@ -519,7 +574,7 @@ final class AuthoredDraft {
     return result;
   }
 
-  PortablePathResult<skir.AuthoringRecord> applyPreparedRecord(
+  PortablePathResult<skir.AuthoringRecord> _applyPreparedRecord(
     skir.ValueLocation location,
     skir.InitializationRequest request,
     skir.PreparedCreation prepared,
@@ -539,7 +594,7 @@ final class AuthoredDraft {
       );
     }
     final branch = fork();
-    final result = branch.set(
+    final result = branch._set(
       location,
       skir.DataValue.createNamed(
         actualType: actual,
@@ -555,14 +610,29 @@ final class AuthoredDraft {
     return result;
   }
 
-  void create(skir.ResourceId id, skir.AuthoringRecord record) {
+  void create(
+    skir.ResourceId id,
+    skir.AuthoringRecord record, {
+    skir.ResourceDefinitionId? definition,
+  }) {
+    if (_resources.containsKey(id)) {
+      throw StateError("The resource already exists");
+    }
+    _definitions[id] =
+        definition ??
+        catalog?.resourceDefinition(record.configuration)?.id ??
+        skir.ResourceDefinitionId.defaultInstance;
     _observe(_exists(resource: id));
     _resources[id] = record;
     _intents.add(skir.EditIntent.createCreateResource(id: id, record: record));
   }
 
-  void createPrepared(skir.ResourceId id, skir.PreparedCreation prepared) {
-    create(id, prepared.record);
+  void createPrepared(
+    skir.ResourceId id,
+    skir.PreparedCreation prepared, {
+    skir.ResourceDefinitionId? definition,
+  }) {
+    create(id, prepared.record, definition: definition);
     _initializationFindings.addAll(
       _locatedInitializationFindings(
         skir.ValuePath(segments: const []),
@@ -571,21 +641,74 @@ final class AuthoredDraft {
     );
   }
 
+  @override
   void delete(skir.ResourceId id) {
-    _observe(_exists(resource: id));
-    _observe(_configuration(at: _root(id)));
-    _observeIncoming(id, null);
-    _observeDeletionRelations(id);
-    _resources.remove(id);
-    _links.removeWhere((link) => link.first == id || link.second == id);
+    if (!_resources.containsKey(id)) throw StateError("The resource is absent");
+    final contracts = {
+      for (final relation
+          in catalog?.snapshot.relations ?? <skir.RelationContract>[])
+        relation.id: relation,
+    };
+    final deleting = <skir.ResourceId>{id};
+    final pending = <skir.ResourceId>[id];
+    while (pending.isNotEmpty) {
+      final current = pending.removeLast();
+      for (final link in _links.where(
+        (link) => link.first == current || link.second == current,
+      )) {
+        final contract = contracts[link.contract];
+        if (contract == null) {
+          throw StateError("The relation contract is unavailable");
+        }
+        final endpoint = link.first == current
+            ? contract.first
+            : contract.second;
+        if (endpoint.onDelete == skir.RelationDeletePolicy.cascade) {
+          final related = link.first == current ? link.second : link.first;
+          if (deleting.add(related)) pending.add(related);
+        }
+      }
+    }
+    _observeDeletionRelations(deleting);
+    for (final link in _links.where(
+      (link) => deleting.contains(link.first) != deleting.contains(link.second),
+    )) {
+      final contract = contracts[link.contract]!;
+      final firstDeleted = deleting.contains(link.first);
+      final endpoint = firstDeleted ? contract.first : contract.second;
+      if (endpoint.onDelete != skir.RelationDeletePolicy.clear) {
+        throw StateError("A relation prevents deletion of this resource");
+      }
+      final survivor = firstDeleted ? link.second : link.first;
+      final path = firstDeleted ? link.secondLocation : link.firstLocation;
+      if (path != null) {
+        _stageLinkClear(skir.ValueLocation(resource: survivor, path: path));
+      }
+    }
+    for (final resource in deleting) {
+      _resources.remove(resource);
+      _definitions.remove(resource);
+    }
+    _links.removeWhere(
+      (link) => deleting.contains(link.first) || deleting.contains(link.second),
+    );
     _intents.add(skir.EditIntent.createDeleteResource(id: id));
   }
 
+  @override
   void connect(
     skir.LinkOccurrence source,
     skir.ResourceId target, {
     skir.CounterpartChoice? counterpart,
   }) {
+    if (!_resources.containsKey(source.source) ||
+        !_resources.containsKey(target) ||
+        source.id.location.resource != source.source) {
+      throw StateError("The relation resources are unavailable");
+    }
+    if (counterpart is skir.CounterpartChoice_unknown) {
+      throw StateError("The counterpart choice is unavailable");
+    }
     _observeRelationPath(source.id.location);
     _observe(_exists(resource: target));
     _observe(_configuration(at: _root(target)));
@@ -639,7 +762,7 @@ final class AuthoredDraft {
       PortablePathUnavailable() => null,
     };
     if (items == null) return;
-    final result = insert(
+    final result = _insert(
       skir.ValueLocation(resource: location.resource, path: containingPath),
       items.lastOrNull?.id,
       skir.ListItem(id: item, value: skir.DataValue.unfilled),
@@ -649,6 +772,7 @@ final class AuthoredDraft {
     }
   }
 
+  @override
   void disconnect(skir.LinkOccurrence occurrence) {
     _disconnect(
       occurrence.id,
@@ -720,7 +844,7 @@ final class AuthoredDraft {
               candidate.second.id == source.id.endpoint,
         )
         .firstOrNull;
-    if (relation == null) return;
+    if (relation == null) throw StateError("The relation is unavailable");
     final oppositeEndpoint = relation.first.id == source.id.endpoint
         ? relation.second.id
         : relation.first.id;
@@ -737,6 +861,19 @@ final class AuthoredDraft {
       ),
       _ => null,
     };
+    if (counterpart is skir.CounterpartChoice_newWrapper &&
+        newOpposite == null) {
+      throw StateError("The new counterpart has no valid relation occurrence");
+    }
+    if (oppositeOccurrence != null &&
+        (oppositeOccurrence.source != target ||
+            oppositeOccurrence.id.location.resource != target ||
+            oppositeOccurrence.id.endpoint != oppositeEndpoint ||
+            !_resources.containsKey(target))) {
+      throw StateError(
+        "The counterpart does not belong to the target endpoint",
+      );
+    }
     final automaticOpposite = counterpart == null
         ? _automaticScalarCounterpart(target, oppositeEndpoint)
         : null;
@@ -849,6 +986,7 @@ final class AuthoredDraft {
     required skir.EndpointId oppositeEndpoint,
     required skir.NewCounterpartChoice choice,
   }) {
+    if (choice.containing.resource != target) return null;
     final targetRecord = _resources[target];
     if (targetRecord == null) return null;
     final actual = switch (choice.prepared.record.configuration) {
@@ -935,27 +1073,24 @@ final class AuthoredDraft {
     skir.LinkTarget target,
   ) {
     final record = _resources[location.resource];
-    if (record == null) return;
+    if (record == null) throw StateError("The resource is absent");
     final current = record.readAt(location.path);
     final payload = skir.DataValue.createLink(
       endpoint: endpoint,
       target: target,
     );
+    final actual = _concreteNamed(
+      catalog?.valueTypeAt(record.configuration, location.path),
+    );
     final replacement = switch (current) {
-      PortablePathValue(value: final skir.DataValue value)
-          when value is skir.DataValue_namedWrapper =>
+      PortablePathValue(value: final skir.DataValue_namedWrapper value) =>
         value.withAuthoredPayload(payload),
-      _ => switch (_concreteNamed(
-        catalog?.valueTypeAt(record.configuration, location.path),
-      )) {
-        final actual? => skir.DataValue.createNamed(
-          actualType: actual,
-          payload: payload,
-        ),
-        null => null,
-      },
+      _ when actual != null => skir.DataValue.createNamed(
+        actualType: actual,
+        payload: payload,
+      ),
+      _ => throw StateError("The relation location has no usable link type"),
     };
-    if (replacement == null) return;
     final updated = record.replaceAt(location.path, replacement);
     if (updated case PortablePathValue(value: final staged)) {
       _resources[location.resource] = staged;
@@ -971,65 +1106,68 @@ final class AuthoredDraft {
   ) {
     final segments = location.path.segments.toList(growable: false);
     if (segments.isEmpty || segments.last is! skir.PathSegment_itemWrapper) {
-      return;
+      throw StateError("The link location is unavailable");
     }
     final item = (segments.last as skir.PathSegment_itemWrapper).value.id;
     final parent = skir.ValuePath(segments: segments.take(segments.length - 1));
-    final current = record.readAt(parent);
-    if (current case PortablePathValue(value: final value)) {
-      final containing = skir.ValueLocation(
-        resource: location.resource,
-        path: parent,
-      );
-      final updated = _replaceCollectionItems(
-        _collectionValue(containing, value),
-        (items) {
-          if (items.any((candidate) => candidate.id == item)) return null;
-          return [...items, skir.ListItem(id: item, value: replacement)];
-        },
-      );
-      if (updated == null) return;
-      final staged = record.replaceAt(parent, updated);
-      if (staged case PortablePathValue(value: final next)) {
-        _resources[location.resource] = next;
-      }
+    final parentLocation = skir.ValueLocation(
+      resource: location.resource,
+      path: parent,
+    );
+    final value = record.readAt(parent);
+    if (value is! PortablePathValue<skir.DataValue>) {
+      throw StateError("The containing collection is unavailable");
     }
+    final collection = _replaceCollectionItems(
+      _collectionValue(parentLocation, value.value),
+      (items) => items.any((candidate) => candidate.id == item)
+          ? null
+          : [...items, skir.ListItem(id: item, value: replacement)],
+    );
+    if (collection == null) {
+      throw StateError("The link item cannot be inserted");
+    }
+    final appended = record.replaceAt(parent, collection);
+    if (appended is! PortablePathValue<skir.AuthoringRecord>) {
+      throw StateError("The containing collection is unavailable");
+    }
+    _resources[location.resource] = appended.value;
   }
 
   void _stageLinkClear(skir.ValueLocation location) {
     final record = _resources[location.resource];
-    if (record == null) return;
+    if (record == null) throw StateError("The resource is absent");
     final segments = location.path.segments.toList(growable: false);
-    if (segments.isNotEmpty && segments.last is skir.PathSegment_itemWrapper) {
-      final item = (segments.last as skir.PathSegment_itemWrapper).value.id;
-      final parent = skir.ValuePath(
-        segments: segments.take(segments.length - 1),
-      );
-      final current = record.readAt(parent);
-      if (current case PortablePathValue(value: final value)) {
-        final updated = _replaceCollectionItems(
-          value,
-          (items) => items
-              .where((candidate) => candidate.id != item)
-              .toList(growable: false),
-        );
-        if (updated != null) {
-          final staged = record.replaceAt(parent, updated);
-          if (staged case PortablePathValue(value: final next)) {
-            _resources[location.resource] = next;
-          }
-        }
+    final item = segments.lastOrNull;
+    final path = item is skir.PathSegment_itemWrapper
+        ? skir.ValuePath(segments: segments.take(segments.length - 1))
+        : location.path;
+    late final skir.DataValue replacement;
+    if (item is skir.PathSegment_itemWrapper) {
+      final current = record.readAt(path);
+      if (current is! PortablePathValue<skir.DataValue>) {
+        throw StateError("The containing collection is unavailable");
       }
-      return;
+      final collection = _replaceCollectionItems(
+        current.value,
+        (items) =>
+            items.where((candidate) => candidate.id != item.value.id).toList(),
+      );
+      if (collection == null) {
+        throw StateError("The containing value is not a collection");
+      }
+      replacement = collection;
+    } else {
+      final expected = catalog?.valueTypeAt(record.configuration, path);
+      replacement = expected is skir.TypeUse_nullableWrapper
+          ? skir.DataValue.null_
+          : skir.DataValue.unfilled;
     }
-    final expected = catalog?.valueTypeAt(record.configuration, location.path);
-    final replacement = expected is skir.TypeUse_nullableWrapper
-        ? skir.DataValue.null_
-        : skir.DataValue.unfilled;
-    final updated = record.replaceAt(location.path, replacement);
-    if (updated case PortablePathValue(value: final staged)) {
-      _resources[location.resource] = staged;
+    final updated = record.replaceAt(path, replacement);
+    if (updated is! PortablePathValue<skir.AuthoringRecord>) {
+      throw StateError("The link location is unavailable");
     }
+    _resources[location.resource] = updated.value;
   }
 
   bool _projectionContainsOccurrence(
@@ -1049,10 +1187,29 @@ final class AuthoredDraft {
   }
 
   void retag(skir.ValueLocation location, skir.NamedTypeUse type) {
+    if (location.path.segments.isEmpty) {
+      throw StateError("Resource configuration requires a type preview");
+    }
+    final record = _resources[location.resource];
+    if (record == null) throw StateError("The resource is absent");
+    final current = record.readAt(location.path);
+    if (current is! PortablePathValue<skir.DataValue> ||
+        current.value is! skir.DataValue_namedWrapper) {
+      throw StateError("Only a named value can be retagged");
+    }
+    final named = (current.value as skir.DataValue_namedWrapper).value;
+    final updated = record.replaceAt(
+      location.path,
+      skir.DataValue.createNamed(actualType: type, payload: named.payload),
+    );
+    if (updated is! PortablePathValue<skir.AuthoringRecord>) {
+      throw StateError("The named value is unavailable");
+    }
     _observe(_value(at: location));
     _observePath(location);
     _observe(_configuration(at: location));
     _observeIncoming(location.resource, null);
+    _resources[location.resource] = updated.value;
     _intents.add(skir.EditIntent.createRetag(at: location, type: type));
   }
 
@@ -1061,7 +1218,11 @@ final class AuthoredDraft {
     skir.TypeSelection configuration,
   ) {
     final current = _resources[resource];
-    if (current == null) return;
+    if (current == null) throw StateError("The resource is absent");
+    if (_configurationRoot(current.configuration) !=
+        _configurationRoot(configuration)) {
+      throw StateError("Resource configuration must retain its root type");
+    }
     _observe(skir.EditExpectation.createResource(id: resource, expected: null));
     _observe(_exists(resource: resource));
     _observe(_configuration(at: _root(resource)));
@@ -1086,13 +1247,13 @@ final class AuthoredDraft {
       case skir.EditIntent_deleteResourceWrapper(:final value):
         delete(value.id);
       case skir.EditIntent_setValueWrapper(:final value):
-        result = set(value.at, value.value);
+        result = _set(value.at, value.value);
       case skir.EditIntent_insertWrapper(:final value):
-        result = insert(value.at, value.after, value.item);
+        result = _insert(value.at, value.after, value.item);
       case skir.EditIntent_removeWrapper(:final value):
-        result = remove(value.at, value.item);
+        result = _remove(value.at, value.item);
       case skir.EditIntent_moveWrapper(:final value):
-        result = move(value.at, value.item, value.after);
+        result = _move(value.at, value.item, value.after);
       case skir.EditIntent_connectRelationWrapper(:final value):
         connect(value.source, value.target, counterpart: value.counterpart);
       case skir.EditIntent_disconnectRelationWrapper(:final value):
@@ -1102,7 +1263,7 @@ final class AuthoredDraft {
       case skir.EditIntent_configureResourceWrapper(:final value):
         configureResource(value.resource, value.configuration);
       case skir.EditIntent_unknown():
-        return "The draft contains an unknown edit";
+        return "The operation contains an unknown edit";
     }
     return switch (result) {
       PortablePathUnavailable(:final message) => message,
@@ -1172,32 +1333,7 @@ final class AuthoredDraft {
     }
   }
 
-  void _observeDeletionRelations(skir.ResourceId requested) {
-    final deleting = <skir.ResourceId>{requested};
-    final pending = <skir.ResourceId>[requested];
-    final contracts = <skir.RelationId, skir.RelationContract>{};
-    if (catalog case final checked?) {
-      for (final relation in checked.snapshot.relations) {
-        contracts[relation.id] = relation;
-      }
-    }
-    while (pending.isNotEmpty) {
-      final current = pending.removeLast();
-      for (final link in _links.where(
-        (link) => link.first == current || link.second == current,
-      )) {
-        final contract = contracts[link.contract];
-        if (contract == null) continue;
-        final endpoint = link.first == current
-            ? contract.first
-            : contract.second;
-        if (endpoint.onDelete != skir.RelationDeletePolicy.cascade) {
-          continue;
-        }
-        final related = link.first == current ? link.second : link.first;
-        if (deleting.add(related)) pending.add(related);
-      }
-    }
+  void _observeDeletionRelations(Set<skir.ResourceId> deleting) {
     for (final resource in deleting) {
       _observe(
         skir.EditExpectation.createResource(id: resource, expected: null),
@@ -1582,101 +1718,18 @@ final class AuthoredDraft {
   skir.DataValue _defaultForNamed(
     skir.NamedTypeUse actual,
     Set<skir.NamedTypeUse> visiting,
-  ) {
-    if (visiting.contains(actual)) return skir.DataValue.unfilled;
-    final checked = catalog!;
-    final published = checked.published(actual.definition);
-    if (published == null) return skir.DataValue.unfilled;
-    final selection = skir.TypeSelection.wrapComplete(actual);
-    final descriptor = checked.initialization(actual.definition);
-    final payload = switch (published.definition.representation) {
-      skir.RepresentationTemplate_scalarWrapper(:final value) => _scalarDefault(
-        value.kind,
-      ),
-      skir.RepresentationTemplate_sequenceWrapper(:final value) =>
-        value.kind == skir.CollectionKind.list
-            ? skir.DataValue.createListValue(items: const [])
-            : skir.DataValue.createSetValue(items: const []),
-      skir.RepresentationTemplate_mappingWrapper() =>
-        skir.DataValue.createMapValue(rows: const []),
-      skir.RepresentationTemplate_enumerationWrapper(:final value) =>
-        value.cases.firstOrNull == null
-            ? skir.DataValue.unfilled
-            : skir.DataValue.wrapEnumCase(value.cases.first.key),
-      skir.RepresentationTemplate_linkWrapper() => skir.DataValue.unfilled,
-      skir.RepresentationTemplate_recordWrapper(:final value) =>
-        value.abstract_
-            ? skir.DataValue.unfilled
-            : skir.DataValue.createRecord(
-                fields: [
-                  for (final field in checked.fields(selection))
-                    skir.FieldValue(
-                      name: field.template.key,
-                      value: _fieldDefault(
-                        field,
-                        descriptor: descriptor,
-                        visiting: {...visiting, actual},
-                      ),
-                    ),
-                ],
-              ),
-      skir.RepresentationTemplate_unknown() => skir.DataValue.unfilled,
-    };
-    if (payload == skir.DataValue.unfilled) return payload;
-    return skir.DataValue.createNamed(actualType: actual, payload: payload);
-  }
-
-  skir.DataValue _fieldDefault(
-    AppliedEditorField field, {
-    required skir.InitializationDescriptor? descriptor,
-    required Set<skir.NamedTypeUse> visiting,
-  }) {
-    final checked = catalog!;
-    final captured = descriptor?.captured
-        .where((candidate) => candidate.field == field.template.owner)
-        .firstOrNull
-        ?.value;
-    if (captured != null) return captured;
-    if (checked.hasConstructorDefault(field.template.owner)) {
-      return skir.DataValue.unfilled;
-    }
-    return _defaultForType(field.type, visiting);
-  }
-
+  ) => _AuthoringDefaults(catalog)._defaultForNamed(actual, visiting);
   skir.DataValue _defaultForType(
     skir.TypeUse? type,
     Set<skir.NamedTypeUse> visiting,
-  ) => switch (type) {
-    skir.TypeUse_nullableWrapper() => skir.DataValue.null_,
-    skir.TypeUse_scalarWrapper(:final value) => _scalarDefault(value),
-    skir.TypeUse_namedWrapper(:final value) => _defaultForNamed(
-      value,
-      visiting,
-    ),
-    _ => skir.DataValue.unfilled,
-  };
-
-  skir.DataValue _scalarDefault(skir.ScalarKind kind) => switch (kind) {
-    skir.ScalarKind.unit => skir.DataValue.unit,
-    skir.ScalarKind.boolean => skir.DataValue.wrapBoolean(false),
-    skir.ScalarKind.text => skir.DataValue.wrapStringValue(""),
-    skir.ScalarKind_integerWrapper() => skir.DataValue.wrapInteger("0"),
-    skir.ScalarKind_floatWrapper() => skir.DataValue.wrapFloat(0),
-    skir.ScalarKind.decimal => skir.DataValue.wrapDecimal("0"),
-    skir.ScalarKind.bytes => skir.DataValue.wrapBytes(skir.ByteString.empty),
-    skir.ScalarKind.duration => skir.DataValue.createDuration(
-      value: skir.Duration(milliseconds: 0),
-    ),
-    skir.ScalarKind.timestamp => skir.DataValue.unfilled,
-    _ => skir.DataValue.unfilled,
-  };
+  ) => _AuthoringDefaults(catalog)._defaultForType(type, visiting);
 
   PortablePathResult<skir.AuthoringRecord> _updateCollection(
     skir.ValueLocation location,
     List<skir.ListItem>? Function(List<skir.ListItem> items) update,
     skir.EditIntent intent,
   ) {
-    final current = read(location);
+    final current = expect(location);
     if (current case PortablePathUnavailable(:final message)) {
       return PortablePathUnavailable(message);
     }
@@ -1713,7 +1766,10 @@ final class AuthoredDraft {
       value: skir.DataValue.createRecord(fields: record.fields),
     );
     final initialized = _defaultForType(expected, const {});
-    return initialized.authoredItems == null ? current : initialized;
+    return initialized.authoredItems != null ||
+            initialized.authoredPayload is skir.DataValue_mapValueWrapper
+        ? initialized
+        : current;
   }
 }
 
@@ -1736,32 +1792,6 @@ Iterable<skir.InitializationDiagnostic> _locatedInitializationFindings(
           : skir.ValuePath(segments: segments),
     );
   }
-}
-
-sealed class AuthoredDraftRebase {
-  const AuthoredDraftRebase();
-}
-
-final class AuthoredDraftRebased extends AuthoredDraftRebase {
-  const AuthoredDraftRebased(this.draft);
-
-  final AuthoredDraft draft;
-}
-
-final class AuthoredDraftRebaseFailed extends AuthoredDraftRebase {
-  const AuthoredDraftRebaseFailed(this.message);
-
-  final String message;
-}
-
-final class AuthoredDraftRebaseConflict extends AuthoredDraftRebase {
-  const AuthoredDraftRebaseConflict({
-    required this.expected,
-    required this.actual,
-  });
-
-  final skir.EditExpectation expected;
-  final skir.EditExpectation actual;
 }
 
 final class _ParentInitialization {
@@ -1792,8 +1822,8 @@ final class _MaterializationOperation {
   final String fingerprint;
 }
 
-final class _DraftState {
-  const _DraftState({
+final class _EditState {
+  const _EditState({
     required this.resources,
     required this.links,
     required this.observed,
@@ -1801,7 +1831,7 @@ final class _DraftState {
     required this.initializationFindings,
   });
 
-  factory _DraftState.capture(AuthoredDraft draft) => _DraftState(
+  factory _EditState.capture(AuthoringEdit draft) => _EditState(
     resources: Map.of(draft._resources),
     links: List.of(draft._links),
     observed: Map.of(draft._observed),
@@ -1815,7 +1845,7 @@ final class _DraftState {
   final List<skir.EditIntent> intents;
   final List<skir.InitializationDiagnostic> initializationFindings;
 
-  bool matches(AuthoredDraft draft) =>
+  bool matches(AuthoringEdit draft) =>
       _mapsEqual(resources, draft._resources) &&
       _listsEqual(links, draft._links) &&
       _mapsEqual(observed, draft._observed) &&
@@ -1999,12 +2029,6 @@ skir.ValuePath? _directFieldPath(skir.RelativeFieldPattern pattern) {
   return skir.ValuePath(segments: segments);
 }
 
-skir.DataValue valueAt(skir.AuthoringRecord record, skir.ValuePath path) =>
-    switch (record.readAt(path)) {
-      PortablePathValue(:final value) => value,
-      PortablePathUnavailable() => skir.DataValue.unfilled,
-    };
-
 skir.DataValue? _replaceCollectionItems(
   skir.DataValue value,
   List<skir.ListItem>? Function(List<skir.ListItem> items) update,
@@ -2049,3 +2073,107 @@ bool _containsLink(skir.DataValue value) => switch (value) {
   ),
   _ => false,
 };
+
+skir.TypeDefinitionId? _configurationRoot(skir.TypeSelection selection) =>
+    switch (selection) {
+      skir.TypeSelection_completeWrapper(:final value) => value.definition,
+      skir.TypeSelection_pendingWrapper(:final value) => value.definition,
+      _ => null,
+    };
+
+final class _AuthoringDefaults {
+  const _AuthoringDefaults(this.catalog);
+  final CheckedEditorCatalog? catalog;
+  skir.DataValue _defaultForNamed(
+    skir.NamedTypeUse actual,
+    Set<skir.NamedTypeUse> visiting,
+  ) {
+    if (visiting.contains(actual)) return skir.DataValue.unfilled;
+    final checked = catalog;
+    if (checked == null) return skir.DataValue.unfilled;
+    final published = checked.published(actual.definition);
+    if (published == null) return skir.DataValue.unfilled;
+    final selection = skir.TypeSelection.wrapComplete(actual);
+    final descriptor = checked.initialization(actual.definition);
+    final payload = switch (published.definition.representation) {
+      skir.RepresentationTemplate_scalarWrapper(:final value) => _scalarDefault(
+        value.kind,
+      ),
+      skir.RepresentationTemplate_sequenceWrapper(:final value) =>
+        value.kind == skir.CollectionKind.list
+            ? skir.DataValue.createListValue(items: const [])
+            : skir.DataValue.createSetValue(items: const []),
+      skir.RepresentationTemplate_mappingWrapper() =>
+        skir.DataValue.createMapValue(rows: const []),
+      skir.RepresentationTemplate_enumerationWrapper(:final value) =>
+        value.cases.firstOrNull == null
+            ? skir.DataValue.unfilled
+            : skir.DataValue.wrapEnumCase(value.cases.first.key),
+      skir.RepresentationTemplate_linkWrapper() => skir.DataValue.unfilled,
+      skir.RepresentationTemplate_recordWrapper(:final value) =>
+        value.abstract_
+            ? skir.DataValue.unfilled
+            : skir.DataValue.createRecord(
+                fields: [
+                  for (final field in checked.fields(selection))
+                    skir.FieldValue(
+                      name: field.template.key,
+                      value: _fieldDefault(
+                        field,
+                        descriptor: descriptor,
+                        visiting: {...visiting, actual},
+                      ),
+                    ),
+                ],
+              ),
+      skir.RepresentationTemplate_unknown() => skir.DataValue.unfilled,
+    };
+    if (payload == skir.DataValue.unfilled) return payload;
+    return skir.DataValue.createNamed(actualType: actual, payload: payload);
+  }
+
+  skir.DataValue _fieldDefault(
+    AppliedEditorField field, {
+    required skir.InitializationDescriptor? descriptor,
+    required Set<skir.NamedTypeUse> visiting,
+  }) {
+    final checked = catalog;
+    final captured = descriptor?.captured
+        .where((candidate) => candidate.field == field.template.owner)
+        .firstOrNull
+        ?.value;
+    if (captured != null) return captured;
+    if (checked!.hasConstructorDefault(field.template.owner)) {
+      return skir.DataValue.unfilled;
+    }
+    return _defaultForType(field.type, visiting);
+  }
+
+  skir.DataValue _defaultForType(
+    skir.TypeUse? type,
+    Set<skir.NamedTypeUse> visiting,
+  ) => switch (type) {
+    skir.TypeUse_nullableWrapper() => skir.DataValue.null_,
+    skir.TypeUse_scalarWrapper(:final value) => _scalarDefault(value),
+    skir.TypeUse_namedWrapper(:final value) => _defaultForNamed(
+      value,
+      visiting,
+    ),
+    _ => skir.DataValue.unfilled,
+  };
+
+  skir.DataValue _scalarDefault(skir.ScalarKind kind) => switch (kind) {
+    skir.ScalarKind.unit => skir.DataValue.unit,
+    skir.ScalarKind.boolean => skir.DataValue.wrapBoolean(false),
+    skir.ScalarKind.text => skir.DataValue.wrapStringValue(""),
+    skir.ScalarKind_integerWrapper() => skir.DataValue.wrapInteger("0"),
+    skir.ScalarKind_floatWrapper() => skir.DataValue.wrapFloat(0),
+    skir.ScalarKind.decimal => skir.DataValue.wrapDecimal("0"),
+    skir.ScalarKind.bytes => skir.DataValue.wrapBytes(skir.ByteString.empty),
+    skir.ScalarKind.duration => skir.DataValue.createDuration(
+      value: skir.Duration(milliseconds: 0),
+    ),
+    skir.ScalarKind.timestamp => skir.DataValue.unfilled,
+    _ => skir.DataValue.unfilled,
+  };
+}

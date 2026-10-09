@@ -22,14 +22,14 @@ Widget tagNodeUseCase(BuildContext context) {
     placement: const GraphPlacement(x: 8, y: 1, width: 4, height: 1),
   );
 
-  return FakeApp(
+  return AuthoringFixtureApp(
+    createDocument: () =>
+        fixtureAuthoringDocument(tags: [previewTag, parentCandidate]),
     overrides: [
-      ...authoringSessionMockOverrides(tags: [previewTag, parentCandidate]),
       organizationIdProvider.overrideWithValue(
         skir.recordId("organization:widgetbook"),
       ),
       realmIdProvider.overrideWithValue(skir.recordId("service:widgetbook")),
-      ...tagsProviderOverrides(tags: [previewTag, parentCandidate]),
     ],
     child: InspectorScaffold(
       child: Center(
@@ -70,14 +70,13 @@ Widget mixedTagSelectionStory({bool initiallySelected = true}) {
   final tags = [earth, europe, netherlands, italy];
   final selected = [netherlands, italy];
 
-  return FakeApp(
+  return AuthoringFixtureApp(
+    createDocument: () => fixtureAuthoringDocument(tags: tags),
     overrides: [
-      ...authoringSessionMockOverrides(tags: tags),
       organizationIdProvider.overrideWithValue(
         skir.recordId("organization:widgetbook"),
       ),
       realmIdProvider.overrideWithValue(skir.recordId("service:widgetbook")),
-      ...tagsProviderOverrides(tags: tags),
     ],
     child: InspectorScaffold(
       child: SelectedInspectorStory(
@@ -137,14 +136,13 @@ Widget tagNodeColorsUseCase(BuildContext context) {
     );
   }).toList();
 
-  return FakeApp(
+  return AuthoringFixtureApp(
+    createDocument: () => fixtureAuthoringDocument(tags: tags),
     overrides: [
-      ...authoringSessionMockOverrides(tags: tags),
       organizationIdProvider.overrideWithValue(
         skir.recordId("organization:widgetbook"),
       ),
       realmIdProvider.overrideWithValue(skir.recordId("service:widgetbook")),
-      ...tagsProviderOverrides(tags: tags),
     ],
     child: InspectorScaffold(
       child: Center(

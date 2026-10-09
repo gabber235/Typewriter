@@ -36,15 +36,13 @@ Widget bookAndTagSelectionStory({required bool sharedColor}) {
     placement: const GraphPlacement(x: 0, y: 0, width: 4, height: 1),
   );
 
-  return FakeApp(
+  return AuthoringFixtureApp(
+    createDocument: () => fixtureAuthoringDocument(books: [book], tags: [tag]),
     overrides: [
-      ...authoringSessionMockOverrides(books: [book], tags: [tag]),
       organizationIdProvider.overrideWithValue(
         skir.recordId("organization:widgetbook"),
       ),
       realmIdProvider.overrideWithValue(skir.recordId("service:widgetbook")),
-      ...tagsProviderOverrides(tags: [tag]),
-      canonicalBooksProvider.overrideWith(() => _HeterogeneousBooks(book)),
     ],
     child: InspectorScaffold(
       child: SelectedInspectorStory(
@@ -71,18 +69,4 @@ Widget bookAndTagSelectionStory({required bool sharedColor}) {
       ),
     ),
   );
-}
-
-class _HeterogeneousBooks extends CanonicalBooks {
-  _HeterogeneousBooks(this.book);
-
-  final Book book;
-
-  @override
-  Future<List<Book>> build() async => [book];
-
-  @override
-  Future<void> updateBook(Book book, {Book? expected}) async {
-    state = AsyncData([book]);
-  }
 }

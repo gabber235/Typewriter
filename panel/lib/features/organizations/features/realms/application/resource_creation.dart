@@ -93,14 +93,14 @@ ResourceCreationTemplate? resourceCreationTemplate(
   return (definition: id, configuration: configuration);
 }
 
-AuthoredDraft stageResourceCreation({
-  required AuthoredDraft baseline,
+void createAuthoringResource({
+  required AuthoringEdit edit,
   required ResourceCreationRequest request,
   required skir.PreparedCreation prepared,
 }) {
-  final draft = baseline.fork()..createPrepared(request.id, prepared);
+  edit.createPrepared(request.id, prepared, definition: request.definition);
   for (final connection in request.connections) {
-    draft.connect(
+    edit.connect(
       skir.LinkOccurrence(
         id: skir.LinkOccurrenceId(
           endpoint: connection.endpoint,
@@ -115,7 +115,6 @@ AuthoredDraft stageResourceCreation({
       request.id,
     );
   }
-  return draft;
 }
 
 final class ResourceCreationSession {
@@ -127,87 +126,66 @@ final class ResourceCreationSession {
     required BuildContext context,
     required ResourceCreationRequest request,
   }) async {
-    final access = ref.readAuthoringSession();
-    final checked = access.state.catalog;
-    final baseline = access.state.draft;
-    if (checked == null || baseline == null) {
-      throw StateError("Authoring is not ready");
-    }
-    var effectiveRequest = request;
-    if (checked.isAbstractRecordSelection(effectiveRequest.configuration)) {
-      final selection = await showCreationConcreteTypePicker(
-        context,
-        expected: effectiveRequest.configuration,
-        catalog: checked,
-      );
-      if (selection == null || !context.mounted) return null;
-      effectiveRequest = effectiveRequest.withConfiguration(selection);
-    }
-    if (!checked.isResourceDefinition(
-          effectiveRequest.configuration,
-          request.definition,
-        ) ||
-        checked.isAbstractRecordSelection(effectiveRequest.configuration)) {
-      throw StateError("The selected resource type is unavailable");
-    }
-    final initialization = skir.InitializationRequest(
-      id: effectiveRequest.initializationId,
-      catalog: baseline.generation,
-      type: effectiveRequest.configuration,
-      supplied: effectiveRequest.supplied,
-      intentHash: _initializationHash(
-        effectiveRequest.configuration,
-        effectiveRequest.supplied,
-      ),
-    );
-    final prepared = await access.notifier.prepareCreation(initialization);
-    final latest = access.state.draft;
-    if (latest == null || latest.generation != baseline.generation) {
-      throw StateError("The Realm changed while creation was prepared");
-    }
-    final draft = stageResourceCreation(
-      baseline: latest,
-      request: effectiveRequest,
-      prepared: prepared,
-    );
-    final response = await access.notifier.commit(draft.prepare());
-    final CreatedAuthoringResource created;
-    switch (response) {
-      case skir.CommitPreparedEditResponse_resultWrapper(
-        value: skir.CommitResult.committed,
-      ):
-        await access.notifier.refresh();
-        final adopted = await access.notifier.awaitResource(
-          effectiveRequest.id,
+    final workspace = ref.readAuthoringWorkspace();
+    final scope = ref.read(selectedAuthoringScopeProvider)!;
+    final checked = workspace.document.catalog;
+    final commands = ref.read(authoredResourceCommandsProvider(scope));
+    CreatedAuthoringResource? created;
+    final outcome = await workspace.prepare(
+      label: "Create resource",
+      apply: (edit) async {
+        var effectiveRequest = request;
+        if (checked.isAbstractRecordSelection(effectiveRequest.configuration)) {
+          final selection = await showCreationConcreteTypePicker(
+            context,
+            expected: effectiveRequest.configuration,
+            catalog: checked,
+          );
+          if (selection == null || !context.mounted) return;
+          effectiveRequest = effectiveRequest.withConfiguration(selection);
+        }
+        if (!checked.isResourceDefinition(
+              effectiveRequest.configuration,
+              request.definition,
+            ) ||
+            checked.isAbstractRecordSelection(effectiveRequest.configuration)) {
+          throw StateError("The selected resource type is unavailable");
+        }
+        final initialization = skir.InitializationRequest(
+          id: effectiveRequest.initializationId,
+          catalog: edit.generation,
+          type: effectiveRequest.configuration,
+          supplied: effectiveRequest.supplied,
+          intentHash: _initializationHash(
+            effectiveRequest.configuration,
+            effectiveRequest.supplied,
+          ),
+        );
+        final prepared = await commands.prepareCreation(initialization);
+        if (!context.mounted) {
+          throw StateError("The creation view closed during preparation");
+        }
+        createAuthoringResource(
+          edit: edit,
+          request: effectiveRequest,
+          prepared: prepared,
         );
         created = (
           id: effectiveRequest.id,
-          definition: adopted.definition,
-          content: adopted.content,
+          definition: effectiveRequest.definition,
+          content: prepared.record,
         );
-      case skir.CommitPreparedEditResponse_resultWrapper(
-        value: skir.CommitResult_conflictWrapper(),
-      ):
-        throw StateError("The Realm changed before this resource was saved");
-      case skir.CommitPreparedEditResponse_resultWrapper(
-        value: skir.CommitResult_catalogChangedWrapper(),
-      ):
-        throw StateError("The editor catalog changed");
-      case skir.CommitPreparedEditResponse_resultWrapper(
-        value: skir.CommitResult_rejectedWrapper(),
-      ):
-        throw StateError(response.rejectionMessage);
-      default:
-        throw StateError("The creation result is unavailable");
-    }
-    if (prepared.findings.isNotEmpty && context.mounted) {
-      showErrorSnackBar(
-        context,
-        prepared.findings
-            .map(formatPortableInitializationDiagnostic)
-            .join("\n"),
-      );
-    }
+        if (prepared.findings.isNotEmpty && context.mounted) {
+          showErrorSnackBar(
+            context,
+            prepared.findings
+                .map(formatPortableInitializationDiagnostic)
+                .join("\n"),
+          );
+        }
+      },
+    );
+    outcome.requireAccepted();
     return created;
   }
 }

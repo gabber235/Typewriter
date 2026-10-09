@@ -14,17 +14,15 @@ skir.ValueLocation authoredFieldLocation(
   ),
 );
 
-void setAuthoredFieldPayload({
-  required AuthoredDraft draft,
-  required skir.ResourceId resource,
-  required Iterable<String> fields,
-  required skir.DataValue payload,
-}) {
-  final result = draft.setPayload(
-    authoredFieldLocation(resource, fields),
-    payload,
-  );
-  if (result is PortablePathUnavailable<skir.AuthoringRecord>) {
-    throw StateError(result.message);
+extension AuthoringFieldEdits on AuthoringEdit {
+  void setFieldPayload({
+    required skir.ResourceId resource,
+    required Iterable<String> fields,
+    required skir.DataValue payload,
+  }) {
+    final result = setPayload(authoredFieldLocation(resource, fields), payload);
+    if (result is PortablePathUnavailable<skir.AuthoringRecord>) {
+      throw StateError(result.message);
+    }
   }
 }

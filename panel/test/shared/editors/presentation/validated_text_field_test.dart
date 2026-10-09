@@ -113,7 +113,7 @@ void main() {
 
   for (final replacement in <int?>[9, null]) {
     testWidgets(
-      "a focused draft survives external ${replacement == null ? "reset" : "replacement"} until focus returns",
+      "a focused field synchronizes external ${replacement == null ? "reset" : "replacement"} immediately",
       (tester) async {
         final edits = <int>[];
         final completions = <int>[];
@@ -144,26 +144,30 @@ void main() {
         await tester.pumpWidget(field(replacement));
         await tester.pumpAndSettle();
         expect(focus.hasFocus, isTrue);
-        expect(controller.text, "invalid");
+        expect(controller.text, replacement?.toString() ?? "");
+        final length = controller.text.length;
         expect(
           controller.selection,
-          const TextSelection(baseOffset: 1, extentOffset: 4),
+          TextSelection(
+            baseOffset: 1.clamp(0, length),
+            extentOffset: 4.clamp(0, length),
+          ),
         );
-        expect(find.text("Enter a whole number"), findsOneWidget);
+        expect(find.text("Enter a whole number"), findsNothing);
 
         focus.unfocus();
         await tester.pumpAndSettle();
-        expect(controller.text, "invalid");
-        expect(find.text("Enter a whole number"), findsOneWidget);
+        expect(controller.text, replacement?.toString() ?? "");
+        expect(find.text("Enter a whole number"), findsNothing);
         expect(blurs, 1);
-        expect(completions, isEmpty);
+        expect(completions, replacement == null ? isEmpty : [replacement]);
 
         focus.requestFocus();
         await tester.pumpAndSettle();
         expect(controller.text, replacement?.toString() ?? "");
         expect(find.text("Enter a whole number"), findsNothing);
         expect(edits, isEmpty);
-        expect(completions, isEmpty);
+        expect(completions, replacement == null ? isEmpty : [replacement]);
         expect(clears, 0);
         expect(blurs, 1);
       },

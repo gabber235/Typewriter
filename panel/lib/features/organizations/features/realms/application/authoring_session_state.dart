@@ -26,11 +26,14 @@ extension AuthoringStateView on AuthoringSessionState {
   List<skir.FindingSet> get findings =>
       snapshot?.findings.toList(growable: false) ?? const [];
 
-  AuthoredDraft? get draft {
+  AuthoringDocument? get confirmedDocument {
     final source = snapshot;
     final checked = catalog;
-    if (source == null || checked == null) return null;
-    if (source.generation != checked.snapshot.generation) return null;
-    return AuthoredDraft.fromState(source, catalog: checked);
+    if (source == null ||
+        checked == null ||
+        source.generation != checked.snapshot.generation) {
+      return null;
+    }
+    return AuthoringDocument.fromState(source, catalog: checked);
   }
 }

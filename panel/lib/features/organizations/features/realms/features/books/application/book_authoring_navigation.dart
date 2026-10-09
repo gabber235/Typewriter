@@ -62,10 +62,18 @@ final class BookAuthoringNavigationAdapter
 
 extension on OpenAuthoringResourceEffect {
   List<skir.ResourceId> _ownerPath(Ref ref, skir.ResourceId start) {
-    final state = ref.readAuthoringSession().state;
-    final catalog = state.catalog;
-    final draft = state.draft;
-    if (catalog == null || draft == null) return const [];
+    final draft = ref
+        .read(
+          workingAuthoringDocumentProvider(
+            AuthoringScope(
+              organizationId: this.organizationId,
+              realmId: this.realmId,
+            ),
+          ),
+        )
+        .value;
+    if (draft == null) return const [];
+    final catalog = draft.catalog;
     final ownership = {
       for (final relation in catalog.snapshot.relations)
         if (relation.families.any(

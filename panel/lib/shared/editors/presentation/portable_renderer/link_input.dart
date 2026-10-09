@@ -65,12 +65,14 @@ extension _PortableLinkInputRendering on PortablePresentationNodeRenderer {
                   canMoveLater: index < items.length - 1,
                   onMoveEarlier: () {
                     final after = index == 1 ? null : items[index - 2].id;
-                    draft.move(location, item.id, after);
-                    childScope.onDraftChanged?.call();
+                    childScope.stage("Edit collection", (operation) {
+                      operation.move(location, item.id, after);
+                    });
                   },
                   onMoveLater: () {
-                    draft.move(location, item.id, items[index + 1].id);
-                    childScope.onDraftChanged?.call();
+                    childScope.stage("Edit collection", (operation) {
+                      operation.move(location, item.id, items[index + 1].id);
+                    });
                   },
                 )
               : null,
@@ -88,8 +90,9 @@ extension _PortableLinkInputRendering on PortablePresentationNodeRenderer {
               final moving = items[oldIndex].id;
               final remaining = [...items]..removeAt(oldIndex);
               final after = newIndex == 0 ? null : remaining[newIndex - 1].id;
-              draft.move(location, moving, after);
-              childScope.onDraftChanged?.call();
+              childScope.stage("Edit collection", (operation) {
+                operation.move(location, moving, after);
+              });
             },
           )
         : Column(children: rows);
@@ -220,17 +223,18 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
                 tooltip: "Clear link",
                 onPressed: enabled
                     ? () {
-                        scope.authoring?.disconnect(
-                          skir.LinkOccurrence(
-                            id: skir.LinkOccurrenceId(
-                              endpoint: link.endpoint,
-                              location: location,
+                        scope.stage("Clear link", (operation) {
+                          operation.disconnect(
+                            skir.LinkOccurrence(
+                              id: skir.LinkOccurrenceId(
+                                endpoint: link.endpoint,
+                                location: location,
+                              ),
+                              source: location.resource,
+                              target: link.target,
                             ),
-                            source: location.resource,
-                            target: link.target,
-                          ),
-                        );
-                        scope.onDraftChanged?.call();
+                          );
+                        });
                       }
                     : null,
                 icon: const Icon(Icons.link_off),

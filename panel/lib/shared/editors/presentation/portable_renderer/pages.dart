@@ -65,40 +65,42 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
       ),
       onElementsMoved: childScope.enabled && !childScope.readOnly
           ? (changes) {
-              for (final change in changes) {
-                _writePageInteger(
-                  projection.draft,
-                  skir.ResourceId(value: change.id.id),
-                  "x",
-                  change.x,
-                );
-                _writePageInteger(
-                  projection.draft,
-                  skir.ResourceId(value: change.id.id),
-                  "y",
-                  change.y,
-                );
-              }
-              childScope.onDraftChanged?.call();
+              childScope.stage("Move graph nodes", (operation) {
+                for (final change in changes) {
+                  _writePageInteger(
+                    operation,
+                    skir.ResourceId(value: change.id.id),
+                    "x",
+                    change.x,
+                  );
+                  _writePageInteger(
+                    operation,
+                    skir.ResourceId(value: change.id.id),
+                    "y",
+                    change.y,
+                  );
+                }
+              }, independent: true);
             }
           : null,
       onElementsResized: childScope.enabled && !childScope.readOnly
           ? (changes) {
-              for (final change in changes) {
-                _writePageInteger(
-                  projection.draft,
-                  skir.ResourceId(value: change.id.id),
-                  "width",
-                  change.width,
-                );
-                _writePageInteger(
-                  projection.draft,
-                  skir.ResourceId(value: change.id.id),
-                  "height",
-                  change.height,
-                );
-              }
-              childScope.onDraftChanged?.call();
+              childScope.stage("Resize graph nodes", (operation) {
+                for (final change in changes) {
+                  _writePageInteger(
+                    operation,
+                    skir.ResourceId(value: change.id.id),
+                    "width",
+                    change.width,
+                  );
+                  _writePageInteger(
+                    operation,
+                    skir.ResourceId(value: change.id.id),
+                    "height",
+                    change.height,
+                  );
+                }
+              }, independent: true);
             }
           : null,
     );
@@ -154,33 +156,34 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
       data: TimelineData(tracks: tracks),
       onElementsCommited: childScope.enabled && !childScope.readOnly
           ? (changes) async {
-              for (final change in changes) {
-                final id = skir.ResourceId(value: change.id.id);
-                final record = projection.draft.resource(id);
-                final placement = record?.authoredField("placement");
-                if (placement?.authoredField("frame") != null) {
-                  _writePageInteger(
-                    projection.draft,
-                    id,
-                    "frame",
-                    change.startFrame,
-                  );
-                } else {
-                  _writePageInteger(
-                    projection.draft,
-                    id,
-                    "startFrame",
-                    change.startFrame,
-                  );
-                  _writePageInteger(
-                    projection.draft,
-                    id,
-                    "endFrame",
-                    change.endFrame,
-                  );
+              childScope.stage("Move timeline elements", (operation) {
+                for (final change in changes) {
+                  final id = skir.ResourceId(value: change.id.id);
+                  final record = operation.resource(id);
+                  final placement = record?.authoredField("placement");
+                  if (placement?.authoredField("frame") != null) {
+                    _writePageInteger(
+                      operation,
+                      id,
+                      "frame",
+                      change.startFrame,
+                    );
+                  } else {
+                    _writePageInteger(
+                      operation,
+                      id,
+                      "startFrame",
+                      change.startFrame,
+                    );
+                    _writePageInteger(
+                      operation,
+                      id,
+                      "endFrame",
+                      change.endFrame,
+                    );
+                  }
                 }
-              }
-              childScope.onDraftChanged?.call();
+              }, independent: true);
             }
           : null,
     );
@@ -209,13 +212,14 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
             PopupMenuButton<_PageResourceAction>(
               enabled: editable,
               onSelected: (action) {
-                switch (action) {
-                  case _PageResourceAction.disconnect:
-                    entry.draft.disconnect(entry.occurrence);
-                  case _PageResourceAction.delete:
-                    entry.draft.delete(entry.resource);
-                }
-                childScope.onDraftChanged?.call();
+                childScope.stage("Change page resource", (operation) {
+                  switch (action) {
+                    case _PageResourceAction.disconnect:
+                      operation.disconnect(entry.occurrence);
+                    case _PageResourceAction.delete:
+                      operation.delete(entry.resource);
+                  }
+                }, independent: true);
               },
               itemBuilder: (_) => const [
                 PopupMenuItem(
@@ -266,11 +270,12 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
         budget: parent.budget,
         setBinding: (reference, value) {
           if (reference.bindingId != _configuredValueBindingId) return;
-          final result = draft.set(
-            skir.ValueLocation(resource: resource, path: reference.path),
-            value,
-          );
-          if (result is PortablePathValue) parent.onDraftChanged?.call();
+          parent.stage("Edit resource value", (operation) {
+            operation.set(
+              skir.ValueLocation(resource: resource, path: reference.path),
+              value,
+            );
+          });
         },
         readOnly: parent.readOnly,
         enabled: parent.enabled,
@@ -285,7 +290,7 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
         role: selected.resolvedRole,
         material: selected.material,
         activePresentations: {selected.material.provider},
-        onDraftChanged: parent.onDraftChanged,
+        edit: parent.edit,
         openResource: parent.openResource,
         prepareCreation: parent.prepareCreation,
         host: parent.host,
@@ -303,7 +308,7 @@ sealed class _PageProjection {
 final class _PageProjectionValue extends _PageProjection {
   const _PageProjectionValue({required this.draft, required this.entries});
 
-  final PortableAuthoringDocument draft;
+  final PortableAuthoringView draft;
   final List<_PageEntry> entries;
 }
 
@@ -322,7 +327,7 @@ final class _PageEntry {
   });
 
   final skir.ResourceId resource;
-  final PortableAuthoringDocument draft;
+  final PortableAuthoringView draft;
   final skir.LinkOccurrence occurrence;
   final _PageGraphPlacement? graph;
 }
@@ -485,8 +490,8 @@ skir.TypeUse _declaredType(String id) => skir.TypeUse.createNamed(
   arguments: const [],
 );
 
-bool _writePageInteger(
-  PortableAuthoringDocument draft,
+void _writePageInteger(
+  AuthoringEdit draft,
   skir.ResourceId resource,
   String field,
   int value,
@@ -501,15 +506,17 @@ bool _writePageInteger(
     ),
   );
   final current = draft.read(location);
-  if (current is! PortablePathValue<skir.DataValue>) return false;
+  if (current is! PortablePathValue<skir.DataValue>) {
+    throw StateError("The resource placement is unavailable");
+  }
   final replacement = current.value.withAuthoredPayload(
     skir.DataValue.wrapInteger(value.toString()),
   );
-  return draft.set(location, replacement) is PortablePathValue;
+  draft.set(location, replacement);
 }
 
 Iterable<skir.ResourceId> _ownedTimelineTargets(
-  PortableAuthoringDocument draft,
+  PortableAuthoringView draft,
   CheckedEditorCatalog catalog,
   skir.ResourceId source,
 ) sync* {
@@ -553,7 +560,7 @@ final _timelineCueResource = skir.ResourceDefinitionId(value: "typewriter.cue");
 
 TimelineElement? _timelineElement(
   BuildContext context,
-  PortableAuthoringDocument draft,
+  PortableAuthoringView draft,
   CheckedEditorCatalog catalog,
   skir.ResourceId resource,
   Map<skir.ResourceId, _PageEntry> direct,

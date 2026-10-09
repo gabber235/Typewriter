@@ -32,8 +32,8 @@ class _Valid<T> extends _State {
 /// selected owners have differing values; a null value without mixed is empty.
 /// The first valid edit of a mixed selection replaces the
 /// selected values. Supply [onCleared] to allow empty text to remove the value.
-/// Focused drafts remain local until the next focus entry restores bound text.
-/// External changes replace unfocused text and discard its prior validation.
+/// Invalid partial input remains local while the bound value stays unchanged.
+/// A changed bound value replaces the text and resets its prior validation.
 class ValidatedTextField<T> extends HookConsumerWidget {
   const ValidatedTextField({
     required this.value,
@@ -163,7 +163,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
         : deserialize?.call(current) ?? current.toString();
 
     useEffect(() {
-      if (!focus.hasFocus) state.value = _initial;
+      state.value = _initial;
       return null;
     }, [focus, formattedValue]);
 

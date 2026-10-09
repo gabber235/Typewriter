@@ -29,18 +29,16 @@ Widget bookUseCase(BuildContext context) {
     tagIds: [directTag.tagId],
   );
 
-  return FakeApp(
+  return AuthoringFixtureApp(
+    createDocument: () => fixtureAuthoringDocument(
+      books: [book],
+      tags: [directTag, inheritedTag],
+    ),
     overrides: [
-      ...authoringSessionMockOverrides(
-        books: [book],
-        tags: [directTag, inheritedTag],
-      ),
       organizationIdProvider.overrideWithValue(
         skir.recordId("organization:widgetbook"),
       ),
       realmIdProvider.overrideWithValue(skir.recordId("service:widgetbook")),
-      ...tagsProviderOverrides(tags: [directTag, inheritedTag]),
-      canonicalBooksProvider.overrideWith(() => _BookStoryBooks([book])),
     ],
     child: const InspectorScaffold(child: Center(child: _BookWidgetStory())),
   );
@@ -82,15 +80,14 @@ Widget mixedBookSelectionStory({bool initiallySelected = true}) {
     ),
   ];
 
-  return FakeApp(
+  return AuthoringFixtureApp(
+    createDocument: () =>
+        fixtureAuthoringDocument(books: books, tags: [lore, quest]),
     overrides: [
-      ...authoringSessionMockOverrides(books: books, tags: [lore, quest]),
       organizationIdProvider.overrideWithValue(
         skir.recordId("organization:widgetbook"),
       ),
       realmIdProvider.overrideWithValue(skir.recordId("service:widgetbook")),
-      ...tagsProviderOverrides(tags: [lore, quest]),
-      canonicalBooksProvider.overrideWith(() => _BookStoryBooks(books)),
     ],
     child: InspectorScaffold(
       child: SelectedInspectorStory(
@@ -103,30 +100,13 @@ Widget mixedBookSelectionStory({bool initiallySelected = true}) {
   );
 }
 
-class _BookStoryBooks extends CanonicalBooks {
-  _BookStoryBooks(List<Book> books) : _initialBooks = List.unmodifiable(books);
-
-  final List<Book> _initialBooks;
-
-  @override
-  Future<List<Book>> build() async => _initialBooks;
-
-  @override
-  Future<void> updateBook(Book book, {Book? expected}) async {
-    state = AsyncData([
-      for (final current in state.requireValue)
-        if (current.bookId == book.bookId) book else current,
-    ]);
-  }
-}
-
 class _BookWidgetStory extends ConsumerWidget {
   const _BookWidgetStory();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final books = ref.watch(projectedBooksProvider);
-    final tags = ref.watch(projectedTagsProvider).value ?? const <Tag>[];
+    final books = ref.watch(workingBooksProvider);
+    final tags = ref.watch(workingTagsProvider).value ?? const <Tag>[];
     return books(
       name: "books",
       shrink: true,

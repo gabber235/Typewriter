@@ -2,6 +2,7 @@ import "package:flutter_test/flutter_test.dart" hide Tags;
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../../../../../support/test_utils.dart";
 
@@ -10,10 +11,7 @@ void main() {
     testWidgets("dropping a parent onto a child links them", (tester) async {
       final childId = skir.ResourceId(value: "child");
       final parentId = skir.ResourceId(value: "parent");
-      final notifier = await _pumpTagTarget(tester, [
-        _tag(childId),
-        _tag(parentId),
-      ], childId);
+      await _pumpTagTarget(tester, [_tag(childId), _tag(parentId)], childId);
       final target = _target(tester);
       final details = _details(parentId);
 
@@ -21,14 +19,28 @@ void main() {
       target.onAcceptWithDetails!(details);
       await tester.pump();
 
-      expect(notifier.updatedTag?.tagId, childId);
-      expect(notifier.updatedTag?.parentIds, [parentId]);
+      expect(
+        tester
+            .container()
+            .read(workingTagProvider(childId))
+            .requireValue!
+            .tagId,
+        childId,
+      );
+      expect(
+        tester
+            .container()
+            .read(workingTagProvider(childId))
+            .requireValue!
+            .parentIds,
+        [parentId],
+      );
     });
 
     testWidgets("dropping a direct parent again unlinks it", (tester) async {
       final childId = skir.ResourceId(value: "child");
       final parentId = skir.ResourceId(value: "parent");
-      final notifier = await _pumpTagTarget(tester, [
+      await _pumpTagTarget(tester, [
         _tag(childId, parentIds: [parentId]),
         _tag(parentId),
       ], childId);
@@ -39,8 +51,22 @@ void main() {
       target.onAcceptWithDetails!(details);
       await tester.pump();
 
-      expect(notifier.updatedTag?.tagId, childId);
-      expect(notifier.updatedTag?.parentIds, isEmpty);
+      expect(
+        tester
+            .container()
+            .read(workingTagProvider(childId))
+            .requireValue!
+            .tagId,
+        childId,
+      );
+      expect(
+        tester
+            .container()
+            .read(workingTagProvider(childId))
+            .requireValue!
+            .parentIds,
+        isEmpty,
+      );
     });
 
     testWidgets("rejects self links", (tester) async {
@@ -114,9 +140,7 @@ void main() {
         [TagIdentifier(childId)],
       );
       await tester.pumpTestApp(
-        overrides: [
-          canonicalTagsProvider.overrideWith(() => _RecordingTags(tags)),
-        ],
+        overrides: [...authoringFixtureOverrides(tags: tags)],
         child: SizedBox(width: 200, height: 100, child: rejectedTarget),
       );
       await tester.pumpAndSettle();
@@ -149,16 +173,13 @@ Tag _tag(skir.ResourceId id, {List<skir.ResourceId> parentIds = const []}) =>
       placement: GraphPlacement(x: 0, y: 0, width: 2, height: 1),
     );
 
-Future<_RecordingTags> _pumpTagTarget(
+Future<void> _pumpTagTarget(
   WidgetTester tester,
   List<Tag> tags,
   skir.ResourceId targetId,
 ) async {
-  late _RecordingTags notifier;
   await tester.pumpTestApp(
-    overrides: [
-      canonicalTagsProvider.overrideWith(() => notifier = _RecordingTags(tags)),
-    ],
+    overrides: [...authoringFixtureOverrides(tags: tags)],
     child: Center(
       child: SizedBox(
         width: 200,
@@ -171,29 +192,4 @@ Future<_RecordingTags> _pumpTagTarget(
     ),
   );
   await tester.pumpAndSettle();
-  return notifier;
-}
-
-class _RecordingTags extends CanonicalTags {
-  _RecordingTags(this.tags);
-
-  final List<Tag> tags;
-  Tag? updatedTag;
-
-  @override
-  Future<List<Tag>> build() async => tags;
-
-  @override
-  Future<TypedMutationResult> updateTag(Tag tag, {Tag? expected}) async {
-    updatedTag = tag;
-    state = AsyncData(
-      state.requireValue
-          .map((current) => current.tagId == tag.tagId ? tag : current)
-          .toList(),
-    );
-    return TypedMutationResult.success(
-      revision: 1,
-      value: StringValue(tag.name),
-    );
-  }
 }

@@ -6,13 +6,10 @@ part "pages.g.dart";
 
 /// Immutable page metadata used by library and page editor consumers.
 ///
-/// The wire authoring session is canonical. This model is a typed read model;
-/// local editor values are overlaid only by [projected] and never written back
-/// into canonical state by the model itself.
+/// The shared workspace owns authored values. This model is a pure typed view.
 final class Page {
   const Page({
     required this.pageId,
-    required this.authoredRecord,
     required this.bookId,
     required this.name,
     required this.configuration,
@@ -24,7 +21,6 @@ final class Page {
     final value = decodeAuthoredPage(resource);
     return Page(
       pageId: value.id,
-      authoredRecord: resource.content,
       bookId: value.book,
       name: value.name,
       configuration: value.configuration,
@@ -35,8 +31,6 @@ final class Page {
 
   final skir.ResourceId pageId;
 
-  /// Exact observation retained for chapter moves, separate from display defaults.
-  final skir.AuthoringRecord authoredRecord;
   final skir.ResourceId? bookId;
   final String name;
   final skir.TypeSelection configuration;
@@ -57,7 +51,6 @@ final class Page {
     int? priority,
   }) => Page(
     pageId: pageId ?? this.pageId,
-    authoredRecord: authoredRecord,
     bookId: bookId ?? this.bookId,
     name: name ?? this.name,
     configuration: configuration ?? this.configuration,
@@ -66,127 +59,51 @@ final class Page {
   );
 }
 
-/// Retains and exposes canonical pages belonging to one book.
-///
-/// The realm authoring session owns the data and server sequence. This provider
-/// leases the registered book page selection, refreshes on sequenced session
-/// observations, and does not include local editor drafts.
+/// All pages in the working document, including resources without a book yet.
 @riverpod
-class CanonicalBookPages extends _$CanonicalBookPages {
-  @override
-  Future<List<Page>> build(skir.ResourceId bookId) async {
-    final organizationId = ref.watch(organizationIdProvider);
-    final realmId = ref.watch(realmIdProvider);
-    if (organizationId == null) throw ApiException.noOrganization();
-    if (realmId == null) throw ApiException.badRequest("No realm selected");
-    final provider = authoringSessionProvider(organizationId, realmId);
-    var session = ref.watch(provider);
-    if (session.failure case final failure?) {
-      throw StateError("Authoring is unavailable: $failure");
-    }
-    if (session.snapshot == null) {
-      await ref.read(provider.notifier).ready;
-      session = ref.read(provider);
-    }
-    return _projectPages(session)
-        .where((page) => page.bookId == bookId)
-        .toList();
-  }
+AsyncValue<List<Page>> workingPages(Ref ref) {
+  final source = ref.watch(selectedWorkingAuthoringDocumentProvider);
+  if (source.mapUnready<List<Page>>() case final pending?) return pending;
+  return AsyncData(
+    source.requireValue.entries.values
+        .where((entry) => entry.definition == corePageResourceDefinition)
+        .map(Page.fromAuthoring)
+        .toList(growable: false),
+  );
 }
 
-/// Retains one canonical page through a typed resource selection lease.
-///
-/// Missing pages become a not found outcome after the authoritative snapshot or
-/// a later sequenced removal. Draft values are intentionally supplied by
-/// [projectedPage], not this provider.
 @riverpod
-class CanonicalPage extends _$CanonicalPage {
-  @override
-  Future<Page> build(skir.ResourceId pageId) async {
-    final organizationId = ref.watch(organizationIdProvider);
-    final realmId = ref.watch(realmIdProvider);
-    if (organizationId == null) throw ApiException.noOrganization();
-    if (realmId == null) throw ApiException.badRequest("No realm selected");
-    final provider = authoringSessionProvider(organizationId, realmId);
-    var session = ref.watch(provider);
-    if (session.failure case final failure?) {
-      throw StateError("Authoring is unavailable: $failure");
-    }
-    if (session.snapshot == null) {
-      await ref.read(provider.notifier).ready;
-      session = ref.read(provider);
-    }
-    return _projectPages(session)
-            .where((page) => page.pageId == pageId)
-            .firstOrNull ??
-        (throw ApiException.notFound("Page"));
-  }
-}
-
-/// Produces the book page list visible to the library sidebar.
-///
-/// Canonical pages are overlaid with current local drafts, then filtered by
-/// page name or chapter. Missing organization or realm context falls back to
-/// canonical data because no scoped local projection can be selected.
-@riverpod
-AsyncValue<List<Page>> projectedBookPages(
+AsyncValue<List<Page>> workingBookPages(
   Ref ref,
   skir.ResourceId bookId,
   String search,
 ) {
-  final canonical = ref.watch(canonicalBookPagesProvider(bookId));
-  if (canonical.mapUnready<List<Page>>() case final value?) return value;
-  final organizationId = ref.watch(organizationIdProvider);
-  final realmId = ref.watch(realmIdProvider);
-  if (organizationId == null || realmId == null) {
-    return AsyncData(canonical.requireValue);
-  }
+  final source = ref.watch(workingPagesProvider);
+  if (source.mapUnready<List<Page>>() case final pending?) return pending;
   final query = search.trim().toLowerCase();
-  return AsyncData([
-    for (final page in canonical.requireValue)
-      if (query.isEmpty ||
-          page.name.toLowerCase().contains(query) ||
-          page.chapter.toLowerCase().contains(query))
-        page,
-  ]);
+  return AsyncData(
+    source.requireValue
+        .where(
+          (page) =>
+              page.bookId == bookId &&
+              (query.isEmpty ||
+                  page.name.toLowerCase().contains(query) ||
+                  page.chapter.toLowerCase().contains(query)),
+        )
+        .toList(growable: false),
+  );
 }
 
-/// Produces all projected pages in the active realm.
 @riverpod
-AsyncValue<List<Page>> projectedPages(Ref ref) {
-  final books = ref.watch(projectedBooksProvider);
-  if (books.mapUnready<List<Page>>() case final value?) return value;
-
-  final pages = [
-    for (final book in books.requireValue)
-      ref.watch(projectedBookPagesProvider(book.bookId, "")),
-  ];
-  for (final value in pages) {
-    if (value.mapUnready<List<Page>>() case final pending?) return pending;
-  }
-  return AsyncData([for (final value in pages) ...value.requireValue]);
-}
-
-/// Produces one page with its current local metadata projection.
-///
-/// Canonical loading and errors pass through. An invalid draft projection is
-/// ignored by [Page.projected], preserving the last valid visible metadata.
-@riverpod
-AsyncValue<Page> projectedPage(Ref ref, skir.ResourceId pageId) {
-  final canonical = ref.watch(canonicalPageProvider(pageId));
-  if (canonical.mapUnready<Page>() case final value?) return value;
-  final organizationId = ref.watch(organizationIdProvider);
-  final realmId = ref.watch(realmIdProvider);
-  if (organizationId == null) {
-    return AsyncError(ApiException.noOrganization(), StackTrace.current);
-  }
-  if (realmId == null) {
-    return AsyncError(
-      ApiException.badRequest("No realm selected"),
-      StackTrace.current,
-    );
-  }
-  return canonical;
+AsyncValue<Page> workingPage(Ref ref, skir.ResourceId pageId) {
+  final source = ref.watch(workingPagesProvider);
+  if (source.mapUnready<Page>() case final pending?) return pending;
+  final page = source.requireValue.firstWhereOrNull(
+    (page) => page.pageId == pageId,
+  );
+  return page == null
+      ? AsyncError(ApiException.notFound("Page"), StackTrace.current)
+      : AsyncData(page);
 }
 
 /// Resolves the route's string parameter to the typed page record identity.
@@ -196,12 +113,3 @@ skir.ResourceId? pageId(Ref ref) {
   if (id == null) return null;
   return skir.ResourceId(value: id);
 }
-
-List<Page> _projectPages(AuthoringSessionState session) => session
-    .resources
-    .values
-    .where((resource) => resource.definition == _pageDefinition)
-    .map(Page.fromAuthoring)
-    .toList(growable: false);
-
-final _pageDefinition = skir.ResourceDefinitionId(value: "typewriter.page");

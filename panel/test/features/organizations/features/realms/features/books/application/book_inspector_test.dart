@@ -8,7 +8,14 @@ void main() {
   test(
     "Book selection opens and deletes through shared capabilities",
     () async {
-      final session = AuthoringSessionMock();
+      final transport = ScriptedAuthoringTransport(
+        AsyncData(fixtureAuthoringDocument()),
+      );
+      final workspace = AuthoringWorkspace(
+        transport: transport,
+        initial: transport.observation.requireValue,
+      );
+      addTearDown(workspace.dispose);
       final book = Book(
         bookId: skir.ResourceId(value: "book:test"),
         title: "Test Book",
@@ -23,9 +30,8 @@ void main() {
         onDelete: () async => deleted = true,
         id: BookIdentifier(book.bookId),
         book: book,
-        draft: session.initial.draft!,
-        catalog: session.initial.catalog!,
-        session: session,
+        workspace: workspace,
+        commands: fixtureAuthoringCommands(transport),
       );
       final owners = EditorOwnerRegistry();
       addTearDown(owners.dispose);

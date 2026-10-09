@@ -9,7 +9,7 @@ const bookAspectRatio = bookWidth / bookHeight;
 /// Displays a book in the library grid.
 ///
 /// Selection and focus belong to the shared selectable system. Double click
-/// opens the book route. The caller supplies projected book data, including
+/// opens the book route. The caller supplies working book data, including
 /// already resolved tags.
 class BookWidget extends HookConsumerWidget {
   const BookWidget({
@@ -71,7 +71,7 @@ class BookWidget extends HookConsumerWidget {
           onWillAcceptWithDetails: (details) => details.data is TagIdentifier,
           onAcceptWithDetails: (details) async {
             final data = details.data as ReferenceResourceDragData;
-            final current = ref.read(projectedBookProvider(id)).value;
+            final current = ref.read(workingBookProvider(id)).value;
             if (current == null) return;
             final tags = [...current.tagIds];
             final index = tags.indexOf(data.referenceId);
@@ -80,9 +80,22 @@ class BookWidget extends HookConsumerWidget {
             } else {
               tags.removeAt(index);
             }
-            await ref
-                .read(canonicalBooksProvider.notifier)
-                .updateBook(current.copyWith(tagIds: tags), expected: current);
+            final workspace = ref.readAuthoringWorkspace();
+            workspace
+                .edit(
+                  label: "Change book tags",
+                  apply: (edit) {
+                    replacePortableLinkCollection(
+                      draft: edit,
+                      catalog: workspace.document.catalog,
+                      resource: id,
+                      field: "tags",
+                      expected: current.tagIds,
+                      proposed: tags,
+                    );
+                  },
+                )
+                .report(context);
           },
           builder: (context, accepted, rejected) => AnimatedContainer(
             duration: const Duration(milliseconds: 120),

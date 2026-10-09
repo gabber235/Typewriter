@@ -467,19 +467,9 @@ final class _AuthoredPresentationHeaderState
     _AuthoredReorderTarget target, {
     required skir.ItemId? after,
   }) {
-    final result = widget.scope.authoring?.move(
-      target.containing,
-      target.item,
-      after,
-    );
-    switch (result) {
-      case PortablePathValue():
-        widget.scope.onDraftChanged?.call();
-      case PortablePathUnavailable(:final message):
-        widget.scope.reportStatus?.call(message);
-      case null:
-        widget.scope.reportStatus?.call("The reorder source is unavailable");
-    }
+    widget.scope.stage("Reorder item", (operation) {
+      operation.move(target.containing, target.item, after);
+    });
   }
 
   int _priority(skir.ExpressionNode? value) {

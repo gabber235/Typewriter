@@ -3,8 +3,8 @@ part of "route.dart";
 /// Full page row used by the expanded sidebar.
 ///
 /// It is the interaction boundary for page selection, context actions, page
-/// movement, and entry drops. It renders projected page metadata but sends all
-/// edits through the authoring commands.
+/// movement, and entry drops. It renders working page metadata and stages edits
+/// through the shared workspace.
 class _PageTile extends HookConsumerWidget {
   const _PageTile({required this.page});
   final Page page;
@@ -84,11 +84,28 @@ class _PageTile extends HookConsumerWidget {
         return DragTarget<PageDrag>(
           onWillAcceptWithDetails: (details) => details.data.pageId != pageId,
           onAcceptWithDetails: (details) async {
-            await ref.movePageChapter(
-              id: details.data.pageId,
-              chapter: chapter,
-              expectedChapter: details.data.expectedChapter,
-            );
+            ref
+                .readAuthoringWorkspace()
+                .edit(
+                  label: "Move page to chapter",
+                  apply: (edit) {
+                    final at = authoredFieldLocation(details.data.pageId, [
+                      "chapter",
+                    ]);
+                    final current = edit.expect(at);
+                    if (current is! PortablePathValue<skir.DataValue> ||
+                        current.value != details.data.expectedChapter) {
+                      throw StateError(
+                        "The page chapter changed during the drag",
+                      );
+                    }
+                    edit.setPayload(
+                      at,
+                      skir.DataValue.wrapStringValue(chapter),
+                    );
+                  },
+                )
+                .report(context);
           },
           builder: (context, pageCandidateData, rejectedData) {
             final isAccepting = pageCandidateData.isNotEmpty;
@@ -104,9 +121,11 @@ class _PageTile extends HookConsumerWidget {
                   child: Draggable<PageDrag>(
                     data: PageDrag(
                       pageId: pageId,
-                      expectedChapter: page.authoredRecord.authoredField(
-                        "chapter",
-                      ),
+                      expectedChapter: ref
+                          .watch(selectedWorkingAuthoringDocumentProvider)
+                          .value
+                          ?.resource(pageId)
+                          ?.authoredField("chapter"),
                     ),
                     feedback: Surface(
                       color: backgroundColor,

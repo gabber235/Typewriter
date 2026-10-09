@@ -4,14 +4,11 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "authoring_session.freezed.dart";
 part "authoring_session.g.dart";
-part "authored_draft_autosave.dart";
 part "authoring_resource_repository.dart";
 part "authoring_session_state.dart";
 
 @riverpod
 class AuthoringSession extends _$AuthoringSession {
-  AuthoringResourceRepository get repository => _repository;
-
   late AuthoringResourceRepository _repository;
   late skir.RecordId _organizationId;
   late skir.RecordId _realmId;
@@ -20,14 +17,6 @@ class AuthoringSession extends _$AuthoringSession {
   var _refreshRequested = false;
   var _catalogRefreshRequested = false;
   skir.CatalogGeneration? _latestInvalidatedGeneration;
-  Completer<skir.AuthoringState> _ready = Completer();
-  final Set<AuthoredDraftAutosave> _autosaves = {};
-
-  Future<skir.AuthoringState> get ready {
-    final snapshot = state.snapshot;
-    return snapshot == null ? _ready.future : Future.value(snapshot);
-  }
-
   @override
   AuthoringSessionState build(
     skir.RecordId organizationId,
@@ -38,7 +27,6 @@ class AuthoringSession extends _$AuthoringSession {
     _refreshRequested = false;
     _catalogRefreshRequested = false;
     _latestInvalidatedGeneration = null;
-    if (_ready.isCompleted) _ready = Completer();
     _organizationId = organizationId;
     _realmId = realmId;
     final repositories = ref.watch(resourceRepositoriesProvider);
@@ -75,10 +63,6 @@ class AuthoringSession extends _$AuthoringSession {
         if (_lifecycleRevision == lifecycleRevision) {
           _lifecycleRevision++;
         }
-        for (final autosave in _autosaves.toList()) {
-          autosave.close();
-        }
-        _autosaves.clear();
       })
       ..onDispose(changes.cancel)
       ..onDispose(invalidations.cancel)
@@ -199,16 +183,10 @@ class AuthoringSession extends _$AuthoringSession {
         snapshot: snapshot,
         catalog: CheckedEditorCatalog(catalog),
       );
-      _rememberSnapshot(snapshot);
-      if (!_ready.isCompleted) _ready.complete(snapshot);
     } on Object catch (error) {
       if (error is BoundedTransferCancelled && repository._isDisposed) return;
       if (!_isActive(lifecycleRevision)) return;
       state = state.copyWith(refreshing: false, failure: error);
-      if (!_ready.isCompleted) {
-        _ready.completeError(error);
-        _ready = Completer();
-      }
       rethrow;
     }
   }
@@ -247,146 +225,6 @@ class AuthoringSession extends _$AuthoringSession {
   PreparedCommit<skir.CommitPreparedEditResponse> prepareCommit(
     skir.PreparedEdit edit,
   ) => _repository.prepareCommit(edit);
-
-  Future<skir.CommitPreparedEditResponse> commit(skir.PreparedEdit edit) async {
-    return ref.read(localWorkControllerProvider).execute(prepareCommit(edit));
-  }
-
-  Future<skir.AuthoringResource> awaitResource(skir.ResourceId resource) {
-    final completer = Completer<skir.AuthoringResource>();
-
-    void accept(AuthoringSessionState next) {
-      if (completer.isCompleted) return;
-      if (next.resources[resource] case final adopted?) {
-        completer.complete(adopted);
-      } else if (next.failure case final failure?) {
-        completer.completeError(failure, StackTrace.current);
-      }
-    }
-
-    final stop = listenSelf((_, next) => accept(next));
-    ref.onDispose(() {
-      if (!completer.isCompleted) {
-        completer.completeError(
-          StateError(
-            "The authoring session closed before creation was adopted",
-          ),
-          StackTrace.current,
-        );
-      }
-    });
-    accept(state);
-    return completer.future.whenComplete(stop);
-  }
-
-  AuthoredDraftAutosave openAutosave({
-    required skir.ResourceId resource,
-    required AuthoredDraft baseline,
-    EditorCommitPolicy policy = EditorCommitPolicy.autosaveChanges,
-  }) {
-    for (final autosave in _autosaves) {
-      if (autosave.resource == resource &&
-          autosave.policy == policy &&
-          autosave.detached) {
-        autosave
-          ..attach()
-          ..acceptBaseline(baseline);
-        return autosave;
-      }
-    }
-    late final AuthoredDraftAutosave autosave;
-    final lease = ref.keepAlive();
-    autosave = AuthoredDraftAutosave(
-      resource: resource,
-      baseline: baseline,
-      policy: policy,
-      commit: commit,
-      fetchCurrent: () async {
-        await refresh();
-        return ready;
-      },
-      reload: refresh,
-      onSettled: () {
-        if (autosave.detached && autosave.settled) {
-          _autosaves.remove(autosave);
-          autosave.close();
-          lease.close();
-        }
-      },
-    );
-    _autosaves.add(autosave);
-    return autosave;
-  }
-
-  void _rememberSnapshot(skir.AuthoringState snapshot) {
-    final baseline = state.draft;
-    if (baseline != null) {
-      for (final autosave in _autosaves) {
-        autosave.acceptBaseline(baseline);
-      }
-    }
-  }
-
-  Future<void> commitDraft(
-    AuthoredDraft draft, {
-    required String conflictMessage,
-  }) async {
-    final response = await commit(draft.prepare());
-    switch (response) {
-      case skir.CommitPreparedEditResponse_resultWrapper(
-        value: skir.CommitResult.committed,
-      ):
-        await refresh();
-        return;
-      case skir.CommitPreparedEditResponse_resultWrapper(
-        value: skir.CommitResult_conflictWrapper(),
-      ):
-        throw ApiException.conflict(conflictMessage);
-      case skir.CommitPreparedEditResponse_resultWrapper(
-        value: skir.CommitResult_rejectedWrapper(),
-      ):
-        throw ApiException.badRequest("The Realm rejected this edit");
-      case skir.CommitPreparedEditResponse_resultWrapper(
-        value: skir.CommitResult_catalogChangedWrapper(),
-      ):
-        throw ApiException.conflict("The editor catalog changed");
-      default:
-        throw ApiException.internalServerError();
-    }
-  }
-
-  Future<void> deleteResource(
-    skir.ResourceId resource, {
-    String conflictMessage = "The resource changed before deletion",
-  }) async {
-    final baseline = state.draft;
-    if (baseline == null) {
-      throw ApiException.badRequest("Authoring is not ready");
-    }
-    final draft = baseline.fork()..delete(resource);
-    final response = await commit(draft.prepare());
-    switch (response) {
-      case skir.CommitPreparedEditResponse_resultWrapper(
-        value: skir.CommitResult.committed,
-      ):
-        await refresh();
-        return;
-      case skir.CommitPreparedEditResponse_resultWrapper(
-        value: skir.CommitResult_conflictWrapper(),
-      ):
-        throw ApiException.conflict(conflictMessage);
-      case skir.CommitPreparedEditResponse_resultWrapper(
-        value: skir.CommitResult_rejectedWrapper(),
-      ):
-        throw ApiException.badRequest("The Realm rejected this deletion");
-      case skir.CommitPreparedEditResponse_resultWrapper(
-        value: skir.CommitResult_catalogChangedWrapper(),
-      ):
-        throw ApiException.conflict("The editor catalog changed");
-      default:
-        throw ApiException.internalServerError();
-    }
-  }
 
   Future<skir.TypePreviewResult> previewTypeArguments({
     required skir.ResourceId resource,
@@ -446,12 +284,4 @@ class AuthoringSession extends _$AuthoringSession {
     organizationId: _organizationId,
     realmId: _realmId,
   ).watch(request);
-}
-
-@freezed
-abstract class AuthoringSessionAccess with _$AuthoringSessionAccess {
-  const factory AuthoringSessionAccess({
-    required AuthoringSession notifier,
-    required AuthoringSessionState state,
-  }) = _AuthoringSessionAccess;
 }

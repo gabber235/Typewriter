@@ -16,37 +16,25 @@ class PagePage extends ConsumerWidget {
     if (organizationId == null || realmId == null) {
       child = const Center(child: Text("Select a Realm to edit this page"));
     } else {
-      final provider = authoringSessionProvider(organizationId, realmId);
-      final state = ref.watch(provider);
+      final scope = AuthoringScope(
+        organizationId: organizationId,
+        realmId: realmId,
+      );
+      final source = ref.watch(workingAuthoringDocumentProvider(scope));
       final resource = skir.ResourceId(value: pageId);
-      final draft = state.draft;
-      final catalog = state.catalog;
-      if (state.failure case final failure?) {
+      final document = source.value;
+      if (source.error case final failure?) {
         child = Center(child: Text("Page authoring is unavailable: $failure"));
-      } else if (draft == null || catalog == null) {
+      } else if (document == null) {
         child = const Center(child: CircularProgressIndicator());
-      } else if (draft.resource(resource) == null) {
+      } else if (document.resource(resource) == null) {
         child = const Center(child: Text("This page is no longer available"));
       } else {
         child = AuthoredResourceInspection(
           key: ValueKey((resource, skir.PresentationRole.editor)),
           resource: resource,
-          draft: draft,
-          catalog: catalog,
-          commands: AuthoredResourceCommands(
-            commit: ref.read(provider.notifier).commit,
-            previewTypeArguments: ref
-                .read(provider.notifier)
-                .previewTypeArguments,
-            commitTypeArguments: ref
-                .read(provider.notifier)
-                .commitTypeArguments,
-            prepareCreation: ref.read(provider.notifier).prepareCreation,
-            invokeCommand: ref.read(provider.notifier).invokeCommand,
-            watchSearch: ref.read(provider.notifier).watchPresentationSearch,
-            reload: ref.read(provider.notifier).refresh,
-            openAutosave: ref.read(provider.notifier).openAutosave,
-          ),
+          workspace: ref.watch(authoringWorkspaceProvider(scope)),
+          commands: ref.watch(authoredResourceCommandsProvider(scope)),
           role: skir.PresentationRole.editor,
           openResource: (selected) {
             ref

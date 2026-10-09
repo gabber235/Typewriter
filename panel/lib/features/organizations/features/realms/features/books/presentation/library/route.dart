@@ -4,9 +4,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Book library route.
 ///
-/// The library reads the canonical book collection, applies local search for
-/// title and tag projections, and delegates creation to the books application
-/// provider. Selection is updated after creation so the new book follows the
+/// The library reads the shared working book collection, applies local search for
+/// title and tag projections, and delegates creation to the generic resource creation
+/// boundary. Selection is updated after creation so the new book follows the
 /// shared selectable and editor flow.
 @RoutePage()
 class LibraryPage extends HookConsumerWidget {
@@ -17,18 +17,14 @@ class LibraryPage extends HookConsumerWidget {
     final searchController = useTextEditingController();
     final searchQuery = useState("");
     final filteredBooks = ref.watch(filteredBooksProvider(searchQuery.value));
-    final organizationId = ref.watch(organizationIdProvider);
-    final realmId = ref.watch(realmIdProvider);
-    final session = organizationId == null || realmId == null
-        ? null
-        : ref.watch(authoringSessionProvider(organizationId, realmId));
+    final document = ref.watch(selectedWorkingAuthoringDocumentProvider).value;
     final definitionId = coreBookResourceDefinition;
-    final definition = session?.catalog?.snapshot.resourceDefinitions
+    final definition = document?.catalog.snapshot.resourceDefinitions
         .where((candidate) => candidate.id == definitionId)
         .firstOrNull;
     final selection = definition == null
         ? null
-        : session?.catalog?.beginSelection(definition.root);
+        : document?.catalog.beginSelection(definition.root);
     final canCreate =
         selection != null && selection != skir.TypeSelection.unknown;
 
@@ -36,9 +32,10 @@ class LibraryPage extends HookConsumerWidget {
       final current = definition == null
           ? null
           : ref
-                .read(authoringSessionProvider(organizationId!, realmId!))
-                .catalog
-                ?.beginSelection(definition.root);
+                .read(selectedWorkingAuthoringDocumentProvider)
+                .value
+                ?.catalog
+                .beginSelection(definition.root);
       if (current == null || current == skir.TypeSelection.unknown) {
         throw StateError("Book creation is unavailable");
       }
@@ -146,7 +143,7 @@ class LibraryPage extends HookConsumerWidget {
                                 tags: book.tagIds
                                     .map(
                                       (tagId) => ref
-                                          .watch(projectedTagProvider(tagId))
+                                          .watch(workingTagProvider(tagId))
                                           .value,
                                     )
                                     .nonNulls

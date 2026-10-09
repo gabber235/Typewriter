@@ -22,21 +22,22 @@ Widget libraryPageStory({
   DisplayState tagsState = DisplayState.manyItems,
   RealmConnectionState connectionState = RealmConnectionState.online,
 }) {
-  final tags = tagsState.generateReadyBatch(generateTagBatch);
-  final books = displayState.generateReady(
-    generateRandomBook(tags ?? const []),
-  );
-  return FakeApp(
+  return AuthoringFixtureApp(
+    scenario: (displayState, tagsState),
+    state: displayState,
+    createDocument: () {
+      final tags =
+          tagsState.generateReadyBatch(generateTagBatch) ?? const <Tag>[];
+      final books =
+          displayState.generateReady(generateRandomBook(tags)) ??
+          const <Book>[];
+      return fixtureAuthoringDocument(books: books, tags: tags);
+    },
     overrides: [
-      ...authoringSessionMockOverrides(
-        books: books ?? const [],
-        tags: tags ?? const [],
-      ),
       realmInteractionProvider.overrideWith(
         (ref) => RealmInteractionState(connectionState: connectionState),
       ),
-      ...booksProviderOverrides(state: displayState, books: books),
-      ...tagsProviderOverrides(state: tagsState, tags: tags),
+
       ...canonicalServicesProviderOverrides(state: DisplayState.manyItems),
       realmIdProvider.overrideWithValue(skir.recordId("service:widgetbook")),
       selectedRealmProvider.overrideWith((ref) async => null),

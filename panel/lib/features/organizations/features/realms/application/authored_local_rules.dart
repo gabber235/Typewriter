@@ -23,7 +23,7 @@ final class AuthoredRuleProjection {
   });
 
   factory AuthoredRuleProjection.evaluate({
-    required AuthoredDraft draft,
+    required PortableAuthoringView draft,
     required CheckedEditorCatalog catalog,
     required skir.ResourceId resource,
     required skir.EvaluationBudget budget,

@@ -11,8 +11,12 @@ Widget tagGraphUseCase(BuildContext context) {
     initialOption: DisplayState.fewItems,
   );
 
-  return FakeApp(
-    overrides: [...tagsProviderOverrides(state: tagsState)],
+  return AuthoringFixtureApp(
+    scenario: tagsState,
+    state: tagsState,
+    createDocument: () => fixtureAuthoringDocument(
+      tags: tagsState.generateReadyBatch(generateTagBatch) ?? const [],
+    ),
     child: const InspectorScaffold(child: TagGraph()),
   );
 }

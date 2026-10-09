@@ -37,6 +37,7 @@ final class AuthoringCreationSearchSource implements SearchSource {
   );
   SearchQueryContext _query = SearchQueryContext.empty;
   var _disposed = false;
+  ProviderSubscription<AsyncValue<AuthoringDocument>>? _working;
 
   @override
   Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
@@ -45,7 +46,13 @@ final class AuthoringCreationSearchSource implements SearchSource {
   List<QuerySelectorDefinition> get selectors => const [];
 
   @override
-  void initialize(SearchQueryContext context) => search(context);
+  void initialize(SearchQueryContext context) {
+    _working = ref.listen(
+      selectedWorkingAuthoringDocumentProvider,
+      (_, _) => _publish(),
+    );
+    search(context);
+  }
 
   @override
   void search(SearchQueryContext context) {
@@ -55,7 +62,10 @@ final class AuthoringCreationSearchSource implements SearchSource {
 
   void _publish() {
     if (_disposed) return;
-    final catalog = ref.readAuthoringSession().state.catalog;
+    final catalog = ref
+        .read(selectedWorkingAuthoringDocumentProvider)
+        .value
+        ?.catalog;
     if (catalog == null) {
       _snapshots.add(SearchSourceSnapshot.loading());
       return;
@@ -121,6 +131,7 @@ final class AuthoringCreationSearchSource implements SearchSource {
   void dispose() {
     if (_disposed) return;
     _disposed = true;
+    _working?.close();
     unawaited(_snapshots.close());
   }
 }
@@ -150,7 +161,10 @@ SearchCommand createAuthoringResourceCommand({required Ref ref}) =>
             message: "The selected Realm changed while creating the resource",
           );
         }
-        final catalog = ref.readAuthoringSession().state.catalog;
+        final catalog = ref
+            .read(selectedWorkingAuthoringDocumentProvider)
+            .value
+            ?.catalog;
         final navigationHandler = catalog?.snapshot.resourceDefinitions
             .where((definition) => definition.id == created.definition)
             .map((definition) => definition.navigationHandler)

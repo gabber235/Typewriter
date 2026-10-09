@@ -21,7 +21,7 @@ final class PortablePresentationScope {
     this.authoring,
     this.catalog,
     this.resource,
-    this.onDraftChanged,
+    this.edit,
     this.openResource,
     this.prepareCreation,
     this.role,
@@ -49,10 +49,10 @@ final class PortablePresentationScope {
   final Future<void> Function()? reload;
   final ValueChanged<String>? reportStatus;
   final Future<void> Function()? commit;
-  final PortableAuthoringDocument? authoring;
+  final PortableAuthoringView? authoring;
   final CheckedEditorCatalog? catalog;
   final skir.ResourceId? resource;
-  final VoidCallback? onDraftChanged;
+  final AuthoringBinding? edit;
   final ValueChanged<skir.ResourceId>? openResource;
   final Future<skir.PreparedCreation> Function(
     skir.InitializationRequest request,
@@ -64,6 +64,54 @@ final class PortablePresentationScope {
   final Map<String, skir.PresentationNode> slots;
   final Map<String, PortableSlotBuilder> slotBuilders;
   final PortablePresentationHost? host;
+
+  AuthoringEditResult stage(
+    String label,
+    void Function(AuthoringEdit edit) apply, {
+    bool independent = false,
+  }) {
+    final binding = edit;
+    final from = authoring is AuthoringDocument
+        ? authoring! as AuthoringDocument
+        : null;
+    final result = binding == null || !enabled || readOnly
+        ? const AuthoringEditResult.rejected(
+            "This presentation is read only",
+            null,
+          )
+        : independent
+        ? binding.workspace.edit(label: label, apply: apply, from: from)
+        : binding.edit(label: label, apply: apply, from: from);
+    if (result case AuthoringEditRejected(:final message)) {
+      reportStatus?.call(message);
+    }
+    return result;
+  }
+
+  Future<AuthoringEditResult> prepare(
+    String label,
+    Future<void> Function(AuthoringEdit edit) apply,
+  ) async {
+    final binding = edit;
+    final from = authoring is AuthoringDocument
+        ? authoring! as AuthoringDocument
+        : null;
+    if (binding == null || !enabled || readOnly) {
+      return const AuthoringEditResult.rejected(
+        "This presentation is read only",
+        null,
+      );
+    }
+    final result = await binding.prepare(
+      label: label,
+      apply: apply,
+      from: from,
+    );
+    if (result case AuthoringEditRejected(:final message)) {
+      reportStatus?.call(message);
+    }
+    return result;
+  }
 
   PortableExpressionResult evaluate(skir.ExpressionNode node) =>
       PortableExpressionEvaluator.located(
@@ -165,7 +213,7 @@ final class PortablePresentationScope {
         authoring: authoring,
         catalog: catalog,
         resource: resource,
-        onDraftChanged: onDraftChanged,
+        edit: edit,
         openResource: openResource,
         prepareCreation: prepareCreation,
         role: role,
@@ -191,7 +239,7 @@ final class PortablePresentationScope {
         authoring: authoring,
         catalog: catalog,
         resource: resource,
-        onDraftChanged: onDraftChanged,
+        edit: edit,
         openResource: openResource,
         prepareCreation: prepareCreation,
         role: role,
@@ -223,7 +271,7 @@ final class PortablePresentationScope {
       authoring: authoring,
       catalog: catalog,
       resource: resource,
-      onDraftChanged: onDraftChanged,
+      edit: edit,
       openResource: openResource,
       prepareCreation: prepareCreation,
       role: role,
@@ -284,7 +332,7 @@ final class PortablePresentationScope {
       authoring: authoring,
       catalog: catalog,
       resource: resource,
-      onDraftChanged: onDraftChanged,
+      edit: edit,
       openResource: openResource,
       prepareCreation: prepareCreation,
       setBinding: (nestedReference, replacement) {
@@ -351,7 +399,7 @@ final class PortablePresentationScope {
       authoring: authoring,
       catalog: catalog,
       resource: resource,
-      onDraftChanged: onDraftChanged,
+      edit: edit,
       openResource: openResource,
       prepareCreation: prepareCreation,
       role: role,
@@ -397,7 +445,7 @@ final class PortablePresentationScope {
     authoring: authoring,
     catalog: catalog,
     resource: resource,
-    onDraftChanged: onDraftChanged,
+    edit: edit,
     openResource: openResource,
     prepareCreation: prepareCreation,
     role: role,
@@ -424,7 +472,7 @@ final class PortablePresentationScope {
     authoring: authoring,
     catalog: catalog,
     resource: resource,
-    onDraftChanged: onDraftChanged,
+    edit: edit,
     openResource: openResource,
     prepareCreation: prepareCreation,
     role: role,
@@ -451,7 +499,7 @@ final class PortablePresentationScope {
     authoring: authoring,
     catalog: catalog,
     resource: resource,
-    onDraftChanged: onDraftChanged,
+    edit: edit,
     openResource: openResource,
     prepareCreation: prepareCreation,
     role: role,
@@ -477,7 +525,7 @@ final class PortablePresentationScope {
         authoring: authoring,
         catalog: catalog,
         resource: resource,
-        onDraftChanged: onDraftChanged,
+        edit: edit,
         openResource: openResource,
         prepareCreation: prepareCreation,
         role: role,

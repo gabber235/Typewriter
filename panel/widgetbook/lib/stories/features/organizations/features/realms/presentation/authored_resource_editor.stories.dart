@@ -8,19 +8,45 @@ import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 Widget authoredResourceEditorUseCase(BuildContext context) {
   final fixture = _fixture();
   return FakeApp(
-    child: Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: AuthoredResourceEditor(
-          resource: fixture.resource,
-          draft: fixture.draft,
-          catalog: fixture.catalog,
-          role: skir.PresentationRole.inspector,
-          budget: skir.EvaluationBudget(
-            maxSteps: 1000,
-            maxCollectionItems: 1000,
-          ),
-        ),
+    child: _ResourceEditorStory(
+      document: fixture.draft.toDocument(),
+      resource: fixture.resource,
+    ),
+  );
+}
+
+final class _ResourceEditorStory extends StatefulWidget {
+  const _ResourceEditorStory({required this.document, required this.resource});
+  final AuthoringDocument document;
+  final skir.ResourceId resource;
+  @override
+  State<_ResourceEditorStory> createState() => _ResourceEditorStoryState();
+}
+
+final class _ResourceEditorStoryState extends State<_ResourceEditorStory> {
+  late final _transport = ScriptedAuthoringTransport(
+    AsyncData(widget.document),
+  );
+  late final _workspace = AuthoringWorkspace(
+    transport: _transport,
+    initial: widget.document,
+  );
+  @override
+  void dispose() {
+    _workspace.dispose();
+    _transport.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: Padding(
+      padding: const EdgeInsets.all(24),
+      child: AuthoredResourceInspection(
+        resource: widget.resource,
+        workspace: _workspace,
+        commands: fixtureAuthoringCommands(_transport),
+        commitPolicy: EditorCommitPolicy.applyResource,
       ),
     ),
   );
@@ -39,6 +65,25 @@ final class AuthoredNewDraftStory extends StatefulWidget {
 
 final class _AuthoredNewDraftStoryState extends State<AuthoredNewDraftStory> {
   late final fixture = _fixture(unfilled: true);
+  late final _transport = ScriptedAuthoringTransport(
+    AsyncData(fixture.draft.toDocument()),
+  );
+  late final _workspace = AuthoringWorkspace(
+    transport: _transport,
+    initial: fixture.draft.toDocument(),
+  );
+  late final _binding = _workspace.attach(
+    fixture.resource,
+    policy: EditorCommitPolicy.applyResource,
+  );
+  @override
+  void dispose() {
+    _binding.detach();
+    _workspace.dispose();
+    _transport.dispose();
+    super.dispose();
+  }
+
   String? outcome;
 
   @override
@@ -75,8 +120,8 @@ final class _AuthoredNewDraftStoryState extends State<AuthoredNewDraftStory> {
             padding: const EdgeInsets.all(24),
             child: AuthoredResourceEditor(
               resource: fixture.resource,
-              draft: fixture.draft,
-              catalog: fixture.catalog,
+              document: _workspace.document,
+              edit: _binding,
               role: skir.PresentationRole.inspector,
               budget: skir.EvaluationBudget(
                 maxSteps: 1000,
@@ -94,7 +139,7 @@ final class _AuthoredNewDraftStoryState extends State<AuthoredNewDraftStory> {
 
 ({
   skir.ResourceId resource,
-  AuthoredDraft draft,
+  AuthoringEdit draft,
   CheckedEditorCatalog catalog,
   skir.TypeDefinitionId page,
 })
@@ -309,7 +354,7 @@ _fixture({bool unfilled = false}) {
     resource: resource,
     page: page,
     catalog: checked,
-    draft: AuthoredDraft(
+    draft: AuthoringEdit(
       generation: generation,
       resources: [
         skir.AuthoringResource(

@@ -15,7 +15,7 @@ class TagNode extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final asyncTag = ref.watch(projectedTagProvider(tagId));
+    final asyncTag = ref.watch(workingTagProvider(tagId));
 
     return asyncTag(
       name: "Tag",
@@ -81,18 +81,44 @@ class _TagNode extends HookConsumerWidget {
                 child: DragTarget<TagIdentifier>(
                   onWillAcceptWithDetails: (details) =>
                       tagParentDropAction(
-                        ref.read(projectedTagsProvider).value ?? const [],
+                        ref.read(workingTagsProvider).value ?? const [],
                         childId: tag.tagId,
                         parentId: details.data.tagId,
                       ) !=
                       null,
-                  onAcceptWithDetails: (details) => ref
-                      .read(canonicalTagsProvider.notifier)
-                      .toggleTagParent(
-                        ref.read(projectedTagsProvider).value ?? const [],
-                        tag.tagId,
-                        details.data.tagId,
-                      ),
+                  onAcceptWithDetails: (details) {
+                    final tags = ref.read(workingTagsProvider).requireValue;
+                    final action = tagParentDropAction(
+                      tags,
+                      childId: tag.tagId,
+                      parentId: details.data.tagId,
+                    );
+                    if (action == null) return;
+                    final child = tags.firstWhere(
+                      (value) => value.tagId == tag.tagId,
+                    );
+                    final parents = action == TagParentDropAction.link
+                        ? [...child.parentIds, details.data.tagId]
+                        : child.parentIds
+                              .where((id) => id != details.data.tagId)
+                              .toList();
+                    final workspace = ref.readAuthoringWorkspace();
+                    workspace
+                        .edit(
+                          label: "Change tag parents",
+                          apply: (edit) {
+                            replacePortableLinkCollection(
+                              draft: edit,
+                              catalog: workspace.document.catalog,
+                              resource: child.tagId,
+                              field: "parents",
+                              expected: child.parentIds,
+                              proposed: parents,
+                            );
+                          },
+                        )
+                        .report(context);
+                  },
                   builder: (context, candidateData, rejectedData) {
                     final isDropTarget = candidateData.isNotEmpty;
                     final isRejected = rejectedData.isNotEmpty;

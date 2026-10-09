@@ -50,7 +50,7 @@ void main() {
   });
 }
 
-({skir.ResourceId resource, AuthoredDraft draft, CheckedEditorCatalog catalog})
+({skir.ResourceId resource, AuthoringEdit draft, CheckedEditorCatalog catalog})
 _nestedRuleFixture({bool collection = false}) {
   final generation = skir.CatalogGeneration(value: "catalog:nested_rules");
   final tag = _definition("Tag");
@@ -192,7 +192,7 @@ _nestedRuleFixture({bool collection = false}) {
     definition: placement,
     arguments: const [],
   );
-  final draft = AuthoredDraft(
+  final draft = AuthoringEdit(
     generation: generation,
     resources: [
       skir.AuthoringResource(

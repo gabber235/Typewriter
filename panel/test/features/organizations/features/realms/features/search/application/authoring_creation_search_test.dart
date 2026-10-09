@@ -2,6 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 final _refProvider = Provider<Ref>((ref) => ref);
 
@@ -83,7 +84,7 @@ void main() {
 
 ({
   ProviderContainer container,
-  ProviderSubscription<AuthoringSessionState> subscription,
+  ProviderSubscription<AsyncValue<AuthoringDocument>> subscription,
   SourceController controller,
 })
 _fixture() {
@@ -99,13 +100,11 @@ _fixture() {
     overrides: [
       organizationIdProvider.overrideWithValue(organization),
       realmIdProvider.overrideWithValue(realm),
-      authoringSessionProvider.overrideWith2(
-        (_) => _CreationSession(_catalog()),
-      ),
+      ...authoringFixtureOverrides(catalog: _catalog()),
     ],
   );
   final subscription = container.listen(
-    authoringSessionProvider(organization, realm),
+    selectedWorkingAuthoringDocumentProvider,
     (_, _) {},
   );
   final controller = SourceController(
@@ -117,21 +116,6 @@ _fixture() {
     subscription: subscription,
     controller: controller,
   );
-}
-
-final class _CreationSession extends AuthoringSession {
-  _CreationSession(this.catalog);
-
-  final CheckedEditorCatalog catalog;
-
-  @override
-  AuthoringSessionState build(
-    skir.RecordId organizationId,
-    skir.RecordId realmId,
-  ) => AuthoringSessionState(catalog: catalog);
-
-  @override
-  Future<void> refresh({bool catalog = false}) async {}
 }
 
 CheckedEditorCatalog _catalog() {

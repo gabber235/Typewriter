@@ -19,26 +19,25 @@ final class AuthoringResourceIdentifier extends SelectableIdentifier {
 
   @override
   AsyncValue<Selectable> create(Ref ref) {
-    final provider = authoringSessionProvider(organizationId, realmId);
-    final state = ref.watch(provider);
-    if (state.failure case final failure?) {
-      return AsyncError(failure, StackTrace.current);
-    }
-    final resource = state.resources[resourceId];
+    final scope = AuthoringScope(
+      organizationId: organizationId,
+      realmId: realmId,
+    );
+    final source = ref.watch(workingAuthoringDocumentProvider(scope));
+    if (source.mapUnready<Selectable>() case final pending?) return pending;
+    final document = source.requireValue;
+    final workspace = ref.watch(authoringWorkspaceProvider(scope));
+    final commands = ref.watch(authoredResourceCommandsProvider(scope));
+    final resource = document.entry(resourceId);
     if (resource == null) {
-      if (state.snapshot == null) return const AsyncLoading();
       return AsyncError(SelectableNotFoundException(this), StackTrace.current);
     }
-    final draft = state.draft;
-    final catalog = state.catalog;
-    if (draft == null || catalog == null) return const AsyncLoading();
     return AsyncData(
       AuthoringSelectableResource(
         id: this,
         resource: resource,
-        draft: draft,
-        catalog: catalog,
-        session: ref.watch(provider.notifier),
+        workspace: workspace,
+        commands: commands,
       ),
     );
   }
@@ -59,17 +58,15 @@ final class AuthoringSelectableResource
   const AuthoringSelectableResource({
     required this.id,
     required this.resource,
-    required this.draft,
-    required this.catalog,
-    required this.session,
+    required this.workspace,
+    required this.commands,
   });
 
   @override
   final AuthoringResourceIdentifier id;
   final skir.AuthoringResource resource;
-  final AuthoredDraft draft;
-  final CheckedEditorCatalog catalog;
-  final AuthoringSession session;
+  final AuthoringWorkspace workspace;
+  final AuthoredResourceCommands commands;
 
   @override
   String get name =>
@@ -87,7 +84,12 @@ final class AuthoringSelectableResource
   @override
   List<SelectionCapability> get capabilities => [
     DeleteSelectionCapability(
-      onDelete: () => session.deleteResource(id.resourceId),
+      onDelete: () async => workspace
+          .edit(
+            label: "Delete resource",
+            apply: (edit) => edit.delete(id.resourceId),
+          )
+          .requireAccepted(),
     ),
   ];
 
@@ -97,18 +99,8 @@ final class AuthoringSelectableResource
         body: AuthoredResourceInspection(
           key: ValueKey((id.resourceId, skir.PresentationRole.inspector)),
           resource: id.resourceId,
-          draft: draft,
-          catalog: catalog,
-          commands: AuthoredResourceCommands(
-            commit: session.commit,
-            previewTypeArguments: session.previewTypeArguments,
-            commitTypeArguments: session.commitTypeArguments,
-            prepareCreation: session.prepareCreation,
-            invokeCommand: session.invokeCommand,
-            watchSearch: session.watchPresentationSearch,
-            reload: session.refresh,
-            openAutosave: session.openAutosave,
-          ),
+          workspace: workspace,
+          commands: commands,
         ),
       );
 }

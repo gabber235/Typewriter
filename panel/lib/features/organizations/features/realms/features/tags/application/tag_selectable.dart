@@ -5,7 +5,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Stable selection and graph drag identity for one tag record.
 ///
 /// The record ID is also the editor resource identity, so selection, graph
-/// nodes, local drafts, and authoring reservations address the same resource.
+/// nodes, shared work, and authoring reservations address the same resource.
 class TagIdentifier extends SelectableIdentifier
     implements GraphDragData, ReferenceResourceDragData {
   const TagIdentifier(this.tagId);
@@ -29,41 +29,32 @@ class TagIdentifier extends SelectableIdentifier
 
   @override
   AsyncValue<Selectable> create(Ref ref) {
-    final organization = ref.watch(organizationIdProvider);
-    final realm = ref.watch(realmIdProvider);
-    if (organization == null || realm == null) {
+    final scope = ref.watch(selectedAuthoringScopeProvider);
+    if (scope == null) {
       return AsyncError(
         ApiException.badRequest("No realm selected"),
         StackTrace.current,
       );
     }
-    final provider = authoringSessionProvider(organization, realm);
-    final state = ref.watch(provider);
-    if (state.failure case final failure?) {
-      return AsyncError(failure, StackTrace.current);
-    }
-    final resource = state.resources[tagId];
+    final source = ref.watch(workingAuthoringDocumentProvider(scope));
+    if (source.mapUnready<Selectable>() case final pending?) return pending;
+    final document = source.requireValue;
+    final workspace = ref.watch(authoringWorkspaceProvider(scope));
+    final commands = ref.watch(authoredResourceCommandsProvider(scope));
+    final resource = document.entry(tagId);
     if (resource == null) {
-      if (state.snapshot == null) return const AsyncLoading();
       return AsyncError(SelectableNotFoundException(this), StackTrace.current);
     }
-    final draft = state.draft;
-    final catalog = state.catalog;
-    if (draft == null || catalog == null) return const AsyncLoading();
     final tag = Tag.fromAuthoring(resource);
     return AsyncValue.data(
       TagSelectable(
-        onDelete: () => ref
-            .read(provider.notifier)
-            .deleteResource(
-              tagId,
-              conflictMessage: "The tag changed before deletion",
-            ),
+        onDelete: () async => workspace
+            .edit(label: "Delete tag", apply: (edit) => edit.delete(tagId))
+            .requireAccepted(),
         id: this,
         tag: tag,
-        draft: draft,
-        catalog: catalog,
-        session: ref.watch(provider.notifier),
+        workspace: workspace,
+        commands: commands,
       ),
     );
   }
@@ -83,8 +74,8 @@ class TagIdentifier extends SelectableIdentifier
 
 /// Binds one tag snapshot to shared inspector and selection infrastructure.
 ///
-/// This object is a read model assembled from the canonical session revision.
-/// Its editor resource owns persistence, while the selectable exposes the
+/// This object is a read model assembled from the working revision.
+/// The workspace owns persistence, while the selectable exposes the
 /// presentation, collection, deletion capability, and snapshot needed by
 /// selection consumers.
 class TagSelectable extends InspectableSelectable<TagIdentifier> {
@@ -92,18 +83,16 @@ class TagSelectable extends InspectableSelectable<TagIdentifier> {
     required this.onDelete,
     required this.id,
     required this.tag,
-    required this.draft,
-    required this.catalog,
-    required this.session,
+    required this.workspace,
+    required this.commands,
   });
 
   @override
   final TagIdentifier id;
 
   final Tag tag;
-  final AuthoredDraft draft;
-  final CheckedEditorCatalog catalog;
-  final AuthoringSession session;
+  final AuthoringWorkspace workspace;
+  final AuthoredResourceCommands commands;
 
   @override
   String get name => tag.name;
@@ -121,18 +110,8 @@ class TagSelectable extends InspectableSelectable<TagIdentifier> {
         body: AuthoredResourceInspection(
           key: ValueKey((tag.tagId, skir.PresentationRole.inspector)),
           resource: tag.tagId,
-          draft: draft,
-          catalog: catalog,
-          commands: AuthoredResourceCommands(
-            commit: session.commit,
-            previewTypeArguments: session.previewTypeArguments,
-            commitTypeArguments: session.commitTypeArguments,
-            prepareCreation: session.prepareCreation,
-            invokeCommand: session.invokeCommand,
-            watchSearch: session.watchPresentationSearch,
-            reload: session.refresh,
-            openAutosave: session.openAutosave,
-          ),
+          workspace: workspace,
+          commands: commands,
         ),
       );
 

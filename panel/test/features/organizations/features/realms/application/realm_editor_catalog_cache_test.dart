@@ -40,8 +40,8 @@ void main() {
     );
 
     expect(state.snapshot, snapshot);
-    expect(state.draft?.generation, snapshot.generation);
-    expect(state.draft?.resources.keys, contains(resource));
+    expect(state.confirmedDocument?.generation, snapshot.generation);
+    expect(state.confirmedDocument?.resources.keys, contains(resource));
   });
 
   test("a catalog from another generation cannot form an authored draft", () {
@@ -58,7 +58,7 @@ void main() {
       ),
     );
 
-    expect(state.draft, isNull);
+    expect(state.confirmedDocument, isNull);
   });
 }
 

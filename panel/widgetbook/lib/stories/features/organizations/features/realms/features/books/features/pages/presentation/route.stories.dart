@@ -15,13 +15,13 @@ Widget pageTimelineWorkspaceUseCase(BuildContext context) =>
 final class PageWorkspaceStory extends StatefulWidget {
   const PageWorkspaceStory({
     required this.timeline,
-    this.onDraftChanged,
+    this.workspace,
     this.onResourceSelected,
     super.key,
   });
 
   final bool timeline;
-  final ValueChanged<AuthoredDraft>? onDraftChanged;
+  final AuthoringWorkspace? workspace;
   final ValueChanged<skir.ResourceId>? onResourceSelected;
 
   @override
@@ -31,9 +31,41 @@ final class PageWorkspaceStory extends StatefulWidget {
 final class _PageWorkspaceStoryState extends State<PageWorkspaceStory> {
   late final _PageFixture _fixture = _pageFixture();
   late skir.ResourceId _selected = _fixture.firstEntry;
+  late final _transport = ScriptedAuthoringTransport(
+    AsyncData(_fixture.draft.toDocument()),
+  );
+  late final _workspace =
+      widget.workspace ??
+      AuthoringWorkspace(
+        transport: _transport,
+        initial: _fixture.draft.toDocument(),
+      );
+  late final _binding = _workspace.attach(_fixture.page);
+  AuthoringBinding? _inspector;
+  void _updated() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _workspace.addListener(_updated);
+  }
+
+  @override
+  void dispose() {
+    _workspace.removeListener(_updated);
+    _binding.detach();
+    _inspector?.detach();
+    if (widget.workspace == null) _workspace.dispose();
+    _transport.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    _inspector?.detach();
+    _inspector = _workspace.attach(_selected);
     final workspace = skir.PresentationNode(
       nodeId: widget.timeline ? "page.timeline" : "page.graph",
       properties: skir.PresentationProperties.defaultInstance,
@@ -60,7 +92,9 @@ final class _PageWorkspaceStoryState extends State<PageWorkspaceStory> {
                 bindings: {
                   configuredValueBindingId: PortableExpressionBinding(
                     value: skir.DataValue.createRecord(
-                      fields: _fixture.draft.resource(_fixture.page)!.fields,
+                      fields: _workspace.document
+                          .resource(_fixture.page)!
+                          .fields,
                     ),
                     location: skir.ValueLocation(
                       resource: _fixture.page,
@@ -70,17 +104,14 @@ final class _PageWorkspaceStoryState extends State<PageWorkspaceStory> {
                 },
                 budget: _budget,
                 setBinding: (_, _) {},
-                authoring: AuthoredDraftAuthoringDocument(_fixture.draft),
+                authoring: _workspace.document,
+                edit: _binding,
                 catalog: _fixture.catalog,
                 resource: _fixture.page,
                 role: skir.PresentationRole.editor,
                 openResource: (resource) {
                   setState(() => _selected = resource);
                   widget.onResourceSelected?.call(resource);
-                },
-                onDraftChanged: () {
-                  setState(() {});
-                  widget.onDraftChanged?.call(_fixture.draft);
                 },
               ),
             ),
@@ -98,11 +129,10 @@ final class _PageWorkspaceStoryState extends State<PageWorkspaceStory> {
                 child: AuthoredResourceEditor(
                   key: ValueKey(_selected.value),
                   resource: _selected,
-                  draft: _fixture.draft,
-                  catalog: _fixture.catalog,
+                  document: _workspace.document,
+                  edit: _inspector,
                   role: skir.PresentationRole.inspector,
                   budget: _budget,
-                  onChanged: (_) => setState(() {}),
                 ),
               ),
             ),
@@ -126,7 +156,7 @@ final class _PageFixture {
 
   final skir.ResourceId page;
   final skir.ResourceId firstEntry;
-  final AuthoredDraft draft;
+  final AuthoringEdit draft;
   final CheckedEditorCatalog catalog;
   final skir.BoundControl control;
 }
@@ -328,7 +358,7 @@ _PageFixture _pageFixture() {
       secondLocation: _fieldPath("owner"),
     ),
   ];
-  final draft = AuthoredDraft.fromState(
+  final draft = AuthoringEdit.fromState(
     skir.AuthoringState(
       generation: generation,
       resources: resources,
@@ -504,3 +534,6 @@ skir.ValuePath _itemPath(String field, String item) => skir.ValuePath(
     skir.PathSegment.createItem(id: skir.ItemId(value: item)),
   ],
 );
+
+AuthoringDocument pageWorkspaceStoryDocument() =>
+    _pageFixture().draft.toDocument();

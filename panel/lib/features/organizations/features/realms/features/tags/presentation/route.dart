@@ -13,20 +13,16 @@ class TagsPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tagsAsync = ref.watch(projectedTagsProvider);
+    final tagsAsync = ref.watch(workingTagsProvider);
     final viewportCenter = useRef<Offset?>(null);
-    final organizationId = ref.watch(organizationIdProvider);
-    final realmId = ref.watch(realmIdProvider);
-    final session = organizationId == null || realmId == null
-        ? null
-        : ref.watch(authoringSessionProvider(organizationId, realmId));
+    final document = ref.watch(selectedWorkingAuthoringDocumentProvider).value;
     final definitionId = coreTagResourceDefinition;
-    final definition = session?.catalog?.snapshot.resourceDefinitions
+    final definition = document?.catalog.snapshot.resourceDefinitions
         .where((candidate) => candidate.id == definitionId)
         .firstOrNull;
     final selection = definition == null
         ? null
-        : session?.catalog?.beginSelection(definition.root);
+        : document?.catalog.beginSelection(definition.root);
     final canCreate =
         selection != null && selection != skir.TypeSelection.unknown;
 
@@ -34,9 +30,10 @@ class TagsPage extends HookConsumerWidget {
       final current = definition == null
           ? null
           : ref
-                .read(authoringSessionProvider(organizationId!, realmId!))
-                .catalog
-                ?.beginSelection(definition.root);
+                .read(selectedWorkingAuthoringDocumentProvider)
+                .value
+                ?.catalog
+                .beginSelection(definition.root);
       if (current == null || current == skir.TypeSelection.unknown) {
         throw StateError("Tag creation is unavailable");
       }

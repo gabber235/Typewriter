@@ -9,7 +9,15 @@ void main() {
   testWidgets("graph workspace selects an entry and commits its placement", (
     tester,
   ) async {
-    AuthoredDraft? changed;
+    final transport = ScriptedAuthoringTransport(
+      AsyncData(pageWorkspaceStoryDocument()),
+    );
+    final workspace = AuthoringWorkspace(
+      transport: transport,
+      initial: transport.observation.requireValue,
+    );
+    addTearDown(workspace.dispose);
+    addTearDown(transport.dispose);
     skir.ResourceId? selected;
     await tester.binding.setSurfaceSize(const Size(1280, 800));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -17,7 +25,7 @@ void main() {
       FakeApp(
         child: PageWorkspaceStory(
           timeline: false,
-          onDraftChanged: (draft) => changed = draft,
+          workspace: workspace,
           onResourceSelected: (resource) => selected = resource,
         ),
       ),
@@ -34,7 +42,9 @@ void main() {
     ]);
     await tester.pump();
 
-    final reward = changed!.resource(skir.ResourceId(value: "entry:reward"))!;
+    final reward = workspace.document.resource(
+      skir.ResourceId(value: "entry:reward"),
+    )!;
     expect(
       reward.authoredField("placement")!.authoredField("x")!.authoredInteger,
       BigInt.from(9),
@@ -49,21 +59,26 @@ void main() {
     expect(selected?.value, "entry:reward");
     expect(find.text("Reward"), findsWidgets);
     expect(tester.takeException(), isNull);
+    await tester.pump(AuthoringWorkspace.debounce);
+    await tester.pumpAndSettle();
   });
 
-  testWidgets("timeline workspace commits cue frames through the draft", (
+  testWidgets("timeline workspace commits cue frames through shared work", (
     tester,
   ) async {
-    AuthoredDraft? changed;
+    final transport = ScriptedAuthoringTransport(
+      AsyncData(pageWorkspaceStoryDocument()),
+    );
+    final workspace = AuthoringWorkspace(
+      transport: transport,
+      initial: transport.observation.requireValue,
+    );
+    addTearDown(workspace.dispose);
+    addTearDown(transport.dispose);
     await tester.binding.setSurfaceSize(const Size(1280, 800));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
-      FakeApp(
-        child: PageWorkspaceStory(
-          timeline: true,
-          onDraftChanged: (draft) => changed = draft,
-        ),
-      ),
+      FakeApp(child: PageWorkspaceStory(timeline: true, workspace: workspace)),
     );
     await tester.pumpAndSettle();
 
@@ -77,7 +92,9 @@ void main() {
     ]);
     await tester.pump();
 
-    final cue = changed!.resource(skir.ResourceId(value: "cue:dialogue"))!;
+    final cue = workspace.document.resource(
+      skir.ResourceId(value: "cue:dialogue"),
+    )!;
     expect(
       cue
           .authoredField("placement")!
@@ -93,5 +110,7 @@ void main() {
       BigInt.from(96),
     );
     expect(tester.takeException(), isNull);
+    await tester.pump(AuthoringWorkspace.debounce);
+    await tester.pumpAndSettle();
   });
 }

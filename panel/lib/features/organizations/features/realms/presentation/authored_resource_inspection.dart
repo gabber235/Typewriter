@@ -5,8 +5,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 final class AuthoredResourceInspection extends StatefulWidget {
   const AuthoredResourceInspection({
     required this.resource,
-    required this.draft,
-    required this.catalog,
+    required this.workspace,
     required this.commands,
     this.role = skir.PresentationRole.inspector,
     this.commitPolicy = EditorCommitPolicy.autosaveChanges,
@@ -15,8 +14,7 @@ final class AuthoredResourceInspection extends StatefulWidget {
   });
 
   final skir.ResourceId resource;
-  final AuthoredDraft draft;
-  final CheckedEditorCatalog catalog;
+  final AuthoringWorkspace workspace;
   final AuthoredResourceCommands commands;
   final skir.PresentationRole role;
   final EditorCommitPolicy commitPolicy;
@@ -29,14 +27,13 @@ final class AuthoredResourceInspection extends StatefulWidget {
 
 final class _AuthoredResourceInspectionState
     extends State<AuthoredResourceInspection> {
-  late final AuthoredDraftAutosave _autosave;
+  late AuthoringBinding _binding;
 
   @override
   void initState() {
     super.initState();
-    _autosave = widget.commands.openAutosave(
-      resource: widget.resource,
-      baseline: widget.draft,
+    _binding = widget.workspace.attach(
+      widget.resource,
       policy: widget.commitPolicy,
     )..addListener(_updated);
   }
@@ -48,16 +45,22 @@ final class _AuthoredResourceInspectionState
   @override
   void didUpdateWidget(covariant AuthoredResourceInspection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final changed =
-        !identical(widget.draft, oldWidget.draft) ||
-        widget.draft.generation != oldWidget.draft.generation;
-    if (!changed) return;
-    _autosave.acceptBaseline(widget.draft);
+    if (widget.workspace != oldWidget.workspace ||
+        widget.resource != oldWidget.resource ||
+        widget.commitPolicy != oldWidget.commitPolicy) {
+      _binding
+        ..removeListener(_updated)
+        ..detach();
+      _binding = widget.workspace.attach(
+        widget.resource,
+        policy: widget.commitPolicy,
+      )..addListener(_updated);
+    }
   }
 
   @override
   void dispose() {
-    _autosave
+    _binding
       ..removeListener(_updated)
       ..detach();
     super.dispose();
@@ -65,11 +68,12 @@ final class _AuthoredResourceInspectionState
 
   @override
   Widget build(BuildContext context) {
-    final dirty = _autosave.dirty;
-    final configuration = _autosave.draft
+    final dirty = _binding.dirty;
+    final relatedWork = widget.workspace.hasWorkFor(widget.resource);
+    final configuration = _binding.document
         .resource(widget.resource)
         ?.configuration;
-    final editor = _editor(widget.role, enabled: true, onChanged: _changed);
+    final editor = _editor(widget.role, enabled: !_binding.blocked);
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: context.spacing.space2,
@@ -77,43 +81,49 @@ final class _AuthoredResourceInspectionState
         if (configuration != null)
           AuthoredTypeArgumentEditor(
             selection: configuration,
-            catalog: widget.catalog,
+            catalog: _binding.document.catalog,
             preview: (requested) => widget.commands.previewTypeArguments(
               resource: widget.resource,
               requested: requested,
             ),
             commit: widget.commands.commitTypeArguments,
-            enabled: !dirty && !_autosave.saving,
-            disabledMessage: dirty
+            enabled: !relatedWork && !_binding.saving,
+            disabledMessage: relatedWork
                 ? "Save or discard local edits before changing type arguments"
                 : null,
             onStatus: (message) {
-              _autosave.reportStatus(message);
+              _binding.reportStatus(message);
             },
           ),
         if (widget.role == skir.PresentationRole.editor)
           Expanded(child: editor)
         else
           editor,
-        if (_autosave.status case final status?)
+        if (_binding.status case final status?)
           Semantics(
             liveRegion: true,
             child: Row(
               children: [
                 Expanded(child: Text(status)),
-                if (_autosave.canRetry)
+                if (_binding.phase is AuthoringGroupCommittedAwaitingRefresh)
                   TextButton(
-                    onPressed: _autosave.retry,
-                    child: const Text("Retry"),
+                    onPressed: widget.workspace.refreshConfirmed,
+                    child: const Text("Refresh"),
                   ),
-                if (_autosave.canUseLatest)
+                if (_binding.blocked && _binding.canDiscard)
                   TextButton(
-                    onPressed: _useLatest,
-                    child: const Text("Use latest"),
+                    onPressed: _discard,
+                    child: Text(
+                      _binding.hasSubmittedWork
+                          ? "Discard later edits"
+                          : "Discard",
+                    ),
                   ),
               ],
             ),
           ),
+        for (final group in _binding.relatedGroups)
+          AuthoringGroupControls(workspace: widget.workspace, group: group),
         if (dirty && widget.commitPolicy == EditorCommitPolicy.applyResource)
           Align(
             alignment: AlignmentDirectional.centerEnd,
@@ -121,14 +131,18 @@ final class _AuthoredResourceInspectionState
               spacing: context.spacing.space2,
               children: [
                 TextButton(
-                  onPressed: _autosave.saving ? null : _discard,
-                  child: const Text("Cancel"),
+                  onPressed: _binding.canDiscard ? _discard : null,
+                  child: Text(
+                    _binding.hasSubmittedWork
+                        ? "Discard later edits"
+                        : "Cancel",
+                  ),
                 ),
                 LoadingButton.filled(
-                  onPressed: !_autosave.saving && !_autosave.blocked
+                  onPressed: _binding.phase is AuthoringGroupDirty
                       ? _save
                       : null,
-                  child: Text(_autosave.saving ? "Saving" : "Apply"),
+                  child: Text(_binding.saving ? "Saving" : "Apply"),
                 ),
               ],
             ),
@@ -150,12 +164,11 @@ final class _AuthoredResourceInspectionState
   AuthoredResourceEditor _editor(
     skir.PresentationRole role, {
     required bool enabled,
-    ValueChanged<AuthoredDraft>? onChanged,
   }) => AuthoredResourceEditor(
     key: ValueKey(role),
     resource: widget.resource,
-    draft: _autosave.draft,
-    catalog: widget.catalog,
+    document: _binding.document,
+    edit: _binding,
     role: role,
     budget: skir.EvaluationBudget(maxSteps: 10000, maxCollectionItems: 10000),
     commit: _save,
@@ -163,24 +176,14 @@ final class _AuthoredResourceInspectionState
     watchSearch: widget.commands.watchSearch,
     reload: widget.commands.reload,
     onStatus: (message) {
-      _autosave.reportStatus(message);
+      _binding.reportStatus(message);
     },
     openResource: widget.openResource,
     prepareCreation: widget.commands.prepareCreation,
     enabled: enabled,
-    onChanged: onChanged,
   );
 
-  void _changed(AuthoredDraft next) {
-    _autosave.stage(next);
-  }
-
-  Future<void> _save() => _autosave.flush();
-
-  Future<void> _useLatest() async {
-    FocusScope.of(context).unfocus();
-    await _autosave.useLatest();
-  }
+  Future<void> _save() => _binding.save();
 
   Future<void> _invokeCommand(
     skir.CapabilityId capabilityId,
@@ -203,86 +206,41 @@ final class _AuthoredResourceInspectionState
               if (id != null) {
                 widget.openResource?.call(skir.ResourceId(value: id));
               } else {
-                _autosave.reportStatus(
+                _binding.reportStatus(
                   "The command returned an invalid resource identity",
                 );
               }
             case skir.PanelInstruction_notifyWrapper(:final value):
-              _autosave.reportStatus(value.message);
+              _binding.reportStatus(value.message);
             case skir.PanelInstruction_unknown():
-              _autosave.reportStatus(
+              _binding.reportStatus(
                 "The command returned an unknown instruction",
               );
           }
         }
       case skir.CommandResult_invalidWrapper(:final value):
-        _autosave.reportStatus(
+        _binding.reportStatus(
           value.diagnostics.map((item) => item.message).join("\n"),
         );
       case skir.CommandResult_unavailableWrapper(:final value):
-        _autosave.reportStatus(
+        _binding.reportStatus(
           value.diagnostics.map((item) => item.message).join("\n"),
         );
       case skir.CommandResult_permissionDeniedWrapper(:final value):
-        _autosave.reportStatus(value.message);
+        _binding.reportStatus(value.message);
       case skir.CommandResult_staleGenerationWrapper():
         await widget.commands.reload();
         if (mounted) {
-          _autosave.reportStatus(
+          _binding.reportStatus(
             "The editor catalog changed. Review the refreshed form",
           );
         }
       case skir.CommandResult_unknown():
-        _autosave.reportStatus("The command result is unavailable");
+        _binding.reportStatus("The command result is unavailable");
     }
   }
 
   void _discard() {
-    _autosave.discard(widget.draft);
+    _binding.discard();
   }
-}
-
-final class AuthoredResourceCommands {
-  const AuthoredResourceCommands({
-    required this.commit,
-    required this.previewTypeArguments,
-    required this.commitTypeArguments,
-    required this.prepareCreation,
-    required this.invokeCommand,
-    required this.watchSearch,
-    required this.reload,
-    required this.openAutosave,
-  });
-
-  final Future<skir.CommitPreparedEditResponse> Function(skir.PreparedEdit edit)
-  commit;
-  final Future<skir.TypePreviewResult> Function({
-    required skir.ResourceId resource,
-    required skir.TypeSelection requested,
-  })
-  previewTypeArguments;
-  final Future<skir.CommitTypeArgumentChangeResponse> Function(
-    skir.TypeArgumentChangePreview preview,
-  )
-  commitTypeArguments;
-  final Future<skir.PreparedCreation> Function(
-    skir.InitializationRequest request,
-  )
-  prepareCreation;
-  final Future<skir.CommandResult> Function({
-    required skir.CapabilityId capabilityId,
-    required skir.DataValue payload,
-  })
-  invokeCommand;
-  final Stream<skir.RealmPresentationSearchUpdate> Function(
-    skir.RealmPresentationSearchRequest request,
-  )
-  watchSearch;
-  final Future<void> Function() reload;
-  final AuthoredDraftAutosave Function({
-    required skir.ResourceId resource,
-    required AuthoredDraft baseline,
-    EditorCommitPolicy policy,
-  })
-  openAutosave;
 }

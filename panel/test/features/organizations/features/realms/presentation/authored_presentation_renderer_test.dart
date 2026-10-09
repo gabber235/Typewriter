@@ -366,7 +366,7 @@ void main() {
         links: const [],
         findings: const [],
       );
-      final draft = AuthoredDraft.fromState(snapshot, catalog: checked);
+      final draft = AuthoringEdit.fromState(snapshot, catalog: checked);
       skir.DataValue? written;
       final reference = skir.BindingRef(
         bindingId: _rootBinding,
@@ -388,7 +388,7 @@ void main() {
         },
         budget: _budget,
         setBinding: (_, value) => written = value,
-        authoring: AuthoredDraftAuthoringDocument(draft),
+        authoring: draft,
         catalog: checked,
       );
 

@@ -6,7 +6,6 @@ import "package:faker/faker.dart" hide Color, random;
 // ignore: depend_on_referenced_packages, implementation_imports
 
 import "package:typewriter_testkit/src/features/organizations/features/realms/features/books/features/pages/features/editor/typed_data.dart";
-import "package:typewriter_testkit/src/shared/testing/testing.dart";
 
 export "features/features.dart";
 
@@ -36,35 +35,3 @@ Book Function() generateRandomBook(List<Tag> tags) {
     );
   };
 }
-
-class BooksMock extends CanonicalBooks {
-  BooksMock(this.displayState, {this.specificBooks});
-  final DisplayState displayState;
-  final List<Book>? specificBooks;
-
-  @override
-  Future<List<Book>> build() async {
-    if (specificBooks != null) return specificBooks!;
-    final tagsIds = await ref.watch(canonicalTagsProvider.future);
-    return displayState.generate(generateRandomBook(tagsIds));
-  }
-
-  @override
-  Future<void> updateBook(Book book, {Book? expected}) async {
-    await Future.delayed(500.ms);
-    state = AsyncData(
-      (await future)
-          .map((value) => value.bookId == book.bookId ? book : value)
-          .toList(),
-    );
-  }
-}
-
-List<Override> booksProviderOverrides({
-  DisplayState state = DisplayState.loading,
-  List<Book>? books,
-}) => [
-  canonicalBooksProvider.overrideWith(
-    () => BooksMock(state, specificBooks: books),
-  ),
-];

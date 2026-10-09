@@ -30,7 +30,7 @@ void main() {
         findings: const [],
       );
 
-      final draft = AuthoredDraft.fromState(snapshot);
+      final draft = AuthoringEdit.fromState(snapshot);
 
       expect(draft.resources.keys, [resource]);
       expect(draft.resource(resource), record);

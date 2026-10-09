@@ -5,11 +5,10 @@ import "package:typewriter_panel/typewriter_panel.dart";
 final class AuthoredResourceEditor extends StatefulWidget {
   const AuthoredResourceEditor({
     required this.resource,
-    required this.draft,
-    required this.catalog,
+    required this.document,
     required this.role,
     required this.budget,
-    this.onChanged,
+    this.edit,
     this.openResource,
     this.prepareCreation,
     this.invokeCommand,
@@ -23,11 +22,10 @@ final class AuthoredResourceEditor extends StatefulWidget {
   });
 
   final skir.ResourceId resource;
-  final AuthoredDraft draft;
-  final CheckedEditorCatalog catalog;
+  final AuthoringDocument document;
+  final AuthoringBinding? edit;
   final skir.PresentationRole role;
   final skir.EvaluationBudget budget;
-  final ValueChanged<AuthoredDraft>? onChanged;
   final ValueChanged<skir.ResourceId>? openResource;
   final Future<skir.PreparedCreation> Function(
     skir.InitializationRequest request,
@@ -53,34 +51,43 @@ final class AuthoredResourceEditor extends StatefulWidget {
 }
 
 final class _AuthoredResourceEditorState extends State<AuthoredResourceEditor> {
-  late AuthoredDraft _draft = widget.draft;
+  AuthoredPresentationHost? _host;
+  AuthoringDocument get _document => widget.edit?.document ?? widget.document;
+  void _updated() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    widget.edit?.addListener(_updated);
+  }
 
   @override
   void didUpdateWidget(covariant AuthoredResourceEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!identical(widget.draft, oldWidget.draft)) {
-      _draft = widget.draft;
+    if (oldWidget.edit != widget.edit) {
+      oldWidget.edit?.removeListener(_updated);
+      widget.edit?.addListener(_updated);
     }
   }
 
   @override
+  void dispose() {
+    widget.edit?.removeListener(_updated);
+    _host?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final record = _draft.resource(widget.resource);
+    final record = _document.resource(widget.resource);
     if (record == null) {
       return _diagnostic(context, "The authored resource is absent");
     }
-    final catalog = _draft.catalog;
-    if (catalog == null || catalog.snapshot.generation != _draft.generation) {
-      return _diagnostic(context, "The authored draft catalog is unavailable");
-    }
-    if (catalog.snapshot.generation != widget.catalog.snapshot.generation) {
-      return _diagnostic(
-        context,
-        "The authored draft must be rebased before rendering",
-      );
-    }
+    final catalog = _document.catalog;
     final localRules = AuthoredRuleProjection.evaluate(
-      draft: _draft,
+      draft: _document,
       catalog: catalog,
       resource: widget.resource,
       budget: widget.budget,
@@ -115,11 +122,6 @@ final class _AuthoredResourceEditorState extends State<AuthoredResourceEditor> {
     skir.PresentationMaterial material,
     AuthoredRuleProjection localRules,
   ) {
-    void changed() {
-      if (mounted) setState(() {});
-      widget.onChanged?.call(_draft);
-    }
-
     final capabilities = PortablePresentationCapabilities(
       invokeCommand: widget.invokeCommand,
       watchSearch: widget.watchSearch,
@@ -131,20 +133,40 @@ final class _AuthoredResourceEditorState extends State<AuthoredResourceEditor> {
     final showsFullDiagnostics =
         widget.role == skir.PresentationRole.editor ||
         widget.role == skir.PresentationRole.inspector;
-    final authoredHost = AuthoredDraftPresentationHost(
-      resource: widget.resource,
-      draft: _draft,
-      material: material,
-      role: selected.resolvedRole,
-      budget: widget.budget,
-      capabilities: capabilities,
-      available: widget.enabled,
-      prepareCreation: widget.prepareCreation,
-      onDraftChanged: changed,
-      reportStatus: widget.onStatus,
-    );
+    var authoredHost = _host;
+    if (authoredHost == null ||
+        authoredHost.resource != widget.resource ||
+        authoredHost.edit != widget.edit ||
+        authoredHost.material != material ||
+        authoredHost.role != selected.resolvedRole ||
+        authoredHost.budget != widget.budget) {
+      authoredHost?.dispose();
+      authoredHost = _host = AuthoredPresentationHost(
+        resource: widget.resource,
+        source: _document,
+        edit: widget.edit,
+        material: material,
+        role: selected.resolvedRole,
+        budget: widget.budget,
+        capabilities: capabilities,
+        available: widget.enabled,
+        readOnly: widget.edit == null,
+        prepareCreation: widget.prepareCreation,
+        reportStatus: widget.onStatus,
+      );
+    } else {
+      authoredHost.update(
+        source: _document,
+        capabilities: capabilities,
+        available: widget.enabled,
+        readOnly: widget.edit == null,
+        prepareCreation: widget.prepareCreation,
+        reportStatus: widget.onStatus,
+      );
+    }
+    final installedHost = authoredHost;
     final renderer = PortablePresentationRenderer(
-      host: authoredHost,
+      host: installedHost,
       fillAvailableSpace: widget.fillAvailableSpace,
       onStatus: widget.onStatus,
       compactDiagnostics: showsFullDiagnostics
@@ -178,10 +200,9 @@ final class _AuthoredResourceEditorState extends State<AuthoredResourceEditor> {
             openResource: capabilities.openResource,
             prepareCreation: capabilities.prepareCreation,
             reportStatus: reportStatus,
-            authoring: authoredHost.authored,
+            authoring: installedHost.authored,
             catalog: document.catalog,
             resource: widget.resource,
-            onDraftChanged: changed,
             role: document.role,
             material: document.material,
             activePresentations: document.activePresentations,

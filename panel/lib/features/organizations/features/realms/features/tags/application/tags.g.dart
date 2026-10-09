@@ -8,170 +8,14 @@ part of 'tags.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Owns the current Realm tag projection and its authoring mutations.
-///
-/// The provider waits for its graph selection before reading the session, then
-/// follows session revisions through [ref.listen]. Creation and deletion use
-/// direct guarded operations. Editing is delegated to the shared editor owner
-/// so drafts, validation, and response reconciliation follow the same path as
-/// other Realm resources.
+/// Typed tag views of the shared working document.
 
-@ProviderFor(CanonicalTags)
-final canonicalTagsProvider = CanonicalTagsProvider._();
+@ProviderFor(workingTags)
+final workingTagsProvider = WorkingTagsProvider._();
 
-/// Owns the current Realm tag projection and its authoring mutations.
-///
-/// The provider waits for its graph selection before reading the session, then
-/// follows session revisions through [ref.listen]. Creation and deletion use
-/// direct guarded operations. Editing is delegated to the shared editor owner
-/// so drafts, validation, and response reconciliation follow the same path as
-/// other Realm resources.
-final class CanonicalTagsProvider
-    extends $AsyncNotifierProvider<CanonicalTags, List<Tag>> {
-  /// Owns the current Realm tag projection and its authoring mutations.
-  ///
-  /// The provider waits for its graph selection before reading the session, then
-  /// follows session revisions through [ref.listen]. Creation and deletion use
-  /// direct guarded operations. Editing is delegated to the shared editor owner
-  /// so drafts, validation, and response reconciliation follow the same path as
-  /// other Realm resources.
-  CanonicalTagsProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'canonicalTagsProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+/// Typed tag views of the shared working document.
 
-  @override
-  String debugGetCreateSourceHash() => _$canonicalTagsHash();
-
-  @$internal
-  @override
-  CanonicalTags create() => CanonicalTags();
-}
-
-String _$canonicalTagsHash() => r'3ccd483ee44ccc87946d274aa32f7d769236cdab';
-
-/// Owns the current Realm tag projection and its authoring mutations.
-///
-/// The provider waits for its graph selection before reading the session, then
-/// follows session revisions through [ref.listen]. Creation and deletion use
-/// direct guarded operations. Editing is delegated to the shared editor owner
-/// so drafts, validation, and response reconciliation follow the same path as
-/// other Realm resources.
-
-abstract class _$CanonicalTags extends $AsyncNotifier<List<Tag>> {
-  FutureOr<List<Tag>> build();
-  @$mustCallSuper
-  @override
-  WhenComplete runBuild() {
-    final ref = this.ref as $Ref<AsyncValue<List<Tag>>, List<Tag>>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<AsyncValue<List<Tag>>, List<Tag>>,
-              AsyncValue<List<Tag>>,
-              Object?,
-              Object?
-            >;
-    return element.handleCreate(ref, build);
-  }
-}
-
-/// Reads one tag from the canonical Realm projection.
-
-@ProviderFor(canonicalTag)
-final canonicalTagProvider = CanonicalTagFamily._();
-
-/// Reads one tag from the canonical Realm projection.
-
-final class CanonicalTagProvider
-    extends $FunctionalProvider<AsyncValue<Tag?>, Tag?, FutureOr<Tag?>>
-    with $FutureModifier<Tag?>, $FutureProvider<Tag?> {
-  /// Reads one tag from the canonical Realm projection.
-  CanonicalTagProvider._({
-    required CanonicalTagFamily super.from,
-    required skir.ResourceId super.argument,
-  }) : super(
-         retry: null,
-         name: r'canonicalTagProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
-
-  @override
-  String debugGetCreateSourceHash() => _$canonicalTagHash();
-
-  @override
-  String toString() {
-    return r'canonicalTagProvider'
-        ''
-        '($argument)';
-  }
-
-  @$internal
-  @override
-  $FutureProviderElement<Tag?> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<Tag?> create(Ref ref) {
-    final argument = this.argument as skir.ResourceId;
-    return canonicalTag(ref, argument);
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return other is CanonicalTagProvider && other.argument == argument;
-  }
-
-  @override
-  int get hashCode {
-    return argument.hashCode;
-  }
-}
-
-String _$canonicalTagHash() => r'fd7b645707b870e3bdcb847e04da6071ce38e867';
-
-/// Reads one tag from the canonical Realm projection.
-
-final class CanonicalTagFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<Tag?>, skir.ResourceId> {
-  CanonicalTagFamily._()
-    : super(
-        retry: null,
-        name: r'canonicalTagProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: true,
-      );
-
-  /// Reads one tag from the canonical Realm projection.
-
-  CanonicalTagProvider call(skir.ResourceId tagId) =>
-      CanonicalTagProvider._(argument: tagId, from: this);
-
-  @override
-  String toString() => r'canonicalTagProvider';
-}
-
-/// Combines canonical tags with local editor values for UI consumers.
-///
-/// Canonical state remains the authority. A local value is only a temporary
-
-@ProviderFor(projectedTags)
-final projectedTagsProvider = ProjectedTagsProvider._();
-
-/// Combines canonical tags with local editor values for UI consumers.
-///
-/// Canonical state remains the authority. A local value is only a temporary
-
-final class ProjectedTagsProvider
+final class WorkingTagsProvider
     extends
         $FunctionalProvider<
           AsyncValue<List<Tag>>,
@@ -179,22 +23,20 @@ final class ProjectedTagsProvider
           AsyncValue<List<Tag>>
         >
     with $Provider<AsyncValue<List<Tag>>> {
-  /// Combines canonical tags with local editor values for UI consumers.
-  ///
-  /// Canonical state remains the authority. A local value is only a temporary
-  ProjectedTagsProvider._()
+  /// Typed tag views of the shared working document.
+  WorkingTagsProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'projectedTagsProvider',
+        name: r'workingTagsProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$projectedTagsHash();
+  String debugGetCreateSourceHash() => _$workingTagsHash();
 
   @$internal
   @override
@@ -204,7 +46,7 @@ final class ProjectedTagsProvider
 
   @override
   AsyncValue<List<Tag>> create(Ref ref) {
-    return projectedTags(ref);
+    return workingTags(ref);
   }
 
   /// {@macro riverpod.override_with_value}
@@ -216,16 +58,12 @@ final class ProjectedTagsProvider
   }
 }
 
-String _$projectedTagsHash() => r'ec7e7bcb7fab6b84b99ffce821e9ba696dc7c550';
+String _$workingTagsHash() => r'0cd206afa3b25f42715597e4555d078fcdd13afc';
 
-/// Projects one tag for graph nodes that rebuild independently.
+@ProviderFor(workingTag)
+final workingTagProvider = WorkingTagFamily._();
 
-@ProviderFor(projectedTag)
-final projectedTagProvider = ProjectedTagFamily._();
-
-/// Projects one tag for graph nodes that rebuild independently.
-
-final class ProjectedTagProvider
+final class WorkingTagProvider
     extends
         $FunctionalProvider<
           AsyncValue<Tag?>,
@@ -233,24 +71,23 @@ final class ProjectedTagProvider
           AsyncValue<Tag?>
         >
     with $Provider<AsyncValue<Tag?>> {
-  /// Projects one tag for graph nodes that rebuild independently.
-  ProjectedTagProvider._({
-    required ProjectedTagFamily super.from,
+  WorkingTagProvider._({
+    required WorkingTagFamily super.from,
     required skir.ResourceId super.argument,
   }) : super(
          retry: null,
-         name: r'projectedTagProvider',
+         name: r'workingTagProvider',
          isAutoDispose: true,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
 
   @override
-  String debugGetCreateSourceHash() => _$projectedTagHash();
+  String debugGetCreateSourceHash() => _$workingTagHash();
 
   @override
   String toString() {
-    return r'projectedTagProvider'
+    return r'workingTagProvider'
         ''
         '($argument)';
   }
@@ -263,7 +100,7 @@ final class ProjectedTagProvider
   @override
   AsyncValue<Tag?> create(Ref ref) {
     final argument = this.argument as skir.ResourceId;
-    return projectedTag(ref, argument);
+    return workingTag(ref, argument);
   }
 
   /// {@macro riverpod.override_with_value}
@@ -276,7 +113,7 @@ final class ProjectedTagProvider
 
   @override
   bool operator ==(Object other) {
-    return other is ProjectedTagProvider && other.argument == argument;
+    return other is WorkingTagProvider && other.argument == argument;
   }
 
   @override
@@ -285,26 +122,22 @@ final class ProjectedTagProvider
   }
 }
 
-String _$projectedTagHash() => r'bd6692f58de18d1f83fce86b47fdb23e3a3cbb37';
+String _$workingTagHash() => r'814b32e7fed48ed4c2f88c79be8cfc88cc4546fb';
 
-/// Projects one tag for graph nodes that rebuild independently.
-
-final class ProjectedTagFamily extends $Family
+final class WorkingTagFamily extends $Family
     with $FunctionalFamilyOverride<AsyncValue<Tag?>, skir.ResourceId> {
-  ProjectedTagFamily._()
+  WorkingTagFamily._()
     : super(
         retry: null,
-        name: r'projectedTagProvider',
+        name: r'workingTagProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
 
-  /// Projects one tag for graph nodes that rebuild independently.
-
-  ProjectedTagProvider call(skir.ResourceId tagId) =>
-      ProjectedTagProvider._(argument: tagId, from: this);
+  WorkingTagProvider call(skir.ResourceId tagId) =>
+      WorkingTagProvider._(argument: tagId, from: this);
 
   @override
-  String toString() => r'projectedTagProvider';
+  String toString() => r'workingTagProvider';
 }

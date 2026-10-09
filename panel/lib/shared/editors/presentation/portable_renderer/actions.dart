@@ -207,15 +207,11 @@ extension _PortableScopeActions on PortablePresentationScope {
       reportStatus?.call("The action target is unavailable");
       return;
     }
-    final staged = authored.stageExpressionEdit(
-      replacement.reads,
-      (branch) => branch.set(location, replacement.value) is PortablePathValue,
-    );
-    if (!staged) {
-      reportStatus?.call("The action target could not be updated");
-      return;
-    }
-    onDraftChanged?.call();
+    stage("Edit value", (operation) {
+      operation
+        ..observeExpressionReads(replacement.reads)
+        ..set(location, replacement.value);
+    });
   }
 
   _EvaluatedActionValue? _reportActionFailure(String message) {
@@ -227,7 +223,7 @@ extension _PortableScopeActions on PortablePresentationScope {
     skir.BindingRef target,
     PortablePathResult<skir.AuthoringRecord> Function(
       skir.ValueLocation location,
-      PortableAuthoringDocument draft,
+      PortableAuthoringEdit draft,
     )
     edit, {
     Iterable<PortableExpressionRead> reads = const [],
@@ -238,20 +234,10 @@ extension _PortableScopeActions on PortablePresentationScope {
       reportStatus?.call("The action target is unavailable");
       return;
     }
-    String? failure;
-    final staged = authored.stageExpressionEdit(reads, (branch) {
-      final result = edit(location, branch);
-      if (result case PortablePathUnavailable(:final message)) {
-        failure = message;
-        return false;
-      }
-      return true;
+    stage("Edit collection", (operation) {
+      operation.observeExpressionReads(reads);
+      edit(location, operation);
     });
-    if (!staged) {
-      reportStatus?.call(failure ?? "The collection could not be updated");
-      return;
-    }
-    onDraftChanged?.call();
   }
 
   void _editMap(
@@ -276,20 +262,15 @@ extension _PortableScopeActions on PortablePresentationScope {
       reportStatus?.call("The map row is no longer available");
       return;
     }
-    String? failure;
-    final staged = authored.stageExpressionEdit(reads, (branch) {
-      final result = branch.replaceMap(location, update(rows));
-      if (result case PortablePathUnavailable(:final message)) {
-        failure = message;
-        return false;
+    stage("Edit map", (operation) {
+      operation.observeExpressionReads(reads);
+      final latest = operation.expect(location);
+      if (latest is! PortablePathValue<skir.DataValue> ||
+          latest.value.authoredPayload != current) {
+        throw StateError("The map changed before this action");
       }
-      return true;
+      operation.replaceMap(location, update(rows));
     });
-    if (!staged) {
-      reportStatus?.call(failure ?? "The map could not be updated");
-      return;
-    }
-    onDraftChanged?.call();
   }
 
   Future<void> _chooseForm(skir.ChooseFormAction choice) async {
@@ -323,16 +304,16 @@ extension _PortableScopeActions on PortablePresentationScope {
     );
     try {
       final previousFindingCount = authored.initializationFindings.length;
-      final prepared = await prepare(request);
-      final result = authored.applyPreparedRecord(location, request, prepared);
-      if (result case PortablePathUnavailable(:final message)) {
-        reportStatus?.call(message);
-        return;
-      }
-      onDraftChanged?.call();
-      final findings = authored.initializationFindings.skip(
-        previousFindingCount,
-      );
+      final result = await this.prepare("Choose form", (operation) async {
+        operation.expect(location);
+        final prepared = await prepare(request);
+        operation.applyPreparedRecord(location, request, prepared);
+      });
+      if (result is AuthoringEditRejected) return;
+      final findings =
+          (edit?.document.initializationFindings ??
+                  const <skir.InitializationDiagnostic>[])
+              .skip(previousFindingCount);
       if (findings.isNotEmpty) {
         reportStatus?.call(
           findings.map(formatPortableInitializationDiagnostic).join("\n"),

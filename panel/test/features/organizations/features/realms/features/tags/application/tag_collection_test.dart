@@ -5,8 +5,15 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 void main() {
-  test("Tag selection opens the canonical authored inspector", () async {
-    final session = AuthoringSessionMock();
+  test("Tag selection opens the shared authored inspector", () async {
+    final transport = ScriptedAuthoringTransport(
+      AsyncData(fixtureAuthoringDocument()),
+    );
+    final workspace = AuthoringWorkspace(
+      transport: transport,
+      initial: transport.observation.requireValue,
+    );
+    addTearDown(workspace.dispose);
     final tag = Tag(
       tagId: skir.ResourceId(value: "tag:test"),
       name: "Test Tag",
@@ -19,9 +26,8 @@ void main() {
       onDelete: () async => deleted = true,
       id: TagIdentifier(tag.tagId),
       tag: tag,
-      draft: session.initial.draft!,
-      catalog: session.initial.catalog!,
-      session: session,
+      workspace: workspace,
+      commands: fixtureAuthoringCommands(transport),
     );
     final owners = EditorOwnerRegistry();
     addTearDown(owners.dispose);

@@ -5,8 +5,6 @@ import "package:faker/faker.dart";
 
 // ignore: depend_on_referenced_packages, implementation_imports
 
-import "package:typewriter_testkit/src/shared/testing/testing.dart";
-
 export "features/features.dart";
 
 final fixturePageType = skir.NamedTypeUse(
@@ -39,23 +37,6 @@ Page generateRandomPage([skir.NamedTypeUse? pageType]) {
     pageType ?? fixturePageType,
   );
   return Page(
-    authoredRecord: skir.AuthoringRecord(
-      configuration: configuration,
-      fields: [
-        skir.FieldValue(
-          name: "name",
-          value: skir.DataValue.wrapStringValue(pageName),
-        ),
-        skir.FieldValue(
-          name: "chapter",
-          value: skir.DataValue.wrapStringValue(chapter),
-        ),
-        skir.FieldValue(
-          name: "priority",
-          value: skir.DataValue.wrapInteger(priority.toString()),
-        ),
-      ],
-    ),
     pageId: skir.ResourceId(value: "page:${faker.guid.guid()}"),
     bookId: skir.ResourceId(value: "book:${faker.guid.guid()}"),
     name: pageName,
@@ -64,50 +45,6 @@ Page generateRandomPage([skir.NamedTypeUse? pageType]) {
     priority: priority,
   );
 }
-
-class BookPagesMock extends CanonicalBookPages {
-  BookPagesMock({required this.displayState});
-
-  final DisplayState displayState;
-
-  @override
-  Future<List<Page>> build(skir.ResourceId bookId) async {
-    await ref.debounce(300.ms);
-    await Future<void>.delayed(100.ms);
-    return displayState.generate(generateRandomPage);
-  }
-}
-
-class PagesMock extends CanonicalPage {
-  PagesMock({this.page, this.pageType});
-
-  final Page? page;
-  final skir.NamedTypeUse? pageType;
-
-  @override
-  Future<Page> build(skir.ResourceId pageId) async {
-    await Future<void>.delayed(50.ms);
-    if (page case final page?) return page;
-    return generateRandomPage(pageType).copyWith(pageId: pageId);
-  }
-}
-
-List<Override> bookPagesProviderOverrides({
-  DisplayState state = DisplayState.loading,
-}) => [
-  canonicalBookPagesProvider.overrideWith2(
-    (_) => BookPagesMock(displayState: state),
-  ),
-];
-
-List<Override> pagesProviderOverrides({
-  Page? page,
-  skir.NamedTypeUse? pageType,
-}) => [
-  canonicalPageProvider.overrideWith2(
-    (_) => PagesMock(page: page, pageType: pageType),
-  ),
-];
 
 List<Override> pageIdProviderOverrides({String? pageId}) => [
   pageIdProvider.overrideWith(

@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
@@ -36,13 +38,17 @@ Widget searchModalRouteUseCase(BuildContext context) {
     initialValue: "",
   );
 
-  return FakeApp(
+  return AuthoringFixtureApp(
+    createDocument: () => fixtureAuthoringDocument(
+      books: [_storyBook],
+      pages: List.generate(
+        8,
+        (_) => generateRandomPage().copyWith(bookId: _storyBook.bookId),
+      ),
+    ),
     overrides: [
-      ...bookPagesProviderOverrides(state: DisplayState.manyItems),
-      ...pagesProviderOverrides(),
       ...pageIdProviderOverrides(pageId: "example-page-id"),
       ...bookIdProviderOverrides(bookId: "example-book-id"),
-      ...booksProviderOverrides(state: DisplayState.manyItems),
       ...organizationProviderOverrides(),
       ...organizationsProviderOverrides(state: DisplayState.manyItems),
       ...authProviderOverrides(),
@@ -198,3 +204,11 @@ class _SearchStoryConfig {
   final Duration debounceDuration;
   final Duration searchDelay;
 }
+
+final _storyBook = Book(
+  bookId: skir.ResourceId(value: "example-book-id"),
+  title: "Example Book",
+  icon: "mdi:book",
+  color: Colors.blue,
+  tagIds: const [],
+);

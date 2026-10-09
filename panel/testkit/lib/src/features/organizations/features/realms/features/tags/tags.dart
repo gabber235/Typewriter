@@ -2,7 +2,6 @@ import "package:faker/faker.dart" hide Color, random;
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/src/shared/testing/testing.dart";
 
 part "tag_batch_layout.dart";
 
@@ -87,39 +86,3 @@ Tag generateRandomTag() {
     ),
   );
 }
-
-class TagsMock extends CanonicalTags {
-  TagsMock({required this.displayState, this.specificTags});
-
-  final DisplayState displayState;
-  final List<Tag>? specificTags;
-
-  @override
-  Future<List<Tag>> build() async {
-    if (specificTags != null) {
-      return specificTags!;
-    }
-
-    return displayState.generateBatch(generateTagBatch);
-  }
-
-  @override
-  Future<void> updateTag(Tag tag, {Tag? expected}) async {
-    final tags = await future;
-    final canonical = tag;
-    state = AsyncData(
-      tags
-          .map((value) => value.tagId == tag.tagId ? canonical : value)
-          .toList(),
-    );
-  }
-}
-
-List<Override> tagsProviderOverrides({
-  DisplayState state = DisplayState.loading,
-  List<Tag>? tags,
-}) => [
-  canonicalTagsProvider.overrideWith(
-    () => TagsMock(displayState: state, specificTags: tags),
-  ),
-];

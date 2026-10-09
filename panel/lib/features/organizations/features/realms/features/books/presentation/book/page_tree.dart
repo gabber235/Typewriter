@@ -167,11 +167,29 @@ class _TreeCategory extends HookConsumerWidget {
                 return DragTarget<PageDrag>(
                   onWillAcceptWithDetails: (details) => true,
                   onAcceptWithDetails: (details) async {
-                    await ref.movePageChapter(
-                      id: details.data.pageId,
-                      chapter: node.path,
-                      expectedChapter: details.data.expectedChapter,
-                    );
+                    ref
+                        .readAuthoringWorkspace()
+                        .edit(
+                          label: "Move page to chapter",
+                          apply: (edit) {
+                            final at = authoredFieldLocation(
+                              details.data.pageId,
+                              ["chapter"],
+                            );
+                            final current = edit.expect(at);
+                            if (current is! PortablePathValue<skir.DataValue> ||
+                                current.value != details.data.expectedChapter) {
+                              throw StateError(
+                                "The page chapter changed during the drag",
+                              );
+                            }
+                            edit.setPayload(
+                              at,
+                              skir.DataValue.wrapStringValue(node.path),
+                            );
+                          },
+                        )
+                        .report(context);
                   },
                   builder: (context, pageCandidates, pageRejected) {
                     final isAccepting =

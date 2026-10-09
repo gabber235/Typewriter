@@ -2,6 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../../../support/test_utils.dart";
 
@@ -10,7 +11,7 @@ void main() {
     final fixture = _fixture();
 
     final result = portableLinkPlans(
-      draft: AuthoredDraftAuthoringDocument(fixture.draft),
+      draft: fixture.draft,
       catalog: fixture.catalog,
       source: fixture.source,
     );
@@ -38,7 +39,7 @@ void main() {
   test("stages a prepared nested counterpart and its reciprocal link", () {
     final fixture = _fixture();
     final plan = (portableLinkPlans(
-      draft: AuthoredDraftAuthoringDocument(fixture.draft),
+      draft: fixture.draft,
       catalog: fixture.catalog,
       source: fixture.source,
     ) as PortableLinkPlanReady).plans.single;
@@ -114,13 +115,14 @@ void main() {
     tester,
   ) async {
     final fixture = _fixture();
-    await tester.pumpWidget(_linkControl(fixture));
+    final editing = _LinkWorkspace(fixture.draft, fixture.source.resource);
+    await tester.pumpWidget(_linkControl(fixture, editing: editing));
 
     await tester.tap(find.byTooltip("Choose linked resource"));
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip("Close"));
     await tester.pumpAndSettle();
-    expect(fixture.draft.intents, isEmpty);
+    expect(editing.workspace.state.groups, isEmpty);
 
     await tester.tap(find.byTooltip("Choose linked resource"));
     await tester.pumpAndSettle();
@@ -133,8 +135,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    unawaited(editing.binding.save());
+    await tester.pump();
     final intent =
-        fixture.draft.intents.single as skir.EditIntent_connectRelationWrapper;
+        editing.transport.requests.single.edit.intents.single
+            as skir.EditIntent_connectRelationWrapper;
     expect(
       intent.value.counterpart,
       isA<skir.CounterpartChoice_existingWrapper>(),
@@ -145,13 +150,17 @@ void main() {
     expect(intent.value.target, fixture.existingTarget);
     expect(counterpart.id.location.resource, fixture.existingTarget);
     expect(counterpart.id.location.path, fixture.nestedLinkPath);
-    expect(fixture.draft.links.single.secondLocation, fixture.nestedLinkPath);
+    expect(
+      editing.workspace.document.links.single.secondLocation,
+      fixture.nestedLinkPath,
+    );
   });
 
   testWidgets("link input prepares and chooses a new nested counterpart", (
     tester,
   ) async {
     final fixture = _fixture();
+    final editing = _LinkWorkspace(fixture.draft, fixture.source.resource);
     final prepared = skir.PreparedCreation(
       record: skir.AuthoringRecord(
         configuration: fixture.wrapperSelection,
@@ -169,6 +178,7 @@ void main() {
     await tester.pumpWidget(
       _linkControl(
         fixture,
+        editing: editing,
         prepareCreation: (value) async {
           request = value;
           return prepared;
@@ -186,8 +196,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(request?.type, fixture.wrapperSelection);
+    unawaited(editing.binding.save());
+    await tester.pump();
     final intent =
-        fixture.draft.intents.single as skir.EditIntent_connectRelationWrapper;
+        editing.transport.requests.single.edit.intents.single
+            as skir.EditIntent_connectRelationWrapper;
     final counterpart = intent.value.counterpart;
     expect(counterpart, isA<skir.CounterpartChoice_newWrapper>());
     final created = (counterpart! as skir.CounterpartChoice_newWrapper).value;
@@ -200,13 +213,34 @@ void main() {
         path: _fieldPath("wrapper"),
       ),
     );
-    expect(fixture.draft.links.single.secondLocation, fixture.nestedLinkPath);
+    expect(
+      editing.workspace.document.links.single.secondLocation,
+      fixture.nestedLinkPath,
+    );
   });
+}
+
+final class _LinkWorkspace {
+  _LinkWorkspace(AuthoringEdit operation, skir.ResourceId resource) {
+    final document = operation.toDocument();
+    transport = ScriptedAuthoringTransport(AsyncData(document));
+    workspace = AuthoringWorkspace(transport: transport, initial: document);
+    binding = workspace.attach(
+      resource,
+      policy: EditorCommitPolicy.applyResource,
+    );
+    addTearDown(binding.detach);
+    addTearDown(workspace.dispose);
+    addTearDown(transport.dispose);
+  }
+  late final ScriptedAuthoringTransport transport;
+  late final AuthoringWorkspace workspace;
+  late final AuthoringBinding binding;
 }
 
 Widget _linkControl(
   ({
-    AuthoredDraft draft,
+    AuthoringEdit draft,
     CheckedEditorCatalog catalog,
     skir.ValueLocation source,
     skir.ResourceId existingTarget,
@@ -216,6 +250,7 @@ Widget _linkControl(
     skir.TypeSelection wrapperSelection,
   })
   fixture, {
+  required _LinkWorkspace editing,
   Future<skir.PreparedCreation> Function(skir.InitializationRequest)?
   prepareCreation,
 }) {
@@ -259,7 +294,8 @@ Widget _linkControl(
           },
           budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
           setBinding: (_, _) {},
-          authoring: AuthoredDraftAuthoringDocument(fixture.draft),
+          authoring: editing.workspace.document,
+          edit: editing.binding,
           catalog: fixture.catalog,
           prepareCreation: prepareCreation,
         ),
@@ -269,7 +305,7 @@ Widget _linkControl(
 }
 
 ({
-  AuthoredDraft draft,
+  AuthoringEdit draft,
   CheckedEditorCatalog catalog,
   skir.ValueLocation source,
   skir.ResourceId existingTarget,
@@ -523,7 +559,7 @@ _fixture() {
   );
   final checked = CheckedEditorCatalog(snapshot);
   return (
-    draft: AuthoredDraft.fromState(authored, catalog: checked),
+    draft: AuthoringEdit.fromState(authored, catalog: checked),
     catalog: checked,
     source: skir.ValueLocation(resource: source, path: _fieldPath("source")),
     existingTarget: existingTarget,

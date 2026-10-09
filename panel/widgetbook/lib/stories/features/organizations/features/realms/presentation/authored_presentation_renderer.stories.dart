@@ -87,12 +87,41 @@ final class AuthoredInteractionGallery extends StatefulWidget {
 
 final class _AuthoredInteractionGalleryState
     extends State<AuthoredInteractionGallery> {
-  late final AuthoredDraft _draft = _interactionDraft();
+  late final _transport = ScriptedAuthoringTransport(
+    AsyncData(_interactionDraft().toDocument()),
+  );
+  late final _workspace = AuthoringWorkspace(
+    transport: _transport,
+    initial: _transport.observation.requireValue,
+  );
+  late final _binding = _workspace.attach(
+    _interactionResource,
+    policy: EditorCommitPolicy.applyResource,
+  );
+  void _updated() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _workspace.addListener(_updated);
+  }
+
+  @override
+  void dispose() {
+    _workspace.removeListener(_updated);
+    _binding.detach();
+    _workspace.dispose();
+    _transport.dispose();
+    super.dispose();
+  }
+
   String? _status;
 
   @override
   Widget build(BuildContext context) {
-    final record = _draft.resource(_interactionResource)!;
+    final record = _workspace.document.resource(_interactionResource)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -117,12 +146,15 @@ final class _AuthoredInteractionGalleryState
                 resource: _interactionResource,
                 path: reference.path,
               );
-              _draft.set(location, value);
+              _binding.edit(
+                label: "Edit field",
+                apply: (edit) => edit.set(location, value),
+              );
               setState(() {});
             },
-            authoring: AuthoredDraftAuthoringDocument(_draft),
+            authoring: _workspace.document,
+            edit: _binding,
             resource: _interactionResource,
-            onDraftChanged: () => setState(() {}),
             reportStatus: (status) => setState(() => _status = status),
           ),
         ),
@@ -531,10 +563,13 @@ skir.PresentationNode _textNode(String id, String value) =>
       header: null,
     );
 
-AuthoredDraft _interactionDraft() {
+AuthoringEdit _interactionDraft() {
   final configuration = _namedType("InteractionStory");
-  return AuthoredDraft(
+  return AuthoringEdit(
     generation: skir.CatalogGeneration(value: "catalog:interaction_story"),
+    catalog: authoringFixtureCatalog(
+      generation: skir.CatalogGeneration(value: "catalog:interaction_story"),
+    ),
     resources: [
       skir.AuthoringResource(
         id: _interactionResource,

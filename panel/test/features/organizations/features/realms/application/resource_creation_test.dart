@@ -2,34 +2,45 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../../../support/test_utils.dart";
 
 void main() {
   testWidgets(
-    "creation commits an unfinished generic resource without an editor dialog",
+    "creation publishes an unfinished resource before server acknowledgement",
     (tester) async {
       final fixture = _fixture();
-      late _CreationSession session;
-      CreatedAuthoringResource? created;
-
-      final staged = stageResourceCreation(
-        baseline: AuthoredDraft.fromState(
-          fixture.snapshot,
-          catalog: fixture.catalog,
-        ),
-        request: fixture.request,
-        prepared: fixture.prepared,
+      final document = AuthoringDocument.fromState(
+        fixture.snapshot,
+        catalog: fixture.catalog,
       );
-      expect(staged.initializationFindings, hasLength(1));
-      expect(staged.initializationFindings.single.code, "dependent_unfilled");
-
+      final transport = ScriptedAuthoringTransport(AsyncData(document));
+      addTearDown(transport.dispose);
+      skir.InitializationRequest? preparedRequest;
+      CreatedAuthoringResource? created;
+      final commands = AuthoredResourceCommands(
+        previewTypeArguments: ({required resource, required requested}) async =>
+            throw UnimplementedError(),
+        commitTypeArguments: (_) async => throw UnimplementedError(),
+        prepareCreation: (request) async {
+          preparedRequest = request;
+          return fixture.prepared;
+        },
+        invokeCommand: ({required capabilityId, required payload}) async =>
+            throw UnimplementedError(),
+        watchSearch: (_) => const Stream.empty(),
+        search: (_) async => throw UnimplementedError(),
+        reload: () async {},
+      );
       await tester.pumpTestApp(
         overrides: [
           organizationIdProvider.overrideWithValue(fixture.organization),
           realmIdProvider.overrideWithValue(fixture.realm),
-          authoringSessionProvider.overrideWith2(
-            (_) => session = _CreationSession(fixture),
+          ...authoringFixtureOverrides(
+            document: document,
+            transport: transport,
+            commands: commands,
           ),
         ],
         child: Consumer(
@@ -45,81 +56,45 @@ void main() {
           ),
         ),
       );
-
       await tester.tap(find.text("Create"));
       await tester.pump();
-
       expect(find.byType(Dialog), findsNothing);
-      expect(session.preparedRequest?.type, fixture.pending);
-      expect(session.committed, isNotNull);
-      expect(session.awaitedResource, fixture.request.id);
-      expect(created, isNull);
-
-      session.adopted.complete(
-        skir.AuthoringResource(
-          id: fixture.request.id,
-          definition: fixture.request.definition,
-          content: fixture.prepared.record,
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text("The generic argument is unfinished"), findsOneWidget);
+      expect(preparedRequest?.type, fixture.pending);
+      expect(created?.id, fixture.request.id);
       expect(created?.content.configuration, fixture.pending);
-      expect(created?.content.fields, isEmpty);
-      final intent = session.committed!.intents.single;
-      expect(intent, isA<skir.EditIntent_createResourceWrapper>());
-      final record =
-          (intent as skir.EditIntent_createResourceWrapper).value.record;
-      expect(record.configuration, fixture.pending);
-      final pending = record.configuration as skir.TypeSelection_pendingWrapper;
-      expect(pending.value.arguments, [skir.ArgumentSelection.unfilled]);
+      final scope = AuthoringScope(
+        organizationId: fixture.organization,
+        realmId: fixture.realm,
+      );
+      final workspace = tester.container().read(
+        authoringWorkspaceProvider(scope),
+      );
+      expect(
+        workspace.document.entry(fixture.request.id)?.definition,
+        fixture.request.definition,
+      );
+      expect(
+        workspace.document.initializationFindings.single.code,
+        "dependent_unfilled",
+      );
+      expect(transport.requests, isEmpty);
+      await tester.pump(AuthoringWorkspace.debounce);
+      await tester.pump();
+      expect(transport.requests, hasLength(1));
+      final intent =
+          transport.requests.single.edit.intents.single
+              as skir.EditIntent_createResourceWrapper;
+      expect(intent.value.record.configuration, fixture.pending);
+      expect(
+        (intent.value.record.configuration as skir.TypeSelection_pendingWrapper)
+            .value
+            .arguments,
+        [skir.ArgumentSelection.unfilled],
+      );
+      expect(transport.observation.requireValue.entry(created!.id), isNull);
+      expect(find.text("The generic argument is unfinished"), findsOneWidget);
     },
   );
-}
-
-final class _CreationSession extends AuthoringSession {
-  _CreationSession(this.fixture);
-
-  final _CreationFixture fixture;
-  skir.InitializationRequest? preparedRequest;
-  skir.PreparedEdit? committed;
-  skir.ResourceId? awaitedResource;
-  final adopted = Completer<skir.AuthoringResource>();
-
-  @override
-  AuthoringSessionState build(
-    skir.RecordId organizationId,
-    skir.RecordId realmId,
-  ) => AuthoringSessionState(
-    snapshot: fixture.snapshot,
-    catalog: fixture.catalog,
-  );
-
-  @override
-  Future<void> refresh({bool catalog = false}) async {}
-
-  @override
-  Future<skir.PreparedCreation> prepareCreation(
-    skir.InitializationRequest request,
-  ) async {
-    preparedRequest = request;
-    return fixture.prepared;
-  }
-
-  @override
-  Future<skir.CommitPreparedEditResponse> commit(skir.PreparedEdit edit) async {
-    committed = edit;
-    return skir.CommitPreparedEditResponse.wrapResult(
-      skir.CommitResult.committed,
-    );
-  }
-
-  @override
-  Future<skir.AuthoringResource> awaitResource(skir.ResourceId resource) {
-    awaitedResource = resource;
-    return adopted.future;
-  }
 }
 
 final class _CreationFixture {

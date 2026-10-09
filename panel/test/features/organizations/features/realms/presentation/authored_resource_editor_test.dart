@@ -2,219 +2,332 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../../../support/test_utils.dart";
 
 void main() {
   for (final kind in ["named", "expected named Unfilled", "ordinary"]) {
-    testWidgets(
-      "direct $kind text preserves authored identity through edit and clear",
-      (tester) async {
-        final named = kind != "ordinary";
-        final initial = kind == "expected named Unfilled"
-            ? skir.DataValue.unfilled
-            : named
-            ? skir.DataValue.createNamed(
-                actualType: _chapterTextType,
-                payload: skir.DataValue.wrapStringValue("old.chapter"),
-              )
-            : skir.DataValue.wrapStringValue("old.chapter");
-        final fixture = _fixture(
-          fieldName: "chapter",
-          initial: initial,
-          namedText: named ? _chapterTextType : null,
-        );
-        await tester.pumpTestApp(
-          child: Scaffold(
-            body: AuthoredResourceEditor(
-              resource: fixture.resource,
-              draft: fixture.draft,
-              catalog: fixture.catalog,
-              role: skir.PresentationRole.inspector,
-              budget: skir.EvaluationBudget(
-                maxSteps: 100,
-                maxCollectionItems: 100,
-              ),
-            ),
-          ),
-        );
-        await tester.enterText(find.byType(TextFormField), "new.chapter");
-        await tester.pumpAndSettle();
-        final expectedEdit = named
-            ? skir.DataValue.createNamed(
-                actualType: _chapterTextType,
-                payload: skir.DataValue.wrapStringValue("new.chapter"),
-              )
-            : skir.DataValue.wrapStringValue("new.chapter");
-        expect(
-          fixture.draft.resource(fixture.resource)?.authoredField("chapter"),
-          expectedEdit,
-        );
-        expect(fixture.draft.intents, hasLength(1));
-        final first =
-            fixture.draft.intents.single as skir.EditIntent_setValueWrapper;
-        expect(first.value.at.resource, fixture.resource);
-        expect(
-          first.value.at.path,
-          skir.ValuePath(
-            segments: [skir.PathSegment.createField(name: "chapter")],
-          ),
-        );
-        expect(first.value.value, expectedEdit);
-        final expectation = fixture.draft
-            .prepare()
-            .expectations
+    testWidgets("direct $kind text preserves identity through edit and clear", (
+      tester,
+    ) async {
+      final named = kind != "ordinary";
+      final initial = kind == "expected named Unfilled"
+          ? skir.DataValue.unfilled
+          : named
+          ? skir.DataValue.createNamed(
+              actualType: _chapterTextType,
+              payload: skir.DataValue.wrapStringValue("old.chapter"),
+            )
+          : skir.DataValue.wrapStringValue("old.chapter");
+      final fixture = _fixture(
+        fieldName: "chapter",
+        initial: initial,
+        namedText: named ? _chapterTextType : null,
+      );
+      final authoring = _editing(fixture.draft);
+      await tester.pumpTestApp(
+        child: Scaffold(body: _editor(fixture.resource, authoring.binding)),
+      );
+      await tester.enterText(find.byType(TextFormField), "new.chapter");
+      await tester.pump();
+      final expected = named
+          ? skir.DataValue.createNamed(
+              actualType: _chapterTextType,
+              payload: skir.DataValue.wrapStringValue("new.chapter"),
+            )
+          : skir.DataValue.wrapStringValue("new.chapter");
+      expect(
+        authoring.workspace.document
+            .resource(fixture.resource)!
+            .authoredField("chapter"),
+        expected,
+      );
+      final saving = authoring.binding.save();
+      await tester.pump();
+      final submitted = authoring.transport.requests.single.edit;
+      final set = submitted.intents.single as skir.EditIntent_setValueWrapper;
+      expect(
+        set.value.at,
+        authoredFieldLocation(fixture.resource, ["chapter"]),
+      );
+      expect(set.value.value, expected);
+      expect(
+        submitted.expectations
             .whereType<skir.EditExpectation_valueWrapper>()
-            .where((fact) => fact.value.at == first.value.at)
-            .single;
-        expect(expectation.value.expected, initial);
-        await tester.enterText(find.byType(TextFormField), "");
-        await tester.pumpAndSettle();
-        final expectedClear = named
+            .single
+            .value
+            .expected,
+        initial,
+      );
+      final branch = AuthoringEdit.fromDocument(
+        authoring.transport.observation.requireValue,
+      )..set(set.value.at, expected);
+      authoring.transport.confirm(0, branch.toDocument());
+      await saving;
+      await tester.pump();
+      await tester.enterText(find.byType(TextFormField), "");
+      await tester.pump();
+      expect(
+        authoring.workspace.document
+            .resource(fixture.resource)!
+            .authoredField("chapter"),
+        named
             ? skir.DataValue.createNamed(
                 actualType: _chapterTextType,
                 payload: skir.DataValue.wrapStringValue(""),
               )
-            : skir.DataValue.wrapStringValue("");
-        expect(
-          fixture.draft.resource(fixture.resource)?.authoredField("chapter"),
-          expectedClear,
-        );
-        expect(fixture.draft.intents, hasLength(2));
-        final clear =
-            fixture.draft.intents.last as skir.EditIntent_setValueWrapper;
-        expect(clear.value.at, first.value.at);
-        expect(clear.value.value, expectedClear);
-      },
-    );
+            : skir.DataValue.wrapStringValue(""),
+      );
+    });
   }
 
   for (final field in ["name", "chapter", "priority"]) {
-    testWidgets(
-      "inspector saves Unfilled $field with its exact authored expectation",
-      (tester) async {
-        final fixture = field == "priority"
-            ? _numericFixture(
-                generation: "catalog:1",
-                snapshot: "realm:1",
-                minimum: 0,
-                fieldName: field,
-                initial: skir.DataValue.unfilled,
-              )
-            : _fixture(fieldName: field, initial: skir.DataValue.unfilled);
-        final submitted = <skir.PreparedEdit>[];
-        var latest = _snapshotOf(fixture.draft);
-        Future<skir.CommitPreparedEditResponse> commit(
-          skir.PreparedEdit edit,
-        ) async {
-          submitted.add(edit);
-          final accepted = fixture.draft.fork();
-          for (final intent
-              in edit.intents.cast<skir.EditIntent_setValueWrapper>()) {
-            accepted.set(intent.value.at, intent.value.value);
-          }
-          latest = _snapshotOf(accepted);
-          return skir.CommitPreparedEditResponse.wrapResult(
-            skir.CommitResult.committed,
-          );
-        }
-
-        final commands = AuthoredResourceCommands(
-          commit: commit,
-          previewTypeArguments: ({required resource, required requested}) =>
-              throw UnimplementedError(),
-          commitTypeArguments: (_) => throw UnimplementedError(),
-          prepareCreation: (_) => throw UnimplementedError(),
-          invokeCommand: ({required capabilityId, required payload}) async =>
-              skir.CommandResult.unknown,
-          watchSearch: (_) => const Stream.empty(),
-          reload: () async {},
-          openAutosave: _openAutosave(
-            commit: commit,
-            fetchCurrent: () async => latest,
+    testWidgets("inspector saves Unfilled $field with exact expectation", (
+      tester,
+    ) async {
+      final fixture = field == "priority"
+          ? _numericFixture(
+              generation: "catalog:1",
+              snapshot: "realm:1",
+              minimum: 0,
+              fieldName: field,
+              initial: skir.DataValue.unfilled,
+            )
+          : _fixture(fieldName: field, initial: skir.DataValue.unfilled);
+      final authoring = _editing(
+        fixture.draft,
+        policy: EditorCommitPolicy.autosaveChanges,
+      );
+      await tester.pumpTestApp(
+        child: Scaffold(
+          body: AuthoredResourceInspection(
+            resource: fixture.resource,
+            workspace: authoring.workspace,
+            commands: fixtureAuthoringCommands(authoring.transport),
           ),
-        );
-        await tester.pumpTestApp(
-          child: Scaffold(
-            body: AuthoredResourceInspection(
-              resource: fixture.resource,
-              draft: fixture.draft,
-              catalog: fixture.catalog,
-              commands: commands,
-            ),
-          ),
-        );
-        await tester.enterText(
-          find.byType(TextFormField),
-          field == "priority" ? "3" : "new",
-        );
-        await tester.pump(AuthoredDraftAutosave.debounce);
-        await tester.pumpAndSettle();
-        expect(submitted, hasLength(1));
-        final set =
-            submitted.single.intents.single as skir.EditIntent_setValueWrapper;
-        expect(set.value.at.resource, fixture.resource);
-        expect(
-          set.value.at.path,
-          skir.ValuePath(segments: [skir.PathSegment.createField(name: field)]),
-        );
-        expect(
-          set.value.value,
-          field == "priority"
-              ? skir.DataValue.wrapInteger("3")
-              : skir.DataValue.wrapStringValue("new"),
-        );
-        final expected = submitted.single.expectations
+        ),
+      );
+      await tester.enterText(
+        find.byType(TextFormField),
+        field == "priority" ? "3" : "new",
+      );
+      await tester.pump(AuthoringWorkspace.debounce);
+      await tester.pump();
+      final submitted = authoring.transport.requests.single.edit;
+      final set = submitted.intents.single as skir.EditIntent_setValueWrapper;
+      expect(set.value.at, authoredFieldLocation(fixture.resource, [field]));
+      expect(
+        set.value.value,
+        field == "priority"
+            ? skir.DataValue.wrapInteger("3")
+            : skir.DataValue.wrapStringValue("new"),
+      );
+      expect(
+        submitted.expectations
             .whereType<skir.EditExpectation_valueWrapper>()
-            .where((fact) => fact.value.at == set.value.at)
-            .single;
-        expect(expected.value.expected, skir.DataValue.unfilled);
-        expect(find.textContaining("changed"), findsNothing);
-        await tester.pumpWidget(const SizedBox());
-        await tester.pumpAndSettle();
-      },
-    );
+            .single
+            .value
+            .expected,
+        skir.DataValue.unfilled,
+      );
+      expect(find.textContaining("changed"), findsNothing);
+      await tester.pumpAndSettle();
+    });
   }
+
+  testWidgets("two inspectors share values and manual discard", (tester) async {
+    final fixture = _fixture();
+    final authoring = _editing(fixture.draft);
+    final commands = fixtureAuthoringCommands(authoring.transport);
+    await tester.pumpTestApp(
+      child: Scaffold(
+        body: Row(
+          children: [
+            for (var index = 0; index < 2; index++)
+              Expanded(
+                child: AuthoredResourceInspection(
+                  resource: fixture.resource,
+                  workspace: authoring.workspace,
+                  commands: commands,
+                  commitPolicy: EditorCommitPolicy.applyResource,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+    await tester.enterText(find.byType(TextFormField).first, "Shared");
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widgetList<TextFormField>(find.byType(TextFormField))
+          .map((field) => field.controller!.text),
+      ["Shared", "Shared"],
+    );
+    expect(authoring.workspace.state.groups, hasLength(1));
+    expect(find.text("Apply"), findsNWidgets(2));
+    await tester.tap(find.text("Cancel").last);
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widgetList<TextFormField>(find.byType(TextFormField))
+          .map((field) => field.controller!.text),
+      ["Original", "Original"],
+    );
+    expect(authoring.transport.requests, isEmpty);
+  });
+
+  testWidgets("closing an inspector retains work for a later editor", (
+    tester,
+  ) async {
+    final fixture = _fixture();
+    final authoring = _editing(fixture.draft);
+    await tester.pumpTestApp(
+      child: Scaffold(body: _editor(fixture.resource, authoring.binding)),
+    );
+    await tester.enterText(find.byType(TextFormField), "Retained");
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump();
+    authoring.binding.detach();
+    final next = authoring.workspace.attach(
+      fixture.resource,
+      policy: EditorCommitPolicy.applyResource,
+    );
+    addTearDown(next.detach);
+    await tester.pumpTestApp(
+      child: Scaffold(body: _editor(fixture.resource, next)),
+    );
+    expect(find.text("Retained"), findsWidgets);
+    expect(next.dirty, isTrue);
+  });
+
+  testWidgets("pending work remains accessible without an inspector", (
+    tester,
+  ) async {
+    final fixture = _fixture();
+    final authoring = _editing(fixture.draft);
+    authoring.binding.edit(
+      label: "Rename message",
+      apply: (edit) => edit.set(
+        authoredFieldLocation(fixture.resource, ["title"]),
+        skir.DataValue.wrapStringValue("Local"),
+      ),
+    );
+    authoring.binding.detach();
+    await tester.pumpTestApp(
+      child: AuthoringPendingWork(workspace: authoring.workspace),
+    );
+    await tester.tap(find.text("Pending changes (1)"));
+    await tester.pumpAndSettle();
+    expect(find.text("Rename message"), findsOneWidget);
+    await tester.tap(find.text("View changes"));
+    await tester.pumpAndSettle();
+    expect(find.text("Working"), findsOneWidget);
+    expect(find.text("Saved"), findsOneWidget);
+    expect(find.text("Before changes"), findsOneWidget);
+    expect(find.byType(TextField), findsNWidgets(3));
+    for (final field in tester.widgetList<TextField>(find.byType(TextField))) {
+      expect(field.readOnly, isTrue);
+    }
+    await tester.tap(find.text("Close"));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Discard"));
+    await tester.pumpAndSettle();
+    expect(authoring.workspace.state.groups, isEmpty);
+  });
 
   testWidgets("empty page graph receives the bounded editor workspace", (
     tester,
   ) async {
     final fixture = _emptyPageGraphFixture();
-    final commands = AuthoredResourceCommands(
-      commit: (_) => throw UnimplementedError(),
-      previewTypeArguments: ({required resource, required requested}) =>
-          throw UnimplementedError(),
-      commitTypeArguments: (_) => throw UnimplementedError(),
-      prepareCreation: (_) => throw UnimplementedError(),
-      invokeCommand: ({required capabilityId, required payload}) async =>
-          skir.CommandResult.unknown,
-      watchSearch: (_) => const Stream.empty(),
-      reload: () async {},
-      openAutosave: _openAutosave(commit: (_) => throw UnimplementedError()),
+    final authoring = _editing(
+      fixture.draft,
+      policy: EditorCommitPolicy.autosaveChanges,
     );
-
     await tester.pumpTestApp(
       child: Scaffold(
         body: AuthoredResourceInspection(
           resource: fixture.resource,
-          draft: fixture.draft,
-          catalog: fixture.catalog,
-          commands: commands,
+          workspace: authoring.workspace,
+          commands: fixtureAuthoringCommands(authoring.transport),
           role: skir.PresentationRole.editor,
         ),
       ),
     );
-    await tester.pump();
-
     expect(tester.takeException(), isNull);
     expect(find.byType(Graph), findsOneWidget);
     final size = tester.getSize(find.byType(Graph));
-    expect(size.width.isFinite, isTrue);
-    expect(size.height.isFinite, isTrue);
-    expect(size.width, greaterThan(0));
-    expect(size.height, greaterThan(0));
+    expect(size.width.isFinite && size.height.isFinite, isTrue);
+    expect(size.width > 0 && size.height > 0, isTrue);
   });
 
+  testWidgets("numeric clearing preserves Unfilled and repair", (tester) async {
+    final fixture = _numericFixture(
+      generation: "catalog:1",
+      snapshot: "realm:1",
+      minimum: 1,
+    );
+    final authoring = _editing(fixture.draft);
+    await tester.pumpTestApp(
+      child: Scaffold(body: _editor(fixture.resource, authoring.binding)),
+    );
+    await tester.enterText(find.byType(TextFormField), "");
+    await tester.pump();
+    expect(
+      authoring.workspace.document
+          .resource(fixture.resource)!
+          .authoredField("repetitions"),
+      skir.DataValue.unfilled,
+    );
+    await tester.enterText(find.byType(TextFormField), "7");
+    await tester.pump();
+    expect(
+      authoring.workspace.document
+          .resource(fixture.resource)!
+          .authoredField("repetitions")!
+          .authoredInteger,
+      BigInt.from(7),
+    );
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets("catalog changes retain the proposal and block editing", (
+    tester,
+  ) async {
+    final first = _numericFixture(
+      generation: "catalog:1",
+      snapshot: "realm:1",
+      minimum: 1,
+    );
+    final authoring = _editing(first.draft);
+    final commands = fixtureAuthoringCommands(authoring.transport);
+    await tester.pumpTestApp(
+      child: Scaffold(
+        body: AuthoredResourceInspection(
+          resource: first.resource,
+          workspace: authoring.workspace,
+          commands: commands,
+          commitPolicy: EditorCommitPolicy.applyResource,
+        ),
+      ),
+    );
+    await tester.enterText(find.byType(TextFormField), "3");
+    await tester.pump();
+    final second = _numericFixture(
+      generation: "catalog:2",
+      snapshot: "realm:2",
+      minimum: 10,
+    );
+    authoring.workspace.acceptConfirmed(second.draft.toDocument());
+    await tester.pump();
+    expect(authoring.binding.phase, isA<AuthoringGroupCatalogChanged>());
+    expect(authoring.workspace.document.generation, first.draft.generation);
+    await tester.tap(find.text("Discard"));
+    await tester.pump();
+    expect(authoring.workspace.document.generation, second.draft.generation);
+    await tester.pumpAndSettle();
+  });
   testWidgets("graph roles preserve the one cell constraint", (tester) async {
     Future<void> pumpCard({
       required String title,
@@ -236,8 +349,7 @@ void main() {
                 ),
                 child: AuthoredResourceEditor(
                   resource: fixture.resource,
-                  draft: fixture.draft,
-                  catalog: fixture.catalog,
+                  document: fixture.draft.toDocument(),
                   role: skir.PresentationRole.graphNode,
                   budget: skir.EvaluationBudget(
                     maxSteps: 100,
@@ -290,8 +402,7 @@ void main() {
       child: Scaffold(
         body: AuthoredResourceEditor(
           resource: fixture.resource,
-          draft: fixture.draft,
-          catalog: fixture.catalog,
+          document: fixture.draft.toDocument(),
           role: skir.PresentationRole.editor,
           budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
         ),
@@ -302,652 +413,42 @@ void main() {
     expect(find.text("Title must not be blank"), findsOneWidget);
     expect(find.bySemanticsLabel("Presentation error"), findsNothing);
   });
-
-  testWidgets("selects catalog material and writes the authored draft", (
-    tester,
-  ) async {
-    final fixture = _fixture();
-    AuthoredDraft? changed;
-
-    await tester.pumpTestApp(
-      child: Builder(
-        builder: (_) => Scaffold(
-          body: AuthoredResourceEditor(
-            resource: fixture.resource,
-            draft: fixture.draft,
-            catalog: fixture.catalog,
-            role: skir.PresentationRole.editor,
-            budget: skir.EvaluationBudget(
-              maxSteps: 100,
-              maxCollectionItems: 100,
-            ),
-            onChanged: (draft) => changed = draft,
-          ),
-        ),
-      ),
-    );
-
-    expect(find.text("Original"), findsOneWidget);
-    await tester.enterText(find.byType(TextFormField), "Changed");
-    await tester.pump();
-
-    expect(changed, same(fixture.draft));
-    expect(
-      fixture.draft
-          .resource(fixture.resource)
-          ?.authoredField("title")
-          ?.authoredString,
-      "Changed",
-    );
-    expect(fixture.draft.intents, hasLength(1));
-    expect(
-      fixture.draft.intents.single,
-      isA<skir.EditIntent_setValueWrapper>(),
-    );
-  });
-
-  testWidgets(
-    "inspection composes identity and retains compact apply controls",
-    (tester) async {
-      final fixture = _fixture();
-      final commands = AuthoredResourceCommands(
-        commit: (_) => throw UnimplementedError(),
-        previewTypeArguments: ({required resource, required requested}) =>
-            throw UnimplementedError(),
-        commitTypeArguments: (_) => throw UnimplementedError(),
-        prepareCreation: (_) => throw UnimplementedError(),
-        invokeCommand: ({required capabilityId, required payload}) async =>
-            skir.CommandResult.unknown,
-        watchSearch: (_) => const Stream.empty(),
-        reload: () async {},
-        openAutosave: _openAutosave(commit: (_) => throw UnimplementedError()),
-      );
-
-      await tester.pumpTestApp(
-        child: Scaffold(
-          body: AuthoredResourceInspection(
-            resource: fixture.resource,
-            draft: fixture.draft,
-            catalog: fixture.catalog,
-            commands: commands,
-            commitPolicy: EditorCommitPolicy.applyResource,
-          ),
-        ),
-      );
-
-      expect(find.byKey(const ValueKey("message.header")), findsOneWidget);
-      expect(find.text("Cancel"), findsNothing);
-      expect(find.text("Apply"), findsNothing);
-
-      await tester.enterText(find.byType(TextFormField), "Changed");
-      await tester.pumpAndSettle();
-
-      expect(
-        find.descendant(
-          of: find.byKey(const ValueKey("message.header")),
-          matching: find.text("Changed"),
-        ),
-        findsOneWidget,
-      );
-      expect(find.text("Cancel"), findsOneWidget);
-      expect(find.text("Apply"), findsOneWidget);
-      expect(
-        tester.getTopLeft(find.byKey(const ValueKey("message.header"))).dy,
-        lessThan(tester.getTopLeft(find.byType(TextFormField)).dy),
-      );
-      expect(
-        tester.getTopLeft(find.text("Apply")).dy,
-        greaterThan(tester.getTopLeft(find.byType(TextFormField)).dy),
-      );
-    },
-  );
-
-  testWidgets("preparing after a catalog change applies the new local rule", (
-    tester,
-  ) async {
-    final first = _numericFixture(
-      generation: "catalog:1",
-      snapshot: "realm:1",
-      minimum: 1,
-    );
-    await tester.pumpTestApp(child: _numericEditor(first));
-    await tester.enterText(find.byType(TextFormField), "3");
-    await tester.pump();
-    final evidence = first.draft.expectations.toList(growable: false);
-
-    final second = _numericFixture(
-      generation: "catalog:2",
-      snapshot: "realm:2",
-      minimum: 10,
-    );
-    final adoption = first.draft.rebaseOnto(second.draft);
-    expect(adoption, isA<AuthoredDraftRebaseFailed>());
-    final rebound = second.draft.fork()
-      ..set(
-        skir.ValueLocation(
-          resource: second.resource,
-          path: skir.ValuePath(
-            segments: [skir.PathSegment.createField(name: "repetitions")],
-          ),
-        ),
-        skir.DataValue.wrapInteger("3"),
-      );
-
-    await tester.pumpTestApp(
-      child: _numericEditor((
-        resource: second.resource,
-        draft: rebound,
-        catalog: second.catalog,
-      )),
-    );
-    await tester.pump();
-
-    expect(find.text("Must be at least 10"), findsOneWidget);
-    expect(
-      rebound
-          .resource(second.resource)
-          ?.authoredField("repetitions")
-          ?.authoredInteger,
-      BigInt.from(3),
-    );
-    expect(rebound.intents, hasLength(1));
-    expect(first.draft.expectations, evidence);
-    expect(rebound.generation, second.draft.generation);
-  });
-
-  testWidgets("required numeric input saves Unfilled and can be repaired", (
-    tester,
-  ) async {
-    final fixture = _numericFixture(
-      generation: "catalog:1",
-      snapshot: "realm:1",
-      minimum: 1,
-    );
-    await tester.pumpTestApp(child: _numericEditor(fixture));
-
-    await tester.enterText(find.byType(TextFormField), "");
-    await tester.pump();
-    expect(
-      fixture.draft.resource(fixture.resource)?.authoredField("repetitions"),
-      skir.DataValue.unfilled,
-    );
-    expect(fixture.draft.intents, hasLength(1));
-
-    final empty = _numericFixture(
-      generation: "catalog:1",
-      snapshot: "realm:2",
-      minimum: 1,
-      initial: skir.DataValue.unfilled,
-    );
-    await tester.pumpTestApp(child: _numericEditor(empty));
-    await tester.enterText(find.byType(TextFormField), "7");
-    await tester.pumpAndSettle();
-    expect(
-      empty.draft
-          .resource(empty.resource)
-          ?.authoredField("repetitions")
-          ?.authoredInteger,
-      BigInt.from(7),
-    );
-  });
-
-  testWidgets("adopts a snapshot that arrives while a save is active", (
-    tester,
-  ) async {
-    final first = _fixture();
-    final completion = Completer<skir.CommitPreparedEditResponse>();
-    final adoption = Completer<skir.AuthoringState>();
-    final commands = AuthoredResourceCommands(
-      commit: (_) => completion.future,
-      previewTypeArguments: ({required resource, required requested}) =>
-          throw UnimplementedError(),
-      commitTypeArguments: (_) => throw UnimplementedError(),
-      prepareCreation: (_) => throw UnimplementedError(),
-      invokeCommand: ({required capabilityId, required payload}) async =>
-          skir.CommandResult.unknown,
-      watchSearch: (_) => const Stream.empty(),
-      reload: () async {},
-      openAutosave: _openAutosave(
-        commit: (_) => completion.future,
-        fetchCurrent: () => adoption.future,
-      ),
-    );
-
-    Widget inspection(
-      ({
-        skir.ResourceId resource,
-        AuthoredDraft draft,
-        CheckedEditorCatalog catalog,
-      })
-      fixture,
-    ) => Builder(
-      builder: (_) => Scaffold(
-        body: AuthoredResourceInspection(
-          resource: fixture.resource,
-          draft: fixture.draft,
-          catalog: fixture.catalog,
-          commands: commands,
-          role: skir.PresentationRole.editor,
-          commitPolicy: EditorCommitPolicy.applyResource,
-        ),
-      ),
-    );
-
-    var current = first;
-    late StateSetter rebuild;
-    await tester.pumpTestApp(
-      child: StatefulBuilder(
-        builder: (context, setState) {
-          rebuild = setState;
-          return inspection(current);
-        },
-      ),
-    );
-    await tester.enterText(find.byType(TextFormField), "Changed");
-    await tester.pump();
-    await tester.tap(find.text("Apply"));
-    await tester.pump();
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
-
-    final replacement = _fixture(snapshot: "realm:2", title: "Changed");
-    rebuild(() => current = replacement);
-    adoption.complete(_snapshotOf(replacement.draft));
-    await tester.pump();
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
-
-    completion.complete(
-      skir.CommitPreparedEditResponse.wrapResult(skir.CommitResult.committed),
-    );
-    await tester.pumpAndSettle();
-
-    expect(
-      tester.widget<TextFormField>(find.byType(TextFormField)).initialValue,
-      "Changed",
-    );
-    expect(find.byType(CircularProgressIndicator), findsNothing);
-  });
-
-  testWidgets("ordinary edits autosave and retain the ordered edit tail", (
-    tester,
-  ) async {
-    final first = _fixture();
-    final firstResponse = Completer<skir.CommitPreparedEditResponse>();
-    final secondResponse = Completer<skir.CommitPreparedEditResponse>();
-    final snapshots = <String, Completer<skir.AuthoringState>>{};
-    var fetchCount = 1;
-    final submitted = <skir.PreparedEdit>[];
-    Future<skir.CommitPreparedEditResponse> commit(skir.PreparedEdit edit) {
-      submitted.add(edit);
-      return submitted.length == 1
-          ? firstResponse.future
-          : secondResponse.future;
-    }
-
-    final commands = AuthoredResourceCommands(
-      commit: commit,
-      previewTypeArguments: ({required resource, required requested}) =>
-          throw UnimplementedError(),
-      commitTypeArguments: (_) => throw UnimplementedError(),
-      prepareCreation: (_) => throw UnimplementedError(),
-      invokeCommand: ({required capabilityId, required payload}) async =>
-          skir.CommandResult.unknown,
-      watchSearch: (_) => const Stream.empty(),
-      reload: () async {},
-      openAutosave: _openAutosave(
-        commit: commit,
-        fetchCurrent: () => snapshots
-            .putIfAbsent("realm:${++fetchCount}", Completer.new)
-            .future,
-      ),
-    );
-    await tester.pumpTestApp(
-      child: Scaffold(
-        body: AuthoredResourceInspection(
-          resource: first.resource,
-          draft: first.draft,
-          catalog: first.catalog,
-          commands: commands,
-          role: skir.PresentationRole.editor,
-        ),
-      ),
-    );
-
-    await tester.enterText(find.byType(TextFormField), "First");
-    await tester.pump(AuthoredDraftAutosave.debounce);
-    expect(submitted, hasLength(1));
-    expect(submitted.single.intents, hasLength(1));
-    expect(find.text("Apply"), findsNothing);
-    expect(find.text("Cancel"), findsNothing);
-
-    await tester.enterText(find.byType(TextFormField), "Second");
-    await tester.pump();
-    expect(find.byType(TextFormField), findsOneWidget);
-
-    final second = _fixture(snapshot: "realm:2", title: "First");
-    snapshots
-        .putIfAbsent("realm:2", Completer.new)
-        .complete(_snapshotOf(second.draft));
-    firstResponse.complete(
-      skir.CommitPreparedEditResponse.wrapResult(skir.CommitResult.committed),
-    );
-    await tester.pump(AuthoredDraftAutosave.debounce);
-    await tester.pump();
-
-    expect(submitted, hasLength(2));
-    expect(submitted.last.catalog, second.draft.generation);
-    expect(submitted.last.intents, hasLength(1));
-
-    final third = _fixture(snapshot: "realm:3", title: "Second");
-    snapshots
-        .putIfAbsent("realm:3", Completer.new)
-        .complete(_snapshotOf(third.draft));
-    secondResponse.complete(
-      skir.CommitPreparedEditResponse.wrapResult(skir.CommitResult.committed),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text("Saved"), findsOneWidget);
-    expect(find.text("Second"), findsOneWidget);
-  });
-
-  testWidgets(
-    "autosave retains text focus through staging and snapshot adoption",
-    (tester) async {
-      final first = _fixture(title: "");
-      final adopted = {
-        "realm:2": _fixture(snapshot: "realm:2", title: "book"),
-        "realm:3": _fixture(snapshot: "realm:3", title: "books"),
-      };
-      var submissions = 0;
-      Future<skir.CommitPreparedEditResponse> commit(
-        skir.PreparedEdit _,
-      ) async {
-        submissions++;
-        return skir.CommitPreparedEditResponse.wrapResult(
-          skir.CommitResult.committed,
-        );
-      }
-
-      final commands = AuthoredResourceCommands(
-        commit: commit,
-        previewTypeArguments: ({required resource, required requested}) =>
-            throw UnimplementedError(),
-        commitTypeArguments: (_) => throw UnimplementedError(),
-        prepareCreation: (_) => throw UnimplementedError(),
-        invokeCommand: ({required capabilityId, required payload}) async =>
-            skir.CommandResult.unknown,
-        watchSearch: (_) => const Stream.empty(),
-        reload: () async {},
-        openAutosave: _openAutosave(
-          commit: commit,
-          fetchCurrent: () => Future.value(
-            _snapshotOf(adopted["realm:${submissions + 1}"]!.draft),
-          ),
-        ),
-      );
-      await tester.pumpTestApp(
-        child: Scaffold(
-          body: AuthoredResourceInspection(
-            resource: first.resource,
-            draft: first.draft,
-            catalog: first.catalog,
-            commands: commands,
-            role: skir.PresentationRole.editor,
-          ),
-        ),
-      );
-
-      final field = find.byType(TextFormField);
-      await tester.showKeyboard(field);
-      for (final text in ["b", "bo", "boo", "book"]) {
-        tester.testTextInput.updateEditingValue(
-          TextEditingValue(
-            text: text,
-            selection: TextSelection.collapsed(offset: text.length),
-          ),
-        );
-        await tester.pump();
-        expect(
-          tester
-              .widget<EditableText>(find.byType(EditableText))
-              .focusNode
-              .hasFocus,
-          isTrue,
-        );
-      }
-
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await tester.pump();
-      expect(
-        tester.widget<EditableText>(find.byType(EditableText)).controller.text,
-        "book",
-      );
-      expect(submissions, 0);
-
-      await tester.pump(AuthoredDraftAutosave.debounce);
-      await tester.pumpAndSettle();
-      expect(submissions, 1);
-
-      await tester.showKeyboard(field);
-
-      tester.testTextInput.updateEditingValue(
-        const TextEditingValue(
-          text: "books",
-          selection: TextSelection.collapsed(offset: 5),
-        ),
-      );
-      await tester.pump();
-      expect(
-        tester
-            .widget<EditableText>(find.byType(EditableText))
-            .focusNode
-            .hasFocus,
-        isTrue,
-      );
-      await tester.pump(AuthoredDraftAutosave.debounce);
-      await tester.pumpAndSettle();
-
-      expect(submissions, 2);
-      expect(find.text("Saved"), findsOneWidget);
-      expect(
-        tester.widget<EditableText>(find.byType(EditableText)).controller.text,
-        "books",
-      );
-      expect(
-        tester
-            .widget<EditableText>(find.byType(EditableText))
-            .focusNode
-            .hasFocus,
-        isTrue,
-      );
-    },
-  );
-
-  testWidgets(
-    "an uncertain save keeps local edits until choosing current values",
-    (tester) async {
-      var submissions = 0;
-      final first = _fixture();
-      final recovered = _fixture(snapshot: "realm:4", title: "After");
-      Future<skir.CommitPreparedEditResponse> commit(
-        skir.PreparedEdit _,
-      ) async {
-        submissions++;
-        if (submissions == 1) throw StateError("The save response timed out");
-        return skir.CommitPreparedEditResponse.wrapResult(
-          skir.CommitResult.committed,
-        );
-      }
-
-      final commands = AuthoredResourceCommands(
-        commit: commit,
-        previewTypeArguments: ({required resource, required requested}) =>
-            throw UnimplementedError(),
-        commitTypeArguments: (_) => throw UnimplementedError(),
-        prepareCreation: (_) => throw UnimplementedError(),
-        invokeCommand: ({required capabilityId, required payload}) async =>
-            skir.CommandResult.unknown,
-        watchSearch: (_) => const Stream.empty(),
-        reload: () async {},
-        openAutosave: _openAutosave(
-          commit: commit,
-          fetchCurrent: () => Future.value(_snapshotOf(recovered.draft)),
-        ),
-      );
-      var current = first;
-      late StateSetter rebuild;
-      await tester.pumpTestApp(
-        child: StatefulBuilder(
-          builder: (context, setState) {
-            rebuild = setState;
-            return Scaffold(
-              body: AuthoredResourceInspection(
-                resource: current.resource,
-                draft: current.draft,
-                catalog: current.catalog,
-                commands: commands,
-                role: skir.PresentationRole.editor,
-              ),
-            );
-          },
-        ),
-      );
-
-      await tester.enterText(find.byType(TextFormField), "First");
-      await tester.pump(AuthoredDraftAutosave.debounce);
-      await tester.pump();
-      expect(submissions, 1);
-      expect(find.text("Use latest"), findsOneWidget);
-
-      await tester.enterText(find.byType(TextFormField), "Second");
-      await tester.pump(AuthoredDraftAutosave.debounce);
-      expect(submissions, 1);
-
-      final latest = _fixture(snapshot: "realm:3", title: "Latest");
-      rebuild(() => current = latest);
-      await tester.pump();
-      await tester.tap(find.text("Use latest"));
-      await tester.pumpAndSettle();
-
-      expect(
-        tester.widget<TextFormField>(find.byType(TextFormField)).initialValue,
-        "Latest",
-      );
-      expect(submissions, 1);
-
-      await tester.enterText(find.byType(TextFormField), "After");
-      await tester.pump(AuthoredDraftAutosave.debounce);
-      await tester.pumpAndSettle();
-
-      expect(submissions, 2);
-      expect(find.text("Saved"), findsOneWidget);
-    },
-  );
-
-  testWidgets("concurrent inspections own independent edit drafts", (
-    tester,
-  ) async {
-    final fixture = _fixture();
-    final commands = AuthoredResourceCommands(
-      commit: (_) => throw UnimplementedError(),
-      previewTypeArguments: ({required resource, required requested}) =>
-          throw UnimplementedError(),
-      commitTypeArguments: (_) => throw UnimplementedError(),
-      prepareCreation: (_) => throw UnimplementedError(),
-      invokeCommand: ({required capabilityId, required payload}) async =>
-          skir.CommandResult.unknown,
-      watchSearch: (_) => const Stream.empty(),
-      reload: () async {},
-      openAutosave: _openAutosave(commit: (_) => throw UnimplementedError()),
-    );
-    await tester.pumpTestApp(
-      child: Builder(
-        builder: (_) => Scaffold(
-          body: Row(
-            children: [
-              for (var index = 0; index < 2; index++)
-                Expanded(
-                  child: AuthoredResourceInspection(
-                    resource: fixture.resource,
-                    draft: fixture.draft,
-                    catalog: fixture.catalog,
-                    commands: commands,
-                    role: skir.PresentationRole.editor,
-                    commitPolicy: EditorCommitPolicy.applyResource,
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-
-    await tester.enterText(find.byType(TextFormField).first, "First edit");
-    await tester.pumpAndSettle();
-
-    expect(
-      fixture.draft
-          .resource(fixture.resource)
-          ?.authoredField("title")
-          ?.authoredString,
-      "Original",
-    );
-    expect(fixture.draft.intents, isEmpty);
-    expect(
-      tester
-          .widgetList<TextFormField>(find.byType(TextFormField))
-          .last
-          .initialValue,
-      "Original",
-    );
-  });
 }
 
-AuthoredDraftAutosave Function({
-  required skir.ResourceId resource,
-  required AuthoredDraft baseline,
-  EditorCommitPolicy policy,
-})
-_openAutosave({
-  required Future<skir.CommitPreparedEditResponse> Function(
-    skir.PreparedEdit edit,
-  )
-  commit,
-  Future<skir.AuthoringState> Function()? fetchCurrent,
-}) =>
-    ({
-      required resource,
-      required baseline,
-      policy = EditorCommitPolicy.autosaveChanges,
-    }) => AuthoredDraftAutosave(
+Widget _editor(skir.ResourceId resource, AuthoringBinding binding) =>
+    AuthoredResourceEditor(
       resource: resource,
-      baseline: baseline,
-      policy: policy,
-      commit: commit,
-      fetchCurrent:
-          fetchCurrent ??
-          () => Future.error(
-            StateError("No current values were configured for this test"),
-          ),
-      reload: () async {},
-      onSettled: () {},
+      document: binding.document,
+      edit: binding,
+      role: skir.PresentationRole.inspector,
+      budget: skir.EvaluationBudget(maxSteps: 10000, maxCollectionItems: 10000),
     );
 
-skir.AuthoringState _snapshotOf(AuthoredDraft draft) => skir.AuthoringState(
-  generation: draft.generation,
-  resources: [
-    for (final resource in draft.resources.entries)
-      skir.AuthoringResource(
-        id: resource.key,
-        definition: skir.ResourceDefinitionId.defaultInstance,
-        content: resource.value,
-      ),
-  ],
-  links: draft.links,
-  findings: const [],
-);
+({
+  AuthoringWorkspace workspace,
+  AuthoringBinding binding,
+  ScriptedAuthoringTransport transport,
+})
+_editing(
+  AuthoringEdit initial, {
+  EditorCommitPolicy policy = EditorCommitPolicy.applyResource,
+}) {
+  final transport = ScriptedAuthoringTransport(AsyncData(initial.toDocument()));
+  final workspace = AuthoringWorkspace(
+    transport: transport,
+    initial: initial.toDocument(),
+  );
+  final binding = workspace.attach(
+    initial.resources.keys.first,
+    policy: policy,
+  );
+  addTearDown(binding.detach);
+  addTearDown(workspace.dispose);
+  addTearDown(transport.dispose);
+  return (workspace: workspace, binding: binding, transport: transport);
+}
 
-({skir.ResourceId resource, AuthoredDraft draft, CheckedEditorCatalog catalog})
+({skir.ResourceId resource, AuthoringEdit draft, CheckedEditorCatalog catalog})
 _emptyPageGraphFixture() {
   final generation = skir.CatalogGeneration(value: "catalog:page");
   final definition = skir.TypeDefinitionId(
@@ -1065,7 +566,7 @@ _emptyPageGraphFixture() {
     ),
     fields: [skir.FieldValue(name: "elements", value: skir.DataValue.unfilled)],
   );
-  final draft = AuthoredDraft(
+  final draft = AuthoringEdit(
     generation: generation,
     resources: [
       skir.AuthoringResource(
@@ -1080,26 +581,7 @@ _emptyPageGraphFixture() {
   return (resource: resource, draft: draft, catalog: checked);
 }
 
-Widget _numericEditor(
-  ({
-    skir.ResourceId resource,
-    AuthoredDraft draft,
-    CheckedEditorCatalog catalog,
-  })
-  fixture,
-) => Builder(
-  builder: (_) => Scaffold(
-    body: AuthoredResourceEditor(
-      resource: fixture.resource,
-      draft: fixture.draft,
-      catalog: fixture.catalog,
-      role: skir.PresentationRole.inspector,
-      budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-    ),
-  ),
-);
-
-({skir.ResourceId resource, AuthoredDraft draft, CheckedEditorCatalog catalog})
+({skir.ResourceId resource, AuthoringEdit draft, CheckedEditorCatalog catalog})
 _numericFixture({
   required String generation,
   required String snapshot,
@@ -1272,7 +754,7 @@ _numericFixture({
   return (
     resource: resource,
     catalog: checked,
-    draft: AuthoredDraft(
+    draft: AuthoringEdit(
       generation: catalogGeneration,
       resources: [
         skir.AuthoringResource(
@@ -1287,9 +769,8 @@ _numericFixture({
   );
 }
 
-({skir.ResourceId resource, AuthoredDraft draft, CheckedEditorCatalog catalog})
+({skir.ResourceId resource, AuthoringEdit draft, CheckedEditorCatalog catalog})
 _fixture({
-  String snapshot = "realm:1",
   String title = "Original",
   bool requireTitle = false,
   String fieldName = "title",
@@ -1614,7 +1095,7 @@ _fixture({
       ),
     ],
   );
-  final draft = AuthoredDraft(
+  final draft = AuthoringEdit(
     generation: generation,
     resources: [
       skir.AuthoringResource(

@@ -2,19 +2,11 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../../../../../support/test_utils.dart";
 
 final _testTagId = skir.ResourceId(value: "test_tag");
-final _tagRefreshProvider = NotifierProvider<_TagRefresh, int>(_TagRefresh.new);
-
-class _TagRefresh extends Notifier<int> {
-  @override
-  int build() => 0;
-
-  void increment() => state++;
-}
-
 Tag _testTag({int x = 0, int y = 0}) => Tag(
   tagId: _testTagId,
   name: "Test Tag",
@@ -29,19 +21,14 @@ void main() {
       tester,
     ) async {
       final tag = _testTag();
-      final refresh = Completer<Tag?>();
-      var buildCount = 0;
+      final transport = ScriptedAuthoringTransport(
+        AsyncData(fixtureAuthoringDocument(tags: [tag])),
+      );
+      addTearDown(transport.dispose);
 
       await tester.pumpTestApp(
         settle: false,
-        overrides: [
-          canonicalTagProvider(_testTagId).overrideWith((ref) {
-            ref.watch(_tagRefreshProvider);
-            buildCount++;
-            if (buildCount == 1) return tag;
-            return refresh.future;
-          }),
-        ],
+        overrides: [...authoringFixtureOverrides(transport: transport)],
         child: Center(
           child: SizedBox(
             width: 200,
@@ -63,19 +50,21 @@ void main() {
       final container = ProviderScope.containerOf(
         tester.element(find.byType(TagNode)),
       );
-      container.read(_tagRefreshProvider.notifier).increment();
+      transport.publish(const AsyncLoading());
       await tester.pump();
-
-      expect(buildCount, 2);
       expect(
-        container.read(projectedTagProvider(_testTagId)).isLoading,
-        isTrue,
+        container.read(workingTagProvider(_testTagId)).requireValue!.name,
+        tag.name,
       );
 
       expect(find.byType(Selector), findsOneWidget);
       expect(FocusManager.instance.primaryFocus, same(focusNode));
 
-      refresh.complete(tag);
+      transport.publish(
+        AsyncData(
+          fixtureAuthoringDocument(tags: [tag.copyWith(name: "Refreshed")]),
+        ),
+      );
       await tester.pumpAndSettle();
     });
 
@@ -91,8 +80,7 @@ void main() {
 
       await tester.pumpTestApp(
         overrides: [
-          projectedTagProvider(_testTagId)
-              .overrideWith((ref) => AsyncData(tag)),
+          ...authoringFixtureOverrides(tags: [tag]),
         ],
         child: Center(
           child: SizedBox(
@@ -136,8 +124,7 @@ void main() {
 
       await tester.pumpTestApp(
         overrides: [
-          projectedTagProvider(_testTagId)
-              .overrideWith((ref) => AsyncData(tag)),
+          ...authoringFixtureOverrides(tags: [tag]),
         ],
         child: Center(
           child: SizedBox(
@@ -176,8 +163,7 @@ void main() {
 
       await tester.pumpTestApp(
         overrides: [
-          projectedTagProvider(_testTagId)
-              .overrideWith((ref) => AsyncData(tag)),
+          ...authoringFixtureOverrides(tags: [tag]),
         ],
         child: Center(
           child: SizedBox(
@@ -215,8 +201,7 @@ void main() {
 
       await tester.pumpTestApp(
         overrides: [
-          projectedTagProvider(_testTagId)
-              .overrideWith((ref) => AsyncData(tag)),
+          ...authoringFixtureOverrides(tags: [tag]),
         ],
         child: Center(
           child: SizedBox(
@@ -253,8 +238,7 @@ void main() {
 
       await tester.pumpTestApp(
         overrides: [
-          projectedTagProvider(_testTagId)
-              .overrideWith((ref) => AsyncData(tag)),
+          ...authoringFixtureOverrides(tags: [tag]),
         ],
         child: Center(
           child: SizedBox(
@@ -287,8 +271,7 @@ void main() {
 
       await tester.pumpTestApp(
         overrides: [
-          projectedTagProvider(_testTagId)
-              .overrideWith((ref) => AsyncData(tag)),
+          ...authoringFixtureOverrides(tags: [tag]),
         ],
         child: Center(
           child: SizedBox(
@@ -321,8 +304,7 @@ void main() {
 
       await tester.pumpTestApp(
         overrides: [
-          projectedTagProvider(_testTagId)
-              .overrideWith((ref) => AsyncData(tag)),
+          ...authoringFixtureOverrides(tags: [tag]),
         ],
         child: Center(
           child: SizedBox(
