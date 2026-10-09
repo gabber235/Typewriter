@@ -73,6 +73,31 @@ final exemptions = <Exemption>[
     "color value conversion",
   ),
   Exemption(
+    "lib/shared/ui/components/surface_container.dart",
+    RegExp(r"Colors\.transparent"),
+    "transparent fill lets the inherited surface show through",
+  ),
+  Exemption(
+    "lib/shared/ui/components/admonition.dart",
+    RegExp(r"Colors\.transparent"),
+    "transparent material preserves the admonition surface",
+  ),
+  Exemption(
+    "lib/shared/ui/components/surface.dart",
+    RegExp(r"TextStyle\s*\(\s*color:\s*selectedForeground\s*\)"),
+    "computed foreground is supplied by the surface state",
+  ),
+  Exemption(
+    "lib/shared/editors/presentation/portable_renderer/appearance.dart",
+    RegExp(r"Colors\.transparent"),
+    "missing presentation fill preserves inherited appearance",
+  ),
+  Exemption(
+    "lib/shared/editors/presentation/presentation_color.dart",
+    RegExp(r"Colors\.(?:white|black)"),
+    "focus outline and monochrome colors are defined by the presentation protocol",
+  ),
+  Exemption(
     "lib/shared/graph/presentation/graph.dart",
     RegExp(r"Colors\.grey"),
     "custom graph painter geometry",
@@ -322,7 +347,7 @@ void main() {
         final checks = <RegExp>[
           if (path != "lib/app/presentation/theme/typography.dart")
             RegExp(
-              r"fontFamily\s*:|(?<![A-Za-z0-9_])(?<!Default)(?<!AnimatedDefault)TextStyle\s*\(",
+              r"fontFamily\s*:|(?<![A-Za-z0-9_])(?<!Default)(?<!AnimatedDefault)TextStyle\s*\([^)]*\)",
             ),
           if (!path.contains("/theme/"))
             RegExp(
