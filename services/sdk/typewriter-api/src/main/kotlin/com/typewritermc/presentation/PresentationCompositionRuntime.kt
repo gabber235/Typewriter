@@ -1,7 +1,6 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.authoring.ValuePath
-import com.typewritermc.configuration.generatedExpressionScope
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.types.skir.SkirTypeCodec
@@ -9,223 +8,192 @@ import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
-import skirout.editor.v1.type_catalog.FieldPatternSegment
-import skirout.editor.v1.type_catalog.NamedFieldPatternSegment
 import kotlin.reflect.KClass
-import skirout.editor.v1.type_catalog.RelativeFieldPattern as WireRelativeFieldPattern
 import skirout.editor.v1.type_catalog.ValuePath as WireValuePath
 
-internal fun PresentationLayoutHandler.presentedField(
-    name: String,
-    scope: KClass<*>,
-    nested: Map<NestedPresentationSlot, NestedPresentationScope>,
-): PresentedField<*, *> {
-    val fieldType = checked.field(name)
-    @Suppress("UNCHECKED_CAST")
-    return RuntimePresentedField<Any?, Any>(
-        state,
-        name,
-        scope as KClass<Any>,
-        nested,
-        base.field(name),
-        fieldType,
-    )
-}
-
-internal fun PresentationLayoutHandler.presentedValue(
-    scope: KClass<*>,
-    nested: Map<NestedPresentationSlot, NestedPresentationScope>,
-): PresentedField<*, *> {
-    @Suppress("UNCHECKED_CAST")
-    return RuntimePresentedField<Any?, Any>(state, "value", scope as KClass<Any>, nested, base, checked)
-}
-
-internal fun PresentationLayoutHandler.expressions(scope: KClass<*>): Any =
-    generatedExpressionScope(
-        scope,
-        Expr<Any?, com.typewritermc.expression.MayBeMissing>(
-            ExpressionNode.Read(CONFIGURED_VALUE, ValuePath()),
-        ),
-    )
-
-@Suppress("UNCHECKED_CAST")
-internal fun PresentationLayoutHandler.scoped(
-    args: Array<out Any?>,
-    typed: Boolean,
-) {
-    val input = args[0] as PresentationInput<*, *>
-    val children = mutableListOf<PresentationNode>()
-    val scopeBinding = if (typed) null else state.bindingId("scoped.value")
-    val receiver =
-        if (typed) {
-            val factory = input.rebind as? (BindingRef, MutableList<PresentationNode>) -> Any?
-            factory?.invoke(input.binding, children) ?: input.scope
-        } else {
-            val rebound =
-                BindingRef(
-                    path = WireValuePath(segments = emptyList()),
-                    bindingId = requireNotNull(scopeBinding).wire(),
-                )
-            val factory = input.rebind as? (BindingRef, MutableList<PresentationNode>) -> Any?
-            factory?.invoke(rebound, children) ?: input.scope
-        }
-    state.withTarget(children) { invokeBlock(args[1], requireNotNull(receiver)) }
-    val child = state.column(children)
-    target +=
-        if (typed) {
-            val expected = requireNotNull(input.expected) { "A typed presentation input must carry its expected type." }
+internal class RuntimePresentationData(
+    val state: PresentationBuildState,
+    val target: MutableList<PresentationNode>,
+    private val checked: CheckedPresentationTemplate,
+) : PresentationData {
+    override fun showIf(
+        condition: Expr<Boolean, Handled>,
+        whenFalse: (Layout.() -> Unit)?,
+        body: Layout.() -> Unit,
+    ) {
+        val nodes = mutableListOf<PresentationNode>()
+        state.withTarget(nodes) { state.scope(nodes).body() }
+        val falseNode = whenFalse?.let(state::presentation)
+        target +=
             state.node(
-                PresentationElement.createTypedField(
-                    binding = input.binding,
-                    expectedType = SkirTypeCodec.encode(expected).getOrThrow(),
-                    presentation = child,
+                PresentationElement.createConditional(
+                    condition = expression(condition),
+                    whenTrue = state.column(nodes),
+                    whenFalse = falseNode,
                 ),
             )
-        } else {
-            state.node(
-                PresentationElement.createScopedBinding(
-                    binding = input.binding,
-                    scopeBindingId = requireNotNull(scopeBinding).wire(),
-                    child = child,
-                ),
-            )
-        }
-}
+    }
 
-internal fun PresentationLayoutHandler.polymorphicMatch(args: Array<out Any?>) {
-    val input = args[0] as PresentationInput<*, *>
-    val binding = state.bindingId("match.value")
-    val cases = mutableListOf<skirout.editor.v1.presentation.PolymorphicMatchCase>()
-    var fallback: PresentationNode? = null
-    val scope =
-        object : MatchScope<Any?> {
-            override fun <Subtype : Any?> case(
-                type: AppliedPresentation<Subtype>,
-                body: MatchCaseScope<Subtype>.() -> Unit,
-            ) {
-                state.type(type.type)
-                require(cases.none { candidate -> candidate.concreteType == SkirTypeCodec.encode(type.type).getOrThrow() }) {
-                    "A polymorphic match may declare one case per concrete type."
-                }
-                val nodes = mutableListOf<PresentationNode>()
-                val layout = state.scope(nodes)
-                val caseScope =
-                    object : MatchCaseScope<Subtype>, Layout by layout {
-                        override val value =
-                            Expr<Subtype, com.typewritermc.expression.MayBeMissing>(
-                                ExpressionNode.Read(binding, ValuePath()),
-                            )
-                    }
-                state.withTarget(nodes) { caseScope.body() }
-                cases +=
-                    skirout.editor.v1.presentation.PolymorphicMatchCase(
-                        concreteType = SkirTypeCodec.encode(type.type).getOrThrow(),
-                        child = state.column(nodes),
+    override fun <V, ItemScope> repeated(
+        source: Expr<List<V>, Handled>,
+        items: SequenceScope<ItemScope>.() -> Unit,
+    ) = renderRepeated(source, items)
+
+    override fun <V, Scope> scoped(
+        binding: PresentationInput<V, Scope>,
+        body: Scope.() -> Unit,
+    ) = scopedContents(binding, false, body)
+
+    override fun <V, Scope> typedField(
+        binding: PresentationInput<V, Scope>,
+        body: Scope.() -> Unit,
+    ) = scopedContents(binding, true, body)
+
+    override fun <Row, Key> collectionLookup(
+        source: CollectionSource<Row, Key>,
+        key: PresentationInput<Key, *>,
+        configure: LookupScope<Row>.() -> Unit,
+    ) = renderCollectionLookup(source, key, configure)
+
+    override fun <Row, Key> collectionGraph(
+        source: CollectionSource<Row, Key>,
+        configure: GraphScope<Row, Key>.() -> Unit,
+    ) = renderCollectionGraph(source, configure)
+
+    private fun <V, Scope> scopedContents(
+        input: PresentationInput<V, Scope>,
+        typed: Boolean,
+        body: Scope.() -> Unit,
+    ) {
+        val children = mutableListOf<PresentationNode>()
+        val scopeBinding = if (typed) null else state.bindingId("scoped.value")
+        val receiver =
+            if (typed) {
+                val factory = input.rebind
+                factory?.invoke(input.binding, children) ?: input.scope
+            } else {
+                val rebound =
+                    BindingRef(
+                        path = WireValuePath(segments = emptyList()),
+                        bindingId = requireNotNull(scopeBinding).wire(),
                     )
+                val factory = input.rebind
+                factory?.invoke(rebound, children) ?: input.scope
             }
-
-            override fun fallback(body: Layout.() -> Unit) {
-                check(fallback == null) { "A polymorphic match may declare fallback content once." }
-                fallback = state.presentation(body)
-            }
-        }
-    invokeBlock(args[1], scope)
-    require(cases.isNotEmpty()) { "A polymorphic match requires at least one concrete case." }
-    target +=
-        state.node(
-            PresentationElement.createPolymorphicMatch(
-                binding = input.binding,
-                scopeBindingId = binding.wire(),
-                cases = cases,
-                fallback = fallback,
-            ),
-        )
-}
-
-internal fun PresentationLayoutHandler.invokePresentation(args: Array<out Any?>) {
-    val reference = args[0] as PresentationReference
-    val id =
-        requireNotNull(state.presentationId(reference, checked)) {
-            "The invoked presentation reference was not registered by its generated provider."
-        }
-    val arguments = mutableListOf<skirout.editor.v1.presentation.PresentationArgument>()
-    val scope =
-        object : PresentationArguments {
-            override fun <Value> bind(
-                parameter: PresentationParameter<Value>,
-                value: PresentationInput<out Value, *>,
-            ) {
-                require(arguments.none { it.input.value == parameter.binding.value }) {
-                    "A presentation parameter may be bound once per invocation."
-                }
-                arguments +=
-                    skirout.editor.v1.presentation.PresentationArgument(
-                        input = parameter.binding.wire(),
-                        binding = value.binding,
-                    )
-            }
-        }
-    invokeBlock(args[1], scope)
-    target +=
-        state.node(
-            PresentationElement.createInvocation(
-                presentationId =
-                    skirout.editor.v1.type_catalog
-                        .PresentationId(namespace = id.namespace, name = id.name),
-                arguments = arguments,
-            ),
-        )
-}
-
-internal fun PresentationLayoutHandler.conditional(
-    condition: Expr<Boolean, Handled>,
-    whenFalse: Any?,
-    body: Any?,
-) {
-    val whenTrueNodes = mutableListOf<PresentationNode>()
-    state.withTarget(whenTrueNodes) { invokeBlock(body, state.scope(whenTrueNodes)) }
-    val whenFalseNode =
-        if (whenFalse == null) {
-            null
-        } else {
-            val whenFalseNodes = mutableListOf<PresentationNode>()
-            state.withTarget(whenFalseNodes) { invokeBlock(whenFalse, state.scope(whenFalseNodes)) }
-            state.column(whenFalseNodes)
-        }
-    target +=
-        state.node(
-            PresentationElement.createConditional(
-                condition = SkirTypeCodec.encode(condition.node).getOrThrow(),
-                whenTrue = state.column(whenTrueNodes),
-                whenFalse = whenFalseNode,
-            ),
-        )
-}
-
-internal fun PresentationLayoutHandler.remainingFields(configuration: Any?) {
-    val excluded = mutableListOf<String>()
-    val scope =
-        object : RemainingFields {
-            override fun exclude(field: PresentedField<*, *>) {
-                excluded += (field as RuntimePresentedField<*, *>).name
-            }
-        }
-    invokeBlock(configuration, scope)
-    val patterns =
-        excluded.map { name ->
-            WireRelativeFieldPattern(
-                segments =
-                    listOf(
-                        FieldPatternSegment.FieldWrapper(
-                            NamedFieldPatternSegment(name = name),
-                        ),
+        state.withTarget(children) { requireNotNull(receiver).body() }
+        val child = state.column(children)
+        target +=
+            if (typed) {
+                val expected = requireNotNull(input.expected) { "A typed presentation input must carry its expected type." }
+                state.node(
+                    PresentationElement.createTypedField(
+                        binding = input.binding,
+                        expectedType = SkirTypeCodec.encode(expected).getOrThrow(),
+                        presentation = child,
                     ),
+                )
+            } else {
+                state.node(
+                    PresentationElement.createScopedBinding(
+                        binding = input.binding,
+                        scopeBindingId = requireNotNull(scopeBinding).wire(),
+                        child = child,
+                    ),
+                )
+            }
+    }
+
+    override fun <V> polymorphicMatch(
+        binding: PresentationInput<V, *>,
+        cases: MatchScope<V>.() -> Unit,
+    ) {
+        val scopeBinding = state.bindingId("match.value")
+        val wireCases = mutableListOf<skirout.editor.v1.presentation.PolymorphicMatchCase>()
+        var fallback: PresentationNode? = null
+        val scope =
+            object : MatchScope<V> {
+                override fun <Subtype : V> case(
+                    type: AppliedPresentation<Subtype>,
+                    body: MatchCaseScope<Subtype>.() -> Unit,
+                ) {
+                    state.type(type.type)
+                    require(wireCases.none { candidate -> candidate.concreteType == SkirTypeCodec.encode(type.type).getOrThrow() }) {
+                        "A polymorphic match may declare one case per concrete type."
+                    }
+                    val nodes = mutableListOf<PresentationNode>()
+                    val layout = state.scope(nodes)
+                    val caseScope =
+                        object : MatchCaseScope<Subtype>, Layout by layout {
+                            override val value =
+                                Expr<Subtype, com.typewritermc.expression.MayBeMissing>(
+                                    ExpressionNode.Read(scopeBinding, ValuePath()),
+                                )
+                        }
+                    state.withTarget(nodes) { caseScope.body() }
+                    wireCases +=
+                        skirout.editor.v1.presentation.PolymorphicMatchCase(
+                            concreteType = SkirTypeCodec.encode(type.type).getOrThrow(),
+                            child = state.column(nodes),
+                        )
+                }
+
+                override fun fallback(body: Layout.() -> Unit) {
+                    check(fallback == null) { "A polymorphic match may declare fallback content once." }
+                    fallback = state.presentation(body)
+                }
+            }
+        scope.cases()
+        require(wireCases.isNotEmpty()) { "A polymorphic match requires at least one concrete case." }
+        target +=
+            state.node(
+                PresentationElement.createPolymorphicMatch(
+                    binding = binding.binding,
+                    scopeBindingId = scopeBinding.wire(),
+                    cases = wireCases,
+                    fallback = fallback,
+                ),
             )
-        }
-    target += state.node(PresentationElement.createRemainingFields(excluded = patterns))
+    }
+
+    override fun invoke(
+        presentation: PresentationReference,
+        arguments: PresentationArguments.() -> Unit,
+    ) {
+        val id =
+            requireNotNull(state.presentationId(presentation, checked)) {
+                "The invoked presentation reference was not registered by its generated provider."
+            }
+        val wireArguments = mutableListOf<skirout.editor.v1.presentation.PresentationArgument>()
+        val scope =
+            object : PresentationArguments {
+                override fun <Value> bind(
+                    parameter: PresentationParameter<Value>,
+                    value: PresentationInput<out Value, *>,
+                ) {
+                    require(wireArguments.none { it.input.value == parameter.binding.value }) {
+                        "A presentation parameter may be bound once per invocation."
+                    }
+                    wireArguments +=
+                        skirout.editor.v1.presentation.PresentationArgument(
+                            input = parameter.binding.wire(),
+                            binding = value.binding,
+                        )
+                }
+            }
+        scope.arguments()
+        target +=
+            state.node(
+                PresentationElement.createInvocation(
+                    presentationId =
+                        skirout.editor.v1.type_catalog
+                            .PresentationId(namespace = id.namespace, name = id.name),
+                    arguments = wireArguments,
+                ),
+            )
+    }
 }
 
-private class RuntimePresentedField<V, S : Any>(
+internal class RuntimePresentedField<V, S : Any>(
     private val state: PresentationBuildState,
     val name: String,
     private val scope: KClass<S>,
@@ -236,9 +204,9 @@ private class RuntimePresentedField<V, S : Any>(
     override val input: PresentationInput<V, S>
         get() {
             val createScope: (BindingRef, MutableList<PresentationNode>) -> S = { rebound, children ->
-                proxy(
+                state.controls.create(
                     scope,
-                    PresentationControlHandler(
+                    RuntimeControlBinding(
                         state = state,
                         target = children,
                         field = name,
@@ -269,9 +237,9 @@ private class RuntimePresentedField<V, S : Any>(
         require(using == null || presentationId != null) {
             "The selected presentation reference was not registered by its generated provider."
         }
-        val handler = PresentationControlHandler(state, state.currentTarget, name, binding, checked, nested, presentationId)
-        val control = proxy(scope, handler)
+        val controlBinding = RuntimeControlBinding(state, state.currentTarget, name, binding, checked, nested, presentationId)
+        val control = state.controls.create(scope, controlBinding)
         control.configure()
-        if (!handler.emitted) handler.defaultPresentation()
+        if (!controlBinding.emitted) controlBinding.defaultPresentation()
     }
 }

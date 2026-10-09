@@ -1350,7 +1350,12 @@ private fun nullableTextField(
         NullableField::class as KClass<NullableField<String, Text>>,
         mapOf(
             FieldPatternSegment.Values to
-                NestedConfigurationScope(RepresentationKind.Text, TypeTemplate.Scalar(ScalarKind.Text)) { nested ->
+                NestedConfigurationScope(
+                    RepresentationKind.Text,
+                    TypeTemplate.Scalar(ScalarKind.Text),
+                    Text::class,
+                    com.typewritermc.configuration.TextExpressionsFactory,
+                ) { nested ->
                     textField(nested, RelativeFieldPattern(), TypeTemplate.Scalar(ScalarKind.Text))
                 },
         ),

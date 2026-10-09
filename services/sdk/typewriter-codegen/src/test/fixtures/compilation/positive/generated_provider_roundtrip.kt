@@ -14,6 +14,12 @@ import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.discovery.GeneratedProviderLoader
 import com.typewritermc.discovery.assemble
 import com.typewritermc.expression.literal
+import com.typewritermc.expression.eq
+import com.typewritermc.expression.orElse
+import com.typewritermc.expression.portableExpression
+import com.typewritermc.expression.ExpressionBindingId
+import com.typewritermc.authoring.ValuePath
+import com.typewritermc.presentation.ExpressionNode
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.presentation.CollectionProjection
 import com.typewritermc.presentation.DefaultPresentationRuntime
@@ -50,10 +56,22 @@ data class Example(
     val selectedTag: ResourceId = ResourceId("fixture.tag"),
     val selectedTags: List<ResourceId> = listOf(ResourceId("fixture.tag")),
     val unstable: String = failingDefault(),
+    val details: ExampleRow? = null,
+    val rows: List<ExampleRow> = emptyList(),
+    val labels: Map<String, ExampleRow> = emptyMap(),
 ) : Resource {
     companion object : ExampleConfiguration {
         override fun ExampleConfigurationScope.configure() {
             title { nonBlank() }
+            details { whenPresent { title { nonBlank() } } }
+            rows {
+                items { title { rule { value eq value }.error("self equal") } }
+                uniqueBy { title }
+            }
+            labels {
+                keys { nonBlank() }
+                values { title { nonBlank() } }
+            }
         }
     }
 }
@@ -63,6 +81,8 @@ private fun failingDefault(): String = error("fixture default failure")
 @TypewriterType(id = "a0000000000000000000000000000097")
 data class ExampleRow(
     val title: String,
+    val value: String = "",
+    val receiverExpression: String = "",
 )
 
 @TypewriterType(id = "a0000000000000000000000000000098")
@@ -89,7 +109,7 @@ fun exampleCollectionProjection(): CollectionProjection<Example, ExampleRow, Exa
         sourceId = "fixture.examples",
         root = com.typewritermc.types.TypeTemplate.Named(ExampleDefinition.id),
         rowType = com.typewritermc.types.TypeTemplate.Named(ExampleRowDefinition.id),
-        expressions = ExampleRowExpressions::class,
+        expressions = ExampleRowExpressionsFactory,
     ) {
         content(ExampleRowFields.title, ExampleFields.title)
     }
@@ -106,6 +126,13 @@ object ExampleInspector : ExamplePresentation {
                 relation("identity", resource)
             }
         title { textInput() }
+        rows {
+            listInput {
+                showIf({ (expressions.title eq expressions.title).orElse(literal(false)) }) {
+                    title { textInput() }
+                }
+            }
+        }
         collectionLookup(examples, selectedTag.input) {
             found { text(literal("found")) }
             missing { text(literal("missing")) }
@@ -157,6 +184,11 @@ fun main() {
     check(contractRepresentation.fields.map { it.owner.name } == listOf("stored"))
     val valueRepresentation = StoredValueDefinition.declaration.representation as RepresentationTemplate.Record
     check(valueRepresentation.fields.map { it.owner.name } == listOf("stored"))
+    val source = portableExpression<Any?>(ExpressionNode.Read(ExpressionBindingId("fixture"), ValuePath()))
+    val rowExpressions = ExampleRowExpressionsFactory.create(source)
+    check(rowExpressions.title.node == ExpressionNode.Read(ExpressionBindingId("fixture"), ValuePath(listOf(com.typewritermc.authoring.PathSegment.Field("title")))))
+    check(rowExpressions.value.node == ExpressionNode.Read(ExpressionBindingId("fixture"), ValuePath(listOf(com.typewritermc.authoring.PathSegment.Field("value")))))
+    check(rowExpressions.receiverExpression.node == ExpressionNode.Read(ExpressionBindingId("fixture"), ValuePath(listOf(com.typewritermc.authoring.PathSegment.Field("receiverExpression")))))
     val runtime = DefaultPresentationRuntime()
     val artifact = Path.of(requireNotNull(System.getProperty("fixtureArtifact")))
     GeneratedProviderLoader()
@@ -184,7 +216,16 @@ fun main() {
             check(contributions.presentations.size == 1)
             check(contributions.resources.single().root == ExampleDefinition.id)
             val assembly = contributions.assemble(CatalogAssemblyContext(CatalogGeneration("fixture")))
-            check(assembly.snapshot.configuration.single().rules.isNotEmpty())
+            val configuredPaths = assembly.snapshot.configuration.filter { it.rules.isNotEmpty() }
+                .map { recipe -> recipe.relativePath.segments.joinToString(".") { segment ->
+                    when (segment) {
+                        is com.typewritermc.configuration.FieldPatternSegment.Field -> segment.name
+                        com.typewritermc.configuration.FieldPatternSegment.Items -> "items"
+                        com.typewritermc.configuration.FieldPatternSegment.Keys -> "keys"
+                        com.typewritermc.configuration.FieldPatternSegment.Values -> "values"
+                    }
+                } }.toSet()
+            check(configuredPaths.containsAll(setOf("title", "details.title", "rows.items.title", "labels.keys", "labels.values.title")))
             val checked =
                 when (val resolved = assembly.checked.resolve(TypeUse.Named(ExampleDefinition.id))) {
                     is Resolution.Ready -> resolved.value

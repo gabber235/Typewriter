@@ -7,12 +7,6 @@ import com.typewritermc.types.Resource
 import kotlin.time.Duration
 import kotlin.time.Instant
 
-@Target(AnnotationTarget.PROPERTY_GETTER)
-@Retention(AnnotationRetention.RUNTIME)
-annotation class ExpressionField(
-    val name: String,
-)
-
 interface GenericValueExpressions<T> {
     val value: Expr<T, MayBeMissing>
 }

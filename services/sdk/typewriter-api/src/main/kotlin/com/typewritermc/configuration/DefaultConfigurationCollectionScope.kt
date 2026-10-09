@@ -7,8 +7,10 @@ import com.typewritermc.checking.CheckRecipe
 import com.typewritermc.checking.DiagnosticSeverity
 import com.typewritermc.checking.DiagnosticTemplate
 import com.typewritermc.checking.RegisteredPredicate
+import com.typewritermc.discovery.checkedGeneratedScope
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.ExpressionBindingId
+import com.typewritermc.expression.ExpressionFactory
 import com.typewritermc.expression.MissingPolicy
 import com.typewritermc.expression.OperationId
 import com.typewritermc.expression.field
@@ -18,12 +20,9 @@ import com.typewritermc.types.DataValue
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeTemplate
-import java.lang.reflect.InvocationHandler
-import java.lang.reflect.Method
-import java.lang.reflect.Proxy
 import kotlin.reflect.KClass
 
-class DefaultConfigurationCollectionScope private constructor(
+class DefaultConfigurationCollectionScope internal constructor(
     private val target: TypeDefinitionId,
     private val state: ConfigurationCollectionState,
     private val prefix: RelativeFieldPattern,
@@ -47,14 +46,12 @@ class DefaultConfigurationCollectionScope private constructor(
         expected: TypeTemplate,
         scope: KClass<S>,
         nested: Map<FieldPatternSegment, NestedConfigurationScope>,
-        expressions: KClass<*>,
+        expressions: ExpressionFactory<*>,
     ): S {
-        require(scope.java.isInterface) { "Configuration scopes must be interfaces." }
-        val interfaces = (CONFIGURATION_INTERFACES + scope.java).distinct().toTypedArray()
         val absolute = RelativeFieldPattern(prefix.segments + path.segments)
-        val handler = FieldScopeHandler(absolute, representation, expected, nested, expressions, skipNull)
-        @Suppress("UNCHECKED_CAST")
-        return Proxy.newProxyInstance(scope.java.classLoader, interfaces, handler) as S
+        val binding =
+            RuntimeConfigurationBinding(target, state, absolute, representation, expected, nested, expressions, constants, skipNull)
+        return binding.createScope(scope)
     }
 
     override fun nested(path: RelativeFieldPattern): ConfigurationCollectionScope =
@@ -68,192 +65,158 @@ class DefaultConfigurationCollectionScope private constructor(
 
     override fun collected(): CollectedConfiguration =
         CollectedConfiguration(state.recipes.toList(), state.checks.toList(), state.initialization)
+}
 
-    private inner class FieldScopeHandler(
-        private val path: RelativeFieldPattern,
-        private val representation: RepresentationKind,
-        private val expected: TypeTemplate,
-        private val nested: Map<FieldPatternSegment, NestedConfigurationScope>,
-        private val expressions: KClass<*>,
-        private val skipNull: Boolean,
-    ) : InvocationHandler {
-        override fun invoke(
-            proxy: Any,
-            method: Method,
-            arguments: Array<out Any?>?,
-        ): Any? {
-            val values = arguments.orEmpty()
-            return when (method.name) {
-                "rule" -> declarePortable(values.single() as Function1<Any, *>)
-                "check" -> declareNative(values.single() as Function1<Any?, Boolean>)
-                "oneOf" -> declareHelper("one_of", values.flatMap(::spread), "Value must be one of the declared choices")
-                "uniqueBy" -> declareUniqueBy(values.single())
-                "whenPresent" -> invokeNested(values.single(), FieldPatternSegment.Values, samePath = true)
-                "items" -> invokeNested(values.single(), FieldPatternSegment.Items)
-                "keys" -> invokeNested(values.single(), FieldPatternSegment.Keys)
-                "values" -> invokeNested(values.single(), FieldPatternSegment.Values)
-                "whenText" -> invokeConditional(values.single(), RepresentationKind.Text, Text::class)
-                "toString" -> "ConfigurationScope($target:$path)"
-                "hashCode" -> System.identityHashCode(proxy)
-                "equals" -> proxy === values.singleOrNull()
-                else -> declareHelper(method.name, values.flatMap(::spread), helperMessage(method.name))
-            }
+internal class RuntimeConfigurationBinding(
+    private val target: TypeDefinitionId,
+    private val state: ConfigurationCollectionState,
+    private val path: RelativeFieldPattern,
+    private val representation: RepresentationKind,
+    private val expected: TypeTemplate,
+    private val nested: Map<FieldPatternSegment, NestedConfigurationScope>,
+    private val expressions: ExpressionFactory<*>,
+    private val constants: PortableConstantEncoder?,
+    private val skipNull: Boolean,
+) {
+    fun <Expressions> rule(callback: ConfigurationPredicate<Expressions>): RuleDeclaration {
+        val receiver = checkedGeneratedScope<Expressions>(expressions.scope, expressions.create(VALUE_EXPRESSION))
+        return PendingRule(receiver.callback().node)
+    }
+
+    fun <Value> check(callback: (Value) -> Boolean): RuleDeclaration =
+        PendingCheck { value ->
+            @Suppress("UNCHECKED_CAST")
+            callback(value as Value)
         }
 
-        private fun declarePortable(callback: Function1<Any, *>): RuleDeclaration {
-            val expression =
-                callback.invoke(generatedExpressionScope(expressions, VALUE_EXPRESSION)) as? Expr<*, *>
-                    ?: throw IllegalArgumentException("A configuration rule must return an expression.")
-            return PendingRule(expression.node)
+    fun helper(
+        operation: String,
+        arguments: List<Any?>,
+        message: String = helperMessage(operation),
+    ) {
+        if (operation == "regex") {
+            val pattern =
+                arguments.singleOrNull() as? String
+                    ?: throw IllegalArgumentException("A regular expression rule requires one text pattern.")
+            pattern.portableRegexValidationError()?.let { reason -> throw IllegalArgumentException(reason) }
         }
+        val nodes = listOf(VALUE_EXPRESSION.node) + arguments.map { literal(it, expected, constants) }
+        val predicate = ExpressionNode.Call(OperationId("typewriter.rule.$operation"), nodes)
+        PendingRule(predicate).error(message)
+    }
 
-        private fun declareNative(callback: Function1<Any?, Boolean>): RuleDeclaration = PendingCheck(callback)
+    fun <Expressions> uniqueBy(callback: Expressions.() -> Expr<*, MissingPolicy>) {
+        val item = ExpressionBindingId("configured_item_${state.nextRule}")
+        val factory = nested[FieldPatternSegment.Items]?.expressions ?: GenericValueExpressionsFactory
+        val receiver =
+            checkedGeneratedScope<Expressions>(
+                factory.scope,
+                factory.create(Expr<Any?, MissingPolicy>(ExpressionNode.Read(item, ValuePath()))),
+            )
+        PendingRule(
+            ExpressionNode.Collection(
+                operation = OperationId("typewriter.collection.unique_by"),
+                input = VALUE_EXPRESSION.node,
+                bindings = listOf(item),
+                arguments = emptyList(),
+                body = receiver.callback().node,
+            ),
+        ).error("Collection values must have unique keys")
+    }
 
-        private fun declareHelper(
-            operation: String,
-            arguments: List<Any?>,
+    fun <Scope> nested(
+        configure: Configuration<Scope>,
+        segment: FieldPatternSegment,
+        samePath: Boolean = false,
+    ) {
+        val nestedPath = if (samePath) path else RelativeFieldPattern(path.segments + segment)
+        val descriptor = nested[segment]
+        val collection =
+            DefaultConfigurationCollectionScope(
+                target,
+                state,
+                nestedPath,
+                constants,
+                skipNull = skipNull || samePath,
+            )
+        val scope = descriptor?.scope ?: GenericValueConfigurationScope::class
+        val receiver =
+            descriptor?.create?.invoke(collection)
+                ?: collection.field(
+                    RelativeFieldPattern(),
+                    representation,
+                    expected,
+                    GenericValueConfigurationScope::class,
+                    emptyMap(),
+                    GenericValueExpressionsFactory,
+                )
+        checkedGeneratedScope<Scope>(scope, receiver).configure()
+    }
+
+    fun whenText(configure: TextConfiguration) {
+        val receiver =
+            RuntimeConfigurationBinding(
+                target,
+                state,
+                path,
+                RepresentationKind.Text,
+                RepresentationKind.Text.expectedTemplate(expected),
+                emptyMap(),
+                TextExpressionsFactory,
+                constants,
+                skipNull,
+            ).createScope(Text::class)
+        receiver.configure()
+    }
+
+    private inner class PendingRule(
+        private val predicate: ExpressionNode,
+    ) : RuleDeclaration {
+        override fun error(
             message: String,
+            at: RelativeFieldPattern?,
         ) {
-            if (operation == "regex") {
-                val pattern =
-                    arguments.singleOrNull() as? String
-                        ?: throw IllegalArgumentException("A regular expression rule requires one text pattern.")
-                pattern.portableRegexValidationError()?.let { reason -> throw IllegalArgumentException(reason) }
-            }
-            val nodes = listOf(VALUE_EXPRESSION.node) + arguments.map { literal(it, expected, constants) }
-            val predicate = ExpressionNode.Call(OperationId("typewriter.rule.$operation"), nodes)
-            PendingRule(predicate).error(message)
-        }
-
-        private fun declareUniqueBy(callback: Any?) {
-            val item = ExpressionBindingId("configured_item_${state.nextRule}")
-
-            @Suppress("UNCHECKED_CAST")
-            val body =
-                (callback as Function1<Any, *>)
-                    .invoke(
-                        generatedExpressionScope(
-                            nested[FieldPatternSegment.Items]?.expressions ?: GenericValueExpressions::class,
-                            Expr<Any?, MissingPolicy>(ExpressionNode.Read(item, ValuePath())),
-                        ),
+            val origin = RuleOrigin(target, state.nextRule++)
+            val effectivePredicate =
+                if (skipNull) {
+                    ExpressionNode.Or(
+                        ExpressionNode.Call(OperationId("typewriter.value.is_null"), listOf(VALUE_EXPRESSION.node)),
+                        predicate,
                     )
-                    as? Expr<*, *>
-                    ?: throw IllegalArgumentException("A uniqueBy selector must return an expression.")
-            PendingRule(
-                ExpressionNode.Collection(
-                    operation = OperationId("typewriter.collection.unique_by"),
-                    input = VALUE_EXPRESSION.node,
-                    bindings = listOf(item),
-                    arguments = emptyList(),
-                    body = body.node,
-                ),
-            ).error("Collection values must have unique keys")
-        }
-
-        private fun invokeNested(
-            callback: Any?,
-            segment: FieldPatternSegment,
-            samePath: Boolean = false,
-        ) {
-            val nestedPath = if (samePath) path else RelativeFieldPattern(path.segments + segment)
-            val descriptor = nested[segment]
-            val receiver =
-                descriptor?.create?.invoke(
-                    DefaultConfigurationCollectionScope(
-                        target,
-                        state,
-                        nestedPath,
-                        constants,
-                        skipNull = skipNull || samePath,
-                    ),
+                } else {
+                    predicate
+                }
+            val diagnostic = diagnostic(message, at ?: path)
+            state.recipes +=
+                ConfigurationRecipe(
+                    origin = origin,
+                    relativePath = path,
+                    representationCondition = representation,
+                    rules = listOf(OwnedRule(RuleId(origin, 0), RuleDescriptor(effectivePredicate), diagnostic)),
                 )
-                    ?: Proxy.newProxyInstance(
-                        Field::class.java.classLoader,
-                        CONFIGURATION_INTERFACES.toTypedArray(),
-                        FieldScopeHandler(
-                            nestedPath,
-                            descriptor?.representation ?: representation,
-                            descriptor?.expected ?: expected,
-                            emptyMap(),
-                            descriptor?.expressions ?: GenericValueExpressions::class,
-                            skipNull = samePath,
-                        ),
-                    )
-            @Suppress("UNCHECKED_CAST")
-            (callback as Function1<Any, Unit>).invoke(receiver)
         }
+    }
 
-        private fun invokeConditional(
-            callback: Any?,
-            condition: RepresentationKind,
-            scope: KClass<*>,
+    private inner class PendingCheck(
+        private val callback: Function1<Any?, Boolean>,
+    ) : RuleDeclaration {
+        override fun error(
+            message: String,
+            at: RelativeFieldPattern?,
         ) {
-            val receiver =
-                Proxy.newProxyInstance(
-                    scope.java.classLoader,
-                    (CONFIGURATION_INTERFACES + scope.java).distinct().toTypedArray(),
-                    FieldScopeHandler(
-                        path,
-                        condition,
-                        condition.expectedTemplate(expected),
-                        emptyMap(),
-                        expressions,
-                        skipNull,
-                    ),
+            val origin = RuleOrigin(target, state.nextRule++)
+            state.checks +=
+                CheckRecipe(
+                    owner = origin,
+                    inputs = listOf(CheckInput(target, path, expected, skipNull)),
+                    predicate = UnboundNativePredicate(expected, callback),
+                    diagnostic = diagnostic(message, at ?: path),
                 )
-            @Suppress("UNCHECKED_CAST")
-            (callback as Function1<Any, Unit>).invoke(receiver)
-        }
-
-        private inner class PendingRule(
-            private val predicate: ExpressionNode,
-        ) : RuleDeclaration {
-            override fun error(
-                message: String,
-                at: RelativeFieldPattern?,
-            ) {
-                val origin = RuleOrigin(target, state.nextRule++)
-                val effectivePredicate =
-                    if (skipNull) {
-                        ExpressionNode.Or(
-                            ExpressionNode.Call(OperationId("typewriter.value.is_null"), listOf(VALUE_EXPRESSION.node)),
-                            predicate,
-                        )
-                    } else {
-                        predicate
-                    }
-                val diagnostic = diagnostic(message, at ?: path)
-                state.recipes +=
-                    ConfigurationRecipe(
-                        origin = origin,
-                        relativePath = path,
-                        representationCondition = representation,
-                        rules = listOf(OwnedRule(RuleId(origin, 0), RuleDescriptor(effectivePredicate), diagnostic)),
-                    )
-            }
-        }
-
-        private inner class PendingCheck(
-            private val callback: Function1<Any?, Boolean>,
-        ) : RuleDeclaration {
-            override fun error(
-                message: String,
-                at: RelativeFieldPattern?,
-            ) {
-                val origin = RuleOrigin(target, state.nextRule++)
-                state.checks +=
-                    CheckRecipe(
-                        owner = origin,
-                        inputs = listOf(CheckInput(target, path, expected, skipNull)),
-                        predicate = UnboundNativePredicate(expected, callback),
-                        diagnostic = diagnostic(message, at ?: path),
-                    )
-            }
         }
     }
 }
 
-private class ConfigurationCollectionState(
+internal class ConfigurationCollectionState(
     val recipes: MutableList<ConfigurationRecipe> = mutableListOf(),
     val checks: MutableList<CheckRecipe> = mutableListOf(),
     var initialization: InitializationPreference? = null,
@@ -308,20 +271,6 @@ private fun diagnostic(
         severity = DiagnosticSeverity.Error,
         targets = listOf(path),
     )
-
-private fun spread(value: Any?): List<Any?> =
-    when (value) {
-        is Array<*> -> value.toList()
-        is BooleanArray -> value.toList()
-        is ByteArray -> value.toList()
-        is ShortArray -> value.toList()
-        is IntArray -> value.toList()
-        is LongArray -> value.toList()
-        is FloatArray -> value.toList()
-        is DoubleArray -> value.toList()
-        is Iterable<*> -> value.toList()
-        else -> listOf(value)
-    }
 
 private fun literal(
     value: Any?,
@@ -413,7 +362,7 @@ private fun literal(
         },
     )
 
-private fun helperMessage(name: String): String =
+internal fun helperMessage(name: String): String =
     when (name) {
         "nonEmpty" -> "Value must not be empty"
         "nonBlank" -> "Text must not be blank"
@@ -437,83 +386,4 @@ private fun helperMessage(name: String): String =
 private val VALUE_EXPRESSION =
     Expr<Any?, MissingPolicy>(
         ExpressionNode.Read(ExpressionBindingId("configured_value"), ValuePath()),
-    )
-
-fun <S : Any> generatedExpressionScope(
-    scope: KClass<S>,
-    value: Expr<*, out MissingPolicy>,
-): S =
-    Proxy.newProxyInstance(
-        scope.java.classLoader,
-        (
-            listOf(
-                scope.java,
-                GenericValueExpressions::class.java,
-                TextExpressions::class.java,
-                NumberExpressions::class.java,
-                BytesExpressions::class.java,
-                BooleanExpressions::class.java,
-                EnumExpressions::class.java,
-                NullableExpressions::class.java,
-                ListExpressions::class.java,
-                SetExpressions::class.java,
-                MapExpressions::class.java,
-                ItemExpressions::class.java,
-                LinkExpressions::class.java,
-                TimestampExpressions::class.java,
-                DurationExpressions::class.java,
-                ColorExpressions::class.java,
-            ).distinct()
-        ).toTypedArray(),
-    ) { proxy, method, arguments ->
-        val field = method.getAnnotation(ExpressionField::class.java)
-        when {
-            field != null -> {
-                value.field<Any?>(field.name)
-            }
-
-            method.name == "getValue" -> {
-                value
-            }
-
-            method.name == "toString" -> {
-                "ConfiguredValueExpressions"
-            }
-
-            method.name == "hashCode" -> {
-                System.identityHashCode(proxy)
-            }
-
-            method.name == "equals" -> {
-                proxy === arguments?.singleOrNull()
-            }
-
-            else -> {
-                throw IllegalArgumentException("Unsupported expression member ${method.name}.")
-            }
-        }
-    } as S
-
-private val CONFIGURATION_INTERFACES =
-    listOf(
-        Field::class.java,
-        Text::class.java,
-        Number::class.java,
-        Integer::class.java,
-        Real::class.java,
-        Decimal::class.java,
-        Bytes::class.java,
-        BooleanField::class.java,
-        EnumField::class.java,
-        RecordField::class.java,
-        NullableField::class.java,
-        LinkField::class.java,
-        TimestampField::class.java,
-        DurationField::class.java,
-        ColorField::class.java,
-        CollectionField::class.java,
-        ListField::class.java,
-        SetField::class.java,
-        MapField::class.java,
-        GenericValueConfigurationScope::class.java,
     )

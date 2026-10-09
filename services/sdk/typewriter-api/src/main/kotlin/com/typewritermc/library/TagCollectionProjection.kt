@@ -14,7 +14,7 @@ fun coreTagCollectionProjection(): CollectionProjection<Tag, TagCollectionRow, T
         sourceId = TAG_COLLECTION_SOURCE_ID,
         root = TypeTemplate.Named(TagDefinition.id),
         rowType = TypeTemplate.Named(TagCollectionRowDefinition.id),
-        expressions = TagCollectionRowExpressions::class,
+        expressions = TagCollectionRowExpressionsFactory,
     ) {
         content(TagCollectionRowFields.name, TagFields.name)
         content(TagCollectionRowFields.color, TagFields.color)

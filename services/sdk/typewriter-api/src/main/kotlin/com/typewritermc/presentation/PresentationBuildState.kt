@@ -1,6 +1,7 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.expression.ExpressionBindingId
+import com.typewritermc.expression.ExpressionFactories
 import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
@@ -15,7 +16,6 @@ import skirout.editor.v1.presentation.PresentationCollectionDefinition
 import skirout.editor.v1.presentation.PresentationDependencies
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
-import java.lang.reflect.Proxy
 import kotlin.reflect.KClass
 import skirout.editor.v1.presentation.CrossAxisAlignment as WireCrossAxisAlignment
 import skirout.editor.v1.presentation.MainAxisAlignment as WireMainAxisAlignment
@@ -25,10 +25,12 @@ import skirout.editor.v1.type_catalog.ValuePath as WireValuePath
 internal class PresentationBuildState(
     private val binding: PresentationBuildBinding,
     private val resolvePresentation: (PresentationReference, CheckedPresentationTemplate) -> com.typewritermc.types.PresentationId?,
+    val expressions: ExpressionFactories,
 ) {
     val role: PresentationRole get() = binding.role
     val type get() = binding.type
     val nodes = mutableListOf<PresentationNode>()
+    val controls = PresentationControlFactories()
     private var nextNode = 0
     private var nextBinding = 0
     private var activeTarget: MutableList<PresentationNode> = nodes
@@ -108,12 +110,8 @@ internal class PresentationBuildState(
         axis: PresentationAxisNodeList? = null,
         checked: CheckedPresentationTemplate = type,
         base: BindingRef = BindingRef(path = WireValuePath(segments = emptyList()), bindingId = CONFIGURED_VALUE.wire()),
-    ): PresentationBuildScope =
-        Proxy.newProxyInstance(
-            PresentationBuildScope::class.java.classLoader,
-            arrayOf(PresentationBuildScope::class.java, AxisLayout::class.java),
-            PresentationLayoutHandler(this, target, axis, checked, base),
-        ) as PresentationBuildScope
+    ): RuntimePresentationBuildScope =
+        RuntimePresentationBuildScope(this, RuntimeLayout(this, target, axis, checked, base), target, checked, base)
 
     fun node(
         element: PresentationElement?,

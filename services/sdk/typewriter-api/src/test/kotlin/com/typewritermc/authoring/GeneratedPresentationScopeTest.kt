@@ -1,11 +1,12 @@
 package com.typewritermc.authoring
 
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.configuration.ExpressionField
-import com.typewritermc.configuration.generatedExpressionScope
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.ExpressionBindingId
+import com.typewritermc.expression.ExpressionFactory
 import com.typewritermc.expression.MayBeMissing
+import com.typewritermc.expression.MissingPolicy
+import com.typewritermc.expression.field
 import com.typewritermc.expression.gte
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
@@ -29,7 +30,7 @@ val GeneratedPresentationScopeTest by testSuite {
             Expr<Any?, MayBeMissing>(
                 ExpressionNode.Read(ExpressionBindingId("configured_value"), ValuePath()),
             )
-        val expressions = generatedExpressionScope(ValueFieldExpressions::class, configured)
+        val expressions = ValueFieldExpressionsFactory.create(configured)
 
         expressions.value.node shouldBe
             ExpressionNode.Read(
@@ -68,8 +69,16 @@ val GeneratedPresentationScopeTest by testSuite {
 }
 
 private interface ValueFieldExpressions {
-    @get:ExpressionField("value")
     val value: Expr<String, MayBeMissing>
+}
+
+private object ValueFieldExpressionsFactory : ExpressionFactory<ValueFieldExpressions> {
+    override val scope = ValueFieldExpressions::class
+
+    override fun create(value: Expr<*, out MissingPolicy>): ValueFieldExpressions =
+        object : ValueFieldExpressions {
+            override val value: Expr<String, MayBeMissing> = value.field("value")
+        }
 }
 
 private object ConditionalPlacementPresentation : TimelineSegmentPlacementPresentation {

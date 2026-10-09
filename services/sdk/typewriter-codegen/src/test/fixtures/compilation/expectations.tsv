@@ -14,3 +14,5 @@ intersection_bound_target	positive	accept	BUILD SUCCESSFUL
 nonregular_recursive_record	positive	accept	BUILD SUCCESSFUL
 presentation_explicit_fallback	positive	accept	BUILD SUCCESSFUL
 universal_resource_endpoint	positive	accept	BUILD SUCCESSFUL
+configuration_unsupported_operation	cases	reject	Unresolved reference 'positive'
+control_unsupported_operation	cases	reject	Unresolved reference 'textInput'

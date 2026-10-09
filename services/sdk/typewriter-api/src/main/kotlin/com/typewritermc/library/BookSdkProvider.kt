@@ -1,6 +1,5 @@
 package com.typewritermc.library
 
-import com.typewritermc.configuration.generatedExpressionScope
 import com.typewritermc.expression.emptyListExpression
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.map
@@ -14,9 +13,9 @@ import com.typewritermc.types.Color
 import com.typewritermc.types.CoreIconSdkProvider
 import com.typewritermc.types.Icon
 import com.typewritermc.types.IconIconifyDefinition
-import com.typewritermc.types.IconIconifyExpressions
+import com.typewritermc.types.IconIconifyExpressionsFactory
 import com.typewritermc.types.IconSvgDefinition
-import com.typewritermc.types.IconSvgExpressions
+import com.typewritermc.types.IconSvgExpressionsFactory
 import com.typewritermc.types.PresentationRole
 
 object BookConfigurationProvider : BookConfiguration {
@@ -99,11 +98,11 @@ object BookReferencePresentation : BookPresentation {
 private fun Layout.bookSubjectIcon(input: PresentationInput<Icon, *>) {
     polymorphicMatch(input) {
         case(AppliedPresentation(IconIconifyDefinition.use, CoreIconSdkProvider)) {
-            val iconify = generatedExpressionScope(IconIconifyExpressions::class, value)
+            val iconify = IconIconifyExpressionsFactory.create(value)
             icon(iconify.value.orElse(literal("material-symbols:book")))
         }
         case(AppliedPresentation(IconSvgDefinition.use, CoreIconSdkProvider)) {
-            val svg = generatedExpressionScope(IconSvgExpressions::class, value)
+            val svg = IconSvgExpressionsFactory.create(value)
             icon(svg.source.orElse(literal("material-symbols:book")))
         }
         fallback { icon(literal("material-symbols:book")) }

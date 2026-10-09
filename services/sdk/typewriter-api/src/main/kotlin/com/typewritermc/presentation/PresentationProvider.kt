@@ -1,6 +1,7 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.expression.Expr
+import com.typewritermc.expression.ExpressionFactory
 import com.typewritermc.expression.Handled
 import com.typewritermc.types.Resource
 import skirout.editor.v1.presentation.PresentationDependencies
@@ -28,6 +29,9 @@ interface PresentationRuntime {
 }
 
 interface PresentationBuildScope : Layout {
+    /** Generated scope builders register nested receiver declarations in the same presentation runtime. */
+    fun registerExpressions(factory: ExpressionFactory<*>)
+
     fun <V, S : Any> value(
         scope: kotlin.reflect.KClass<S>,
         nested: Map<NestedPresentationSlot, NestedPresentationScope> = emptyMap(),

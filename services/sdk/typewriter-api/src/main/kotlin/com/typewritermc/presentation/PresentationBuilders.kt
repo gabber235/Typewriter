@@ -1,9 +1,9 @@
 package com.typewritermc.presentation
 
 import com.typewritermc.authoring.ValuePath
-import com.typewritermc.configuration.generatedExpressionScope
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.ExpressionBindingId
+import com.typewritermc.expression.ExpressionFactory
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.MayBeMissing
 import com.typewritermc.expression.literal
@@ -538,11 +538,11 @@ private class DefaultCollectionSourceScope<Row, Key>(
 private class DefaultProjectedCollectionSourceScope<Row, Key, Expressions : Any>(
     private val rowBinding: ExpressionBindingId,
     private val resourceBinding: ExpressionBindingId,
-    expressionType: kotlin.reflect.KClass<Expressions>,
+    expressionFactory: ExpressionFactory<Expressions>,
 ) : ProjectedCollectionSourceScope<Row, Key, Expressions> {
     override val row = Expr<Row, MayBeMissing>(ExpressionNode.Read(rowBinding, ValuePath()))
     override val resource = Expr<ResourceId, Handled>(ExpressionNode.Read(resourceBinding, ValuePath()))
-    override val expressions: Expressions = generatedExpressionScope(expressionType, row)
+    override val expressions: Expressions = expressionFactory.create(row)
     private var selectability: Expr<Boolean, Handled> = literal(true)
     private val relations = mutableListOf<CollectionRelation<Key>>()
 

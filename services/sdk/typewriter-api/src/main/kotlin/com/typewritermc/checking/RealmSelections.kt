@@ -3,10 +3,10 @@ package com.typewritermc.checking
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.ValuePath
-import com.typewritermc.configuration.generatedExpressionScope
 import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.ExpressionBindingId
+import com.typewritermc.expression.ExpressionFactory
 import com.typewritermc.expression.MissingPolicy
 import com.typewritermc.expression.portableExpression
 import com.typewritermc.presentation.ExpressionNode
@@ -41,14 +41,14 @@ fun <D> TypedSelection<D>.where(predicate: ExpressionNode): TypedSelection<D> = 
 
 fun <D, S : Any> compileSelection(
     type: DraftType<D>,
-    scope: kotlin.reflect.KClass<S>,
+    factory: ExpressionFactory<S>,
     predicate: S.() -> Expr<Boolean, out MissingPolicy>,
 ): TypedSelection<D> {
     val configured =
         portableExpression<Any?>(
             ExpressionNode.Read(ExpressionBindingId("configured_value"), ValuePath()),
         )
-    return TypedSelection(type, generatedExpressionScope(scope, configured).predicate().node)
+    return TypedSelection(type, factory.create(configured).predicate().node)
 }
 
 data class PartialSelection<D>(

@@ -1,8 +1,11 @@
 package com.typewritermc.presentation
 
+import com.typewritermc.expression.ExpressionFactories
 import java.util.IdentityHashMap
 
 class DefaultPresentationRuntime : PresentationRuntime {
+    private val expressions = ExpressionFactories()
+
     private val presentations = IdentityHashMap<PresentationReference, MutableList<PresentationDescriptor>>()
 
     override fun register(
@@ -31,7 +34,7 @@ class DefaultPresentationRuntime : PresentationRuntime {
         binding: PresentationBuildBinding,
         content: (PresentationBuildScope) -> Unit,
     ): PresentationBuildResult {
-        val state = PresentationBuildState(binding, ::resolve)
+        val state = PresentationBuildState(binding, ::resolve, expressions)
         state.withTarget(state.nodes) { content(state.scope()) }
         return state.result(state.column(state.nodes))
     }

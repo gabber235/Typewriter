@@ -2,11 +2,11 @@ package com.typewritermc.presentation
 
 import com.typewritermc.authoring.TypedPath
 import com.typewritermc.authoring.ValuePath
+import com.typewritermc.expression.ExpressionFactory
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.Resource
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeTemplate
-import kotlin.reflect.KClass
 
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.BINARY)
@@ -44,14 +44,14 @@ sealed interface CollectionProjectionValueSpec {
 
 data class CollectionProjection<Resource : com.typewritermc.types.Resource, Row, Expressions : Any>(
     val specification: CollectionProjectionSpec,
-    val expressions: KClass<Expressions>,
+    val expressions: ExpressionFactory<Expressions>,
 )
 
 fun <Resource : com.typewritermc.types.Resource, Row, Expressions : Any> collectionProjection(
     sourceId: String,
     root: TypeTemplate.Named,
     rowType: TypeTemplate,
-    expressions: KClass<Expressions>,
+    expressions: ExpressionFactory<Expressions>,
     block: CollectionProjectionBuilder<Resource, Row>.() -> Unit,
 ): CollectionProjection<Resource, Row, Expressions> =
     CollectionProjection(

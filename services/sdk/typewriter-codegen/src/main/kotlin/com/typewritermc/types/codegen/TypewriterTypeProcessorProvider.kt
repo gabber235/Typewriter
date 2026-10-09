@@ -625,8 +625,42 @@ object $objectName : com.typewritermc.discovery.GeneratedEndpointBindingsProvide
             exposedFields.joinToString("\n") { field ->
                 val property = properties[field.sourceName]
                 val valueType = property?.type?.resolve()?.sourceType(property.type.explicitNullable) ?: "kotlin.Any?"
-                "    @get:com.typewritermc.configuration.ExpressionField(\"${field.name}\")\n" +
-                    "    val ${field.sourceName}: com.typewritermc.expression.Expr<$valueType, com.typewritermc.expression.MayBeMissing>"
+                "    val ${field.sourceName}: com.typewritermc.expression.Expr<$valueType, com.typewritermc.expression.MayBeMissing>"
+            }
+        val expressionReceiverName =
+            generateSequence("receiverExpression") { "_$it" }
+                .first { candidate -> exposedFields.none { it.sourceName == candidate } }
+        val expressionImplementation =
+            exposedFields.joinToString("\n") { field ->
+                val property = properties[field.sourceName]
+                val valueType = property?.type?.resolve()?.sourceType(property.type.explicitNullable) ?: "kotlin.Any?"
+                "    override val ${field.sourceName}: " +
+                    "com.typewritermc.expression.Expr<$valueType, com.typewritermc.expression.MayBeMissing> " +
+                    "get() = $expressionReceiverName.field(\"${field.name}\")"
+            }
+        val nothingArguments =
+            typeParameters.joinToString(
+                prefix = if (typeParameters.isEmpty()) "" else "<",
+                postfix = if (typeParameters.isEmpty()) "" else ">",
+            ) { "kotlin.Nothing" }
+        val rootExpressionFactory =
+            when (val representation = typeDefinition.representation) {
+                is RepresentationTemplate.Scalar -> {
+                    if (declaration.qualifiedName?.asString() == COLOR_TYPE) {
+                        "com.typewritermc.configuration.ColorExpressionsFactory"
+                    } else {
+                        expressionScopeClass(TypeTemplate.Scalar(representation.kind), declaration.valueClassRepresentationType()) +
+                            "Factory"
+                    }
+                }
+
+                is RepresentationTemplate.Enumeration -> {
+                    "com.typewritermc.configuration.EnumExpressionsFactory"
+                }
+
+                else -> {
+                    "${name}ExpressionsFactory"
+                }
             }
         val configurationImplementation =
             exposedFields.joinToString("\n") { field ->
@@ -638,11 +672,17 @@ object $objectName : com.typewritermc.discovery.GeneratedEndpointBindingsProvide
                 val scopeClass = configurationScopeClass(field.template, property?.type?.resolve())
                 val nested = configurationNestedScopes(field.template, property?.type?.resolve())
                 val expressions = expressionScopeClass(field.template, property?.type?.resolve())
-                "    @Suppress(\"UNCHECKED_CAST\") override fun ${field.sourceName}(" +
-                    "configure: com.typewritermc.configuration.Configuration<$scope>) { " +
-                    "collection.field($pattern, com.typewritermc.configuration.RepresentationKind.$kind, " +
-                    "$expected, $scopeClass::class as kotlin.reflect.KClass<$scope>, $nested, " +
-                    "$expressions::class).configure() }"
+                val fieldType = property?.type?.resolve()
+                if (field.template is TypeTemplate.Named && fieldType != null && fieldType.hasGeneratedConfigurationImplementation()) {
+                    "    override fun ${field.sourceName}(configure: com.typewritermc.configuration.Configuration<$scope>) { " +
+                        "${fieldType.generatedConfigurationScopeImplementation()}(collection.nested($pattern)).configure() }"
+                } else {
+                    "    @Suppress(\"UNCHECKED_CAST\") override fun ${field.sourceName}(" +
+                        "configure: com.typewritermc.configuration.Configuration<$scope>) { " +
+                        "collection.field($pattern, com.typewritermc.configuration.RepresentationKind.$kind, " +
+                        "$expected, $scopeClass::class as kotlin.reflect.KClass<$scope>, $nested, " +
+                        "${expressions}Factory).configure() }"
+                }
             }
         val presentationFields =
             exposedFields.joinToString("\n") { field ->
@@ -740,6 +780,7 @@ import com.typewritermc.authoring.exactEditablePath
 import com.typewritermc.authoring.read
 import com.typewritermc.authoring.requireOpaqueCompatibility
 import com.typewritermc.types.encodeGeneratedDefault
+import com.typewritermc.expression.field
 
 $nativeAlias
 
@@ -764,6 +805,20 @@ interface ${name}Expressions$sourceArguments$sourceWhere {
 $expressionFields
 }
 
+internal class ${name}ExpressionsImpl$sourceArguments(
+    private val $expressionReceiverName: com.typewritermc.expression.Expr<*, out com.typewritermc.expression.MissingPolicy>,
+) : ${name}Expressions$appliedTypeArguments$sourceClassWhere {
+$expressionImplementation
+}
+
+object ${name}ExpressionsFactory : com.typewritermc.expression.ExpressionFactory<${name}Expressions$starArguments> {
+    @Suppress("UNCHECKED_CAST")
+    override val scope = ${name}Expressions::class as kotlin.reflect.KClass<${name}Expressions$starArguments>
+
+    override fun create(value: com.typewritermc.expression.Expr<*, out com.typewritermc.expression.MissingPolicy>): ${name}Expressions$starArguments =
+        ${name}ExpressionsImpl$nothingArguments(value)
+}
+
 @kotlin.jvm.JvmName("${name}ExpressionAny")
 @Suppress("UNCHECKED_CAST")
 fun $expressionFunctionArguments com.typewritermc.expression.Expr<kotlin.collections.List<$name$appliedTypeArguments>, M>.any(
@@ -771,7 +826,7 @@ fun $expressionFunctionArguments com.typewritermc.expression.Expr<kotlin.collect
 ): com.typewritermc.expression.Expr<kotlin.Boolean, com.typewritermc.expression.MayBeMissing>$sourceWhere =
     com.typewritermc.expression.collectionAny(
         this,
-        ${name}Expressions::class as kotlin.reflect.KClass<${name}Expressions$appliedTypeArguments>,
+        ${name}ExpressionsFactory as com.typewritermc.expression.ExpressionFactory<${name}Expressions$appliedTypeArguments>,
         predicate,
     )
 
@@ -782,7 +837,7 @@ fun $expressionFunctionArguments com.typewritermc.expression.Expr<kotlin.collect
 ): com.typewritermc.expression.Expr<kotlin.collections.List<$name$appliedTypeArguments>, com.typewritermc.expression.MayBeMissing>$sourceWhere =
     com.typewritermc.expression.collectionFilter(
         this,
-        ${name}Expressions::class as kotlin.reflect.KClass<${name}Expressions$appliedTypeArguments>,
+        ${name}ExpressionsFactory as com.typewritermc.expression.ExpressionFactory<${name}Expressions$appliedTypeArguments>,
         predicate,
     )
 
@@ -795,7 +850,7 @@ $configurationFields
 }
 
 @Suppress("UNCHECKED_CAST")
-internal class ${name}ConfigurationScopeImpl$sourceArguments(
+class ${name}ConfigurationScopeImpl$sourceArguments(
     private val collection: com.typewritermc.configuration.ConfigurationCollectionScope,
 ) : ${name}ConfigurationScope$appliedTypeArguments,
     $rootConfigurationScope by (
@@ -805,7 +860,7 @@ internal class ${name}ConfigurationScopeImpl$sourceArguments(
             $rootConfigurationExpected,
             $rootConfigurationClass::class as kotlin.reflect.KClass<$rootConfigurationScope>,
             emptyMap(),
-            ${name}Expressions::class,
+            $rootExpressionFactory,
         )
     )$sourceClassWhere {
     override fun initialization(preference: com.typewritermc.configuration.InitializationPreference) =
@@ -832,6 +887,10 @@ $presentationValue$presentationFields
 class ${name}PresentationScopeImpl$sourceArguments(
     private val build: com.typewritermc.presentation.PresentationBuildScope,
 ) : ${name}PresentationScope$appliedTypeArguments, com.typewritermc.presentation.Layout by build$sourceClassWhere {
+    init {
+        build.registerExpressions(${name}ExpressionsFactory)
+    }
+
     @Suppress("UNCHECKED_CAST") override val expressions: ${name}Expressions$appliedTypeArguments
         get() = build.expressions(${name}Expressions::class as kotlin.reflect.KClass<${name}Expressions$appliedTypeArguments>)
 $presentationValueImplementation$presentationImplementation
@@ -896,7 +955,7 @@ object ${name}DraftType : com.typewritermc.checking.DraftType<${name}Draft> {
     fun where(
         predicate: ${name}Expressions.() -> com.typewritermc.expression.Expr<kotlin.Boolean, out com.typewritermc.expression.MissingPolicy>,
     ): com.typewritermc.checking.TypedSelection<${name}Draft> =
-        com.typewritermc.checking.compileSelection(this, ${name}Expressions::class, predicate)
+        com.typewritermc.checking.compileSelection(this, ${name}ExpressionsFactory, predicate)
 }
 """
         } else if (resource) {
@@ -924,7 +983,7 @@ class ${name}ExactDraftType$exactDraftParameters(
     ): com.typewritermc.checking.TypedSelection<${name}ExactDraft$exactDraftArguments> =
         com.typewritermc.checking.compileSelection(
             this,
-            ${name}Expressions::class as kotlin.reflect.KClass<${name}Expressions$appliedTypeArguments>,
+            ${name}ExpressionsFactory as com.typewritermc.expression.ExpressionFactory<${name}Expressions$appliedTypeArguments>,
             predicate,
         )
 }
@@ -1319,8 +1378,9 @@ class $adapterName(
             descriptor
         }
 
-    override fun build(binding: com.typewritermc.presentation.PresentationBuildBinding): com.typewritermc.presentation.PresentationBuildResult =
-        runtime.build(binding) { build -> with($declaration) { ${target}PresentationScopeImpl(build).present() } }
+    override fun build(binding: com.typewritermc.presentation.PresentationBuildBinding): com.typewritermc.presentation.PresentationBuildResult {
+        return runtime.build(binding) { build -> with($declaration) { ${target}PresentationScopeImpl(build).present() } }
+    }
 }
 """.trimStart()
             }
@@ -2215,8 +2275,16 @@ private fun nestedConfigurationDescriptor(
     val kind = representationKind(template, type)
     val expected = configurationExpectedTemplate(template, type).templateCode()
     val expressions = expressionScopeClass(template, type)
+    val scope =
+        if (template is TypeTemplate.Named && type != null &&
+            type.hasGeneratedConfigurationImplementation()
+        ) {
+            type.generatedConfigurationScopeClass()
+        } else {
+            configurationScopeClass(template, type)
+        }
     return "com.typewritermc.configuration.NestedConfigurationScope(" +
-        "com.typewritermc.configuration.RepresentationKind.$kind, $expected, $expressions::class" +
+        "com.typewritermc.configuration.RepresentationKind.$kind, $expected, $scope::class, ${expressions}Factory" +
         ") { nested -> ${configurationScopeCreation(template, type, "nested")} }"
 }
 
@@ -2237,7 +2305,7 @@ private fun configurationScopeCreation(
     return "$collection.field(com.typewritermc.configuration.RelativeFieldPattern(), " +
         "com.typewritermc.configuration.RepresentationKind.$kind, " +
         "$expected, " +
-        "$scopeClass::class as kotlin.reflect.KClass<$scope>, $nested, $expressions::class)"
+        "$scopeClass::class as kotlin.reflect.KClass<$scope>, $nested, ${expressions}Factory)"
 }
 
 private fun configurationExpectedTemplate(

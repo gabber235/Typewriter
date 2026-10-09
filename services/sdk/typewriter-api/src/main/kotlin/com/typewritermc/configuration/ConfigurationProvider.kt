@@ -6,6 +6,7 @@ import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.checking.CheckRecipe
 import com.typewritermc.checking.Diagnostic
 import com.typewritermc.expression.EvaluationDiagnostic
+import com.typewritermc.expression.ExpressionFactory
 import com.typewritermc.types.TypeTemplate
 
 data class CollectedConfiguration(
@@ -21,7 +22,8 @@ interface TypeConfigurationScope {
 data class NestedConfigurationScope(
     val representation: RepresentationKind,
     val expected: TypeTemplate,
-    val expressions: kotlin.reflect.KClass<*> = GenericValueExpressions::class,
+    val scope: kotlin.reflect.KClass<*>,
+    val expressions: ExpressionFactory<*> = GenericValueExpressionsFactory,
     val create: (ConfigurationCollectionScope) -> Any,
 )
 
@@ -33,7 +35,7 @@ interface ConfigurationCollectionScope {
         representation: RepresentationKind,
         expected: TypeTemplate,
         scope: kotlin.reflect.KClass<S>,
-    ): S = field(path, representation, expected, scope, emptyMap(), GenericValueExpressions::class)
+    ): S = field(path, representation, expected, scope, emptyMap(), configurationExpressions(scope))
 
     fun <S : Any> field(
         path: RelativeFieldPattern,
@@ -41,7 +43,7 @@ interface ConfigurationCollectionScope {
         expected: TypeTemplate,
         scope: kotlin.reflect.KClass<S>,
         nested: Map<FieldPatternSegment, NestedConfigurationScope>,
-    ): S = field(path, representation, expected, scope, nested, GenericValueExpressions::class)
+    ): S = field(path, representation, expected, scope, nested, configurationExpressions(scope))
 
     fun <S : Any> field(
         path: RelativeFieldPattern,
@@ -49,7 +51,7 @@ interface ConfigurationCollectionScope {
         expected: TypeTemplate,
         scope: kotlin.reflect.KClass<S>,
         nested: Map<FieldPatternSegment, NestedConfigurationScope>,
-        expressions: kotlin.reflect.KClass<*>,
+        expressions: ExpressionFactory<*>,
     ): S
 
     fun nested(path: RelativeFieldPattern): ConfigurationCollectionScope

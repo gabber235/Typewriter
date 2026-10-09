@@ -1,6 +1,5 @@
 package com.typewritermc.library
 
-import com.typewritermc.configuration.generatedExpressionScope
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.MissingPolicy
@@ -56,7 +55,7 @@ internal fun libraryTagCollectionSource(): CollectionSource<TagCollectionRow, Re
     }
 
 internal fun GraphNodeScope<TagCollectionRow>.tagGraphNode() {
-    val tag = generatedExpressionScope(TagCollectionRowExpressions::class, row)
+    val tag = TagCollectionRowExpressionsFactory.create(row)
     chip(
         label = tag.name.orElse(literal("Unnamed tag")),
         color = tag.color.orElse(literal(Color(0xff9e9e9eu))).asPresentationColor(),

@@ -275,7 +275,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                                 ),
                             ),
                     ),
-                expressions = ProjectionFixtureExpressions::class,
+                expressions = ProjectionFixtureExpressionsFactory,
             )
         val runtime = DefaultPresentationRuntime()
         val provider =
@@ -365,7 +365,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                                 ),
                             ),
                     ),
-                expressions = ProjectionFixtureExpressions::class,
+                expressions = ProjectionFixtureExpressionsFactory,
             )
         val runtime = DefaultPresentationRuntime()
         val provider =
@@ -507,7 +507,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                 val projection =
                     CollectionProjection<ProjectionFixtureResource, Any, ProjectionFixtureExpressions>(
                         specification,
-                        ProjectionFixtureExpressions::class,
+                        ProjectionFixtureExpressionsFactory,
                     )
                 val provider =
                     object : PresentationProvider {
@@ -1508,6 +1508,14 @@ private class TestPositionScopeImpl(
 }
 
 private class ProjectionFixtureResource : Resource
+
+private object ProjectionFixtureExpressionsFactory : com.typewritermc.expression.ExpressionFactory<ProjectionFixtureExpressions> {
+    override val scope = ProjectionFixtureExpressions::class
+
+    override fun create(
+        value: com.typewritermc.expression.Expr<*, out com.typewritermc.expression.MissingPolicy>,
+    ): ProjectionFixtureExpressions = object : ProjectionFixtureExpressions {}
+}
 
 private interface ProjectionFixtureExpressions
 

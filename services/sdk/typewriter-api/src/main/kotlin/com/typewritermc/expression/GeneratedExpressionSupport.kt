@@ -2,7 +2,6 @@ package com.typewritermc.expression
 
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ValuePath
-import com.typewritermc.configuration.generatedExpressionScope
 import com.typewritermc.presentation.ExpressionNode
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.Ref
@@ -42,11 +41,11 @@ fun <V> Expr<*, out MissingPolicy>.field(name: String): Expr<V, MayBeMissing> =
 
 fun <T, S : Any> collectionAny(
     source: Expr<List<T>, out MissingPolicy>,
-    scope: kotlin.reflect.KClass<S>,
+    factory: ExpressionFactory<S>,
     predicate: S.() -> Expr<Boolean, out MissingPolicy>,
 ): Expr<Boolean, MayBeMissing> {
     val item = ExpressionBindingId("item_${source.node.hashCode().toUInt()}")
-    val expressions = generatedExpressionScope(scope, Expr<T, MayBeMissing>(ExpressionNode.Read(item, ValuePath())))
+    val expressions = factory.create(Expr<T, MayBeMissing>(ExpressionNode.Read(item, ValuePath())))
     return Expr(
         ExpressionNode.Collection(
             OperationId("typewriter.collection.any"),
@@ -60,11 +59,11 @@ fun <T, S : Any> collectionAny(
 
 fun <T, S : Any> collectionFilter(
     source: Expr<List<T>, out MissingPolicy>,
-    scope: kotlin.reflect.KClass<S>,
+    factory: ExpressionFactory<S>,
     predicate: S.() -> Expr<Boolean, out MissingPolicy>,
 ): Expr<List<T>, MayBeMissing> {
     val item = ExpressionBindingId("item_${source.node.hashCode().toUInt()}")
-    val expressions = generatedExpressionScope(scope, Expr<T, MayBeMissing>(ExpressionNode.Read(item, ValuePath())))
+    val expressions = factory.create(Expr<T, MayBeMissing>(ExpressionNode.Read(item, ValuePath())))
     return Expr(
         ExpressionNode.Collection(
             OperationId("typewriter.collection.filter"),

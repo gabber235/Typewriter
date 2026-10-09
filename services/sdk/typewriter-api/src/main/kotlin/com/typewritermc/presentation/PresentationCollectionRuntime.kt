@@ -19,30 +19,22 @@ import skirout.editor.v1.presentation.PresentationCollectionRelationDefinition
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
 import skirout.editor.v1.presentation.PresentationResourceCollection
-import kotlin.reflect.KClass
 import skirout.editor.v1.presentation.CrossAxisAlignment as WireCrossAxisAlignment
 import skirout.editor.v1.presentation.MainAxisAlignment as WireMainAxisAlignment
 
-internal fun PresentationLayoutHandler.resourceCollection(args: Array<out Any?>): CollectionSource<*, *> {
-    val id = args[0] as String
-    val native = args[1] as KClass<*>
-    val appearance = args[2] as? PresentationReference
-
-    @Suppress("UNCHECKED_CAST")
-    val configure = args[3] as ResourceCollectionSourceScope<com.typewritermc.types.Resource>.() -> Unit
-    return resourceCollectionSource(id, state.resourceType(native), appearance, configure)
-}
-
-internal fun PresentationLayoutHandler.repeated(args: Array<out Any?>) {
+internal fun <V, ItemScope> RuntimePresentationData.renderRepeated(
+    source: Expr<List<V>, Handled>,
+    items: SequenceScope<ItemScope>.() -> Unit,
+) {
     val binding = state.bindingId("repeated.item")
     val itemNodes = mutableListOf<PresentationNode>()
     val itemLayout = state.scope(itemNodes)
     var empty: PresentationNode? = null
     var separator: PresentationNode? = null
     val scope =
-        object : SequenceScope<Any?>, Layout by itemLayout {
+        object : SequenceScope<ItemScope>, Layout by itemLayout {
             override val item =
-                Expr<Any?, com.typewritermc.expression.MayBeMissing>(
+                Expr<ItemScope, com.typewritermc.expression.MayBeMissing>(
                     ExpressionNode.Read(binding, ValuePath()),
                 )
 
@@ -56,28 +48,30 @@ internal fun PresentationLayoutHandler.repeated(args: Array<out Any?>) {
                 separator = state.presentation(body)
             }
         }
-    state.withTarget(itemNodes) { invokeBlock(args[1], scope) }
+    state.withTarget(itemNodes) { scope.items() }
     target +=
         state.node(
             PresentationElement.createRepeated(
-                source = expression(args[0]),
+                source = expression(source),
                 itemBindingId = binding.wire(),
                 presentation = sequence(state.column(itemNodes), empty, separator),
             ),
         )
 }
 
-internal fun PresentationLayoutHandler.collectionLookup(args: Array<out Any?>) {
-    val source = args[0] as CollectionSource<*, *>
+internal fun <Row, Key> RuntimePresentationData.renderCollectionLookup(
+    source: CollectionSource<Row, Key>,
+    key: PresentationInput<Key, *>,
+    configure: LookupScope<Row>.() -> Unit,
+) {
     state.collection(source)
-    val key = args[1] as PresentationInput<*, *>
     var found: PresentationNode? = null
     var missing: PresentationNode? = null
     var loading: PresentationNode? = null
     val scope =
-        object : LookupScope<Any?> {
+        object : LookupScope<Row> {
             override val row =
-                Expr<Any?, com.typewritermc.expression.MayBeMissing>(
+                Expr<Row, com.typewritermc.expression.MayBeMissing>(
                     ExpressionNode.Read(source.rowBinding, ValuePath()),
                 )
 
@@ -96,7 +90,7 @@ internal fun PresentationLayoutHandler.collectionLookup(args: Array<out Any?>) {
                 loading = state.presentation(body)
             }
         }
-    invokeBlock(args[2], scope)
+    scope.configure()
     target +=
         state.node(
             PresentationElement.createCollectionLookup(
@@ -109,8 +103,10 @@ internal fun PresentationLayoutHandler.collectionLookup(args: Array<out Any?>) {
         )
 }
 
-internal fun PresentationLayoutHandler.collectionGraph(args: Array<out Any?>) {
-    val source = args[0] as CollectionSource<*, *>
+internal fun <Row, Key> RuntimePresentationData.renderCollectionGraph(
+    source: CollectionSource<Row, Key>,
+    configure: GraphScope<Row, Key>.() -> Unit,
+) {
     state.collection(source)
     val childrenBinding = state.bindingId("graph.children")
     val childBinding = state.bindingId("graph.child")
@@ -122,8 +118,8 @@ internal fun PresentationLayoutHandler.collectionGraph(args: Array<out Any?>) {
     var graphMaximumDepth: Int? = null
     var node: PresentationNode? = null
     val scope =
-        object : GraphScope<Any?, Any?> {
-            override fun root(binding: PresentationInput<Any?, *>) {
+        object : GraphScope<Row, Key> {
+            override fun root(binding: PresentationInput<Key, *>) {
                 check(roots == null) { "Collection graph roots may be declared once." }
                 roots =
                     ExpressionNode.Read(
@@ -132,7 +128,7 @@ internal fun PresentationLayoutHandler.collectionGraph(args: Array<out Any?>) {
                     )
             }
 
-            override fun roots(binding: PresentationInput<List<Any?>, *>) {
+            override fun roots(binding: PresentationInput<List<Key>, *>) {
                 check(roots == null) { "Collection graph roots may be declared once." }
                 roots =
                     ExpressionNode.Read(
@@ -141,12 +137,12 @@ internal fun PresentationLayoutHandler.collectionGraph(args: Array<out Any?>) {
                     )
             }
 
-            override fun root(value: Expr<Any?, Handled>) {
+            override fun root(value: Expr<Key, Handled>) {
                 check(roots == null) { "Collection graph roots may be declared once." }
                 roots = value.node
             }
 
-            override fun roots(value: Expr<List<Any?>, Handled>) {
+            override fun roots(value: Expr<List<Key>, Handled>) {
                 check(roots == null) { "Collection graph roots may be declared once." }
                 roots = value.node
             }
@@ -164,18 +160,18 @@ internal fun PresentationLayoutHandler.collectionGraph(args: Array<out Any?>) {
                 graphMaximumDepth = maximumDepth
             }
 
-            override fun node(body: GraphNodeScope<Any?>.() -> Unit) {
+            override fun node(body: GraphNodeScope<Row>.() -> Unit) {
                 check(node == null) { "Collection graph node content may be declared once." }
                 val nodes = mutableListOf<PresentationNode>()
                 val layout = state.scope(nodes)
                 val nodeScope =
-                    object : GraphNodeScope<Any?>, Layout by layout {
+                    object : GraphNodeScope<Row>, Layout by layout {
                         override val row =
-                            Expr<Any?, com.typewritermc.expression.MayBeMissing>(
+                            Expr<Row, com.typewritermc.expression.MayBeMissing>(
                                 ExpressionNode.Read(source.rowBinding, ValuePath()),
                             )
                         override val children =
-                            Expr<List<Any?>, com.typewritermc.expression.MayBeMissing>(
+                            Expr<List<Row>, com.typewritermc.expression.MayBeMissing>(
                                 ExpressionNode.Read(childrenBinding, ValuePath()),
                             )
 
@@ -183,11 +179,11 @@ internal fun PresentationLayoutHandler.collectionGraph(args: Array<out Any?>) {
                             layout.slot(childSlot)
                         }
                     }
-                state.withTarget(nodes) { invokeBlock(body, nodeScope) }
+                state.withTarget(nodes) { nodeScope.body() }
                 node = state.column(nodes)
             }
         }
-    invokeBlock(args[1], scope)
+    scope.configure()
     val rootSequence =
         hierarchySequence(
             item = state.node(PresentationElement.createSlot(slotId = rootSlot)),
@@ -215,7 +211,7 @@ internal fun PresentationLayoutHandler.collectionGraph(args: Array<out Any?>) {
         )
 }
 
-private fun PresentationLayoutHandler.sequence(
+private fun RuntimePresentationData.sequence(
     item: PresentationNode,
     empty: PresentationNode? = null,
     separator: PresentationNode? = null,
@@ -234,7 +230,7 @@ private fun PresentationLayoutHandler.sequence(
             ),
     )
 
-private fun PresentationLayoutHandler.hierarchySequence(
+private fun RuntimePresentationData.hierarchySequence(
     item: PresentationNode,
     empty: PresentationNode? = null,
 ): skirout.editor.v1.presentation.SequencePresentation {
