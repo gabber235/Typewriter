@@ -52,7 +52,7 @@ class DateTimePickerSurface extends StatelessWidget {
                   value: value,
                   enabled: enabled,
                   autofocus: true,
-                  onChanged: (date) => onChanged(replaceDatePart(value, date)),
+                  onChanged: (date) => onChanged(value.withDate(date)),
                 ),
               if (includeDate && includeTime)
                 Padding(

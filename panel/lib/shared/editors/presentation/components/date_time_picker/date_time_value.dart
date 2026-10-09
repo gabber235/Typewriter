@@ -4,27 +4,25 @@
 /// disabled parts. Subsecond precision is intentionally not displayed because
 /// the editor format has second precision. Callers should provide the UTC
 /// timestamp used by the editor contract.
-String formatDateTimeEditorValue(
-  DateTime value, {
-  required bool includeDate,
-  required bool includeTime,
-}) {
-  final parts = <String>[];
-  if (includeDate) {
-    parts.add(
-      "${value.year.toString().padLeft(4, "0")}-"
-      "${value.month.toString().padLeft(2, "0")}-"
-      "${value.day.toString().padLeft(2, "0")}",
-    );
+extension DateTimeEditorText on DateTime {
+  String toEditorText({required bool includeDate, required bool includeTime}) {
+    final parts = <String>[];
+    if (includeDate) {
+      parts.add(
+        "${year.toString().padLeft(4, "0")}-"
+        "${month.toString().padLeft(2, "0")}-"
+        "${day.toString().padLeft(2, "0")}",
+      );
+    }
+    if (includeTime) {
+      parts.add(
+        "${hour.toString().padLeft(2, "0")}:"
+        "${minute.toString().padLeft(2, "0")}:"
+        "${second.toString().padLeft(2, "0")}",
+      );
+    }
+    return parts.join(" ");
   }
-  if (includeTime) {
-    parts.add(
-      "${value.hour.toString().padLeft(2, "0")}:"
-      "${value.minute.toString().padLeft(2, "0")}:"
-      "${value.second.toString().padLeft(2, "0")}",
-    );
-  }
-  return parts.join(" ");
 }
 
 /// Returns the input hint and validation format for the enabled timestamp parts.
@@ -44,119 +42,113 @@ String dateTimeEditorFormat({
 /// component ranges. The returned timestamp is UTC. Invalid drafts throw
 /// [FormatException], allowing [ValidatedTextField] to retain the last valid
 /// value and show recovery guidance.
-DateTime parseDateTimeEditorValue(
-  String draft, {
-  required DateTime current,
-  required bool includeDate,
-  required bool includeTime,
-}) {
-  if (!includeDate && !includeTime) {
-    throw const FormatException("Enable the date or time before editing");
-  }
-  final pattern = switch ((includeDate, includeTime)) {
-    (true, true) => RegExp(
-      r"^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$",
-    ),
-    (true, false) => RegExp(r"^(\d{4})-(\d{2})-(\d{2})$"),
-    (false, true) => RegExp(r"^(\d{2}):(\d{2}):(\d{2})$"),
-    _ => throw const FormatException("Enable the date or time before editing"),
-  };
-  final match = pattern.firstMatch(draft);
-  if (match == null) {
-    throw FormatException(
-      "Use ${dateTimeEditorFormat(includeDate: includeDate, includeTime: includeTime)}",
+extension DateTimeEditorDraft on String {
+  DateTime parseEditorDateTime({
+    required DateTime current,
+    required bool includeDate,
+    required bool includeTime,
+  }) {
+    if (!includeDate && !includeTime) {
+      throw const FormatException("Enable the date or time before editing");
+    }
+    final pattern = switch ((includeDate, includeTime)) {
+      (true, true) => RegExp(
+        r"^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$",
+      ),
+      (true, false) => RegExp(r"^(\d{4})-(\d{2})-(\d{2})$"),
+      (false, true) => RegExp(r"^(\d{2}):(\d{2}):(\d{2})$"),
+      _ => throw const FormatException(
+        "Enable the date or time before editing",
+      ),
+    };
+    final match = pattern.firstMatch(this);
+    if (match == null) {
+      throw FormatException(
+        "Use ${dateTimeEditorFormat(includeDate: includeDate, includeTime: includeTime)}",
+      );
+    }
+
+    var year = current.year;
+    var month = current.month;
+    var day = current.day;
+    var hour = current.hour;
+
+    var minute = current.minute;
+
+    var second = current.second;
+    if (includeDate) {
+      year = int.parse(match.group(1)!);
+      month = int.parse(match.group(2)!);
+      day = int.parse(match.group(3)!);
+    }
+    if (includeTime) {
+      final offset = includeDate ? 3 : 0;
+      hour = int.parse(match.group(offset + 1)!);
+      minute = int.parse(match.group(offset + 2)!);
+      second = int.parse(match.group(offset + 3)!);
+    }
+    if (year < 1 ||
+        month < 1 ||
+        month > 12 ||
+        hour > 23 ||
+        minute > 59 ||
+        second > 59) {
+      throw const FormatException("Enter a valid date and time");
+    }
+
+    final parsed = DateTime.utc(
+      year,
+      month,
+      day,
+      hour,
+      minute,
+      second,
+      current.millisecond,
+      current.microsecond,
     );
+    if (parsed.year != year || parsed.month != month || parsed.day != day) {
+      throw const FormatException("Enter a valid calendar date");
+    }
+    return parsed;
   }
+}
 
-  var year = current.year;
-  var month = current.month;
-  var day = current.day;
-  var hour = current.hour;
-
-  var minute = current.minute;
-
-  var second = current.second;
-  if (includeDate) {
-    year = int.parse(match.group(1)!);
-    month = int.parse(match.group(2)!);
-    day = int.parse(match.group(3)!);
-  }
-  if (includeTime) {
-    final offset = includeDate ? 3 : 0;
-    hour = int.parse(match.group(offset + 1)!);
-    minute = int.parse(match.group(offset + 2)!);
-    second = int.parse(match.group(offset + 3)!);
-  }
-  if (year < 1 ||
-      month < 1 ||
-      month > 12 ||
-      hour > 23 ||
-      minute > 59 ||
-      second > 59) {
-    throw const FormatException("Enter a valid date and time");
-  }
-
-  final parsed = DateTime.utc(
-    year,
-    month,
-    day,
+extension DateTimeCalendarOperations on DateTime {
+  /// Replaces the calendar date while preserving time and subsecond precision.
+  DateTime withDate(DateTime date) => DateTime.utc(
+    date.year,
+    date.month,
+    date.day,
     hour,
     minute,
     second,
-    current.millisecond,
-    current.microsecond,
+    millisecond,
+    microsecond,
   );
-  if (parsed.year != year || parsed.month != month || parsed.day != day) {
-    throw const FormatException("Enter a valid calendar date");
-  }
-  return parsed;
-}
 
-/// Replaces only the calendar date components and returns a UTC timestamp,
-/// preserving time and subsecond precision.
-DateTime replaceDatePart(DateTime current, DateTime date) => DateTime.utc(
-  date.year,
-  date.month,
-  date.day,
-  current.hour,
-  current.minute,
-  current.second,
-  current.millisecond,
-  current.microsecond,
-);
-
-/// Replaces selected time components and returns a UTC timestamp, preserving
-/// date and subsecond precision.
-DateTime replaceTimePart(
-  DateTime current, {
-  int? hour,
-  int? minute,
-  int? second,
-}) => DateTime.utc(
-  current.year,
-  current.month,
-  current.day,
-  hour ?? current.hour,
-  minute ?? current.minute,
-  second ?? current.second,
-  current.millisecond,
-  current.microsecond,
-);
-
-/// Returns the number of days in a Gregorian calendar month.
-int daysInMonth(int year, int month) => DateTime.utc(year, month + 1, 0).day;
-
-/// Moves a UTC calendar date by [delta] months and clamps its day.
-///
-/// Clamping keeps dates such as January 31 valid when moving into February and
-/// makes repeated calendar navigation deterministic across leap years.
-DateTime moveMonth(DateTime value, int delta) {
-  final monthIndex = value.year * 12 + value.month - 1 + delta;
-  final year = monthIndex ~/ 12;
-  final month = monthIndex % 12 + 1;
-  return DateTime.utc(
+  /// Replaces selected time components while preserving date and precision.
+  DateTime withTime({int? hour, int? minute, int? second}) => DateTime.utc(
     year,
     month,
-    value.day.clamp(1, daysInMonth(year, month)),
+    day,
+    hour ?? this.hour,
+    minute ?? this.minute,
+    second ?? this.second,
+    millisecond,
+    microsecond,
   );
+
+  /// Moves this UTC calendar date by [delta] months and clamps its day.
+  DateTime moveMonth(int delta) {
+    final monthIndex = year * 12 + month - 1 + delta;
+    final nextYear = monthIndex ~/ 12;
+    final nextMonth = monthIndex % 12 + 1;
+    return DateTime.utc(
+      nextYear,
+      nextMonth,
+      day.clamp(1, daysInMonth(nextYear, nextMonth)),
+    );
+  }
 }
+
+int daysInMonth(int year, int month) => DateTime.utc(year, month + 1, 0).day;

@@ -54,7 +54,7 @@ class _DateTimeCalendarState extends State<DateTimeCalendar> {
     });
   }
 
-  void _moveMonth(int delta) => _focus(moveMonth(_focusedDate, delta));
+  void _moveMonth(int delta) => _focus(_focusedDate.moveMonth(delta));
 
   void _selectMonth(int month) {
     _focus(

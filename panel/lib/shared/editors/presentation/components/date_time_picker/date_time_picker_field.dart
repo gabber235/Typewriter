@@ -97,8 +97,7 @@ class DateTimePickerField extends HookConsumerWidget {
       if (currentValue == null) return Future.value();
       return Clipboard.setData(
         ClipboardData(
-          text: formatDateTimeEditorValue(
-            currentValue,
+          text: currentValue.toEditorText(
             includeDate: includeDate,
             includeTime: includeTime,
           ),
@@ -168,13 +167,11 @@ class DateTimePickerField extends HookConsumerWidget {
               ? MaterialSymbols.calendar_month_rounded
               : MaterialSymbols.schedule_rounded,
           readOnly: !editable,
-          deserialize: (value) => formatDateTimeEditorValue(
-            value,
+          deserialize: (value) => value.toEditorText(
             includeDate: includeDate,
             includeTime: includeTime,
           ),
-          serialize: (draft) => parseDateTimeEditorValue(
-            draft,
+          serialize: (draft) => draft.parseEditorDateTime(
             current: pickerValue,
             includeDate: includeDate,
             includeTime: includeTime,

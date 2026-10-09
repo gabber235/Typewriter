@@ -71,8 +71,7 @@ class DateTimeFields extends HookWidget {
                   enabled: enabled,
                   inputFieldController: hourController,
                   nextInputFieldController: minuteController,
-                  onChanged: (hour) =>
-                      onChanged(replaceTimePart(value, hour: hour)),
+                  onChanged: (hour) => onChanged(value.withTime(hour: hour)),
                 ),
               ),
               const _TimeSeparator(key: ValueKey("date_time_separator_1")),
@@ -86,7 +85,7 @@ class DateTimeFields extends HookWidget {
                   inputFieldController: minuteController,
                   nextInputFieldController: secondController,
                   onChanged: (minute) =>
-                      onChanged(replaceTimePart(value, minute: minute)),
+                      onChanged(value.withTime(minute: minute)),
                 ),
               ),
               const _TimeSeparator(key: ValueKey("date_time_separator_2")),
@@ -99,7 +98,7 @@ class DateTimeFields extends HookWidget {
                   enabled: enabled,
                   inputFieldController: secondController,
                   onChanged: (second) =>
-                      onChanged(replaceTimePart(value, second: second)),
+                      onChanged(value.withTime(second: second)),
                 ),
               ),
             ],
