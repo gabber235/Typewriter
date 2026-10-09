@@ -3,6 +3,7 @@ package com.typewritermc.realm
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.CommitResult
 import com.typewritermc.discovery.DeploymentFacts
+import com.typewritermc.discovery.RuntimeCleanupOwner
 import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.RuntimeScope
 import com.typewritermc.loader.api.HostedMessagingSession
@@ -54,7 +55,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import java.util.concurrent.atomic.AtomicBoolean
 
 internal class Realm(
     private val databaseProvider: RealmDatabaseProvider,
@@ -300,29 +300,13 @@ private class RealmRuntimeScope(
     override val coroutineScope: CoroutineScope,
     override val facts: DeploymentFacts,
 ) : RuntimeScope {
-    private val lock = Any()
-    private val cleanup = mutableListOf<suspend () -> Unit>()
-    private val closed = AtomicBoolean()
+    private val ownership = RuntimeCleanupOwner()
 
-    override fun own(cleanup: suspend () -> Unit) {
-        synchronized(lock) {
-            check(!closed.get()) { "Realm runtime scope is closed." }
-            this.cleanup += cleanup
-        }
-    }
+    override fun own(cleanup: suspend () -> Unit) = ownership.own(cleanup)
 
-    override fun <R : AutoCloseable> own(resource: R): R = resource.also { own(it::close) }
+    override fun <R : AutoCloseable> own(resource: R): R = ownership.own(resource)
 
-    suspend fun shutdown() {
-        if (!closed.compareAndSet(false, true)) return
-        val actions = synchronized(lock) { cleanup.asReversed().toList().also { cleanup.clear() } }
-        val failures = actions.mapNotNull { action -> runCatching { action() }.exceptionOrNull() }
-        if (failures.isNotEmpty()) {
-            val failure = failures.first()
-            failures.drop(1).forEach(failure::addSuppressed)
-            throw failure
-        }
-    }
+    suspend fun shutdown() = ownership.close()
 }
 
 private fun RouterResult.requireSuccess(operation: String) {
