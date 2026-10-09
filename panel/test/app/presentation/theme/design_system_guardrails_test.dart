@@ -40,6 +40,7 @@ final exemptions = <Exemption>[
     "lib/shared/editors/presentation/protocol/renderers/content/chip_renderer.dart",
     "lib/shared/editors/presentation/protocol/renderers/content/text_renderer.dart",
     "lib/shared/editors/presentation/components/search_input/search_input_row.dart",
+    "lib/shared/editors/presentation/portable_renderer/expression_resolution.dart",
   ])
     Exemption(
       path,

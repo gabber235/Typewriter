@@ -455,7 +455,7 @@ final _reorderableListItem = skir.PresentationNode(
       path: skir.ValuePath(segments: const []),
     ),
     color: null,
-    fontSize: null,
+    sizing: null,
     fontWeight: null,
     fontItalic: null,
     fontOpticalSize: null,
@@ -515,7 +515,7 @@ skir.PresentationNode _textNode(String id, String value) =>
       element: skir.PresentationElement.createText(
         value: _literal(value),
         color: null,
-        fontSize: null,
+        sizing: null,
         fontWeight: null,
         fontItalic: null,
         fontOpticalSize: null,

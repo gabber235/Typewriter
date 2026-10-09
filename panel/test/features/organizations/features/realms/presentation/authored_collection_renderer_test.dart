@@ -674,7 +674,7 @@ skir.PresentationNode _textNode(String id, skir.ExpressionNode value) =>
       element: skir.PresentationElement.createText(
         value: value,
         color: null,
-        fontSize: null,
+        sizing: null,
         fontWeight: null,
         fontItalic: null,
         fontOpticalSize: null,

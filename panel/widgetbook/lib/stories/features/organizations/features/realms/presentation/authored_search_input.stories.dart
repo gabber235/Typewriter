@@ -73,7 +73,7 @@ final class _SearchInputStoryState extends State<_SearchInputStory> {
           element: skir.PresentationElement.createText(
             value: _rowRead,
             color: null,
-            fontSize: null,
+            sizing: null,
             fontWeight: null,
             fontItalic: null,
             fontOpticalSize: null,

@@ -1626,7 +1626,7 @@ impl SpacerLayout {
 pub struct TextContent {
     pub value: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub color: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
-    pub font_size: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub sizing: Option<TextSizing>,
     pub font_weight: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     pub font_italic: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     pub font_optical_size: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
@@ -1884,6 +1884,7 @@ pub struct RichTextContent {
     pub runs: Vec<TextRun>,
     pub style: Option<TextStyleOverride>,
     pub paragraph: TextParagraph,
+    pub sizing: Option<TextSizing>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RichTextContent>>,
 }
@@ -7071,6 +7072,87 @@ impl PageTimelineElement {
 }
 
 // ==============================================================================
+// struct TextFit
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct TextFit {
+    pub minimum: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub maximum: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<TextFit>>,
+}
+
+impl TextFit {
+    pub fn default_ref() -> &'static TextFit {
+        static D: std::sync::LazyLock<TextFit> = std::sync::LazyLock::new(TextFit::default);
+        &D
+    }
+}
+
+impl TextFit {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<TextFit> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<TextFit>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "TextFit",
+                    "",
+                    |x: &TextFit| &x._unrecognized,
+                    |x: &mut TextFit, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<TextFit> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(TextFit::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum TextSizing
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum TextSizing {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<TextSizing>>),
+    Exact(Box<crate::skirout::base::editor::v1::expression::ExpressionNode>),
+    Fit(Box<TextFit>),
+}
+
+impl Default for TextSizing {
+    fn default() -> Self {
+        TextSizing::Unknown(None)
+    }
+}
+
+impl TextSizing {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<TextSizing> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<TextSizing>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &TextSizing| match x {
+                        TextSizing::Unknown(_) => 0,
+                        TextSizing::Exact(_) => 1,
+                        TextSizing::Fit(_) => 2,
+                    },
+                    |u| TextSizing::Unknown(Some(u)),
+                    |x: &TextSizing| match x { TextSizing::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "editor/v1/presentation.skir",
+                    "TextSizing",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<TextSizing> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(TextSizing::_adapter())
+    }
+}
+
+// ==============================================================================
 // initialize_module_serializers()
 // ==============================================================================
 
@@ -7364,7 +7446,7 @@ fn initialize_module_serializers() {
                 let a: *mut crate::skir_client::internal::StructAdapter<TextContent> = TextContent::_adapter() as *const _ as *mut _;
                 (*a).add_field("value", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &TextContent| &x.value, |x: &mut TextContent, v| x.value = v);
                 (*a).add_field("color", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextContent| &x.color, |x: &mut TextContent, v| x.color = v);
-                (*a).add_field("font_size", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextContent| &x.font_size, |x: &mut TextContent, v| x.font_size = v);
+                (*a).add_field("sizing", 2, crate::skir_client::Serializer::optional(crate::skir_client::internal::enum_serializer_from_static(TextSizing::_adapter())), "", |x: &TextContent| &x.sizing, |x: &mut TextContent, v| x.sizing = v);
                 (*a).add_field("font_weight", 3, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextContent| &x.font_weight, |x: &mut TextContent, v| x.font_weight = v);
                 (*a).add_field("font_italic", 4, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextContent| &x.font_italic, |x: &mut TextContent, v| x.font_italic = v);
                 (*a).add_field("font_optical_size", 5, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextContent| &x.font_optical_size, |x: &mut TextContent, v| x.font_optical_size = v);
@@ -7418,6 +7500,7 @@ fn initialize_module_serializers() {
                 (*a).add_field("runs", 0, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(TextRun::_adapter())), "", |x: &RichTextContent| &x.runs, |x: &mut RichTextContent, v| x.runs = v);
                 (*a).add_field("style", 1, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(TextStyleOverride::_adapter())), "", |x: &RichTextContent| &x.style, |x: &mut RichTextContent, v| x.style = v);
                 (*a).add_field("paragraph", 2, crate::skir_client::internal::struct_serializer_from_static(TextParagraph::_adapter()), "", |x: &RichTextContent| &x.paragraph, |x: &mut RichTextContent, v| x.paragraph = v);
+                (*a).add_field("sizing", 3, crate::skir_client::Serializer::optional(crate::skir_client::internal::enum_serializer_from_static(TextSizing::_adapter())), "", |x: &RichTextContent| &x.sizing, |x: &mut RichTextContent, v| x.sizing = v);
                 (*a).finalize();
             }
             unsafe {
@@ -8354,6 +8437,18 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<PageTimelineElement> = PageTimelineElement::_adapter() as *const _ as *mut _;
                 (*a).add_field("control", 0, crate::skir_client::internal::struct_serializer_from_static(BoundControl::_adapter()), "", |x: &PageTimelineElement| &x.control, |x: &mut PageTimelineElement, v| x.control = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<TextFit> = TextFit::_adapter() as *const _ as *mut _;
+                (*a).add_field("minimum", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &TextFit| &x.minimum, |x: &mut TextFit, v| x.minimum = v);
+                (*a).add_field("maximum", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &TextFit| &x.maximum, |x: &mut TextFit, v| x.maximum = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<TextSizing> = TextSizing::_adapter() as *const _ as *mut _;
+                (*a).add_wrapper_variant("exact", 1, 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |v| TextSizing::Exact(Box::new(v)), |x| match x { TextSizing::Exact(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("fit", 2, 2, crate::skir_client::internal::struct_serializer_from_static(TextFit::_adapter()), "", |v| TextSizing::Fit(Box::new(v)), |x| match x { TextSizing::Fit(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
         });

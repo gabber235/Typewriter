@@ -19,6 +19,7 @@ interface PresentationContent {
     fun text(
         value: Expr<String, Handled>,
         style: TextStyle = TextStyle(),
+        paragraph: TextParagraph = TextParagraph(),
     )
 
     fun richText(configure: RichTextScope.() -> Unit)
@@ -159,6 +160,8 @@ interface RichTextScope {
     fun style(style: TextStyleOverride)
 
     fun paragraph(paragraph: TextParagraph)
+
+    fun sizing(sizing: TextSizing)
 }
 
 interface MenuScope {
@@ -213,17 +216,38 @@ interface ConnectionsScope {
 }
 
 data class TextStyle(
-    val tone: String? = null,
+    val color: Expr<Color, Handled>? = null,
     val weight: Int? = null,
+    val sizing: TextSizing? = null,
 )
 
 data class TextStyleOverride(
-    val tone: String? = null,
+    val color: Expr<Color, Handled>? = null,
     val weight: Int? = null,
 )
 
+/** Logical font size policy. Fit bounds must resolve to positive whole sizes. */
+sealed interface TextSizing {
+    data class Exact(
+        val value: Expr<Double, Handled>,
+    ) : TextSizing
+
+    data class Fit(
+        val minimum: Expr<Double, Handled>,
+        val maximum: Expr<Double, Handled>,
+    ) : TextSizing
+}
+
+enum class TextOverflow { Clip, Ellipsis }
+
+enum class TextTone { Primary, Secondary }
+
 data class TextParagraph(
     val maximumLines: Int? = null,
+    val overflow: TextOverflow = TextOverflow.Clip,
+    val softWrap: Boolean = false,
+    val selectable: Boolean = false,
+    val tone: TextTone = TextTone.Primary,
 )
 
 data class IconOptions(

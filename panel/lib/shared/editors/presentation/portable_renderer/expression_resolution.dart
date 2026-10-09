@@ -231,3 +231,114 @@ _Resolved<TextDecoration?> _optionalTextDecoration(
     ),
   };
 }
+
+_Resolved<ResolvedTextSizing?> _resolveTextSizing(
+  PortablePresentationScope scope,
+  skir.TextSizing? sizing,
+) {
+  if (sizing == null) return const _ResolvedValue(null);
+  switch (sizing) {
+    case skir.TextSizing_exactWrapper(:final value):
+      final size = _optionalTextNumber(
+        scope,
+        value,
+        name: "Font size",
+        minimumExclusive: 0,
+      );
+      return switch (size) {
+        _ResolvedValue(:final value) => _ResolvedValue(
+          ResolvedTextSizing.exact(value!),
+        ),
+        _ResolvedFailure(:final message) => _ResolvedFailure(message),
+      };
+    case skir.TextSizing_fitWrapper(:final value):
+      final min = _optionalTextNumber(
+        scope,
+        value.minimum,
+        name: "Minimum font size",
+        minimumExclusive: 0,
+      );
+      if (min case _ResolvedFailure(:final message)) {
+        return _ResolvedFailure(message);
+      }
+      final max = _optionalTextNumber(
+        scope,
+        value.maximum,
+        name: "Maximum font size",
+        minimumExclusive: 0,
+      );
+      if (max case _ResolvedFailure(:final message)) {
+        return _ResolvedFailure(message);
+      }
+      final minimum = (min as _ResolvedValue<double?>).value!;
+      final maximum = (max as _ResolvedValue<double?>).value!;
+      if (minimum > maximum) {
+        return const _ResolvedFailure(
+          "Minimum font size must not exceed maximum font size",
+        );
+      }
+      if (minimum % 1 != 0 || maximum % 1 != 0) {
+        return const _ResolvedFailure(
+          "Fit bounds must be whole logical font sizes",
+        );
+      }
+      return _ResolvedValue(
+        ResolvedTextSizing.fit(minimum: minimum, maximum: maximum),
+      );
+    case skir.TextSizing_unknown():
+      return const _ResolvedFailure("Unknown text sizing policy");
+  }
+}
+
+_Resolved<TextStyle?> _resolveTextStyle(
+  PortablePresentationScope scope,
+  skir.TextStyleOverride? style, {
+  List<FontVariation>? inheritedVariations,
+}) {
+  if (style == null) return const _ResolvedValue(null);
+  final color = _optionalTextColor(scope, style.color);
+  if (color case _ResolvedFailure(:final message)) {
+    return _ResolvedFailure(message);
+  }
+  final weight = _optionalTextNumber(
+    scope,
+    style.fontWeight,
+    name: "Font weight",
+    minimum: 1,
+    maximum: 1000,
+  );
+  if (weight case _ResolvedFailure(:final message)) {
+    return _ResolvedFailure(message);
+  }
+  final italic = _optionalTextNumber(
+    scope,
+    style.fontItalic,
+    name: "Font italic",
+    minimum: 0,
+    maximum: 1,
+  );
+  if (italic case _ResolvedFailure(:final message)) {
+    return _ResolvedFailure(message);
+  }
+  final decoration = _optionalTextDecoration(scope, style.decoration);
+  if (decoration case _ResolvedFailure(:final message)) {
+    return _ResolvedFailure(message);
+  }
+  final weightValue = (weight as _ResolvedValue<double?>).value;
+  final italicValue = (italic as _ResolvedValue<double?>).value;
+  final variations = [
+    for (final variation in inheritedVariations ?? <FontVariation>[])
+      if ((variation.axis != "wght" || weightValue == null) &&
+          (variation.axis != "ital" || italicValue == null))
+        variation,
+    if (weightValue != null) FontVariation.weight(weightValue),
+    if (italicValue != null) FontVariation.italic(italicValue),
+  ];
+  return _ResolvedValue(
+    TextStyle(
+      color: (color as _ResolvedValue<Color?>).value,
+      fontVariations: variations.isEmpty ? null : variations,
+      decoration: (decoration as _ResolvedValue<TextDecoration?>).value,
+    ),
+  );
+}

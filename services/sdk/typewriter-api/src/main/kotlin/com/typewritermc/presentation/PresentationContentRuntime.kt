@@ -10,12 +10,13 @@ import skirout.editor.v1.presentation.PresentationElement
 
 internal fun PresentationLayoutHandler.text(args: Array<out Any?>) {
     val style = args.getOrNull(1) as? TextStyle ?: TextStyle()
+    val paragraph = args.getOrNull(2) as? TextParagraph ?: TextParagraph()
     target +=
         state.node(
             PresentationElement.createText(
                 value = expression(args[0]),
-                color = style.tone?.let(::expression),
-                fontSize = null,
+                color = style.color?.let(::expression),
+                sizing = style.sizing?.wire(),
                 fontWeight = style.weight?.let(::expression),
                 fontItalic = null,
                 fontOpticalSize = null,
@@ -26,9 +27,7 @@ internal fun PresentationLayoutHandler.text(args: Array<out Any?>) {
                 letterSpacing = null,
                 decoration = null,
                 semanticLabel = null,
-                paragraph =
-                    skirout.editor.v1.presentation.TextParagraph
-                        .partial(),
+                paragraph = paragraph.wire(),
             ),
         )
 }
@@ -39,7 +38,7 @@ internal fun PresentationLayoutHandler.markdown(args: Array<out Any?>) {
             PresentationElement.createMarkdown(
                 value = expression(args[0]),
                 color = args.getOrNull(1)?.let(::expression),
-                fontSize = null,
+                sizing = null,
                 fontWeight = null,
                 fontItalic = null,
                 fontOpticalSize = null,
@@ -89,6 +88,7 @@ internal fun PresentationLayoutHandler.richText(configuration: Any?) {
     val runs = mutableListOf<skirout.editor.v1.presentation.TextRun>()
     var overallStyle: TextStyleOverride? = null
     var overallParagraph = TextParagraph()
+    var overallSizing: TextSizing? = null
     val scope =
         object : RichTextScope {
             override fun run(
@@ -106,6 +106,10 @@ internal fun PresentationLayoutHandler.richText(configuration: Any?) {
                 overallStyle = style
             }
 
+            override fun sizing(sizing: TextSizing) {
+                overallSizing = sizing
+            }
+
             override fun paragraph(paragraph: TextParagraph) {
                 overallParagraph = paragraph
             }
@@ -117,6 +121,7 @@ internal fun PresentationLayoutHandler.richText(configuration: Any?) {
                 runs = runs,
                 style = overallStyle?.wire(),
                 paragraph = overallParagraph.wire(),
+                sizing = overallSizing?.wire(),
             ),
         )
 }
@@ -210,15 +215,43 @@ private fun portableLiteral(value: Any?): DataValue =
 
 private fun TextStyleOverride.wire(): skirout.editor.v1.presentation.TextStyleOverride =
     skirout.editor.v1.presentation.TextStyleOverride(
-        color = tone?.let(::expression),
+        color = color?.let(::expression),
         fontWeight = weight?.let(::expression),
         fontItalic = null,
         decoration = null,
     )
 
 private fun TextParagraph.wire(): skirout.editor.v1.presentation.TextParagraph =
-    skirout.editor.v1.presentation.TextParagraph
-        .partial(maxLines = maximumLines)
+    skirout.editor.v1.presentation.TextParagraph(
+        maxLines = maximumLines,
+        overflow =
+            when (overflow) {
+                TextOverflow.Clip -> skirout.editor.v1.presentation.PresentationTextOverflow.CLIP
+                TextOverflow.Ellipsis -> skirout.editor.v1.presentation.PresentationTextOverflow.ELLIPSIS
+            },
+        softWrap = softWrap,
+        selectable = selectable,
+        tone =
+            when (tone) {
+                TextTone.Primary -> skirout.editor.v1.presentation.PresentationTextTone.PRIMARY
+                TextTone.Secondary -> skirout.editor.v1.presentation.PresentationTextTone.SECONDARY
+            },
+    )
+
+private fun TextSizing.wire(): skirout.editor.v1.presentation.TextSizing =
+    when (this) {
+        is TextSizing.Exact -> {
+            skirout.editor.v1.presentation.TextSizing
+                .ExactWrapper(expression(value))
+        }
+
+        is TextSizing.Fit -> {
+            skirout.editor.v1.presentation.TextSizing.createFit(
+                minimum = expression(minimum),
+                maximum = expression(maximum),
+            )
+        }
+    }
 
 private fun StatusAppearance.wire(): skirout.editor.v1.presentation.StatusAppearance =
     skirout.editor.v1.presentation.StatusAppearance(

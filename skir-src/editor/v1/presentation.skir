@@ -283,7 +283,7 @@ struct SpacerLayout(810800038) {
 struct TextContent(810800039) {
   value: ExpressionNode = 0;
   color: ExpressionNode? = 1;
-  font_size: ExpressionNode? = 2;
+  sizing: TextSizing? = 2;
   font_weight: ExpressionNode? = 3;
   font_italic: ExpressionNode? = 4;
   font_optical_size: ExpressionNode? = 5;
@@ -331,6 +331,7 @@ struct RichTextContent(810800045) {
   runs: [TextRun] = 0;
   style: TextStyleOverride? = 1;
   paragraph: TextParagraph = 2;
+  sizing: TextSizing? = 3;
 }
 
 struct AdaptiveLeadingElement(810800046) {
@@ -1153,4 +1154,15 @@ struct PageGraphElement(810800163) {
 
 struct PageTimelineElement(810800164) {
   control: BoundControl = 0;
+}
+
+// Fit bounds are positive whole logical font sizes, with minimum at most maximum.
+struct TextFit(810800165) {
+  minimum: ExpressionNode = 0;
+  maximum: ExpressionNode = 1;
+}
+
+enum TextSizing(810800166) {
+  exact: ExpressionNode = 1;
+  fit: TextFit = 2;
 }

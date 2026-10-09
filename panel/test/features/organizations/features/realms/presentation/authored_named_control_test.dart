@@ -197,7 +197,7 @@ skir.NamedControl _control() => skir.NamedControl(
                       skir.DataValue.wrapStringValue("Custom style"),
                     ),
                     color: null,
-                    fontSize: null,
+                    sizing: null,
                     fontWeight: null,
                     fontItalic: null,
                     fontOpticalSize: null,

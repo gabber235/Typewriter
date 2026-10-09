@@ -32,7 +32,7 @@ void main() {
       element: skir.PresentationElement.createText(
         value: rowRead,
         color: null,
-        fontSize: null,
+        sizing: null,
         fontWeight: null,
         fontItalic: null,
         fontOpticalSize: null,
@@ -94,7 +94,7 @@ void main() {
         element: skir.PresentationElement.createText(
           value: summaryRead,
           color: null,
-          fontSize: null,
+          sizing: null,
           fontWeight: null,
           fontItalic: null,
           fontOpticalSize: null,
@@ -242,7 +242,7 @@ void main() {
           skir.DataValue.wrapStringValue("HTTP result"),
         ),
         color: null,
-        fontSize: null,
+        sizing: null,
         fontWeight: null,
         fontItalic: null,
         fontOpticalSize: null,

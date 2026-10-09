@@ -53,6 +53,37 @@ import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
 
 val DefaultPresentationRuntimeTest by testSuite {
+    test("rich paragraphs serialize sizing and paragraph behavior") {
+        val catalog = DefaultCheckedCatalog(CatalogGeneration("rich sizing"), StandardTypes.definitions)
+        val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
+        val result =
+            DefaultPresentationRuntime().build(
+                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.INSPECTOR),
+            ) { build ->
+                build.richText {
+                    sizing(TextSizing.Fit(literal(18.0), literal(40.0)))
+                    paragraph(TextParagraph(maximumLines = 2, softWrap = true, selectable = true, tone = TextTone.Secondary))
+                    style(TextStyleOverride(color = literal(com.typewritermc.types.Color(0xff123456u)), weight = 500))
+                    run(literal("First"))
+                    run(literal("Second"), TextStyleOverride(weight = 700))
+                }
+            }
+        val text = (result.layout.singleFixed().element as PresentationElement.RichTextWrapper).value
+        (text.sizing is skirout.editor.v1.presentation.TextSizing.FitWrapper) shouldBe true
+        text.paragraph.maxLines shouldBe 2
+        text.paragraph.softWrap shouldBe true
+        text.paragraph.selectable shouldBe true
+        text.paragraph.tone shouldBe skirout.editor.v1.presentation.PresentationTextTone.SECONDARY
+        text.runs.size shouldBe 2
+        (text.style?.color != null) shouldBe true
+        val restored =
+            skirout.editor.v1.presentation.RichTextContent.serializer.fromBytes(
+                skirout.editor.v1.presentation.RichTextContent.serializer
+                    .toBytes(text),
+            )
+        restored shouldBe text
+    }
+
     test("builds one symbolic generic material and applies it to concrete uses") {
         val id = TypeDefinitionId(TypeId.Qualified("test", "Weighted"), 1)
         val parameter = ParameterKey(id, 0)

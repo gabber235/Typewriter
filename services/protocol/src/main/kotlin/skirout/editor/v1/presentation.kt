@@ -5526,7 +5526,7 @@ class SpacerLayout private constructor(
 sealed interface TextContent_OrMutable {
     val value: skirout.editor.v1.expression.ExpressionNode;
     val color: skirout.editor.v1.expression.ExpressionNode?;
-    val fontSize: skirout.editor.v1.expression.ExpressionNode?;
+    val sizing: skirout.editor.v1.presentation.TextSizing?;
     val fontWeight: skirout.editor.v1.expression.ExpressionNode?;
     val fontItalic: skirout.editor.v1.expression.ExpressionNode?;
     val fontOpticalSize: skirout.editor.v1.expression.ExpressionNode?;
@@ -5547,7 +5547,7 @@ sealed interface TextContent_OrMutable {
 class TextContent private constructor(
     override val value: skirout.editor.v1.expression.ExpressionNode,
     override val color: skirout.editor.v1.expression.ExpressionNode?,
-    override val fontSize: skirout.editor.v1.expression.ExpressionNode?,
+    override val sizing: skirout.editor.v1.presentation.TextSizing?,
     override val fontWeight: skirout.editor.v1.expression.ExpressionNode?,
     override val fontItalic: skirout.editor.v1.expression.ExpressionNode?,
     override val fontOpticalSize: skirout.editor.v1.expression.ExpressionNode?,
@@ -5567,7 +5567,7 @@ class TextContent private constructor(
             _MustNameArguments,
         value: skirout.editor.v1.expression.ExpressionNode,
         color: skirout.editor.v1.expression.ExpressionNode?,
-        fontSize: skirout.editor.v1.expression.ExpressionNode?,
+        sizing: skirout.editor.v1.presentation.TextSizing?,
         fontWeight: skirout.editor.v1.expression.ExpressionNode?,
         fontItalic: skirout.editor.v1.expression.ExpressionNode?,
         fontOpticalSize: skirout.editor.v1.expression.ExpressionNode?,
@@ -5584,7 +5584,7 @@ class TextContent private constructor(
     ): this(
         value,
         color,
-        fontSize,
+        sizing,
         fontWeight,
         fontItalic,
         fontOpticalSize,
@@ -5606,7 +5606,7 @@ class TextContent private constructor(
     fun toMutable() = Mutable(
         value = this.value,
         color = this.color,
-        fontSize = this.fontSize,
+        sizing = this.sizing,
         fontWeight = this.fontWeight,
         fontItalic = this.fontItalic,
         fontOpticalSize = this.fontOpticalSize,
@@ -5628,8 +5628,8 @@ class TextContent private constructor(
             this.value,
         color: skirout.editor.v1.expression.ExpressionNode? =
             this.color,
-        fontSize: skirout.editor.v1.expression.ExpressionNode? =
-            this.fontSize,
+        sizing: skirout.editor.v1.presentation.TextSizing? =
+            this.sizing,
         fontWeight: skirout.editor.v1.expression.ExpressionNode? =
             this.fontWeight,
         fontItalic: skirout.editor.v1.expression.ExpressionNode? =
@@ -5655,7 +5655,7 @@ class TextContent private constructor(
     ) = skirout.editor.v1.presentation.TextContent(
         value,
         color,
-        fontSize,
+        sizing,
         fontWeight,
         fontItalic,
         fontOpticalSize,
@@ -5674,11 +5674,11 @@ class TextContent private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.TextContent && this.value == other.value && this.color == other.color && this.fontSize == other.fontSize && this.fontWeight == other.fontWeight && this.fontItalic == other.fontItalic && this.fontOpticalSize == other.fontOpticalSize && this.fontSlant == other.fontSlant && this.fontWidth == other.fontWidth && this.textAlignment == other.textAlignment && this.lineHeight == other.lineHeight && this.letterSpacing == other.letterSpacing && this.decoration == other.decoration && this.semanticLabel == other.semanticLabel && this.paragraph == other.paragraph);
+        return this === other || (other is skirout.editor.v1.presentation.TextContent && this.value == other.value && this.color == other.color && this.sizing == other.sizing && this.fontWeight == other.fontWeight && this.fontItalic == other.fontItalic && this.fontOpticalSize == other.fontOpticalSize && this.fontSlant == other.fontSlant && this.fontWidth == other.fontWidth && this.textAlignment == other.textAlignment && this.lineHeight == other.lineHeight && this.letterSpacing == other.letterSpacing && this.decoration == other.decoration && this.semanticLabel == other.semanticLabel && this.paragraph == other.paragraph);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.value, this.color, this.fontSize, this.fontWeight, this.fontItalic, this.fontOpticalSize, this.fontSlant, this.fontWidth, this.textAlignment, this.lineHeight, this.letterSpacing, this.decoration, this.semanticLabel, this.paragraph).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.value, this.color, this.sizing, this.fontWeight, this.fontItalic, this.fontOpticalSize, this.fontSlant, this.fontWidth, this.textAlignment, this.lineHeight, this.letterSpacing, this.decoration, this.semanticLabel, this.paragraph).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -5696,7 +5696,7 @@ class TextContent private constructor(
             skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
         override var color: skirout.editor.v1.expression.ExpressionNode? =
             null,
-        override var fontSize: skirout.editor.v1.expression.ExpressionNode? =
+        override var sizing: skirout.editor.v1.presentation.TextSizing? =
             null,
         override var fontWeight: skirout.editor.v1.expression.ExpressionNode? =
             null,
@@ -5727,7 +5727,7 @@ class TextContent private constructor(
         override fun toFrozen() = skirout.editor.v1.presentation.TextContent(
             value = this.value,
             color = this.color,
-            fontSize = this.fontSize,
+            sizing = this.sizing,
             fontWeight = this.fontWeight,
             fontItalic = this.fontItalic,
             fontOpticalSize = this.fontOpticalSize,
@@ -5793,7 +5793,7 @@ class TextContent private constructor(
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
             color: skirout.editor.v1.expression.ExpressionNode? =
                 null,
-            fontSize: skirout.editor.v1.expression.ExpressionNode? =
+            sizing: skirout.editor.v1.presentation.TextSizing? =
                 null,
             fontWeight: skirout.editor.v1.expression.ExpressionNode? =
                 null,
@@ -5820,7 +5820,7 @@ class TextContent private constructor(
         ) = skirout.editor.v1.presentation.TextContent(
             value = value,
             color = color,
-            fontSize = fontSize,
+            sizing = sizing,
             fontWeight = fontWeight,
             fontItalic = fontItalic,
             fontOpticalSize = fontOpticalSize,
@@ -6442,6 +6442,7 @@ sealed interface RichTextContent_OrMutable {
     val runs: kotlin.collections.List<skirout.editor.v1.presentation.TextRun_OrMutable>;
     val style: skirout.editor.v1.presentation.TextStyleOverride_OrMutable?;
     val paragraph: skirout.editor.v1.presentation.TextParagraph_OrMutable;
+    val sizing: skirout.editor.v1.presentation.TextSizing?;
 
     fun toFrozen(): skirout.editor.v1.presentation.RichTextContent;
 }
@@ -6452,6 +6453,7 @@ class RichTextContent private constructor(
     override val runs: kotlin.collections.List<skirout.editor.v1.presentation.TextRun>,
     override val style: skirout.editor.v1.presentation.TextStyleOverride?,
     override val paragraph: skirout.editor.v1.presentation.TextParagraph,
+    override val sizing: skirout.editor.v1.presentation.TextSizing?,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.RichTextContent>? =
         null,
 ): skirout.editor.v1.presentation.RichTextContent_OrMutable {
@@ -6461,12 +6463,14 @@ class RichTextContent private constructor(
         runs: kotlin.collections.Iterable<skirout.editor.v1.presentation.TextRun_OrMutable>,
         style: skirout.editor.v1.presentation.TextStyleOverride_OrMutable?,
         paragraph: skirout.editor.v1.presentation.TextParagraph_OrMutable,
+        sizing: skirout.editor.v1.presentation.TextSizing?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.RichTextContent>? =
             null,
     ): this(
         build.skir.internal.toFrozenList(runs, { it.toFrozen() }),
         if (style != null) style.toFrozen() else null,
         paragraph.toFrozen(),
+        sizing,
         _unrecognizedFields,
     ) {}
 
@@ -6478,6 +6482,7 @@ class RichTextContent private constructor(
         runs = this.runs,
         style = this.style,
         paragraph = this.paragraph,
+        sizing = this.sizing,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -6490,10 +6495,13 @@ class RichTextContent private constructor(
             this.style,
         paragraph: skirout.editor.v1.presentation.TextParagraph_OrMutable =
             this.paragraph,
+        sizing: skirout.editor.v1.presentation.TextSizing? =
+            this.sizing,
     ) = skirout.editor.v1.presentation.RichTextContent(
         build.skir.internal.toFrozenList(runs, { it.toFrozen() }),
         if (style != null) style.toFrozen() else null,
         paragraph.toFrozen(),
+        sizing,
         this._unrecognizedFields,
     );
 
@@ -6501,11 +6509,11 @@ class RichTextContent private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.RichTextContent && this.runs == other.runs && this.style == other.style && this.paragraph == other.paragraph);
+        return this === other || (other is skirout.editor.v1.presentation.RichTextContent && this.runs == other.runs && this.style == other.style && this.paragraph == other.paragraph && this.sizing == other.sizing);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.runs, this.style, this.paragraph).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.runs, this.style, this.paragraph, this.sizing).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -6525,6 +6533,8 @@ class RichTextContent private constructor(
             null,
         override var paragraph: skirout.editor.v1.presentation.TextParagraph_OrMutable =
             skirout.editor.v1.presentation.TextParagraph.partial(),
+        override var sizing: skirout.editor.v1.presentation.TextSizing? =
+            null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.RichTextContent>? =
             null,
     ): skirout.editor.v1.presentation.RichTextContent_OrMutable {
@@ -6533,6 +6543,7 @@ class RichTextContent private constructor(
             runs = this.runs,
             style = this.style,
             paragraph = this.paragraph,
+            sizing = this.sizing,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -6575,6 +6586,7 @@ class RichTextContent private constructor(
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.TextRun>(),
                 null,
                 skirout.editor.v1.presentation.TextParagraph.partial(),
+                null,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -6594,10 +6606,13 @@ class RichTextContent private constructor(
                 null,
             paragraph: skirout.editor.v1.presentation.TextParagraph_OrMutable =
                 skirout.editor.v1.presentation.TextParagraph.partial(),
+            sizing: skirout.editor.v1.presentation.TextSizing? =
+                null,
         ) = skirout.editor.v1.presentation.RichTextContent(
             runs = runs,
             style = style,
             paragraph = paragraph,
+            sizing = sizing,
             _unrecognizedFields = null,
         );
 
@@ -22213,7 +22228,7 @@ sealed class PresentationElement private constructor() {
                 _MustNameArguments,
             value: skirout.editor.v1.expression.ExpressionNode,
             color: skirout.editor.v1.expression.ExpressionNode?,
-            fontSize: skirout.editor.v1.expression.ExpressionNode?,
+            sizing: skirout.editor.v1.presentation.TextSizing?,
             fontWeight: skirout.editor.v1.expression.ExpressionNode?,
             fontItalic: skirout.editor.v1.expression.ExpressionNode?,
             fontOpticalSize: skirout.editor.v1.expression.ExpressionNode?,
@@ -22229,7 +22244,7 @@ sealed class PresentationElement private constructor() {
             skirout.editor.v1.presentation.TextContent(
                 value = value,
                 color = color,
-                fontSize = fontSize,
+                sizing = sizing,
                 fontWeight = fontWeight,
                 fontItalic = fontItalic,
                 fontOpticalSize = fontOpticalSize,
@@ -22251,7 +22266,7 @@ sealed class PresentationElement private constructor() {
                 _MustNameArguments,
             value: skirout.editor.v1.expression.ExpressionNode,
             color: skirout.editor.v1.expression.ExpressionNode?,
-            fontSize: skirout.editor.v1.expression.ExpressionNode?,
+            sizing: skirout.editor.v1.presentation.TextSizing?,
             fontWeight: skirout.editor.v1.expression.ExpressionNode?,
             fontItalic: skirout.editor.v1.expression.ExpressionNode?,
             fontOpticalSize: skirout.editor.v1.expression.ExpressionNode?,
@@ -22267,7 +22282,7 @@ sealed class PresentationElement private constructor() {
             skirout.editor.v1.presentation.TextContent(
                 value = value,
                 color = color,
-                fontSize = fontSize,
+                sizing = sizing,
                 fontWeight = fontWeight,
                 fontItalic = fontItalic,
                 fontOpticalSize = fontOpticalSize,
@@ -23012,11 +23027,13 @@ sealed class PresentationElement private constructor() {
             runs: kotlin.collections.Iterable<skirout.editor.v1.presentation.TextRun_OrMutable>,
             style: skirout.editor.v1.presentation.TextStyleOverride_OrMutable?,
             paragraph: skirout.editor.v1.presentation.TextParagraph_OrMutable,
+            sizing: skirout.editor.v1.presentation.TextSizing?,
         ) = RichTextWrapper(
             skirout.editor.v1.presentation.RichTextContent(
                 runs = runs,
                 style = style,
                 paragraph = paragraph,
+                sizing = sizing,
             )
         );
 
@@ -26248,6 +26265,226 @@ class PageTimelineElement private constructor(
     }
 }
 
+sealed interface TextFit_OrMutable {
+    val minimum: skirout.editor.v1.expression.ExpressionNode;
+    val maximum: skirout.editor.v1.expression.ExpressionNode;
+
+    fun toFrozen(): skirout.editor.v1.presentation.TextFit;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class TextFit private constructor(
+    override val minimum: skirout.editor.v1.expression.ExpressionNode,
+    override val maximum: skirout.editor.v1.expression.ExpressionNode,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.TextFit>? =
+        null,
+): skirout.editor.v1.presentation.TextFit_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        minimum: skirout.editor.v1.expression.ExpressionNode,
+        maximum: skirout.editor.v1.expression.ExpressionNode,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.TextFit>? =
+            null,
+    ): this(
+        minimum,
+        maximum,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        minimum = this.minimum,
+        maximum = this.maximum,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        minimum: skirout.editor.v1.expression.ExpressionNode =
+            this.minimum,
+        maximum: skirout.editor.v1.expression.ExpressionNode =
+            this.maximum,
+    ) = skirout.editor.v1.presentation.TextFit(
+        minimum,
+        maximum,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.TextFit && this.minimum == other.minimum && this.maximum == other.maximum);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.minimum, this.maximum).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.TextFitSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [TextFit]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var minimum: skirout.editor.v1.expression.ExpressionNode =
+            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+        override var maximum: skirout.editor.v1.expression.ExpressionNode =
+            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.TextFit>? =
+            null,
+    ): skirout.editor.v1.presentation.TextFit_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.TextFit(
+            minimum = this.minimum,
+            maximum = this.maximum,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.TextFit(
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [TextFit].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            minimum: skirout.editor.v1.expression.ExpressionNode =
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+            maximum: skirout.editor.v1.expression.ExpressionNode =
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+        ) = skirout.editor.v1.presentation.TextFit(
+            minimum = minimum,
+            maximum = maximum,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [TextFit] instances. */
+        val serializer get() = _SerializerRegistry.TextFitSerializer;
+
+        /** Describes the [TextFit] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.TextFitSerializerImpl.typeDescriptor;
+    }
+}
+
+/** Deeply immutable. */
+sealed class TextSizing private constructor() {
+    /** The kind of variant held by a `TextSizing`. */
+    enum class Kind {
+        UNKNOWN,
+        EXACT_WRAPPER,
+        FIT_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.TextSizing.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.TextSizing>?,
+    ) : skirout.editor.v1.presentation.TextSizing() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.TextSizing && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    class ExactWrapper(
+        val value: skirout.editor.v1.expression.ExpressionNode,
+    ) : skirout.editor.v1.presentation.TextSizing() {
+        override val kind get() = Kind.EXACT_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.TextSizing.ExactWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 96946943;
+        }
+    }
+
+    class FitWrapper private constructor (
+        val value: skirout.editor.v1.presentation.TextFit,
+    ) : skirout.editor.v1.presentation.TextSizing() {
+        constructor(
+            value: skirout.editor.v1.presentation.TextFit_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.FIT_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.TextSizing.FitWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 101393;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.TextSizing>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.TextSizingSerializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [TextSizing].
+         * Default value for fields of type [TextSizing].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `FitWrapper(skirout.editor.v1.presentation.TextFit(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createFit(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            minimum: skirout.editor.v1.expression.ExpressionNode,
+            maximum: skirout.editor.v1.expression.ExpressionNode,
+        ) = FitWrapper(
+            skirout.editor.v1.presentation.TextFit(
+                minimum = minimum,
+                maximum = maximum,
+            )
+        );
+
+        /** Serializer for [TextSizing] instances. */
+        val serializer get() = _SerializerRegistry.TextSizingSerializer;
+
+        /** Describes the [TextSizing] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.TextSizingSerializerImpl.typeDescriptor;
+    }
+}
+
 private object _SerializerRegistry {
     val AdaptiveLeadingElementSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:AdaptiveLeadingElement",
@@ -28147,6 +28384,18 @@ private object _SerializerRegistry {
 
     val TextControlSerializer = build.skir.internal.makeSerializer(TextControlSerializerImpl);
 
+    val TextFitSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/presentation.skir:TextFit",
+        doc = "",
+        defaultInstance = skirout.editor.v1.presentation.TextFit.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.TextFit.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val TextFitSerializer = build.skir.internal.makeSerializer(TextFitSerializerImpl);
+
     val TextInputFormatSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.TextInputFormat, skirout.editor.v1.presentation.TextInputFormat.Unknown>(
             recordId = "editor/v1/presentation.skir:TextInputFormat",
@@ -28195,6 +28444,19 @@ private object _SerializerRegistry {
     );
 
     val TextRunSerializer = build.skir.internal.makeSerializer(TextRunSerializerImpl);
+
+    val TextSizingSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.TextSizing, skirout.editor.v1.presentation.TextSizing.Unknown>(
+            recordId = "editor/v1/presentation.skir:TextSizing",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.presentation.TextSizing.Kind.values().size,
+            unknownInstance = skirout.editor.v1.presentation.TextSizing.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.presentation.TextSizing.Unknown(skirout.editor.v1.presentation.TextSizing.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val TextSizingSerializer = build.skir.internal.makeSerializer(TextSizingSerializerImpl);
 
     val TextStyleOverrideSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:TextStyleOverride",
@@ -32835,6 +33097,17 @@ private object _SerializerRegistry {
             { it.paragraph },
             { mut, v -> mut.paragraph = v },
         );
+        RichTextContentSerializerImpl.addField(
+            "sizing",
+            "sizing",
+            3,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.TextSizingSerializer,
+            ),
+            "",
+            { it.sizing },
+            { mut, v -> mut.sizing = v },
+        );
         RichTextContentSerializerImpl.finalizeStruct();
 
         ScopedBindingElementSerializerImpl.addField(
@@ -33882,15 +34155,15 @@ private object _SerializerRegistry {
             { mut, v -> mut.color = v },
         );
         TextContentSerializerImpl.addField(
-            "font_size",
-            "fontSize",
+            "sizing",
+            "sizing",
             2,
             build.skir.Serializers.optional(
-                skirout.editor.v1.expression.ExpressionNode.serializer,
+                _SerializerRegistry.TextSizingSerializer,
             ),
             "",
-            { it.fontSize },
-            { mut, v -> mut.fontSize = v },
+            { it.sizing },
+            { mut, v -> mut.sizing = v },
         );
         TextContentSerializerImpl.addField(
             "font_weight",
@@ -34057,6 +34330,26 @@ private object _SerializerRegistry {
         );
         TextControlSerializerImpl.finalizeStruct();
 
+        TextFitSerializerImpl.addField(
+            "minimum",
+            "minimum",
+            0,
+            skirout.editor.v1.expression.ExpressionNode.serializer,
+            "",
+            { it.minimum },
+            { mut, v -> mut.minimum = v },
+        );
+        TextFitSerializerImpl.addField(
+            "maximum",
+            "maximum",
+            1,
+            skirout.editor.v1.expression.ExpressionNode.serializer,
+            "",
+            { it.maximum },
+            { mut, v -> mut.maximum = v },
+        );
+        TextFitSerializerImpl.finalizeStruct();
+
         TextInputFormatSerializerImpl.addConstantVariant(
             1,
             "lowercase",
@@ -34190,6 +34483,26 @@ private object _SerializerRegistry {
             { mut, v -> mut.style = v },
         );
         TextRunSerializerImpl.finalizeStruct();
+
+        TextSizingSerializerImpl.addWrapperVariant(
+            1,
+            "exact",
+            skirout.editor.v1.presentation.TextSizing.Kind.EXACT_WRAPPER.ordinal,
+            skirout.editor.v1.expression.ExpressionNode.serializer,
+            "",
+            { skirout.editor.v1.presentation.TextSizing.ExactWrapper(it) },
+            { it.value },
+        );
+        TextSizingSerializerImpl.addWrapperVariant(
+            2,
+            "fit",
+            skirout.editor.v1.presentation.TextSizing.Kind.FIT_WRAPPER.ordinal,
+            _SerializerRegistry.TextFitSerializer,
+            "",
+            { skirout.editor.v1.presentation.TextSizing.FitWrapper(it) },
+            { it.value },
+        );
+        TextSizingSerializerImpl.finalizeEnum();
 
         TextStyleOverrideSerializerImpl.addField(
             "color",

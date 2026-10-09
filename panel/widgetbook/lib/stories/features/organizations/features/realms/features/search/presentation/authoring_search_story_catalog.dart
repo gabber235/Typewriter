@@ -146,7 +146,7 @@ skir.PresentationNode _text(String id, String field) => skir.PresentationNode(
       ),
     ),
     color: null,
-    fontSize: null,
+    sizing: null,
     fontWeight: null,
     fontItalic: null,
     fontOpticalSize: null,

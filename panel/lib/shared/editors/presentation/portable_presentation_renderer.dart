@@ -99,6 +99,7 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
       childScope,
     ),
     skir.PresentationElement_markdownWrapper(:final value) => _renderMarkdown(
+      context,
       value,
       childScope,
     ),
@@ -237,6 +238,7 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
       childScope,
     ),
     skir.PresentationElement_richTextWrapper(:final value) => _renderRichText(
+      context,
       value,
       childScope,
     ),

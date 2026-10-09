@@ -16,6 +16,7 @@ export "portable_link_choices.dart";
 export "portable_presentation_host.dart";
 export "portable_regex.dart";
 export "portable_scalar_admission.dart";
+export "portable_text_sizing.dart";
 export "portable_value_admission.dart";
 export "portable_value_tree.dart";
 export "presentation_binding_ids.dart";

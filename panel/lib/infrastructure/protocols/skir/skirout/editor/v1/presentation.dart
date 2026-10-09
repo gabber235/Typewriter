@@ -6227,7 +6227,7 @@ final class SpacerLayout_mutable implements SpacerLayout_orMutable {
 sealed class TextContent_orMutable {
   _lib_editor_v1_expression.ExpressionNode get value;
   _lib_editor_v1_expression.ExpressionNode? get color;
-  _lib_editor_v1_expression.ExpressionNode? get fontSize;
+  TextSizing? get sizing;
   _lib_editor_v1_expression.ExpressionNode? get fontWeight;
   _lib_editor_v1_expression.ExpressionNode? get fontItalic;
   _lib_editor_v1_expression.ExpressionNode? get fontOpticalSize;
@@ -6250,7 +6250,7 @@ final class TextContent implements TextContent_orMutable {
   @_core.override
   final _lib_editor_v1_expression.ExpressionNode? color;
   @_core.override
-  final _lib_editor_v1_expression.ExpressionNode? fontSize;
+  final TextSizing? sizing;
   @_core.override
   final _lib_editor_v1_expression.ExpressionNode? fontWeight;
   @_core.override
@@ -6278,7 +6278,7 @@ final class TextContent implements TextContent_orMutable {
   factory TextContent({
     required _lib_editor_v1_expression.ExpressionNode value,
     required _lib_editor_v1_expression.ExpressionNode? color,
-    required _lib_editor_v1_expression.ExpressionNode? fontSize,
+    required TextSizing? sizing,
     required _lib_editor_v1_expression.ExpressionNode? fontWeight,
     required _lib_editor_v1_expression.ExpressionNode? fontItalic,
     required _lib_editor_v1_expression.ExpressionNode? fontOpticalSize,
@@ -6293,7 +6293,7 @@ final class TextContent implements TextContent_orMutable {
   }) => TextContent._(
     value,
     color,
-    fontSize,
+    sizing,
     fontWeight,
     fontItalic,
     fontOpticalSize,
@@ -6310,7 +6310,7 @@ final class TextContent implements TextContent_orMutable {
   TextContent._(
     this.value,
     this.color,
-    this.fontSize,
+    this.sizing,
     this.fontWeight,
     this.fontItalic,
     this.fontOpticalSize,
@@ -6370,7 +6370,7 @@ final class TextContent implements TextContent_orMutable {
   TextContent_mutable toMutable() => TextContent_mutable._(
     this.value,
     this.color,
-    this.fontSize,
+    this.sizing,
     this.fontWeight,
     this.fontItalic,
     this.fontOpticalSize,
@@ -6400,7 +6400,7 @@ final class TextContent implements TextContent_orMutable {
   _core.List get _equality_proxy => [
     this.value,
     this.color,
-    this.fontSize,
+    this.sizing,
     this.fontWeight,
     this.fontItalic,
     this.fontOpticalSize,
@@ -6442,15 +6442,13 @@ final class TextContent implements TextContent_orMutable {
         (it, v) => it.color = v,
       );
       _serializerBuilder.addField(
-        "font_size",
-        "fontSize",
+        "sizing",
+        "sizing",
         2,
-        _skir.Serializers.optional(
-          _lib_editor_v1_expression.ExpressionNode.serializer,
-        ),
+        _skir.Serializers.optional(TextSizing.serializer),
         "",
-        (it) => it.fontSize,
-        (it, v) => it.fontSize = v,
+        (it) => it.sizing,
+        (it, v) => it.sizing = v,
       );
       _serializerBuilder.addField(
         "font_weight",
@@ -6591,7 +6589,7 @@ final class TextContent implements TextContent_orMutable {
 final class TextContent_mutable implements TextContent_orMutable {
   _lib_editor_v1_expression.ExpressionNode value;
   _lib_editor_v1_expression.ExpressionNode? color;
-  _lib_editor_v1_expression.ExpressionNode? fontSize;
+  TextSizing? sizing;
   _lib_editor_v1_expression.ExpressionNode? fontWeight;
   _lib_editor_v1_expression.ExpressionNode? fontItalic;
   _lib_editor_v1_expression.ExpressionNode? fontOpticalSize;
@@ -6608,7 +6606,7 @@ final class TextContent_mutable implements TextContent_orMutable {
   TextContent_mutable._(
     this.value,
     this.color,
-    this.fontSize,
+    this.sizing,
     this.fontWeight,
     this.fontItalic,
     this.fontOpticalSize,
@@ -6638,7 +6636,7 @@ final class TextContent_mutable implements TextContent_orMutable {
   TextContent toFrozen() => TextContent(
     value: this.value,
     color: this.color,
-    fontSize: this.fontSize,
+    sizing: this.sizing,
     fontWeight: this.fontWeight,
     fontItalic: this.fontItalic,
     fontOpticalSize: this.fontOpticalSize,
@@ -7345,6 +7343,7 @@ sealed class RichTextContent_orMutable {
   _core.Iterable<TextRun_orMutable> get runs;
   TextStyleOverride_orMutable? get style;
   TextParagraph_orMutable get paragraph;
+  TextSizing? get sizing;
 
   RichTextContent toFrozen();
 }
@@ -7357,25 +7356,30 @@ final class RichTextContent implements RichTextContent_orMutable {
   final TextStyleOverride? style;
   @_core.override
   final TextParagraph paragraph;
+  @_core.override
+  final TextSizing? sizing;
   _skir.internal__UnrecognizedFields? _u;
 
   factory RichTextContent({
     required _core.Iterable<TextRun_orMutable> runs,
     required TextStyleOverride_orMutable? style,
     required TextParagraph_orMutable paragraph,
+    required TextSizing? sizing,
   }) => RichTextContent._(
     _skir.internal__frozenMappedCopy(runs, (it) => it.toFrozen()),
     (style != null) ? style.toFrozen() : null,
     paragraph.toFrozen(),
+    sizing,
   );
 
-  RichTextContent._(this.runs, this.style, this.paragraph);
+  RichTextContent._(this.runs, this.style, this.paragraph, this.sizing);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RichTextContent._(
     _skir.KeyedIterable.empty,
     null,
     TextParagraph.defaultInstance,
+    null,
   );
 
   /// Returns a new mutable instance.
@@ -7384,6 +7388,7 @@ final class RichTextContent implements RichTextContent_orMutable {
     _skir.KeyedIterable.empty,
     null,
     TextParagraph.defaultInstance,
+    null,
   );
 
   /// Returns this instance (no-op).
@@ -7392,8 +7397,12 @@ final class RichTextContent implements RichTextContent_orMutable {
   RichTextContent toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  RichTextContent_mutable toMutable() =>
-      RichTextContent_mutable._(this.runs, this.style, this.paragraph);
+  RichTextContent_mutable toMutable() => RichTextContent_mutable._(
+    this.runs,
+    this.style,
+    this.paragraph,
+    this.sizing,
+  );
 
   @_core.override
   _core.bool operator ==(other) {
@@ -7408,7 +7417,12 @@ final class RichTextContent implements RichTextContent_orMutable {
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.runs, this.style, this.paragraph];
+  _core.List get _equality_proxy => [
+    this.runs,
+    this.style,
+    this.paragraph,
+    this.sizing,
+  ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -7444,6 +7458,15 @@ final class RichTextContent implements RichTextContent_orMutable {
         (it) => it.paragraph,
         (it, v) => it.paragraph = v,
       );
+      _serializerBuilder.addField(
+        "sizing",
+        "sizing",
+        3,
+        _skir.Serializers.optional(TextSizing.serializer),
+        "",
+        (it) => it.sizing,
+        (it, v) => it.sizing = v,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -7465,9 +7488,10 @@ final class RichTextContent_mutable implements RichTextContent_orMutable {
   _core.Iterable<TextRun_orMutable> runs;
   TextStyleOverride_orMutable? style;
   TextParagraph_orMutable paragraph;
+  TextSizing? sizing;
   _skir.internal__UnrecognizedFields? _u;
 
-  RichTextContent_mutable._(this.runs, this.style, this.paragraph);
+  RichTextContent_mutable._(this.runs, this.style, this.paragraph, this.sizing);
 
   /// If the value of [runs] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [runs] and returns it.
@@ -7497,6 +7521,7 @@ final class RichTextContent_mutable implements RichTextContent_orMutable {
     runs: this.runs,
     style: this.style,
     paragraph: this.paragraph,
+    sizing: this.sizing,
   ).._u = this._u;
 }
 
@@ -23673,7 +23698,7 @@ sealed class PresentationElement {
   factory PresentationElement.createText({
     required _lib_editor_v1_expression.ExpressionNode value,
     required _lib_editor_v1_expression.ExpressionNode? color,
-    required _lib_editor_v1_expression.ExpressionNode? fontSize,
+    required TextSizing? sizing,
     required _lib_editor_v1_expression.ExpressionNode? fontWeight,
     required _lib_editor_v1_expression.ExpressionNode? fontItalic,
     required _lib_editor_v1_expression.ExpressionNode? fontOpticalSize,
@@ -23689,7 +23714,7 @@ sealed class PresentationElement {
     TextContent(
       value: value,
       color: color,
-      fontSize: fontSize,
+      sizing: sizing,
       fontWeight: fontWeight,
       fontItalic: fontItalic,
       fontOpticalSize: fontOpticalSize,
@@ -23712,7 +23737,7 @@ sealed class PresentationElement {
   factory PresentationElement.createMarkdown({
     required _lib_editor_v1_expression.ExpressionNode value,
     required _lib_editor_v1_expression.ExpressionNode? color,
-    required _lib_editor_v1_expression.ExpressionNode? fontSize,
+    required TextSizing? sizing,
     required _lib_editor_v1_expression.ExpressionNode? fontWeight,
     required _lib_editor_v1_expression.ExpressionNode? fontItalic,
     required _lib_editor_v1_expression.ExpressionNode? fontOpticalSize,
@@ -23728,7 +23753,7 @@ sealed class PresentationElement {
     TextContent(
       value: value,
       color: color,
-      fontSize: fontSize,
+      sizing: sizing,
       fontWeight: fontWeight,
       fontItalic: fontItalic,
       fontOpticalSize: fontOpticalSize,
@@ -24470,8 +24495,14 @@ sealed class PresentationElement {
     required _core.Iterable<TextRun_orMutable> runs,
     required TextStyleOverride_orMutable? style,
     required TextParagraph_orMutable paragraph,
+    required TextSizing? sizing,
   }) => PresentationElement.wrapRichText(
-    RichTextContent(runs: runs, style: style, paragraph: paragraph),
+    RichTextContent(
+      runs: runs,
+      style: style,
+      paragraph: paragraph,
+      sizing: sizing,
+    ),
   );
 
   /// Create a 'adaptive_leading' variant wrapping around the given value.
@@ -29409,4 +29440,261 @@ final class PageTimelineElement_mutable
   @_core.override
   PageTimelineElement toFrozen() =>
       PageTimelineElement(control: this.control).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// struct TextFit
+// -----------------------------------------------------------------------------
+
+sealed class TextFit_orMutable {
+  _lib_editor_v1_expression.ExpressionNode get minimum;
+  _lib_editor_v1_expression.ExpressionNode get maximum;
+
+  TextFit toFrozen();
+}
+
+/// Deeply immutable.
+final class TextFit implements TextFit_orMutable {
+  @_core.override
+  final _lib_editor_v1_expression.ExpressionNode minimum;
+  @_core.override
+  final _lib_editor_v1_expression.ExpressionNode maximum;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory TextFit({
+    required _lib_editor_v1_expression.ExpressionNode minimum,
+    required _lib_editor_v1_expression.ExpressionNode maximum,
+  }) => TextFit._(minimum, maximum);
+
+  TextFit._(this.minimum, this.maximum);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = TextFit._(
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static TextFit_mutable mutable() => TextFit_mutable._(
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+  );
+
+  /// Returns this instance (no-op).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  TextFit toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  TextFit_mutable toMutable() => TextFit_mutable._(this.minimum, this.maximum);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! TextFit) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.minimum, this.maximum];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `TextFit` instances.
+  static _skir.StructSerializer<TextFit, TextFit_mutable> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "minimum",
+        "minimum",
+        0,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
+        "",
+        (it) => it.minimum,
+        (it, v) => it.minimum = v,
+      );
+      _serializerBuilder.addField(
+        "maximum",
+        "maximum",
+        1,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
+        "",
+        (it) => it.maximum,
+        (it, v) => it.maximum = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:TextFit",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (TextFit_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [TextFit].
+final class TextFit_mutable implements TextFit_orMutable {
+  _lib_editor_v1_expression.ExpressionNode minimum;
+  _lib_editor_v1_expression.ExpressionNode maximum;
+  _skir.internal__UnrecognizedFields? _u;
+
+  TextFit_mutable._(this.minimum, this.maximum);
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  TextFit toFrozen() =>
+      TextFit(minimum: this.minimum, maximum: this.maximum).._u = this._u;
+}
+
+// -----------------------------------------------------------------------------
+// enum TextSizing
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case TextSizing_unknown(): { ... }
+///     case TextSizing_exact(:var value): { ... }
+///     case TextSizing_fit(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class TextSizing {
+  /// Constant indicating an unknown `TextSizing`.
+  /// Default value for fields of type `TextSizing`.
+  static const TextSizing unknown = TextSizing_unknown._instance;
+
+  /// Create a 'exact' variant wrapping around the given value.
+  factory TextSizing.wrapExact(
+    _lib_editor_v1_expression.ExpressionNode value,
+  ) => TextSizing_exactWrapper._(value);
+
+  /// Create a 'fit' variant wrapping around the given value.
+  factory TextSizing.wrapFit(TextFit value) => TextSizing_fitWrapper._(value);
+
+  /// Same as `wrapFit(TextFit(...))`.
+  factory TextSizing.createFit({
+    required _lib_editor_v1_expression.ExpressionNode minimum,
+    required _lib_editor_v1_expression.ExpressionNode maximum,
+  }) => TextSizing.wrapFit(TextFit(minimum: minimum, maximum: maximum));
+
+  /// Returns the kind of variant held by this TextSizing.
+  TextSizing_kind get kind;
+
+  /// Serializer for `TextSizing` instances.
+  static _skir.EnumSerializer<TextSizing> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "exact",
+        "wrapExact",
+        _lib_editor_v1_expression.ExpressionNode.serializer,
+        "",
+        TextSizing_exactWrapper._,
+        (it) => it.value,
+        ordinal: TextSizing_kind.exactWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "fit",
+        "wrapFit",
+        TextFit.serializer,
+        "",
+        TextSizing_fitWrapper._,
+        (it) => it.value,
+        ordinal: TextSizing_kind.fitWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/presentation.skir:TextSizing",
+        doc: "",
+        unknownInstance: TextSizing_unknown._instance,
+        enumInstance: TextSizing.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: TextSizing_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `TextSizing`.
+enum TextSizing_kind {
+  unknown(0),
+  exactWrapper(1),
+  fitWrapper(2);
+
+  final _core.int _ordinal;
+
+  const TextSizing_kind(this._ordinal);
+}
+
+final class TextSizing_unknown implements TextSizing {
+  static const _instance = TextSizing_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const TextSizing_unknown._() : _u = null;
+  TextSizing_unknown._unrecognized(this._u);
+
+  @_core.override
+  TextSizing_kind get kind => TextSizing_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is TextSizing_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, TextSizing.serializer);
+}
+
+sealed class _TextSizing_wrapper implements TextSizing {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _TextSizing_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, TextSizing.serializer);
+}
+
+final class TextSizing_exactWrapper extends _TextSizing_wrapper {
+  final _lib_editor_v1_expression.ExpressionNode value;
+
+  TextSizing_exactWrapper._(this.value);
+
+  @_core.override
+  TextSizing_kind get kind => TextSizing_kind.exactWrapper;
+}
+
+final class TextSizing_fitWrapper extends _TextSizing_wrapper {
+  final TextFit value;
+
+  TextSizing_fitWrapper._(this.value);
+
+  @_core.override
+  TextSizing_kind get kind => TextSizing_kind.fitWrapper;
 }

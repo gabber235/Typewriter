@@ -133,7 +133,9 @@ skir.TextContent _inspectorTextContent(
 }) => skir.TextContent(
   value: value,
   color: color == null ? null : _inspectorColor(color),
-  fontSize: _inspectorNumber(fontSize),
+  sizing: fontSize == null
+      ? null
+      : skir.TextSizing.wrapExact(_inspectorNumber(fontSize)!),
   fontWeight: _inspectorNumber(fontWeight),
   letterSpacing: _inspectorNumber(letterSpacing),
   fontItalic: null,

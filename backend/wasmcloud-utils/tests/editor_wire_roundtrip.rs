@@ -4,7 +4,8 @@ use wasmcloud_utils::skir::base::editor::v1::{
     presentation::{
         AxisChild, AxisChildrenElement, AxisChildrenLayout, BoundControl, ChildrenElement,
         NamedControl, PageGraphDirection, PageGraphElement, PageTimelineElement,
-        PresentationElement, PresentationNode, TextContent,
+        PresentationElement, PresentationNode, RichTextContent, TextContent, TextFit, TextRun,
+        TextSizing,
     },
     publication, search,
     type_catalog::{
@@ -186,7 +187,12 @@ fn expression_and_layout_round_trip_without_losing_portable_nodes() {
     let child = PresentationNode {
         node_id: "label".to_owned(),
         element: Some(PresentationElement::Text(Box::new(TextContent {
-            value: label,
+            value: label.clone(),
+            sizing: Some(TextSizing::Fit(Box::new(TextFit {
+                minimum: ExpressionNode::Literal(Box::new(DataValue::Float(18.0))),
+                maximum: ExpressionNode::Literal(Box::new(DataValue::Float(40.0))),
+                ..Default::default()
+            }))),
             ..Default::default()
         }))),
         ..Default::default()
@@ -197,6 +203,20 @@ fn expression_and_layout_round_trip_without_losing_portable_nodes() {
             ChildrenElement::Row(Box::new(AxisChildrenElement {
                 children: vec![
                     AxisChild::Fixed(Box::new(child.clone())),
+                    AxisChild::Fixed(Box::new(PresentationNode {
+                        node_id: "rich".to_owned(),
+                        element: Some(PresentationElement::RichText(Box::new(RichTextContent {
+                            runs: vec![TextRun {
+                                text: label,
+                                ..Default::default()
+                            }],
+                            sizing: Some(TextSizing::Exact(Box::new(ExpressionNode::Literal(
+                                Box::new(DataValue::Float(12.5)),
+                            )))),
+                            ..Default::default()
+                        }))),
+                        ..Default::default()
+                    })),
                     AxisChild::Fixed(Box::new(PresentationNode {
                         node_id: "named".to_owned(),
                         element: Some(PresentationElement::NamedInput(Box::new(NamedControl {

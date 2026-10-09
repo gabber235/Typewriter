@@ -1353,7 +1353,7 @@ _fixture({
         ),
       ),
       color: null,
-      fontSize: null,
+      sizing: null,
       fontWeight: null,
       fontItalic: null,
       fontOpticalSize: null,

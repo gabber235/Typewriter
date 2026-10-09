@@ -15,13 +15,8 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
     if (color case _ResolvedFailure(:final message)) {
       return _diagnostic(message);
     }
-    final fontSize = _optionalTextNumber(
-      childScope,
-      content.fontSize,
-      name: "Font size",
-      minimum: 0,
-    );
-    if (fontSize case _ResolvedFailure(:final message)) {
+    final sizing = _resolveTextSizing(childScope, content.sizing);
+    if (sizing case _ResolvedFailure(:final message)) {
       return _diagnostic(message);
     }
     final weight = _optionalTextNumber(
@@ -106,20 +101,16 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
       return _diagnostic(message);
     }
     final paragraph = content.paragraph;
-    final widget = Text(
-      text,
-      semanticsLabel: (semanticLabel as _ResolvedValue<String?>).value,
+    return TextSpan(text: text).renderParagraph(
+      context,
+      sizing: (sizing as _ResolvedValue<ResolvedTextSizing?>).value,
+      paragraph: paragraph,
+      semanticLabel: (semanticLabel as _ResolvedValue<String?>).value,
       textAlign: (alignment as _ResolvedValue<TextAlign?>).value,
-      maxLines: paragraph.maxLines,
-      softWrap: paragraph.softWrap,
-      overflow: paragraph.overflow == skir.PresentationTextOverflow.ellipsis
-          ? TextOverflow.ellipsis
-          : TextOverflow.clip,
       style: DefaultTextStyle.of(context).style.copyWith(
         color:
             (color as _ResolvedValue<Color?>).value ??
             _paragraphToneColor(context, paragraph.tone),
-        fontSize: (fontSize as _ResolvedValue<double?>).value,
         fontVariations: [
           if ((weight as _ResolvedValue<double?>).value case final value?)
             FontVariation.weight(value),
@@ -137,18 +128,32 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
         decoration: (decoration as _ResolvedValue<TextDecoration?>).value,
       ),
     );
-    return paragraph.selectable ? SelectionArea(child: widget) : widget;
   }
 
   Widget _renderMarkdown(
+    BuildContext context,
     skir.TextContent content,
     PortablePresentationScope childScope,
   ) {
+    final sizing = _resolveTextSizing(childScope, content.sizing);
+    if (sizing case _ResolvedFailure(:final message)) {
+      return _diagnostic(message);
+    }
+    final resolved = (sizing as _ResolvedValue<ResolvedTextSizing?>).value;
+    if (resolved is FitTextSizing) {
+      return _diagnostic("Markdown does not support fitted text sizing");
+    }
     final value = _string(childScope, content.value);
     return switch (value) {
       _ResolvedValue(:final value) => MarkdownBody(
         data: value,
         selectable: content.paragraph.selectable,
+        styleSheet: resolved is ExactTextSizing
+            ? MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
+                p: DefaultTextStyle.of(context).style
+                    .copyWith(fontSize: resolved.size),
+              )
+            : null,
       ),
       _ResolvedFailure(:final message) => _diagnostic(message),
     };
@@ -425,17 +430,103 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
   }
 
   Widget _renderRichText(
+    BuildContext context,
     skir.RichTextContent content,
     PortablePresentationScope childScope,
   ) {
+    final sizing = _resolveTextSizing(childScope, content.sizing);
+    if (sizing case _ResolvedFailure(:final message)) {
+      return _diagnostic(message);
+    }
+    final overall = _resolveTextStyle(childScope, content.style);
+    if (overall case _ResolvedFailure(:final message)) {
+      return _diagnostic(message);
+    }
     final spans = <InlineSpan>[];
     for (final run in content.runs) {
       final text = _string(childScope, run.text);
       if (text case _ResolvedFailure(:final message)) {
         return _diagnostic(message);
       }
-      spans.add(TextSpan(text: (text as _ResolvedValue<String>).value));
+      final style = _resolveTextStyle(
+        childScope,
+        run.style,
+        inheritedVariations:
+            (overall as _ResolvedValue<TextStyle?>).value?.fontVariations,
+      );
+      if (style case _ResolvedFailure(:final message)) {
+        return _diagnostic(message);
+      }
+      spans.add(
+        TextSpan(
+          text: (text as _ResolvedValue<String>).value,
+          style: (style as _ResolvedValue<TextStyle?>).value,
+        ),
+      );
     }
-    return Text.rich(TextSpan(children: spans));
+    return TextSpan(children: spans).renderParagraph(
+      context,
+      sizing: (sizing as _ResolvedValue<ResolvedTextSizing?>).value,
+      paragraph: content.paragraph,
+      style: DefaultTextStyle.of(context).style
+          .copyWith(color: _paragraphToneColor(context, content.paragraph.tone))
+          .merge((overall as _ResolvedValue<TextStyle?>).value),
+    );
+  }
+}
+
+extension _PortableParagraphRendering on TextSpan {
+  Widget renderParagraph(
+    BuildContext context, {
+    required ResolvedTextSizing? sizing,
+    required skir.TextParagraph paragraph,
+    required TextStyle style,
+    String? semanticLabel,
+    TextAlign? textAlign,
+  }) {
+    if (paragraph.maxLines != null && paragraph.maxLines! <= 0) {
+      return _diagnostic("Maximum text lines must be positive");
+    }
+    final fontSize = switch (sizing) {
+      ExactTextSizing(:final size) => size,
+      FitTextSizing(:final maximum) => maximum,
+      null => null,
+    };
+    final resolvedStyle = style.copyWith(fontSize: fontSize);
+    final overflow =
+        paragraph.overflow == skir.PresentationTextOverflow.ellipsis
+        ? TextOverflow.ellipsis
+        : TextOverflow.clip;
+    final direction = Directionality.of(context);
+    final locale = Localizations.maybeLocaleOf(context);
+    // The installed fitter approximates nonlinear scaling and does not measure
+    // extra accessibility letter spacing. Keep its behavior in one shared path.
+    final widget = switch (sizing) {
+      FitTextSizing(:final minimum, :final maximum) => AutoSizeText.rich(
+        this,
+        style: resolvedStyle,
+        minFontSize: minimum,
+        maxFontSize: maximum,
+        maxLines: paragraph.maxLines,
+        softWrap: paragraph.softWrap,
+        overflow: overflow,
+        semanticsLabel: semanticLabel,
+        textAlign: textAlign,
+        textDirection: direction,
+        locale: locale,
+      ),
+      _ => Text.rich(
+        this,
+        style: resolvedStyle,
+        maxLines: paragraph.maxLines,
+        softWrap: paragraph.softWrap,
+        overflow: overflow,
+        semanticsLabel: semanticLabel,
+        textAlign: textAlign,
+        textDirection: direction,
+        locale: locale,
+      ),
+    };
+    return paragraph.selectable ? SelectionArea(child: widget) : widget;
   }
 }
