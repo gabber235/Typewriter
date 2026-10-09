@@ -20,25 +20,25 @@ import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
 
 /**
- * Describes service assignments, API versions, and deployment facts.
+ * Pins the responding host roles, API versions, and facts used to select deployment artifacts.
  *
- * Every assigned host must have an API version. The Realm host receives the panel engine as well; primary engines
- * use their own host set.
+ * This selection comes from presence observations, not a complete backend assignment snapshot. Every selected
+ * host must have an API version. The Realm host also receives the panel engine; primary engines use their own set.
  */
 @Serializable
-data class RealmTopology(
+data class RealmDeploymentSelection(
     val realmService: ServiceId,
     val primaryEngineServices: Set<ServiceId>,
     val serviceApis: Map<ServiceId, com.typewritermc.imprint.ArtifactVersion>,
     val factsByService: Map<ServiceId, Map<String, String>> = emptyMap(),
 ) {
     init {
-        require(serviceApis.keys.containsAll(assignedServices())) {
-            "Every assigned service must declare its host API version."
+        require(serviceApis.keys.containsAll(selectedServices())) {
+            "Every selected service must declare its host API version."
         }
     }
 
-    fun assignedServices(): Set<ServiceId> = primaryEngineServices + realmService
+    fun selectedServices(): Set<ServiceId> = primaryEngineServices + realmService
 
     fun factsFor(serviceId: ServiceId): Map<String, String> = factsByService[serviceId].orEmpty()
 }
@@ -118,19 +118,19 @@ object HostDeploymentProjectionCodec {
 }
 
 /**
- * Derives runtime roles and source part eligibility for an assigned host.
+ * Derives runtime roles and source part eligibility for a selected host.
  *
- * Unassigned hosts and missing required manifests are rejected. Extension parts retain eligible placements or
+ * Unselected hosts and missing required manifests are rejected. Extension parts retain eligible placements or
  * concrete reasons when none of the projected engines can load them.
  */
 fun DeploymentSnapshot.projectFor(
     realmId: String,
-    topology: RealmTopology,
+    selection: RealmDeploymentSelection,
     serviceId: ServiceId,
     manifests: Map<ArtifactId, ImprintManifest>,
 ): HostDeploymentProjection {
-    require(serviceId in topology.assignedServices()) { "Cannot project a deployment for an unassigned service." }
-    val projected = projectedRuntimes(topology, serviceId)
+    require(serviceId in selection.selectedServices()) { "Cannot project a deployment for an unselected service." }
+    val projected = projectedRuntimes(selection, serviceId)
     val extensions = projectedExtensions(projected, manifests)
     val publicationTarget = primaryEngineImplementation(manifests)
     val runtimes =
@@ -148,7 +148,7 @@ fun DeploymentSnapshot.projectFor(
         runtimes = runtimes,
         extensions = extensions,
         publicationTarget = publicationTarget,
-        facts = topology.factsFor(serviceId),
+        facts = selection.factsFor(serviceId),
     ).canonical()
 }
 
@@ -204,15 +204,15 @@ private fun DeploymentArtifact.toImplementationArtifact(sourceParts: List<String
     )
 
 private fun DeploymentSnapshot.projectedRuntimes(
-    topology: RealmTopology,
+    selection: RealmDeploymentSelection,
     serviceId: ServiceId,
 ): List<ProjectedRuntime> =
     buildList {
-        if (serviceId == topology.realmService) {
+        if (serviceId == selection.realmService) {
             add(ProjectedRuntime.realm(content.realm))
             add(ProjectedRuntime.panelEngine(content.panelEngine))
         }
-        if (serviceId in topology.primaryEngineServices) {
+        if (serviceId in selection.primaryEngineServices) {
             add(ProjectedRuntime.primaryEngine(content.primaryEngine))
         }
     }

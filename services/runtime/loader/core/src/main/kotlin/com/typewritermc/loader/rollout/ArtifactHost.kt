@@ -21,8 +21,8 @@ import com.typewritermc.loader.deployment.DeploymentContentCodec
 import com.typewritermc.loader.deployment.DeploymentGeneration
 import com.typewritermc.loader.deployment.DeploymentSnapshot
 import com.typewritermc.loader.deployment.PrimaryEngineTarget
+import com.typewritermc.loader.deployment.RealmDeploymentSelection
 import com.typewritermc.loader.deployment.RealmLoaderIntent
-import com.typewritermc.loader.deployment.RealmTopology
 import com.typewritermc.loader.deployment.ResolutionResult
 import com.typewritermc.loader.deployment.resolveDeployment
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
@@ -355,8 +355,8 @@ internal class AssignmentRuntime(
         val intent = requireNotNull(assignment.intent)
         val messenger = CommunicatorRolloutMessenger(session.organizationId, session.communicator)
         while (true) {
-            val topology = discoverTopology(assignment.realmId, messenger)
-            if (topology == null) {
+            val selection = discoverDeploymentSelection(assignment.realmId, messenger)
+            if (selection == null) {
                 delay(1.seconds)
                 continue
             }
@@ -369,7 +369,7 @@ internal class AssignmentRuntime(
                         attribute("realm.id", assignment.realmId.value)
                         attribute("service.id", serviceId.value)
                     }
-                    resolveDeployment(CandidateIndex(candidates.candidates()), topology, primaryEngine, intent)
+                    resolveDeployment(CandidateIndex(candidates.candidates()), selection, primaryEngine, intent)
                 }
             if (resolution is ResolutionResult.Resolved) {
                 val digest = DeploymentContentCodec.digest(resolution.content)
@@ -377,7 +377,7 @@ internal class AssignmentRuntime(
                 val rollout =
                     CoordinatedRollout(
                         assignment.realmId,
-                        topology,
+                        selection,
                         resolution.manifests,
                         messenger,
                         projections,
@@ -408,16 +408,16 @@ internal class AssignmentRuntime(
         }
     }
 
-    private suspend fun discoverTopology(
+    private suspend fun discoverDeploymentSelection(
         realmId: RealmId,
         messenger: RolloutMessenger,
-    ): RealmTopology? {
+    ): RealmDeploymentSelection? {
         val probe = ProbeRealmHosts(realmId)
         val responses =
             messenger
                 .discover(probe, emptySet(), 5.seconds)
                 .filter { it.probeId == probe.probeId }
-        return responses.toReadyTopology()
+        return responses.deploymentSelectionOrNull()
     }
 
     override suspend fun close() {
@@ -465,20 +465,21 @@ internal class AssignmentRuntime(
     }
 }
 
-internal fun List<RealmHostPresence>.toReadyTopology(): RealmTopology? {
+/** Derives artifact selection from unambiguous responding hosts without inferring absent assignments. */
+internal fun List<RealmHostPresence>.deploymentSelectionOrNull(): RealmDeploymentSelection? {
     val responsesByService = groupBy(RealmHostPresence::serviceId)
     if (responsesByService.values.any { it.size != 1 }) return null
-    val active = responsesByService.mapValues { it.value.single() }
-    val realmHosts = active.values.filter { RuntimePlacement.REALM in it.assignedRoles }
+    val observations = responsesByService.mapValues { it.value.single() }
+    val realmHosts = observations.values.filter { RuntimePlacement.REALM in it.assignedRoles }
     if (realmHosts.size != 1) return null
     val primaryHosts =
-        active.values
+        observations.values
             .filter { RuntimePlacement.PRIMARY_ENGINE in it.assignedRoles }
             .mapTo(linkedSetOf(), RealmHostPresence::serviceId)
-    return RealmTopology(
+    return RealmDeploymentSelection(
         realmService = realmHosts.single().serviceId,
         primaryEngineServices = primaryHosts,
-        serviceApis = active.mapValues { it.value.hostApi },
+        serviceApis = observations.mapValues { it.value.hostApi },
     )
 }
 
