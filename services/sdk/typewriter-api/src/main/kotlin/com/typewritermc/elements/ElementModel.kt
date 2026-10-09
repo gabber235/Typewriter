@@ -6,7 +6,6 @@ import com.typewritermc.authoring.TimelineKeyframePlacement
 import com.typewritermc.authoring.TimelineSegmentPlacement
 import com.typewritermc.types.Resource
 import com.typewritermc.types.TypewriterRecordContract
-import kotlin.reflect.KClass
 
 /** Base contract for authored instances that can be referenced by other content. */
 @TypewriterRecordContract
@@ -33,10 +32,3 @@ interface Segment : Cue {
 interface Keyframe : Cue {
     override val placement: TimelineKeyframePlacement
 }
-
-/** Attaches execution behavior to a declared Element type. */
-@Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.BINARY)
-annotation class TypewriterElementFacet(
-    val element: KClass<out Element>,
-)

@@ -16,11 +16,7 @@ import com.typewritermc.discovery.GraphDirection
 import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.RuntimeScope
 import com.typewritermc.discovery.TypewriterRegistrar
-import com.typewritermc.elements.ElementRuntimeContext
-import com.typewritermc.elements.ElementRuntimeFacet
-import com.typewritermc.elements.ElementRuntimeHandle
 import com.typewritermc.elements.Entry
-import com.typewritermc.elements.TypewriterElementFacet
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
 import com.typewritermc.library.Book
@@ -33,8 +29,6 @@ import com.typewritermc.presentation.resourceHeading
 import com.typewritermc.types.Color
 import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.Ref
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ResourceRecord
 import com.typewritermc.types.TypewriterDisplay
 import com.typewritermc.types.TypewriterType
 import kotlinx.serialization.SerialName
@@ -216,16 +210,6 @@ object SyntheticEntryCompactPresentation : SyntheticEntryPresentation {
         }
         remainingFields { exclude(message) }
     }
-}
-
-/** Supplies the runtime facet discovered for [SyntheticEntry]. */
-@TypewriterElementFacet(SyntheticEntry::class)
-class SyntheticEntryFacet : ElementRuntimeFacet<SyntheticEntry> {
-    context(context: ElementRuntimeContext)
-    override suspend fun attach(element: ResourceRecord<ResourceId, SyntheticEntry>): ElementRuntimeHandle =
-        object : ElementRuntimeHandle {
-            override fun close() = Unit
-        }
 }
 
 /** Registers the conformance runtime scope and owns no external resources. */

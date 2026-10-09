@@ -15,7 +15,8 @@ import com.typewritermc.types.TypewriterType
 /**
  * Marks entries accepted by the core sequence graph page.
  *
- * The marker defines an editor role; execution behavior must be supplied by the entry or a runtime facet.
+ * The marker defines an editor role. Runtime registrars own execution setup, while engine content consumers own typed
+ * [com.typewritermc.engine.runtime.EngineContentFacet] assembly from compiled artifacts.
  */
 interface SequenceEntry : Entry {
     override val placement: GraphPlacement

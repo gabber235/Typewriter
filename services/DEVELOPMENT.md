@@ -56,9 +56,9 @@ Never add another nested Gradle root for a normal service project. `services/set
 
 Imprint assembles one canonical manifest for each artifact. KSP processors contribute static metadata and generated module providers. Realm discovery loads only Realm bindings. Execution discovery loads only execution bindings. Each deployment owns an isolated Koin application and classloader.
 
-Element runtime facets always contribute execution bindings. Realm discovery never loads them.
+Generated registrars contribute runtime setup only to their declared domains. Compiled artifact producers own source specific compilation, while engine content consumers assemble compiled artifacts into typed `EngineContentFacet` values. Element declarations provide authored data and editor semantics. They do not own execution setup or compiled content assembly.
 
-The conformance extension proves declared type identities, generated prototypes, element descriptors, source part eligibility, generated registrars, generated facets, and engine targeting.
+The conformance extension proves declared type identities, generated prototypes, element descriptors, source part eligibility, generated registrars, and engine targeting.
 
 ## Runtime status
 
