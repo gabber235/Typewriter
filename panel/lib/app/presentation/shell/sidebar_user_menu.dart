@@ -86,7 +86,7 @@ class UserMenu extends HookConsumerWidget {
         color: Theme.of(context).colorScheme.error,
         onPressed: () async {
           try {
-            await ref.read(authProvider.notifier).signOut();
+            await ref.signOutVoluntarily(context);
           } on Object catch (_) {
             if (!context.mounted) return;
             showErrorSnackBar(context, "Could not sign out. Please try again.");

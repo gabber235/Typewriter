@@ -8,3 +8,4 @@ export "local_work_state.dart";
 export "mutation_coordinator.dart";
 export "mutation_submission.dart";
 export "work_driver.dart";
+export "work_session_loss.dart";
