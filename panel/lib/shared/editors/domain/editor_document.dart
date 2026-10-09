@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Defines how local and remote values may be combined at a path.
@@ -23,7 +25,7 @@ enum EditorMergePolicy { atomic, record, set, orderedList }
 final class EditorDocument {
   const EditorDocument({
     required this.rootType,
-    required this.typeCatalog,
+    required this.catalog,
     required this.confirmedValue,
     required this.revision,
     this.mergePolicies = const {},
@@ -31,12 +33,12 @@ final class EditorDocument {
     this.readOnly = false,
   }) : assert(revision >= 0, "Revision must not be negative.");
 
-  final TypeExpression rootType;
-  final TypeCatalog typeCatalog;
-  final DataValue confirmedValue;
+  final skir.TypeUse rootType;
+  final CheckedEditorCatalog catalog;
+  final skir.DataValue confirmedValue;
   final int revision;
-  final Map<DataPath, EditorMergePolicy> mergePolicies;
-  final List<TypeDiagnostic> diagnostics;
+  final Map<skir.ValuePath, EditorMergePolicy> mergePolicies;
+  final List<EditorDiagnostic> diagnostics;
   final bool readOnly;
 
   bool hasSameContent(EditorDocument other) =>
@@ -45,23 +47,23 @@ final class EditorDocument {
       revision == other.revision;
 
   bool hasSameMetadata(EditorDocument other) =>
-      typeExpressionsEqual(rootType, other.rootType) &&
-      typeCatalog == other.typeCatalog &&
+      rootType == other.rootType &&
+      catalog == other.catalog &&
       mapEquals(mergePolicies, other.mergePolicies) &&
       listEquals(diagnostics, other.diagnostics) &&
       readOnly == other.readOnly;
 
   EditorDocument copyWith({
-    TypeExpression? rootType,
-    TypeCatalog? typeCatalog,
-    DataValue? confirmedValue,
+    skir.TypeUse? rootType,
+    CheckedEditorCatalog? catalog,
+    skir.DataValue? confirmedValue,
     int? revision,
-    Map<DataPath, EditorMergePolicy>? mergePolicies,
-    List<TypeDiagnostic>? diagnostics,
+    Map<skir.ValuePath, EditorMergePolicy>? mergePolicies,
+    List<EditorDiagnostic>? diagnostics,
     bool? readOnly,
   }) => EditorDocument(
     rootType: rootType ?? this.rootType,
-    typeCatalog: typeCatalog ?? this.typeCatalog,
+    catalog: catalog ?? this.catalog,
     confirmedValue: confirmedValue ?? this.confirmedValue,
     revision: revision ?? this.revision,
     mergePolicies: mergePolicies ?? this.mergePolicies,
@@ -91,43 +93,27 @@ final class EditorCommit {
 
   final int expectedRevision;
   final int localRevision;
-  final DataValue rootValue;
-  final DataValue baseValue;
-  final Set<DataPath> changedPaths;
+  final skir.DataValue rootValue;
+  final skir.DataValue baseValue;
+  final Set<skir.ValuePath> changedPaths;
   final List<EditorStructuralMutation> mutations;
 }
 
 /// Describes one structural operation included in an [EditorCommit].
 ///
 /// These operations preserve intent that a value diff cannot reliably recover,
-/// such as list movement, duplication, and concrete type replacement. The path
-/// is relative to the commit root and [prefixedBy] is used when a nested
-/// operation becomes part of a larger structural edit.
+/// such as map membership and concrete type replacement. The path is relative
+/// to the commit root and [prefixedBy] is used when a nested operation becomes
+/// part of a larger structural edit.
 sealed class EditorStructuralMutation {
   const EditorStructuralMutation(this.path);
 
-  final DataPath path;
+  final skir.ValuePath path;
 
-  EditorStructuralMutation prefixedBy(DataPath prefix) {
+  EditorStructuralMutation prefixedBy(skir.ValuePath prefix) {
     final next = prefix.followedBy(path);
     return switch (this) {
       EditorSetValue(:final value) => EditorSetValue(next, value),
-      EditorInsertListItems(:final index, :final values) =>
-        EditorInsertListItems(next, index, values),
-      EditorRemoveListItems(:final index, :final count) =>
-        EditorRemoveListItems(next, index, count),
-      EditorReorderListItems(
-        :final sourceIndex,
-        :final count,
-        :final destinationIndex,
-      ) =>
-        EditorReorderListItems(next, sourceIndex, count, destinationIndex),
-      EditorDuplicateListItems(
-        :final sourceIndex,
-        :final count,
-        :final destinationIndex,
-      ) =>
-        EditorDuplicateListItems(next, sourceIndex, count, destinationIndex),
       EditorPutMapEntries(:final entries) => EditorPutMapEntries(next, entries),
       EditorRemoveMapEntries(:final keys) => EditorRemoveMapEntries(next, keys),
       EditorReplaceConcreteType(:final concreteType, :final value) =>
@@ -139,64 +125,24 @@ sealed class EditorStructuralMutation {
 final class EditorSetValue extends EditorStructuralMutation {
   const EditorSetValue(super.path, this.value);
 
-  final DataValue value;
-}
-
-final class EditorInsertListItems extends EditorStructuralMutation {
-  const EditorInsertListItems(super.path, this.index, this.values);
-
-  final int index;
-  final List<DataValue> values;
-}
-
-final class EditorRemoveListItems extends EditorStructuralMutation {
-  const EditorRemoveListItems(super.path, this.index, this.count);
-
-  final int index;
-  final int count;
-}
-
-final class EditorReorderListItems extends EditorStructuralMutation {
-  const EditorReorderListItems(
-    super.path,
-    this.sourceIndex,
-    this.count,
-    this.destinationIndex,
-  );
-
-  final int sourceIndex;
-  final int count;
-  final int destinationIndex;
-}
-
-final class EditorDuplicateListItems extends EditorStructuralMutation {
-  const EditorDuplicateListItems(
-    super.path,
-    this.sourceIndex,
-    this.count,
-    this.destinationIndex,
-  );
-
-  final int sourceIndex;
-  final int count;
-  final int destinationIndex;
+  final skir.DataValue value;
 }
 
 final class EditorPutMapEntries extends EditorStructuralMutation {
   const EditorPutMapEntries(super.path, this.entries);
 
-  final List<DataMapEntry> entries;
+  final List<skir.MapRow> entries;
 }
 
 final class EditorRemoveMapEntries extends EditorStructuralMutation {
   const EditorRemoveMapEntries(super.path, this.keys);
 
-  final List<DataValue> keys;
+  final List<skir.DataValue> keys;
 }
 
 final class EditorReplaceConcreteType extends EditorStructuralMutation {
   const EditorReplaceConcreteType(super.path, this.concreteType, this.value);
 
-  final ResolvedTypeRef concreteType;
-  final DataValue value;
+  final skir.NamedTypeUse concreteType;
+  final skir.DataValue value;
 }

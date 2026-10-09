@@ -7,10 +7,9 @@ part "authored_type_argument_editor.freezed.dart";
 typedef AuthoredTypePreview = Future<skir.TypePreviewResult> Function(
   skir.TypeSelection requested,
 );
-typedef AuthoredTypeCommit =
-    Future<skir.CommitTypeArgumentChangeResponse> Function(
-      skir.TypeArgumentChangePreview preview,
-    );
+typedef AuthoredTypeCommit = Future<AuthoringEditResult> Function(
+  skir.TypeArgumentChangePreview preview,
+);
 
 @freezed
 sealed class AuthoredTypeUseCandidate with _$AuthoredTypeUseCandidate {
@@ -580,27 +579,11 @@ final class _AuthoredTypeArgumentEditorState
     final response = await widget.commit(preview);
     if (!mounted) return;
     final message = switch (response) {
-      skir.CommitTypeArgumentChangeResponse_resultWrapper(
-        value: skir.CommitResult.committed,
-      ) =>
-        "Type arguments updated",
-      skir.CommitTypeArgumentChangeResponse_resultWrapper(
-        value: skir.CommitResult_conflictWrapper(),
-      ) =>
-        "The resource changed before the type update was saved",
-      skir.CommitTypeArgumentChangeResponse_resultWrapper(
-        value: skir.CommitResult_catalogChangedWrapper(),
-      ) =>
-        "The editor catalog changed before the type update was saved",
-      skir.CommitTypeArgumentChangeResponse_resultWrapper(
-        value: skir.CommitResult_rejectedWrapper(),
-      ) =>
-        "The Realm rejected the type update",
-      _ => "The type update result is unavailable",
+      AuthoringEditStaged() => "Type arguments staged",
+      AuthoringEditUnchanged() => "Type arguments are unchanged",
+      AuthoringEditRejected(:final message) => message,
     };
-    setState(
-      () => _error = message == "Type arguments updated" ? null : message,
-    );
+    setState(() => _error = response is AuthoringEditRejected ? message : null);
     widget.onStatus?.call(message);
   }
 }
@@ -735,7 +718,7 @@ final class _TypeRepairReview extends StatelessWidget {
               ),
             SizedBox(height: context.spacing.space2),
             Text("Links repaired: ${linkRepairs.length}"),
-            Text("Value repairs: ${preview.intents.length}"),
+            Text("Value repairs: ${preview.edit.intents.length}"),
           ],
         ),
       ),

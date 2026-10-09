@@ -21,7 +21,7 @@ class BookIdentifier extends SelectableIdentifier
   skir.ResourceId get referenceId => bookId;
 
   @override
-  List<ResolvedTypeRef> get referenceTypes => const [];
+  List<skir.TypeDefinitionId> get referenceTypes => const [];
 
   /// Resolves the current book and builds its editor and navigation boundary.
   ///

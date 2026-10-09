@@ -8,39 +8,6 @@ part "tag_model.dart";
 
 const tagGraphCellSize = 50.0;
 
-RecordValue tagCreationPartial(
-  Iterable<Tag> tags, {
-  Offset? preferredGraphAnchor,
-}) {
-  final obstacles = [
-    for (final tag in tags)
-      GraphGridRect(
-        x: tag.placement.x,
-        y: tag.placement.y,
-        width: tag.placement.width,
-        height: tag.placement.height,
-      ),
-  ];
-  final placement = const GraphIncrementalPlacer()
-      .placeGroup(
-        obstacles: obstacles,
-        group: [GraphGridRect(x: 0, y: 0, width: 4, height: 1)],
-        anchor:
-            preferredGraphAnchor ??
-            graphCenterOfMass(obstacles, cellSize: tagGraphCellSize) ??
-            Offset.zero,
-      )
-      .single;
-  return RecordValue({
-    "placement": RecordValue({
-      "x": placement.x.asValue,
-      "y": placement.y.asValue,
-      "width": placement.width.asValue,
-      "height": placement.height.asValue,
-    }),
-  });
-}
-
 /// Typed tag views of the shared working document.
 @riverpod
 AsyncValue<List<Tag>> workingTags(Ref ref) {

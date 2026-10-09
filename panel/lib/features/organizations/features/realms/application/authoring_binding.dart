@@ -76,6 +76,26 @@ final class AuthoringBinding extends ChangeNotifier {
     return result;
   }
 
+  AuthoringEditResult stagePrepared({
+    required String label,
+    required skir.PreparedEdit edit,
+  }) {
+    if (_detached || blocked) {
+      return const AuthoringEditResult.rejected(
+        "The editor is unavailable",
+        null,
+      );
+    }
+    final result = workspace.stagePrepared(
+      group: editingGroup,
+      label: label,
+      edit: edit,
+    );
+    _message = result is AuthoringEditRejected ? result.message : null;
+    _updated();
+    return result;
+  }
+
   Future<void> save() => workspace.save(editingGroup);
   bool discard() {
     _message = null;

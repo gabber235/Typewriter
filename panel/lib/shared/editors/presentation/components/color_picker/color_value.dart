@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Adapters between Flutter colors and Typewriter's unsigned ARGB values.
@@ -22,13 +24,14 @@ extension ColorArgbFormatting on Color {
     return "#${value.toRadixString(16).padLeft(width, "0").toUpperCase()}";
   }
 
-  IntegerValue get asValue => IntegerValue(BigInt.from(argbValue));
+  skir.DataValue get asValue =>
+      skir.DataValue.wrapInteger(argbValue.toString());
 }
 
-extension DataValueColor on DataValue {
+extension DataValueColor on skir.DataValue {
   Color? get asColorOrNull {
-    if (this is! IntegerValue) return null;
-    final value = (this as IntegerValue).value;
+    final value = authoredInteger;
+    if (value == null) return null;
     final maximum = BigInt.from(0xFFFFFFFF);
     if (value.isNegative || value > maximum) return null;
     return Color(value.toInt());

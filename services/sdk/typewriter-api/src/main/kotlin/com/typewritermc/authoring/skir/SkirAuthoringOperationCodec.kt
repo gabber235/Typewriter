@@ -9,8 +9,10 @@ import com.typewritermc.authoring.InitializationRequest
 import com.typewritermc.authoring.InitializationRequestId
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.LinkProjection
-import com.typewritermc.authoring.PreparedCreation
+import com.typewritermc.authoring.PreparationTarget
+import com.typewritermc.authoring.PreparedContent
 import com.typewritermc.authoring.PreparedEdit
+import com.typewritermc.authoring.PreparedValue
 import com.typewritermc.authoring.TraversalDirection
 import com.typewritermc.authoring.ValueProblem
 import com.typewritermc.checking.CatalogGeneration
@@ -34,12 +36,13 @@ import skirout.editor.v1.authoring_facts.EditExpectation as SkirEditExpectation
 import skirout.editor.v1.authoring_facts.ExpectationConflict as SkirExpectationConflict
 import skirout.editor.v1.authoring_facts.LinkProjection as SkirLinkProjection
 import skirout.editor.v1.authoring_facts.TraversalDirection as SkirTraversalDirection
-import skirout.editor.v1.catalog.InitializationRequest as SkirInitializationRequest
-import skirout.editor.v1.catalog.PreparedCreation as SkirPreparedCreation
+import skirout.editor.v1.catalog.PreparationTarget as SkirPreparationTarget
+import skirout.editor.v1.catalog.PreparedContent as SkirPreparedContent
+import skirout.editor.v1.catalog.PreparedValue as SkirPreparedValue
+import skirout.editor.v1.catalog.ValuePreparationRequest as SkirInitializationRequest
 import skirout.editor.v1.diagnostic.ValueProblem as SkirValueProblem
 import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue as SkirDataValue
-import skirout.editor.v1.type_catalog.FieldValue as SkirFieldValue
 import skirout.editor.v1.type_catalog.InitializationRequestId as SkirInitializationRequestId
 import skirout.editor.v1.type_catalog.ItemId as SkirItemId
 import skirout.editor.v1.type_catalog.ListItem as SkirListItem
@@ -69,11 +72,9 @@ object SkirAuthoringOperationCodec {
     fun decode(value: SkirInitializationRequest): SkirConversionResult<InitializationRequest> =
         captureOperationConversion { decodeInitializationRequest(value) }
 
-    fun encode(value: PreparedCreation): SkirConversionResult<SkirPreparedCreation> =
-        captureOperationConversion { encodePreparedCreation(value) }
+    fun encode(value: PreparedValue): SkirConversionResult<SkirPreparedValue> = captureOperationConversion { encodePreparedValue(value) }
 
-    fun decode(value: SkirPreparedCreation): SkirConversionResult<PreparedCreation> =
-        captureOperationConversion { decodePreparedCreation(value) }
+    fun decode(value: SkirPreparedValue): SkirConversionResult<PreparedValue> = captureOperationConversion { decodePreparedValue(value) }
 }
 
 private fun OperationConversionScope.encodePreparedEdit(value: PreparedEdit): SkirPreparedEdit =
@@ -377,7 +378,7 @@ private fun OperationConversionScope.encodeConnect(value: ConnectIntent): SkirCo
                     SkirCounterpartChoice.NewWrapper(
                         SkirNewCounterpartChoice(
                             containing = convert(SkirAuthoringValueCodec.encode(counterpart.containing)),
-                            prepared = encodePreparedCreation(counterpart.prepared),
+                            prepared = encodePreparedValue(counterpart.prepared),
                         ),
                     )
                 }
@@ -401,7 +402,7 @@ private fun OperationConversionScope.decodeConnect(value: SkirConnectIntent): Co
                 is SkirCounterpartChoice.NewWrapper -> {
                     CounterpartChoice.New(
                         containing = convert(SkirAuthoringValueCodec.decode(counterpart.value.containing)),
-                        prepared = decodePreparedCreation(counterpart.value.prepared),
+                        prepared = decodePreparedValue(counterpart.value.prepared),
                     )
                 }
 
@@ -449,11 +450,19 @@ private fun OperationConversionScope.encodeInitializationRequest(value: Initiali
     SkirInitializationRequest(
         id = SkirInitializationRequestId(value = value.id.value),
         catalog = SkirCatalogGeneration(value = value.catalog.value),
-        type = convert(SkirAuthoringValueCodec.encode(value.type)),
-        supplied =
-            value.supplied.toSortedMap().map { (name, supplied) ->
-                SkirFieldValue(name = name, value = at(name) { convert(SkirDataValueCodec.encode(supplied)) })
+        target =
+            when (val target = value.target) {
+                is PreparationTarget.Value -> {
+                    SkirPreparationTarget.ValueWrapper(convert(SkirTypeCodec.encode(target.type)))
+                }
+
+                is PreparationTarget.Record -> {
+                    SkirPreparationTarget.RecordWrapper(
+                        convert(SkirAuthoringValueCodec.encode(target.selection)),
+                    )
+                }
             },
+        suppliedValue = value.supplied?.let { convert(SkirDataValueCodec.encode(it)) },
         intentHash = value.intentHash,
     )
 
@@ -461,18 +470,36 @@ private fun OperationConversionScope.decodeInitializationRequest(value: SkirInit
     InitializationRequest(
         id = InitializationRequestId(requireText(value.id.value, "Initialization request identity")),
         catalog = CatalogGeneration(requireText(value.catalog.value, "Catalog generation")),
-        type = convert(SkirAuthoringValueCodec.decode(value.type)),
-        supplied =
-            value.supplied.associate { supplied ->
-                supplied.name to
-                    at(supplied.name) { convert(SkirDataValueCodec.decode(supplied.value)) }
+        target =
+            when (val target = value.target) {
+                is SkirPreparationTarget.ValueWrapper -> {
+                    PreparationTarget.Value(convert(SkirTypeCodec.decode(target.value)))
+                }
+
+                is SkirPreparationTarget.RecordWrapper -> {
+                    PreparationTarget.Record(convert(SkirAuthoringValueCodec.decode(target.value)))
+                }
+
+                else -> {
+                    fail("Preparation target is unknown.")
+                }
             },
+        supplied = value.suppliedValue?.let { convert(SkirDataValueCodec.decode(it)) },
         intentHash = value.intentHash,
     )
 
-private fun OperationConversionScope.encodePreparedCreation(value: PreparedCreation): SkirPreparedCreation =
-    SkirPreparedCreation(
-        record = convert(SkirAuthoringValueCodec.encode(value.record)),
+private fun OperationConversionScope.encodePreparedValue(value: PreparedValue): SkirPreparedValue =
+    SkirPreparedValue(
+        content =
+            when (val content = value.content) {
+                is PreparedContent.Value -> {
+                    SkirPreparedContent.ValueWrapper(convert(SkirDataValueCodec.encode(content.value)))
+                }
+
+                is PreparedContent.Record -> {
+                    SkirPreparedContent.RecordWrapper(convert(SkirAuthoringValueCodec.encode(content.record)))
+                }
+            },
         findings =
             value.findings.mapIndexed {
                 index,
@@ -482,9 +509,22 @@ private fun OperationConversionScope.encodePreparedCreation(value: PreparedCreat
             },
     )
 
-private fun OperationConversionScope.decodePreparedCreation(value: SkirPreparedCreation): PreparedCreation =
-    PreparedCreation(
-        record = convert(SkirAuthoringValueCodec.decode(value.record)),
+private fun OperationConversionScope.decodePreparedValue(value: SkirPreparedValue): PreparedValue =
+    PreparedValue(
+        content =
+            when (val content = value.content) {
+                is SkirPreparedContent.ValueWrapper -> {
+                    PreparedContent.Value(convert(SkirDataValueCodec.decode(content.value)))
+                }
+
+                is SkirPreparedContent.RecordWrapper -> {
+                    PreparedContent.Record(convert(SkirAuthoringValueCodec.decode(content.value)))
+                }
+
+                else -> {
+                    fail("Prepared content is unknown.")
+                }
+            },
         findings =
             value.findings.mapIndexed {
                 index,

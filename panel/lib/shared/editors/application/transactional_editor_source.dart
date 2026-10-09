@@ -20,6 +20,8 @@
  * stale completion from changing state.
  */
 
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "transactional_editor_persistence.dart";
@@ -42,8 +44,8 @@ typedef EditorCommitter = Future<TypedMutationResult> Function(
 
 /// Validates a local mutation before it enters the draft.
 typedef EditorMutationValidator = EditorMutationResult Function(
-  DataPath path,
-  DataValue value,
+  skir.ValuePath path,
+  skir.DataValue value,
 );
 
 /// Owns the editable projection of one resource and its save lifecycle.
@@ -87,11 +89,11 @@ final class TransactionalEditorSource extends ChangeNotifier
        _jitter = jitter ?? RandomEditorJitterSource();
 
   EditorDocument _document;
-  DataValue _draft;
+  skir.DataValue _draft;
   final EditorCommitter? _commit;
   EditableResource? _resource;
   EditableResource? get resource => _resource;
-  final LocalWorkSession? workspace;
+  final ScopedWorkSession? workspace;
   EditorSnapshot? _snapshot;
   EditorSnapshot? get snapshot => _snapshot;
   EditorSnapshot? _pendingContractSnapshot;
@@ -100,7 +102,7 @@ final class TransactionalEditorSource extends ChangeNotifier
   bool get contractUnavailable => _contractUnavailable;
   int get localRevision => _localRevision;
   final EditorMutationValidator? _validation;
-  final List<TypeDiagnostic> Function(DataValue)? _validateDraft;
+  final List<EditorDiagnostic> Function(skir.DataValue)? _validateDraft;
 
   @override
   final EditorCommitPolicy commitPolicy;
@@ -111,10 +113,10 @@ final class TransactionalEditorSource extends ChangeNotifier
       _activeCommit != null ||
       _unresolved != null;
 
-  Set<DataPath> get editedPaths => Set.unmodifiable(_states.dirtyPaths);
+  Set<skir.ValuePath> get editedPaths => Set.unmodifiable(_states.dirtyPaths);
 
   @override
-  List<TypeDiagnostic> get draftDiagnostics =>
+  List<EditorDiagnostic> get draftDiagnostics =>
       _snapshot?.validateDraft(_draft) ??
       _validateDraft?.call(_draft) ??
       const [];
@@ -138,11 +140,11 @@ final class TransactionalEditorSource extends ChangeNotifier
 
   /// The type of the current canonical document.
   @override
-  TypeExpression get rootType => document.rootType;
+  skir.TypeUse get rootType => document.rootType;
 
   /// The catalog of the current canonical document.
   @override
-  TypeCatalog get typeCatalog => document.typeCatalog;
+  CheckedEditorCatalog get catalog => document.catalog;
 
   /// Whether local mutation is currently disallowed by the document or save
   /// lifecycle.
@@ -157,7 +159,7 @@ final class TransactionalEditorSource extends ChangeNotifier
 
   /// Reads the local draft at [path], including unsaved edits.
   @override
-  EditorValue value(DataPath path) {
+  EditorValue value(skir.ValuePath path) {
     if (_deleted) {
       return EditorValue.invalid([_diagnostic("Deleted elsewhere", path)]);
     }
@@ -171,18 +173,20 @@ final class TransactionalEditorSource extends ChangeNotifier
   /// any draft change.
   @override
   EditorMutationResult update(
-    DataPath path,
-    DataValue value, {
+    skir.ValuePath path,
+    skir.DataValue value, {
     EditorStructuralMutation? structuralMutation,
   }) {
     final validation = validate(path, value);
     if (validation is! AppliedEditorMutation) return validation;
-    final replaced = path.replace(_draft, validation.value);
-    if (replaced case TypeFailure(:final diagnostics)) {
-      return EditorMutationResult.invalid(diagnostics);
+    final replaced = _draft.replacingEditorValue(path, validation.value);
+    if (replaced == null) {
+      return EditorMutationResult.invalid([
+        _diagnostic("The editor path is unavailable", path),
+      ]);
     }
 
-    _draft = replaced.valueOrNull!;
+    _draft = replaced;
 
     _localRevision++;
     _pendingMutations.add(
@@ -202,7 +206,7 @@ final class TransactionalEditorSource extends ChangeNotifier
 
   /// Validates an edit against the current document and editor lifecycle.
   @override
-  EditorMutationResult validate(DataPath path, DataValue value) {
+  EditorMutationResult validate(skir.ValuePath path, skir.DataValue value) {
     if (_disposed) {
       return EditorMutationResult.invalid([_diagnostic("Editor is disposed")]);
     }
@@ -228,7 +232,7 @@ final class TransactionalEditorSource extends ChangeNotifier
   /// path. The session controls its local interaction lifecycle; it does not
   /// imply that the resulting draft is persisted.
   @override
-  EditorInteractionSession beginInteraction(DataPath path) {
+  EditorInteractionSession beginInteraction(skir.ValuePath path) {
     for (final gate in _states.takeGates()) {
       if (_pathsOverlap(path, gate.path)) {
         if (gate is _Interaction) gate.close();
@@ -239,7 +243,7 @@ final class TransactionalEditorSource extends ChangeNotifier
     final interaction = _Interaction(
       source: this,
       path: path,
-      origin: path.read(_draft).valueOrNull,
+      origin: _draft.editorValueAt(path),
       startingRevision: _localRevision,
     );
     if (_disposed || _deleted) {
@@ -255,7 +259,7 @@ final class TransactionalEditorSource extends ChangeNotifier
   /// Uncertain means the destination may have accepted the captured commit and
   /// must be resolved or replayed. It is not equivalent to failure.
   @override
-  EditorSaveState saveState(DataPath path) {
+  EditorSaveState saveState(skir.ValuePath path) {
     if (_deleted) {
       return EditorSaveState(
         phase: EditorSavePhase.deletedElsewhere,
@@ -283,7 +287,7 @@ final class TransactionalEditorSource extends ChangeNotifier
   /// an active attempt, and a conflict may rebase and retry. A successful
   /// result confirms only the captured edits that were not superseded locally.
   @override
-  Future<TypedMutationResult> flush({Set<DataPath>? paths}) async {
+  Future<TypedMutationResult> flush({Set<skir.ValuePath>? paths}) async {
     if (_disposed) return _unavailable("Editor is disposed");
     if (_deleted) return _unavailable("Deleted elsewhere");
 
@@ -326,7 +330,7 @@ final class TransactionalEditorSource extends ChangeNotifier
   /// different values are retained as a diagnostic because the invariant that
   /// revisions identify canonical content has been violated.
   @override
-  void acceptRemote({required int revision, required DataValue value}) =>
+  void acceptRemote({required int revision, required skir.DataValue value}) =>
       _acceptRemote(revision: revision, value: value);
 
   /// Resolves [path] by discarding its local value in favor of the canonical
@@ -334,11 +338,11 @@ final class TransactionalEditorSource extends ChangeNotifier
   ///
   /// This is a local conflict decision. It does not send a persistence request.
   @override
-  void useRemote(DataPath path) {
+  void useRemote(skir.ValuePath path) {
     if (_disposed || _unresolved != null) return;
-    final remote = path.read(_document.confirmedValue).valueOrNull;
+    final remote = _document.confirmedValue.editorValueAt(path);
     if (remote == null) return;
-    _draft = path.replace(_draft, remote).valueOrNull ?? _draft;
+    _draft = _draft.replacingEditorValue(path, remote) ?? _draft;
     _pendingMutations.removeWhere(
       (pending) => _pathsOverlap(path, pending.mutation.path),
     );
@@ -354,7 +358,7 @@ final class TransactionalEditorSource extends ChangeNotifier
   /// only settles the conflict because the enclosing draft is persisted by a
   /// later explicit operation.
   @override
-  Future<TypedMutationResult> keepLocal(DataPath path) {
+  Future<TypedMutationResult> keepLocal(skir.ValuePath path) {
     if (_disposed) return Future.value(_unavailable("Editor is disposed"));
     if (_unresolved case final unresolved?) {
       return Future.value(unresolved.result);

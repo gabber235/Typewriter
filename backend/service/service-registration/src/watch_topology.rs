@@ -16,10 +16,9 @@ use wasmcloud_utils::{
     },
     decode_skir, extract_params,
     skir::base::service::v1::topology::{
-        WatchOrganizationTopologyRequest, WatchOrganizationTopologyResponse,
-        WatchOrganizationTopologyResponse_List,
+        OrganizationTopologySnapshot, WatchOrganizationTopologyRequest,
+        WatchOrganizationTopologyResponse,
     },
-    skir_variant,
     wasmcloud::messaging::types::NatsMessage,
 };
 
@@ -46,7 +45,9 @@ pub async fn handle_watch(
         "actor.id" = actor_id.to_string(),
         "organization.id" = org_id.to_string(),
     );
-    snapshot(org_id).await
+    snapshot(org_id)
+        .await
+        .map(|snapshot| WatchOrganizationTopologyResponse::List(Box::new(snapshot)))
 }
 
 /// Reads all topology resources belonging to one organization.
@@ -54,7 +55,7 @@ pub async fn handle_watch(
 /// The query excludes resources owned by other organizations and projects Realm and engine rows
 /// through the database view functions before serialization. The complete list initializes a
 /// consumer; configuration and runtime handlers publish incremental topology events afterward.
-pub async fn snapshot(org_id: &str) -> Result<WatchOrganizationTopologyResponse, otel_wasi::Error> {
+pub async fn snapshot(org_id: &str) -> Result<OrganizationTopologySnapshot, otel_wasi::Error> {
     let organization_id = RecordId::new("organization", org_id);
     let topology = read_query!(
         r#"
@@ -88,9 +89,10 @@ pub async fn snapshot(org_id: &str) -> Result<WatchOrganizationTopologyResponse,
         "topology.realm_count" = topology.realms.len() as i64,
         "topology.engine_count" = topology.engines.len() as i64,
     );
-    Ok(skir_variant!(WatchOrganizationTopologyResponse::List {
+    Ok(OrganizationTopologySnapshot {
         hosts: topology.hosts.into_iter().map(Into::into).collect(),
         realms: topology.realms.into_iter().map(Into::into).collect(),
         engines: topology.engines.into_iter().map(Into::into).collect(),
-    }))
+        ..Default::default()
+    })
 }

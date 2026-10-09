@@ -61,20 +61,64 @@ final class _AuthoredScalarGalleryState extends State<AuthoredScalarGallery> {
     _bytes: skir.DataValue.unfilled,
   };
 
-  @override
-  Widget build(BuildContext context) => PortablePresentationNodeRenderer(
-    node: _gallery,
-    scope: PortablePresentationScope(
-      bindings: {
-        for (final entry in _values.entries)
-          entry.key: PortableExpressionBinding(value: entry.value),
-      },
-      budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 1000),
-      setBinding: (reference, value) {
-        setState(() => _values[reference.bindingId] = value);
-      },
-    ),
+  late final _host = EditorSourcePresentationHost(
+    catalog: skir.EditorCatalogWireSnapshot.defaultInstance
+        .asTrustedLocalCatalog(),
+    root: () => _gallery,
+    bindings: [
+      _binding(_title, skir.TypeUse.wrapScalar(skir.ScalarKind.text)),
+      _binding(
+        _count,
+        skir.TypeUse.wrapScalar(
+          skir.ScalarKind.createInteger(
+            width: skir.IntegerWidth.signedThirtyTwo,
+          ),
+        ),
+      ),
+      _binding(_enabled, skir.TypeUse.wrapScalar(skir.ScalarKind.boolean)),
+      _binding(
+        _intensity,
+        skir.TypeUse.wrapScalar(
+          skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour),
+        ),
+      ),
+      _binding(_startsAt, skir.TypeUse.wrapScalar(skir.ScalarKind.timestamp)),
+      _binding(_duration, skir.TypeUse.wrapScalar(skir.ScalarKind.duration)),
+      _binding(
+        _color,
+        skir.TypeUse.wrapScalar(
+          skir.ScalarKind.createInteger(
+            width: skir.IntegerWidth.unsignedThirtyTwo,
+          ),
+        ),
+      ),
+      _binding(_bytes, skir.TypeUse.wrapScalar(skir.ScalarKind.bytes)),
+    ],
+    budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 1000),
   );
+
+  EditorSourcePresentationBinding _binding(
+    skir.ExpressionBindingId id,
+    skir.TypeUse use,
+  ) => EditorSourcePresentationBinding(
+    id: id,
+    use: use,
+    read: (_) => _values[id],
+    write: (_, value) async {
+      setState(() => _values[id] = value);
+      return const PortablePresentationWriteApplied();
+    },
+  );
+
+  @override
+  void dispose() {
+    _host.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      PortablePresentationRenderer(host: _host);
 }
 
 final class AuthoredInteractionGallery extends StatefulWidget {
@@ -98,6 +142,16 @@ final class _AuthoredInteractionGalleryState
     _interactionResource,
     policy: EditorCommitPolicy.applyResource,
   );
+  late final _host = AuthoredPresentationHost(
+    resource: _interactionResource,
+    source: _workspace.document,
+    material: skir.PresentationMaterial.defaultInstance,
+    role: skir.PresentationRole.editor,
+    budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 1000),
+    capabilities: const PortablePresentationCapabilities(),
+    edit: _binding,
+    reportStatus: (status) => setState(() => _status = status),
+  );
   void _updated() {
     if (mounted) setState(() {});
   }
@@ -111,6 +165,7 @@ final class _AuthoredInteractionGalleryState
   @override
   void dispose() {
     _workspace.removeListener(_updated);
+    _host.dispose();
     _binding.detach();
     _workspace.dispose();
     _transport.dispose();
@@ -122,6 +177,13 @@ final class _AuthoredInteractionGalleryState
   @override
   Widget build(BuildContext context) {
     final record = _workspace.document.resource(_interactionResource)!;
+    _host.update(
+      source: _workspace.document,
+      capabilities: const PortablePresentationCapabilities(),
+      available: true,
+      readOnly: false,
+      reportStatus: (status) => setState(() => _status = status),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -152,10 +214,9 @@ final class _AuthoredInteractionGalleryState
               );
               setState(() {});
             },
-            authoring: _workspace.document,
-            edit: _binding,
             resource: _interactionResource,
             reportStatus: (status) => setState(() => _status = status),
+            host: _host,
           ),
         ),
         if (_status case final status?) ...[
@@ -688,7 +749,7 @@ final _startsAt = skir.ExpressionBindingId(value: "starts_at");
 final _duration = skir.ExpressionBindingId(value: "duration");
 final _color = skir.ExpressionBindingId(value: "color");
 final _bytes = skir.ExpressionBindingId(value: "bytes");
-final _interactionRoot = skir.ExpressionBindingId(value: "interaction_root");
+final _interactionRoot = configuredValueBindingId;
 final _listItemBinding = skir.ExpressionBindingId(value: "list_item");
 final _interactionResource = skir.ResourceId(value: "interaction:widgetbook");
 

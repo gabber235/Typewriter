@@ -5,7 +5,7 @@ void main() {
   test(
     "queued action reads latest drafts and replay keeps captured values",
     () async {
-      final work = LocalWorkSession();
+      final work = ScopedWorkSession();
       addTearDown(work.dispose);
       final blocker = await work.coordinator.reserve({"A"});
       final drafts = {"A": "red", "B": "red"};
@@ -103,7 +103,7 @@ void main() {
   test(
     "failed preparation releases reservation and disposes captured request",
     () async {
-      final work = LocalWorkSession();
+      final work = ScopedWorkSession();
       addTearDown(work.dispose);
       var disposed = false;
       await expectLater(

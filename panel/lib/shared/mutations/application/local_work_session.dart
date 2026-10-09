@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "local_work_snapshot.dart";
@@ -8,6 +10,8 @@ part "local_work_snapshot.dart";
 /// retain a resource while a screen is alive, but must release it when the
 /// screen ends. A scoped owner may reject commands after its session ends.
 abstract interface class LocalWorkCommands {
+  Stream<LocalWorkState> get changes;
+
   /// Current resources with live editors or retained leases.
   Map<EditorResourceKey, EditorResource> get resources;
 
@@ -44,13 +48,23 @@ abstract interface class LocalWorkCommands {
   void release(EditorResourceKey key);
 
   /// Retries a failed submission or flushes the draft that owns its identity.
-  Future<void> retry(Object id);
+  Future<void> retrySubmission(Object id);
+
+  Future<void> retry(WorkEntryId entry);
+  Future<void> save(WorkEntryId entry);
+  WorkDriverId register(WorkDriver driver, {WorkDestination? destination});
+  D getOrRegister<D extends WorkDriver>(
+    WorkDriverId id,
+    D Function() create, {
+    WorkDestination? destination,
+  });
+  WorkLease lease(WorkDriverId driver);
 
   /// Discards the local draft when its save lifecycle permits it.
-  void discard(EditorResourceKey key);
+  bool discard(WorkEntryId entry);
 
   /// Opens the current destination for [key], if one is available.
-  Future<void> open(EditorResourceKey key);
+  Future<void> open(WorkEntryId entry);
 
   /// Looks up a live editor without creating or retaining one.
   EditorSource? source(EditorResourceKey key);
@@ -70,11 +84,10 @@ final class EditorResource {
   EditorTarget target;
   final Object targetId;
   String label;
-  EditorDestination? _destination;
-  EditorDestination? get destination => _destination;
+  WorkDestination? _destination;
+  WorkDestination? get destination => _destination;
   LocalWorkDestinationState destinationState =
       LocalWorkDestinationState.unavailable;
-  int leases = 0;
   VoidCallback? listener;
   VoidCallback? _destinationListener;
   final TransactionalEditorSource source;
@@ -87,7 +100,7 @@ final class EditorResource {
     return null;
   }
 
-  set destination(EditorDestination? value) {
+  set destination(WorkDestination? value) {
     if (identical(value, _destination)) return;
     if (_destinationListener case final changed?) {
       _destination?.removeListener(changed);
@@ -122,10 +135,15 @@ final class EditorResource {
 /// editor sources and submissions remain owned objects behind this read model.
 /// Dispose ends the scope, releases all resources, rejects queued reservations,
 /// and prevents later publication.
-final class LocalWorkSession implements LocalWorkCommands {
-  LocalWorkSession();
+final class ScopedWorkSession implements LocalWorkCommands {
+  ScopedWorkSession();
 
-  final Map<EditorResourceKey, EditorResource> _resources = {};
+  final Map<WorkDriverId, OwnedWorkDriver> _drivers = {};
+  Map<EditorResourceKey, EditorResource> get _resources => {
+    for (final owned in _drivers.values)
+      if (owned.driver case final DocumentWorkDriver driver)
+        driver.key: driver.resource,
+  };
   final MutationCoordinator coordinator = MutationCoordinator();
   final Map<Object, MutationSubmission<Object?>> _submissions = {};
   final Map<Object, Timer> _expiry = {};
@@ -145,6 +163,7 @@ final class LocalWorkSession implements LocalWorkCommands {
   LocalWorkState get state => _state;
 
   /// Emits a new state only when the read model changes.
+  @override
   Stream<LocalWorkState> get changes => _changes.stream;
 
   /// Waits for all participants, then captures and starts the pending commit.
@@ -286,35 +305,111 @@ final class LocalWorkSession implements LocalWorkCommands {
       workspace: this,
     );
     resource = EditorResource(target, source);
-    _resources[key] = resource;
-    resource.listener = () {
-      _publish();
-      scheduleMicrotask(() {
-        if (!_disposed && resource.leases == 0 && !source.hasWork) _remove(key);
-      });
-    };
-    source.addListener(resource.listener!);
+    register(DocumentWorkDriver(key, resource));
     return source;
   }
 
   @override
-  void retain(EditorResourceKey key) => _resources[key]!.leases++;
+  WorkDriverId register(WorkDriver driver, {WorkDestination? destination}) {
+    if (_disposed) throw StateError("The work session ended");
+    if (_drivers.containsKey(driver.id)) {
+      throw StateError("A work driver identity is already owned");
+    }
+    void changed() {
+      _publish();
+      scheduleMicrotask(() => _tryRelease(driver.id));
+    }
 
-  @override
-  void release(EditorResourceKey key) {
-    final resource = _resources[key];
-    if (resource == null) return;
-    resource.leases--;
-    if (resource.leases > 0 || resource.source.hasWork) return;
-    _remove(key);
+    final owned = OwnedWorkDriver(driver, changed, destination: destination);
+    _drivers[driver.id] = owned;
+    driver.addListener(changed);
+    _publish();
+    return driver.id;
   }
 
   @override
-  Future<void> retry(Object id) async {
+  D getOrRegister<D extends WorkDriver>(
+    WorkDriverId id,
+    D Function() create, {
+    WorkDestination? destination,
+  }) {
+    if (_disposed) throw StateError("The work session ended");
+    final existing = _drivers[id];
+    if (existing != null) {
+      if (existing.driver is! D) {
+        throw StateError("The work identity has another driver type");
+      }
+      if (destination != null &&
+          !identical(existing.destination, destination)) {
+        existing.destination = destination;
+      }
+      return existing.driver as D;
+    }
+    final driver = create();
+    if (driver.id != id) {
+      driver.dispose();
+      throw StateError(
+        "The registered driver must preserve its requested identity",
+      );
+    }
+    register(driver, destination: destination);
+    return driver;
+  }
+
+  @override
+  WorkLease lease(WorkDriverId driver) {
+    if (_disposed) throw StateError("The work session ended");
+    final owned = _drivers[driver];
+    if (owned == null) throw StateError("The work driver is unavailable");
+    owned.leases++;
+    _publish();
+    return WorkLease(() {
+      if (_disposed || !identical(_drivers[driver], owned)) return;
+      owned.leases--;
+      _tryRelease(driver);
+    });
+  }
+
+  void _tryRelease(WorkDriverId id) {
+    if (_disposed) return;
+    final owned = _drivers[id];
+    if (owned == null || owned.leases > 0 || owned.retained) return;
+    _drivers.remove(id);
+    owned.dispose();
+    _publish();
+  }
+
+  @override
+  void retain(EditorResourceKey key) {
+    final owned = _drivers[WorkDriverId(domain: "document", scope: key)];
+    if (owned == null || _disposed) {
+      throw StateError("The document work is unavailable");
+    }
+    owned.leases++;
+  }
+
+  @override
+  void release(EditorResourceKey key) {
+    final id = WorkDriverId(domain: "document", scope: key);
+    final owned = _drivers[id];
+    if (owned == null || _disposed) return;
+    if (owned.leases <= 0) {
+      throw StateError("A document work lease must be retained before release");
+    }
+    owned.leases--;
+    _tryRelease(id);
+  }
+
+  @override
+  Future<void> retrySubmission(Object id) async {
     final submission = _submissions[id];
     if (submission == null) return;
     final owners = _resources.values.where(
-      (resource) => resource.source.saveState(DataPath.root).submissionId == id,
+      (resource) =>
+          resource.source
+              .saveState(skir.ValuePath(segments: []))
+              .submissionId ==
+          id,
     );
     if (owners.isNotEmpty) {
       await owners.first.source.flush();
@@ -323,37 +418,54 @@ final class LocalWorkSession implements LocalWorkCommands {
     await submission.run();
   }
 
-  @override
-  void discard(EditorResourceKey key) => _resources[key]?.source.discardDraft();
+  WorkEntryState _entry(WorkEntryId entry) {
+    if (_disposed) throw StateError("The work session ended");
+    final driver = _drivers[entry.driver]?.driver;
+    if (driver == null) throw StateError("The work driver is unavailable");
+    return driver.snapshot.entries.firstWhere((value) => value.id == entry);
+  }
 
   @override
-  Future<void> open(EditorResourceKey key) async =>
-      _resources[key]?.destination?.open();
+  Future<void> save(WorkEntryId entry) {
+    if (!_entry(entry).canSave) {
+      return Future.error(StateError("This work cannot currently be saved"));
+    }
+    return _drivers[entry.driver]!.driver.save(entry);
+  }
+
+  @override
+  Future<void> retry(WorkEntryId entry) {
+    if (!_entry(entry).canRetry) {
+      return Future.error(StateError("This work cannot currently be retried"));
+    }
+    return _drivers[entry.driver]!.driver.retry(entry);
+  }
+
+  @override
+  bool discard(WorkEntryId entry) =>
+      _entry(entry).canDiscard && _drivers[entry.driver]!.driver.discard(entry);
+
+  @override
+  Future<void> open(WorkEntryId entry) async {
+    final owned = _drivers[entry.driver];
+    if (owned?.driver case final DocumentWorkDriver driver) {
+      await driver.resource.destination?.open();
+    } else {
+      await owned?.destination?.open();
+    }
+  }
 
   @override
   EditorSource? source(EditorResourceKey key) => _resources[key]?.source;
-
-  void _remove(EditorResourceKey key) {
-    final resource = _resources.remove(key);
-    if (resource == null) return;
-    resource.source.removeListener(resource.listener!);
-    resource
-      ..listener = null
-      ..destination = null;
-    resource.source.dispose();
-    _publish();
-  }
 
   /// Ends this scope and releases every owned resource and submission.
   void dispose() {
     if (_disposed) return;
     _disposed = true;
-    for (final resource in _resources.values) {
-      resource.destination = null;
-      resource.source.removeListener(resource.listener!);
-      resource.source.dispose();
+    for (final owned in _drivers.values) {
+      owned.dispose();
     }
-    _resources.clear();
+    _drivers.clear();
     coordinator.dispose();
     for (final timer in _expiry.values) {
       timer.cancel();

@@ -4,8 +4,10 @@ import com.typewritermc.authoring.ArgumentSelection
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.AuthoringResourceDefinition
 import com.typewritermc.authoring.CommitResult
+import com.typewritermc.authoring.EditIntent
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.PreparedEdit
+import com.typewritermc.authoring.PreparedEditResult
 import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
@@ -49,7 +51,6 @@ import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import de.infix.testBalloon.framework.core.testSuite
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 
 class TypeArgumentOperationsTest {
@@ -62,7 +63,7 @@ class TypeArgumentOperationsTest {
                 catalog,
                 AuthoringSeed(mapOf(resource to record)),
             )
-        val operations = DefaultTypeArgumentOperations(RecordingRepository(), store)
+        val operations = DefaultTypeArgumentOperations(store)
 
         store.capture().use { snapshot ->
             assertIs<TypePreviewResult.InvalidArguments>(
@@ -80,7 +81,8 @@ class TypeArgumentOperationsTest {
             )
         invalidStore.capture().use { snapshot ->
             assertIs<TypePreviewResult.Rejected>(
-                operations.preview(resource, TypeSelection.Complete(CONTAINER_COIN), snapshot),
+                DefaultTypeArgumentOperations(invalidStore)
+                    .preview(resource, TypeSelection.Complete(CONTAINER_COIN), snapshot),
             )
         }
         invalidStore.close()
@@ -97,7 +99,7 @@ class TypeArgumentOperationsTest {
                 AuthoringSeed(mapOf(resource to record)),
             )
         val repository = RecordingRepository()
-        val operations = DefaultTypeArgumentOperations(repository, store)
+        val operations = DefaultTypeArgumentOperations(store)
 
         val preview =
             store.capture().use { snapshot ->
@@ -137,21 +139,21 @@ class TypeArgumentOperationsTest {
         val compatible = location(resource, "reward")
         assertEquals(
             listOf(
-                TypeRepairIntent.ConfigureResource(resource, TypeSelection.Complete(CONTAINER_COIN)),
-                TypeRepairIntent.Retag(bundles, LIST_BUNDLE_COIN),
-                TypeRepairIntent.Retag(bundle, BUNDLE_COIN),
-                TypeRepairIntent.Clear(incompatible),
+                EditIntent.ConfigureResource(resource, TypeSelection.Complete(CONTAINER_COIN)),
+                EditIntent.Retag(bundles, LIST_BUNDLE_COIN),
+                EditIntent.Retag(bundle, BUNDLE_COIN),
+                EditIntent.SetValue(incompatible, DataValue.Unfilled),
             ),
-            preview.intents,
+            preview.edit.intents,
         )
         assertEquals(listOf(incompatible), preview.clearedLocations)
-        val observed = preview.expectations.flatMapTo(linkedSetOf()) { it.dependencies() }
+        val observed = preview.edit.expectations.flatMapTo(linkedSetOf()) { it.dependencies() }
         assertTrue(InputIdentity.Value(title) in observed)
         assertTrue(InputIdentity.Value(compatible) in observed)
         assertTrue(InputIdentity.Value(incompatible) in observed)
         assertTrue(InputIdentity.Value(bundles) in observed)
         assertTrue(InputIdentity.Value(bundles) in observed)
-        assertFalse(preview.intents.any { it == TypeRepairIntent.Clear(compatible) })
+        assertFalse(preview.edit.intents.any { it == EditIntent.SetValue(compatible, DataValue.Unfilled) })
 
         store.close()
     }
@@ -167,7 +169,7 @@ class TypeArgumentOperationsTest {
                     AuthoringSeed(mapOf(resource to record)),
                 )
             val repository = RecordingRepository()
-            val operations = DefaultTypeArgumentOperations(repository, store)
+            val operations = DefaultTypeArgumentOperations(store)
             val preview =
                 store.capture().use { snapshot ->
                     assertIs<TypePreviewResult.Ready>(
@@ -175,10 +177,10 @@ class TypeArgumentOperationsTest {
                     ).preview
                 }
 
-            operations.confirm(preview)
-
-            val edit = requireNotNull(repository.edit)
+            val edit = assertIs<PreparedEditResult.Prepared>(operations.prepare(preview)).edit
+            repository.commit(edit)
             assertTrue(edit.expectations.any { InputIdentity.Value(location(resource, "reward")) in it.dependencies() })
+            assertEquals(edit, repository.edit)
             store.close()
         }
 
@@ -193,7 +195,7 @@ class TypeArgumentOperationsTest {
                     AuthoringSeed(mapOf(resource to original)),
                 )
             val repository = RecordingRepository()
-            val operations = DefaultTypeArgumentOperations(repository, store)
+            val operations = DefaultTypeArgumentOperations(store)
             val pending =
                 TypeSelection.Pending(
                     DUAL,
@@ -206,13 +208,12 @@ class TypeArgumentOperationsTest {
                 }
 
             assertEquals(pending, pendingPreview.next)
-            assertTrue(pendingPreview.intents.contains(TypeRepairIntent.ConfigureResource(resource, pending)))
-            assertTrue(pendingPreview.intents.contains(TypeRepairIntent.Clear(location(resource, "second"))))
-            assertFalse(pendingPreview.intents.contains(TypeRepairIntent.Clear(location(resource, "name"))))
-            assertFalse(pendingPreview.intents.contains(TypeRepairIntent.Clear(location(resource, "first"))))
+            assertTrue(pendingPreview.edit.intents.contains(EditIntent.ConfigureResource(resource, pending)))
+            assertTrue(pendingPreview.edit.intents.contains(EditIntent.SetValue(location(resource, "second"), DataValue.Unfilled)))
+            assertFalse(pendingPreview.edit.intents.contains(EditIntent.SetValue(location(resource, "name"), DataValue.Unfilled)))
+            assertFalse(pendingPreview.edit.intents.contains(EditIntent.SetValue(location(resource, "first"), DataValue.Unfilled)))
 
-            operations.confirm(pendingPreview)
-            val pendingEdit = requireNotNull(repository.edit)
+            val pendingEdit = assertIs<PreparedEditResult.Prepared>(operations.prepare(pendingPreview)).edit
             val pendingPlan =
                 assertIs<MutationPlanningResult.Accepted>(
                     AuthoringMutationPlanner(catalog.checked, emptyList()).plan(mapOf(resource to original), pendingEdit),
@@ -234,38 +235,10 @@ class TypeArgumentOperationsTest {
                     assertIs<TypePreviewResult.Ready>(operations.preview(resource, complete, snapshot)).preview
                 }
             assertEquals(complete, completePreview.next)
-            assertTrue(completePreview.intents.contains(TypeRepairIntent.ConfigureResource(resource, complete)))
-            assertFalse(completePreview.intents.contains(TypeRepairIntent.Clear(location(resource, "first"))))
+            assertTrue(completePreview.edit.intents.contains(EditIntent.ConfigureResource(resource, complete)))
+            assertFalse(completePreview.edit.intents.contains(EditIntent.SetValue(location(resource, "first"), DataValue.Unfilled)))
 
             pendingStore.close()
-            store.close()
-        }
-
-    fun confirmationPropagatesRepositoryCancellation() =
-        runTest {
-            val catalog = RepairCatalogLease()
-            val resource = ResourceId("dual")
-            val original = dualRecord(TypeSelection.Complete(DUAL_COIN_GEM))
-            val store =
-                InMemoryAuthoringViewStore(
-                    catalog,
-                    AuthoringSeed(mapOf(resource to original)),
-                )
-            val operations =
-                DefaultTypeArgumentOperations(
-                    object : AuthoringRepository {
-                        override suspend fun commit(edit: PreparedEdit): CommitResult = throw CancellationException("cancelled")
-                    },
-                    store,
-                )
-            val preview =
-                store.capture().use { snapshot ->
-                    assertIs<TypePreviewResult.Ready>(
-                        operations.preview(resource, TypeSelection.Complete(DUAL_COIN_COIN), snapshot),
-                    ).preview
-                }
-
-            assertFailsWith<CancellationException> { operations.confirm(preview) }
             store.close()
         }
 
@@ -280,7 +253,7 @@ class TypeArgumentOperationsTest {
                     AuthoringSeed(mapOf(resource to original)),
                 )
             val repository = RecordingRepository()
-            val operations = DefaultTypeArgumentOperations(repository, store)
+            val operations = DefaultTypeArgumentOperations(store)
             val pending =
                 TypeSelection.Pending(
                     DUAL,
@@ -291,21 +264,28 @@ class TypeArgumentOperationsTest {
                     assertIs<TypePreviewResult.Ready>(operations.preview(resource, pending, snapshot)).preview
                 }
 
-            assertIs<CommitResult.Rejected>(
-                operations.confirm(
+            assertIs<PreparedEditResult.Rejected>(
+                operations.prepare(
                     preview.copy(
-                        intents = listOf(TypeRepairIntent.ConfigureResource(resource, TypeSelection.Complete(DUAL_COIN_COIN))),
+                        edit =
+                            preview.edit.copy(
+                                intents = listOf(EditIntent.ConfigureResource(resource, TypeSelection.Complete(DUAL_COIN_COIN))),
+                            ),
                     ),
                 ),
             )
             assertEquals(null, repository.edit)
-            assertIs<CommitResult.Rejected>(operations.confirm(preview.copy(expectations = preview.expectations.dropLast(1))))
+            assertIs<PreparedEditResult.Rejected>(
+                operations.prepare(
+                    preview.copy(edit = preview.edit.copy(expectations = preview.edit.expectations.dropLast(1))),
+                ),
+            )
             assertEquals(null, repository.edit)
 
-            assertIs<CommitResult.Committed>(operations.confirm(preview))
-            val first = requireNotNull(repository.edit)
-            assertIs<CommitResult.Committed>(operations.confirm(preview))
-            assertEquals(first, repository.edit)
+            val prepared = assertIs<PreparedEditResult.Prepared>(operations.prepare(preview)).edit
+            assertEquals(null, repository.edit)
+            assertIs<CommitResult.Committed>(repository.commit(prepared))
+            assertEquals(prepared, repository.edit)
             store.close()
         }
 
@@ -344,12 +324,12 @@ class TypeArgumentOperationsTest {
         val preview =
             store.capture().use { snapshot ->
                 assertIs<TypePreviewResult.Ready>(
-                    DefaultTypeArgumentOperations(RecordingRepository(), store).preview(resource, pending, snapshot),
+                    DefaultTypeArgumentOperations(store).preview(resource, pending, snapshot),
                 ).preview
             }
 
         assertTrue(preview.clearedLocations.contains(linkLocation))
-        assertTrue(preview.intents.none { it == TypeRepairIntent.Clear(linkLocation) })
+        assertTrue(preview.edit.intents.none { it == EditIntent.SetValue(linkLocation, DataValue.Unfilled) })
         assertEquals(
             listOf(
                 LinkRepairIntent.Clear(
@@ -358,7 +338,7 @@ class TypeArgumentOperationsTest {
             ),
             preview.linkRepairs,
         )
-        assertTrue(preview.expectations.any { InputIdentity.Incoming(resource, RELATION) in it.dependencies() })
+        assertTrue(preview.edit.expectations.any { InputIdentity.Incoming(resource, RELATION) in it.dependencies() })
         store.close()
     }
 }
@@ -570,9 +550,6 @@ val TypeArgumentOperationsTestSuite by testSuite {
     test("confirmationRetainsEvidenceForCompatibleValues") { TypeArgumentOperationsTest().confirmationRetainsEvidenceForCompatibleValues() }
     test("unfinishedSelectionPreservesIndependentAndCompatibleFieldsAndCanLaterComplete") {
         TypeArgumentOperationsTest().unfinishedSelectionPreservesIndependentAndCompatibleFieldsAndCanLaterComplete()
-    }
-    test("confirmationPropagatesRepositoryCancellation") {
-        TypeArgumentOperationsTest().confirmationPropagatesRepositoryCancellation()
     }
     test("confirmationRejectsAlteredReceiptAndAcceptsAnExactRetry") {
         TypeArgumentOperationsTest().confirmationRejectsAlteredReceiptAndAcceptsAnExactRetry()

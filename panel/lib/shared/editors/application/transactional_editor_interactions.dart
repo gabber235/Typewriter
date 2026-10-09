@@ -42,7 +42,7 @@ extension _EditorInteractions on TransactionalEditorSource {
     if (_disposed || _deleted) return;
     final origin = interaction.origin;
     if (origin != null) {
-      _draft = interaction.path.replace(_draft, origin).valueOrNull ?? _draft;
+      _draft = _draft.replacingEditorValue(interaction.path, origin) ?? _draft;
     }
     _pendingMutations.removeWhere(
       (pending) =>
@@ -173,8 +173,8 @@ final class _Interaction implements EditorInteractionSession {
   final TransactionalEditorSource source;
 
   @override
-  final DataPath path;
-  final DataValue? origin;
+  final skir.ValuePath path;
+  final skir.DataValue? origin;
   final int startingRevision;
 
   @override
@@ -191,24 +191,22 @@ final class _Interaction implements EditorInteractionSession {
   void close() => active = false;
 }
 
-TypeDiagnostic _diagnostic(String message, [DataPath path = DataPath.root]) {
-  return TypeDiagnostic(
-    code: TypeDiagnosticCode.mutationConflict,
+EditorDiagnostic _diagnostic(String message, [skir.ValuePath? at]) {
+  return EditorDiagnostic(
+    code: EditorDiagnosticCode.mutationConflict,
     message: message,
-    path: path,
+    path: at ?? editorRootPath,
   );
 }
 
-TypeDiagnostic _deletedDiagnostic() => _diagnostic("Deleted elsewhere");
+EditorDiagnostic _deletedDiagnostic() => _diagnostic("Deleted elsewhere");
 
 TypedMutationResult _unavailable(String message) =>
     TypedMutationResult.unavailable([_diagnostic(message)]);
 
-bool _targetWasDeleted(List<TypeDiagnostic> diagnostics) {
+bool _targetWasDeleted(List<EditorDiagnostic> diagnostics) {
   return diagnostics.any(
-    (diagnostic) => diagnostic.details.any(
-      (detail) => detail.key == "editor.target" && detail.value == "deleted",
-    ),
+    (diagnostic) => diagnostic.details["editor.target"] == "deleted",
   );
 }
 
@@ -219,12 +217,14 @@ final class _PendingStructuralMutation {
   final EditorStructuralMutation mutation;
 }
 
-bool _pathsOverlap(DataPath first, DataPath second) {
+bool _pathsOverlap(skir.ValuePath first, skir.ValuePath second) {
   final shared = first.segments.length < second.segments.length
       ? first.segments.length
       : second.segments.length;
   for (var index = 0; index < shared; index++) {
-    if (first.segments[index] != second.segments[index]) return false;
+    if (first.segments.elementAt(index) != second.segments.elementAt(index)) {
+      return false;
+    }
   }
   return true;
 }

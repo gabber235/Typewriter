@@ -95,7 +95,7 @@ private fun EditIntent.canonical(): String =
                             "new",
                             canonical(ValueLocation.serializer(), choice.containing),
                             canonical(
-                                com.typewritermc.authoring.PreparedCreation
+                                com.typewritermc.authoring.PreparedValue
                                     .serializer(),
                                 choice.prepared,
                             ),

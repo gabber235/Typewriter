@@ -77,7 +77,11 @@ class UserJoinRequests extends _$UserJoinRequests {
     }
 
     final request = skir.WatchUserJoinRequestsRequest();
-    yield* ref.watchSequencedRequest(
+    yield* ref.watchProjection<
+      List<UserJoinRequest>,
+      skir.WatchUserJoinRequestsResponse,
+      skir.UserJoinRequestsChanged
+    >(
       subject: "cloud.to.user.$userId.organization.join_requests.watch",
       eventSubject: "cloud.from.user.$userId.join_requests.changed",
       requestBytes: skir.WatchUserJoinRequestsRequest.serializer.toBytes(
@@ -85,24 +89,20 @@ class UserJoinRequests extends _$UserJoinRequests {
       ),
       responseSerializer: skir.WatchUserJoinRequestsResponse.serializer,
       eventSerializer: skir.UserJoinRequestsChanged.serializer,
-      snapshot: (response) {
-        return switch (response) {
-          skir.WatchUserJoinRequestsResponse_unknown() =>
-            throw ApiException.unknownResponseMessage(),
-          skir.WatchUserJoinRequestsResponse_internalErrorWrapper() =>
-            throw ApiException.internalServerError(),
-          skir.WatchUserJoinRequestsResponse_snapshotWrapper(:final value) =>
-            SequencedSnapshot(
-              sequence: value.sequence,
-              value: value.values.map(UserJoinRequest.fromSkir).toList(),
-            ),
-          skir.WatchUserJoinRequestsResponse_changedWrapper() =>
-            throw StateError("Snapshot request returned a delta"),
-        };
-      },
-      eventSequence: (event) => event.sequence,
+      snapshot: (response) =>
+          _userJoinRequestSnapshot(response).values
+              .map(UserJoinRequest.fromSkir)
+              .toList(),
       reduce: _reduceUserJoinRequests,
-      sequenceState: _sequenceState,
+      delivery: const ProjectionDelivery.ordered(
+        stream: "TYPEWRITER_MEMBERSHIP",
+      ),
+      reconciliation: ProjectionReconciliation.sequenced(
+        snapshotSequence: (response) =>
+            _userJoinRequestSnapshot(response).sequence,
+        eventSequence: (event) => event.sequence,
+        sequenceState: _sequenceState,
+      ),
     );
   }
 
@@ -284,6 +284,19 @@ class UserJoinRequests extends _$UserJoinRequests {
     );
   }
 }
+
+skir.UserJoinRequestsSnapshot _userJoinRequestSnapshot(
+  skir.WatchUserJoinRequestsResponse response,
+) => switch (response) {
+  skir.WatchUserJoinRequestsResponse_snapshotWrapper(:final value) => value,
+  skir.WatchUserJoinRequestsResponse_unknown() =>
+    throw ApiException.unknownResponseMessage(),
+  skir.WatchUserJoinRequestsResponse_internalErrorWrapper() =>
+    throw ApiException.internalServerError(),
+  skir.WatchUserJoinRequestsResponse_changedWrapper() => throw StateError(
+    "Snapshot request returned a delta",
+  ),
+};
 
 List<UserJoinRequest> _reduceUserJoinRequests(
   List<UserJoinRequest> requests,

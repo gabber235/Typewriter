@@ -41,82 +41,90 @@ final class HostEditorSnapshot extends EditorSnapshot {
   @override
   EditorDocument get document => EditorDocument(
     rootType: _hostConfigurationType,
-    typeCatalog: _hostConfigurationCatalog,
+    catalog: _hostConfigurationCatalog,
     confirmedValue: _configurationValue(_realm, _engine),
     revision: host.revision,
   );
   @override
-  List<TypeDiagnostic> validateDraft(DataValue value) {
+  List<EditorDiagnostic> validateDraft(skir.DataValue value) {
     final shape = _configurationShapeIssues(value);
     return shape.isEmpty ? _configurationIssues(value) : shape;
   }
 
   @override
-  EditorMutationResult validate(DataPath path, DataValue value) {
+  EditorMutationResult validate(skir.ValuePath path, skir.DataValue value) {
     if (_admitsConfigurationValue(path, value)) {
       return EditorMutationResult.applied(value);
     }
     return EditorMutationResult.invalid([
-      TypeDiagnostic(
-        code: TypeDiagnosticCode.invalidValue,
+      EditorDiagnostic(
+        code: EditorDiagnosticCode.invalidValue,
         message: "The host configuration value is invalid",
         path: path,
       ),
     ]);
   }
 
-  bool _admitsConfigurationValue(DataPath path, DataValue value) {
-    if (path == DataPath.root) return _configurationShapeIssues(value).isEmpty;
-    if (path == DataPath.root.field("realm")) {
+  bool _admitsConfigurationValue(skir.ValuePath path, skir.DataValue value) {
+    if (path == editorRootPath) return _configurationShapeIssues(value).isEmpty;
+    if (path == editorRootPath.field("realm")) {
       return _isRealmConfiguration(value);
     }
-    if (path == DataPath.root.field("engine")) {
+    if (path == editorRootPath.field("engine")) {
       return _isEngineConfiguration(value);
     }
-    if (path == DataPath.root.field("realm").field("target") ||
-        path == DataPath.root.field("engine").field("target") ||
-        path == DataPath.root.field("engine").field("realm")) {
-      return value is StringValue;
+    if (path == editorRootPath.field("realm").field("target") ||
+        path == editorRootPath.field("engine").field("target") ||
+        path == editorRootPath.field("engine").field("realm")) {
+      return value is skir.DataValue_stringValueWrapper;
     }
     return false;
   }
 
-  List<TypeDiagnostic> _configurationShapeIssues(DataValue value) {
-    if (value is RecordValue &&
-        value.fields.length == 2 &&
-        _isRealmConfiguration(value.fields["realm"]) &&
-        _isEngineConfiguration(value.fields["engine"])) {
+  List<EditorDiagnostic> _configurationShapeIssues(skir.DataValue value) {
+    final fields = value.authoredRecord?.fields.toList(growable: false);
+    if (fields != null &&
+        fields.length == 2 &&
+        _isRealmConfiguration(
+          value.editorValueAt(editorRootPath.field("realm")),
+        ) &&
+        _isEngineConfiguration(
+          value.editorValueAt(editorRootPath.field("engine")),
+        )) {
       return const [];
     }
     return const [
-      TypeDiagnostic(
-        code: TypeDiagnosticCode.invalidValue,
+      EditorDiagnostic(
+        code: EditorDiagnosticCode.invalidValue,
         message: "The host configuration structure is invalid",
       ),
     ];
   }
 
-  bool _isRealmConfiguration(DataValue? value) => switch (value) {
-    PolymorphicValue(:final concreteType, value: RecordValue(:final fields))
-        when concreteType == _realmDisabled =>
-      fields.isEmpty,
-    PolymorphicValue(:final concreteType, value: RecordValue(:final fields))
-        when concreteType == _realmHosted =>
-      fields.length == 1 && fields["target"] is StringValue,
-    _ => false,
-  };
+  bool _isRealmConfiguration(skir.DataValue? value) {
+    if (value == null) return false;
+    if (_actualType(value) == _realmDisabled) {
+      return value.authoredRecord?.fields.isEmpty ?? false;
+    }
+    return _actualType(value) == _realmHosted &&
+        value.authoredRecord?.fields.length == 1 &&
+        value.editorValueAt(editorRootPath.field("target"))
+            is skir.DataValue_stringValueWrapper;
+  }
 
-  bool _isEngineConfiguration(DataValue? value) => switch (value) {
-    PolymorphicValue(:final concreteType, value: RecordValue(:final fields))
-        when concreteType == _engineDisabled =>
-      fields.isEmpty,
-    PolymorphicValue(:final concreteType, value: RecordValue(:final fields))
-        when concreteType == _engineEnabled =>
-      fields.length == 2 &&
-          fields["target"] is StringValue &&
-          fields["realm"] is StringValue,
-    _ => false,
-  };
+  bool _isEngineConfiguration(skir.DataValue? value) {
+    if (value == null) return false;
+    if (_actualType(value) == _engineDisabled) {
+      return value.authoredRecord?.fields.isEmpty ?? false;
+    }
+    return _actualType(value) == _engineEnabled &&
+        value.authoredRecord?.fields.length == 2 &&
+        value.editorValueAt(editorRootPath.field("target"))
+            is skir.DataValue_stringValueWrapper &&
+        value.editorValueAt(editorRootPath.field("realm"))
+            is skir.DataValue_stringValueWrapper;
+  }
+
   TopologyEngineTarget? _decodeTarget(
     String? value,
     Map<String, List<String>> targets,
@@ -171,65 +179,70 @@ final class HostEditorResource implements EditableResource {
     return IndependentMutation(
       PendingCommit(
         resources: reservations,
-        prepare: () => repository
-            .configure(hostId, commit.expectedRevision, execution)
-            .copyWith(
-              integrate: (result) async {
-                switch (result) {
-                  case SubmissionConfirmed(:final value) ||
-                      SubmissionRejected(
-                        response: final skir.ConfigureServiceHostResponse value,
-                      ):
-                    switch (value) {
-                      case skir.ConfigureServiceHostResponse_successWrapper(
-                        :final value,
-                      ):
-                        repository.acceptConfiguration(value);
-                        final actual = TopologyConfigurationResult.fromSkir(
-                          value,
-                        );
-                        accept(
-                          MutationSuccess(
-                            revision: actual.host.revision,
-                            value: current._configurationValue(
-                              actual.realm,
-                              actual.engine,
-                            ),
+        prepare: () {
+          final prepared = repository.configure(
+            hostId,
+            commit.expectedRevision,
+            execution,
+          );
+          final integrate = prepared.integrate;
+          return prepared.copyWith(
+            integrate: (result) async {
+              await integrate?.call(result);
+              switch (result) {
+                case SubmissionConfirmed(:final value) ||
+                    SubmissionRejected(
+                      response: final skir.ConfigureServiceHostResponse value,
+                    ):
+                  switch (value) {
+                    case skir.ConfigureServiceHostResponse_successWrapper(
+                      :final value,
+                    ):
+                      final actual = TopologyConfigurationResult.fromSkir(
+                        value,
+                      );
+                      accept(
+                        MutationSuccess(
+                          revision: actual.host.revision,
+                          value: current._configurationValue(
+                            actual.realm,
+                            actual.engine,
                           ),
-                        );
-                      case skir.ConfigureServiceHostResponse_conflictErrorWrapper(
-                        :final value,
-                      ):
-                        repository.acceptConfiguration(value.actual);
-                        final actual = TopologyConfigurationResult.fromSkir(
-                          value.actual,
-                        );
-                        accept(
-                          MutationConflict(
-                            expectedRevision: commit.expectedRevision,
-                            actualRevision: actual.host.revision,
-                            actualValue: current._configurationValue(
-                              actual.realm,
-                              actual.engine,
-                            ),
+                        ),
+                      );
+                    case skir.ConfigureServiceHostResponse_conflictErrorWrapper(
+                      :final value,
+                    ):
+                      final actual = TopologyConfigurationResult.fromSkir(
+                        value.actual,
+                      );
+                      accept(
+                        MutationConflict(
+                          expectedRevision: commit.expectedRevision,
+                          actualRevision: actual.host.revision,
+                          actualValue: current._configurationValue(
+                            actual.realm,
+                            actual.engine,
                           ),
-                        );
-                      case skir.ConfigureServiceHostResponse_invalidConfigurationErrorWrapper(
-                        :final value,
-                      ):
-                        accept(invalidMutation(value.message));
-                      default:
-                        accept(
-                          unavailableMutation(
-                            "The host configuration could not be applied",
-                          ),
-                        );
-                    }
-                  default:
-                    break;
-                }
-              },
-            ),
+                        ),
+                      );
+                    case skir.ConfigureServiceHostResponse_invalidConfigurationErrorWrapper(
+                      :final value,
+                    ):
+                      accept(invalidMutation(value.message));
+                    default:
+                      accept(
+                        unavailableMutation(
+                          "The host configuration could not be applied",
+                        ),
+                      );
+                  }
+                default:
+                  break;
+              }
+            },
+          );
+        },
       ),
     );
   }

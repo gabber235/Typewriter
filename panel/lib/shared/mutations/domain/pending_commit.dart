@@ -14,7 +14,7 @@ final class PendingCommit<T> {
   /// The generic type keeps the response associated with this pending commit
   /// when heterogeneous transactions are collected together.
   MutationSubmission<T> start(
-    LocalWorkSession workspace,
+    ScopedWorkSession workspace,
     MutationReservation reservation,
   ) {
     PreparedCommit<T>? captured;

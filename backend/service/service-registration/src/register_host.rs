@@ -17,7 +17,7 @@ use wasmcloud_utils::{
     },
     decode_skir, extract_params,
     skir::base::service::v1::topology::{
-        RegisterServiceHostRequest, RegisterServiceHostResponse, WatchOrganizationTopologyResponse,
+        OrganizationTopologyChanged, RegisterServiceHostRequest, RegisterServiceHostResponse,
     },
     wasmcloud::messaging::types::NatsMessage,
 };
@@ -125,8 +125,8 @@ pub async fn handle(
     };
     let host = wasmcloud_utils::skir::base::service::v1::topology::ServiceHost::from(result.host);
     if result.changed {
-        wasmcloud_utils::skir_subjects::organization_topology(&result.organization_id.key)
-            .publish(WatchOrganizationTopologyResponse::HostUpdated(Box::new(
+        wasmcloud_utils::skir_subjects::organization_topology_changed(&result.organization_id.key)
+            .publish(OrganizationTopologyChanged::HostUpdated(Box::new(
                 host.clone(),
             )))
             .await?;

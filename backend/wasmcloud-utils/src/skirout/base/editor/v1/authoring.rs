@@ -1017,7 +1017,7 @@ impl DeleteResourceIntent {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct NewCounterpartChoice {
     pub containing: crate::skirout::base::editor::v1::type_catalog::ValueLocation,
-    pub prepared: crate::skirout::base::editor::v1::catalog::PreparedCreation,
+    pub prepared: crate::skirout::base::editor::v1::catalog::PreparedValue,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<NewCounterpartChoice>>,
 }
@@ -1514,50 +1514,6 @@ impl AuthoringChanged {
 }
 
 // ==============================================================================
-// enum TypeRepairIntent
-// ==============================================================================
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum TypeRepairIntent {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<TypeRepairIntent>>),
-    Retag(Box<RetagIntent>),
-    Clear(Box<crate::skirout::base::editor::v1::type_catalog::ValueLocation>),
-    ConfigureResource(Box<ResourceConfigurationIntent>),
-}
-
-impl Default for TypeRepairIntent {
-    fn default() -> Self {
-        TypeRepairIntent::Unknown(None)
-    }
-}
-
-impl TypeRepairIntent {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<TypeRepairIntent> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<TypeRepairIntent>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &TypeRepairIntent| match x {
-                        TypeRepairIntent::Unknown(_) => 0,
-                        TypeRepairIntent::Retag(_) => 1,
-                        TypeRepairIntent::Clear(_) => 2,
-                        TypeRepairIntent::ConfigureResource(_) => 3,
-                    },
-                    |u| TypeRepairIntent::Unknown(Some(u)),
-                    |x: &TypeRepairIntent| match x { TypeRepairIntent::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "editor/v1/authoring.skir",
-                    "TypeRepairIntent",
-                    "",
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<TypeRepairIntent> {
-        initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(TypeRepairIntent::_adapter())
-    }
-}
-
-// ==============================================================================
 // enum LinkRepairIntent
 // ==============================================================================
 
@@ -1605,11 +1561,9 @@ impl LinkRepairIntent {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct TypeArgumentChangePreview {
-    pub catalog: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
     pub resource: crate::skirout::base::editor::v1::type_catalog::ResourceId,
     pub next: crate::skirout::base::editor::v1::type_catalog::TypeSelection,
-    pub expectations: Vec<crate::skirout::base::editor::v1::authoring_facts::EditExpectation>,
-    pub intents: Vec<TypeRepairIntent>,
+    pub edit: PreparedEdit,
     pub link_repairs: Vec<LinkRepairIntent>,
     pub cleared_locations: Vec<crate::skirout::base::editor::v1::type_catalog::ValueLocation>,
     /// Set this to None when you're creating a struct.
@@ -2350,44 +2304,44 @@ impl PreviewTypeArgumentChangeResponse {
 }
 
 // ==============================================================================
-// enum CommitTypeArgumentChangeResponse
+// enum PrepareTypeArgumentChangeResponse
 // ==============================================================================
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum CommitTypeArgumentChangeResponse {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<CommitTypeArgumentChangeResponse>>),
-    Result(Box<CommitResult>),
+pub enum PrepareTypeArgumentChangeResponse {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<PrepareTypeArgumentChangeResponse>>),
+    Result(Box<PreparedEditResult>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
 
-impl Default for CommitTypeArgumentChangeResponse {
+impl Default for PrepareTypeArgumentChangeResponse {
     fn default() -> Self {
-        CommitTypeArgumentChangeResponse::Unknown(None)
+        PrepareTypeArgumentChangeResponse::Unknown(None)
     }
 }
 
-impl CommitTypeArgumentChangeResponse {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<CommitTypeArgumentChangeResponse> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<CommitTypeArgumentChangeResponse>> =
+impl PrepareTypeArgumentChangeResponse {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PrepareTypeArgumentChangeResponse> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<PrepareTypeArgumentChangeResponse>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::EnumAdapter::new(
-                    |x: &CommitTypeArgumentChangeResponse| match x {
-                        CommitTypeArgumentChangeResponse::Unknown(_) => 0,
-                        CommitTypeArgumentChangeResponse::Result(_) => 1,
-                        CommitTypeArgumentChangeResponse::InternalError(_) => 2,
+                    |x: &PrepareTypeArgumentChangeResponse| match x {
+                        PrepareTypeArgumentChangeResponse::Unknown(_) => 0,
+                        PrepareTypeArgumentChangeResponse::Result(_) => 1,
+                        PrepareTypeArgumentChangeResponse::InternalError(_) => 2,
                     },
-                    |u| CommitTypeArgumentChangeResponse::Unknown(Some(u)),
-                    |x: &CommitTypeArgumentChangeResponse| match x { CommitTypeArgumentChangeResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    |u| PrepareTypeArgumentChangeResponse::Unknown(Some(u)),
+                    |x: &PrepareTypeArgumentChangeResponse| match x { PrepareTypeArgumentChangeResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
                     "editor/v1/authoring.skir",
-                    "CommitTypeArgumentChangeResponse",
+                    "PrepareTypeArgumentChangeResponse",
                     "",
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<CommitTypeArgumentChangeResponse> {
+    pub fn serializer() -> crate::skir_client::Serializer<PrepareTypeArgumentChangeResponse> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(CommitTypeArgumentChangeResponse::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(PrepareTypeArgumentChangeResponse::_adapter())
     }
 }
 
@@ -2563,7 +2517,7 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<NewCounterpartChoice> = NewCounterpartChoice::_adapter() as *const _ as *mut _;
                 (*a).add_field("containing", 0, crate::skirout::base::editor::v1::type_catalog::ValueLocation::serializer(), "", |x: &NewCounterpartChoice| &x.containing, |x: &mut NewCounterpartChoice, v| x.containing = v);
-                (*a).add_field("prepared", 1, crate::skirout::base::editor::v1::catalog::PreparedCreation::serializer(), "", |x: &NewCounterpartChoice| &x.prepared, |x: &mut NewCounterpartChoice, v| x.prepared = v);
+                (*a).add_field("prepared", 1, crate::skirout::base::editor::v1::catalog::PreparedValue::serializer(), "", |x: &NewCounterpartChoice| &x.prepared, |x: &mut NewCounterpartChoice, v| x.prepared = v);
                 (*a).finalize();
             }
             unsafe {
@@ -2643,13 +2597,6 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<TypeRepairIntent> = TypeRepairIntent::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("retag", 1, 1, crate::skir_client::internal::struct_serializer_from_static(RetagIntent::_adapter()), "", |v| TypeRepairIntent::Retag(Box::new(v)), |x| match x { TypeRepairIntent::Retag(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("clear", 2, 2, crate::skirout::base::editor::v1::type_catalog::ValueLocation::serializer(), "", |v| TypeRepairIntent::Clear(Box::new(v)), |x| match x { TypeRepairIntent::Clear(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("configure_resource", 3, 3, crate::skir_client::internal::struct_serializer_from_static(ResourceConfigurationIntent::_adapter()), "", |v| TypeRepairIntent::ConfigureResource(Box::new(v)), |x| match x { TypeRepairIntent::ConfigureResource(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
                 let a: *mut crate::skir_client::internal::EnumAdapter<LinkRepairIntent> = LinkRepairIntent::_adapter() as *const _ as *mut _;
                 (*a).add_wrapper_variant("clear", 1, 1, crate::skir_client::internal::struct_serializer_from_static(LinkOccurrenceId::_adapter()), "", |v| LinkRepairIntent::Clear(Box::new(v)), |x| match x { LinkRepairIntent::Clear(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("remove", 2, 2, crate::skir_client::internal::struct_serializer_from_static(LinkOccurrenceId::_adapter()), "", |v| LinkRepairIntent::Remove(Box::new(v)), |x| match x { LinkRepairIntent::Remove(b) => b.as_ref(), _ => unreachable!() });
@@ -2657,13 +2604,11 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<TypeArgumentChangePreview> = TypeArgumentChangePreview::_adapter() as *const _ as *mut _;
-                (*a).add_field("catalog", 0, crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(), "", |x: &TypeArgumentChangePreview| &x.catalog, |x: &mut TypeArgumentChangePreview, v| x.catalog = v);
-                (*a).add_field("resource", 1, crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(), "", |x: &TypeArgumentChangePreview| &x.resource, |x: &mut TypeArgumentChangePreview, v| x.resource = v);
-                (*a).add_field("next", 2, crate::skirout::base::editor::v1::type_catalog::TypeSelection::serializer(), "", |x: &TypeArgumentChangePreview| &x.next, |x: &mut TypeArgumentChangePreview, v| x.next = v);
-                (*a).add_field("expectations", 3, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::authoring_facts::EditExpectation::serializer()), "", |x: &TypeArgumentChangePreview| &x.expectations, |x: &mut TypeArgumentChangePreview, v| x.expectations = v);
-                (*a).add_field("intents", 4, crate::skir_client::Serializer::array(crate::skir_client::internal::enum_serializer_from_static(TypeRepairIntent::_adapter())), "", |x: &TypeArgumentChangePreview| &x.intents, |x: &mut TypeArgumentChangePreview, v| x.intents = v);
-                (*a).add_field("link_repairs", 5, crate::skir_client::Serializer::array(crate::skir_client::internal::enum_serializer_from_static(LinkRepairIntent::_adapter())), "", |x: &TypeArgumentChangePreview| &x.link_repairs, |x: &mut TypeArgumentChangePreview, v| x.link_repairs = v);
-                (*a).add_field("cleared_locations", 6, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::ValueLocation::serializer()), "", |x: &TypeArgumentChangePreview| &x.cleared_locations, |x: &mut TypeArgumentChangePreview, v| x.cleared_locations = v);
+                (*a).add_field("resource", 0, crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(), "", |x: &TypeArgumentChangePreview| &x.resource, |x: &mut TypeArgumentChangePreview, v| x.resource = v);
+                (*a).add_field("next", 1, crate::skirout::base::editor::v1::type_catalog::TypeSelection::serializer(), "", |x: &TypeArgumentChangePreview| &x.next, |x: &mut TypeArgumentChangePreview, v| x.next = v);
+                (*a).add_field("edit", 2, crate::skir_client::internal::struct_serializer_from_static(PreparedEdit::_adapter()), "", |x: &TypeArgumentChangePreview| &x.edit, |x: &mut TypeArgumentChangePreview, v| x.edit = v);
+                (*a).add_field("link_repairs", 3, crate::skir_client::Serializer::array(crate::skir_client::internal::enum_serializer_from_static(LinkRepairIntent::_adapter())), "", |x: &TypeArgumentChangePreview| &x.link_repairs, |x: &mut TypeArgumentChangePreview, v| x.link_repairs = v);
+                (*a).add_field("cleared_locations", 4, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::ValueLocation::serializer()), "", |x: &TypeArgumentChangePreview| &x.cleared_locations, |x: &mut TypeArgumentChangePreview, v| x.cleared_locations = v);
                 (*a).finalize();
             }
             unsafe {
@@ -2785,9 +2730,9 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<CommitTypeArgumentChangeResponse> = CommitTypeArgumentChangeResponse::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("result", 1, 1, crate::skir_client::internal::enum_serializer_from_static(CommitResult::_adapter()), "", |v| CommitTypeArgumentChangeResponse::Result(Box::new(v)), |x| match x { CommitTypeArgumentChangeResponse::Result(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("internal_error", 2, 2, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| CommitTypeArgumentChangeResponse::InternalError(Box::new(v)), |x| match x { CommitTypeArgumentChangeResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
+                let a: *mut crate::skir_client::internal::EnumAdapter<PrepareTypeArgumentChangeResponse> = PrepareTypeArgumentChangeResponse::_adapter() as *const _ as *mut _;
+                (*a).add_wrapper_variant("result", 1, 1, crate::skir_client::internal::enum_serializer_from_static(PreparedEditResult::_adapter()), "", |v| PrepareTypeArgumentChangeResponse::Result(Box::new(v)), |x| match x { PrepareTypeArgumentChangeResponse::Result(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("internal_error", 2, 2, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| PrepareTypeArgumentChangeResponse::InternalError(Box::new(v)), |x| match x { PrepareTypeArgumentChangeResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
         });
@@ -2850,13 +2795,13 @@ pub fn preview_type_argument_change_method() -> &'static crate::skir_client::Met
     &*METHOD
 }
 
-pub fn commit_type_argument_change_method() -> &'static crate::skir_client::Method<TypeArgumentChangePreview, CommitTypeArgumentChangeResponse> {
-    static METHOD: std::sync::LazyLock<crate::skir_client::Method<TypeArgumentChangePreview, CommitTypeArgumentChangeResponse>> = std::sync::LazyLock::new(|| {
+pub fn prepare_type_argument_change_method() -> &'static crate::skir_client::Method<TypeArgumentChangePreview, PrepareTypeArgumentChangeResponse> {
+    static METHOD: std::sync::LazyLock<crate::skir_client::Method<TypeArgumentChangePreview, PrepareTypeArgumentChangeResponse>> = std::sync::LazyLock::new(|| {
         crate::skir_client::Method {
-            name: "CommitTypeArgumentChange".to_string(),
+            name: "PrepareTypeArgumentChange".to_string(),
             number: 920014_i64,
             request_serializer: TypeArgumentChangePreview::serializer(),
-            response_serializer: CommitTypeArgumentChangeResponse::serializer(),
+            response_serializer: PrepareTypeArgumentChangeResponse::serializer(),
             doc: "".to_string(),
         }
     });

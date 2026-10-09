@@ -37,13 +37,22 @@ final class NatsRealmPublicationSource implements RealmPublicationSource {
   }
 
   @override
-  Stream<skir.PublicationReport> watch() => ref.watchRequest(
-    subject: _address.request("editor.authoring.publication.watch"),
-    listenSubject: _address.event("editor.authoring.publication.watch"),
-    requestBytes: skir.WatchPublicationRequest.serializer.toBytes(
-      skir.WatchPublicationRequest(),
-    ),
-    serializer: skir.PublicationReport.serializer,
-    transformer: (_, response) => response,
-  );
+  Stream<skir.PublicationReport> watch() =>
+      ref.watchProjection<
+        skir.PublicationReport,
+        skir.PublicationReport,
+        skir.PublicationReport
+      >(
+        subject: _address.request("editor.authoring.publication.watch"),
+        eventSubject: _address.event("editor.authoring.publication.watch"),
+        requestBytes: skir.WatchPublicationRequest.serializer.toBytes(
+          skir.WatchPublicationRequest(),
+        ),
+        responseSerializer: skir.PublicationReport.serializer,
+        eventSerializer: skir.PublicationReport.serializer,
+        snapshot: (response) => response,
+        reduce: (_, event) => event,
+        delivery: const ProjectionDelivery.ephemeral(),
+        reconciliation: const ProjectionReconciliation.latest(),
+      );
 }

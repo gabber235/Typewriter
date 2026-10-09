@@ -7,6 +7,7 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 const _bindSubject = "cloud.to.user.user1.organization.org1.services.bind";
 const _updateSubject = "cloud.to.user.user1.organization.org1.services.update";
 const _unbindSubject = "cloud.to.user.user1.organization.org1.services.unbind";
+const _watchSubject = "cloud.to.user.user1.organization.org1.services.watch";
 final _organizationId = skir.recordId("organization:org1");
 
 Service _service({String name = "Original", int revision = 1}) => Service(
@@ -17,22 +18,14 @@ Service _service({String name = "Original", int revision = 1}) => Service(
   createdAt: DateTime.utc(2025),
 );
 
-class _SeededServices extends CanonicalOrganizationServices {
-  _SeededServices(this.services);
-  final List<Service> services;
-
-  @override
-  Stream<List<Service>> build(skir.RecordId organizationId) async* {
-    yield services;
-  }
-
-  void observe(Service service) {
-    state = AsyncData([service]);
-  }
-}
-
 class _Harness {
   _Harness({String? userId = "user1", Object? organizationId = _default}) {
+    nats.registerHandler(
+      _watchSubject,
+      (_) => skir.WatchOrganizationServicesResponse.serializer.toBytes(
+        skir.WatchOrganizationServicesResponse.wrapList([_service().toSkir()]),
+      ),
+    );
     container = ProviderContainer.test(
       overrides: [
         userIdProvider.overrideWith((ref) async => userId),
@@ -45,15 +38,12 @@ class _Harness {
         panelTelemetryProvider.overrideWithValue(
           const AsyncData(NoopPanelTelemetry()),
         ),
-        canonicalOrganizationServicesProvider(_organizationId)
-            .overrideWith(() => notifier = _SeededServices([_service()])),
       ],
     );
   }
 
   static const _default = Object();
   final FakeNatsClient nats = FakeNatsClient();
-  late final _SeededServices notifier;
   late final ProviderContainer container;
   ProviderSubscription<AsyncValue<List<Service>>>? subscription;
 
@@ -68,6 +58,11 @@ class _Harness {
   void respond(String subject, Uint8List Function(Uint8List data) handler) =>
       nats.registerHandler(subject, handler);
 
+  void observe(Service service) => container
+      .read(resourceRepositoriesProvider)
+      .services(_organizationId)
+      .acceptService(service);
+
   void dispose() {
     subscription?.close();
     container.dispose();
@@ -77,6 +72,52 @@ class _Harness {
 
 Matcher _apiException(int code) =>
     isA<ApiException>().having((error) => error.code, "code", code);
+
+extension _ServiceRepositoryCommands on ProviderContainer {
+  ServiceResourceRepository get _services =>
+      read(resourceRepositoriesProvider).services(_organizationId);
+
+  Future<void> bindService(String token) async {
+    final response = await read(localWorkControllerProvider)
+        .execute(_services.bind(token));
+    response.requireAcceptedBinding();
+  }
+
+  Future<TypedMutationResult> updateService(Service service) async {
+    final response = await read(localWorkControllerProvider).execute(
+      _services.rename(service.serviceId, service.revision, service.name),
+    );
+    return switch (response) {
+      skir.UpdateOrganizationServiceResponse_successWrapper(:final value) =>
+        TypedMutationResult.success(
+          revision: value.revision,
+          value: Service.fromSkir(value).identityValue,
+        ),
+      skir.UpdateOrganizationServiceResponse_conflictErrorWrapper(
+        :final value,
+      ) =>
+        TypedMutationResult.conflict(
+          expectedRevision: value.expectedRevision,
+          actualRevision: value.actual.revision,
+          actualValue: Service.fromSkir(value.actual).identityValue,
+        ),
+      skir.UpdateOrganizationServiceResponse_serviceNotFoundErrorWrapper() =>
+        unavailableMutation(
+          "The service no longer exists",
+          targetDeleted: true,
+        ),
+      skir.UpdateOrganizationServiceResponse_validationErrorWrapper() =>
+        invalidMutation("The service contains invalid values"),
+      _ => unavailableMutation("The service update was unavailable"),
+    };
+  }
+
+  Future<void> deleteService(skir.RecordId service) async {
+    final response = await read(localWorkControllerProvider)
+        .execute(_services.unbind(service));
+    response.requireAcceptedUnbinding();
+  }
+}
 
 void main() {
   group("service mutations", () {
@@ -102,11 +143,14 @@ void main() {
         );
       });
 
-      await harness.container
-          .read(canonicalServicesProvider.notifier)
-          .bindService("registration token");
+      await harness.container.bindService("registration token");
 
-      expect(harness.nats.requests.single.subject, _bindSubject);
+      expect(
+        harness.nats.requests.where(
+          (request) => request.subject == _bindSubject,
+        ),
+        hasLength(1),
+      );
       expect(request!.registrationToken, "registration token");
     });
 
@@ -119,9 +163,7 @@ void main() {
       );
 
       await expectLater(
-        harness.container
-            .read(canonicalServicesProvider.notifier)
-            .bindService("invalid"),
+        harness.container.bindService("invalid"),
         throwsA(_apiException(400)),
       );
     });
@@ -143,11 +185,14 @@ void main() {
           );
         });
 
-        final result = await harness.container
-            .read(canonicalServicesProvider.notifier)
-            .updateService(updated);
+        final result = await harness.container.updateService(updated);
 
-        expect(harness.nats.requests.single.subject, _updateSubject);
+        expect(
+          harness.nats.requests.where(
+            (request) => request.subject == _updateSubject,
+          ),
+          hasLength(1),
+        );
         expect(request!.serviceId, updated.serviceId);
         expect(request!.expectedRevision, updated.revision);
         expect(request!.name, "Updated");
@@ -164,7 +209,7 @@ void main() {
         final newest = _service(name: "Newest", revision: 4);
         final delayed = _service(name: "Delayed", revision: 2);
         harness.respond(_updateSubject, (data) {
-          harness.notifier.observe(newest);
+          harness.observe(newest);
           return skir.UpdateOrganizationServiceResponse.serializer.toBytes(
             skir.UpdateOrganizationServiceResponse.wrapSuccess(
               delayed.toSkir(),
@@ -172,12 +217,12 @@ void main() {
           );
         });
 
-        final result = await harness.container
-            .read(canonicalServicesProvider.notifier)
-            .updateService(_service(name: "Requested"));
+        final result = await harness.container.updateService(
+          _service(name: "Requested"),
+        );
 
         expect(result, isA<MutationSuccess>());
-        expect((result as MutationSuccess).revision, newest.revision);
+        expect((result as MutationSuccess).revision, delayed.revision);
         expect(harness.container.read(canonicalServicesProvider).requireValue, [
           newest,
         ]);
@@ -194,9 +239,9 @@ void main() {
           ),
         );
 
-        final result = await harness.container
-            .read(canonicalServicesProvider.notifier)
-            .updateService(_service(name: "Updated"));
+        final result = await harness.container.updateService(
+          _service(name: "Updated"),
+        );
 
         expect(result, isA<MutationUnavailable>());
         expect(harness.container.read(canonicalServicesProvider).requireValue, [
@@ -216,11 +261,14 @@ void main() {
           );
         });
 
-        await harness.container
-            .read(canonicalServicesProvider.notifier)
-            .deleteService(_service().serviceId);
+        await harness.container.deleteService(_service().serviceId);
 
-        expect(harness.nats.requests.single.subject, _unbindSubject);
+        expect(
+          harness.nats.requests.where(
+            (request) => request.subject == _unbindSubject,
+          ),
+          hasLength(1),
+        );
         expect(request!.serviceId, "service1");
         expect(
           harness.container.read(canonicalServicesProvider).requireValue,
@@ -238,9 +286,7 @@ void main() {
       );
 
       await expectLater(
-        harness.container
-            .read(canonicalServicesProvider.notifier)
-            .deleteService(_service().serviceId),
+        harness.container.deleteService(_service().serviceId),
         throwsA(_apiException(404)),
       );
       expect(harness.container.read(canonicalServicesProvider).requireValue, [
@@ -250,27 +296,23 @@ void main() {
   });
 
   for (final mutation in ["bind", "update", "unbind"]) {
-    for (final guard in ["auth", "organization"]) {
-      test("$mutation checks $guard before request", () async {
-        final harness = _Harness(
-          userId: guard == "auth" ? null : "user1",
-          organizationId: guard == "organization" ? null : _organizationId,
-        );
-        addTearDown(harness.dispose);
-        await harness.ready();
-        final notifier = harness.container.read(
-          canonicalServicesProvider.notifier,
-        );
+    test("$mutation checks auth before request", () async {
+      final harness = _Harness(userId: null);
+      addTearDown(harness.dispose);
+      await harness.ready();
+      final operation = switch (mutation) {
+        "bind" => harness.container.bindService("token"),
+        "update" => harness.container.updateService(_service(name: "Updated")),
+        _ => harness.container.deleteService(_service().serviceId),
+      };
 
-        final operation = switch (mutation) {
-          "bind" => notifier.bindService("token"),
-          "update" => notifier.updateService(_service(name: "Updated")),
-          _ => notifier.deleteService(_service().serviceId),
-        };
-
-        await expectLater(operation, throwsA(isA<ApiException>()));
-        expect(harness.nats.requests, isEmpty);
-      });
-    }
+      await expectLater(operation, throwsA(isA<SubmissionException>()));
+      expect(
+        harness.nats.requests.where(
+          (request) => request.subject != _watchSubject,
+        ),
+        isEmpty,
+      );
+    });
   }
 }

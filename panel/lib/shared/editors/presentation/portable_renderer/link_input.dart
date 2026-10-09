@@ -7,9 +7,8 @@ extension _PortableLinkInputRendering on PortablePresentationNodeRenderer {
     PortablePresentationScope childScope,
   ) {
     final location = childScope.location(control.control.binding);
-    final draft = childScope.authoring;
     final catalog = childScope.catalog;
-    if (location == null || draft == null || catalog == null) {
+    if (location == null || catalog == null) {
       return _diagnostic("The link control binding is unavailable");
     }
     Map<skir.ResourceId, _AuthoredCollectionRow>? candidates;
@@ -32,6 +31,7 @@ extension _PortableLinkInputRendering on PortablePresentationNodeRenderer {
         key: ValueKey("${node.nodeId}.link"),
         control: control,
         scope: childScope,
+        reference: control.control.binding,
         location: location,
         candidates: candidates,
         candidateDefinition: candidateDefinition,
@@ -43,6 +43,15 @@ extension _PortableLinkInputRendering on PortablePresentationNodeRenderer {
           key: ValueKey("${node.nodeId}.link.${item.id.value}"),
           control: control,
           scope: childScope,
+          reference: skir.BindingRef(
+            bindingId: control.control.binding.bindingId,
+            path: skir.ValuePath(
+              segments: [
+                ...control.control.binding.path.segments,
+                skir.PathSegment.createItem(id: item.id),
+              ],
+            ),
+          ),
           location: skir.ValueLocation(
             resource: location.resource,
             path: skir.ValuePath(
@@ -65,14 +74,18 @@ extension _PortableLinkInputRendering on PortablePresentationNodeRenderer {
                   canMoveLater: index < items.length - 1,
                   onMoveEarlier: () {
                     final after = index == 1 ? null : items[index - 2].id;
-                    childScope.stage("Edit collection", (operation) {
-                      operation.move(location, item.id, after);
-                    });
+                    childScope.moveListItem(
+                      control.control.binding,
+                      item.id,
+                      after,
+                    );
                   },
                   onMoveLater: () {
-                    childScope.stage("Edit collection", (operation) {
-                      operation.move(location, item.id, items[index + 1].id);
-                    });
+                    childScope.moveListItem(
+                      control.control.binding,
+                      item.id,
+                      items[index + 1].id,
+                    );
                   },
                 )
               : null,
@@ -90,9 +103,7 @@ extension _PortableLinkInputRendering on PortablePresentationNodeRenderer {
               final moving = items[oldIndex].id;
               final remaining = [...items]..removeAt(oldIndex);
               final after = newIndex == 0 ? null : remaining[newIndex - 1].id;
-              childScope.stage("Edit collection", (operation) {
-                operation.move(location, moving, after);
-              });
+              childScope.moveListItem(control.control.binding, moving, after);
             },
           )
         : Column(children: rows);
@@ -147,6 +158,7 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
   const _AuthoredLinkValueInput({
     required this.control,
     required this.scope,
+    required this.reference,
     required this.location,
     required this.candidates,
     required this.candidateDefinition,
@@ -158,6 +170,7 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
 
   final skir.LinkControl control;
   final PortablePresentationScope scope;
+  final skir.BindingRef reference;
   final skir.ValueLocation location;
   final Map<skir.ResourceId, _AuthoredCollectionRow>? candidates;
   final skir.PresentationCollectionDefinition? candidateDefinition;
@@ -167,13 +180,7 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final record = scope.authoring?.resource(location.resource);
-    final value = record == null
-        ? null
-        : switch (record.readAt(location.path)) {
-            PortablePathValue(value: final value) => value,
-            PortablePathUnavailable() => null,
-          };
+    final value = scope.read(reference);
     final link = value?.authoredLink;
     final enabled = scope.enabled && !scope.readOnly;
     final selectedRow = link == null ? null : candidates?[link.target.resource];
@@ -185,10 +192,17 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
         : Text(
             link == null
                 ? "No resource selected"
-                : _authoredLinkTargetLabel(
-                        scope.authoring?.resource(link.target.resource),
-                      ) ??
-                      link.target.resource.value,
+                : switch (scope.host) {
+                    PortableCollectionProjectionHost host =>
+                      host
+                              .projectResource(
+                                link.target.resource,
+                                context: scope.invocation,
+                              )
+                              ?.label ??
+                          link.target.resource.value,
+                    _ => link.target.resource.value,
+                  },
             overflow: TextOverflow.ellipsis,
           );
     final content = DepthBox(
@@ -223,18 +237,27 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
                 tooltip: "Clear link",
                 onPressed: enabled
                     ? () {
-                        scope.stage("Clear link", (operation) {
-                          operation.disconnect(
-                            skir.LinkOccurrence(
-                              id: skir.LinkOccurrenceId(
-                                endpoint: link.endpoint,
-                                location: location,
-                              ),
-                              source: location.resource,
-                              target: link.target,
+                        final linkHost = switch (scope.host) {
+                          PortableLinkHost value => value,
+                          _ => null,
+                        };
+                        if (linkHost == null) return;
+                        final result = linkHost.disconnectLink(
+                          skir.LinkOccurrence(
+                            id: skir.LinkOccurrenceId(
+                              endpoint: link.endpoint,
+                              location: location,
                             ),
-                          );
-                        });
+                            source: location.resource,
+                            target: link.target,
+                          ),
+                          context: scope.invocation,
+                        );
+                        if (result case PortablePresentationWriteRejected(
+                          :final message,
+                        )) {
+                          scope.reportStatus?.call(message);
+                        }
                       }
                     : null,
                 icon: const Icon(Icons.link_off),

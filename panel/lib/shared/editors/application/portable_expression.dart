@@ -124,10 +124,15 @@ final class PortableExpressionRead {
 }
 
 final class PortableExpressionBinding {
-  const PortableExpressionBinding({required this.value, this.location});
+  const PortableExpressionBinding({
+    required this.value,
+    this.location,
+    this.schema,
+  });
 
   final skir.DataValue value;
   final skir.ValueLocation? location;
+  final PortablePresentationBindingSchema? schema;
 }
 
 final class PortableExpressionEvaluator {

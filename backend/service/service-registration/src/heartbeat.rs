@@ -12,7 +12,7 @@ use wasmcloud_utils::{
     database::{RecordId, transaction_query},
     decode_skir, extract_param,
     skir::base::service::v1::{
-        lifecycle::ServiceHeartbeatNotification, organization::WatchOrganizationServicesResponse,
+        lifecycle::ServiceHeartbeatNotification, organization::OrganizationServicesChanged,
     },
     wasmcloud::messaging::types::NatsMessage,
 };
@@ -91,8 +91,8 @@ pub(crate) async fn update_state(
     };
     let service = record.try_into()?;
 
-    wasmcloud_utils::skir_subjects::organization_services(organization.key)
-        .publish(WatchOrganizationServicesResponse::Update(Box::new(service)))
+    wasmcloud_utils::skir_subjects::organization_services_changed(organization.key)
+        .publish(OrganizationServicesChanged::Update(Box::new(service)))
         .await?;
 
     otel_wasi::main_attribute!("service.state" = status.to_string());

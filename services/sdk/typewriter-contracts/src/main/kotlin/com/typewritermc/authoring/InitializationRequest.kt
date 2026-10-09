@@ -25,14 +25,41 @@ enum class InitializationMode {
 data class InitializationRequest(
     val id: InitializationRequestId,
     val catalog: CatalogGeneration,
-    val type: TypeSelection,
-    val supplied: Map<String, DataValue>,
+    val target: PreparationTarget,
+    /** A complete authored value for [PreparationTarget.Value], or partial record fields for [PreparationTarget.Record]. */
+    val supplied: DataValue?,
     val intentHash: String,
 )
 
 @Serializable
-data class PreparedCreation(
-    val record: AuthoringRecord,
+sealed interface PreparationTarget {
+    @Serializable
+    data class Value(
+        val type: com.typewritermc.types.TypeUse,
+    ) : PreparationTarget
+
+    @Serializable
+    data class Record(
+        val selection: TypeSelection,
+    ) : PreparationTarget
+}
+
+@Serializable
+sealed interface PreparedContent {
+    @Serializable
+    data class Value(
+        val value: DataValue,
+    ) : PreparedContent
+
+    @Serializable
+    data class Record(
+        val record: AuthoringRecord,
+    ) : PreparedContent
+}
+
+@Serializable
+data class PreparedValue(
+    val content: PreparedContent,
     val findings: List<InitializationDiagnostic>,
 )
 

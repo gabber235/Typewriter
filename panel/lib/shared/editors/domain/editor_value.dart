@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "editor_value.freezed.dart";
@@ -15,11 +17,11 @@ sealed class EditorValue with _$EditorValue {
   const factory EditorValue.loading() = LoadingEditorValue;
   const factory EditorValue.missing() = MissingEditorValue;
   const factory EditorValue.mixed() = MixedEditorValue;
-  const factory EditorValue.invalid(List<TypeDiagnostic> diagnostics) =
+  const factory EditorValue.invalid(List<EditorDiagnostic> diagnostics) =
       InvalidEditorValue;
-  const factory EditorValue.ready(DataValue value) = ReadyEditorValue;
+  const factory EditorValue.ready(skir.DataValue value) = ReadyEditorValue;
 
-  DataValue? get valueOrNull => switch (this) {
+  skir.DataValue? get valueOrNull => switch (this) {
     ReadyEditorValue(:final value) => value,
     LoadingEditorValue() ||
     MissingEditorValue() ||
@@ -37,20 +39,26 @@ sealed class EditorValue with _$EditorValue {
 sealed class EditorMutationResult with _$EditorMutationResult {
   const EditorMutationResult._();
 
-  const factory EditorMutationResult.applied(DataValue value) =
+  const factory EditorMutationResult.applied(skir.DataValue value) =
       AppliedEditorMutation;
   const factory EditorMutationResult.conflict() = ConflictingEditorMutation;
-  const factory EditorMutationResult.invalid(List<TypeDiagnostic> diagnostics) =
-      InvalidEditorMutation;
+  const factory EditorMutationResult.invalid(
+    List<EditorDiagnostic> diagnostics,
+  ) = InvalidEditorMutation;
 }
 
 /// Reads [path] without manufacturing a fallback when the path is unavailable.
-extension DataValueEditorReading on DataValue {
-  EditorValue readEditorValue(DataPath path) {
-    final result = path.read(this);
-    return switch (result) {
-      TypeSuccess(:final value) => EditorValue.ready(value),
-      TypeFailure(:final diagnostics) => EditorValue.invalid(diagnostics),
+extension CanonicalDataValueEditorReading on skir.DataValue {
+  EditorValue readEditorValue(skir.ValuePath path) {
+    return switch (readAt(path)) {
+      PortablePathValue(:final value) => EditorValue.ready(value),
+      PortablePathUnavailable(:final message) => EditorValue.invalid([
+        EditorDiagnostic(
+          code: EditorDiagnosticCode.invalidPath,
+          message: message,
+          path: path,
+        ),
+      ]),
     };
   }
 }

@@ -90,7 +90,11 @@ class OrganizationJoinRequests extends _$OrganizationJoinRequests {
     }
 
     final request = skir.WatchOrganizationJoinRequestsRequest();
-    yield* ref.watchSequencedRequest(
+    yield* ref.watchProjection<
+      List<OrganizationJoinRequest>,
+      skir.WatchOrganizationJoinRequestsResponse,
+      skir.OrganizationJoinRequestsChanged
+    >(
       subject:
           "cloud.to.user.$userId.organization.${organizationId.id}.members.join_requests.watch",
       eventSubject:
@@ -99,28 +103,19 @@ class OrganizationJoinRequests extends _$OrganizationJoinRequests {
           .toBytes(request),
       responseSerializer: skir.WatchOrganizationJoinRequestsResponse.serializer,
       eventSerializer: skir.OrganizationJoinRequestsChanged.serializer,
-      snapshot: (response) {
-        return switch (response) {
-          skir.WatchOrganizationJoinRequestsResponse_unknown() =>
-            throw ApiException.unknownResponseMessage(),
-          skir.WatchOrganizationJoinRequestsResponse_internalErrorWrapper() =>
-            throw ApiException.internalServerError(),
-          skir.WatchOrganizationJoinRequestsResponse_snapshotWrapper(
-            :final value,
-          ) =>
-            SequencedSnapshot(
-              sequence: value.sequence,
-              value: value.values
-                  .map(OrganizationJoinRequest.fromSkir)
-                  .toList(),
-            ),
-          skir.WatchOrganizationJoinRequestsResponse_changedWrapper() =>
-            throw StateError("Snapshot request returned a delta"),
-        };
-      },
-      eventSequence: (event) => event.sequence,
+      snapshot: (response) =>
+          _joinRequestSnapshot(response).values
+              .map(OrganizationJoinRequest.fromSkir)
+              .toList(),
       reduce: _reduceOrganizationJoinRequests,
-      sequenceState: _sequenceState,
+      delivery: const ProjectionDelivery.ordered(
+        stream: "TYPEWRITER_MEMBERSHIP",
+      ),
+      reconciliation: ProjectionReconciliation.sequenced(
+        snapshotSequence: (response) => _joinRequestSnapshot(response).sequence,
+        eventSequence: (event) => event.sequence,
+        sequenceState: _sequenceState,
+      ),
     );
   }
 
@@ -316,6 +311,19 @@ class OrganizationJoinRequests extends _$OrganizationJoinRequests {
     );
   }
 }
+
+skir.OrganizationJoinRequestsSnapshot _joinRequestSnapshot(
+  skir.WatchOrganizationJoinRequestsResponse response,
+) => switch (response) {
+  skir.WatchOrganizationJoinRequestsResponse_snapshotWrapper(:final value) =>
+    value,
+  skir.WatchOrganizationJoinRequestsResponse_unknown() =>
+    throw ApiException.unknownResponseMessage(),
+  skir.WatchOrganizationJoinRequestsResponse_internalErrorWrapper() =>
+    throw ApiException.internalServerError(),
+  skir.WatchOrganizationJoinRequestsResponse_changedWrapper() =>
+    throw StateError("Snapshot request returned a delta"),
+};
 
 /// Folds one ordered organization event into the moderation projection.
 List<OrganizationJoinRequest> _reduceOrganizationJoinRequests(

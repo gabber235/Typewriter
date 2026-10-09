@@ -241,17 +241,13 @@ class AuthoringSession extends _$AuthoringSession {
     );
   }
 
-  Future<skir.CommitTypeArgumentChangeResponse> commitTypeArguments(
+  Future<skir.PreparedEditResult> prepareTypeArguments(
     skir.TypeArgumentChangePreview preview,
-  ) async {
-    return ref
-        .read(localWorkControllerProvider)
-        .execute(_repository.prepareTypeCommit(preview));
-  }
+  ) => _repository.prepareTypeArgumentChange(preview);
 
-  Future<skir.PreparedCreation> prepareCreation(
-    skir.InitializationRequest request,
-  ) => NatsRealmEditorCatalogSource(ref).prepareCreation(
+  Future<skir.PreparedValue> prepareValue(
+    skir.ValuePreparationRequest request,
+  ) => NatsRealmEditorCatalogSource(ref).prepareValue(
     RealmEditorCatalogRoute(organizationId: _organizationId, realmId: _realmId),
     request,
   );

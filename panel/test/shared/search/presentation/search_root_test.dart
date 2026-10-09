@@ -143,6 +143,47 @@ void main() {
 
       expect(find.text("Second selected: 1"), findsOneWidget);
     });
+
+    testWidgets("default root disposes its owned controller source", (
+      tester,
+    ) async {
+      final source = FakeSearchSource();
+      await tester.pumpTestApp(
+        child: SearchRoot(
+          create: (_) => SearchController(
+            session: testSearchSession(source),
+            baseSelectors: const [],
+          ),
+          child: const _SearchSelectionText(label: "Owned"),
+        ),
+      );
+
+      await tester.pumpWidget(const SizedBox());
+
+      expect(source.disposeCount, 1);
+    });
+
+    testWidgets("borrowed root leaves controller disposal to its caller", (
+      tester,
+    ) async {
+      final source = FakeSearchSource();
+      final controller = SearchController(
+        session: testSearchSession(source),
+        baseSelectors: const [],
+      );
+      await tester.pumpTestApp(
+        child: SearchRoot.borrowed(
+          controller: controller,
+          child: const _SearchSelectionText(label: "Borrowed"),
+        ),
+      );
+
+      await tester.pumpWidget(const SizedBox());
+
+      expect(source.disposeCount, 0);
+      controller.dispose();
+      expect(source.disposeCount, 1);
+    });
   });
 }
 

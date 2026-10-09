@@ -11,6 +11,9 @@ import com.typewritermc.authoring.InitializationRequestId
 import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.NativeConstructionPlan
 import com.typewritermc.authoring.PathSegment
+import com.typewritermc.authoring.PreparationTarget
+import com.typewritermc.authoring.PreparedContent
+import com.typewritermc.authoring.PreparedValue
 import com.typewritermc.authoring.SamplingInputs
 import com.typewritermc.authoring.StructuralResult
 import com.typewritermc.authoring.TypeSelection
@@ -44,6 +47,70 @@ val InitializationRuntimeConformanceTest by testSuite {
     test("shared scalar defaults preserve the authored representation") {
         ScalarKind.Bytes.authoredDefault() shouldBe DataValue.Bytes(emptyList())
         ScalarKind.Timestamp.authoredDefault() shouldBe DataValue.Unfilled
+    }
+
+    test("complete supplied values pass through without record synthesis") {
+        val generation = CatalogGeneration("complete supplied value")
+        val catalog = DefaultCheckedCatalog(generation, emptyList())
+        val supplied = DataValue.StringValue("authored")
+        val prepared =
+            DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList())).prepareNow(
+                InitializationRequest(
+                    id = InitializationRequestId("complete value"),
+                    catalog = generation,
+                    target = PreparationTarget.Value(TypeUse.Scalar(ScalarKind.Text)),
+                    supplied = supplied,
+                    intentHash = "complete value",
+                ),
+            )
+
+        prepared.content shouldBe PreparedContent.Value(supplied)
+        prepared.findings shouldBe emptyList()
+    }
+
+    test("partial supplied record fields merge with captured constructor defaults") {
+        val generation = CatalogGeneration("partial supplied record")
+        val definition =
+            TypeDefinition(
+                INITIALIZED_ID,
+                representation =
+                    RepresentationTemplate.Record(
+                        listOf(
+                            FieldDeclaration(REQUIRED_OWNER, TypeTemplate.Scalar(ScalarKind.Text)),
+                            FieldDeclaration(
+                                DEFAULTED_OWNER,
+                                TypeTemplate.Scalar(ScalarKind.Integer(IntegerWidth.SIGNED_32)),
+                                hasConstructorDefault = true,
+                            ),
+                        ),
+                    ),
+            )
+        val catalog = DefaultCheckedCatalog(generation, listOf(definition))
+        val plan = CapturingPlan()
+        val runtime =
+            DefaultInitializationRuntime(
+                catalog,
+                FactoryNativeBindingRegistry(catalog, listOf(PlanFactory(plan))),
+            )
+
+        val prepared =
+            runtime.prepareNow(
+                recordRequest(
+                    InitializationRequestId("partial record"),
+                    generation,
+                    TypeSelection.Complete(INITIALIZED_USE),
+                    mapOf("required" to DataValue.StringValue("authored")),
+                    "partial record",
+                ),
+            )
+
+        plan.sampled.getValue(REQUIRED_OWNER).value shouldBe DataValue.StringValue("authored")
+        prepared.record.fields shouldBe
+            mapOf(
+                "required" to DataValue.StringValue("authored"),
+                "defaulted" to DataValue.Integer(java.math.BigInteger.valueOf(3)),
+            )
+        prepared.findings shouldBe emptyList()
     }
 
     test("pending generic creation materializes every independently known field") {
@@ -89,7 +156,7 @@ val InitializationRuntimeConformanceTest by testSuite {
 
         val prepared =
             DefaultInitializationRuntime(catalog, bindings).prepareNow(
-                InitializationRequest(
+                recordRequest(
                     InitializationRequestId("pending generic"),
                     generation,
                     selection,
@@ -112,7 +179,7 @@ val InitializationRuntimeConformanceTest by testSuite {
 
         val unknown =
             DefaultInitializationRuntime(catalog, bindings).prepareNow(
-                InitializationRequest(
+                recordRequest(
                     InitializationRequestId("pending unknown field"),
                     generation,
                     selection,
@@ -125,7 +192,7 @@ val InitializationRuntimeConformanceTest by testSuite {
 
         val dependentSupplied =
             DefaultInitializationRuntime(catalog, bindings).prepareNow(
-                InitializationRequest(
+                recordRequest(
                     InitializationRequestId("pending dependent field"),
                     generation,
                     selection,
@@ -162,7 +229,7 @@ val InitializationRuntimeConformanceTest by testSuite {
         val prepared =
             runSuspend {
                 runtime.prepare(
-                    InitializationRequest(
+                    recordRequest(
                         InitializationRequestId("create initialized"),
                         generation,
                         TypeSelection.Complete(INITIALIZED_USE),
@@ -182,7 +249,7 @@ val InitializationRuntimeConformanceTest by testSuite {
 
         val unknown =
             runtime.prepareNow(
-                InitializationRequest(
+                recordRequest(
                     InitializationRequestId("complete unknown field"),
                     generation,
                     TypeSelection.Complete(INITIALIZED_USE),
@@ -218,7 +285,7 @@ val InitializationRuntimeConformanceTest by testSuite {
         val prepared =
             runSuspend {
                 DefaultInitializationRuntime(catalog, bindings).prepare(
-                    InitializationRequest(
+                    recordRequest(
                         InitializationRequestId("failed capture"),
                         generation,
                         TypeSelection.Complete(INITIALIZED_USE),
@@ -271,7 +338,7 @@ val InitializationRuntimeConformanceTest by testSuite {
         val prepared =
             runSuspend {
                 DefaultInitializationRuntime(catalog, bindings).prepare(
-                    InitializationRequest(
+                    recordRequest(
                         InitializationRequestId("abstract input"),
                         generation,
                         TypeSelection.Complete(TypeUse.Named(ABSTRACT_OWNER_ID)),
@@ -325,7 +392,7 @@ val InitializationRuntimeConformanceTest by testSuite {
         val prepared =
             runSuspend {
                 DefaultInitializationRuntime(catalog, bindings).prepare(
-                    InitializationRequest(
+                    recordRequest(
                         InitializationRequestId("nested defaults"),
                         generation,
                         TypeSelection.Complete(TypeUse.Named(PARENT_ID)),
@@ -386,7 +453,7 @@ val InitializationRuntimeConformanceTest by testSuite {
 
         val prepared =
             DefaultInitializationRuntime(catalog, bindings).prepareNow(
-                InitializationRequest(
+                recordRequest(
                     InitializationRequestId("nested finding paths"),
                     generation,
                     TypeSelection.Complete(TypeUse.Named(themeId)),
@@ -419,7 +486,7 @@ val InitializationRuntimeConformanceTest by testSuite {
 
         val prepared =
             DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList())).prepareNow(
-                InitializationRequest(
+                recordRequest(
                     InitializationRequestId("required recursive"),
                     generation,
                     TypeSelection.Complete(TypeUse.Named(directId)),
@@ -463,7 +530,7 @@ val InitializationRuntimeConformanceTest by testSuite {
 
         val prepared =
             DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList())).prepareNow(
-                InitializationRequest(
+                recordRequest(
                     InitializationRequestId("nonregular recursive"),
                     generation,
                     TypeSelection.Complete(TypeUse.Named(growId, listOf(TypeUse.Scalar(ScalarKind.Text)))),
@@ -507,7 +574,7 @@ val InitializationRuntimeConformanceTest by testSuite {
 
         val prepared =
             DefaultInitializationRuntime(catalog, FactoryNativeBindingRegistry(catalog, emptyList())).prepareNow(
-                InitializationRequest(
+                recordRequest(
                     InitializationRequestId("abstract recursive"),
                     generation,
                     TypeSelection.Complete(TypeUse.Named(ownerId)),
@@ -565,7 +632,7 @@ val InitializationRuntimeConformanceTest by testSuite {
 
         val boxed =
             runtime.prepareNow(
-                InitializationRequest(
+                recordRequest(
                     InitializationRequestId("finite box"),
                     generation,
                     TypeSelection.Complete(TypeUse.Named(boxId, listOf(innerBox))),
@@ -580,7 +647,7 @@ val InitializationRuntimeConformanceTest by testSuite {
         val treeUse = TypeUse.Named(treeId, listOf(text))
         val preparedTree =
             runtime.prepareNow(
-                InitializationRequest(
+                recordRequest(
                     InitializationRequestId("finite tree"),
                     generation,
                     TypeSelection.Complete(treeUse),
@@ -633,7 +700,7 @@ val InitializationRuntimeConformanceTest by testSuite {
         val plan = InitializationCatalogPlanner(catalog, bindings).plan(definitions, emptyMap())
         val prepared =
             DefaultInitializationRuntime(catalog, bindings, plan.descriptors).prepareNow(
-                InitializationRequest(
+                recordRequest(
                     InitializationRequestId("planned nested defaults"),
                     generation,
                     TypeSelection.Complete(TypeUse.Named(PARENT_ID)),
@@ -957,11 +1024,28 @@ private val CHILD_DEFAULT_OWNER = FieldOwner(CHILD_ID, "defaulted")
 private val PARENT_ID = TypeDefinitionId(TypeId.Qualified("test", "Parent"), 1)
 private val PARENT_CHILD_OWNER = FieldOwner(PARENT_ID, "child")
 
+private val PreparedValue.record
+    get() = (content as PreparedContent.Record).record
+
+private fun recordRequest(
+    id: InitializationRequestId,
+    generation: CatalogGeneration,
+    selection: TypeSelection,
+    supplied: Map<String, DataValue>,
+    intentHash: String,
+) = InitializationRequest(
+    id = id,
+    catalog = generation,
+    target = PreparationTarget.Record(selection),
+    supplied = DataValue.Record(supplied),
+    intentHash = intentHash,
+)
+
 private fun parentRequest(
     id: String,
     generation: CatalogGeneration,
 ): InitializationRequest =
-    InitializationRequest(
+    recordRequest(
         InitializationRequestId(id),
         generation,
         TypeSelection.Complete(TypeUse.Named(PARENT_ID)),

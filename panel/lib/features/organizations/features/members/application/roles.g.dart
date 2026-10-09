@@ -48,7 +48,7 @@ final class OrganizationRolesProvider
   OrganizationRoles create() => OrganizationRoles();
 }
 
-String _$organizationRolesHash() => r'8c03f7f4ee0c061dd4a7cfae15d5e929f9215028';
+String _$organizationRolesHash() => r'1a49470919cffe4d51184116252b0124a6614068';
 
 /// Streams the role catalog for the selected organization.
 ///

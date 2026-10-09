@@ -117,6 +117,23 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
         definitionIndex.values.flatMap { definition -> definition.templateFields(definitionIndex).diagnostics }
     val providerRegistry = ImmutableOwnedProviderRegistry(configurations, presentations, nativeBindings, checks)
     val structural = DefaultCheckedCatalog(context.generation, definitions)
+    val resourceDefinitions = (resources + context.resources).distinctBy(AuthoringResourceDefinition::id)
+    val resourceFamilyDiagnostics =
+        definitions
+            .filter { (it.representation as? RepresentationTemplate.Record)?.abstract != true }
+            .flatMap { definition ->
+                val families =
+                    resourceDefinitions.filter { family ->
+                        structural.isNominalSubtype(definition.id, family.root)
+                    }
+                if (families.size <= 1) {
+                    emptyList()
+                } else {
+                    (listOf(definition.id) + families.map(AuthoringResourceDefinition::root)).map { affected ->
+                        DeclarationDiagnostic(affected, "overlapping_resource_family")
+                    }
+                }
+            }.distinct()
     val structuralBindings =
         com.typewritermc.types.FactoryNativeBindingRegistry(structural, nativeBindings.map(OwnedNativeBinding::factory))
     val constants = PortableConstantEncoder { expected, value -> encodeConstant(expected, value, structural, structuralBindings) }
@@ -156,7 +173,7 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             nativeBindings,
             definitionIndex,
             structural,
-            (resources + context.resources).distinctBy(AuthoringResourceDefinition::id),
+            resourceDefinitions,
         )
     val presentationDiagnostics =
         presentationFieldDiagnostics(
@@ -168,7 +185,7 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
     val directFailures =
         collectionResults.mapNotNull(ConfigurationCollectionResult::failure) +
             duplicateDiagnostics + symbolicDiagnostics + ruleDiagnostics + preferenceDiagnostics + initializationDiagnostics +
-            materialCollection.failures + presentationDiagnostics
+            materialCollection.failures + presentationDiagnostics + resourceFamilyDiagnostics
     val unavailable = propagateUnavailableDefinitions(directFailures.map(DeclarationDiagnostic::affected).toSet(), definitions)
     val checked = DefaultCheckedCatalog(context.generation, definitions.filterNot { it.id in unavailable })
     val bindingRegistry =
@@ -214,7 +231,7 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             generation = context.generation,
             types = published,
             relations = (relations + context.relations).distinctBy(RelationContract::id),
-            resourceDefinitions = (resources + context.resources).distinctBy(AuthoringResourceDefinition::id),
+            resourceDefinitions = resourceDefinitions.filter { it.root !in unavailable },
             presentations = presentations.map(OwnedPresentation::descriptor),
             presentationMaterials =
                 materialCollection.materials.filter { material ->

@@ -2,13 +2,12 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-const realmFixtureGeneration = CatalogGeneration("fixture");
+final realmFixtureGeneration = skir.CatalogGeneration(value: "fixture");
 
 skir.EditorCatalogWireSnapshot receivedEditorCatalogWireSnapshot({
   skir.CatalogGeneration? generation,
 }) => skir.EditorCatalogWireSnapshot(
-  generation:
-      generation ?? skir.CatalogGeneration(value: realmFixtureGeneration.value),
+  generation: generation ?? realmFixtureGeneration,
   types: const [],
   relations: const [],
   resourceDefinitions: const [],

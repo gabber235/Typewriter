@@ -18,9 +18,9 @@ use crate::{
             user::{WatchUserJoinRequestsResponse, WatchUserOrganizationsResponse},
         },
         service::v1::{
-            organization::WatchOrganizationServicesResponse,
+            organization::OrganizationServicesChanged,
             registration::ServiceBoundNotification,
-            topology::{WatchHostExecutionResponse, WatchOrganizationTopologyResponse},
+            topology::{OrganizationTopologyChanged, WatchHostExecutionResponse},
         },
     },
 };
@@ -56,10 +56,10 @@ define_skir_subjects! {
     organization_join_codes_changed(organization_id) -> OrganizationJoinCodesChanged =
         "typewriter.to.organization.{organization_id}.join_codes.changed";
 
-    organization_services(organization_id) -> WatchOrganizationServicesResponse =
+    organization_services_changed(organization_id) -> OrganizationServicesChanged =
         "typewriter.to.organization.{organization_id}.services.watch";
 
-    organization_topology(organization_id) -> WatchOrganizationTopologyResponse =
+    organization_topology_changed(organization_id) -> OrganizationTopologyChanged =
         "typewriter.to.organization.{organization_id}.topology.watch";
 
     host_execution(service_id) -> WatchHostExecutionResponse =
@@ -146,8 +146,8 @@ mod tests {
     }
 
     #[test]
-    fn organization_services_subject_formats_organization_id() {
-        let subject = super::organization_services("org_123");
+    fn organization_services_changed_subject_formats_organization_id() {
+        let subject = super::organization_services_changed("org_123");
 
         assert_eq!(
             subject.subject(),

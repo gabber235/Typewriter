@@ -119,6 +119,7 @@ class SearchController<T> extends ChangeNotifier
         ),
         result,
       );
+      if (_disposed) return;
       switch (outcome) {
         case SearchActivationComplete(:final value):
           await _onCompleted?.call(value);

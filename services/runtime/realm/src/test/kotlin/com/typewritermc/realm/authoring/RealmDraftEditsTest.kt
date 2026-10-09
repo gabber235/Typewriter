@@ -18,9 +18,11 @@ import com.typewritermc.authoring.InitializationRequest
 import com.typewritermc.authoring.InitializationRequestId
 import com.typewritermc.authoring.InitializationRuntime
 import com.typewritermc.authoring.ItemId
-import com.typewritermc.authoring.PreparedCreation
+import com.typewritermc.authoring.PreparationTarget
+import com.typewritermc.authoring.PreparedContent
 import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.PreparedEditResult
+import com.typewritermc.authoring.PreparedValue
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.authoring.TypeSelection
@@ -972,31 +974,35 @@ class RealmDraftEditsTest {
         val store = draftStore(catalog, resource, record)
         val evaluated = mutableListOf<InitializationRequest>()
         val creation =
-            CreationCoordinator(
+            PreparationCoordinator(
                 catalog = catalog::retain,
                 evaluator =
-                    CreationEvaluator { request, _ ->
+                    PreparationEvaluator { request, _ ->
                         evaluated += request
-                        val selection = assertIs<TypeSelection.Complete>(request.type)
+                        val target = request.target as PreparationTarget.Record
+                        val supplied = (request.supplied as DataValue.Record).fields
+                        val selection = assertIs<TypeSelection.Complete>(target.selection)
                         when (selection.use.definition) {
                             ROOT -> {
-                                assertTrue(request.supplied.containsKey("items"))
-                                PreparedCreation(
-                                    AuthoringRecord(
-                                        request.type,
-                                        request.supplied +
-                                            (
-                                                "child" to
-                                                    DataValue.Named(
-                                                        CHILD_USE,
-                                                        DataValue.Record(
-                                                            mapOf(
-                                                                "value" to DataValue.StringValue("field_default"),
-                                                                "repetitions" to DataValue.Unfilled,
+                                assertTrue(supplied.containsKey("items"))
+                                PreparedValue(
+                                    PreparedContent.Record(
+                                        AuthoringRecord(
+                                            target.selection,
+                                            supplied +
+                                                (
+                                                    "child" to
+                                                        DataValue.Named(
+                                                            CHILD_USE,
+                                                            DataValue.Record(
+                                                                mapOf(
+                                                                    "value" to DataValue.StringValue("field_default"),
+                                                                    "repetitions" to DataValue.Unfilled,
+                                                                ),
                                                             ),
-                                                        ),
-                                                    )
-                                            ),
+                                                        )
+                                                ),
+                                        ),
                                     ),
                                     listOf(
                                         InitializationDiagnostic(
@@ -1071,23 +1077,25 @@ class RealmDraftEditsTest {
         val store = draftStore(catalog, resource, draftRecord())
         val creation =
             object : InitializationRuntime {
-                override suspend fun prepare(request: InitializationRequest): PreparedCreation =
-                    PreparedCreation(
-                        AuthoringRecord(
-                            request.type,
-                            request.supplied +
-                                (
-                                    "child" to
-                                        DataValue.Named(
-                                            CHILD_USE,
-                                            DataValue.Record(
-                                                mapOf(
-                                                    "value" to DataValue.StringValue("captured"),
-                                                    "repetitions" to DataValue.Unfilled,
+                override suspend fun prepare(request: InitializationRequest): PreparedValue =
+                    PreparedValue(
+                        PreparedContent.Record(
+                            AuthoringRecord(
+                                (request.target as PreparationTarget.Record).selection,
+                                (request.supplied as DataValue.Record).fields +
+                                    (
+                                        "child" to
+                                            DataValue.Named(
+                                                CHILD_USE,
+                                                DataValue.Record(
+                                                    mapOf(
+                                                        "value" to DataValue.StringValue("captured"),
+                                                        "repetitions" to DataValue.Unfilled,
+                                                    ),
                                                 ),
-                                            ),
-                                        )
-                                ),
+                                            )
+                                    ),
+                            ),
                         ),
                         listOf(
                             InitializationDiagnostic(
@@ -1136,9 +1144,14 @@ class RealmDraftEditsTest {
             )
         val creation =
             object : InitializationRuntime {
-                override suspend fun prepare(request: InitializationRequest): PreparedCreation =
-                    PreparedCreation(
-                        AuthoringRecord(request.type, request.supplied + ("child" to DataValue.Unfilled)),
+                override suspend fun prepare(request: InitializationRequest): PreparedValue =
+                    PreparedValue(
+                        PreparedContent.Record(
+                            AuthoringRecord(
+                                (request.target as PreparationTarget.Record).selection,
+                                (request.supplied as DataValue.Record).fields + ("child" to DataValue.Unfilled),
+                            ),
+                        ),
                         listOf(diagnostic),
                     )
             }
@@ -1172,15 +1185,20 @@ class RealmDraftEditsTest {
         val store = draftStore(catalog, resource, draftRecord())
         val creation =
             object : InitializationRuntime {
-                override suspend fun prepare(request: InitializationRequest): PreparedCreation =
+                override suspend fun prepare(request: InitializationRequest): PreparedValue =
                     if (request.id.value.startsWith("wrong_configuration")) {
-                        PreparedCreation(
-                            AuthoringRecord(TypeSelection.Complete(CHILD_USE), emptyMap()),
+                        PreparedValue(
+                            PreparedContent.Record(AuthoringRecord(TypeSelection.Complete(CHILD_USE), emptyMap())),
                             emptyList(),
                         )
                     } else {
-                        PreparedCreation(
-                            AuthoringRecord(request.type, request.supplied),
+                        PreparedValue(
+                            PreparedContent.Record(
+                                AuthoringRecord(
+                                    (request.target as PreparationTarget.Record).selection,
+                                    (request.supplied as DataValue.Record).fields,
+                                ),
+                            ),
                             emptyList(),
                         )
                     }

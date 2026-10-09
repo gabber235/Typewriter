@@ -2104,7 +2104,7 @@ final _skir.Method<
 >
 watchRealmPresentationSearchMethod = _skir.Method(
   "WatchRealmPresentationSearch",
-  910003,
+  919103,
   RealmPresentationSearchRequest.serializer,
   RealmPresentationSearchUpdate.serializer,
   "",
@@ -2116,7 +2116,7 @@ final _skir.Method<
 >
 cancelRealmPresentationSearchMethod = _skir.Method(
   "CancelRealmPresentationSearch",
-  919103,
+  919104,
   CancelRealmPresentationSearchRequest.serializer,
   CancelRealmPresentationSearchResult.serializer,
   "",

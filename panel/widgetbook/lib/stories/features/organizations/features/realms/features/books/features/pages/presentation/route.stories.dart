@@ -41,6 +41,15 @@ final class _PageWorkspaceStoryState extends State<PageWorkspaceStory> {
         initial: _fixture.draft.toDocument(),
       );
   late final _binding = _workspace.attach(_fixture.page);
+  late final _host = AuthoredPresentationHost(
+    resource: _fixture.page,
+    source: _workspace.document,
+    material: skir.PresentationMaterial.defaultInstance,
+    role: skir.PresentationRole.editor,
+    budget: _budget,
+    capabilities: const PortablePresentationCapabilities(),
+    edit: _binding,
+  );
   AuthoringBinding? _inspector;
   void _updated() {
     if (mounted) setState(() {});
@@ -55,6 +64,7 @@ final class _PageWorkspaceStoryState extends State<PageWorkspaceStory> {
   @override
   void dispose() {
     _workspace.removeListener(_updated);
+    _host.dispose();
     _binding.detach();
     _inspector?.detach();
     if (widget.workspace == null) _workspace.dispose();
@@ -64,6 +74,12 @@ final class _PageWorkspaceStoryState extends State<PageWorkspaceStory> {
 
   @override
   Widget build(BuildContext context) {
+    _host.update(
+      source: _workspace.document,
+      capabilities: const PortablePresentationCapabilities(),
+      available: true,
+      readOnly: false,
+    );
     _inspector?.detach();
     _inspector = _workspace.attach(_selected);
     final workspace = skir.PresentationNode(
@@ -104,11 +120,10 @@ final class _PageWorkspaceStoryState extends State<PageWorkspaceStory> {
                 },
                 budget: _budget,
                 setBinding: (_, _) {},
-                authoring: _workspace.document,
-                edit: _binding,
                 catalog: _fixture.catalog,
                 resource: _fixture.page,
                 role: skir.PresentationRole.editor,
+                host: _host,
                 openResource: (resource) {
                   setState(() => _selected = resource);
                   widget.onResourceSelected?.call(resource);

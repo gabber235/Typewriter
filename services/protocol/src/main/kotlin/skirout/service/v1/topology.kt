@@ -2615,282 +2615,6 @@ class HostExecutionConfiguration private constructor(
     }
 }
 
-sealed interface RegisterServiceHostRequest_OrMutable {
-    val entrypoint: kotlin.String;
-    val canHostRealm: kotlin.Boolean;
-    val supportedEngines: kotlin.collections.List<skirout.service.v1.topology.SupportedEngine_OrMutable>;
-
-    fun toFrozen(): skirout.service.v1.topology.RegisterServiceHostRequest;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class RegisterServiceHostRequest private constructor(
-    override val entrypoint: kotlin.String,
-    override val canHostRealm: kotlin.Boolean,
-    override val supportedEngines: kotlin.collections.List<skirout.service.v1.topology.SupportedEngine>,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.RegisterServiceHostRequest>? =
-        null,
-): skirout.service.v1.topology.RegisterServiceHostRequest_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        entrypoint: kotlin.String,
-        canHostRealm: kotlin.Boolean,
-        supportedEngines: kotlin.collections.Iterable<skirout.service.v1.topology.SupportedEngine_OrMutable>,
-        _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.RegisterServiceHostRequest>? =
-            null,
-    ): this(
-        entrypoint,
-        canHostRealm,
-        build.skir.internal.toFrozenList(supportedEngines, { it.toFrozen() }),
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        entrypoint = this.entrypoint,
-        canHostRealm = this.canHostRealm,
-        supportedEngines = this.supportedEngines,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        entrypoint: kotlin.String =
-            this.entrypoint,
-        canHostRealm: kotlin.Boolean =
-            this.canHostRealm,
-        supportedEngines: kotlin.collections.Iterable<skirout.service.v1.topology.SupportedEngine_OrMutable> =
-            this.supportedEngines,
-    ) = skirout.service.v1.topology.RegisterServiceHostRequest(
-        entrypoint,
-        canHostRealm,
-        build.skir.internal.toFrozenList(supportedEngines, { it.toFrozen() }),
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.topology.RegisterServiceHostRequest && this.entrypoint == other.entrypoint && this.canHostRealm == other.canHostRealm && this.supportedEngines == other.supportedEngines);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.entrypoint, this.canHostRealm, this.supportedEngines).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.RegisterServiceHostRequestSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [RegisterServiceHostRequest]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var entrypoint: kotlin.String =
-            "",
-        override var canHostRealm: kotlin.Boolean =
-            false,
-        override var supportedEngines: kotlin.collections.List<skirout.service.v1.topology.SupportedEngine_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.service.v1.topology.SupportedEngine>(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.RegisterServiceHostRequest>? =
-            null,
-    ): skirout.service.v1.topology.RegisterServiceHostRequest_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.service.v1.topology.RegisterServiceHostRequest(
-            entrypoint = this.entrypoint,
-            canHostRealm = this.canHostRealm,
-            supportedEngines = this.supportedEngines,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [supportedEngines] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [supportedEngines] and returns it.
-         */
-        val mutableSupportedEngines: kotlin.collections.MutableList<skirout.service.v1.topology.SupportedEngine_OrMutable> get() {
-            var value = this.supportedEngines;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.supportedEngines = value;
-                    value;
-                }
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.service.v1.topology.RegisterServiceHostRequest(
-                "",
-                false,
-                build.skir.internal.emptyFrozenList<skirout.service.v1.topology.SupportedEngine>(),
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [RegisterServiceHostRequest].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            entrypoint: kotlin.String =
-                "",
-            canHostRealm: kotlin.Boolean =
-                false,
-            supportedEngines: kotlin.collections.Iterable<skirout.service.v1.topology.SupportedEngine_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.service.v1.topology.SupportedEngine>(),
-        ) = skirout.service.v1.topology.RegisterServiceHostRequest(
-            entrypoint = entrypoint,
-            canHostRealm = canHostRealm,
-            supportedEngines = supportedEngines,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [RegisterServiceHostRequest] instances. */
-        val serializer get() = _SerializerRegistry.RegisterServiceHostRequestSerializer;
-
-        /** Describes the [RegisterServiceHostRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.RegisterServiceHostRequestSerializerImpl.typeDescriptor;
-    }
-}
-
-/** Deeply immutable. */
-sealed class RegisterServiceHostResponse private constructor() {
-    /** The kind of variant held by a `RegisterServiceHostResponse`. */
-    enum class Kind {
-        UNKNOWN,
-        SUCCESS_WRAPPER,
-        INTERNAL_ERROR_WRAPPER,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.service.v1.topology.RegisterServiceHostResponse.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.service.v1.topology.RegisterServiceHostResponse>?,
-    ) : skirout.service.v1.topology.RegisterServiceHostResponse() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.topology.RegisterServiceHostResponse && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    class SuccessWrapper private constructor (
-        val value: skirout.service.v1.topology.ServiceHost,
-    ) : skirout.service.v1.topology.RegisterServiceHostResponse() {
-        constructor(
-            value: skirout.service.v1.topology.ServiceHost_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.SUCCESS_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.topology.RegisterServiceHostResponse.SuccessWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1867169789;
-        }
-    }
-
-    class InternalErrorWrapper private constructor (
-        val value: skirout.kernel.v1.errors.InternalError,
-    ) : skirout.service.v1.topology.RegisterServiceHostResponse() {
-        constructor(
-            value: skirout.kernel.v1.errors.InternalError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.topology.RegisterServiceHostResponse.InternalErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 778975750;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.service.v1.topology.RegisterServiceHostResponse>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.RegisterServiceHostResponseSerializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [RegisterServiceHostResponse].
-         * Default value for fields of type [RegisterServiceHostResponse].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Shortcut for `SuccessWrapper(skirout.service.v1.topology.ServiceHost(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createSuccess(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            hostId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-            serviceId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-            revision: kotlin.Long,
-            entrypoint: kotlin.String,
-            canHostRealm: kotlin.Boolean,
-            supportedEngines: kotlin.collections.Iterable<skirout.service.v1.topology.SupportedEngine_OrMutable>,
-            topologyRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable,
-            state: skirout.service.v1.topology.HostRuntimeState_OrMutable,
-        ) = SuccessWrapper(
-            skirout.service.v1.topology.ServiceHost(
-                hostId = hostId,
-                serviceId = serviceId,
-                revision = revision,
-                entrypoint = entrypoint,
-                canHostRealm = canHostRealm,
-                supportedEngines = supportedEngines,
-                topologyRevision = topologyRevision,
-                state = state,
-            )
-        );
-
-        /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createInternalError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = InternalErrorWrapper(
-            skirout.kernel.v1.errors.InternalError()
-        );
-
-        /** Serializer for [RegisterServiceHostResponse] instances. */
-        val serializer get() = _SerializerRegistry.RegisterServiceHostResponseSerializer;
-
-        /** Describes the [RegisterServiceHostResponse] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.RegisterServiceHostResponseSerializerImpl.typeDescriptor;
-    }
-}
-
 sealed interface HostConfigurationChange_OrMutable {
     val host: skirout.service.v1.topology.ServiceHost_OrMutable;
     val realm: skirout.service.v1.topology.RealmInstance_OrMutable?;
@@ -4233,22 +3957,35 @@ sealed class ConfigureServiceHostResponse private constructor() {
     }
 }
 
-sealed interface WatchOrganizationTopologyRequest_OrMutable {
-    fun toFrozen(): skirout.service.v1.topology.WatchOrganizationTopologyRequest;
+sealed interface OrganizationTopologySnapshot_OrMutable {
+    val hosts: kotlin.collections.List<skirout.service.v1.topology.ServiceHost_OrMutable>;
+    val realms: kotlin.collections.List<skirout.service.v1.topology.RealmInstance_OrMutable>;
+    val engines: kotlin.collections.List<skirout.service.v1.topology.EngineInstance_OrMutable>;
+
+    fun toFrozen(): skirout.service.v1.topology.OrganizationTopologySnapshot;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class WatchOrganizationTopologyRequest private constructor(
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.WatchOrganizationTopologyRequest>? =
+class OrganizationTopologySnapshot private constructor(
+    override val hosts: kotlin.collections.List<skirout.service.v1.topology.ServiceHost>,
+    override val realms: kotlin.collections.List<skirout.service.v1.topology.RealmInstance>,
+    override val engines: kotlin.collections.List<skirout.service.v1.topology.EngineInstance>,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.OrganizationTopologySnapshot>? =
         null,
-): skirout.service.v1.topology.WatchOrganizationTopologyRequest_OrMutable {
+): skirout.service.v1.topology.OrganizationTopologySnapshot_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.WatchOrganizationTopologyRequest>? =
+        hosts: kotlin.collections.Iterable<skirout.service.v1.topology.ServiceHost_OrMutable>,
+        realms: kotlin.collections.Iterable<skirout.service.v1.topology.RealmInstance_OrMutable>,
+        engines: kotlin.collections.Iterable<skirout.service.v1.topology.EngineInstance_OrMutable>,
+        _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.OrganizationTopologySnapshot>? =
             null,
     ): this(
+        build.skir.internal.toFrozenList(hosts, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(realms, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(engines, { it.toFrozen() }),
         _unrecognizedFields,
     ) {}
 
@@ -4256,85 +3993,177 @@ class WatchOrganizationTopologyRequest private constructor(
     override fun toFrozen() = this;
 
     /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable();
+    fun toMutable() = Mutable(
+        hosts = this.hosts,
+        realms = this.realms,
+        engines = this.engines,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        hosts: kotlin.collections.Iterable<skirout.service.v1.topology.ServiceHost_OrMutable> =
+            this.hosts,
+        realms: kotlin.collections.Iterable<skirout.service.v1.topology.RealmInstance_OrMutable> =
+            this.realms,
+        engines: kotlin.collections.Iterable<skirout.service.v1.topology.EngineInstance_OrMutable> =
+            this.engines,
+    ) = skirout.service.v1.topology.OrganizationTopologySnapshot(
+        build.skir.internal.toFrozenList(hosts, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(realms, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(engines, { it.toFrozen() }),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.topology.WatchOrganizationTopologyRequest);
+        return this === other || (other is skirout.service.v1.topology.OrganizationTopologySnapshot && this.hosts == other.hosts && this.realms == other.realms && this.engines == other.engines);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>().hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.hosts, this.realms, this.engines).hashCode();
     }
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            _SerializerRegistry.WatchOrganizationTopologyRequestSerializerImpl,
+            _SerializerRegistry.OrganizationTopologySnapshotSerializerImpl,
         )
     }
 
-    /** Mutable version of [WatchOrganizationTopologyRequest]. */
+    /** Mutable version of [OrganizationTopologySnapshot]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.WatchOrganizationTopologyRequest>? =
+        override var hosts: kotlin.collections.List<skirout.service.v1.topology.ServiceHost_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.service.v1.topology.ServiceHost>(),
+        override var realms: kotlin.collections.List<skirout.service.v1.topology.RealmInstance_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.service.v1.topology.RealmInstance>(),
+        override var engines: kotlin.collections.List<skirout.service.v1.topology.EngineInstance_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.service.v1.topology.EngineInstance>(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.OrganizationTopologySnapshot>? =
             null,
-    ): skirout.service.v1.topology.WatchOrganizationTopologyRequest_OrMutable {
+    ): skirout.service.v1.topology.OrganizationTopologySnapshot_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.service.v1.topology.WatchOrganizationTopologyRequest(
+        override fun toFrozen() = skirout.service.v1.topology.OrganizationTopologySnapshot(
+            hosts = this.hosts,
+            realms = this.realms,
+            engines = this.engines,
             _unrecognizedFields = this._unrecognizedFields,
         );
+
+        /**
+         * If the value of [hosts] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [hosts] and returns it.
+         */
+        val mutableHosts: kotlin.collections.MutableList<skirout.service.v1.topology.ServiceHost_OrMutable> get() {
+            var value = this.hosts;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.hosts = value;
+                    value;
+                }
+            }
+        }
+
+        /**
+         * If the value of [realms] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [realms] and returns it.
+         */
+        val mutableRealms: kotlin.collections.MutableList<skirout.service.v1.topology.RealmInstance_OrMutable> get() {
+            var value = this.realms;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.realms = value;
+                    value;
+                }
+            }
+        }
+
+        /**
+         * If the value of [engines] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [engines] and returns it.
+         */
+        val mutableEngines: kotlin.collections.MutableList<skirout.service.v1.topology.EngineInstance_OrMutable> get() {
+            var value = this.engines;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.engines = value;
+                    value;
+                }
+            }
+        }
     }
 
     companion object {
         private val default =
-            skirout.service.v1.topology.WatchOrganizationTopologyRequest();
+            skirout.service.v1.topology.OrganizationTopologySnapshot(
+                build.skir.internal.emptyFrozenList<skirout.service.v1.topology.ServiceHost>(),
+                build.skir.internal.emptyFrozenList<skirout.service.v1.topology.RealmInstance>(),
+                build.skir.internal.emptyFrozenList<skirout.service.v1.topology.EngineInstance>(),
+            );
 
         /** Returns an instance with all fields set to their default values. */
         fun partial() = default;
 
         /**
-         * Creates a new instance of [WatchOrganizationTopologyRequest].
+         * Creates a new instance of [OrganizationTopologySnapshot].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-        ) = skirout.service.v1.topology.WatchOrganizationTopologyRequest(
+            hosts: kotlin.collections.Iterable<skirout.service.v1.topology.ServiceHost_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.service.v1.topology.ServiceHost>(),
+            realms: kotlin.collections.Iterable<skirout.service.v1.topology.RealmInstance_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.service.v1.topology.RealmInstance>(),
+            engines: kotlin.collections.Iterable<skirout.service.v1.topology.EngineInstance_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.service.v1.topology.EngineInstance>(),
+        ) = skirout.service.v1.topology.OrganizationTopologySnapshot(
+            hosts = hosts,
+            realms = realms,
+            engines = engines,
             _unrecognizedFields = null,
         );
 
-        /** Serializer for [WatchOrganizationTopologyRequest] instances. */
-        val serializer get() = _SerializerRegistry.WatchOrganizationTopologyRequestSerializer;
+        /** Serializer for [OrganizationTopologySnapshot] instances. */
+        val serializer get() = _SerializerRegistry.OrganizationTopologySnapshotSerializer;
 
-        /** Describes the [WatchOrganizationTopologyRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.WatchOrganizationTopologyRequestSerializerImpl.typeDescriptor;
+        /** Describes the [OrganizationTopologySnapshot] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.OrganizationTopologySnapshotSerializerImpl.typeDescriptor;
     }
 }
 
 /** Deeply immutable. */
-sealed class WatchOrganizationTopologyResponse private constructor() {
-    /** The kind of variant held by a `WatchOrganizationTopologyResponse`. */
+sealed class OrganizationTopologyChanged private constructor() {
+    /** The kind of variant held by a `OrganizationTopologyChanged`. */
     enum class Kind {
         UNKNOWN,
-        LIST_WRAPPER,
+        REPLACE_WRAPPER,
         CONFIGURATION_CHANGED_WRAPPER,
         HOST_UPDATED_WRAPPER,
         REALM_UPDATED_WRAPPER,
         ENGINE_UPDATED_WRAPPER,
-        RESOURCE_REMOVED_WRAPPER,
-        INTERNAL_ERROR_WRAPPER,
     }
 
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.service.v1.topology.WatchOrganizationTopologyResponse.UNKNOWN")) internal constructor(
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.service.v1.topology.OrganizationTopologyChanged.UNKNOWN")) internal constructor(
         internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.service.v1.topology.WatchOrganizationTopologyResponse>?,
-    ) : skirout.service.v1.topology.WatchOrganizationTopologyResponse() {
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.service.v1.topology.OrganizationTopologyChanged>?,
+    ) : skirout.service.v1.topology.OrganizationTopologyChanged() {
         override val kind get() = _kind;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.topology.WatchOrganizationTopologyResponse && other.kind == kind;
+            return other is skirout.service.v1.topology.OrganizationTopologyChanged && other.kind == kind;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -4342,27 +4171,27 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
         }
     }
 
-    class ListWrapper private constructor (
-        val value: skirout.service.v1.topology.WatchOrganizationTopologyResponse.List,
-    ) : skirout.service.v1.topology.WatchOrganizationTopologyResponse() {
+    class ReplaceWrapper private constructor (
+        val value: skirout.service.v1.topology.OrganizationTopologySnapshot,
+    ) : skirout.service.v1.topology.OrganizationTopologyChanged() {
         constructor(
-            value: skirout.service.v1.topology.WatchOrganizationTopologyResponse.List_OrMutable,
+            value: skirout.service.v1.topology.OrganizationTopologySnapshot_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.LIST_WRAPPER;
+        override val kind get() = Kind.REPLACE_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.topology.WatchOrganizationTopologyResponse.ListWrapper && value == other.value;
+            return other is skirout.service.v1.topology.OrganizationTopologyChanged.ReplaceWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 3322014;
+            return this.value.hashCode() + 1094496948;
         }
     }
 
     class ConfigurationChangedWrapper private constructor (
         val value: skirout.service.v1.topology.HostConfigurationChange,
-    ) : skirout.service.v1.topology.WatchOrganizationTopologyResponse() {
+    ) : skirout.service.v1.topology.OrganizationTopologyChanged() {
         constructor(
             value: skirout.service.v1.topology.HostConfigurationChange_OrMutable,
         ): this(value.toFrozen()) {}
@@ -4370,7 +4199,7 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
         override val kind get() = Kind.CONFIGURATION_CHANGED_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.topology.WatchOrganizationTopologyResponse.ConfigurationChangedWrapper && value == other.value;
+            return other is skirout.service.v1.topology.OrganizationTopologyChanged.ConfigurationChangedWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -4380,7 +4209,7 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
 
     class HostUpdatedWrapper private constructor (
         val value: skirout.service.v1.topology.ServiceHost,
-    ) : skirout.service.v1.topology.WatchOrganizationTopologyResponse() {
+    ) : skirout.service.v1.topology.OrganizationTopologyChanged() {
         constructor(
             value: skirout.service.v1.topology.ServiceHost_OrMutable,
         ): this(value.toFrozen()) {}
@@ -4388,7 +4217,7 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
         override val kind get() = Kind.HOST_UPDATED_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.topology.WatchOrganizationTopologyResponse.HostUpdatedWrapper && value == other.value;
+            return other is skirout.service.v1.topology.OrganizationTopologyChanged.HostUpdatedWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -4398,7 +4227,7 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
 
     class RealmUpdatedWrapper private constructor (
         val value: skirout.service.v1.topology.RealmInstance,
-    ) : skirout.service.v1.topology.WatchOrganizationTopologyResponse() {
+    ) : skirout.service.v1.topology.OrganizationTopologyChanged() {
         constructor(
             value: skirout.service.v1.topology.RealmInstance_OrMutable,
         ): this(value.toFrozen()) {}
@@ -4406,7 +4235,7 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
         override val kind get() = Kind.REALM_UPDATED_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.topology.WatchOrganizationTopologyResponse.RealmUpdatedWrapper && value == other.value;
+            return other is skirout.service.v1.topology.OrganizationTopologyChanged.RealmUpdatedWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -4416,7 +4245,7 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
 
     class EngineUpdatedWrapper private constructor (
         val value: skirout.service.v1.topology.EngineInstance,
-    ) : skirout.service.v1.topology.WatchOrganizationTopologyResponse() {
+    ) : skirout.service.v1.topology.OrganizationTopologyChanged() {
         constructor(
             value: skirout.service.v1.topology.EngineInstance_OrMutable,
         ): this(value.toFrozen()) {}
@@ -4424,7 +4253,7 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
         override val kind get() = Kind.ENGINE_UPDATED_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.topology.WatchOrganizationTopologyResponse.EngineUpdatedWrapper && value == other.value;
+            return other is skirout.service.v1.topology.OrganizationTopologyChanged.EngineUpdatedWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -4432,70 +4261,34 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
         }
     }
 
-    class ResourceRemovedWrapper private constructor (
-        val value: skirout.kernel.v1.record_id.RecordId,
-    ) : skirout.service.v1.topology.WatchOrganizationTopologyResponse() {
-        constructor(
-            value: skirout.kernel.v1.record_id.RecordId_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.RESOURCE_REMOVED_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.topology.WatchOrganizationTopologyResponse.ResourceRemovedWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1594463535;
-        }
-    }
-
-    class InternalErrorWrapper private constructor (
-        val value: skirout.kernel.v1.errors.InternalError,
-    ) : skirout.service.v1.topology.WatchOrganizationTopologyResponse() {
-        constructor(
-            value: skirout.kernel.v1.errors.InternalError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.topology.WatchOrganizationTopologyResponse.InternalErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 778975750;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.service.v1.topology.WatchOrganizationTopologyResponse>? get() = null;
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.service.v1.topology.OrganizationTopologyChanged>? get() = null;
 
     abstract val kind: Kind;
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            _SerializerRegistry.WatchOrganizationTopologyResponseSerializerImpl,
+            _SerializerRegistry.OrganizationTopologyChangedSerializerImpl,
         )
     }
 
     companion object {
         /**
-         * Constant indicating an unknown [WatchOrganizationTopologyResponse].
-         * Default value for fields of type [WatchOrganizationTopologyResponse].
+         * Constant indicating an unknown [OrganizationTopologyChanged].
+         * Default value for fields of type [OrganizationTopologyChanged].
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        /** Shortcut for `ListWrapper(skirout.service.v1.topology.WatchOrganizationTopologyResponse.List(...))`. */
+        /** Shortcut for `ReplaceWrapper(skirout.service.v1.topology.OrganizationTopologySnapshot(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createList(
+        fun createReplace(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             hosts: kotlin.collections.Iterable<skirout.service.v1.topology.ServiceHost_OrMutable>,
             realms: kotlin.collections.Iterable<skirout.service.v1.topology.RealmInstance_OrMutable>,
             engines: kotlin.collections.Iterable<skirout.service.v1.topology.EngineInstance_OrMutable>,
-        ) = ListWrapper(
-            skirout.service.v1.topology.WatchOrganizationTopologyResponse.List(
+        ) = ReplaceWrapper(
+            skirout.service.v1.topology.OrganizationTopologySnapshot(
                 hosts = hosts,
                 realms = realms,
                 engines = engines,
@@ -4588,17 +4381,185 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
             )
         );
 
-        /** Shortcut for `ResourceRemovedWrapper(skirout.kernel.v1.record_id.RecordId(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createResourceRemoved(
+        /** Serializer for [OrganizationTopologyChanged] instances. */
+        val serializer get() = _SerializerRegistry.OrganizationTopologyChangedSerializer;
+
+        /** Describes the [OrganizationTopologyChanged] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.OrganizationTopologyChangedSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface WatchOrganizationTopologyRequest_OrMutable {
+    fun toFrozen(): skirout.service.v1.topology.WatchOrganizationTopologyRequest;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class WatchOrganizationTopologyRequest private constructor(
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.WatchOrganizationTopologyRequest>? =
+        null,
+): skirout.service.v1.topology.WatchOrganizationTopologyRequest_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.WatchOrganizationTopologyRequest>? =
+            null,
+    ): this(
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable();
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.service.v1.topology.WatchOrganizationTopologyRequest);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>().hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.WatchOrganizationTopologyRequestSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [WatchOrganizationTopologyRequest]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.WatchOrganizationTopologyRequest>? =
+            null,
+    ): skirout.service.v1.topology.WatchOrganizationTopologyRequest_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.service.v1.topology.WatchOrganizationTopologyRequest(
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.service.v1.topology.WatchOrganizationTopologyRequest();
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [WatchOrganizationTopologyRequest].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            table: kotlin.String,
-            key: skirout.kernel.v1.record_id.RecordIdKey,
-        ) = ResourceRemovedWrapper(
-            skirout.kernel.v1.record_id.RecordId(
-                table = table,
-                key = key,
+        ) = skirout.service.v1.topology.WatchOrganizationTopologyRequest(
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [WatchOrganizationTopologyRequest] instances. */
+        val serializer get() = _SerializerRegistry.WatchOrganizationTopologyRequestSerializer;
+
+        /** Describes the [WatchOrganizationTopologyRequest] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.WatchOrganizationTopologyRequestSerializerImpl.typeDescriptor;
+    }
+}
+
+/** Deeply immutable. */
+sealed class WatchOrganizationTopologyResponse private constructor() {
+    /** The kind of variant held by a `WatchOrganizationTopologyResponse`. */
+    enum class Kind {
+        UNKNOWN,
+        LIST_WRAPPER,
+        INTERNAL_ERROR_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.service.v1.topology.WatchOrganizationTopologyResponse.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.service.v1.topology.WatchOrganizationTopologyResponse>?,
+    ) : skirout.service.v1.topology.WatchOrganizationTopologyResponse() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.service.v1.topology.WatchOrganizationTopologyResponse && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    class ListWrapper private constructor (
+        val value: skirout.service.v1.topology.OrganizationTopologySnapshot,
+    ) : skirout.service.v1.topology.WatchOrganizationTopologyResponse() {
+        constructor(
+            value: skirout.service.v1.topology.OrganizationTopologySnapshot_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.LIST_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.service.v1.topology.WatchOrganizationTopologyResponse.ListWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 3322014;
+        }
+    }
+
+    class InternalErrorWrapper private constructor (
+        val value: skirout.kernel.v1.errors.InternalError,
+    ) : skirout.service.v1.topology.WatchOrganizationTopologyResponse() {
+        constructor(
+            value: skirout.kernel.v1.errors.InternalError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.service.v1.topology.WatchOrganizationTopologyResponse.InternalErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 778975750;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.service.v1.topology.WatchOrganizationTopologyResponse>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.WatchOrganizationTopologyResponseSerializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [WatchOrganizationTopologyResponse].
+         * Default value for fields of type [WatchOrganizationTopologyResponse].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `ListWrapper(skirout.service.v1.topology.OrganizationTopologySnapshot(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createList(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            hosts: kotlin.collections.Iterable<skirout.service.v1.topology.ServiceHost_OrMutable>,
+            realms: kotlin.collections.Iterable<skirout.service.v1.topology.RealmInstance_OrMutable>,
+            engines: kotlin.collections.Iterable<skirout.service.v1.topology.EngineInstance_OrMutable>,
+        ) = ListWrapper(
+            skirout.service.v1.topology.OrganizationTopologySnapshot(
+                hosts = hosts,
+                realms = realms,
+                engines = engines,
             )
         );
 
@@ -4616,193 +4577,6 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
 
         /** Describes the [WatchOrganizationTopologyResponse] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = _SerializerRegistry.WatchOrganizationTopologyResponseSerializerImpl.typeDescriptor;
-    }
-
-    sealed interface List_OrMutable {
-        val hosts: kotlin.collections.List<skirout.service.v1.topology.ServiceHost_OrMutable>;
-        val realms: kotlin.collections.List<skirout.service.v1.topology.RealmInstance_OrMutable>;
-        val engines: kotlin.collections.List<skirout.service.v1.topology.EngineInstance_OrMutable>;
-
-        fun toFrozen(): skirout.service.v1.topology.WatchOrganizationTopologyResponse.List;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class List private constructor(
-        override val hosts: kotlin.collections.List<skirout.service.v1.topology.ServiceHost>,
-        override val realms: kotlin.collections.List<skirout.service.v1.topology.RealmInstance>,
-        override val engines: kotlin.collections.List<skirout.service.v1.topology.EngineInstance>,
-        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.WatchOrganizationTopologyResponse.List>? =
-            null,
-    ): skirout.service.v1.topology.WatchOrganizationTopologyResponse.List_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            hosts: kotlin.collections.Iterable<skirout.service.v1.topology.ServiceHost_OrMutable>,
-            realms: kotlin.collections.Iterable<skirout.service.v1.topology.RealmInstance_OrMutable>,
-            engines: kotlin.collections.Iterable<skirout.service.v1.topology.EngineInstance_OrMutable>,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.WatchOrganizationTopologyResponse.List>? =
-                null,
-        ): this(
-            build.skir.internal.toFrozenList(hosts, { it.toFrozen() }),
-            build.skir.internal.toFrozenList(realms, { it.toFrozen() }),
-            build.skir.internal.toFrozenList(engines, { it.toFrozen() }),
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable(
-            hosts = this.hosts,
-            realms = this.realms,
-            engines = this.engines,
-        );
-
-        /** Returns a shallow copy of this instance with the specified fields replaced. */
-        fun copy(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            hosts: kotlin.collections.Iterable<skirout.service.v1.topology.ServiceHost_OrMutable> =
-                this.hosts,
-            realms: kotlin.collections.Iterable<skirout.service.v1.topology.RealmInstance_OrMutable> =
-                this.realms,
-            engines: kotlin.collections.Iterable<skirout.service.v1.topology.EngineInstance_OrMutable> =
-                this.engines,
-        ) = skirout.service.v1.topology.WatchOrganizationTopologyResponse.List(
-            build.skir.internal.toFrozenList(hosts, { it.toFrozen() }),
-            build.skir.internal.toFrozenList(realms, { it.toFrozen() }),
-            build.skir.internal.toFrozenList(engines, { it.toFrozen() }),
-            this._unrecognizedFields,
-        );
-
-        @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-        fun copy() = this;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.topology.WatchOrganizationTopologyResponse.List && this.hosts == other.hosts && this.realms == other.realms && this.engines == other.engines);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>(this.hosts, this.realms, this.engines).hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                _SerializerRegistry.WatchOrganizationTopologyResponse_ListSerializerImpl,
-            )
-        }
-
-        /** Mutable version of [List]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            override var hosts: kotlin.collections.List<skirout.service.v1.topology.ServiceHost_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.service.v1.topology.ServiceHost>(),
-            override var realms: kotlin.collections.List<skirout.service.v1.topology.RealmInstance_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.service.v1.topology.RealmInstance>(),
-            override var engines: kotlin.collections.List<skirout.service.v1.topology.EngineInstance_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.service.v1.topology.EngineInstance>(),
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.WatchOrganizationTopologyResponse.List>? =
-                null,
-        ): skirout.service.v1.topology.WatchOrganizationTopologyResponse.List_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.topology.WatchOrganizationTopologyResponse.List(
-                hosts = this.hosts,
-                realms = this.realms,
-                engines = this.engines,
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-
-            /**
-             * If the value of [hosts] is already mutable, returns it as-is.
-             * Otherwise, makes a mutable copy, assigns it back to [hosts] and returns it.
-             */
-            val mutableHosts: kotlin.collections.MutableList<skirout.service.v1.topology.ServiceHost_OrMutable> get() {
-                var value = this.hosts;
-                return when (value) {
-                    is build.skir.internal.MutableList -> value;
-                    else -> {
-                        value = build.skir.internal.MutableList(value);
-                        this.hosts = value;
-                        value;
-                    }
-                }
-            }
-
-            /**
-             * If the value of [realms] is already mutable, returns it as-is.
-             * Otherwise, makes a mutable copy, assigns it back to [realms] and returns it.
-             */
-            val mutableRealms: kotlin.collections.MutableList<skirout.service.v1.topology.RealmInstance_OrMutable> get() {
-                var value = this.realms;
-                return when (value) {
-                    is build.skir.internal.MutableList -> value;
-                    else -> {
-                        value = build.skir.internal.MutableList(value);
-                        this.realms = value;
-                        value;
-                    }
-                }
-            }
-
-            /**
-             * If the value of [engines] is already mutable, returns it as-is.
-             * Otherwise, makes a mutable copy, assigns it back to [engines] and returns it.
-             */
-            val mutableEngines: kotlin.collections.MutableList<skirout.service.v1.topology.EngineInstance_OrMutable> get() {
-                var value = this.engines;
-                return when (value) {
-                    is build.skir.internal.MutableList -> value;
-                    else -> {
-                        value = build.skir.internal.MutableList(value);
-                        this.engines = value;
-                        value;
-                    }
-                }
-            }
-        }
-
-        companion object {
-            private val default =
-                skirout.service.v1.topology.WatchOrganizationTopologyResponse.List(
-                    build.skir.internal.emptyFrozenList<skirout.service.v1.topology.ServiceHost>(),
-                    build.skir.internal.emptyFrozenList<skirout.service.v1.topology.RealmInstance>(),
-                    build.skir.internal.emptyFrozenList<skirout.service.v1.topology.EngineInstance>(),
-                );
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [List].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-                hosts: kotlin.collections.Iterable<skirout.service.v1.topology.ServiceHost_OrMutable> =
-                    build.skir.internal.emptyFrozenList<skirout.service.v1.topology.ServiceHost>(),
-                realms: kotlin.collections.Iterable<skirout.service.v1.topology.RealmInstance_OrMutable> =
-                    build.skir.internal.emptyFrozenList<skirout.service.v1.topology.RealmInstance>(),
-                engines: kotlin.collections.Iterable<skirout.service.v1.topology.EngineInstance_OrMutable> =
-                    build.skir.internal.emptyFrozenList<skirout.service.v1.topology.EngineInstance>(),
-            ) = skirout.service.v1.topology.WatchOrganizationTopologyResponse.List(
-                hosts = hosts,
-                realms = realms,
-                engines = engines,
-                _unrecognizedFields = null,
-            );
-
-            /** Serializer for [List] instances. */
-            val serializer get() = _SerializerRegistry.WatchOrganizationTopologyResponse_ListSerializer;
-
-            /** Describes the [List] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = _SerializerRegistry.WatchOrganizationTopologyResponse_ListSerializerImpl.typeDescriptor;
-        }
     }
 }
 
@@ -6050,17 +5824,280 @@ sealed class GetServiceMessagingScopeResponse private constructor() {
     }
 }
 
-val RegisterServiceHost: build.skir.service.Method<
-    skirout.service.v1.topology.RegisterServiceHostRequest,
-    skirout.service.v1.topology.RegisterServiceHostResponse,
-> by kotlin.lazy {
-    build.skir.service.Method(
-        "RegisterServiceHost",
-        934206,
-        skirout.service.v1.topology.RegisterServiceHostRequest.serializer,
-        skirout.service.v1.topology.RegisterServiceHostResponse.serializer,
-        "",
-    )
+sealed interface RegisterServiceHostRequest_OrMutable {
+    val entrypoint: kotlin.String;
+    val canHostRealm: kotlin.Boolean;
+    val supportedEngines: kotlin.collections.List<skirout.service.v1.topology.SupportedEngine_OrMutable>;
+
+    fun toFrozen(): skirout.service.v1.topology.RegisterServiceHostRequest;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class RegisterServiceHostRequest private constructor(
+    override val entrypoint: kotlin.String,
+    override val canHostRealm: kotlin.Boolean,
+    override val supportedEngines: kotlin.collections.List<skirout.service.v1.topology.SupportedEngine>,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.RegisterServiceHostRequest>? =
+        null,
+): skirout.service.v1.topology.RegisterServiceHostRequest_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        entrypoint: kotlin.String,
+        canHostRealm: kotlin.Boolean,
+        supportedEngines: kotlin.collections.Iterable<skirout.service.v1.topology.SupportedEngine_OrMutable>,
+        _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.RegisterServiceHostRequest>? =
+            null,
+    ): this(
+        entrypoint,
+        canHostRealm,
+        build.skir.internal.toFrozenList(supportedEngines, { it.toFrozen() }),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        entrypoint = this.entrypoint,
+        canHostRealm = this.canHostRealm,
+        supportedEngines = this.supportedEngines,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        entrypoint: kotlin.String =
+            this.entrypoint,
+        canHostRealm: kotlin.Boolean =
+            this.canHostRealm,
+        supportedEngines: kotlin.collections.Iterable<skirout.service.v1.topology.SupportedEngine_OrMutable> =
+            this.supportedEngines,
+    ) = skirout.service.v1.topology.RegisterServiceHostRequest(
+        entrypoint,
+        canHostRealm,
+        build.skir.internal.toFrozenList(supportedEngines, { it.toFrozen() }),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.service.v1.topology.RegisterServiceHostRequest && this.entrypoint == other.entrypoint && this.canHostRealm == other.canHostRealm && this.supportedEngines == other.supportedEngines);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.entrypoint, this.canHostRealm, this.supportedEngines).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.RegisterServiceHostRequestSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [RegisterServiceHostRequest]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var entrypoint: kotlin.String =
+            "",
+        override var canHostRealm: kotlin.Boolean =
+            false,
+        override var supportedEngines: kotlin.collections.List<skirout.service.v1.topology.SupportedEngine_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.service.v1.topology.SupportedEngine>(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.RegisterServiceHostRequest>? =
+            null,
+    ): skirout.service.v1.topology.RegisterServiceHostRequest_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.service.v1.topology.RegisterServiceHostRequest(
+            entrypoint = this.entrypoint,
+            canHostRealm = this.canHostRealm,
+            supportedEngines = this.supportedEngines,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [supportedEngines] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [supportedEngines] and returns it.
+         */
+        val mutableSupportedEngines: kotlin.collections.MutableList<skirout.service.v1.topology.SupportedEngine_OrMutable> get() {
+            var value = this.supportedEngines;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.supportedEngines = value;
+                    value;
+                }
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.service.v1.topology.RegisterServiceHostRequest(
+                "",
+                false,
+                build.skir.internal.emptyFrozenList<skirout.service.v1.topology.SupportedEngine>(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [RegisterServiceHostRequest].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            entrypoint: kotlin.String =
+                "",
+            canHostRealm: kotlin.Boolean =
+                false,
+            supportedEngines: kotlin.collections.Iterable<skirout.service.v1.topology.SupportedEngine_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.service.v1.topology.SupportedEngine>(),
+        ) = skirout.service.v1.topology.RegisterServiceHostRequest(
+            entrypoint = entrypoint,
+            canHostRealm = canHostRealm,
+            supportedEngines = supportedEngines,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [RegisterServiceHostRequest] instances. */
+        val serializer get() = _SerializerRegistry.RegisterServiceHostRequestSerializer;
+
+        /** Describes the [RegisterServiceHostRequest] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.RegisterServiceHostRequestSerializerImpl.typeDescriptor;
+    }
+}
+
+/** Deeply immutable. */
+sealed class RegisterServiceHostResponse private constructor() {
+    /** The kind of variant held by a `RegisterServiceHostResponse`. */
+    enum class Kind {
+        UNKNOWN,
+        SUCCESS_WRAPPER,
+        INTERNAL_ERROR_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.service.v1.topology.RegisterServiceHostResponse.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.service.v1.topology.RegisterServiceHostResponse>?,
+    ) : skirout.service.v1.topology.RegisterServiceHostResponse() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.service.v1.topology.RegisterServiceHostResponse && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    class SuccessWrapper private constructor (
+        val value: skirout.service.v1.topology.ServiceHost,
+    ) : skirout.service.v1.topology.RegisterServiceHostResponse() {
+        constructor(
+            value: skirout.service.v1.topology.ServiceHost_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.SUCCESS_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.service.v1.topology.RegisterServiceHostResponse.SuccessWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -1867169789;
+        }
+    }
+
+    class InternalErrorWrapper private constructor (
+        val value: skirout.kernel.v1.errors.InternalError,
+    ) : skirout.service.v1.topology.RegisterServiceHostResponse() {
+        constructor(
+            value: skirout.kernel.v1.errors.InternalError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.service.v1.topology.RegisterServiceHostResponse.InternalErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 778975750;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.service.v1.topology.RegisterServiceHostResponse>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.RegisterServiceHostResponseSerializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [RegisterServiceHostResponse].
+         * Default value for fields of type [RegisterServiceHostResponse].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `SuccessWrapper(skirout.service.v1.topology.ServiceHost(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createSuccess(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            hostId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+            serviceId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+            revision: kotlin.Long,
+            entrypoint: kotlin.String,
+            canHostRealm: kotlin.Boolean,
+            supportedEngines: kotlin.collections.Iterable<skirout.service.v1.topology.SupportedEngine_OrMutable>,
+            topologyRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable,
+            state: skirout.service.v1.topology.HostRuntimeState_OrMutable,
+        ) = SuccessWrapper(
+            skirout.service.v1.topology.ServiceHost(
+                hostId = hostId,
+                serviceId = serviceId,
+                revision = revision,
+                entrypoint = entrypoint,
+                canHostRealm = canHostRealm,
+                supportedEngines = supportedEngines,
+                topologyRevision = topologyRevision,
+                state = state,
+            )
+        );
+
+        /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createInternalError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+        ) = InternalErrorWrapper(
+            skirout.kernel.v1.errors.InternalError()
+        );
+
+        /** Serializer for [RegisterServiceHostResponse] instances. */
+        val serializer get() = _SerializerRegistry.RegisterServiceHostResponseSerializer;
+
+        /** Describes the [RegisterServiceHostResponse] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.RegisterServiceHostResponseSerializerImpl.typeDescriptor;
+    }
 }
 
 val ConfigureServiceHost: build.skir.service.Method<
@@ -6124,6 +6161,19 @@ val GetServiceMessagingScope: build.skir.service.Method<
         934205,
         skirout.service.v1.topology.GetServiceMessagingScopeRequest.serializer,
         skirout.service.v1.topology.GetServiceMessagingScopeResponse.serializer,
+        "",
+    )
+}
+
+val RegisterServiceHost: build.skir.service.Method<
+    skirout.service.v1.topology.RegisterServiceHostRequest,
+    skirout.service.v1.topology.RegisterServiceHostResponse,
+> by kotlin.lazy {
+    build.skir.service.Method(
+        "RegisterServiceHost",
+        934206,
+        skirout.service.v1.topology.RegisterServiceHostRequest.serializer,
+        skirout.service.v1.topology.RegisterServiceHostResponse.serializer,
         "",
     )
 }
@@ -6410,6 +6460,31 @@ private object _SerializerRegistry {
 
     val HostRuntimeStatusSerializer = build.skir.internal.makeSerializer(HostRuntimeStatusSerializerImpl);
 
+    val OrganizationTopologyChangedSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.service.v1.topology.OrganizationTopologyChanged, skirout.service.v1.topology.OrganizationTopologyChanged.Unknown>(
+            recordId = "service/v1/topology.skir:OrganizationTopologyChanged",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.service.v1.topology.OrganizationTopologyChanged.Kind.values().size,
+            unknownInstance = skirout.service.v1.topology.OrganizationTopologyChanged.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.service.v1.topology.OrganizationTopologyChanged.Unknown(skirout.service.v1.topology.OrganizationTopologyChanged.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val OrganizationTopologyChangedSerializer = build.skir.internal.makeSerializer(OrganizationTopologyChangedSerializerImpl);
+
+    val OrganizationTopologySnapshotSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:OrganizationTopologySnapshot",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.OrganizationTopologySnapshot.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.OrganizationTopologySnapshot.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val OrganizationTopologySnapshotSerializer = build.skir.internal.makeSerializer(OrganizationTopologySnapshotSerializerImpl);
+
     val OwnerHostSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "service/v1/topology.skir:OwnerHost",
         doc = "",
@@ -6629,18 +6704,6 @@ private object _SerializerRegistry {
         );
 
     val WatchOrganizationTopologyResponseSerializer = build.skir.internal.makeSerializer(WatchOrganizationTopologyResponseSerializerImpl);
-
-    val WatchOrganizationTopologyResponse_ListSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "service/v1/topology.skir:WatchOrganizationTopologyResponse.List",
-        doc = "",
-        defaultInstance = skirout.service.v1.topology.WatchOrganizationTopologyResponse.List.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.WatchOrganizationTopologyResponse.List.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val WatchOrganizationTopologyResponse_ListSerializer = build.skir.internal.makeSerializer(WatchOrganizationTopologyResponse_ListSerializerImpl);
 
     init {
         ChildRuntimeStateSerializerImpl.addField(
@@ -7219,6 +7282,88 @@ private object _SerializerRegistry {
         );
         HostRuntimeStatusSerializerImpl.finalizeEnum();
 
+        OrganizationTopologyChangedSerializerImpl.addWrapperVariant(
+            1,
+            "replace",
+            skirout.service.v1.topology.OrganizationTopologyChanged.Kind.REPLACE_WRAPPER.ordinal,
+            _SerializerRegistry.OrganizationTopologySnapshotSerializer,
+            "",
+            { skirout.service.v1.topology.OrganizationTopologyChanged.ReplaceWrapper(it) },
+            { it.value },
+        );
+        OrganizationTopologyChangedSerializerImpl.addWrapperVariant(
+            2,
+            "configuration_changed",
+            skirout.service.v1.topology.OrganizationTopologyChanged.Kind.CONFIGURATION_CHANGED_WRAPPER.ordinal,
+            _SerializerRegistry.HostConfigurationChangeSerializer,
+            "",
+            { skirout.service.v1.topology.OrganizationTopologyChanged.ConfigurationChangedWrapper(it) },
+            { it.value },
+        );
+        OrganizationTopologyChangedSerializerImpl.addWrapperVariant(
+            3,
+            "host_updated",
+            skirout.service.v1.topology.OrganizationTopologyChanged.Kind.HOST_UPDATED_WRAPPER.ordinal,
+            _SerializerRegistry.ServiceHostSerializer,
+            "",
+            { skirout.service.v1.topology.OrganizationTopologyChanged.HostUpdatedWrapper(it) },
+            { it.value },
+        );
+        OrganizationTopologyChangedSerializerImpl.addWrapperVariant(
+            4,
+            "realm_updated",
+            skirout.service.v1.topology.OrganizationTopologyChanged.Kind.REALM_UPDATED_WRAPPER.ordinal,
+            _SerializerRegistry.RealmInstanceSerializer,
+            "",
+            { skirout.service.v1.topology.OrganizationTopologyChanged.RealmUpdatedWrapper(it) },
+            { it.value },
+        );
+        OrganizationTopologyChangedSerializerImpl.addWrapperVariant(
+            5,
+            "engine_updated",
+            skirout.service.v1.topology.OrganizationTopologyChanged.Kind.ENGINE_UPDATED_WRAPPER.ordinal,
+            _SerializerRegistry.EngineInstanceSerializer,
+            "",
+            { skirout.service.v1.topology.OrganizationTopologyChanged.EngineUpdatedWrapper(it) },
+            { it.value },
+        );
+        OrganizationTopologyChangedSerializerImpl.finalizeEnum();
+
+        OrganizationTopologySnapshotSerializerImpl.addField(
+            "hosts",
+            "hosts",
+            0,
+            build.skir.Serializers.list(
+                _SerializerRegistry.ServiceHostSerializer,
+            ),
+            "",
+            { it.hosts },
+            { mut, v -> mut.hosts = v },
+        );
+        OrganizationTopologySnapshotSerializerImpl.addField(
+            "realms",
+            "realms",
+            1,
+            build.skir.Serializers.list(
+                _SerializerRegistry.RealmInstanceSerializer,
+            ),
+            "",
+            { it.realms },
+            { mut, v -> mut.realms = v },
+        );
+        OrganizationTopologySnapshotSerializerImpl.addField(
+            "engines",
+            "engines",
+            2,
+            build.skir.Serializers.list(
+                _SerializerRegistry.EngineInstanceSerializer,
+            ),
+            "",
+            { it.engines },
+            { mut, v -> mut.engines = v },
+        );
+        OrganizationTopologySnapshotSerializerImpl.finalizeStruct();
+
         OwnerHostSerializerImpl.addField(
             "id",
             "id",
@@ -7624,58 +7769,13 @@ private object _SerializerRegistry {
             1,
             "list",
             skirout.service.v1.topology.WatchOrganizationTopologyResponse.Kind.LIST_WRAPPER.ordinal,
-            _SerializerRegistry.WatchOrganizationTopologyResponse_ListSerializer,
+            _SerializerRegistry.OrganizationTopologySnapshotSerializer,
             "",
             { skirout.service.v1.topology.WatchOrganizationTopologyResponse.ListWrapper(it) },
             { it.value },
         );
         WatchOrganizationTopologyResponseSerializerImpl.addWrapperVariant(
             2,
-            "configuration_changed",
-            skirout.service.v1.topology.WatchOrganizationTopologyResponse.Kind.CONFIGURATION_CHANGED_WRAPPER.ordinal,
-            _SerializerRegistry.HostConfigurationChangeSerializer,
-            "",
-            { skirout.service.v1.topology.WatchOrganizationTopologyResponse.ConfigurationChangedWrapper(it) },
-            { it.value },
-        );
-        WatchOrganizationTopologyResponseSerializerImpl.addWrapperVariant(
-            3,
-            "host_updated",
-            skirout.service.v1.topology.WatchOrganizationTopologyResponse.Kind.HOST_UPDATED_WRAPPER.ordinal,
-            _SerializerRegistry.ServiceHostSerializer,
-            "",
-            { skirout.service.v1.topology.WatchOrganizationTopologyResponse.HostUpdatedWrapper(it) },
-            { it.value },
-        );
-        WatchOrganizationTopologyResponseSerializerImpl.addWrapperVariant(
-            4,
-            "realm_updated",
-            skirout.service.v1.topology.WatchOrganizationTopologyResponse.Kind.REALM_UPDATED_WRAPPER.ordinal,
-            _SerializerRegistry.RealmInstanceSerializer,
-            "",
-            { skirout.service.v1.topology.WatchOrganizationTopologyResponse.RealmUpdatedWrapper(it) },
-            { it.value },
-        );
-        WatchOrganizationTopologyResponseSerializerImpl.addWrapperVariant(
-            5,
-            "engine_updated",
-            skirout.service.v1.topology.WatchOrganizationTopologyResponse.Kind.ENGINE_UPDATED_WRAPPER.ordinal,
-            _SerializerRegistry.EngineInstanceSerializer,
-            "",
-            { skirout.service.v1.topology.WatchOrganizationTopologyResponse.EngineUpdatedWrapper(it) },
-            { it.value },
-        );
-        WatchOrganizationTopologyResponseSerializerImpl.addWrapperVariant(
-            6,
-            "resource_removed",
-            skirout.service.v1.topology.WatchOrganizationTopologyResponse.Kind.RESOURCE_REMOVED_WRAPPER.ordinal,
-            skirout.kernel.v1.record_id.RecordId.serializer,
-            "",
-            { skirout.service.v1.topology.WatchOrganizationTopologyResponse.ResourceRemovedWrapper(it) },
-            { it.value },
-        );
-        WatchOrganizationTopologyResponseSerializerImpl.addWrapperVariant(
-            7,
             "internal_error",
             skirout.service.v1.topology.WatchOrganizationTopologyResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
             skirout.kernel.v1.errors.InternalError.serializer,
@@ -7684,40 +7784,5 @@ private object _SerializerRegistry {
             { it.value },
         );
         WatchOrganizationTopologyResponseSerializerImpl.finalizeEnum();
-
-        WatchOrganizationTopologyResponse_ListSerializerImpl.addField(
-            "hosts",
-            "hosts",
-            0,
-            build.skir.Serializers.list(
-                _SerializerRegistry.ServiceHostSerializer,
-            ),
-            "",
-            { it.hosts },
-            { mut, v -> mut.hosts = v },
-        );
-        WatchOrganizationTopologyResponse_ListSerializerImpl.addField(
-            "realms",
-            "realms",
-            1,
-            build.skir.Serializers.list(
-                _SerializerRegistry.RealmInstanceSerializer,
-            ),
-            "",
-            { it.realms },
-            { mut, v -> mut.realms = v },
-        );
-        WatchOrganizationTopologyResponse_ListSerializerImpl.addField(
-            "engines",
-            "engines",
-            2,
-            build.skir.Serializers.list(
-                _SerializerRegistry.EngineInstanceSerializer,
-            ),
-            "",
-            { it.engines },
-            { mut, v -> mut.engines = v },
-        );
-        WatchOrganizationTopologyResponse_ListSerializerImpl.finalizeStruct();
     }
 }

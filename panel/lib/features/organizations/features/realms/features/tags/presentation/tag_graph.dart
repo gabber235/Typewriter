@@ -65,10 +65,12 @@ class TagGraph extends HookConsumerWidget {
       name: "tags",
       builder: (tagList) {
         if (tagList.isEmpty) {
-          final template = resourceCreationTemplate(
-            ref.read(selectedWorkingAuthoringDocumentProvider).value?.catalog,
-            coreTagResourceDefinition.value,
-          );
+          final template =
+              (ref
+                      .read(selectedWorkingAuthoringDocumentProvider)
+                      .value
+                      ?.catalog)
+                  .resourceCreationTemplate(coreTagResourceDefinition.value);
           return EmptyTagsPage(
             onCreateTag: template == null
                 ? null

@@ -15,14 +15,14 @@ void _testResourceConnections() {
       final source = _identitySource(owners);
       expect(
         source.update(
-          DataPath.root.field("name"),
-          const StringValue("renamed"),
+          editorRootPath.field("name"),
+          skir.DataValue.wrapStringValue("renamed"),
         ),
         isA<AppliedEditorMutation>(),
       );
       expect(
-        source.value(DataPath.root.field("name")).valueOrNull,
-        const StringValue("renamed"),
+        source.value(editorRootPath.field("name")).valueOrNull,
+        skir.DataValue.wrapStringValue("renamed"),
       );
 
       final replacement = FakeNatsClient();
@@ -58,8 +58,8 @@ void _testResourceConnections() {
         same(repositories),
       );
       expect(
-        source.value(DataPath.root.field("name")).valueOrNull,
-        const StringValue("renamed"),
+        source.value(editorRootPath.field("name")).valueOrNull,
+        skir.DataValue.wrapStringValue("renamed"),
       );
       expect(await source.flush(), isA<MutationSuccess>());
       expect(harness.nats.requests, isEmpty);

@@ -76,7 +76,7 @@ wasmcloud_utils_macros::skir_response! {
 
 wasmcloud_utils_macros::skir_response! {
     WatchOrganizationServicesResponse {
-        success: [List, Add, Update, Remove],
+        success: List,
         errors {}
     }
 }
@@ -119,7 +119,7 @@ wasmcloud_utils_macros::skir_response! {
 
 wasmcloud_utils_macros::skir_response! {
     WatchOrganizationTopologyResponse {
-        success: [List, ConfigurationChanged, HostUpdated, RealmUpdated, EngineUpdated, ResourceRemoved],
+        success: List,
         errors {}
     }
 }
@@ -279,7 +279,7 @@ wasmcloud_utils_macros::skir_response! {
 
 wasmcloud_utils_macros::skir_response! {
     WatchOrganizationMembersResponse {
-        success: [Snapshot, Changed],
+        success: Snapshot,
         errors {}
     }
 }

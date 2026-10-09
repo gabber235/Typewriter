@@ -270,7 +270,7 @@ void main() {
 _nestedMaterialFixture() {
   final base = _fixture();
   final original = base.scope.catalog!.snapshot;
-  final record = base.scope.authoring!.resources.values.first;
+  final record = base.document.resources.values.first;
   final type = switch (record.configuration) {
     skir.TypeSelection_completeWrapper(:final value) => value.definition,
     _ => throw StateError("The nested collection fixture must be complete"),
@@ -367,7 +367,7 @@ _nestedMaterialFixture() {
       roleFallbacks: original.roleFallbacks,
     ),
   );
-  final resource = base.scope.authoring!.resources.keys.first;
+  final resource = base.document.resources.keys.first;
   return (
     scope: PortablePresentationScope(
       bindings: {
@@ -378,10 +378,10 @@ _nestedMaterialFixture() {
       },
       budget: base.scope.budget,
       setBinding: base.scope.setBinding,
-      authoring: base.scope.authoring,
       catalog: checked,
       resource: resource,
       material: base.material,
+      host: base.scope.host,
     ),
     node: skir.PresentationNode(
       nodeId: "outer.invocation",
@@ -395,7 +395,11 @@ _nestedMaterialFixture() {
   );
 }
 
-({PortablePresentationScope scope, skir.PresentationMaterial material})
+({
+  PortablePresentationScope scope,
+  skir.PresentationMaterial material,
+  AuthoringDocument document,
+})
 _fixture({
   bool cycle = false,
   bool projected = false,
@@ -575,8 +579,22 @@ _fixture({
       arguments: const [],
     ),
   );
+  final document = draft.toDocument();
+  final budget = skir.EvaluationBudget(
+    maxSteps: 1000,
+    maxCollectionItems: 1000,
+  );
+  final host = AuthoredPresentationHost(
+    resource: one,
+    source: document,
+    material: material,
+    role: skir.PresentationRole.inspector,
+    budget: budget,
+    capabilities: const PortablePresentationCapabilities(),
+  );
   return (
     material: material,
+    document: document,
     scope: PortablePresentationScope(
       bindings: {
         _lookupBinding: PortableExpressionBinding(
@@ -588,11 +606,11 @@ _fixture({
           value: _values([one], listOfText),
         ),
       },
-      budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 1000),
+      budget: budget,
       setBinding: (_, _) {},
-      authoring: draft,
       catalog: checked,
       material: material,
+      host: host,
     ),
   );
 }

@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Presents one resource snapshot to editor composition and interaction code.
@@ -16,11 +18,11 @@ abstract interface class EditorTarget {
   EditorCommitPolicy get commitPolicy;
 
   /// Validates the complete draft against resource level rules.
-  List<TypeDiagnostic> validateDraft(DataValue value);
+  List<EditorDiagnostic> validateDraft(skir.DataValue value);
 
   /// Reads confirmed target content before an editing owner is attached.
-  EditorValue value(DataPath path);
+  EditorValue value(skir.ValuePath path);
 
   /// Checks one proposed value without changing target or owner state.
-  EditorMutationResult validate(DataPath path, DataValue value);
+  EditorMutationResult validate(skir.ValuePath path, skir.DataValue value);
 }

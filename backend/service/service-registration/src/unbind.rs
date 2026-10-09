@@ -24,6 +24,9 @@ use wasmcloud_utils::{
         UnbindServiceResponse_OperationIdentityReusedError,
         UnbindServiceResponse_ServiceNotFoundError, UnbindServiceResponse_Success,
     },
+    skir::base::service::v1::{
+        organization::OrganizationServicesChanged, topology::OrganizationTopologyChanged,
+    },
     skir_variant,
     wasmcloud::messaging::types::NatsMessage,
 };
@@ -108,11 +111,15 @@ RETURN {
 
     // Both projections are post commit notifications. They cannot be included in the database
     // transaction, so snapshots provide a repair path when a subscriber misses an event.
-    wasmcloud_utils::skir_subjects::organization_topology(org_id)
-        .publish(crate::watch_topology::snapshot(org_id).await?)
+    wasmcloud_utils::skir_subjects::organization_topology_changed(org_id)
+        .publish(OrganizationTopologyChanged::Replace(Box::new(
+            crate::watch_topology::snapshot(org_id).await?,
+        )))
         .await?;
-    wasmcloud_utils::skir_subjects::organization_services(org_id)
-        .publish(crate::watch::snapshot(org_id).await?)
+    wasmcloud_utils::skir_subjects::organization_services_changed(org_id)
+        .publish(OrganizationServicesChanged::Replace(
+            crate::watch::snapshot(org_id).await?,
+        ))
         .await?;
 
     otel_wasi::main_attribute!("service.outcome" = "unbound");

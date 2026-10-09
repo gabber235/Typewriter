@@ -29,7 +29,15 @@ class RegistrationTokenInput extends HookConsumerWidget {
         return;
       }
       error.value = null;
-      await ref.read(canonicalServicesProvider.notifier).bindService(token);
+      final organization = ref.read(organizationIdProvider);
+      if (organization == null) throw ApiException.noOrganization();
+      final repository = ref
+          .read(resourceRepositoriesProvider)
+          .services(organization);
+      final response = await ref
+          .read(localWorkControllerProvider)
+          .execute(repository.bind(token));
+      response.requireAcceptedBinding();
       controller.clear();
     }
 

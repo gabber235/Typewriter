@@ -20,7 +20,7 @@ import com.typewritermc.loader.api.HostedDeploymentContext
 import com.typewritermc.loader.api.SourcePartDisposition
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationRuntime
-import com.typewritermc.realm.authoring.CreationEvaluator
+import com.typewritermc.realm.authoring.PreparationEvaluator
 import com.typewritermc.realm.catalog.RealmCatalogIncarnation
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.compiler.EngineImplementationInputs
@@ -101,8 +101,8 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                     host = context.host,
                     registrars = loaded.providers.registrars.map { it.registrar },
                     facts = loaded.facts,
-                    creationEvaluator =
-                        CreationEvaluator { request, catalog ->
+                    preparationEvaluator =
+                        PreparationEvaluator { request, catalog ->
                             DefaultInitializationRuntime(
                                 catalog.checked,
                                 catalog.nativeBindings,

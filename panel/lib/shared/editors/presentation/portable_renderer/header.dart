@@ -434,24 +434,17 @@ final class _AuthoredPresentationHeaderState
   );
 
   _AuthoredReorderTarget? _reorderTarget(skir.BindingRef source) {
-    final location = widget.scope.location(source);
-    final draft = widget.scope.authoring;
-    if (location == null || draft == null) return null;
-    final segments = location.path.segments.toList(growable: false);
+    final resolved = widget.scope.sourceReference(source);
+    if (resolved == null) return null;
+    final segments = resolved.path.segments.toList(growable: false);
     final last = segments.lastOrNull;
     if (last is! skir.PathSegment_itemWrapper) return null;
     final item = last.value.id;
-    final containing = skir.ValueLocation(
-      resource: location.resource,
+    final containing = skir.BindingRef(
+      bindingId: resolved.bindingId,
       path: skir.ValuePath(segments: segments.take(segments.length - 1)),
     );
-    final collection = draft
-        .resource(location.resource)
-        ?.readAt(containing.path);
-    final items = switch (collection) {
-      PortablePathValue(:final value) => value.authoredItems?.toList(),
-      _ => null,
-    };
+    final items = widget.scope.read(containing)?.authoredItems?.toList();
     if (items == null) return null;
     final index = items.indexWhere((candidate) => candidate.id == item);
     if (index < 0) return null;
@@ -467,9 +460,7 @@ final class _AuthoredPresentationHeaderState
     _AuthoredReorderTarget target, {
     required skir.ItemId? after,
   }) {
-    widget.scope.stage("Reorder item", (operation) {
-      operation.move(target.containing, target.item, after);
-    });
+    widget.scope.moveListItem(target.containing, target.item, after);
   }
 
   int _priority(skir.ExpressionNode? value) {

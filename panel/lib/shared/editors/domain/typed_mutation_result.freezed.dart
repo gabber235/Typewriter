@@ -132,7 +132,7 @@ return unavailable(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( int revision,  DataValue value)?  success,TResult Function( int expectedRevision,  int actualRevision,  DataValue actualValue)?  conflict,TResult Function( List<TypeDiagnostic> diagnostics)?  invalid,TResult Function( String message)?  permissionDenied,TResult Function( String message,  Object cause,  StackTrace stackTrace,  Future<TypedMutationResult> Function()? replay,  Object? submissionId)?  uncertain,TResult Function( List<TypeDiagnostic> diagnostics)?  unavailable,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( int revision,  skir.DataValue value)?  success,TResult Function( int expectedRevision,  int actualRevision,  skir.DataValue actualValue)?  conflict,TResult Function( List<EditorDiagnostic> diagnostics)?  invalid,TResult Function( String message)?  permissionDenied,TResult Function( String message,  Object cause,  StackTrace stackTrace,  Future<TypedMutationResult> Function()? replay,  Object? submissionId)?  uncertain,TResult Function( List<EditorDiagnostic> diagnostics)?  unavailable,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case MutationSuccess() when success != null:
 return success(_that.revision,_that.value);case MutationConflict() when conflict != null:
@@ -158,7 +158,7 @@ return unavailable(_that.diagnostics);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( int revision,  DataValue value)  success,required TResult Function( int expectedRevision,  int actualRevision,  DataValue actualValue)  conflict,required TResult Function( List<TypeDiagnostic> diagnostics)  invalid,required TResult Function( String message)  permissionDenied,required TResult Function( String message,  Object cause,  StackTrace stackTrace,  Future<TypedMutationResult> Function()? replay,  Object? submissionId)  uncertain,required TResult Function( List<TypeDiagnostic> diagnostics)  unavailable,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( int revision,  skir.DataValue value)  success,required TResult Function( int expectedRevision,  int actualRevision,  skir.DataValue actualValue)  conflict,required TResult Function( List<EditorDiagnostic> diagnostics)  invalid,required TResult Function( String message)  permissionDenied,required TResult Function( String message,  Object cause,  StackTrace stackTrace,  Future<TypedMutationResult> Function()? replay,  Object? submissionId)  uncertain,required TResult Function( List<EditorDiagnostic> diagnostics)  unavailable,}) {final _that = this;
 switch (_that) {
 case MutationSuccess():
 return success(_that.revision,_that.value);case MutationConflict():
@@ -180,7 +180,7 @@ return unavailable(_that.diagnostics);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( int revision,  DataValue value)?  success,TResult? Function( int expectedRevision,  int actualRevision,  DataValue actualValue)?  conflict,TResult? Function( List<TypeDiagnostic> diagnostics)?  invalid,TResult? Function( String message)?  permissionDenied,TResult? Function( String message,  Object cause,  StackTrace stackTrace,  Future<TypedMutationResult> Function()? replay,  Object? submissionId)?  uncertain,TResult? Function( List<TypeDiagnostic> diagnostics)?  unavailable,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( int revision,  skir.DataValue value)?  success,TResult? Function( int expectedRevision,  int actualRevision,  skir.DataValue actualValue)?  conflict,TResult? Function( List<EditorDiagnostic> diagnostics)?  invalid,TResult? Function( String message)?  permissionDenied,TResult? Function( String message,  Object cause,  StackTrace stackTrace,  Future<TypedMutationResult> Function()? replay,  Object? submissionId)?  uncertain,TResult? Function( List<EditorDiagnostic> diagnostics)?  unavailable,}) {final _that = this;
 switch (_that) {
 case MutationSuccess() when success != null:
 return success(_that.revision,_that.value);case MutationConflict() when conflict != null:
@@ -201,10 +201,10 @@ return unavailable(_that.diagnostics);case _:
 
 class MutationSuccess implements TypedMutationResult {
   const MutationSuccess({required this.revision, required this.value}): assert(revision >= 0, 'Revision must not be negative.');
-  
+
 
  final  int revision;
- final  DataValue value;
+ final  skir.DataValue value;
 
 /// Create a copy of TypedMutationResult
 /// with the given fields replaced by the non-null parameter values.
@@ -238,11 +238,11 @@ abstract mixin class $MutationSuccessCopyWith<$Res> implements $TypedMutationRes
   factory $MutationSuccessCopyWith(MutationSuccess value, $Res Function(MutationSuccess) _then) = _$MutationSuccessCopyWithImpl;
 @useResult
 $Res call({
- int revision, DataValue value
+ int revision, skir.DataValue value
 });
 
 
-$DataValueCopyWith<$Res> get value;
+
 
 }
 /// @nodoc
@@ -259,20 +259,11 @@ class _$MutationSuccessCopyWithImpl<$Res>
   return _then(MutationSuccess(
 revision: null == revision ? _self.revision : revision // ignore: cast_nullable_to_non_nullable
 as int,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
-as DataValue,
+as skir.DataValue,
   ));
 }
 
-/// Create a copy of TypedMutationResult
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$DataValueCopyWith<$Res> get value {
-  
-  return $DataValueCopyWith<$Res>(_self.value, (value) {
-    return _then(_self.copyWith(value: value));
-  });
-}
+
 }
 
 /// @nodoc
@@ -280,11 +271,11 @@ $DataValueCopyWith<$Res> get value {
 
 class MutationConflict implements TypedMutationResult {
   const MutationConflict({required this.expectedRevision, required this.actualRevision, required this.actualValue});
-  
+
 
  final  int expectedRevision;
  final  int actualRevision;
- final  DataValue actualValue;
+ final  skir.DataValue actualValue;
 
 /// Create a copy of TypedMutationResult
 /// with the given fields replaced by the non-null parameter values.
@@ -318,11 +309,11 @@ abstract mixin class $MutationConflictCopyWith<$Res> implements $TypedMutationRe
   factory $MutationConflictCopyWith(MutationConflict value, $Res Function(MutationConflict) _then) = _$MutationConflictCopyWithImpl;
 @useResult
 $Res call({
- int expectedRevision, int actualRevision, DataValue actualValue
+ int expectedRevision, int actualRevision, skir.DataValue actualValue
 });
 
 
-$DataValueCopyWith<$Res> get actualValue;
+
 
 }
 /// @nodoc
@@ -340,31 +331,22 @@ class _$MutationConflictCopyWithImpl<$Res>
 expectedRevision: null == expectedRevision ? _self.expectedRevision : expectedRevision // ignore: cast_nullable_to_non_nullable
 as int,actualRevision: null == actualRevision ? _self.actualRevision : actualRevision // ignore: cast_nullable_to_non_nullable
 as int,actualValue: null == actualValue ? _self.actualValue : actualValue // ignore: cast_nullable_to_non_nullable
-as DataValue,
+as skir.DataValue,
   ));
 }
 
-/// Create a copy of TypedMutationResult
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$DataValueCopyWith<$Res> get actualValue {
-  
-  return $DataValueCopyWith<$Res>(_self.actualValue, (value) {
-    return _then(_self.copyWith(actualValue: value));
-  });
-}
+
 }
 
 /// @nodoc
 
 
 class MutationInvalid implements TypedMutationResult {
-   MutationInvalid( List<TypeDiagnostic> diagnostics): assert(diagnostics.isNotEmpty, 'Diagnostics must not be empty.'),_diagnostics = diagnostics;
-  
+   MutationInvalid( List<EditorDiagnostic> diagnostics): assert(diagnostics.isNotEmpty, 'Diagnostics must not be empty.'),_diagnostics = diagnostics;
 
- final  List<TypeDiagnostic> _diagnostics;
- List<TypeDiagnostic> get diagnostics {
+
+ final  List<EditorDiagnostic> _diagnostics;
+ List<EditorDiagnostic> get diagnostics {
   if (_diagnostics is EqualUnmodifiableListView) return _diagnostics;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_diagnostics);
@@ -403,7 +385,7 @@ abstract mixin class $MutationInvalidCopyWith<$Res> implements $TypedMutationRes
   factory $MutationInvalidCopyWith(MutationInvalid value, $Res Function(MutationInvalid) _then) = _$MutationInvalidCopyWithImpl;
 @useResult
 $Res call({
- List<TypeDiagnostic> diagnostics
+ List<EditorDiagnostic> diagnostics
 });
 
 
@@ -423,7 +405,7 @@ class _$MutationInvalidCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') $Res call({Object? diagnostics = null,}) {
   return _then(MutationInvalid(
 null == diagnostics ? _self._diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
-as List<TypeDiagnostic>,
+as List<EditorDiagnostic>,
   ));
 }
 
@@ -435,7 +417,7 @@ as List<TypeDiagnostic>,
 
 class MutationPermissionDenied implements TypedMutationResult {
   const MutationPermissionDenied(this.message);
-  
+
 
  final  String message;
 
@@ -503,7 +485,7 @@ as String,
 
 class MutationUncertain implements TypedMutationResult {
   const MutationUncertain({required this.message, required this.cause, required this.stackTrace, this.replay, this.submissionId});
-  
+
 
  final  String message;
  final  Object cause;
@@ -576,11 +558,11 @@ as Future<TypedMutationResult> Function()?,submissionId: freezed == submissionId
 
 
 class MutationUnavailable implements TypedMutationResult {
-   MutationUnavailable( List<TypeDiagnostic> diagnostics): assert(diagnostics.isNotEmpty, 'Diagnostics must not be empty.'),_diagnostics = diagnostics;
-  
+   MutationUnavailable( List<EditorDiagnostic> diagnostics): assert(diagnostics.isNotEmpty, 'Diagnostics must not be empty.'),_diagnostics = diagnostics;
 
- final  List<TypeDiagnostic> _diagnostics;
- List<TypeDiagnostic> get diagnostics {
+
+ final  List<EditorDiagnostic> _diagnostics;
+ List<EditorDiagnostic> get diagnostics {
   if (_diagnostics is EqualUnmodifiableListView) return _diagnostics;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_diagnostics);
@@ -619,7 +601,7 @@ abstract mixin class $MutationUnavailableCopyWith<$Res> implements $TypedMutatio
   factory $MutationUnavailableCopyWith(MutationUnavailable value, $Res Function(MutationUnavailable) _then) = _$MutationUnavailableCopyWithImpl;
 @useResult
 $Res call({
- List<TypeDiagnostic> diagnostics
+ List<EditorDiagnostic> diagnostics
 });
 
 
@@ -639,7 +621,7 @@ class _$MutationUnavailableCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') $Res call({Object? diagnostics = null,}) {
   return _then(MutationUnavailable(
 null == diagnostics ? _self._diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
-as List<TypeDiagnostic>,
+as List<EditorDiagnostic>,
   ));
 }
 

@@ -21,9 +21,11 @@ import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.LinkOccurrenceId
 import com.typewritermc.authoring.LocatedInitializationDiagnostic
 import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.PreparedCreation
+import com.typewritermc.authoring.PreparationTarget
+import com.typewritermc.authoring.PreparedContent
 import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.PreparedEditResult
+import com.typewritermc.authoring.PreparedValue
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.StructuralResult
 import com.typewritermc.authoring.TypeSelection
@@ -389,8 +391,9 @@ private class RealmEditContext(
                             suffix = "containing",
                         ),
                     )
-                if (!acceptPreparedCreation(prepared, containing, containingLocation)) return null
-                val authoredField = prepared.record.fields.getValue(missing.field.key)
+                if (!acceptPreparedValue(prepared, containing, containingLocation)) return null
+                val record = (prepared.content as PreparedContent.Record).record
+                val authoredField = record.fields.getValue(missing.field.key)
                 val fieldValue = authoredField as? DataValue.Named
                 if (fieldValue != null &&
                     lease.root.catalog.checked
@@ -419,12 +422,13 @@ private class RealmEditContext(
                     suffix = "child",
                 ),
             )
-        if (!acceptPreparedCreation(prepared, missing.expected, missing.at)) return null
-        return DataValue.Named(missing.expected, DataValue.Record(prepared.record.fields))
+        if (!acceptPreparedValue(prepared, missing.expected, missing.at)) return null
+        val record = (prepared.content as PreparedContent.Record).record
+        return DataValue.Named(missing.expected, DataValue.Record(record.fields))
     }
 
-    private fun acceptPreparedCreation(
-        prepared: PreparedCreation,
+    private fun acceptPreparedValue(
+        prepared: PreparedValue,
         expected: TypeUse.Named,
         base: ValueLocation,
     ): Boolean {
@@ -436,11 +440,12 @@ private class RealmEditContext(
                     } ?: base
                 LocatedInitializationDiagnostic(location, finding)
             }
-        if (prepared.record.configuration != TypeSelection.Complete(expected)) {
+        val record = (prepared.content as? PreparedContent.Record)?.record
+        if (record == null || record.configuration != TypeSelection.Complete(expected)) {
             problems += ValueProblem(base, "initialization_configuration_mismatch")
             return false
         }
-        return when (val structural = prepared.record.validateStructure(lease.root.catalog.checked)) {
+        return when (val structural = record.validateStructure(lease.root.catalog.checked)) {
             StructuralResult.Valid -> {
                 true
             }
@@ -484,8 +489,8 @@ private class RealmEditContext(
         return InitializationRequest(
             id = InitializationRequestId("${preparation.value}:$locationDigest:$suffix:$occurrence"),
             catalog = lease.root.catalog.generation,
-            type = TypeSelection.Complete(type),
-            supplied = supplied,
+            target = PreparationTarget.Record(TypeSelection.Complete(type)),
+            supplied = DataValue.Record(supplied),
             intentHash = "$prefix:$locationDigest:$suffix",
         )
     }

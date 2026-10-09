@@ -1,6 +1,7 @@
 package com.typewritermc.realm.routes
 
 import com.typewritermc.authoring.ArgumentLocation
+import com.typewritermc.authoring.PreparedEditResult
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.checking.CatalogGeneration
@@ -10,7 +11,6 @@ import com.typewritermc.realm.authoring.LinkRepairIntent
 import com.typewritermc.realm.authoring.TypeArgumentChangePreview
 import com.typewritermc.realm.authoring.TypeArgumentOperations
 import com.typewritermc.realm.authoring.TypePreviewResult
-import com.typewritermc.realm.authoring.TypeRepairIntent
 import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
@@ -28,7 +28,7 @@ import skirout.editor.v1.authoring.AuthoringStateTransferChunk
 import skirout.editor.v1.authoring.AuthoringTransferUnavailable
 import skirout.editor.v1.authoring.AuthoringTransferUnavailableReason
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
-import skirout.editor.v1.authoring.CommitTypeArgumentChangeResponse
+import skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse
 import skirout.editor.v1.authoring.PreviewTypeArgumentChangeRequest
 import skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse
 import skirout.editor.v1.authoring.QueryAuthoringStateRequest
@@ -38,9 +38,9 @@ import skirout.editor.v1.authoring.AuthoringResource as SkirAuthoringResource
 import skirout.editor.v1.authoring.AuthoringState as SkirAuthoringState
 import skirout.editor.v1.authoring.CatalogChanged as SkirCatalogChanged
 import skirout.editor.v1.authoring.LinkRepairIntent as SkirLinkRepairIntent
+import skirout.editor.v1.authoring.PreparedEditResult as SkirPreparedEditResult
 import skirout.editor.v1.authoring.TypeArgumentChangePreview as SkirTypeArgumentChangePreview
 import skirout.editor.v1.authoring.TypePreviewResult as SkirTypePreviewResult
-import skirout.editor.v1.authoring.TypeRepairIntent as SkirTypeRepairIntent
 import skirout.editor.v1.authoring_facts.LinkProjection as SkirLinkProjection
 import skirout.editor.v1.catalog.ResourceDefinitionId as SkirResourceDefinitionId
 import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
@@ -53,14 +53,14 @@ internal class AuthoringRoutes private constructor(
     private val repository: AuthoringRepository,
     private val snapshots: AuthoringViewStore,
     private val captureFindings: suspend (com.typewritermc.realm.authoring.AuthoringView) -> CapturedFindings,
-    private val typeArguments: TypeArgumentOperations = DefaultTypeArgumentOperations(repository, snapshots),
+    private val typeArguments: TypeArgumentOperations = DefaultTypeArgumentOperations(snapshots),
     private val contracts: EditorContracts,
 ) {
     constructor(
         repository: AuthoringRepository,
         snapshots: AuthoringViewStore,
         events: EditorCheckEvents,
-        typeArguments: TypeArgumentOperations = DefaultTypeArgumentOperations(repository, snapshots),
+        typeArguments: TypeArgumentOperations = DefaultTypeArgumentOperations(snapshots),
         contracts: EditorContracts,
     ) : this(repository, snapshots, events::capture, typeArguments, contracts)
 
@@ -68,7 +68,7 @@ internal class AuthoringRoutes private constructor(
         repository: AuthoringRepository,
         snapshots: AuthoringViewStore,
         findings: () -> List<com.typewritermc.realm.checking.FindingSet>,
-        typeArguments: TypeArgumentOperations = DefaultTypeArgumentOperations(repository, snapshots),
+        typeArguments: TypeArgumentOperations = DefaultTypeArgumentOperations(snapshots),
         contracts: EditorContracts,
     ) : this(
         repository,
@@ -94,10 +94,10 @@ internal class AuthoringRoutes private constructor(
             unary(contracts.previewTypeArgumentChange) { call ->
                 PreviewTypeArgumentChangeResponse.ResultWrapper(preview(call.request).toWire())
             }
-            unary(contracts.commitTypeArgumentChange) { call ->
+            unary(contracts.prepareTypeArgumentChange) { call ->
                 val preview = call.request.toDomain()
-                CommitTypeArgumentChangeResponse.ResultWrapper(
-                    SkirAuthoringOperationCodec.encode(typeArguments.confirm(preview)).getOrThrow(),
+                PrepareTypeArgumentChangeResponse.ResultWrapper(
+                    typeArguments.prepare(preview).toWire(),
                 )
             }
         }
@@ -247,11 +247,9 @@ private val TypeSelection.definition
 
 private fun TypeArgumentChangePreview.toWire(): SkirTypeArgumentChangePreview =
     SkirTypeArgumentChangePreview(
-        catalog = SkirCatalogGeneration(value = catalog.value),
         resource = SkirResourceId(value = resource.value),
         next = SkirAuthoringValueCodec.encode(next).getOrThrow(),
-        expectations = expectations.map { SkirAuthoringOperationCodec.encode(it).getOrThrow() },
-        intents = intents.map(TypeRepairIntent::toWire),
+        edit = SkirAuthoringOperationCodec.encode(edit).getOrThrow(),
         linkRepairs = linkRepairs.map(LinkRepairIntent::toWire),
         clearedLocations = clearedLocations.map { SkirAuthoringValueCodec.encode(it).getOrThrow() },
     )
@@ -260,56 +258,23 @@ private fun SkirTypeArgumentChangePreview.toDomain(): TypeArgumentChangePreview 
     TypeArgumentChangePreview(
         resource = ResourceId(resource.value),
         next = SkirAuthoringValueCodec.decode(next).getOrThrow(),
-        catalog = CatalogGeneration(catalog.value),
-        expectations = expectations.map { SkirAuthoringOperationCodec.decode(it).getOrThrow() },
-        intents = intents.map(SkirTypeRepairIntent::toDomain),
+        edit = SkirAuthoringOperationCodec.decode(edit).getOrThrow(),
         linkRepairs = linkRepairs.map(SkirLinkRepairIntent::toDomain),
         clearedLocations = clearedLocations.map { SkirAuthoringValueCodec.decode(it).getOrThrow() },
     )
 
-private fun TypeRepairIntent.toWire(): SkirTypeRepairIntent =
+private fun PreparedEditResult.toWire(): SkirPreparedEditResult =
     when (this) {
-        is TypeRepairIntent.ConfigureResource -> {
-            SkirTypeRepairIntent.createConfigureResource(
-                resource = SkirResourceId(value = resource.value),
-                configuration = SkirAuthoringValueCodec.encode(configuration).getOrThrow(),
-            )
+        is PreparedEditResult.Prepared -> {
+            SkirPreparedEditResult.createPrepared(edit = SkirAuthoringOperationCodec.encode(edit).getOrThrow())
         }
 
-        is TypeRepairIntent.Retag -> {
-            SkirTypeRepairIntent.createRetag(
-                at = SkirAuthoringValueCodec.encode(at).getOrThrow(),
-                type = type.toWire(),
-            )
+        is PreparedEditResult.NeedsInput -> {
+            SkirPreparedEditResult.NeedsInputWrapper(locations.map { SkirAuthoringValueCodec.encode(it).getOrThrow() })
         }
 
-        is TypeRepairIntent.Clear -> {
-            SkirTypeRepairIntent.ClearWrapper(SkirAuthoringValueCodec.encode(at).getOrThrow())
-        }
-    }
-
-private fun SkirTypeRepairIntent.toDomain(): TypeRepairIntent =
-    when (this) {
-        is SkirTypeRepairIntent.ConfigureResourceWrapper -> {
-            TypeRepairIntent.ConfigureResource(
-                resource = ResourceId(value.resource.value),
-                configuration = SkirAuthoringValueCodec.decode(value.configuration).getOrThrow(),
-            )
-        }
-
-        is SkirTypeRepairIntent.RetagWrapper -> {
-            TypeRepairIntent.Retag(
-                at = SkirAuthoringValueCodec.decode(value.at).getOrThrow(),
-                type = value.type.toDomain(),
-            )
-        }
-
-        is SkirTypeRepairIntent.ClearWrapper -> {
-            TypeRepairIntent.Clear(SkirAuthoringValueCodec.decode(value).getOrThrow())
-        }
-
-        else -> {
-            error("Unknown Skir type repair intent variant.")
+        is PreparedEditResult.Rejected -> {
+            SkirPreparedEditResult.RejectedWrapper(problems.map { SkirAuthoringValueCodec.encode(it).getOrThrow() })
         }
     }
 

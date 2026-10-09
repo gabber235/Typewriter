@@ -93,31 +93,40 @@ final class _PortableGalleryHost extends ChangeNotifier
 
   @override
   Future<PortablePresentationWriteResult> execute(
-    skir.EditorAction editorAction,
-  ) async => const PortablePresentationWriteResult.rejected(
+    skir.EditorAction editorAction, {
+    required PortableInvocationContext context,
+  }) async => const PortablePresentationWriteResult.rejected(
     "This gallery action has no persistence owner",
   );
 
   @override
-  skir.TypeUse? expectedType(skir.BindingRef reference) =>
-      switch (reference.bindingId) {
-        final value when value == _title => _textType,
-        final value when value == _count => _integerType,
-        _ => null,
-      };
+  skir.TypeUse? expectedType(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => switch (reference.bindingId) {
+    final value when value == _title => _textType,
+    final value when value == _count => _integerType,
+    _ => null,
+  };
 
   @override
-  skir.ValueLocation? location(skir.BindingRef reference) => null;
+  skir.ValueLocation? location(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => null;
 
   @override
-  skir.DataValue? read(skir.BindingRef reference) =>
-      reference.path.segments.isEmpty ? _values[reference.bindingId] : null;
+  skir.DataValue? read(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => reference.path.segments.isEmpty ? _values[reference.bindingId] : null;
 
   @override
   Future<PortablePresentationWriteResult> write(
     skir.BindingRef reference,
-    skir.DataValue value,
-  ) async {
+    skir.DataValue value, {
+    required PortableInvocationContext context,
+  }) async {
     if (reference.path.segments.isNotEmpty ||
         !_values.containsKey(reference.bindingId)) {
       return const PortablePresentationWriteResult.rejected(

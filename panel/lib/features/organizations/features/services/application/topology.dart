@@ -22,175 +22,65 @@ class OrganizationTopologyController extends _$OrganizationTopologyController {
       yield OrganizationTopology.empty;
       return;
     }
-    final results = ref
-        .watch(resourceRepositoriesProvider)
-        .services(organizationId)
-        .configurations
-        .listen((change) {
-          state = AsyncData(
-            (state.value ?? OrganizationTopology.empty).applyConfiguration(
-              change,
-            ),
-          );
-        });
-    ref.onDispose(results.cancel);
-    yield* ref.watchRequest(
+    yield* ref.watchProjection<
+      OrganizationTopology,
+      skir.WatchOrganizationTopologyResponse,
+      skir.OrganizationTopologyChanged
+    >(
       subject:
           "cloud.to.user.$userId.organization.${organizationId.id}.topology.watch",
-      listenSubject:
+      eventSubject:
           "cloud.from.organization.${organizationId.id}.topology.watch",
       requestBytes: skir.WatchOrganizationTopologyRequest.serializer.toBytes(
         skir.WatchOrganizationTopologyRequest(),
       ),
-      serializer: skir.WatchOrganizationTopologyResponse.serializer,
-      transformer: (_, response) => _reduceTopology(state.value, response),
+      responseSerializer: skir.WatchOrganizationTopologyResponse.serializer,
+      eventSerializer: skir.OrganizationTopologyChanged.serializer,
+      snapshot: (response) => response.readSnapshot(),
+      reduce: (current, event) => event.applyTo(current),
+      confirmedEvents: ref
+          .watch(resourceRepositoriesProvider)
+          .services(organizationId)
+          .configurations
+          .map(skir.OrganizationTopologyChanged.wrapConfigurationChanged),
+      reconcileSnapshot: (current, incoming) =>
+          incoming.reconcileSnapshot(current),
+      initialValue: OrganizationTopology.empty,
+      delivery: const ProjectionDelivery.ephemeral(),
+      reconciliation: const ProjectionReconciliation.latest(),
     );
   }
 
   /// Reloads the authoritative snapshot and replaces the owned subscription.
   void refresh() => ref.invalidateSelf();
-
-  /// Applies one complete host execution configuration with optimistic
-  /// concurrency.
-  ///
-  /// The backend result is the canonical configuration result. On success it
-  /// is integrated into this projection before being returned. On conflict,
-  /// the actual backend configuration is integrated before the conflict is
-  /// reported, allowing the editor to refresh its revision. A successful
-  /// result describes desired configuration and observed resources; it does
-  /// not guarantee that reconciliation has completed.
-  Future<TopologyConfigurationResult> configureHost({
-    required TopologyHost host,
-    required skir.HostExecutionConfiguration execution,
-  }) async {
-    var active = true;
-    final stop = ref.onDispose(() => active = false);
-    try {
-      final userId = await ref.read(userIdProvider.future);
-      if (userId == null) throw ApiException.notAuthenticated();
-      if (!active) throw ApiException.notAuthenticated();
-      state.ensureReady();
-      final request = skir.ConfigureServiceHostRequest(
-        operationId: uuid.v4(),
-        hostId: host.hostId,
-        expectedRevision: host.revision,
-        execution: execution,
-      );
-      final response = await ref.mutateSkir(
-        "cloud.to.user.$userId.organization.${this.organizationId.id}.topology.configure",
-        skir.ConfigureServiceHostRequest.serializer.toBytes(request),
-        skir.ConfigureServiceHostResponse.serializer,
-        submissionId: request.operationId,
-        replay: SubmissionReplay.identicalRequest,
-        label: "Apply Host configuration: ${host.hostId.id}",
-        resources: {(organizationId, host.hostId)},
-        classify: (response) => switch (response) {
-          skir.ConfigureServiceHostResponse_successWrapper() =>
-            MutationResponseDisposition.confirmed,
-          skir.ConfigureServiceHostResponse_unknown() ||
-          skir.ConfigureServiceHostResponse_internalErrorWrapper() =>
-            MutationResponseDisposition.uncertain,
-          _ => MutationResponseDisposition.rejected,
-        },
-      );
-
-      switch (response) {
-        case skir.ConfigureServiceHostResponse_successWrapper(:final value):
-          if (active) {
-            state = AsyncData(
-              (state.value ?? OrganizationTopology.empty).applyConfiguration(
-                value,
-              ),
-            );
-          }
-          return TopologyConfigurationResult.fromSkir(value);
-        case skir.ConfigureServiceHostResponse_conflictErrorWrapper(
-          :final value,
-        ):
-          if (active) {
-            state = AsyncData(
-              (state.value ?? OrganizationTopology.empty).applyConfiguration(
-                value.actual,
-              ),
-            );
-          }
-          throw _HostConfigurationConflict(
-            TopologyConfigurationResult.fromSkir(value.actual),
-          );
-        case skir.ConfigureServiceHostResponse_invalidConfigurationErrorWrapper(
-          :final value,
-        ):
-          throw ApiException.badRequest(value.message);
-        case skir.ConfigureServiceHostResponse_incompatibleEngineErrorWrapper():
-          throw ApiException.badRequest(
-            "The selected engine is not supported by this host",
-          );
-        case skir.ConfigureServiceHostResponse_realmNotFoundErrorWrapper():
-          throw ApiException.notFound("Realm");
-        case skir.ConfigureServiceHostResponse_invalidRecordIdErrorWrapper(
-          :final value,
-        ):
-          throw ApiException.invalidRecordId(value);
-        case skir.ConfigureServiceHostResponse_internalErrorWrapper():
-          throw ApiException.internalServerError();
-        case skir.ConfigureServiceHostResponse_invalidOperationIdErrorWrapper():
-          throw ApiException.badRequest("Operation identity is required");
-        case skir.ConfigureServiceHostResponse_operationIdentityReusedErrorWrapper():
-          throw ApiException.conflict(
-            "Operation identity was reused with different input",
-          );
-        case skir.ConfigureServiceHostResponse_unknown():
-          throw ApiException.unknownResponseMessage();
-      }
-    } finally {
-      stop();
-    }
-  }
 }
 
-class _HostConfigurationConflict implements Exception {
-  const _HostConfigurationConflict(this.actual);
-
-  final TopologyConfigurationResult actual;
-}
-
-OrganizationTopology _reduceTopology(
-  OrganizationTopology? previous,
-  skir.WatchOrganizationTopologyResponse response,
-) {
-  final current = previous ?? OrganizationTopology.empty;
-  return switch (response) {
+extension TopologySnapshotReply on skir.WatchOrganizationTopologyResponse {
+  OrganizationTopology readSnapshot() => switch (this) {
     skir.WatchOrganizationTopologyResponse_listWrapper(:final value) =>
-      OrganizationTopology(
-        hosts: value.hosts.map(TopologyHost.fromSkir).toList(),
-        realmInstances: value.realms.map(TopologyRealm.fromSkir).toList(),
-        engineInstances: value.engines.map(TopologyEngine.fromSkir).toList(),
-      ),
-    skir.WatchOrganizationTopologyResponse_configurationChangedWrapper(
-      :final value,
-    ) =>
-      current.applyConfiguration(value),
-    skir.WatchOrganizationTopologyResponse_hostUpdatedWrapper(:final value) =>
-      current.applyHostObservation(TopologyHost.fromSkir(value)),
-    skir.WatchOrganizationTopologyResponse_realmUpdatedWrapper(:final value) =>
-      current.applyRealmObservation(TopologyRealm.fromSkir(value)),
-    skir.WatchOrganizationTopologyResponse_engineUpdatedWrapper(:final value) =>
-      current.applyEngineObservation(TopologyEngine.fromSkir(value)),
-    skir.WatchOrganizationTopologyResponse_resourceRemovedWrapper(
-      :final value,
-    ) =>
-      current.copyWith(
-        hosts: current.hosts.where((it) => it.hostId != value).toList(),
-        realmInstances: current.realmInstances
-            .where((it) => it.realmId != value)
-            .toList(),
-        engineInstances: current.engineInstances
-            .where((it) => it.engineId != value)
-            .toList(),
-      ),
+      OrganizationTopology.fromSkir(value),
     skir.WatchOrganizationTopologyResponse_internalErrorWrapper() =>
       throw ApiException.internalServerError(),
     skir.WatchOrganizationTopologyResponse_unknown() =>
+      throw ApiException.unknownResponseMessage(),
+  };
+}
+
+extension TopologyProjectionChange on skir.OrganizationTopologyChanged {
+  OrganizationTopology applyTo(OrganizationTopology current) => switch (this) {
+    skir.OrganizationTopologyChanged_replaceWrapper(:final value) =>
+      OrganizationTopology.fromSkir(value).reconcileSnapshot(current),
+    skir.OrganizationTopologyChanged_configurationChangedWrapper(
+      :final value,
+    ) =>
+      current.applyConfiguration(value),
+    skir.OrganizationTopologyChanged_hostUpdatedWrapper(:final value) =>
+      current.applyHostObservation(TopologyHost.fromSkir(value)),
+    skir.OrganizationTopologyChanged_realmUpdatedWrapper(:final value) =>
+      current.applyRealmObservation(TopologyRealm.fromSkir(value)),
+    skir.OrganizationTopologyChanged_engineUpdatedWrapper(:final value) =>
+      current.applyEngineObservation(TopologyEngine.fromSkir(value)),
+    skir.OrganizationTopologyChanged_unknown() =>
       throw ApiException.unknownResponseMessage(),
   };
 }

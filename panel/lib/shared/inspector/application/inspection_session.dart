@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Composes the selected resources into one inspector presentation graph.
@@ -127,18 +129,15 @@ final class InspectionSession extends ChangeNotifier {
       )) {
         continue;
       }
-      final rootType = members
-          .map((candidate) => candidate.rootType)
-          .commonEditableProjection()
-          .valueOrNull;
-      if (rootType == null) continue;
+      final rootType = members.first.rootType;
+      if (members.any((candidate) => candidate.rootType != rootType)) continue;
       final catalog = _mergePortableCatalogs(members);
       if (catalog == null) continue;
       plans.add(
         _PortableMultiInspectionPlan(
           members: members,
           rootType: rootType,
-          typeCatalog: catalog,
+          catalog: catalog,
         ),
       );
     }
@@ -156,7 +155,7 @@ final class InspectionSession extends ChangeNotifier {
       final combined = context.multiEditorForOwners(
         owners,
         rootType: plan.rootType,
-        typeCatalog: plan.typeCatalog,
+        catalog: plan.catalog,
       );
       final host = plan.members.first.buildHost(
         plan.members,
@@ -229,30 +228,27 @@ Map<Object, PortableMultiInspectionSurface> _indexPortableSurfaces(
   return indexed;
 }
 
-TypeCatalog? _mergePortableCatalogs(
+CheckedEditorCatalog? _mergePortableCatalogs(
   List<PortableMultiInspectionSurface> surfaces,
 ) {
-  final definitions = <ResolvedTypeRef, TypeDefinition>{};
-  for (final surface in surfaces) {
-    for (final definition in surface.typeCatalog.definitions) {
-      final existing = definitions[definition.id];
-      if (existing != null && existing != definition) return null;
-      definitions[definition.id] = definition;
-    }
-  }
-  return TypeCatalog(definitions.values.toList());
+  final catalog = surfaces.first.catalog;
+  return surfaces.every(
+        (surface) => surface.catalog.snapshot == catalog.snapshot,
+      )
+      ? catalog
+      : null;
 }
 
 final class _PortableMultiInspectionPlan {
   const _PortableMultiInspectionPlan({
     required this.members,
     required this.rootType,
-    required this.typeCatalog,
+    required this.catalog,
   });
 
   final List<PortableMultiInspectionSurface> members;
-  final TypeExpression rootType;
-  final TypeCatalog typeCatalog;
+  final skir.TypeUse rootType;
+  final CheckedEditorCatalog catalog;
 }
 
 /// Restores a resource selection and its route without retaining an inspector.
@@ -260,7 +256,7 @@ final class _PortableMultiInspectionPlan {
 /// Editor resources use this destination after the inspector graph is rebuilt
 /// or closed. It observes route and selection state, but owns neither; closing
 /// it releases only those listeners.
-final class InspectorDestination extends EditorDestination {
+final class InspectorDestination extends WorkDestination {
   InspectorDestination({
     required this.container,
     required this.router,

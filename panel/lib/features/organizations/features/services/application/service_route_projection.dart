@@ -19,26 +19,6 @@ class CanonicalServices extends _$CanonicalServices {
     ref.listen(provider, (_, next) => state = next);
     yield await ref.read(provider.future);
   }
-
-  CanonicalOrganizationServices get _repository {
-    final organization = ref.read(organizationIdProvider);
-    if (organization == null) throw ApiException.noOrganization();
-    return ref.read(
-      canonicalOrganizationServicesProvider(organization).notifier,
-    );
-  }
-
-  /// Delegates registration binding to the selected organization repository.
-  Future<void> bindService(String token) async =>
-      _repository.bindService(token);
-
-  /// Delegates an identity update to the selected organization repository.
-  Future<TypedMutationResult> updateService(Service service) async =>
-      _repository.updateService(service);
-
-  /// Delegates service removal to the selected organization repository.
-  Future<void> deleteService(skir.RecordId id) async =>
-      _repository.deleteService(id);
 }
 
 /// Overlays active local editor drafts on canonical service identities.

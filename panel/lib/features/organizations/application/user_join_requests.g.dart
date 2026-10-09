@@ -54,7 +54,7 @@ final class UserJoinRequestsProvider
   UserJoinRequests create() => UserJoinRequests();
 }
 
-String _$userJoinRequestsHash() => r'7e2bc1e6c7f65d1a0fb1c45f00ecd30ee1a485cc';
+String _$userJoinRequestsHash() => r'aaa8d8888595b5555775111a277bc7734cfdad62';
 
 /// Owns the authenticated user's pending join request projection.
 ///

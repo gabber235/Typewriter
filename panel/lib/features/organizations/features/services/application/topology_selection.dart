@@ -47,11 +47,7 @@ class ServiceHostIdentifier extends SelectableIdentifier {
     final repository = ref
         .watch(resourceRepositoriesProvider)
         .services(organization);
-    final serviceCommands = canonicalService == null
-        ? null
-        : ref.watch(
-            canonicalOrganizationServicesProvider(organization).notifier,
-          );
+    final work = ref.watch(localWorkControllerProvider);
     final configurationSnapshot = HostEditorSnapshot(host, topology);
 
     return AsyncData(
@@ -82,7 +78,12 @@ class ServiceHostIdentifier extends SelectableIdentifier {
         ),
         onUnbind: canonicalService == null
             ? null
-            : () => serviceCommands!.deleteService(canonicalService.serviceId),
+            : () async {
+                final response = await work.execute(
+                  repository.unbind(canonicalService.serviceId),
+                );
+                response.requireAcceptedUnbinding();
+              },
         serviceIdentityTarget: service == null || canonicalService == null
             ? null
             : serviceIdentityTarget(

@@ -4001,7 +4001,7 @@ final class DeleteResourceIntent_mutable
 
 sealed class NewCounterpartChoice_orMutable {
   _lib_editor_v1_type_catalog.ValueLocation_orMutable get containing;
-  _lib_editor_v1_catalog.PreparedCreation_orMutable get prepared;
+  _lib_editor_v1_catalog.PreparedValue_orMutable get prepared;
 
   NewCounterpartChoice toFrozen();
 }
@@ -4011,12 +4011,12 @@ final class NewCounterpartChoice implements NewCounterpartChoice_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.ValueLocation containing;
   @_core.override
-  final _lib_editor_v1_catalog.PreparedCreation prepared;
+  final _lib_editor_v1_catalog.PreparedValue prepared;
   _skir.internal__UnrecognizedFields? _u;
 
   factory NewCounterpartChoice({
     required _lib_editor_v1_type_catalog.ValueLocation_orMutable containing,
-    required _lib_editor_v1_catalog.PreparedCreation_orMutable prepared,
+    required _lib_editor_v1_catalog.PreparedValue_orMutable prepared,
   }) => NewCounterpartChoice._(containing.toFrozen(), prepared.toFrozen());
 
   NewCounterpartChoice._(this.containing, this.prepared);
@@ -4024,7 +4024,7 @@ final class NewCounterpartChoice implements NewCounterpartChoice_orMutable {
   /// Default instance with all fields set to their default values.
   static final defaultInstance = NewCounterpartChoice._(
     _lib_editor_v1_type_catalog.ValueLocation.defaultInstance,
-    _lib_editor_v1_catalog.PreparedCreation.defaultInstance,
+    _lib_editor_v1_catalog.PreparedValue.defaultInstance,
   );
 
   /// Returns a new mutable instance.
@@ -4032,7 +4032,7 @@ final class NewCounterpartChoice implements NewCounterpartChoice_orMutable {
   static NewCounterpartChoice_mutable mutable() =>
       NewCounterpartChoice_mutable._(
         _lib_editor_v1_type_catalog.ValueLocation.defaultInstance,
-        _lib_editor_v1_catalog.PreparedCreation.defaultInstance,
+        _lib_editor_v1_catalog.PreparedValue.defaultInstance,
       );
 
   /// Returns this instance (no-op).
@@ -4082,7 +4082,7 @@ final class NewCounterpartChoice implements NewCounterpartChoice_orMutable {
         "prepared",
         "prepared",
         1,
-        _lib_editor_v1_catalog.PreparedCreation.serializer,
+        _lib_editor_v1_catalog.PreparedValue.serializer,
         "",
         (it) => it.prepared,
         (it, v) => it.prepared = v,
@@ -4107,7 +4107,7 @@ final class NewCounterpartChoice implements NewCounterpartChoice_orMutable {
 final class NewCounterpartChoice_mutable
     implements NewCounterpartChoice_orMutable {
   _lib_editor_v1_type_catalog.ValueLocation_orMutable containing;
-  _lib_editor_v1_catalog.PreparedCreation_orMutable prepared;
+  _lib_editor_v1_catalog.PreparedValue_orMutable prepared;
   _skir.internal__UnrecognizedFields? _u;
 
   NewCounterpartChoice_mutable._(this.containing, this.prepared);
@@ -4126,12 +4126,12 @@ final class NewCounterpartChoice_mutable
 
   /// If the value of [prepared] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [prepared] and returns it.
-  _lib_editor_v1_catalog.PreparedCreation_mutable get mutablePrepared {
+  _lib_editor_v1_catalog.PreparedValue_mutable get mutablePrepared {
     final value = this.prepared;
-    if (value is _lib_editor_v1_catalog.PreparedCreation_mutable) {
+    if (value is _lib_editor_v1_catalog.PreparedValue_mutable) {
       return value;
     } else {
-      return this.prepared = (value as _lib_editor_v1_catalog.PreparedCreation)
+      return this.prepared = (value as _lib_editor_v1_catalog.PreparedValue)
           .toMutable();
     }
   }
@@ -4182,7 +4182,7 @@ sealed class CounterpartChoice {
   /// Same as `wrapNew(NewCounterpartChoice(...))`.
   factory CounterpartChoice.createNew({
     required _lib_editor_v1_type_catalog.ValueLocation_orMutable containing,
-    required _lib_editor_v1_catalog.PreparedCreation_orMutable prepared,
+    required _lib_editor_v1_catalog.PreparedValue_orMutable prepared,
   }) => CounterpartChoice.wrapNew(
     NewCounterpartChoice(containing: containing, prepared: prepared),
   );
@@ -6061,195 +6061,6 @@ final class AuthoringChanged_mutable implements AuthoringChanged_orMutable {
 }
 
 // -----------------------------------------------------------------------------
-// enum TypeRepairIntent
-// -----------------------------------------------------------------------------
-
-/// To switch on the variants:
-///   ```
-///   switch (e) {
-///     case TypeRepairIntent_unknown(): { ... }
-///     case TypeRepairIntent_retag(:var value): { ... }
-///     case TypeRepairIntent_clear(:var value): { ... }
-///     case TypeRepairIntent_configureResource(:var value): { ... }
-///   }
-///   ```
-///
-/// Deeply immutable.
-sealed class TypeRepairIntent {
-  /// Constant indicating an unknown `TypeRepairIntent`.
-  /// Default value for fields of type `TypeRepairIntent`.
-  static const TypeRepairIntent unknown = TypeRepairIntent_unknown._instance;
-
-  /// Create a 'retag' variant wrapping around the given value.
-  factory TypeRepairIntent.wrapRetag(RetagIntent value) =>
-      TypeRepairIntent_retagWrapper._(value);
-
-  /// Same as `wrapRetag(RetagIntent(...))`.
-  factory TypeRepairIntent.createRetag({
-    required _lib_editor_v1_type_catalog.ValueLocation_orMutable at,
-    required _lib_editor_v1_type_catalog.NamedTypeUse_orMutable type,
-  }) => TypeRepairIntent.wrapRetag(RetagIntent(at: at, type: type));
-
-  /// Create a 'clear' variant wrapping around the given value.
-  factory TypeRepairIntent.wrapClear(
-    _lib_editor_v1_type_catalog.ValueLocation value,
-  ) => TypeRepairIntent_clearWrapper._(value);
-
-  /// Same as `wrapClear(_lib_editor_v1_type_catalog.ValueLocation(...))`.
-  factory TypeRepairIntent.createClear({
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
-    required _lib_editor_v1_type_catalog.ValuePath_orMutable path,
-  }) => TypeRepairIntent.wrapClear(
-    _lib_editor_v1_type_catalog.ValueLocation(resource: resource, path: path),
-  );
-
-  /// Create a 'configure_resource' variant wrapping around the given value.
-  factory TypeRepairIntent.wrapConfigureResource(
-    ResourceConfigurationIntent value,
-  ) => TypeRepairIntent_configureResourceWrapper._(value);
-
-  /// Same as `wrapConfigureResource(ResourceConfigurationIntent(...))`.
-  factory TypeRepairIntent.createConfigureResource({
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
-    required _lib_editor_v1_type_catalog.TypeSelection configuration,
-  }) => TypeRepairIntent.wrapConfigureResource(
-    ResourceConfigurationIntent(
-      resource: resource,
-      configuration: configuration,
-    ),
-  );
-
-  /// Returns the kind of variant held by this TypeRepairIntent.
-  TypeRepairIntent_kind get kind;
-
-  /// Serializer for `TypeRepairIntent` instances.
-  static _skir.EnumSerializer<TypeRepairIntent> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addWrapperVariant(
-        1,
-        "retag",
-        "wrapRetag",
-        RetagIntent.serializer,
-        "",
-        TypeRepairIntent_retagWrapper._,
-        (it) => it.value,
-        ordinal: TypeRepairIntent_kind.retagWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        2,
-        "clear",
-        "wrapClear",
-        _lib_editor_v1_type_catalog.ValueLocation.serializer,
-        "",
-        TypeRepairIntent_clearWrapper._,
-        (it) => it.value,
-        ordinal: TypeRepairIntent_kind.clearWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        3,
-        "configure_resource",
-        "wrapConfigureResource",
-        ResourceConfigurationIntent.serializer,
-        "",
-        TypeRepairIntent_configureResourceWrapper._,
-        (it) => it.value,
-        ordinal: TypeRepairIntent_kind.configureResourceWrapper._ordinal,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/authoring.skir:TypeRepairIntent",
-        doc: "",
-        unknownInstance: TypeRepairIntent_unknown._instance,
-        enumInstance: TypeRepairIntent.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: TypeRepairIntent_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
-}
-
-/// The kind of variant held by a `TypeRepairIntent`.
-enum TypeRepairIntent_kind {
-  unknown(0),
-  retagWrapper(1),
-  clearWrapper(2),
-  configureResourceWrapper(3);
-
-  final _core.int _ordinal;
-
-  const TypeRepairIntent_kind(this._ordinal);
-}
-
-final class TypeRepairIntent_unknown implements TypeRepairIntent {
-  static const _instance = TypeRepairIntent_unknown._();
-
-  final _skir.internal__UnrecognizedVariant? _u;
-
-  const TypeRepairIntent_unknown._() : _u = null;
-  TypeRepairIntent_unknown._unrecognized(this._u);
-
-  @_core.override
-  TypeRepairIntent_kind get kind => TypeRepairIntent_kind.unknown;
-  @_core.override
-  _core.bool operator ==(other) => other is TypeRepairIntent_unknown;
-  @_core.override
-  _core.int get hashCode => 8118964;
-  @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, TypeRepairIntent.serializer);
-}
-
-sealed class _TypeRepairIntent_wrapper implements TypeRepairIntent {
-  _core.dynamic get value;
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (other is! _TypeRepairIntent_wrapper) return false;
-    return kind == other.kind && value == other.value;
-  }
-
-  @_core.override
-  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
-
-  @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, TypeRepairIntent.serializer);
-}
-
-final class TypeRepairIntent_retagWrapper extends _TypeRepairIntent_wrapper {
-  final RetagIntent value;
-
-  TypeRepairIntent_retagWrapper._(this.value);
-
-  @_core.override
-  TypeRepairIntent_kind get kind => TypeRepairIntent_kind.retagWrapper;
-}
-
-final class TypeRepairIntent_clearWrapper extends _TypeRepairIntent_wrapper {
-  final _lib_editor_v1_type_catalog.ValueLocation value;
-
-  TypeRepairIntent_clearWrapper._(this.value);
-
-  @_core.override
-  TypeRepairIntent_kind get kind => TypeRepairIntent_kind.clearWrapper;
-}
-
-final class TypeRepairIntent_configureResourceWrapper
-    extends _TypeRepairIntent_wrapper {
-  final ResourceConfigurationIntent value;
-
-  TypeRepairIntent_configureResourceWrapper._(this.value);
-
-  @_core.override
-  TypeRepairIntent_kind get kind =>
-      TypeRepairIntent_kind.configureResourceWrapper;
-}
-
-// -----------------------------------------------------------------------------
 // enum LinkRepairIntent
 // -----------------------------------------------------------------------------
 
@@ -6405,12 +6216,9 @@ final class LinkRepairIntent_removeWrapper extends _LinkRepairIntent_wrapper {
 // -----------------------------------------------------------------------------
 
 sealed class TypeArgumentChangePreview_orMutable {
-  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get catalog;
   _lib_editor_v1_type_catalog.ResourceId_orMutable get resource;
   _lib_editor_v1_type_catalog.TypeSelection get next;
-  _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation>
-  get expectations;
-  _core.Iterable<TypeRepairIntent> get intents;
+  PreparedEdit_orMutable get edit;
   _core.Iterable<LinkRepairIntent> get linkRepairs;
   _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable>
   get clearedLocations;
@@ -6422,16 +6230,11 @@ sealed class TypeArgumentChangePreview_orMutable {
 final class TypeArgumentChangePreview
     implements TypeArgumentChangePreview_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.CatalogGeneration catalog;
-  @_core.override
   final _lib_editor_v1_type_catalog.ResourceId resource;
   @_core.override
   final _lib_editor_v1_type_catalog.TypeSelection next;
   @_core.override
-  final _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation>
-  expectations;
-  @_core.override
-  final _core.Iterable<TypeRepairIntent> intents;
+  final PreparedEdit edit;
   @_core.override
   final _core.Iterable<LinkRepairIntent> linkRepairs;
   @_core.override
@@ -6440,42 +6243,33 @@ final class TypeArgumentChangePreview
   _skir.internal__UnrecognizedFields? _u;
 
   factory TypeArgumentChangePreview({
-    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog,
     required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
     required _lib_editor_v1_type_catalog.TypeSelection next,
-    required _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation>
-    expectations,
-    required _core.Iterable<TypeRepairIntent> intents,
+    required PreparedEdit_orMutable edit,
     required _core.Iterable<LinkRepairIntent> linkRepairs,
     required _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable>
     clearedLocations,
   }) => TypeArgumentChangePreview._(
-    catalog.toFrozen(),
     resource.toFrozen(),
     next,
-    _skir.internal__frozenCopy(expectations),
-    _skir.internal__frozenCopy(intents),
+    edit.toFrozen(),
     _skir.internal__frozenCopy(linkRepairs),
     _skir.internal__frozenMappedCopy(clearedLocations, (it) => it.toFrozen()),
   );
 
   TypeArgumentChangePreview._(
-    this.catalog,
     this.resource,
     this.next,
-    this.expectations,
-    this.intents,
+    this.edit,
     this.linkRepairs,
     this.clearedLocations,
   );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = TypeArgumentChangePreview._(
-    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
     _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
     _lib_editor_v1_type_catalog.TypeSelection.unknown,
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
+    PreparedEdit.defaultInstance,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
   );
@@ -6484,11 +6278,9 @@ final class TypeArgumentChangePreview
   /// Fields are initialized to their default values.
   static TypeArgumentChangePreview_mutable mutable() =>
       TypeArgumentChangePreview_mutable._(
-        _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
         _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
         _lib_editor_v1_type_catalog.TypeSelection.unknown,
-        _skir.KeyedIterable.empty,
-        _skir.KeyedIterable.empty,
+        PreparedEdit.defaultInstance,
         _skir.KeyedIterable.empty,
         _skir.KeyedIterable.empty,
       );
@@ -6501,11 +6293,9 @@ final class TypeArgumentChangePreview
   /// Returns a mutable shallow copy of this instance.
   TypeArgumentChangePreview_mutable toMutable() =>
       TypeArgumentChangePreview_mutable._(
-        this.catalog,
         this.resource,
         this.next,
-        this.expectations,
-        this.intents,
+        this.edit,
         this.linkRepairs,
         this.clearedLocations,
       );
@@ -6524,11 +6314,9 @@ final class TypeArgumentChangePreview
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
   _core.List get _equality_proxy => [
-    this.catalog,
     this.resource,
     this.next,
-    this.expectations,
-    this.intents,
+    this.edit,
     this.linkRepairs,
     this.clearedLocations,
   ];
@@ -6544,18 +6332,9 @@ final class TypeArgumentChangePreview
   get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
-        "catalog",
-        "catalog",
+        "resource",
+        "resource",
         0,
-        _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
-        "",
-        (it) => it.catalog,
-        (it, v) => it.catalog = v,
-      );
-      _serializerBuilder.addField(
-        "resource",
-        "resource",
-        1,
         _lib_editor_v1_type_catalog.ResourceId.serializer,
         "",
         (it) => it.resource,
@@ -6564,36 +6343,25 @@ final class TypeArgumentChangePreview
       _serializerBuilder.addField(
         "next",
         "next",
-        2,
+        1,
         _lib_editor_v1_type_catalog.TypeSelection.serializer,
         "",
         (it) => it.next,
         (it, v) => it.next = v,
       );
       _serializerBuilder.addField(
-        "expectations",
-        "expectations",
-        3,
-        _skir.Serializers.iterable(
-          _lib_editor_v1_authoring_facts.EditExpectation.serializer,
-        ),
+        "edit",
+        "edit",
+        2,
+        PreparedEdit.serializer,
         "",
-        (it) => it.expectations,
-        (it, v) => it.expectations = v,
-      );
-      _serializerBuilder.addField(
-        "intents",
-        "intents",
-        4,
-        _skir.Serializers.iterable(TypeRepairIntent.serializer),
-        "",
-        (it) => it.intents,
-        (it, v) => it.intents = v,
+        (it) => it.edit,
+        (it, v) => it.edit = v,
       );
       _serializerBuilder.addField(
         "link_repairs",
         "linkRepairs",
-        5,
+        3,
         _skir.Serializers.iterable(LinkRepairIntent.serializer),
         "",
         (it) => it.linkRepairs,
@@ -6602,7 +6370,7 @@ final class TypeArgumentChangePreview
       _serializerBuilder.addField(
         "cleared_locations",
         "clearedLocations",
-        6,
+        4,
         _skir.Serializers.iterable(
           _lib_editor_v1_type_catalog.ValueLocation.serializer,
         ),
@@ -6629,37 +6397,21 @@ final class TypeArgumentChangePreview
 /// Mutable version of [TypeArgumentChangePreview].
 final class TypeArgumentChangePreview_mutable
     implements TypeArgumentChangePreview_orMutable {
-  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog;
   _lib_editor_v1_type_catalog.ResourceId_orMutable resource;
   _lib_editor_v1_type_catalog.TypeSelection next;
-  _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation> expectations;
-  _core.Iterable<TypeRepairIntent> intents;
+  PreparedEdit_orMutable edit;
   _core.Iterable<LinkRepairIntent> linkRepairs;
   _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable>
   clearedLocations;
   _skir.internal__UnrecognizedFields? _u;
 
   TypeArgumentChangePreview_mutable._(
-    this.catalog,
     this.resource,
     this.next,
-    this.expectations,
-    this.intents,
+    this.edit,
     this.linkRepairs,
     this.clearedLocations,
   );
-
-  /// If the value of [catalog] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [catalog] and returns it.
-  _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableCatalog {
-    final value = this.catalog;
-    if (value is _lib_editor_v1_type_catalog.CatalogGeneration_mutable) {
-      return value;
-    } else {
-      return this.catalog =
-          (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
-    }
-  }
 
   /// If the value of [resource] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
@@ -6673,29 +6425,14 @@ final class TypeArgumentChangePreview_mutable
     }
   }
 
-  /// If the value of [expectations] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [expectations] and returns it.
-  _core.List<_lib_editor_v1_authoring_facts.EditExpectation>
-  get mutableExpectations {
-    final value = this.expectations;
-    if (value
-        is _skir.internal__MutableList<
-          _lib_editor_v1_authoring_facts.EditExpectation
-        >) {
+  /// If the value of [edit] is already mutable, returns it as-is.
+  /// Otherwise, makes a mutable copy, assigns it back to [edit] and returns it.
+  PreparedEdit_mutable get mutableEdit {
+    final value = this.edit;
+    if (value is PreparedEdit_mutable) {
       return value;
     } else {
-      return this.expectations = _skir.internal__MutableList([...value]);
-    }
-  }
-
-  /// If the value of [intents] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [intents] and returns it.
-  _core.List<TypeRepairIntent> get mutableIntents {
-    final value = this.intents;
-    if (value is _skir.internal__MutableList<TypeRepairIntent>) {
-      return value;
-    } else {
-      return this.intents = _skir.internal__MutableList([...value]);
+      return this.edit = (value as PreparedEdit).toMutable();
     }
   }
 
@@ -6728,11 +6465,9 @@ final class TypeArgumentChangePreview_mutable
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   TypeArgumentChangePreview toFrozen() => TypeArgumentChangePreview(
-    catalog: this.catalog,
     resource: this.resource,
     next: this.next,
-    expectations: this.expectations,
-    intents: this.intents,
+    edit: this.edit,
     linkRepairs: this.linkRepairs,
     clearedLocations: this.clearedLocations,
   ).._u = this._u;
@@ -6862,22 +6597,17 @@ sealed class TypePreviewResult {
 
   /// Same as `wrapReady(TypeArgumentChangePreview(...))`.
   factory TypePreviewResult.createReady({
-    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog,
     required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
     required _lib_editor_v1_type_catalog.TypeSelection next,
-    required _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation>
-    expectations,
-    required _core.Iterable<TypeRepairIntent> intents,
+    required PreparedEdit_orMutable edit,
     required _core.Iterable<LinkRepairIntent> linkRepairs,
     required _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable>
     clearedLocations,
   }) => TypePreviewResult.wrapReady(
     TypeArgumentChangePreview(
-      catalog: catalog,
       resource: resource,
       next: next,
-      expectations: expectations,
-      intents: intents,
+      edit: edit,
       linkRepairs: linkRepairs,
       clearedLocations: clearedLocations,
     ),
@@ -9832,55 +9562,57 @@ final class PreviewTypeArgumentChangeResponse_internalErrorWrapper
 }
 
 // -----------------------------------------------------------------------------
-// enum CommitTypeArgumentChangeResponse
+// enum PrepareTypeArgumentChangeResponse
 // -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
-///     case CommitTypeArgumentChangeResponse_unknown(): { ... }
-///     case CommitTypeArgumentChangeResponse_result(:var value): { ... }
-///     case CommitTypeArgumentChangeResponse_internalError(:var value): { ... }
+///     case PrepareTypeArgumentChangeResponse_unknown(): { ... }
+///     case PrepareTypeArgumentChangeResponse_result(:var value): { ... }
+///     case PrepareTypeArgumentChangeResponse_internalError(:var value): { ... }
 ///   }
 ///   ```
 ///
 /// Deeply immutable.
-sealed class CommitTypeArgumentChangeResponse {
-  /// Constant indicating an unknown `CommitTypeArgumentChangeResponse`.
-  /// Default value for fields of type `CommitTypeArgumentChangeResponse`.
-  static const CommitTypeArgumentChangeResponse unknown =
-      CommitTypeArgumentChangeResponse_unknown._instance;
+sealed class PrepareTypeArgumentChangeResponse {
+  /// Constant indicating an unknown `PrepareTypeArgumentChangeResponse`.
+  /// Default value for fields of type `PrepareTypeArgumentChangeResponse`.
+  static const PrepareTypeArgumentChangeResponse unknown =
+      PrepareTypeArgumentChangeResponse_unknown._instance;
 
   /// Create a 'result' variant wrapping around the given value.
-  factory CommitTypeArgumentChangeResponse.wrapResult(CommitResult value) =>
-      CommitTypeArgumentChangeResponse_resultWrapper._(value);
+  factory PrepareTypeArgumentChangeResponse.wrapResult(
+    PreparedEditResult value,
+  ) => PrepareTypeArgumentChangeResponse_resultWrapper._(value);
 
   /// Create a 'internal_error' variant wrapping around the given value.
-  factory CommitTypeArgumentChangeResponse.wrapInternalError(
+  factory PrepareTypeArgumentChangeResponse.wrapInternalError(
     _lib_kernel_v1_errors.InternalError value,
-  ) => CommitTypeArgumentChangeResponse_internalErrorWrapper._(value);
+  ) => PrepareTypeArgumentChangeResponse_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory CommitTypeArgumentChangeResponse.createInternalError() =>
-      CommitTypeArgumentChangeResponse.wrapInternalError(
+  factory PrepareTypeArgumentChangeResponse.createInternalError() =>
+      PrepareTypeArgumentChangeResponse.wrapInternalError(
         _lib_kernel_v1_errors.InternalError(),
       );
 
-  /// Returns the kind of variant held by this CommitTypeArgumentChangeResponse.
-  CommitTypeArgumentChangeResponse_kind get kind;
+  /// Returns the kind of variant held by this PrepareTypeArgumentChangeResponse.
+  PrepareTypeArgumentChangeResponse_kind get kind;
 
-  /// Serializer for `CommitTypeArgumentChangeResponse` instances.
-  static _skir.EnumSerializer<CommitTypeArgumentChangeResponse> get serializer {
+  /// Serializer for `PrepareTypeArgumentChangeResponse` instances.
+  static _skir.EnumSerializer<PrepareTypeArgumentChangeResponse>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addWrapperVariant(
         1,
         "result",
         "wrapResult",
-        CommitResult.serializer,
+        PreparedEditResult.serializer,
         "",
-        CommitTypeArgumentChangeResponse_resultWrapper._,
+        PrepareTypeArgumentChangeResponse_resultWrapper._,
         (it) => it.value,
-        ordinal: CommitTypeArgumentChangeResponse_kind.resultWrapper._ordinal,
+        ordinal: PrepareTypeArgumentChangeResponse_kind.resultWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         2,
@@ -9888,10 +9620,11 @@ sealed class CommitTypeArgumentChangeResponse {
         "wrapInternalError",
         _lib_kernel_v1_errors.InternalError.serializer,
         "",
-        CommitTypeArgumentChangeResponse_internalErrorWrapper._,
+        PrepareTypeArgumentChangeResponse_internalErrorWrapper._,
         (it) => it.value,
-        ordinal:
-            CommitTypeArgumentChangeResponse_kind.internalErrorWrapper._ordinal,
+        ordinal: PrepareTypeArgumentChangeResponse_kind
+            .internalErrorWrapper
+            ._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -9900,59 +9633,59 @@ sealed class CommitTypeArgumentChangeResponse {
 
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
-        recordId: "editor/v1/authoring.skir:CommitTypeArgumentChangeResponse",
+        recordId: "editor/v1/authoring.skir:PrepareTypeArgumentChangeResponse",
         doc: "",
-        unknownInstance: CommitTypeArgumentChangeResponse_unknown._instance,
-        enumInstance: CommitTypeArgumentChangeResponse.unknown,
+        unknownInstance: PrepareTypeArgumentChangeResponse_unknown._instance,
+        enumInstance: PrepareTypeArgumentChangeResponse.unknown,
         getOrdinal: (it) => it.kind._ordinal,
         wrapUnrecognized:
-            CommitTypeArgumentChangeResponse_unknown._unrecognized,
+            PrepareTypeArgumentChangeResponse_unknown._unrecognized,
         getUnrecognized: (it) => it._u,
       );
 }
 
-/// The kind of variant held by a `CommitTypeArgumentChangeResponse`.
-enum CommitTypeArgumentChangeResponse_kind {
+/// The kind of variant held by a `PrepareTypeArgumentChangeResponse`.
+enum PrepareTypeArgumentChangeResponse_kind {
   unknown(0),
   resultWrapper(1),
   internalErrorWrapper(2);
 
   final _core.int _ordinal;
 
-  const CommitTypeArgumentChangeResponse_kind(this._ordinal);
+  const PrepareTypeArgumentChangeResponse_kind(this._ordinal);
 }
 
-final class CommitTypeArgumentChangeResponse_unknown
-    implements CommitTypeArgumentChangeResponse {
-  static const _instance = CommitTypeArgumentChangeResponse_unknown._();
+final class PrepareTypeArgumentChangeResponse_unknown
+    implements PrepareTypeArgumentChangeResponse {
+  static const _instance = PrepareTypeArgumentChangeResponse_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
 
-  const CommitTypeArgumentChangeResponse_unknown._() : _u = null;
-  CommitTypeArgumentChangeResponse_unknown._unrecognized(this._u);
+  const PrepareTypeArgumentChangeResponse_unknown._() : _u = null;
+  PrepareTypeArgumentChangeResponse_unknown._unrecognized(this._u);
 
   @_core.override
-  CommitTypeArgumentChangeResponse_kind get kind =>
-      CommitTypeArgumentChangeResponse_kind.unknown;
+  PrepareTypeArgumentChangeResponse_kind get kind =>
+      PrepareTypeArgumentChangeResponse_kind.unknown;
   @_core.override
   _core.bool operator ==(other) =>
-      other is CommitTypeArgumentChangeResponse_unknown;
+      other is PrepareTypeArgumentChangeResponse_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
   _core.String toString() => _skir.internal__stringify(
     this,
-    CommitTypeArgumentChangeResponse.serializer,
+    PrepareTypeArgumentChangeResponse.serializer,
   );
 }
 
-sealed class _CommitTypeArgumentChangeResponse_wrapper
-    implements CommitTypeArgumentChangeResponse {
+sealed class _PrepareTypeArgumentChangeResponse_wrapper
+    implements PrepareTypeArgumentChangeResponse {
   _core.dynamic get value;
 
   @_core.override
   _core.bool operator ==(other) {
-    if (other is! _CommitTypeArgumentChangeResponse_wrapper) return false;
+    if (other is! _PrepareTypeArgumentChangeResponse_wrapper) return false;
     return kind == other.kind && value == other.value;
   }
 
@@ -9962,30 +9695,30 @@ sealed class _CommitTypeArgumentChangeResponse_wrapper
   @_core.override
   _core.String toString() => _skir.internal__stringify(
     this,
-    CommitTypeArgumentChangeResponse.serializer,
+    PrepareTypeArgumentChangeResponse.serializer,
   );
 }
 
-final class CommitTypeArgumentChangeResponse_resultWrapper
-    extends _CommitTypeArgumentChangeResponse_wrapper {
-  final CommitResult value;
+final class PrepareTypeArgumentChangeResponse_resultWrapper
+    extends _PrepareTypeArgumentChangeResponse_wrapper {
+  final PreparedEditResult value;
 
-  CommitTypeArgumentChangeResponse_resultWrapper._(this.value);
+  PrepareTypeArgumentChangeResponse_resultWrapper._(this.value);
 
   @_core.override
-  CommitTypeArgumentChangeResponse_kind get kind =>
-      CommitTypeArgumentChangeResponse_kind.resultWrapper;
+  PrepareTypeArgumentChangeResponse_kind get kind =>
+      PrepareTypeArgumentChangeResponse_kind.resultWrapper;
 }
 
-final class CommitTypeArgumentChangeResponse_internalErrorWrapper
-    extends _CommitTypeArgumentChangeResponse_wrapper {
+final class PrepareTypeArgumentChangeResponse_internalErrorWrapper
+    extends _PrepareTypeArgumentChangeResponse_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
-  CommitTypeArgumentChangeResponse_internalErrorWrapper._(this.value);
+  PrepareTypeArgumentChangeResponse_internalErrorWrapper._(this.value);
 
   @_core.override
-  CommitTypeArgumentChangeResponse_kind get kind =>
-      CommitTypeArgumentChangeResponse_kind.internalErrorWrapper;
+  PrepareTypeArgumentChangeResponse_kind get kind =>
+      PrepareTypeArgumentChangeResponse_kind.internalErrorWrapper;
 }
 
 final _skir.Method<QueryAuthoringStateRequest, QueryAuthoringStateResponse>
@@ -10027,11 +9760,11 @@ previewTypeArgumentChangeMethod = _skir.Method(
   "",
 );
 
-final _skir.Method<TypeArgumentChangePreview, CommitTypeArgumentChangeResponse>
-commitTypeArgumentChangeMethod = _skir.Method(
-  "CommitTypeArgumentChange",
+final _skir.Method<TypeArgumentChangePreview, PrepareTypeArgumentChangeResponse>
+prepareTypeArgumentChangeMethod = _skir.Method(
+  "PrepareTypeArgumentChange",
   920014,
   TypeArgumentChangePreview.serializer,
-  CommitTypeArgumentChangeResponse.serializer,
+  PrepareTypeArgumentChangeResponse.serializer,
   "",
 );

@@ -21,8 +21,7 @@ Future<Page?> createPage({
       )
       .value;
   final checked = draft?.catalog;
-  final template = resourceCreationTemplate(
-    checked,
+  final template = checked.resourceCreationTemplate(
     corePageResourceDefinition.value,
   );
   final book = draft?.resource(bookId);

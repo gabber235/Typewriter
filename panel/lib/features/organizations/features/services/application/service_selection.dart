@@ -21,9 +21,10 @@ class ServiceIdentifier extends SelectableIdentifier {
     if (organization == null) {
       return AsyncError(ApiException.noOrganization(), StackTrace.current);
     }
-    final repository = ref.watch(
-      canonicalOrganizationServicesProvider(organization).notifier,
-    );
+    final repository = ref
+        .watch(resourceRepositoriesProvider)
+        .services(organization);
+    final work = ref.watch(localWorkControllerProvider);
     final canonicalState = ref.watch(canonicalServiceProvider(serviceId));
     if (canonicalState.mapUnready<Selectable>() case final value?) return value;
     final canonical = canonicalState.requireValue;
@@ -44,11 +45,12 @@ class ServiceIdentifier extends SelectableIdentifier {
           id: this,
           service: canonical,
           connected: connections[serviceId] ?? false,
-          repository: ref
-              .watch(resourceRepositoriesProvider)
-              .services(organization),
+          repository: repository,
         ),
-        onUnbind: () => repository.deleteService(serviceId),
+        onUnbind: () async {
+          final response = await work.execute(repository.unbind(serviceId));
+          response.requireAcceptedUnbinding();
+        },
         id: this,
         service: service,
         canonicalService: canonical,
@@ -125,10 +127,10 @@ final class _ServiceIdentityPortableSurface
   final EditorTarget target;
 
   @override
-  TypeExpression get rootType => _serviceIdentityType;
+  skir.TypeUse get rootType => _serviceIdentityType;
 
   @override
-  TypeCatalog get typeCatalog => _serviceIdentityCatalog;
+  CheckedEditorCatalog get catalog => _serviceIdentityCatalog;
 
   @override
   bool isCompatibleWith(PortableMultiInspectionSurface other) =>
@@ -145,11 +147,36 @@ final class _ServiceIdentityPortableSurface
   );
 }
 
-final _serviceIdentityType = RecordType(
-  fields: {"name": TypeField(name: "name", type: identifierStringType)},
+final _serviceIdentityDefinition = _draftType("ServiceIdentity");
+final _serviceIdentityType = skir.TypeUse.wrapNamed(
+  _draftUse(_serviceIdentityDefinition),
 );
-
-final _serviceIdentityCatalog = panelPresentationTypeCatalog(const []);
+final _serviceIdentityCatalog = skir.EditorCatalogWireSnapshot(
+  generation: skir.CatalogGeneration(value: "panel.service.identity"),
+  types: [
+    _draftPublished(
+      _serviceIdentityDefinition,
+      fields: [
+        _draftField(
+          _serviceIdentityDefinition,
+          "name",
+          _hostConfigurationTextTemplate,
+        ),
+      ],
+    ),
+  ],
+  presentations: const [],
+  presentationMaterials: const [],
+  configuration: const [],
+  capabilities: const [],
+  relations: const [],
+  endpointBindings: const [],
+  resourceDefinitions: const [],
+  recommendations: const [],
+  roleFallbacks: const [],
+  initialization: const [],
+  diagnostics: const [],
+).asTrustedLocalCatalog();
 
 /// Creates the scoped editor target used to rename [service].
 ///

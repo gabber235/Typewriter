@@ -28,8 +28,8 @@ use wasmcloud_utils::{
         ConfigureServiceHostResponse_InvalidOperationIdError,
         ConfigureServiceHostResponse_OperationIdentityReusedError,
         ConfigureServiceHostResponse_RealmNotFoundError, EngineRealmSelection, EngineTarget,
-        HostConfigurationChange, WatchHostExecutionResponse, WatchHostExecutionResponse_Desired,
-        WatchOrganizationTopologyResponse,
+        HostConfigurationChange, OrganizationTopologyChanged, WatchHostExecutionResponse,
+        WatchHostExecutionResponse_Desired,
     },
     skir_transaction_outcome, skir_variant,
     wasmcloud::messaging::types::NatsMessage,
@@ -387,10 +387,10 @@ async fn publish_configuration(
     organization_id: &str,
     change: &HostConfigurationChange,
 ) -> Result<(), otel_wasi::Error> {
-    wasmcloud_utils::skir_subjects::organization_topology(organization_id)
-        .publish(WatchOrganizationTopologyResponse::ConfigurationChanged(
-            Box::new(change.clone()),
-        ))
+    wasmcloud_utils::skir_subjects::organization_topology_changed(organization_id)
+        .publish(OrganizationTopologyChanged::ConfigurationChanged(Box::new(
+            change.clone(),
+        )))
         .await?;
     wasmcloud_utils::skir_subjects::host_execution(&change.host.service_id.key.to_string())
         .publish(skir_variant!(WatchHostExecutionResponse::Desired {

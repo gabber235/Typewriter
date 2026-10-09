@@ -62,8 +62,8 @@ void main() {
       final base = fixtureAuthoringCommands(transport);
       final commands = AuthoredResourceCommands(
         previewTypeArguments: base.previewTypeArguments,
-        commitTypeArguments: base.commitTypeArguments,
-        prepareCreation: base.prepareCreation,
+        prepareTypeArguments: base.prepareTypeArguments,
+        prepareValue: base.prepareValue,
         invokeCommand: base.invokeCommand,
         watchSearch: base.watchSearch,
         reload: base.reload,
@@ -161,8 +161,8 @@ _fixture() {
   final commands = AuthoredResourceCommands(
     previewTypeArguments: ({required resource, required requested}) async =>
         throw UnimplementedError(),
-    commitTypeArguments: (_) async => throw UnimplementedError(),
-    prepareCreation: (_) async => throw UnimplementedError(),
+    prepareTypeArguments: (_) async => throw UnimplementedError(),
+    prepareValue: (_) async => throw UnimplementedError(),
     invokeCommand: ({required capabilityId, required payload}) async =>
         throw UnimplementedError(),
     watchSearch: (_) => const Stream.empty(),

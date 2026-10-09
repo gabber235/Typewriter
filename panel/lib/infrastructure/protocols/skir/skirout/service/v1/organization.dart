@@ -118,6 +118,211 @@ enum _ServiceUpdateValidationError_consts
 }
 
 // -----------------------------------------------------------------------------
+// enum OrganizationServicesChanged
+// -----------------------------------------------------------------------------
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case OrganizationServicesChanged_unknown(): { ... }
+///     case OrganizationServicesChanged_replace(:var value): { ... }
+///     case OrganizationServicesChanged_update(:var value): { ... }
+///     case OrganizationServicesChanged_remove(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class OrganizationServicesChanged {
+  /// Constant indicating an unknown `OrganizationServicesChanged`.
+  /// Default value for fields of type `OrganizationServicesChanged`.
+  static const OrganizationServicesChanged unknown =
+      OrganizationServicesChanged_unknown._instance;
+
+  /// Create a 'replace' variant wrapping around the given value.
+  factory OrganizationServicesChanged.wrapReplace(
+    _core.Iterable<_lib_service_v1_service.Service> value,
+  ) => OrganizationServicesChanged_replaceWrapper._(value);
+
+  /// Create a 'update' variant wrapping around the given value.
+  factory OrganizationServicesChanged.wrapUpdate(
+    _lib_service_v1_service.Service value,
+  ) => OrganizationServicesChanged_updateWrapper._(value);
+
+  /// Same as `wrapUpdate(_lib_service_v1_service.Service(...))`.
+  factory OrganizationServicesChanged.createUpdate({
+    required _lib_kernel_v1_record_id.RecordId_orMutable serviceId,
+    required _core.int revision,
+    required _core.String name,
+    required _lib_service_v1_service.ServiceRole role,
+    required _core.DateTime createdAt,
+    required _lib_kernel_v1_record_id.RecordId_orMutable? organization,
+    required _lib_service_v1_service.ServiceRegistration_orMutable?
+    registration,
+    required _lib_service_v1_service.ServiceState_orMutable? state,
+  }) => OrganizationServicesChanged.wrapUpdate(
+    _lib_service_v1_service.Service(
+      serviceId: serviceId,
+      revision: revision,
+      name: name,
+      role: role,
+      createdAt: createdAt,
+      organization: organization,
+      registration: registration,
+      state: state,
+    ),
+  );
+
+  /// Create a 'remove' variant wrapping around the given value.
+  factory OrganizationServicesChanged.wrapRemove(
+    _lib_kernel_v1_record_id.RecordId value,
+  ) => OrganizationServicesChanged_removeWrapper._(value);
+
+  /// Same as `wrapRemove(_lib_kernel_v1_record_id.RecordId(...))`.
+  factory OrganizationServicesChanged.createRemove({
+    required _core.String table,
+    required _lib_kernel_v1_record_id.RecordIdKey key,
+  }) => OrganizationServicesChanged.wrapRemove(
+    _lib_kernel_v1_record_id.RecordId(table: table, key: key),
+  );
+
+  /// Returns the kind of variant held by this OrganizationServicesChanged.
+  OrganizationServicesChanged_kind get kind;
+
+  /// Serializer for `OrganizationServicesChanged` instances.
+  static _skir.EnumSerializer<OrganizationServicesChanged> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "replace",
+        "wrapReplace",
+        _skir.Serializers.iterable(_lib_service_v1_service.Service.serializer),
+        "",
+        OrganizationServicesChanged_replaceWrapper._,
+        (it) => it.value,
+        ordinal: OrganizationServicesChanged_kind.replaceWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "update",
+        "wrapUpdate",
+        _lib_service_v1_service.Service.serializer,
+        "",
+        OrganizationServicesChanged_updateWrapper._,
+        (it) => it.value,
+        ordinal: OrganizationServicesChanged_kind.updateWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        3,
+        "remove",
+        "wrapRemove",
+        _lib_kernel_v1_record_id.RecordId.serializer,
+        "",
+        OrganizationServicesChanged_removeWrapper._,
+        (it) => it.value,
+        ordinal: OrganizationServicesChanged_kind.removeWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "service/v1/organization.skir:OrganizationServicesChanged",
+        doc: "",
+        unknownInstance: OrganizationServicesChanged_unknown._instance,
+        enumInstance: OrganizationServicesChanged.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: OrganizationServicesChanged_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `OrganizationServicesChanged`.
+enum OrganizationServicesChanged_kind {
+  unknown(0),
+  replaceWrapper(1),
+  updateWrapper(2),
+  removeWrapper(3);
+
+  final _core.int _ordinal;
+
+  const OrganizationServicesChanged_kind(this._ordinal);
+}
+
+final class OrganizationServicesChanged_unknown
+    implements OrganizationServicesChanged {
+  static const _instance = OrganizationServicesChanged_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const OrganizationServicesChanged_unknown._() : _u = null;
+  OrganizationServicesChanged_unknown._unrecognized(this._u);
+
+  @_core.override
+  OrganizationServicesChanged_kind get kind =>
+      OrganizationServicesChanged_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is OrganizationServicesChanged_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, OrganizationServicesChanged.serializer);
+}
+
+sealed class _OrganizationServicesChanged_wrapper
+    implements OrganizationServicesChanged {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _OrganizationServicesChanged_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, OrganizationServicesChanged.serializer);
+}
+
+final class OrganizationServicesChanged_replaceWrapper
+    extends _OrganizationServicesChanged_wrapper {
+  final _core.Iterable<_lib_service_v1_service.Service> value;
+
+  OrganizationServicesChanged_replaceWrapper._(this.value);
+
+  @_core.override
+  OrganizationServicesChanged_kind get kind =>
+      OrganizationServicesChanged_kind.replaceWrapper;
+}
+
+final class OrganizationServicesChanged_updateWrapper
+    extends _OrganizationServicesChanged_wrapper {
+  final _lib_service_v1_service.Service value;
+
+  OrganizationServicesChanged_updateWrapper._(this.value);
+
+  @_core.override
+  OrganizationServicesChanged_kind get kind =>
+      OrganizationServicesChanged_kind.updateWrapper;
+}
+
+final class OrganizationServicesChanged_removeWrapper
+    extends _OrganizationServicesChanged_wrapper {
+  final _lib_kernel_v1_record_id.RecordId value;
+
+  OrganizationServicesChanged_removeWrapper._(this.value);
+
+  @_core.override
+  OrganizationServicesChanged_kind get kind =>
+      OrganizationServicesChanged_kind.removeWrapper;
+}
+
+// -----------------------------------------------------------------------------
 // struct WatchOrganizationServicesRequest
 // -----------------------------------------------------------------------------
 
@@ -216,9 +421,6 @@ final class WatchOrganizationServicesRequest_mutable
 ///     case WatchOrganizationServicesResponse_unknown(): { ... }
 ///     case WatchOrganizationServicesResponse_internalError(:var value): { ... }
 ///     case WatchOrganizationServicesResponse_list(:var value): { ... }
-///     case WatchOrganizationServicesResponse_add(:var value): { ... }
-///     case WatchOrganizationServicesResponse_update(:var value): { ... }
-///     case WatchOrganizationServicesResponse_remove(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -244,77 +446,6 @@ sealed class WatchOrganizationServicesResponse {
   factory WatchOrganizationServicesResponse.wrapList(
     _core.Iterable<_lib_service_v1_service.Service> value,
   ) => WatchOrganizationServicesResponse_listWrapper._(value);
-
-  /// Create a 'add' variant wrapping around the given value.
-  factory WatchOrganizationServicesResponse.wrapAdd(
-    _lib_service_v1_service.Service value,
-  ) => WatchOrganizationServicesResponse_addWrapper._(value);
-
-  /// Same as `wrapAdd(_lib_service_v1_service.Service(...))`.
-  factory WatchOrganizationServicesResponse.createAdd({
-    required _lib_kernel_v1_record_id.RecordId_orMutable serviceId,
-    required _core.int revision,
-    required _core.String name,
-    required _lib_service_v1_service.ServiceRole role,
-    required _core.DateTime createdAt,
-    required _lib_kernel_v1_record_id.RecordId_orMutable? organization,
-    required _lib_service_v1_service.ServiceRegistration_orMutable?
-    registration,
-    required _lib_service_v1_service.ServiceState_orMutable? state,
-  }) => WatchOrganizationServicesResponse.wrapAdd(
-    _lib_service_v1_service.Service(
-      serviceId: serviceId,
-      revision: revision,
-      name: name,
-      role: role,
-      createdAt: createdAt,
-      organization: organization,
-      registration: registration,
-      state: state,
-    ),
-  );
-
-  /// Create a 'update' variant wrapping around the given value.
-  factory WatchOrganizationServicesResponse.wrapUpdate(
-    _lib_service_v1_service.Service value,
-  ) => WatchOrganizationServicesResponse_updateWrapper._(value);
-
-  /// Same as `wrapUpdate(_lib_service_v1_service.Service(...))`.
-  factory WatchOrganizationServicesResponse.createUpdate({
-    required _lib_kernel_v1_record_id.RecordId_orMutable serviceId,
-    required _core.int revision,
-    required _core.String name,
-    required _lib_service_v1_service.ServiceRole role,
-    required _core.DateTime createdAt,
-    required _lib_kernel_v1_record_id.RecordId_orMutable? organization,
-    required _lib_service_v1_service.ServiceRegistration_orMutable?
-    registration,
-    required _lib_service_v1_service.ServiceState_orMutable? state,
-  }) => WatchOrganizationServicesResponse.wrapUpdate(
-    _lib_service_v1_service.Service(
-      serviceId: serviceId,
-      revision: revision,
-      name: name,
-      role: role,
-      createdAt: createdAt,
-      organization: organization,
-      registration: registration,
-      state: state,
-    ),
-  );
-
-  /// Create a 'remove' variant wrapping around the given value.
-  factory WatchOrganizationServicesResponse.wrapRemove(
-    _lib_kernel_v1_record_id.RecordId value,
-  ) => WatchOrganizationServicesResponse_removeWrapper._(value);
-
-  /// Same as `wrapRemove(_lib_kernel_v1_record_id.RecordId(...))`.
-  factory WatchOrganizationServicesResponse.createRemove({
-    required _core.String table,
-    required _lib_kernel_v1_record_id.RecordIdKey key,
-  }) => WatchOrganizationServicesResponse.wrapRemove(
-    _lib_kernel_v1_record_id.RecordId(table: table, key: key),
-  );
 
   /// Returns the kind of variant held by this WatchOrganizationServicesResponse.
   WatchOrganizationServicesResponse_kind get kind;
@@ -345,36 +476,6 @@ sealed class WatchOrganizationServicesResponse {
         (it) => it.value,
         ordinal: WatchOrganizationServicesResponse_kind.listWrapper._ordinal,
       );
-      _serializerBuilder.addWrapperVariant(
-        3,
-        "add",
-        "wrapAdd",
-        _lib_service_v1_service.Service.serializer,
-        "",
-        WatchOrganizationServicesResponse_addWrapper._,
-        (it) => it.value,
-        ordinal: WatchOrganizationServicesResponse_kind.addWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        4,
-        "update",
-        "wrapUpdate",
-        _lib_service_v1_service.Service.serializer,
-        "",
-        WatchOrganizationServicesResponse_updateWrapper._,
-        (it) => it.value,
-        ordinal: WatchOrganizationServicesResponse_kind.updateWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        5,
-        "remove",
-        "wrapRemove",
-        _lib_kernel_v1_record_id.RecordId.serializer,
-        "",
-        WatchOrganizationServicesResponse_removeWrapper._,
-        (it) => it.value,
-        ordinal: WatchOrganizationServicesResponse_kind.removeWrapper._ordinal,
-      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -398,10 +499,7 @@ sealed class WatchOrganizationServicesResponse {
 enum WatchOrganizationServicesResponse_kind {
   unknown(0),
   internalErrorWrapper(1),
-  listWrapper(2),
-  addWrapper(3),
-  updateWrapper(4),
-  removeWrapper(5);
+  listWrapper(2);
 
   final _core.int _ordinal;
 
@@ -472,39 +570,6 @@ final class WatchOrganizationServicesResponse_listWrapper
   @_core.override
   WatchOrganizationServicesResponse_kind get kind =>
       WatchOrganizationServicesResponse_kind.listWrapper;
-}
-
-final class WatchOrganizationServicesResponse_addWrapper
-    extends _WatchOrganizationServicesResponse_wrapper {
-  final _lib_service_v1_service.Service value;
-
-  WatchOrganizationServicesResponse_addWrapper._(this.value);
-
-  @_core.override
-  WatchOrganizationServicesResponse_kind get kind =>
-      WatchOrganizationServicesResponse_kind.addWrapper;
-}
-
-final class WatchOrganizationServicesResponse_updateWrapper
-    extends _WatchOrganizationServicesResponse_wrapper {
-  final _lib_service_v1_service.Service value;
-
-  WatchOrganizationServicesResponse_updateWrapper._(this.value);
-
-  @_core.override
-  WatchOrganizationServicesResponse_kind get kind =>
-      WatchOrganizationServicesResponse_kind.updateWrapper;
-}
-
-final class WatchOrganizationServicesResponse_removeWrapper
-    extends _WatchOrganizationServicesResponse_wrapper {
-  final _lib_kernel_v1_record_id.RecordId value;
-
-  WatchOrganizationServicesResponse_removeWrapper._(this.value);
-
-  @_core.override
-  WatchOrganizationServicesResponse_kind get kind =>
-      WatchOrganizationServicesResponse_kind.removeWrapper;
 }
 
 // -----------------------------------------------------------------------------

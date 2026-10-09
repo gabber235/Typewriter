@@ -71,7 +71,11 @@ class OrganizationMembers extends _$OrganizationMembers {
     }
 
     final request = skir.WatchOrganizationMembersRequest();
-    yield* ref.watchSequencedRequest(
+    yield* ref.watchProjection<
+      List<OrganizationMember>,
+      skir.WatchOrganizationMembersResponse,
+      skir.OrganizationMembersChanged
+    >(
       subject:
           "cloud.to.user.$userId.organization.${organizationId.id}.members.watch",
       eventSubject:
@@ -81,24 +85,23 @@ class OrganizationMembers extends _$OrganizationMembers {
       ),
       responseSerializer: skir.WatchOrganizationMembersResponse.serializer,
       eventSerializer: skir.OrganizationMembersChanged.serializer,
-      snapshot: (response) {
-        return switch (response) {
-          skir.WatchOrganizationMembersResponse_unknown() =>
-            throw ApiException.unknownResponseMessage(),
-          skir.WatchOrganizationMembersResponse_internalErrorWrapper() =>
-            throw ApiException.internalServerError(),
-          skir.WatchOrganizationMembersResponse_snapshotWrapper(:final value) =>
-            SequencedSnapshot(
-              sequence: value.sequence,
-              value: value.values.map(OrganizationMember.fromSkir).toList(),
-            ),
-          skir.WatchOrganizationMembersResponse_changedWrapper() =>
-            throw StateError("Snapshot request returned a delta"),
-        };
+      snapshot: (response) => switch (response) {
+        skir.WatchOrganizationMembersResponse_unknown() =>
+          throw ApiException.unknownResponseMessage(),
+        skir.WatchOrganizationMembersResponse_internalErrorWrapper() =>
+          throw ApiException.internalServerError(),
+        skir.WatchOrganizationMembersResponse_snapshotWrapper(:final value) =>
+          value.values.map(OrganizationMember.fromSkir).toList(),
       },
-      eventSequence: (event) => event.sequence,
       reduce: _reduceMembers,
-      sequenceState: sequencedCollection,
+      delivery: const ProjectionDelivery.ordered(
+        stream: "TYPEWRITER_MEMBERSHIP",
+      ),
+      reconciliation: ProjectionReconciliation.sequenced(
+        snapshotSequence: (response) => response.readSnapshot().sequence,
+        eventSequence: (event) => event.sequence,
+        sequenceState: sequencedCollection,
+      ),
     );
   }
 
@@ -338,6 +341,17 @@ class OrganizationMembers extends _$OrganizationMembers {
     AsyncValue<List<OrganizationMember>> previous,
     AsyncValue<List<OrganizationMember>> next,
   ) => true;
+}
+
+extension MemberSnapshotReply on skir.WatchOrganizationMembersResponse {
+  skir.OrganizationMembersSnapshot readSnapshot() => switch (this) {
+    skir.WatchOrganizationMembersResponse_snapshotWrapper(:final value) =>
+      value,
+    skir.WatchOrganizationMembersResponse_internalErrorWrapper() =>
+      throw ApiException.internalServerError(),
+    skir.WatchOrganizationMembersResponse_unknown() =>
+      throw ApiException.unknownResponseMessage(),
+  };
 }
 
 /// Reduces complete add and update values, plus identity only removals, into

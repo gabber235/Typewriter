@@ -1,31 +1,37 @@
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
+
+import "../../../support/editor_fixture.dart";
 
 const _key = EditorResourceKey(
   scope: "original organization",
   identity: "resource",
 );
-final _title = DataPath.root.field("title");
+final _title = editorRootPath.field("title");
 
-RecordValue _value(String title) => RecordValue({"title": StringValue(title)});
+skir.DataValue _value(String title) =>
+    recordEditorValue({"title": skir.DataValue.wrapStringValue(title)});
+
+final _fieldTypes = {
+  "title": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+};
 
 EditorSnapshot _snapshot({required String title, required int revision}) =>
     FakeEditorSnapshot(
-      EditorDocument(
-        rootType: RecordType(
-          fields: const {"title": TypeField(name: "title", type: StringType())},
-        ),
-        typeCatalog: const TypeCatalog([]),
-        confirmedValue: _value(title),
-        revision: revision,
+      recordEditorDocument(
+        {"title": skir.DataValue.wrapStringValue(title)},
+        _fieldTypes,
+        revision,
       ),
       validation: acceptTestEditorMutation,
     );
 
 void main() {
   test("same revision refresh adopts the authoritative value without sending the draft", () async {
-    final workspace = LocalWorkSession();
+    final workspace = ScopedWorkSession();
     addTearDown(workspace.dispose);
     var sends = 0;
     final resource = FakeEditableResource(
@@ -50,11 +56,14 @@ void main() {
       ),
     ) as TransactionalEditorSource;
     workspace.retain(resource.key);
-    source.update(_title, const StringValue("Red"));
+    source.update(_title, skir.DataValue.wrapStringValue("Red"));
 
     expect(await source.flush(), isA<MutationUnavailable>());
     expect(source.document.confirmedValue, _value("Green"));
-    expect(source.value(_title).valueOrNull, const StringValue("Red"));
+    expect(
+      source.value(_title).valueOrNull,
+      skir.DataValue.wrapStringValue("Red"),
+    );
     expect(source.hasWork, isTrue);
     expect(
       source.saveState(_title).phase,
@@ -64,7 +73,10 @@ void main() {
 
     source.discardDraft();
     expect(source.document.confirmedValue, _value("Green"));
-    expect(source.value(_title).valueOrNull, const StringValue("Green"));
+    expect(
+      source.value(_title).valueOrNull,
+      skir.DataValue.wrapStringValue("Green"),
+    );
     expect(source.saveState(_title).phase, EditorSavePhase.idle);
   });
 }

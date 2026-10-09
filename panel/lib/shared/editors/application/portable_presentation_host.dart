@@ -90,6 +90,31 @@ abstract class PortablePresentationDocument
   }) = _PortablePresentationDocument;
 }
 
+final class PortableInvocationContext {
+  PortableInvocationContext({
+    required Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings,
+    required this.catalogGeneration,
+  }) : bindings = Map.unmodifiable(bindings);
+
+  final Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings;
+  final skir.CatalogGeneration catalogGeneration;
+
+  PortableInvocationContext withBinding(
+    skir.ExpressionBindingId id,
+    PortableExpressionBinding binding,
+  ) => PortableInvocationContext(
+    bindings: {...bindings, id: binding},
+    catalogGeneration: catalogGeneration,
+  );
+
+  PortableInvocationContext withBindings(
+    Map<skir.ExpressionBindingId, PortableExpressionBinding> values,
+  ) => PortableInvocationContext(
+    bindings: {...bindings, ...values},
+    catalogGeneration: catalogGeneration,
+  );
+}
+
 /// Optional operations supplied by hosts that support more than local writes.
 ///
 /// A service or topology editor normally leaves these callbacks absent. A
@@ -111,8 +136,8 @@ abstract class PortablePresentationCapabilities
     Future<void> Function()? reload,
     Future<void> Function()? commit,
     ValueChanged<skir.ResourceId>? openResource,
-    Future<skir.PreparedCreation> Function(skir.InitializationRequest request)?
-    prepareCreation,
+    Future<skir.PreparedValue> Function(skir.ValuePreparationRequest request)?
+    prepareValue,
   }) = _PortablePresentationCapabilities;
 }
 
@@ -140,22 +165,297 @@ abstract interface class PortablePresentationHost implements Listenable {
 
   PortablePresentationCapabilities get capabilities;
 
-  skir.DataValue? read(skir.BindingRef reference);
+  skir.DataValue? read(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  });
 
-  skir.ValueLocation? location(skir.BindingRef reference);
+  skir.ValueLocation? location(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  });
 
-  skir.TypeUse? expectedType(skir.BindingRef reference);
+  skir.TypeUse? expectedType(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  });
 
   Future<PortablePresentationWriteResult> write(
     skir.BindingRef reference,
-    skir.DataValue value,
-  );
+    skir.DataValue value, {
+    required PortableInvocationContext context,
+  });
 
   Future<PortablePresentationWriteResult> execute(
-    skir.EditorAction editorAction,
-  );
+    skir.EditorAction editorAction, {
+    required PortableInvocationContext context,
+  });
 
   void dispose();
+}
+
+abstract interface class PortableCollectionMutationHost {
+  Future<PortablePresentationWriteResult> addCollectionItem(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  });
+
+  PortablePresentationWriteResult addMapRow(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  });
+}
+
+final class PortableCollectionRowProjection {
+  const PortableCollectionRowProjection({
+    required this.resource,
+    required this.configuration,
+    required this.label,
+    required this.row,
+    required this.key,
+    required this.canonicalKey,
+    required this.selectable,
+  });
+
+  final skir.ResourceId resource;
+  final skir.TypeSelection configuration;
+  final String label;
+  final skir.DataValue row;
+  final skir.DataValue key;
+  final String canonicalKey;
+  final bool selectable;
+}
+
+final class PortableCollectionProjection {
+  const PortableCollectionProjection({
+    required this.definition,
+    required this.rows,
+    this.problem,
+  });
+
+  final skir.PresentationCollectionDefinition? definition;
+  final List<PortableCollectionRowProjection> rows;
+  final String? problem;
+}
+
+final class PortableResourceProjection {
+  const PortableResourceProjection({
+    required this.resource,
+    required this.configuration,
+    required this.label,
+    required this.value,
+  });
+
+  final skir.ResourceId resource;
+  final skir.TypeSelection configuration;
+  final String label;
+  final skir.DataValue value;
+}
+
+abstract interface class PortableCollectionProjectionHost {
+  PortableCollectionProjection projectCollection(
+    String sourceId, {
+    required skir.PresentationMaterial material,
+    required PortableInvocationContext context,
+  });
+
+  PortableResourceProjection? projectResource(
+    skir.ResourceId resource, {
+    required PortableInvocationContext context,
+  });
+}
+
+sealed class PortableLinkCounterpartRequest {
+  const PortableLinkCounterpartRequest();
+}
+
+final class PortableAutomaticCounterpart
+    extends PortableLinkCounterpartRequest {
+  const PortableAutomaticCounterpart();
+}
+
+final class PortableExistingCounterpart extends PortableLinkCounterpartRequest {
+  const PortableExistingCounterpart(this.occurrence);
+
+  final skir.LinkOccurrence occurrence;
+}
+
+final class PortableCreatedCounterpart extends PortableLinkCounterpartRequest {
+  const PortableCreatedCounterpart(this.slot);
+
+  final PortableNewCounterpartChoice slot;
+}
+
+abstract interface class PortableLinkHost {
+  bool get canPrepareCounterpart;
+
+  PortableLinkPlanResult planLink(
+    skir.ValueLocation source, {
+    required PortableInvocationContext context,
+  });
+
+  Future<PortablePresentationWriteResult> connectLink({
+    required PortableLinkPlan plan,
+    required PortableLinkTargetChoice target,
+    required PortableLinkCounterpartRequest counterpart,
+    required PortableInvocationContext context,
+  });
+
+  PortablePresentationWriteResult disconnectLink(
+    skir.LinkOccurrence occurrence, {
+    required PortableInvocationContext context,
+  });
+}
+
+final class PortablePageGraphPlacement {
+  const PortablePageGraphPlacement({
+    required this.x,
+    required this.y,
+    required this.width,
+    required this.height,
+  });
+
+  final int x;
+  final int y;
+  final int width;
+  final int height;
+}
+
+final class PortablePageEntryProjection {
+  const PortablePageEntryProjection({
+    required this.resource,
+    required this.occurrence,
+    required this.resourceProjection,
+    this.graph,
+  });
+
+  final skir.ResourceId resource;
+  final skir.LinkOccurrence occurrence;
+  final PortableResourceProjection resourceProjection;
+  final PortablePageGraphPlacement? graph;
+}
+
+final class PortablePageEdgeProjection {
+  const PortablePageEdgeProjection({
+    required this.id,
+    required this.source,
+    required this.target,
+  });
+
+  final String id;
+  final skir.ResourceId source;
+  final skir.ResourceId target;
+}
+
+sealed class PortableTimelinePlacement {
+  const PortableTimelinePlacement();
+}
+
+final class PortableTimelineKeyframe extends PortableTimelinePlacement {
+  const PortableTimelineKeyframe(this.frame);
+
+  final int frame;
+}
+
+final class PortableTimelineSegment extends PortableTimelinePlacement {
+  const PortableTimelineSegment(this.startFrame, this.endFrame);
+
+  final int startFrame;
+  final int endFrame;
+}
+
+final class PortableTimelineCueProjection {
+  const PortableTimelineCueProjection({
+    required this.resource,
+    required this.label,
+    required this.placement,
+    required this.children,
+  });
+
+  final skir.ResourceId resource;
+  final String label;
+  final PortableTimelinePlacement placement;
+  final List<PortableTimelineCueProjection> children;
+}
+
+final class PortablePageProjection {
+  const PortablePageProjection({
+    required this.entries,
+    required this.edges,
+    required this.timeline,
+    this.problem,
+  });
+
+  final List<PortablePageEntryProjection> entries;
+  final List<PortablePageEdgeProjection> edges;
+  final Map<skir.ResourceId, List<PortableTimelineCueProjection>> timeline;
+  final String? problem;
+}
+
+final class PortableGraphPositionChange {
+  const PortableGraphPositionChange(this.resource, this.x, this.y);
+
+  final skir.ResourceId resource;
+  final int x;
+  final int y;
+}
+
+final class PortableGraphSizeChange {
+  const PortableGraphSizeChange(this.resource, this.width, this.height);
+
+  final skir.ResourceId resource;
+  final int width;
+  final int height;
+}
+
+final class PortableTimelineChange {
+  const PortableTimelineChange(this.resource, this.startFrame, this.endFrame);
+
+  final skir.ResourceId resource;
+  final int startFrame;
+  final int endFrame;
+}
+
+abstract interface class PortablePageHost {
+  PortablePageProjection projectPage(
+    skir.BindingRef source, {
+    required PortableInvocationContext context,
+  });
+
+  PortablePresentationWriteResult moveGraphNodes(
+    List<PortableGraphPositionChange> changes, {
+    required PortableInvocationContext context,
+  });
+
+  PortablePresentationWriteResult resizeGraphNodes(
+    List<PortableGraphSizeChange> changes, {
+    required PortableInvocationContext context,
+  });
+
+  PortablePresentationWriteResult moveTimelineElements(
+    List<PortableTimelineChange> changes, {
+    required PortableInvocationContext context,
+  });
+
+  PortablePresentationWriteResult removePageResource(
+    PortablePageEntryProjection entry, {
+    required bool delete,
+    required PortableInvocationContext context,
+  });
+}
+
+extension PortablePresentationRootInvocation on PortablePresentationHost {
+  PortableInvocationContext get rootInvocation => PortableInvocationContext(
+    bindings: {
+      for (final entry in document.bindings.entries)
+        entry.key: PortableExpressionBinding(
+          value: entry.value.value,
+          location: entry.value.location,
+          schema: entry.value.schema,
+        ),
+    },
+    catalogGeneration: document.catalog.snapshot.generation,
+  );
 }
 
 /// Supplies the portable presentation used to review one retained draft.

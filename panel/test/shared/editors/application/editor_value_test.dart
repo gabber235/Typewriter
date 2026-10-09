@@ -1,18 +1,20 @@
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   group("EditorValue", () {
     test("ready exposes its typed value", () {
-      const state = EditorValue.ready(StringValue("ready"));
+      final state = EditorValue.ready(skir.DataValue.wrapStringValue("ready"));
 
-      expect(state.valueOrNull, const StringValue("ready"));
+      expect(state.valueOrNull, skir.DataValue.wrapStringValue("ready"));
     });
 
     test("nonready states do not manufacture fallback values", () {
       final invalid = EditorValue.invalid([
-        const TypeDiagnostic(
-          code: TypeDiagnosticCode.invalidValue,
+        const EditorDiagnostic(
+          code: EditorDiagnosticCode.invalidValue,
           message: "Invalid value",
         ),
       ]);

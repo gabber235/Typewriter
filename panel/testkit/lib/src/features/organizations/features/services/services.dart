@@ -69,37 +69,6 @@ class ServicesMock extends CanonicalOrganizationServices {
       });
     });
   }
-
-  @override
-  Future<void> bindService(String token) async =>
-      Future<void>.delayed(const Duration(milliseconds: 1000));
-
-  @override
-  Future<TypedMutationResult> updateService(Service service) async {
-    await Future<void>.delayed(const Duration(milliseconds: 100));
-    final canonical = service.copyWith(revision: service.revision + 1);
-    state = AsyncData(
-      (await future)
-          .map(
-            (value) => value.serviceId == service.serviceId ? canonical : value,
-          )
-          .toList(),
-    );
-    return TypedMutationResult.success(
-      revision: canonical.revision,
-      value: canonical.identityValue,
-    );
-  }
-
-  @override
-  Future<void> deleteService(skir.RecordId serviceId) async {
-    await Future<void>.delayed(const Duration(milliseconds: 100));
-    state = AsyncData(
-      (await future)
-          .where((service) => service.serviceId != serviceId)
-          .toList(),
-    );
-  }
 }
 
 List<Override> canonicalServicesProviderOverrides({

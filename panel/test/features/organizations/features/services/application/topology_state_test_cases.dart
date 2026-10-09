@@ -46,28 +46,22 @@ void topologyStateTests() {
             engine: null,
             removedResources: [_realm().realmId],
           );
-          void emit(skir.WatchOrganizationTopologyResponse event) {
+          void emit(skir.OrganizationTopologyChanged event) {
             nats.emitMessageOnSubject(
               _listenSubject,
-              skir.WatchOrganizationTopologyResponse.serializer.toBytes(event),
+              skir.OrganizationTopologyChanged.serializer.toBytes(event),
             );
           }
 
-          final command = container
-              .read(provider.notifier)
-              .configureHost(
-                host: TopologyHost.fromSkir(_host()),
-                execution: skir.HostExecutionConfiguration(
-                  realm: null,
-                  primaryEngine: null,
-                ),
-              );
-          final commandCompleted = conflict
-              ? expectLater(command, throwsA(isA<Exception>()))
-              : expectLater(
-                  command,
-                  completion(isA<TopologyConfigurationResult>()),
-                );
+          final command = _configureHost(
+            container,
+            TopologyHost.fromSkir(_host()),
+            skir.HostExecutionConfiguration(realm: null, primaryEngine: null),
+          );
+          final commandCompleted = expectLater(
+            command,
+            completion(isA<skir.ConfigureServiceHostResponse>()),
+          );
 
           await _waitFor(
             () => nats.requests.any(
@@ -76,9 +70,7 @@ void topologyStateTests() {
           );
           if (eventFirst) {
             emit(
-              skir.WatchOrganizationTopologyResponse.wrapConfigurationChanged(
-                change,
-              ),
+              skir.OrganizationTopologyChanged.wrapConfigurationChanged(change),
             );
             await _waitFor(
               () =>
@@ -102,7 +94,7 @@ void topologyStateTests() {
           expect(container.read(provider).requireValue.realmInstances, isEmpty);
 
           emit(
-            skir.WatchOrganizationTopologyResponse.wrapHostUpdated(
+            skir.OrganizationTopologyChanged.wrapHostUpdated(
               _host(
                 state: skir.HostRuntimeState(
                   status: skir.HostRuntimeStatus.active,
@@ -113,12 +105,12 @@ void topologyStateTests() {
             ),
           );
           emit(
-            skir.WatchOrganizationTopologyResponse.wrapHostUpdated(
+            skir.OrganizationTopologyChanged.wrapHostUpdated(
               _host(id: "host2"),
             ),
           );
           emit(
-            skir.WatchOrganizationTopologyResponse.wrapHostUpdated(
+            skir.OrganizationTopologyChanged.wrapHostUpdated(
               _host(id: "host3"),
             ),
           );
@@ -131,13 +123,25 @@ void topologyStateTests() {
           expect(observed.hosts.first.state.message, "fresh");
           expect(observed.realmInstances, isEmpty);
           emit(
-            skir.WatchOrganizationTopologyResponse.wrapConfigurationChanged(
-              change,
-            ),
+            skir.OrganizationTopologyChanged.wrapConfigurationChanged(change),
           );
           emit(
-            skir.WatchOrganizationTopologyResponse.wrapResourceRemoved(
-              _host(id: "host3").hostId,
+            skir.OrganizationTopologyChanged.wrapReplace(
+              skir.OrganizationTopologySnapshot(
+                hosts: [
+                  _host(
+                    revision: 2,
+                    state: skir.HostRuntimeState(
+                      status: skir.HostRuntimeStatus.active,
+                      message: "fresh",
+                      updatedAt: DateTime.utc(2026),
+                    ),
+                  ),
+                  _host(id: "host2"),
+                ],
+                realms: [],
+                engines: [],
+              ),
             ),
           );
           await _waitFor(
@@ -200,15 +204,11 @@ void topologyStateTests() {
         container.read(second.future),
       ]);
 
-      await container
-          .read(first.notifier)
-          .configureHost(
-            host: TopologyHost.fromSkir(_host()),
-            execution: skir.HostExecutionConfiguration(
-              realm: null,
-              primaryEngine: null,
-            ),
-          );
+      await _configureHost(
+        container,
+        TopologyHost.fromSkir(_host()),
+        skir.HostExecutionConfiguration(realm: null, primaryEngine: null),
+      );
       expect(container.read(first).requireValue.hosts.single.revision, 2);
       expect(container.read(second).requireValue.hosts.single.revision, 1);
       subscription.close();
@@ -263,14 +263,11 @@ void topologyStateTests() {
         primaryEngine: null,
       );
 
-      await container
-          .read(
-            organizationTopologyControllerProvider(_organizationId).notifier,
-          )
-          .configureHost(
-            host: TopologyHost.fromSkir(_host()),
-            execution: execution,
-          );
+      await _configureHost(
+        container,
+        TopologyHost.fromSkir(_host()),
+        execution,
+      );
 
       expect(
         nats.requests

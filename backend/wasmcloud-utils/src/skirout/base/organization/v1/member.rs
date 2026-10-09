@@ -239,7 +239,6 @@ pub enum WatchOrganizationMembersResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<WatchOrganizationMembersResponse>>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
     Snapshot(Box<OrganizationMembersSnapshot>),
-    Changed(Box<OrganizationMembersChanged>),
 }
 
 impl Default for WatchOrganizationMembersResponse {
@@ -257,7 +256,6 @@ impl WatchOrganizationMembersResponse {
                         WatchOrganizationMembersResponse::Unknown(_) => 0,
                         WatchOrganizationMembersResponse::InternalError(_) => 1,
                         WatchOrganizationMembersResponse::Snapshot(_) => 2,
-                        WatchOrganizationMembersResponse::Changed(_) => 3,
                     },
                     |u| WatchOrganizationMembersResponse::Unknown(Some(u)),
                     |x: &WatchOrganizationMembersResponse| match x { WatchOrganizationMembersResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -999,7 +997,6 @@ fn initialize_module_serializers() {
                 let a: *mut crate::skir_client::internal::EnumAdapter<WatchOrganizationMembersResponse> = WatchOrganizationMembersResponse::_adapter() as *const _ as *mut _;
                 (*a).add_wrapper_variant("internal_error", 1, 1, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| WatchOrganizationMembersResponse::InternalError(Box::new(v)), |x| match x { WatchOrganizationMembersResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("snapshot", 2, 2, crate::skir_client::internal::struct_serializer_from_static(OrganizationMembersSnapshot::_adapter()), "", |v| WatchOrganizationMembersResponse::Snapshot(Box::new(v)), |x| match x { WatchOrganizationMembersResponse::Snapshot(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("changed", 3, 3, crate::skir_client::internal::struct_serializer_from_static(OrganizationMembersChanged::_adapter()), "", |v| WatchOrganizationMembersResponse::Changed(Box::new(v)), |x| match x { WatchOrganizationMembersResponse::Changed(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {

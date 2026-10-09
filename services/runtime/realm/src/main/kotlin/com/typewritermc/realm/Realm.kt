@@ -10,9 +10,9 @@ import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.loader.api.HostedRuntimeHost
 import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.realm.authoring.AuthoringViewStore
-import com.typewritermc.realm.authoring.CreationCoordinator
-import com.typewritermc.realm.authoring.CreationEvaluator
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
+import com.typewritermc.realm.authoring.PreparationCoordinator
+import com.typewritermc.realm.authoring.PreparationEvaluator
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.checking.RealmCheckRuntime
 import com.typewritermc.realm.compiler.AuthoringAcceptance
@@ -68,7 +68,7 @@ internal class Realm(
     private val host: HostedRuntimeHost,
     private val registrars: List<RuntimeRegistrar>,
     private val facts: DeploymentFacts,
-    private val creationEvaluator: CreationEvaluator,
+    private val preparationEvaluator: PreparationEvaluator,
     private val engine: EngineImplementationSource,
     private val catalogActivator: RealmCatalogActivator = DefaultRealmCatalogActivator,
 ) {
@@ -115,10 +115,10 @@ internal class Realm(
                     compilation = CompiledArtifactProducerRegistry(listOf(PageCompiledArtifactProducer())),
                 )
             publisher.recoverInterrupted()
-            val creation =
-                CreationCoordinator(
+            val preparation =
+                PreparationCoordinator(
                     catalog = catalogs::captureCurrent,
-                    evaluator = creationEvaluator,
+                    evaluator = preparationEvaluator,
                 )
             val activeRegistrarScope = RealmRuntimeScope(scope, facts)
             registrarScope = activeRegistrarScope
@@ -134,7 +134,7 @@ internal class Realm(
                     compiledContent = compiledContent,
                     publisher = publisher,
                     editorCatalog = SnapshotRealmEditorCatalogSource(catalogs),
-                    creation = creation,
+                    preparation = preparation,
                     presentationSearch = CapabilityRealmPresentationSearchSource(scope, catalogs),
                     capabilityInvocations = RealmCapabilityInvocationSource(catalogs),
                     checkEvents = checkEvents,

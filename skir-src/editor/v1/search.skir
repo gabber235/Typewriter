@@ -78,7 +78,7 @@ enum RealmPresentationSearchUpdate(811000011) {
 
 method WatchRealmPresentationSearch(
   RealmPresentationSearchRequest
-): RealmPresentationSearchUpdate = 910003;
+): RealmPresentationSearchUpdate = 919103;
 
 struct CancelRealmPresentationSearchRequest(811000012) {
   subscription_id: string = 0;
@@ -92,4 +92,4 @@ enum CancelRealmPresentationSearchResult(811000013) {
 
 method CancelRealmPresentationSearch(
   CancelRealmPresentationSearchRequest
-): CancelRealmPresentationSearchResult = 919103;
+): CancelRealmPresentationSearchResult = 919104;

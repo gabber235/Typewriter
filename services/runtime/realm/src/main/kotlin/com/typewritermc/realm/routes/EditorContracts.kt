@@ -24,8 +24,8 @@ import com.typewritermc.services.libs.telemetry.ErrorSlug
 import skirout.editor.v1.authoring.AuthoringChanged
 import skirout.editor.v1.authoring.CommitPreparedEdit
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
-import skirout.editor.v1.authoring.CommitTypeArgumentChange
-import skirout.editor.v1.authoring.CommitTypeArgumentChangeResponse
+import skirout.editor.v1.authoring.PrepareTypeArgumentChange
+import skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse
 import skirout.editor.v1.authoring.PreviewTypeArgumentChange
 import skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse
 import skirout.editor.v1.authoring.QueryAuthoringState
@@ -39,8 +39,8 @@ import skirout.editor.v1.capability.InvokeRealmComputation
 import skirout.editor.v1.catalog.CatalogFetchResult
 import skirout.editor.v1.catalog.CatalogInvalidated
 import skirout.editor.v1.catalog.FetchEditorCatalog
-import skirout.editor.v1.catalog.PrepareCreation
-import skirout.editor.v1.catalog.PrepareCreationResult
+import skirout.editor.v1.catalog.PrepareValue
+import skirout.editor.v1.catalog.PrepareValueResult
 import skirout.editor.v1.catalog.WatchEditorCatalog
 import skirout.editor.v1.compiled_content.CompiledContentChanged
 import skirout.editor.v1.compiled_content.QueryCompiledResourceStatus
@@ -86,11 +86,11 @@ internal class EditorContracts(
             responseClassifier(ResponseOutcome.INTERNAL_ERROR),
             responseClassifier(ResponseOutcome.SUCCESS),
         )
-    val prepareCreation =
+    val prepareValue =
         unary(
-            PrepareCreation,
+            PrepareValue,
             "editor.creation.prepare",
-            PrepareCreationResult.createInternalError(),
+            PrepareValueResult.createInternalError(),
         )
     val watchRealmPresentationSearch = realmPresentationSearchContract(address)
     val cancelRealmPresentationSearch =
@@ -143,11 +143,11 @@ internal class EditorContracts(
             "editor.authoring.type.preview",
             PreviewTypeArgumentChangeResponse.createInternalError(),
         )
-    val commitTypeArgumentChange =
+    val prepareTypeArgumentChange =
         unary(
-            CommitTypeArgumentChange,
+            PrepareTypeArgumentChange,
             "editor.authoring.type.commit",
-            CommitTypeArgumentChangeResponse.createInternalError(),
+            PrepareTypeArgumentChangeResponse.createInternalError(),
         )
     val searchAuthoring =
         unary(

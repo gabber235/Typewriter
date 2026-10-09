@@ -7,6 +7,7 @@ import com.typewritermc.authoring.CommitResult
 import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.EditIntent
 import com.typewritermc.authoring.PreparedEdit
+import com.typewritermc.authoring.PreparedEditResult
 import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
@@ -26,7 +27,6 @@ import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
 import com.typewritermc.realm.authoring.TypeArgumentChangePreview
 import com.typewritermc.realm.authoring.TypeArgumentOperations
 import com.typewritermc.realm.authoring.TypePreviewResult
-import com.typewritermc.realm.authoring.TypeRepairIntent
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.catalog.installTestCatalog
 import com.typewritermc.realm.checking.CheckInstanceId
@@ -54,8 +54,8 @@ import skirout.editor.v1.authoring.QueryAuthoringStateRequest
 import skirout.editor.v1.authoring.QueryAuthoringStateResponse
 import skirout.editor.v1.authoring.AuthoringState as SkirAuthoringState
 import skirout.editor.v1.authoring.EditIntent as SkirEditIntent
-import skirout.editor.v1.authoring_facts.EditExpectation as SkirEditExpectation
 import skirout.editor.v1.authoring.TypePreviewResult as SkirTypePreviewResult
+import skirout.editor.v1.authoring_facts.EditExpectation as SkirEditExpectation
 import skirout.editor.v1.checking.CheckOutcome as SkirCheckOutcome
 import skirout.editor.v1.checking.FindingStatus as SkirFindingStatus
 import skirout.editor.v1.type_catalog.AuthoringRecord as SkirAuthoringRecord
@@ -191,11 +191,32 @@ val AuthoringRoutesTest by testSuite {
                 val serializer = skirout.editor.v1.authoring.PreparedEdit.serializer
                 val invalidPayload =
                     when (invalidInput) {
-                        "malformed binary" -> byteArrayOf(-1)
-                        "truncated binary" -> serializer.toBytes(wire).toByteArray().dropLast(1).toByteArray()
-                        "unknown intent" -> serializer.toBytes(wire.copy(intents = listOf(SkirEditIntent.UNKNOWN))).toByteArray()
-                        "unknown expectation" -> serializer.toBytes(wire.copy(expectations = listOf(SkirEditExpectation.UNKNOWN))).toByteArray()
-                        else -> error("Unexpected invalid input scenario")
+                        "malformed binary" -> {
+                            byteArrayOf(-1)
+                        }
+
+                        "truncated binary" -> {
+                            serializer
+                                .toBytes(wire)
+                                .toByteArray()
+                                .dropLast(1)
+                                .toByteArray()
+                        }
+
+                        "unknown intent" -> {
+                            serializer.toBytes(wire.copy(intents = listOf(SkirEditIntent.UNKNOWN))).toByteArray()
+                        }
+
+                        "unknown expectation" -> {
+                            serializer
+                                .toBytes(
+                                    wire.copy(expectations = listOf(SkirEditExpectation.UNKNOWN)),
+                                ).toByteArray()
+                        }
+
+                        else -> {
+                            error("Unexpected invalid input scenario")
+                        }
                     }
 
                 RouteFixture { contracts, _, _ ->
@@ -344,9 +365,8 @@ val AuthoringRoutesTest by testSuite {
                     typeArguments.requested shouldBe requested
                     val ready = response.value as SkirTypePreviewResult.ReadyWrapper
                     SkirAuthoringValueCodec.decode(ready.value.next).getOrThrow() shouldBe requested
-                    val repair = ready.value.intents.single()
-                    repair as skirout.editor.v1.authoring.TypeRepairIntent.ConfigureResourceWrapper
-                    SkirAuthoringValueCodec.decode(repair.value.configuration).getOrThrow() shouldBe requested
+                    val edit = SkirAuthoringOperationCodec.decode(ready.value.edit).getOrThrow()
+                    edit.intents shouldBe listOf(EditIntent.ConfigureResource(resource, requested))
                 }
             } finally {
                 snapshots.close()
@@ -452,16 +472,19 @@ private class RecordingTypeArgumentOperations : TypeArgumentOperations {
             TypeArgumentChangePreview(
                 resource = resource,
                 next = requested,
-                catalog = snapshot.root.catalog.generation,
-                expectations = emptyList(),
-                intents = listOf(TypeRepairIntent.ConfigureResource(resource, requested)),
+                edit =
+                    PreparedEdit(
+                        catalog = snapshot.root.catalog.generation,
+                        expectations = emptyList(),
+                        intents = listOf(EditIntent.ConfigureResource(resource, requested)),
+                    ),
                 linkRepairs = emptyList(),
                 clearedLocations = emptyList(),
             ),
         )
     }
 
-    override suspend fun confirm(preview: TypeArgumentChangePreview): CommitResult = CommitResult.Committed
+    override suspend fun prepare(preview: TypeArgumentChangePreview): PreparedEditResult = PreparedEditResult.Prepared(preview.edit)
 }
 
 private data object MissingSnapshotStore : AuthoringViewStore {

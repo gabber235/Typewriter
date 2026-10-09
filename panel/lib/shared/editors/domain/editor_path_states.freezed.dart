@@ -226,7 +226,7 @@ return $default(_that.progress,_that.gate);case _:
 
 class _EditorPathRecord extends EditorPathRecord {
   const _EditorPathRecord({this.progress, this.gate}): super._();
-  
+
 
 @override final  EditorPathProgress? progress;
 @override final  EditorInteractionSession? gate;
@@ -423,7 +423,7 @@ return settled(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  pending,TResult Function()?  saving,TResult Function( List<TypeDiagnostic> diagnostics)?  failed,TResult Function()?  contended,TResult Function( EditorPathConflict conflict)?  conflicted,TResult Function( EditorSavePhase phase)?  settled,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  pending,TResult Function()?  saving,TResult Function( List<EditorDiagnostic> diagnostics)?  failed,TResult Function()?  contended,TResult Function( EditorPathConflict conflict)?  conflicted,TResult Function( EditorSavePhase phase)?  settled,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case PendingPathProgress() when pending != null:
 return pending();case SavingPathProgress() when saving != null:
@@ -449,7 +449,7 @@ return settled(_that.phase);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  pending,required TResult Function()  saving,required TResult Function( List<TypeDiagnostic> diagnostics)  failed,required TResult Function()  contended,required TResult Function( EditorPathConflict conflict)  conflicted,required TResult Function( EditorSavePhase phase)  settled,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  pending,required TResult Function()  saving,required TResult Function( List<EditorDiagnostic> diagnostics)  failed,required TResult Function()  contended,required TResult Function( EditorPathConflict conflict)  conflicted,required TResult Function( EditorSavePhase phase)  settled,}) {final _that = this;
 switch (_that) {
 case PendingPathProgress():
 return pending();case SavingPathProgress():
@@ -471,7 +471,7 @@ return settled(_that.phase);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  pending,TResult? Function()?  saving,TResult? Function( List<TypeDiagnostic> diagnostics)?  failed,TResult? Function()?  contended,TResult? Function( EditorPathConflict conflict)?  conflicted,TResult? Function( EditorSavePhase phase)?  settled,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  pending,TResult? Function()?  saving,TResult? Function( List<EditorDiagnostic> diagnostics)?  failed,TResult? Function()?  contended,TResult? Function( EditorPathConflict conflict)?  conflicted,TResult? Function( EditorSavePhase phase)?  settled,}) {final _that = this;
 switch (_that) {
 case PendingPathProgress() when pending != null:
 return pending();case SavingPathProgress() when saving != null:
@@ -492,7 +492,7 @@ return settled(_that.phase);case _:
 
 class PendingPathProgress implements EditorPathProgress {
   const PendingPathProgress();
-  
+
 
 
 
@@ -524,7 +524,7 @@ String toString() {
 
 class SavingPathProgress implements EditorPathProgress {
   const SavingPathProgress();
-  
+
 
 
 
@@ -555,11 +555,11 @@ String toString() {
 
 
 class FailedPathProgress implements EditorPathProgress {
-  const FailedPathProgress( List<TypeDiagnostic> diagnostics): _diagnostics = diagnostics;
-  
+  const FailedPathProgress( List<EditorDiagnostic> diagnostics): _diagnostics = diagnostics;
 
- final  List<TypeDiagnostic> _diagnostics;
- List<TypeDiagnostic> get diagnostics {
+
+ final  List<EditorDiagnostic> _diagnostics;
+ List<EditorDiagnostic> get diagnostics {
   if (_diagnostics is EqualUnmodifiableListView) return _diagnostics;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_diagnostics);
@@ -598,7 +598,7 @@ abstract mixin class $FailedPathProgressCopyWith<$Res> implements $EditorPathPro
   factory $FailedPathProgressCopyWith(FailedPathProgress value, $Res Function(FailedPathProgress) _then) = _$FailedPathProgressCopyWithImpl;
 @useResult
 $Res call({
- List<TypeDiagnostic> diagnostics
+ List<EditorDiagnostic> diagnostics
 });
 
 
@@ -618,7 +618,7 @@ class _$FailedPathProgressCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') $Res call({Object? diagnostics = null,}) {
   return _then(FailedPathProgress(
 null == diagnostics ? _self._diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
-as List<TypeDiagnostic>,
+as List<EditorDiagnostic>,
   ));
 }
 
@@ -630,7 +630,7 @@ as List<TypeDiagnostic>,
 
 class ContendedPathProgress implements EditorPathProgress {
   const ContendedPathProgress();
-  
+
 
 
 
@@ -662,7 +662,7 @@ String toString() {
 
 class ConflictedPathProgress implements EditorPathProgress {
   const ConflictedPathProgress(this.conflict);
-  
+
 
  final  EditorPathConflict conflict;
 
@@ -730,7 +730,7 @@ as EditorPathConflict,
 
 class SettledPathProgress implements EditorPathProgress {
   const SettledPathProgress(this.phase): assert(phase == EditorSavePhase.saved, 'A settled path has been saved.');
-  
+
 
  final  EditorSavePhase phase;
 

@@ -18,18 +18,17 @@ final class PortablePresentationScope {
     this.reload,
     this.reportStatus,
     this.commit,
-    this.authoring,
     this.catalog,
     this.resource,
-    this.edit,
+    this.searchHistoryNamespace,
     this.openResource,
-    this.prepareCreation,
     this.role,
     this.material,
     this.activePresentations = const {},
     this.slots = const {},
     this.slotBuilders = const {},
     this.host,
+    this.projectedWriters = const {},
   });
 
   final Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings;
@@ -49,69 +48,24 @@ final class PortablePresentationScope {
   final Future<void> Function()? reload;
   final ValueChanged<String>? reportStatus;
   final Future<void> Function()? commit;
-  final PortableAuthoringView? authoring;
   final CheckedEditorCatalog? catalog;
   final skir.ResourceId? resource;
-  final AuthoringBinding? edit;
+  final String? searchHistoryNamespace;
   final ValueChanged<skir.ResourceId>? openResource;
-  final Future<skir.PreparedCreation> Function(
-    skir.InitializationRequest request,
-  )?
-  prepareCreation;
   final skir.PresentationRole? role;
   final skir.PresentationMaterial? material;
   final Set<skir.PresentationId> activePresentations;
   final Map<String, skir.PresentationNode> slots;
   final Map<String, PortableSlotBuilder> slotBuilders;
   final PortablePresentationHost? host;
+  final Map<skir.ExpressionBindingId, PortableBindingSetter> projectedWriters;
 
-  AuthoringEditResult stage(
-    String label,
-    void Function(AuthoringEdit edit) apply, {
-    bool independent = false,
-  }) {
-    final binding = edit;
-    final from = authoring is AuthoringDocument
-        ? authoring! as AuthoringDocument
-        : null;
-    final result = binding == null || !enabled || readOnly
-        ? const AuthoringEditResult.rejected(
-            "This presentation is read only",
-            null,
-          )
-        : independent
-        ? binding.workspace.edit(label: label, apply: apply, from: from)
-        : binding.edit(label: label, apply: apply, from: from);
-    if (result case AuthoringEditRejected(:final message)) {
-      reportStatus?.call(message);
-    }
-    return result;
-  }
-
-  Future<AuthoringEditResult> prepare(
-    String label,
-    Future<void> Function(AuthoringEdit edit) apply,
-  ) async {
-    final binding = edit;
-    final from = authoring is AuthoringDocument
-        ? authoring! as AuthoringDocument
-        : null;
-    if (binding == null || !enabled || readOnly) {
-      return const AuthoringEditResult.rejected(
-        "This presentation is read only",
-        null,
-      );
-    }
-    final result = await binding.prepare(
-      label: label,
-      apply: apply,
-      from: from,
-    );
-    if (result case AuthoringEditRejected(:final message)) {
-      reportStatus?.call(message);
-    }
-    return result;
-  }
+  PortableInvocationContext get invocation => PortableInvocationContext(
+    bindings: bindings,
+    catalogGeneration:
+        (catalog ?? host?.document.catalog)?.snapshot.generation ??
+        (throw StateError("Portable invocation has no checked catalog")),
+  );
 
   PortableExpressionResult evaluate(skir.ExpressionNode node) =>
       PortableExpressionEvaluator.located(
@@ -120,42 +74,44 @@ final class PortablePresentationScope {
       ).evaluate(node);
 
   skir.DataValue? read(skir.BindingRef reference) {
-    final source = bindings[reference.bindingId];
-    if (source == null) return null;
-    if (reference.path.segments.isEmpty) return source.value;
-    return switch (source.value.readAt(reference.path)) {
-      PortablePathValue(:final value) => value,
-      PortablePathUnavailable() => null,
-    };
+    return host?.read(reference, context: invocation);
   }
 
   skir.ValueLocation? location(skir.BindingRef reference) {
-    final source = bindings[reference.bindingId]?.location;
-    if (source == null) return null;
-    return skir.ValueLocation(
-      resource: source.resource,
+    return host?.location(reference, context: invocation);
+  }
+
+  skir.BindingRef? sourceReference(skir.BindingRef reference) {
+    final document = host?.document;
+    if (document == null) return null;
+    if (document.bindings.containsKey(reference.bindingId)) {
+      return reference;
+    }
+    final local = bindings[reference.bindingId]?.location;
+    if (local == null) return null;
+    final targetSegments = [...local.path.segments, ...reference.path.segments];
+    MapEntry<skir.ExpressionBindingId, PortablePresentationBinding>? owner;
+    for (final candidate in document.bindings.entries) {
+      final base = candidate.value.location;
+      if (base == null || base.resource != local.resource) continue;
+      if (!_isPathPrefix(base.path.segments.toList(), targetSegments)) {
+        continue;
+      }
+      final previous = owner?.value.location?.path.segments.length ?? -1;
+      if (base.path.segments.length > previous) owner = candidate;
+    }
+    final base = owner?.value.location;
+    if (owner == null || base == null) return null;
+    return skir.BindingRef(
+      bindingId: owner.key,
       path: skir.ValuePath(
-        segments: [...source.path.segments, ...reference.path.segments],
+        segments: targetSegments.skip(base.path.segments.length),
       ),
     );
   }
 
   skir.TypeUse? expectedType(skir.BindingRef reference) {
-    final hosted = host?.expectedType(reference);
-    if (hosted != null) return hosted;
-    final target = location(reference);
-    final checked = catalog;
-    final authored = authoring;
-    if (target == null || checked == null || authored == null) return null;
-    final record = authored.resource(target.resource);
-    if (record == null) return null;
-    final payload = skir.DataValue.createRecord(fields: record.fields);
-    final value = switch (record.configuration) {
-      skir.TypeSelection_completeWrapper(:final value) =>
-        skir.DataValue.createNamed(actualType: value, payload: payload),
-      _ => payload,
-    };
-    return checked.valueTypeAt(record.configuration, target.path, value: value);
+    return host?.expectedType(reference, context: invocation);
   }
 
   skir.TypeUse? expectedPayloadType(skir.BindingRef reference) {
@@ -176,7 +132,20 @@ final class PortablePresentationScope {
   }
 
   void write(skir.BindingRef reference, skir.DataValue value) {
-    if (enabled && !readOnly) setBinding(reference, value);
+    final target = host;
+    if (!enabled || readOnly || target == null) return;
+    final projectedWriter = projectedWriters[reference.bindingId];
+    if (projectedWriter != null) {
+      projectedWriter(reference, value);
+      return;
+    }
+    unawaited(
+      target.write(reference, value, context: invocation).then((result) {
+        if (result case PortablePresentationWriteRejected(:final message)) {
+          reportStatus?.call(message);
+        }
+      }),
+    );
   }
 
   void writePayload(skir.BindingRef reference, skir.DataValue payload) {
@@ -195,8 +164,7 @@ final class PortablePresentationScope {
     );
   }
 
-  bool get canExecuteAction =>
-      enabled && !readOnly && (authoring != null || host != null);
+  bool get canExecuteAction => enabled && !readOnly && host != null;
 
   PortablePresentationScope withReadOnly(bool value) =>
       PortablePresentationScope(
@@ -210,18 +178,17 @@ final class PortablePresentationScope {
         reload: reload,
         reportStatus: reportStatus,
         commit: commit,
-        authoring: authoring,
         catalog: catalog,
         resource: resource,
-        edit: edit,
+        searchHistoryNamespace: searchHistoryNamespace,
         openResource: openResource,
-        prepareCreation: prepareCreation,
         role: role,
         material: material,
         activePresentations: activePresentations,
         slots: slots,
         slotBuilders: slotBuilders,
         host: host,
+        projectedWriters: projectedWriters,
       );
 
   PortablePresentationScope withEnabled(bool value) =>
@@ -236,22 +203,30 @@ final class PortablePresentationScope {
         reload: reload,
         reportStatus: reportStatus,
         commit: commit,
-        authoring: authoring,
         catalog: catalog,
         resource: resource,
-        edit: edit,
+        searchHistoryNamespace: searchHistoryNamespace,
         openResource: openResource,
-        prepareCreation: prepareCreation,
         role: role,
         material: material,
         activePresentations: activePresentations,
         slots: slots,
         slotBuilders: slotBuilders,
         host: host,
+        projectedWriters: projectedWriters,
       );
 
   PortablePresentationScope withNamedPayload(PortableNamedPayload payload) {
     final configured = skir.ExpressionBindingId(value: "configured_value");
+    void writeConfigured(skir.BindingRef reference, skir.DataValue value) {
+      final replaced = reference.path.segments.isEmpty
+          ? PortablePathValue(value)
+          : payload.value.replaceAt(reference.path, value);
+      if (replaced case PortablePathValue(:final value)) {
+        payload.replace(value);
+      }
+    }
+
     return PortablePresentationScope(
       bindings: {
         ...bindings.withSubjectAt(payload.location),
@@ -268,29 +243,23 @@ final class PortablePresentationScope {
       reload: reload,
       reportStatus: reportStatus,
       commit: commit,
-      authoring: authoring,
       catalog: catalog,
       resource: resource,
-      edit: edit,
+      searchHistoryNamespace: searchHistoryNamespace,
       openResource: openResource,
-      prepareCreation: prepareCreation,
       role: role,
       material: material,
       activePresentations: activePresentations,
       slots: slots,
       slotBuilders: slotBuilders,
       host: host,
+      projectedWriters: {...projectedWriters, configured: writeConfigured},
       setBinding: (reference, value) {
         if (reference.bindingId != configured) {
           setBinding(reference, value);
           return;
         }
-        final replaced = reference.path.segments.isEmpty
-            ? PortablePathValue(value)
-            : payload.value.replaceAt(reference.path, value);
-        if (replaced case PortablePathValue(:final value)) {
-          payload.replace(value);
-        }
+        writeConfigured(reference, value);
       },
     );
   }
@@ -319,7 +288,14 @@ final class PortablePresentationScope {
     return PortablePresentationScope(
       bindings: {
         ...bindings.withSubjectAt(location),
-        configured: PortableExpressionBinding(value: value, location: location),
+        configured: PortableExpressionBinding(
+          value: value,
+          location: location,
+          schema: switch (expectedType(reference)) {
+            final use? => CompletePortablePresentationBinding(use),
+            null => null,
+          },
+        ),
       },
       budget: budget,
       readOnly: readOnly,
@@ -329,12 +305,10 @@ final class PortablePresentationScope {
       reload: reload,
       reportStatus: reportStatus,
       commit: commit,
-      authoring: authoring,
       catalog: catalog,
       resource: resource,
-      edit: edit,
+      searchHistoryNamespace: searchHistoryNamespace,
       openResource: openResource,
-      prepareCreation: prepareCreation,
       setBinding: (nestedReference, replacement) {
         if (nestedReference.bindingId != configured) {
           write(nestedReference, replacement);
@@ -355,6 +329,7 @@ final class PortablePresentationScope {
       slots: slots,
       slotBuilders: slotBuilders,
       host: host,
+      projectedWriters: projectedWriters,
     );
   }
 
@@ -386,7 +361,14 @@ final class PortablePresentationScope {
         ...(id == _configuredValueBindingId
             ? bindings.withSubjectAt(location)
             : bindings),
-        id: PortableExpressionBinding(value: value, location: location),
+        id: PortableExpressionBinding(
+          value: value,
+          location: location,
+          schema: switch (expectedType(reference)) {
+            final use? => CompletePortablePresentationBinding(use),
+            null => null,
+          },
+        ),
       },
       budget: budget,
       readOnly: readOnly,
@@ -396,18 +378,17 @@ final class PortablePresentationScope {
       reload: reload,
       reportStatus: reportStatus,
       commit: commit,
-      authoring: authoring,
       catalog: catalog,
       resource: resource,
-      edit: edit,
+      searchHistoryNamespace: searchHistoryNamespace,
       openResource: openResource,
-      prepareCreation: prepareCreation,
       role: role,
       material: material,
       activePresentations: activePresentations,
       slots: slots,
       slotBuilders: slotBuilders,
       host: host,
+      projectedWriters: projectedWriters,
       setBinding: (nestedReference, replacement) {
         if (nestedReference.bindingId != id) {
           write(nestedReference, replacement);
@@ -442,18 +423,17 @@ final class PortablePresentationScope {
     reload: reload,
     reportStatus: reportStatus,
     commit: commit,
-    authoring: authoring,
     catalog: catalog,
     resource: resource,
-    edit: edit,
+    searchHistoryNamespace: searchHistoryNamespace,
     openResource: openResource,
-    prepareCreation: prepareCreation,
     role: role,
     material: material,
     activePresentations: activePresentations,
     slots: slots,
     slotBuilders: slotBuilders,
     host: host,
+    projectedWriters: projectedWriters,
   );
 
   PortablePresentationScope withSlotBuilders(
@@ -469,18 +449,17 @@ final class PortablePresentationScope {
     reload: reload,
     reportStatus: reportStatus,
     commit: commit,
-    authoring: authoring,
     catalog: catalog,
     resource: resource,
-    edit: edit,
+    searchHistoryNamespace: searchHistoryNamespace,
     openResource: openResource,
-    prepareCreation: prepareCreation,
     role: role,
     material: material,
     activePresentations: activePresentations,
     slots: slots,
     slotBuilders: {...slotBuilders, ...values},
     host: host,
+    projectedWriters: projectedWriters,
   );
 
   PortablePresentationScope withActivePresentation(
@@ -496,18 +475,17 @@ final class PortablePresentationScope {
     reload: reload,
     reportStatus: reportStatus,
     commit: commit,
-    authoring: authoring,
     catalog: catalog,
     resource: resource,
-    edit: edit,
+    searchHistoryNamespace: searchHistoryNamespace,
     openResource: openResource,
-    prepareCreation: prepareCreation,
     role: role,
     material: material,
     activePresentations: {...activePresentations, presentation},
     slots: slots,
     slotBuilders: slotBuilders,
     host: host,
+    projectedWriters: projectedWriters,
   );
 
   PortablePresentationScope withMaterial(skir.PresentationMaterial value) =>
@@ -522,19 +500,26 @@ final class PortablePresentationScope {
         reload: reload,
         reportStatus: reportStatus,
         commit: commit,
-        authoring: authoring,
         catalog: catalog,
         resource: resource,
-        edit: edit,
+        searchHistoryNamespace: searchHistoryNamespace,
         openResource: openResource,
-        prepareCreation: prepareCreation,
         role: role,
         material: value,
         activePresentations: activePresentations,
         slots: slots,
         slotBuilders: slotBuilders,
         host: host,
+        projectedWriters: projectedWriters,
       );
+}
+
+bool _isPathPrefix(List<skir.PathSegment> prefix, List<skir.PathSegment> path) {
+  if (prefix.length > path.length) return false;
+  for (var index = 0; index < prefix.length; index++) {
+    if (prefix[index] != path[index]) return false;
+  }
+  return true;
 }
 
 skir.DataValue _preserveNamedIdentity(

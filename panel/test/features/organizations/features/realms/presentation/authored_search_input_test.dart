@@ -10,6 +10,7 @@ void main() {
   testWidgets("renders static results and selects with the keyboard", (
     tester,
   ) async {
+    final borrowedClient = _TrackingClient();
     final target = skir.ExpressionBindingId(value: "target");
     final row = skir.ExpressionBindingId(value: "row");
     skir.DataValue? written;
@@ -121,36 +122,49 @@ void main() {
       },
       budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
       setBinding: (_, value) => written = value,
+      host: _TestHost(
+        catalog: CheckedEditorCatalog(_emptyCatalog("catalog:static")),
+        initial: skir.DataValue.wrapStringValue("Alpha"),
+        onWrite: (value) => written = value,
+      ),
     );
 
     await tester.pumpTestApp(
       child: Scaffold(
-        body: PortableSearchInput(control: control, scope: scope),
+        body: PortableSearchInput(
+          control: control,
+          scope: scope,
+          client: borrowedClient,
+        ),
       ),
     );
 
     expect(find.text("Alpha"), findsOneWidget);
-    expect(find.text("Beta"), findsNothing);
+    expect(find.text("Beta").hitTestable(), findsNothing);
 
     await tester.tap(find.byKey(const ValueKey("authored_search_summary")));
     await tester.pumpAndSettle();
 
     expect(find.text("Beta"), findsOneWidget);
-    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-    await tester.pumpAndSettle();
-
-    expect(find.byKey(const ValueKey("authored_search_query")), findsNothing);
-    expect(find.text("Beta"), findsNothing);
-    expect(written, isNull);
-
-    await tester.tap(find.byKey(const ValueKey("authored_search_summary")));
-    await tester.pumpAndSettle();
-    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.tap(find.byType(EditableText));
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pumpAndSettle();
 
     expect(written, skir.DataValue.wrapStringValue("Beta"));
-    expect(find.byKey(const ValueKey("authored_search_query")), findsNothing);
+
+    await tester.tap(find.byKey(const ValueKey("authored_search_summary")));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(EditableText));
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+
+    expect(written, skir.DataValue.wrapStringValue("Beta"));
+    expect(find.text("Alpha").hitTestable(), findsNothing);
 
     await tester.pumpTestApp(
       child: Scaffold(
@@ -167,6 +181,11 @@ void main() {
               maxCollectionItems: 100,
             ),
             setBinding: (_, value) => written = value,
+            host: _TestHost(
+              catalog: CheckedEditorCatalog(_emptyCatalog("catalog:empty")),
+              initial: skir.DataValue.wrapStringValue(""),
+              onWrite: (value) => written = value,
+            ),
           ),
         ),
       ),
@@ -174,6 +193,9 @@ void main() {
 
     expect(find.text("Search"), findsOneWidget);
     expect(find.text("Beta"), findsNothing);
+
+    await tester.pumpWidget(const SizedBox());
+    expect(borrowedClient.closed, isFalse);
   });
 
   testWidgets("decodes typed HTTP results and isolates malformed candidates", (
@@ -326,6 +348,11 @@ void main() {
       budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
       setBinding: (_, value) => written = value,
       catalog: CheckedEditorCatalog(catalogSnapshot),
+      host: _TestHost(
+        catalog: CheckedEditorCatalog(catalogSnapshot),
+        initial: skir.DataValue.unfilled,
+        onWrite: (value) => written = value,
+      ),
     );
 
     await tester.pumpTestApp(
@@ -349,7 +376,7 @@ void main() {
           .toList()
           .toString(),
     );
-    expect(find.textContaining(r"$.results[1].name"), findsOneWidget);
+    expect(find.textContaining(r"$.results[1].name"), findsWidgets);
     await tester.tap(find.text("HTTP result"));
     await tester.pump();
 
@@ -361,4 +388,235 @@ void main() {
       skir.DataValue.wrapStringValue("Alpha"),
     );
   });
+
+  testWidgets("late selection cannot close a rebound search input", (
+    tester,
+  ) async {
+    final catalog = CheckedEditorCatalog(_emptyCatalog("catalog:pending"));
+    final completion = Completer<PortablePresentationWriteResult>();
+    final pendingHost = _TestHost(
+      catalog: catalog,
+      initial: skir.DataValue.unfilled,
+      onWrite: (_) {},
+      writeCompletion: completion,
+    );
+    final replacementHost = _TestHost(
+      catalog: catalog,
+      initial: skir.DataValue.unfilled,
+      onWrite: (_) {},
+    );
+    PortablePresentationScope scope(PortablePresentationHost host) =>
+        PortablePresentationScope(
+          bindings: const {},
+          budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
+          setBinding: (_, _) {},
+          catalog: catalog,
+          host: host,
+        );
+    final control = _pendingControl();
+
+    await tester.pumpTestApp(
+      child: Scaffold(
+        body: PortableSearchInput(
+          control: control,
+          scope: scope(pendingHost),
+          client: _TrackingClient(),
+        ),
+      ),
+    );
+    await tester.tap(find.byKey(const ValueKey("authored_search_summary")));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Pending"));
+    await tester.pump();
+
+    await tester.pumpTestApp(
+      child: Scaffold(
+        body: PortableSearchInput(
+          control: control,
+          scope: scope(replacementHost),
+          client: _TrackingClient(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    completion.complete(const PortablePresentationWriteResult.applied());
+    await tester.pumpAndSettle();
+
+    expect(find.text("Pending").hitTestable(), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+}
+
+skir.SearchControl _pendingControl() {
+  final target = skir.ExpressionBindingId(value: "target");
+  final row = skir.ExpressionBindingId(value: "row");
+  final rowRead = skir.ExpressionNode.createRead(
+    binding: row,
+    path: skir.ValuePath(segments: const []),
+  );
+  return skir.SearchControl(
+    control: skir.BoundControl(
+      binding: skir.BindingRef(
+        bindingId: target,
+        path: skir.ValuePath(segments: const []),
+      ),
+      label: null,
+      description: null,
+      prefix: null,
+      semanticLabel: null,
+    ),
+    selectionMode: skir.SearchSelectionMode.single,
+    queryBindingId: skir.ExpressionBindingId(value: "query"),
+    summaryBindingId: skir.ExpressionBindingId(value: "summary"),
+    maximumExtent: skir.ExpressionNode.wrapLiteral(
+      skir.DataValue.wrapInteger("240"),
+    ),
+    provider: skir.SearchProvider.createStaticValues(
+      values: skir.ExpressionNode.wrapLiteral(
+        skir.DataValue.createListValue(
+          items: [
+            skir.ListItem(
+              id: skir.ItemId(value: "pending"),
+              value: skir.DataValue.wrapStringValue("Pending"),
+            ),
+          ],
+        ),
+      ),
+      result: skir.SearchResultMapping(
+        bindingId: row,
+        key: rowRead,
+        selectedValue: rowRead,
+        presentation: skir.PresentationNode(
+          nodeId: "pending",
+          properties: skir.PresentationProperties.defaultInstance,
+          element: skir.PresentationElement.createText(
+            value: rowRead,
+            color: null,
+            sizing: null,
+            fontWeight: null,
+            fontItalic: null,
+            fontOpticalSize: null,
+            fontSlant: null,
+            fontWidth: null,
+            textAlignment: null,
+            lineHeight: null,
+            letterSpacing: null,
+            decoration: null,
+            semanticLabel: null,
+            paragraph: skir.TextParagraph.defaultInstance,
+          ),
+          header: null,
+        ),
+        label: rowRead,
+      ),
+      selectors: const [],
+    ),
+    summary: null,
+    placeholder: null,
+    customValue: null,
+    initialQuery: null,
+  );
+}
+
+final class _TrackingClient extends MockClient {
+  _TrackingClient()
+    : super((_) async => Response("Unavailable in this fixture", 503));
+
+  bool closed = false;
+
+  @override
+  void close() {
+    closed = true;
+    super.close();
+  }
+}
+
+skir.EditorCatalogWireSnapshot _emptyCatalog(String generation) =>
+    skir.EditorCatalogWireSnapshot(
+      generation: skir.CatalogGeneration(value: generation),
+      types: const [],
+      relations: const [],
+      resourceDefinitions: const [],
+      presentations: const [],
+      presentationMaterials: const [],
+      configuration: const [],
+      diagnostics: const [],
+      initialization: const [],
+      endpointBindings: const [],
+      capabilities: const [],
+      recommendations: const [],
+      roleFallbacks: const [],
+    );
+
+final class _TestHost extends ChangeNotifier
+    implements PortablePresentationHost {
+  _TestHost({
+    required CheckedEditorCatalog catalog,
+    required skir.DataValue initial,
+    required this.onWrite,
+    this.writeCompletion,
+  }) : _value = initial,
+       _document = PortablePresentationDocument(
+         catalog: catalog,
+         root: skir.PresentationNode.defaultInstance,
+         bindings: const {},
+         budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
+       );
+
+  skir.DataValue _value;
+  final ValueChanged<skir.DataValue> onWrite;
+  final Completer<PortablePresentationWriteResult>? writeCompletion;
+  final PortablePresentationDocument _document;
+
+  @override
+  PortablePresentationCapabilities get capabilities =>
+      const PortablePresentationCapabilities();
+  @override
+  PortablePresentationDocument get document => _document;
+  @override
+  bool get enabled => true;
+  @override
+  bool get readOnly => false;
+
+  @override
+  skir.TypeUse? expectedType(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => null;
+
+  @override
+  skir.ValueLocation? location(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => null;
+
+  @override
+  skir.DataValue? read(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => _value;
+
+  @override
+  Future<PortablePresentationWriteResult> write(
+    skir.BindingRef reference,
+    skir.DataValue value, {
+    required PortableInvocationContext context,
+  }) async {
+    final delayed = writeCompletion;
+    if (delayed != null) {
+      final result = await delayed.future;
+      if (result is PortablePresentationWriteRejected) return result;
+    }
+    _value = value;
+    onWrite(value);
+    return const PortablePresentationWriteResult.applied();
+  }
+
+  @override
+  Future<PortablePresentationWriteResult> execute(
+    skir.EditorAction editorAction, {
+    required PortableInvocationContext context,
+  }) async => const PortablePresentationWriteResult.rejected(
+    "Actions are unavailable in this fixture",
+  );
 }

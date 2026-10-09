@@ -1,4 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
@@ -16,13 +18,13 @@ Future<void> _setSurface(WidgetTester tester, {required bool mobile}) async {
 
 Future<void> _openActivity(
   WidgetTester tester,
-  LocalWorkSession workspace, {
+  ScopedWorkSession workspace, {
   required bool mobile,
 }) async {
   await tester.pumpTestApp(
     child: Scaffold(
       appBar: AppBar(
-        actions: [LocalWorkSessionActivityView(controller: workspace)],
+        actions: [ScopedWorkSessionActivityView(controller: workspace)],
       ),
     ),
   );
@@ -32,16 +34,80 @@ Future<void> _openActivity(
   await tester.pumpAndSettle();
 }
 
-EditorDocument _document(String field, String value) => EditorDocument(
-  rootType: RecordType(
-    fields: {field: TypeField(name: field, type: StringType())},
-  ),
-  typeCatalog: const TypeCatalog([]),
-  confirmedValue: RecordValue({field: StringValue(value)}),
-  revision: 1,
+EditorDocument _document(String field, String value) {
+  final definition = skir.TypeDefinitionId(
+    typeId: skir.TypeId.createQualified(namespace: "test", name: "Resource"),
+    revision: 1,
+  );
+  final effectiveField = skir.EffectiveFieldTemplate(
+    key: field,
+    owner: skir.FieldOwner(definition: definition, name: field),
+    type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+    rules: const [],
+  );
+  final catalog = CheckedEditorCatalog(
+    skir.EditorCatalogWireSnapshot(
+      generation: skir.CatalogGeneration(value: "test"),
+      types: [
+        skir.PublishedType(
+          display: null,
+          definition: skir.TypeDefinition(
+            id: definition,
+            parameters: const [],
+            representation: skir.RepresentationTemplate.createRecord(
+              fields: [
+                skir.FieldDeclaration(
+                  owner: effectiveField.owner,
+                  type: effectiveField.type,
+                  overrides: const [],
+                  hasConstructorDefault: false,
+                ),
+              ],
+              abstract_: false,
+            ),
+            parents: const [],
+          ),
+          status: skir.DeclarationStatus.ready,
+          effectiveFields: [effectiveField],
+          ancestorTemplates: const [],
+        ),
+      ],
+      relations: const [],
+      resourceDefinitions: const [],
+      presentations: const [],
+      presentationMaterials: const [],
+      configuration: const [],
+      diagnostics: const [],
+      initialization: const [],
+      endpointBindings: const [],
+      capabilities: const [],
+      recommendations: const [],
+      roleFallbacks: const [],
+    ),
+  );
+  return EditorDocument(
+    rootType: skir.TypeUse.wrapNamed(
+      skir.NamedTypeUse(definition: definition, arguments: const []),
+    ),
+    catalog: catalog,
+    confirmedValue: skir.DataValue.createRecord(
+      fields: [
+        skir.FieldValue(
+          name: field,
+          value: skir.DataValue.wrapStringValue(value),
+        ),
+      ],
+    ),
+    revision: 1,
+  );
+}
+
+WorkEntryId _workEntryId(EditorResourceKey key) => WorkEntryId(
+  driver: WorkDriverId(domain: "document", scope: key),
+  identity: key,
 );
 
-void _dismissSubmissions(LocalWorkSession workspace) {
+void _dismissSubmissions(ScopedWorkSession workspace) {
   for (final submission in workspace.submissions) {
     workspace.dismiss(submission.id);
   }
@@ -55,13 +121,13 @@ void main() {
       (tester) async {
         await _setSurface(tester, mobile: mobile);
         const key = EditorResourceKey(scope: "test", identity: "host");
-        const diagnostic = TypeDiagnostic(
-          code: TypeDiagnosticCode.invalidValue,
+        final diagnostic = EditorDiagnostic(
+          code: EditorDiagnosticCode.invalidValue,
           message: "Different values share the same revision and cannot be saved until the conflict is resolved",
-          path: DataPath.root,
+          path: editorRootPath,
         );
         final document = _document("target", "paper@*");
-        final workspace = LocalWorkSession();
+        final workspace = ScopedWorkSession();
         addTearDown(workspace.dispose);
         final source = workspace.editor(
           fakeEditorTarget(
@@ -76,13 +142,16 @@ void main() {
         );
         workspace.retain(key);
         source.update(
-          DataPath.root.field("target"),
-          const StringValue("unsupported"),
+          editorRootPath.field("target"),
+          skir.DataValue.wrapStringValue("unsupported"),
         );
         expect(await source.flush(), isA<MutationInvalid>());
 
         await _openActivity(tester, workspace, mobile: mobile);
-        expect(find.byKey(ValueKey(("resource", key))), findsOneWidget);
+        expect(
+          find.byKey(ValueKey(("resource", _workEntryId(key)))),
+          findsOneWidget,
+        );
         final summary = "Save failed: ${diagnostic.message}";
         final summaryFinder = find.text(summary);
         expect(summaryFinder, findsOneWidget);
@@ -93,7 +162,7 @@ void main() {
         expect(find.text("Code"), findsNothing);
         expect(find.text("Show details"), findsNothing);
         expect(find.byIcon(Icons.chevron_right), findsOneWidget);
-        expect(find.text("Retry save"), findsOneWidget);
+        expect(find.text("Retry"), findsOneWidget);
         expect(find.byIcon(Icons.copy_outlined), findsOneWidget);
         expect(
           tester.getBottomRight(find.byIcon(Icons.copy_outlined)).dx,
@@ -127,13 +196,13 @@ void main() {
     (tester) async {
       await _setSurface(tester, mobile: false);
       const key = EditorResourceKey(scope: "test", identity: "copy");
-      final diagnostic = TypeDiagnostic(
-        code: TypeDiagnosticCode.invalidValue,
+      final diagnostic = EditorDiagnostic(
+        code: EditorDiagnosticCode.invalidValue,
         message: "Choose a supported engine target",
-        path: DataPath.root.field("target"),
+        path: editorRootPath.field("target"),
       );
       final document = _document("target", "paper@*");
-      final workspace = LocalWorkSession();
+      final workspace = ScopedWorkSession();
       addTearDown(workspace.dispose);
       final source = workspace.editor(
         fakeEditorTarget(
@@ -148,8 +217,8 @@ void main() {
       );
       workspace.retain(key);
       source.update(
-        DataPath.root.field("target"),
-        const StringValue("unsupported"),
+        editorRootPath.field("target"),
+        skir.DataValue.wrapStringValue("unsupported"),
       );
       expect(await source.flush(), isA<MutationInvalid>());
 
@@ -173,7 +242,7 @@ void main() {
 
       await _openActivity(tester, workspace, mobile: false);
       expect(find.byIcon(Icons.copy_outlined), findsOneWidget);
-      expect(find.text("Retry save"), findsOneWidget);
+      expect(find.text("Retry"), findsOneWidget);
       final discardFinder = find.widgetWithText(TextButton, "Discard");
       final discard = tester.widget<TextButton>(discardFinder);
       final context = tester.element(discardFinder);
@@ -183,7 +252,7 @@ void main() {
       );
 
       final copy = tester.getCenter(find.byIcon(Icons.copy_outlined));
-      final retry = tester.getCenter(find.text("Retry save"));
+      final retry = tester.getCenter(find.text("Retry"));
       final discardPosition = tester.getCenter(discardFinder);
       expect(copy.dx, lessThan(retry.dx));
       expect(retry.dx, lessThan(discardPosition.dx));
@@ -215,7 +284,7 @@ void main() {
     await _setSurface(tester, mobile: false);
     const key = EditorResourceKey(scope: "test", identity: "contention");
     final document = _document("target", "canonical");
-    final workspace = LocalWorkSession();
+    final workspace = ScopedWorkSession();
     addTearDown(workspace.dispose);
     final source = workspace.editor(
       fakeEditorTarget(
@@ -233,15 +302,18 @@ void main() {
     );
     workspace.retain(key);
     source.update(
-      DataPath.root.field("target"),
-      const StringValue("local value"),
+      editorRootPath.field("target"),
+      skir.DataValue.wrapStringValue("local value"),
     );
     final flush = source.flush();
     await tester.pump(const Duration(seconds: 10));
     expect(await flush, isA<MutationConflict>());
 
     await _openActivity(tester, workspace, mobile: false);
-    expect(find.byKey(ValueKey(("resource", key))), findsOneWidget);
+    expect(
+      find.byKey(ValueKey(("resource", _workEntryId(key)))),
+      findsOneWidget,
+    );
     expect(
       find.text("Changed repeatedly elsewhere. Retry when other edits stop."),
       findsOneWidget,
@@ -253,7 +325,8 @@ void main() {
     expect(find.text("Contention"), findsOneWidget);
     expect(find.text("versionMismatch"), findsOneWidget);
     expect(find.text("4 total"), findsOneWidget);
-    expect(find.text("3 of 3"), findsOneWidget);
+    expect(find.text("Retries"), findsOneWidget);
+    expect(find.text("3"), findsOneWidget);
     expect(find.text("Expected version"), findsOneWidget);
     expect(find.text("Observed version"), findsOneWidget);
     expect(find.text("local value"), findsNothing);
@@ -265,7 +338,7 @@ void main() {
     await _setSurface(tester, mobile: false);
     const key = EditorResourceKey(scope: "test", identity: "draft");
     final document = _document("name", "canonical");
-    final workspace = LocalWorkSession();
+    final workspace = ScopedWorkSession();
     addTearDown(workspace.dispose);
     final source = workspace.editor(
       fakeEditorTarget(
@@ -281,14 +354,14 @@ void main() {
     );
     workspace.retain(key);
     source.update(
-      DataPath.root.field("name"),
-      const StringValue("local draft"),
+      editorRootPath.field("name"),
+      skir.DataValue.wrapStringValue("local draft"),
     );
 
     await tester.pumpTestApp(
       child: Scaffold(
         appBar: AppBar(
-          actions: [LocalWorkSessionActivityView(controller: workspace)],
+          actions: [ScopedWorkSessionActivityView(controller: workspace)],
         ),
       ),
     );

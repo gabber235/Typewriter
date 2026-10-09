@@ -22,12 +22,20 @@ final class NatsRealmEditorCatalogSource {
       if (!disposed.isCompleted) disposed.complete();
     });
     final responses = ref
-        .watchRequest<skir.CatalogFetchResult, skir.CatalogFetchResult>(
+        .watchProjection<
+          skir.CatalogFetchResult,
+          skir.CatalogFetchResult,
+          skir.CatalogFetchResult
+        >(
           subject: route.fetchSubject,
-          listenSubject: route.fetchUpdateSubject(transferId),
+          eventSubject: route.fetchUpdateSubject(transferId),
           requestBytes: skir.CatalogFetchRequest.serializer.toBytes(request),
-          serializer: skir.CatalogFetchResult.serializer,
-          transformer: (_, response) => response,
+          responseSerializer: skir.CatalogFetchResult.serializer,
+          eventSerializer: skir.CatalogFetchResult.serializer,
+          snapshot: (response) => response,
+          reduce: (_, event) => event,
+          delivery: const ProjectionDelivery.ephemeral(),
+          reconciliation: const ProjectionReconciliation.latest(),
         );
     return assembler.assemble(
       responses.map(
@@ -46,28 +54,32 @@ final class NatsRealmEditorCatalogSource {
 
   Stream<skir.CatalogInvalidated> watchInvalidations(
     RealmEditorCatalogRoute route,
-  ) => ref.watchRequest(
+  ) => ref.watchProjection(
     subject: route.invalidationRequestSubject,
-    listenSubject: route.invalidationSubject,
+    eventSubject: route.invalidationSubject,
     requestBytes: skir.WatchEditorCatalogRequest.serializer.toBytes(
       skir.WatchEditorCatalogRequest(),
     ),
-    serializer: skir.CatalogInvalidated.serializer,
-    transformer: (_, response) => response,
+    responseSerializer: skir.CatalogInvalidated.serializer,
+    eventSerializer: skir.CatalogInvalidated.serializer,
+    snapshot: (response) => response,
+    reduce: (_, event) => event,
+    delivery: const ProjectionDelivery.ephemeral(),
+    reconciliation: const ProjectionReconciliation.latest(),
   );
 
-  Future<skir.PreparedCreation> prepareCreation(
+  Future<skir.PreparedValue> prepareValue(
     RealmEditorCatalogRoute route,
-    skir.InitializationRequest request,
+    skir.ValuePreparationRequest request,
   ) async {
     final response = await ref.requestSkir(
       route.address.request("editor.creation.prepare"),
-      skir.InitializationRequest.serializer.toBytes(request),
-      skir.PrepareCreationResult.serializer,
+      skir.ValuePreparationRequest.serializer.toBytes(request),
+      skir.PrepareValueResult.serializer,
     );
     return switch (response) {
-      skir.PrepareCreationResult_preparedWrapper(:final value) => value,
-      skir.PrepareCreationResult_catalogChangedWrapper(:final value) =>
+      skir.PrepareValueResult_preparedWrapper(:final value) => value,
+      skir.PrepareValueResult_catalogChangedWrapper(:final value) =>
         throw CatalogGenerationChanged(value),
       _ => throw ApiException.internalServerError(),
     };

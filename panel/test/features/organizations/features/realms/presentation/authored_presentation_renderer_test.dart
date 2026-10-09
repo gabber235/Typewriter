@@ -69,11 +69,17 @@ void main() {
   testWidgets("record controls preserve the named record identity", (
     tester,
   ) async {
-    skir.DataValue? written;
+    (skir.BindingRef, skir.DataValue)? written;
     final placementReference = skir.BindingRef(
       bindingId: _rootBinding,
       path: _fieldPath("placement"),
     );
+    final host = _ControlHost(
+      onWrite: (reference, value) {
+        written = (reference, value);
+      },
+    );
+    addTearDown(host.dispose);
 
     await tester.pumpTestApp(
       child: Builder(
@@ -132,8 +138,9 @@ void main() {
               budget: _budget,
               setBinding: (reference, value) {
                 expect(reference, placementReference);
-                written = value;
+                written = (reference, value);
               },
+              host: host,
             ),
           ),
         ),
@@ -143,15 +150,8 @@ void main() {
     await tester.enterText(find.byType(TextFormField), "7");
     await tester.pumpAndSettle();
 
-    final named = switch (written) {
-      final skir.DataValue_namedWrapper value => value,
-      _ => throw TestFailure("Expected a named record value"),
-    };
-    expect(named.value.actualType, _placementType);
-    expect(
-      named.value.payload.authoredField("x")?.authoredInteger,
-      BigInt.from(7),
-    );
+    expect(written?.$1.path, _fieldPath("x"));
+    expect(written?.$2, skir.DataValue.wrapInteger("7"));
   });
 
   testWidgets("toggle controls preserve a named scalar identity", (
@@ -162,6 +162,8 @@ void main() {
       bindingId: _rootBinding,
       path: _fieldPath("enabled"),
     );
+    final host = _ControlHost(onWrite: (_, value) => written = value);
+    addTearDown(host.dispose);
     await tester.pumpTestApp(
       child: Builder(
         builder: (_) => Scaffold(
@@ -195,6 +197,7 @@ void main() {
                 expect(reference, enabledReference);
                 written = value;
               },
+              host: host,
             ),
           ),
         ),
@@ -223,6 +226,8 @@ void main() {
       bindingId: _rootBinding,
       path: _fieldPath("enabled"),
     );
+    final host = _ControlHost(onWrite: (_, value) => written = value);
+    addTearDown(host.dispose);
     await tester.pumpTestApp(
       child: Builder(
         builder: (_) => Scaffold(
@@ -253,6 +258,7 @@ void main() {
                 expect(reference, enabledReference);
                 written = value;
               },
+              host: host,
             ),
           ),
         ),
@@ -372,24 +378,64 @@ void main() {
         bindingId: _rootBinding,
         path: location.path,
       );
+      final host = EditorSourcePresentationHost(
+        catalog: checked,
+        root: () => skir.PresentationNode.defaultInstance,
+        bindings: [
+          EditorSourcePresentationBinding(
+            id: _rootBinding,
+            use: skir.TypeUse.createNamed(
+              definition: root,
+              arguments: const [],
+            ),
+            read: (_) => skir.DataValue.createNamed(
+              actualType: skir.NamedTypeUse(
+                definition: root,
+                arguments: const [],
+              ),
+              payload: skir.DataValue.createRecord(
+                fields: draft.resource(location.resource)!.fields,
+              ),
+            ),
+            write: (_, value) async {
+              written = value;
+              return const PortablePresentationWriteApplied();
+            },
+          ),
+        ],
+        budget: _budget,
+      );
+      addTearDown(host.dispose);
       final scope = PortablePresentationScope(
         bindings: {
           _rootBinding: PortableExpressionBinding(
-            value: skir.DataValue.createRecord(
-              fields: [
-                skir.FieldValue(name: "count", value: skir.DataValue.unfilled),
-              ],
+            value: skir.DataValue.createNamed(
+              actualType: skir.NamedTypeUse(
+                definition: root,
+                arguments: const [],
+              ),
+              payload: skir.DataValue.createRecord(
+                fields: [
+                  skir.FieldValue(
+                    name: "count",
+                    value: skir.DataValue.unfilled,
+                  ),
+                ],
+              ),
             ),
             location: skir.ValueLocation(
               resource: location.resource,
               path: skir.ValuePath(segments: const []),
             ),
+            schema: PortablePresentationBindingSchema.complete(
+              skir.TypeUse.createNamed(definition: root, arguments: const []),
+            ),
           ),
         },
         budget: _budget,
         setBinding: (_, value) => written = value,
-        authoring: draft,
         catalog: checked,
+        host: host,
       );
 
       expect(
@@ -811,28 +857,117 @@ Future<void> _pumpControl(
   bool rebindWrites = false,
 }) {
   var current = value;
+  late StateSetter rebuild;
+  final host = _ControlHost(
+    expected: switch (element) {
+      skir.PresentationElement_sliderInputWrapper() => skir.TypeUse.wrapScalar(
+        skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour),
+      ),
+      _ => skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+    },
+    onWrite: (_, replacement) {
+      onWrite(replacement);
+      if (rebindWrites) rebuild(() => current = replacement);
+    },
+  );
+  addTearDown(host.dispose);
   return tester.pumpTestApp(
     child: StatefulBuilder(
-      builder: (_, setState) => Scaffold(
-        body: PortablePresentationNodeRenderer(
-          node: skir.PresentationNode(
-            nodeId: "scalar",
-            properties: skir.PresentationProperties.defaultInstance,
-            element: element,
-            header: null,
+      builder: (_, setState) {
+        rebuild = setState;
+        return Scaffold(
+          body: PortablePresentationNodeRenderer(
+            node: skir.PresentationNode(
+              nodeId: "scalar",
+              properties: skir.PresentationProperties.defaultInstance,
+              element: element,
+              header: null,
+            ),
+            scope: PortablePresentationScope(
+              bindings: {
+                _rootBinding: PortableExpressionBinding(value: current),
+              },
+              budget: _budget,
+              setBinding: (_, replacement) {
+                onWrite(replacement);
+                if (rebindWrites) setState(() => current = replacement);
+              },
+              readOnly: readOnly,
+              enabled: enabled,
+              host: host,
+            ),
           ),
-          scope: PortablePresentationScope(
-            bindings: {_rootBinding: PortableExpressionBinding(value: current)},
-            budget: _budget,
-            setBinding: (_, replacement) {
-              onWrite(replacement);
-              if (rebindWrites) setState(() => current = replacement);
-            },
-            readOnly: readOnly,
-            enabled: enabled,
-          ),
-        ),
-      ),
+        );
+      },
     ),
   );
+}
+
+final class _ControlHost extends ChangeNotifier
+    implements PortablePresentationHost {
+  _ControlHost({required this.onWrite, this.expected});
+
+  final void Function(skir.BindingRef reference, skir.DataValue value) onWrite;
+  final skir.TypeUse? expected;
+
+  @override
+  PortablePresentationCapabilities get capabilities =>
+      const PortablePresentationCapabilities();
+
+  @override
+  PortablePresentationDocument get document => PortablePresentationDocument(
+    catalog: skir.EditorCatalogWireSnapshot.defaultInstance
+        .asTrustedLocalCatalog(),
+    root: skir.PresentationNode.defaultInstance,
+    bindings: const {},
+    budget: _budget,
+  );
+
+  @override
+  bool get enabled => true;
+
+  @override
+  bool get readOnly => false;
+
+  @override
+  Future<PortablePresentationWriteResult> execute(
+    skir.EditorAction editorAction, {
+    required PortableInvocationContext context,
+  }) async => const PortablePresentationWriteApplied();
+
+  @override
+  skir.TypeUse? expectedType(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => expected ?? skir.TypeUse.wrapScalar(skir.ScalarKind.text);
+
+  @override
+  skir.ValueLocation? location(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => null;
+
+  @override
+  skir.DataValue? read(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) {
+    final root = context.bindings[reference.bindingId]?.value;
+    if (root == null || reference.path.segments.isEmpty) return root;
+    return switch (root.readAt(reference.path)) {
+      PortablePathValue(:final value) => value,
+      PortablePathUnavailable() => null,
+    };
+  }
+
+  @override
+  Future<PortablePresentationWriteResult> write(
+    skir.BindingRef reference,
+    skir.DataValue value, {
+    required PortableInvocationContext context,
+  }) async {
+    onWrite(reference, value);
+    notifyListeners();
+    return const PortablePresentationWriteApplied();
+  }
 }

@@ -134,7 +134,11 @@ class OrganizationJoinCodes extends _$OrganizationJoinCodes {
     }
 
     final request = skir.WatchOrganizationJoinCodesRequest();
-    yield* ref.watchSequencedRequest(
+    yield* ref.watchProjection<
+      List<OrganizationJoinCode>,
+      skir.WatchOrganizationJoinCodesResponse,
+      skir.OrganizationJoinCodesChanged
+    >(
       subject:
           "cloud.to.user.$userId.organization.${organizationId.id}.members.join_codes.watch",
       eventSubject:
@@ -144,26 +148,19 @@ class OrganizationJoinCodes extends _$OrganizationJoinCodes {
       ),
       responseSerializer: skir.WatchOrganizationJoinCodesResponse.serializer,
       eventSerializer: skir.OrganizationJoinCodesChanged.serializer,
-      snapshot: (response) {
-        return switch (response) {
-          skir.WatchOrganizationJoinCodesResponse_unknown() =>
-            throw ApiException.unknownResponseMessage(),
-          skir.WatchOrganizationJoinCodesResponse_internalErrorWrapper() =>
-            throw ApiException.internalServerError(),
-          skir.WatchOrganizationJoinCodesResponse_snapshotWrapper(
-            :final value,
-          ) =>
-            SequencedSnapshot(
-              sequence: value.sequence,
-              value: value.values.map(OrganizationJoinCode.fromSkir).toList(),
-            ),
-          skir.WatchOrganizationJoinCodesResponse_changedWrapper() =>
-            throw StateError("Snapshot request returned a delta"),
-        };
-      },
-      eventSequence: (event) => event.sequence,
+      snapshot: (response) =>
+          _joinCodeSnapshot(response).values
+              .map(OrganizationJoinCode.fromSkir)
+              .toList(),
       reduce: _reduceJoinCodes,
-      sequenceState: _sequenceState,
+      delivery: const ProjectionDelivery.ordered(
+        stream: "TYPEWRITER_MEMBERSHIP",
+      ),
+      reconciliation: ProjectionReconciliation.sequenced(
+        snapshotSequence: (response) => _joinCodeSnapshot(response).sequence,
+        eventSequence: (event) => event.sequence,
+        sequenceState: _sequenceState,
+      ),
     );
   }
 
@@ -359,6 +356,20 @@ class OrganizationJoinCodes extends _$OrganizationJoinCodes {
     }
   }
 }
+
+skir.OrganizationJoinCodesSnapshot _joinCodeSnapshot(
+  skir.WatchOrganizationJoinCodesResponse response,
+) => switch (response) {
+  skir.WatchOrganizationJoinCodesResponse_snapshotWrapper(:final value) =>
+    value,
+  skir.WatchOrganizationJoinCodesResponse_unknown() =>
+    throw ApiException.unknownResponseMessage(),
+  skir.WatchOrganizationJoinCodesResponse_internalErrorWrapper() =>
+    throw ApiException.internalServerError(),
+  skir.WatchOrganizationJoinCodesResponse_changedWrapper() => throw StateError(
+    "Snapshot request returned a delta",
+  ),
+};
 
 // The reducer is shared by initial event delivery and mutation responses so
 // both paths apply add and remove changes with the same ordering and identity

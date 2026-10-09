@@ -18,13 +18,33 @@ class DefaultInitializationRuntime(
 ) : InitializationRuntime {
     private val initialization = initialization.associateBy(InitializationDescriptor::definition)
 
-    override suspend fun prepare(request: InitializationRequest): PreparedCreation = prepareNow(request)
+    override suspend fun prepare(request: InitializationRequest): PreparedValue = prepareNow(request)
 
-    fun prepareNow(request: InitializationRequest): PreparedCreation {
+    fun prepareNow(request: InitializationRequest): PreparedValue {
         if (request.catalog != catalog.generation) {
             return unavailable(request, "catalog_generation_mismatch", "The initialization request uses a different catalog generation.")
         }
-        val selection = request.type
+        return when (val target = request.target) {
+            is PreparationTarget.Value -> prepareValue(request, target.type)
+            is PreparationTarget.Record -> prepareRecord(request, target.selection)
+        }
+    }
+
+    private fun prepareValue(
+        request: InitializationRequest,
+        type: TypeUse,
+    ): PreparedValue {
+        val findings = mutableListOf<InitializationDiagnostic>()
+        val value = request.supplied ?: ordinaryDefault(type, DefaultInitializationContext(), findings)
+        return PreparedValue(PreparedContent.Value(value), findings)
+    }
+
+    private fun prepareRecord(
+        request: InitializationRequest,
+        selection: TypeSelection,
+    ): PreparedValue {
+        val suppliedFields =
+            suppliedRecord(request) ?: return unavailable(request, "invalid_supplied_value", "Record preparation requires a record value.")
         if (selection is TypeSelection.Pending) return preparePending(request, selection)
         val use =
             selection.completeUse()
@@ -39,9 +59,26 @@ class DefaultInitializationRuntime(
                     resolution.value
                 }
             }
-        rejectUnknownFields(request, checked.schema.fields.mapTo(linkedSetOf(), com.typewritermc.types.catalog.ResolvedField::key))
-            ?.let { return it }
-        val supplied = linkedMapOf<String, DataValue>()
+        rejectUnknownFields(
+            request,
+            suppliedFields,
+            checked.schema.fields.mapTo(linkedSetOf(), com.typewritermc.types.catalog.ResolvedField::key),
+        )?.let { return it }
+        val prepared = prepareRecordFields(use, checked, suppliedFields, DefaultInitializationContext(), nested = false)
+        return PreparedValue(
+            PreparedContent.Record(AuthoringRecord(TypeSelection.Complete(use), prepared.fields)),
+            prepared.findings,
+        )
+    }
+
+    private fun prepareRecordFields(
+        use: TypeUse.Named,
+        checked: CheckedType,
+        suppliedFields: Map<String, DataValue>,
+        context: DefaultInitializationContext,
+        nested: Boolean,
+    ): RecordPreparation {
+        val provided = suppliedFields.toMutableMap()
         val ordinary = linkedMapOf<String, DataValue>()
         val samples = linkedMapOf<com.typewritermc.types.FieldOwner, CompleteValue>()
         val findings = mutableListOf<InitializationDiagnostic>()
@@ -56,9 +93,8 @@ class DefaultInitializationRuntime(
         checked.schema.fields.forEach { field ->
             val owner = com.typewritermc.types.FieldOwner(field.declarationOwner, field.key)
             val fieldFindings = mutableListOf<InitializationDiagnostic>()
-            val context = DefaultInitializationContext()
             val authoredDefault =
-                if (owner !in defaulted && field.key !in request.supplied) {
+                if (owner !in defaulted && field.key !in suppliedFields) {
                     (startupCaptured[owner] ?: ordinaryDefault(field.type, context, fieldFindings)).also {
                         ordinary[field.key] = it
                     }
@@ -66,10 +102,9 @@ class DefaultInitializationRuntime(
                     null
                 }
             val value =
-                request.supplied[field.key] ?: authoredDefault?.let { samplingDefault(field.type, it, context, fieldFindings) }
+                suppliedFields[field.key] ?: authoredDefault?.let { samplingDefault(field.type, it, context, fieldFindings) }
                     ?: return@forEach
             findings += fieldFindings.map { it.prepend(PathSegment.Field(field.key)) }
-            request.supplied[field.key]?.let { supplied[field.key] = it }
             if (owner in defaulted) return@forEach
             when (val result = completeSample(field.type, value)) {
                 null -> Unit
@@ -83,10 +118,12 @@ class DefaultInitializationRuntime(
             } else {
                 bindings.sampleDefaults(checked, SamplingInputs(samples))
             }
-        findings += descriptor?.diagnostics.orEmpty()
-        findings += (capture as? CaptureResult.Unavailable)?.reasons.orEmpty()
+        val descriptorFindings = descriptor?.diagnostics.orEmpty()
+        val captureFindings = (capture as? CaptureResult.Unavailable)?.reasons.orEmpty()
+        findings += if (nested) descriptorFindings.map { it.atOwnField() } else descriptorFindings
+        findings += if (nested) captureFindings.map { it.atOwnField() } else captureFindings
         val captured = (capture as? CaptureResult.Captured)?.values.orEmpty()
-        val fields = supplied.toMutableMap()
+        val fields = provided.toMutableMap()
         checked.schema.fields.forEach { field ->
             if (field.key in fields) return@forEach
             val owner = com.typewritermc.types.FieldOwner(field.declarationOwner, field.key)
@@ -97,13 +134,15 @@ class DefaultInitializationRuntime(
                     else -> ordinary.getValue(field.key)
                 }
         }
-        return PreparedCreation(AuthoringRecord(TypeSelection.Complete(use), fields), findings)
+        return RecordPreparation(fields, findings)
     }
 
     private fun preparePending(
         request: InitializationRequest,
         selection: TypeSelection.Pending,
-    ): PreparedCreation {
+    ): PreparedValue {
+        val supplied =
+            suppliedRecord(request) ?: return unavailable(request, "invalid_supplied_value", "Record preparation requires a record value.")
         val partial =
             when (val resolution = catalog.resolvePartial(selection)) {
                 is Resolution.Invalid -> {
@@ -117,8 +156,8 @@ class DefaultInitializationRuntime(
         val descriptor = initialization[selection.definition]
         val knownKeys = partial.knownFields.mapTo(linkedSetOf(), com.typewritermc.types.catalog.ResolvedField::key)
         val dependentKeys = partial.dependentFields.mapTo(linkedSetOf()) { it.owner.name }
-        rejectUnknownFields(request, knownKeys + dependentKeys)?.let { return it }
-        request.supplied.keys.firstOrNull { it in dependentKeys }?.let { dependent ->
+        rejectUnknownFields(request, supplied, knownKeys + dependentKeys)?.let { return it }
+        supplied.keys.firstOrNull { it in dependentKeys }?.let { dependent ->
             val field = partial.dependentFields.single { it.owner.name == dependent }.owner
             return unavailable(
                 request,
@@ -142,7 +181,7 @@ class DefaultInitializationRuntime(
             val owner = com.typewritermc.types.FieldOwner(field.declarationOwner, field.key)
             val fieldFindings = mutableListOf<InitializationDiagnostic>()
             fields[field.key] =
-                request.supplied[field.key]
+                supplied[field.key]
                     ?: captured[owner]
                     ?: if (owner in defaulted) {
                         DataValue.Unfilled
@@ -159,30 +198,39 @@ class DefaultInitializationRuntime(
                 code = "incomplete_type_selection",
                 message = "Initialization left fields that depend on unfinished type arguments unfilled.",
             )
-        return PreparedCreation(AuthoringRecord(selection, fields), findings)
+        return PreparedValue(PreparedContent.Record(AuthoringRecord(selection, fields)), findings)
     }
 
     private fun unavailable(
         request: InitializationRequest,
         code: String,
         message: String,
-    ): PreparedCreation = unavailable(request, InitializationDiagnostic(null, code, message))
+    ): PreparedValue = unavailable(request, InitializationDiagnostic(null, code, message))
 
     private fun unavailable(
         request: InitializationRequest,
         diagnostic: InitializationDiagnostic,
-    ): PreparedCreation =
-        PreparedCreation(
-            AuthoringRecord(request.type, request.supplied),
+    ): PreparedValue =
+        PreparedValue(
+            when (val target = request.target) {
+                is PreparationTarget.Value -> {
+                    PreparedContent.Value(request.supplied ?: DataValue.Unfilled)
+                }
+
+                is PreparationTarget.Record -> {
+                    PreparedContent.Record(AuthoringRecord(target.selection, suppliedRecord(request).orEmpty()))
+                }
+            },
             listOf(diagnostic),
         )
 
     private fun rejectUnknownFields(
         request: InitializationRequest,
+        supplied: Map<String, DataValue>,
         declared: Set<String>,
-    ): PreparedCreation? {
+    ): PreparedValue? {
         val unknown =
-            request.supplied.keys
+            supplied.keys
                 .filterNot(declared::contains)
                 .sorted()
         if (unknown.isEmpty()) return null
@@ -192,6 +240,13 @@ class DefaultInitializationRuntime(
             "Initialization supplied undeclared fields: ${unknown.joinToString()}.",
         )
     }
+
+    private fun suppliedRecord(request: InitializationRequest): Map<String, DataValue>? =
+        when (val value = request.supplied) {
+            null -> emptyMap()
+            is DataValue.Record -> value.fields
+            else -> null
+        }
 
     private fun ordinaryDefault(
         use: TypeUse,
@@ -269,51 +324,9 @@ class DefaultInitializationRuntime(
 
                 is ResolvedRepresentation.Record -> {
                     if (representation.abstract) return DataValue.Unfilled
-                    val defaulted = bindings.defaultedFields(checked)
-                    val descriptor = initialization[use.definition]
-                    val startupCaptured =
-                        descriptor
-                            ?.takeIf { it.mode == InitializationMode.Startup }
-                            ?.captured
-                            ?.associate { it.field to it.value }
-                            .orEmpty()
-                    val required = linkedMapOf<com.typewritermc.types.FieldOwner, CompleteValue>()
-                    val ordinary = linkedMapOf<String, DataValue>()
-                    representation.fields.forEach { field ->
-                        val owner = com.typewritermc.types.FieldOwner(field.declarationOwner, field.key)
-                        if (owner in defaulted) return@forEach
-                        val nestedFindings = mutableListOf<InitializationDiagnostic>()
-                        val authoredDefault = startupCaptured[owner] ?: ordinaryDefault(field.type, context, nestedFindings)
-                        ordinary[field.key] = authoredDefault
-                        val sample = samplingDefault(field.type, authoredDefault, context, nestedFindings)
-                        findings += nestedFindings.map { it.prepend(PathSegment.Field(field.key)) }
-                        val complete = completeSample(field.type, sample) as? CompletenessResult.Complete
-                        if (complete != null) required[owner] = complete.value
-                    }
-                    val capture =
-                        if (descriptor?.mode == InitializationMode.Startup) {
-                            CaptureResult.Captured(descriptor.captured.associate { it.field to it.value })
-                        } else {
-                            bindings.sampleDefaults(checked, SamplingInputs(required))
-                        }
-                    findings += descriptor?.diagnostics.orEmpty().map { it.atOwnField() }
-                    findings +=
-                        (capture as? CaptureResult.Unavailable)
-                            ?.reasons
-                            .orEmpty()
-                            .map { it.atOwnField() }
-                    val captured = (capture as? CaptureResult.Captured)?.values.orEmpty()
-                    DataValue.Record(
-                        representation.fields.associate { field ->
-                            val owner = com.typewritermc.types.FieldOwner(field.declarationOwner, field.key)
-                            field.key to
-                                when {
-                                    owner in captured -> captured.getValue(owner)
-                                    owner in defaulted -> DataValue.Unfilled
-                                    else -> ordinary.getValue(field.key)
-                                }
-                        },
-                    )
+                    val prepared = prepareRecordFields(use, checked, emptyMap(), context, nested = true)
+                    findings += prepared.findings
+                    DataValue.Record(prepared.fields)
                 }
             }
         return if (payload == DataValue.Unfilled) payload else DataValue.Named(use, payload)
@@ -390,6 +403,11 @@ class DefaultInitializationRuntime(
         }
     }
 }
+
+private data class RecordPreparation(
+    val fields: Map<String, DataValue>,
+    val findings: List<InitializationDiagnostic>,
+)
 
 private enum class DefaultEntry {
     Ready,

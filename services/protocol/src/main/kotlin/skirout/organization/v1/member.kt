@@ -781,7 +781,6 @@ sealed class WatchOrganizationMembersResponse private constructor() {
         UNKNOWN,
         INTERNAL_ERROR_WRAPPER,
         SNAPSHOT_WRAPPER,
-        CHANGED_WRAPPER,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.organization.v1.member.WatchOrganizationMembersResponse.UNKNOWN")) internal constructor(
@@ -835,24 +834,6 @@ sealed class WatchOrganizationMembersResponse private constructor() {
         }
     }
 
-    class ChangedWrapper private constructor (
-        val value: skirout.organization.v1.member.OrganizationMembersChanged,
-    ) : skirout.organization.v1.member.WatchOrganizationMembersResponse() {
-        constructor(
-            value: skirout.organization.v1.member.OrganizationMembersChanged_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.CHANGED_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.organization.v1.member.WatchOrganizationMembersResponse.ChangedWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 738943668;
-        }
-    }
-
     internal open val _unrecognized: _UnrecognizedVariant<skirout.organization.v1.member.WatchOrganizationMembersResponse>? get() = null;
 
     abstract val kind: Kind;
@@ -891,22 +872,6 @@ sealed class WatchOrganizationMembersResponse private constructor() {
             skirout.organization.v1.member.OrganizationMembersSnapshot(
                 sequence = sequence,
                 values = values,
-            )
-        );
-
-        /** Shortcut for `ChangedWrapper(skirout.organization.v1.member.OrganizationMembersChanged(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createChanged(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            sequence: kotlin.Long,
-            operationId: kotlin.String,
-            changes: kotlin.collections.Iterable<skirout.organization.v1.member.OrganizationMembersChange>,
-        ) = ChangedWrapper(
-            skirout.organization.v1.member.OrganizationMembersChanged(
-                sequence = sequence,
-                operationId = operationId,
-                changes = changes,
             )
         );
 
@@ -4124,15 +4089,6 @@ private object _SerializerRegistry {
             _SerializerRegistry.OrganizationMembersSnapshotSerializer,
             "",
             { skirout.organization.v1.member.WatchOrganizationMembersResponse.SnapshotWrapper(it) },
-            { it.value },
-        );
-        WatchOrganizationMembersResponseSerializerImpl.addWrapperVariant(
-            3,
-            "changed",
-            skirout.organization.v1.member.WatchOrganizationMembersResponse.Kind.CHANGED_WRAPPER.ordinal,
-            _SerializerRegistry.OrganizationMembersChangedSerializer,
-            "",
-            { skirout.organization.v1.member.WatchOrganizationMembersResponse.ChangedWrapper(it) },
             { it.value },
         );
         WatchOrganizationMembersResponseSerializerImpl.finalizeEnum();

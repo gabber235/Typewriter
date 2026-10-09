@@ -5,7 +5,7 @@ import {
   TraversalDirection,
 } from "editor/v1/authoring_facts.skir";
 import {
-  PreparedCreation,
+  PreparedValue,
   ResourceDefinitionId,
 } from "editor/v1/catalog.skir";
 import { FindingSet } from "editor/v1/checking.skir";
@@ -172,7 +172,7 @@ struct DeleteResourceIntent(812200024) {
 
 struct NewCounterpartChoice(812200025) {
   containing: ValueLocation = 0;
-  prepared: PreparedCreation = 1;
+  prepared: PreparedValue = 1;
 }
 
 enum CounterpartChoice(812200026) {
@@ -240,79 +240,71 @@ struct AuthoringChanged(812200036) {
   generation: CatalogGeneration = 0;
 }
 
-enum TypeRepairIntent(812200037) {
-  retag: RetagIntent = 1;
-  clear: ValueLocation = 2;
-  configure_resource: ResourceConfigurationIntent = 3;
-}
-
-enum LinkRepairIntent(812200038) {
+enum LinkRepairIntent(812200037) {
   clear: LinkOccurrenceId = 1;
   remove: LinkOccurrenceId = 2;
 }
 
-struct TypeArgumentChangePreview(812200039) {
-  catalog: CatalogGeneration = 0;
-  resource: ResourceId = 1;
-  next: TypeSelection = 2;
-  expectations: [EditExpectation] = 3;
-  intents: [TypeRepairIntent] = 4;
-  link_repairs: [LinkRepairIntent] = 5;
-  cleared_locations: [ValueLocation] = 6;
+struct TypeArgumentChangePreview(812200038) {
+  resource: ResourceId = 0;
+  next: TypeSelection = 1;
+  edit: PreparedEdit = 2;
+  link_repairs: [LinkRepairIntent] = 3;
+  cleared_locations: [ValueLocation] = 4;
 }
 
-struct ArgumentLocation(812200040) {
+struct ArgumentLocation(812200039) {
   index: int32 = 0;
 }
 
-enum TypePreviewResult(812200041) {
+enum TypePreviewResult(812200040) {
   ready: TypeArgumentChangePreview = 1;
   invalid_arguments: [DeclarationDiagnostic] = 2;
   incomplete: [ArgumentLocation] = 3;
   rejected: [ValueProblem] = 4;
 }
 
-struct AuthoringSearchHit(812200042) {
+struct AuthoringSearchHit(812200041) {
   resource: ResourceId = 0;
   definition: ResourceDefinitionId = 1;
   subject: PresentationSubject = 2;
   context: PortableValue = 3;
 }
 
-struct AuthoringSearchResult(812200043) {
+struct AuthoringSearchResult(812200042) {
   generation: CatalogGeneration = 0;
   hits: [AuthoringSearchHit] = 1;
   diagnostics: [Diagnostic] = 2;
 }
 
-enum CollectionProjectionSource(812200044) {
+enum CollectionProjectionSource(812200043) {
   resource_id = 1;
   content: ValuePath = 2;
   literal: DataValue = 3;
 }
 
-struct CollectionProjectionField(812200045) {
+struct CollectionProjectionField(812200044) {
   target: ValuePath = 0;
   source: CollectionProjectionSource = 1;
 }
 
-struct CollectionProjectionDefinition(812200046) {
+struct CollectionProjectionDefinition(812200045) {
   source_id: string = 0;
   root: TypeDefinitionId = 1;
   row_type: NamedTypeUse = 2;
   fields: [CollectionProjectionField] = 3;
 }
 
-struct AuthoringStateTransferChunk(812200047) {
+struct AuthoringStateTransferChunk(812200046) {
   generation: CatalogGeneration = 0;
   transfer: BoundedTransferChunk = 1;
 }
 
-enum AuthoringTransferUnavailableReason(812200048) {
+enum AuthoringTransferUnavailableReason(812200047) {
   encoded_size_limit = 1;
 }
 
-struct AuthoringTransferUnavailable(812200049) {
+struct AuthoringTransferUnavailable(812200048) {
   generation: CatalogGeneration = 0;
   reason: AuthoringTransferUnavailableReason = 1;
   encoded_size: int64 = 2;
@@ -364,9 +356,9 @@ method PreviewTypeArgumentChange(
   internal_error: InternalError = 2;
 } = 920013;
 
-method CommitTypeArgumentChange(
+method PrepareTypeArgumentChange(
   TypeArgumentChangePreview
 ): enum {
-  result: CommitResult = 1;
+  result: PreparedEditResult = 1;
   internal_error: InternalError = 2;
 } = 920014;

@@ -1814,7 +1814,7 @@ val WatchRealmPresentationSearch: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "WatchRealmPresentationSearch",
-        910003,
+        919103,
         skirout.editor.v1.search.RealmPresentationSearchRequest.serializer,
         skirout.editor.v1.search.RealmPresentationSearchUpdate.serializer,
         "",
@@ -1827,7 +1827,7 @@ val CancelRealmPresentationSearch: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "CancelRealmPresentationSearch",
-        919103,
+        919104,
         skirout.editor.v1.search.CancelRealmPresentationSearchRequest.serializer,
         skirout.editor.v1.search.CancelRealmPresentationSearchResult.serializer,
         "",

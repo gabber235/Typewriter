@@ -194,11 +194,13 @@ void main() {
           preview: (next) async {
             requested = next;
             return skir.TypePreviewResult.createReady(
-              catalog: fixture.catalog.snapshot.generation,
               resource: skir.ResourceId(value: "variable:1"),
               next: next,
-              expectations: const [],
-              intents: const [],
+              edit: skir.PreparedEdit(
+                catalog: fixture.catalog.snapshot.generation,
+                expectations: const [],
+                intents: const [],
+              ),
               linkRepairs: const [],
               clearedLocations: [
                 skir.ValueLocation(
@@ -212,9 +214,7 @@ void main() {
           },
           commit: (preview) async {
             committed = preview;
-            return skir.CommitTypeArgumentChangeResponse.wrapResult(
-              skir.CommitResult.committed,
-            );
+            return const AuthoringEditResult.staged(AuthoringGroupId(1));
           },
           onStatus: (value) => status = value,
         ),
@@ -249,7 +249,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(committed?.next, requested);
-    expect(status, "Type arguments updated");
+    expect(status, "Type arguments staged");
   });
 
   testWidgets("persists one chosen argument while another stays Unfilled", (
@@ -271,18 +271,19 @@ void main() {
           preview: (next) async {
             requested = next;
             return skir.TypePreviewResult.createReady(
-              catalog: fixture.catalog.snapshot.generation,
               resource: skir.ResourceId(value: "variable:1"),
               next: next,
-              expectations: const [],
-              intents: const [],
+              edit: skir.PreparedEdit(
+                catalog: fixture.catalog.snapshot.generation,
+                expectations: const [],
+                intents: const [],
+              ),
               linkRepairs: const [],
               clearedLocations: const [],
             );
           },
-          commit: (_) async => skir.CommitTypeArgumentChangeResponse.wrapResult(
-            skir.CommitResult.committed,
-          ),
+          commit: (_) async =>
+              const AuthoringEditResult.staged(AuthoringGroupId(1)),
         ),
       ),
     );

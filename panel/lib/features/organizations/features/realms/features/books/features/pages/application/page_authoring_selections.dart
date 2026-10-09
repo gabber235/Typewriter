@@ -16,7 +16,7 @@ extension type const PageAuthoringSelectionKey(String value) {
 extension type const PageContentSelectionKey(String value) {
   factory PageContentSelectionKey.page(
     skir.ResourceId page,
-    CatalogGeneration generation,
+    skir.CatalogGeneration generation,
   ) => PageContentSelectionKey(
     "page-content:${base64Url.encode(utf8.encode(page.value))}:${generation.value}",
   );

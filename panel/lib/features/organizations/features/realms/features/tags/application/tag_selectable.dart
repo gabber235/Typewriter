@@ -25,7 +25,7 @@ class TagIdentifier extends SelectableIdentifier
   skir.ResourceId get referenceId => tagId;
 
   @override
-  List<ResolvedTypeRef> get referenceTypes => const [];
+  List<skir.TypeDefinitionId> get referenceTypes => const [];
 
   @override
   AsyncValue<Selectable> create(Ref ref) {

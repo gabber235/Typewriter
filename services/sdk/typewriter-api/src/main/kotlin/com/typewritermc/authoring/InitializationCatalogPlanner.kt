@@ -62,15 +62,16 @@ class InitializationCatalogPlanner(
                             InitializationRequest(
                                 InitializationRequestId("catalog:${definition.id}"),
                                 catalog.generation,
-                                TypeSelection.Complete(use),
-                                emptyMap(),
+                                PreparationTarget.Record(TypeSelection.Complete(use)),
+                                DataValue.Record(emptyMap()),
                                 "catalog initialization",
                             ),
                         )
+                    val record = (prepared.content as PreparedContent.Record).record
                     val captured =
                         checked.schema.fields.mapNotNull { field ->
                             val owner = com.typewritermc.types.FieldOwner(field.declarationOwner, field.key)
-                            val value = prepared.record.fields[field.key] ?: return@mapNotNull null
+                            val value = record.fields[field.key] ?: return@mapNotNull null
                             value.takeUnless { it == DataValue.Unfilled }?.let { CapturedDefault(owner, it) }
                         }
                     InitializationDescriptor(

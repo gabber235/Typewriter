@@ -86,10 +86,10 @@ final class _ServiceHostConfigurationPortableSurface
   final EditorTarget target;
 
   @override
-  TypeExpression get rootType => _hostConfigurationType;
+  skir.TypeUse get rootType => _hostConfigurationType;
 
   @override
-  TypeCatalog get typeCatalog => _hostConfigurationCatalog;
+  CheckedEditorCatalog get catalog => _hostConfigurationCatalog;
 
   @override
   bool isCompatibleWith(PortableMultiInspectionSurface other) =>

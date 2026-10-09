@@ -13,6 +13,7 @@ final class ScriptedAuthoringTransport extends ChangeNotifier
   final void Function(skir.PreparedEdit edit)? onRequest;
   final requests = <ScriptedAuthoringRequest>[];
   Object? refreshFailure;
+  int fetches = 0;
   void publish(AsyncValue<AuthoringDocument> next) {
     observation = next;
     notifyListeners();
@@ -29,6 +30,7 @@ final class ScriptedAuthoringTransport extends ChangeNotifier
 
   @override
   Future<AuthoringDocument> fetchConfirmed() async {
+    fetches++;
     if (refreshFailure case final error?) throw error;
     return observation.requireValue;
   }
@@ -121,6 +123,13 @@ List<Override> authoringFixtureOverrides({
       ref.onDispose(() => scripted.removeListener(ref.invalidateSelf));
       return scripted.observation;
     }),
+    localWorkScopeProvider.overrideWith((ref) {
+      final selected = ref.watch(selectedAuthoringScopeProvider);
+      return LocalWorkScope(
+        userId: "fixture",
+        organizationId: selected?.organizationId,
+      );
+    }),
     authoringWorkspaceTransportProvider.overrideWith((ref, scope) => scripted),
     authoredResourceCommandsProvider.overrideWith(
       (ref, scope) => commands ?? fixtureAuthoringCommands(scripted),
@@ -133,30 +142,32 @@ AuthoredResourceCommands fixtureAuthoringCommands(
 ) => AuthoredResourceCommands(
   previewTypeArguments: ({required resource, required requested}) async =>
       throw StateError("No type preview reply was scripted"),
-  commitTypeArguments: (_) async =>
-      throw StateError("No type commit reply was scripted"),
-  prepareCreation: (request) async {
+  prepareTypeArguments: (_) async =>
+      throw StateError("No type preparation reply was scripted"),
+  prepareValue: (request) async {
     final catalog = transport.observation.requireValue.catalog;
     if (catalog.snapshot.generation != request.catalog) {
       throw StateError("The fixture catalog changed");
     }
     final defaults = transport.observation.requireValue;
-    return skir.PreparedCreation(
-      record: skir.AuthoringRecord(
-        configuration: request.type,
-        fields: [
-          for (final field in catalog.fields(request.type))
-            skir.FieldValue(
-              name: field.template.key,
-              value:
-                  request.supplied
-                      .firstWhereOrNull(
-                        (value) => value.name == field.template.key,
-                      )
-                      ?.value ??
-                  defaults.defaultValue(field.type),
-            ),
-        ],
+    return skir.PreparedValue(
+      content: skir.PreparedContent.wrapRecord(
+        skir.AuthoringRecord(
+          configuration: request.recordSelection,
+          fields: [
+            for (final field in catalog.fields(request.recordSelection))
+              skir.FieldValue(
+                name: field.template.key,
+                value:
+                    request.recordSuppliedFields
+                        .firstWhereOrNull(
+                          (value) => value.name == field.template.key,
+                        )
+                        ?.value ??
+                    defaults.defaultValue(field.type),
+              ),
+          ],
+        ),
       ),
       findings: const [],
     );

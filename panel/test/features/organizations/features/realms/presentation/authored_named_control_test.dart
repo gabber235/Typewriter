@@ -11,6 +11,13 @@ void main() {
     (tester) async {
       skir.BindingRef? writtenReference;
       skir.DataValue? writtenValue;
+      final presentationHost = _NamedTestHost(
+        onWrite: (reference, value) {
+          writtenReference = reference;
+          writtenValue = value;
+        },
+      );
+      addTearDown(presentationHost.dispose);
 
       Widget host(bool visible) => testApp(
         child: Scaffold(
@@ -26,6 +33,7 @@ void main() {
                 writtenReference = reference;
                 writtenValue = value;
               },
+              host: presentationHost,
             ),
           ),
         ),
@@ -57,6 +65,8 @@ void main() {
 
   testWidgets("disabled nodes reject keyboard edits", (tester) async {
     var writes = 0;
+    final presentationHost = _NamedTestHost(onWrite: (_, _) => writes++);
+    addTearDown(presentationHost.dispose);
     final control =
         _control().payloadPresentation!.element!
             as skir.PresentationElement_childrenWrapper;
@@ -99,6 +109,7 @@ void main() {
                 maxCollectionItems: 100,
               ),
               setBinding: (_, _) => writes++,
+              host: presentationHost,
             ),
           ),
         ),
@@ -262,3 +273,81 @@ skir.PresentationNode _rootPresentation() => skir.PresentationNode(
 
 skir.ValuePath _fieldPath(String name) =>
     skir.ValuePath(segments: [skir.PathSegment.createField(name: name)]);
+
+final class _NamedTestHost extends ChangeNotifier
+    implements PortablePresentationHost {
+  _NamedTestHost({required this.onWrite});
+
+  final void Function(skir.BindingRef reference, skir.DataValue value) onWrite;
+
+  @override
+  PortablePresentationCapabilities get capabilities =>
+      const PortablePresentationCapabilities();
+
+  @override
+  PortablePresentationDocument get document => PortablePresentationDocument(
+    catalog: skir.EditorCatalogWireSnapshot.defaultInstance
+        .asTrustedLocalCatalog(),
+    root: skir.PresentationNode.defaultInstance,
+    bindings: const {},
+    budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
+  );
+
+  @override
+  bool get enabled => true;
+
+  @override
+  bool get readOnly => false;
+
+  @override
+  Future<PortablePresentationWriteResult> execute(
+    skir.EditorAction editorAction, {
+    required PortableInvocationContext context,
+  }) async => const PortablePresentationWriteApplied();
+
+  @override
+  skir.TypeUse? expectedType(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => reference == _styleReference
+      ? skir.TypeUse.wrapNamed(_styleType)
+      : skir.TypeUse.wrapScalar(skir.ScalarKind.text);
+
+  @override
+  skir.ValueLocation? location(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) {
+    final base = context.bindings[reference.bindingId]?.location;
+    if (base == null) return null;
+    return skir.ValueLocation(
+      resource: base.resource,
+      path: skir.ValuePath(
+        segments: [...base.path.segments, ...reference.path.segments],
+      ),
+    );
+  }
+
+  @override
+  skir.DataValue? read(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) {
+    final root = context.bindings[reference.bindingId]?.value;
+    if (root == null || reference.path.segments.isEmpty) return root;
+    return switch (root.readAt(reference.path)) {
+      PortablePathValue(:final value) => value,
+      PortablePathUnavailable() => null,
+    };
+  }
+
+  @override
+  Future<PortablePresentationWriteResult> write(
+    skir.BindingRef reference,
+    skir.DataValue value, {
+    required PortableInvocationContext context,
+  }) async {
+    onWrite(reference, value);
+    return const PortablePresentationWriteApplied();
+  }
+}

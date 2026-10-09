@@ -19,6 +19,7 @@ use serde::Deserialize;
 use wasmcloud_utils::{
     database::{RecordId, read_query, transaction_query},
     decode_skir, extract_params,
+    skir::base::service::v1::organization::OrganizationServicesChanged,
     skir::base::service::v1::registration::{
         BindServiceRequest, BindServiceResponse, BindServiceResponse_InvalidOperationIdError,
         BindServiceResponse_OperationIdentityReusedError, BindServiceResponse_Success,
@@ -129,8 +130,10 @@ LET $services = SELECT * FROM service
 
     // The database commit is authoritative. Publications are recovery friendly projections and
     // must not be performed inside the transaction because messaging cannot roll back the bind.
-    wasmcloud_utils::skir_subjects::organization_services(org_id)
-        .publish(crate::watch::snapshot(org_id).await?)
+    wasmcloud_utils::skir_subjects::organization_services_changed(org_id)
+        .publish(OrganizationServicesChanged::Replace(
+            crate::watch::snapshot(org_id).await?,
+        ))
         .await?;
 
     let organization = read_query!("SELECT VALUE organization.* FROM ONLY $service")

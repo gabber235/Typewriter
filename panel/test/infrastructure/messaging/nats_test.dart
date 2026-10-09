@@ -422,7 +422,7 @@ void main() {
     });
   });
 
-  group("RefNatsExtension.watchRequest", () {
+  group("RefNatsExtension.watchProjection", () {
     late FakeNatsClient mockClient;
     late ProviderContainer container;
 
@@ -441,25 +441,36 @@ void main() {
       mockClient.dispose();
     });
 
-    test("injects trace headers on the initial Skir request", () async {
+    test("subscribes before the traced initial Skir request", () async {
       const listenSubject = "test.responses";
-      mockClient.registerHandler(
-        "test.watch",
-        (_) => skir.GetSentinelCredentialsResponse.serializer.toBytes(
+      var subscribedBeforeSnapshot = false;
+      mockClient.registerHandler("test.watch", (_) {
+        subscribedBeforeSnapshot = mockClient.subscriptionSubjects.contains(
+          listenSubject,
+        );
+        return skir.GetSentinelCredentialsResponse.serializer.toBytes(
           skir.GetSentinelCredentialsResponse.createSuccess(
             jwt: "test-jwt",
             seed: "test-seed",
           ),
-        ),
-      );
+        );
+      });
       final stream = container
           .read(_testRefProvider)
-          .watchRequest(
+          .watchProjection<
+            skir.GetSentinelCredentialsResponse,
+            skir.GetSentinelCredentialsResponse,
+            skir.GetSentinelCredentialsResponse
+          >(
             subject: "test.watch",
-            listenSubject: listenSubject,
+            eventSubject: listenSubject,
             requestBytes: Uint8List.fromList([1, 2, 3]),
-            serializer: skir.GetSentinelCredentialsResponse.serializer,
-            transformer: (_, response) => response,
+            responseSerializer: skir.GetSentinelCredentialsResponse.serializer,
+            eventSerializer: skir.GetSentinelCredentialsResponse.serializer,
+            snapshot: (response) => response,
+            reduce: (_, event) => event,
+            delivery: const ProjectionDelivery.ephemeral(),
+            reconciliation: const ProjectionReconciliation.latest(),
           );
       final firstResponse = stream.first;
 
@@ -471,6 +482,7 @@ void main() {
       expect(request.subject, "test.watch");
       expect(request.headers["traceparent"], startsWith("00-4bf92f"));
       expect(request.headers["tracestate"], "vendor=value");
+      expect(subscribedBeforeSnapshot, isTrue);
 
       expect(await firstResponse, isA<skir.GetSentinelCredentialsResponse>());
     });
@@ -488,12 +500,20 @@ void main() {
       );
       final stream = container
           .read(_testRefProvider)
-          .watchRequest(
+          .watchProjection<
+            skir.GetSentinelCredentialsResponse,
+            skir.GetSentinelCredentialsResponse,
+            skir.GetSentinelCredentialsResponse
+          >(
             subject: "test.cancel",
-            listenSubject: listenSubject,
+            eventSubject: listenSubject,
             requestBytes: Uint8List.fromList([1, 2, 3]),
-            serializer: skir.GetSentinelCredentialsResponse.serializer,
-            transformer: (_, response) => response,
+            responseSerializer: skir.GetSentinelCredentialsResponse.serializer,
+            eventSerializer: skir.GetSentinelCredentialsResponse.serializer,
+            snapshot: (response) => response,
+            reduce: (_, event) => event,
+            delivery: const ProjectionDelivery.ephemeral(),
+            reconciliation: const ProjectionReconciliation.latest(),
           );
       final subscription = stream.listen(null);
 
@@ -519,12 +539,20 @@ void main() {
       addTearDown(pendingContainer.dispose);
       final stream = pendingContainer
           .read(_testRefProvider)
-          .watchRequest(
+          .watchProjection<
+            skir.GetSentinelCredentialsResponse,
+            skir.GetSentinelCredentialsResponse,
+            skir.GetSentinelCredentialsResponse
+          >(
             subject: "test.pending",
-            listenSubject: "test.pending.responses",
+            eventSubject: "test.pending.responses",
             requestBytes: Uint8List(0),
-            serializer: skir.GetSentinelCredentialsResponse.serializer,
-            transformer: (_, response) => response,
+            responseSerializer: skir.GetSentinelCredentialsResponse.serializer,
+            eventSerializer: skir.GetSentinelCredentialsResponse.serializer,
+            snapshot: (response) => response,
+            reduce: (_, event) => event,
+            delivery: const ProjectionDelivery.ephemeral(),
+            reconciliation: const ProjectionReconciliation.latest(),
           );
       final listener = stream.listen(null);
       await Future<void>.delayed(Duration.zero);
@@ -550,12 +578,16 @@ void main() {
         final values = <int>[];
         final listener = container
             .read(_testRefProvider)
-            .watchRequest<int, skir.Duration>(
+            .watchProjection<int, skir.Duration, skir.Duration>(
               subject: "test.reconnect",
-              listenSubject: "test.reconnect.changed",
+              eventSubject: "test.reconnect.changed",
               requestBytes: Uint8List(0),
-              serializer: skir.Duration.serializer,
-              transformer: (previous, response) => response.milliseconds,
+              responseSerializer: skir.Duration.serializer,
+              eventSerializer: skir.Duration.serializer,
+              snapshot: (response) => response.milliseconds,
+              reduce: (_, event) => event.milliseconds,
+              delivery: const ProjectionDelivery.ephemeral(),
+              reconciliation: const ProjectionReconciliation.latest(),
             )
             .listen(values.add);
 
@@ -591,6 +623,53 @@ void main() {
       },
     );
 
+    test("a stale reconnect generation cannot publish its snapshot", () async {
+      final firstSnapshot = Completer<Uint8List>();
+      var requests = 0;
+      mockClient.registerHandler("test.stale.generation", (_) {
+        requests++;
+        if (requests == 1) return firstSnapshot.future;
+        return skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 2));
+      });
+      final values = <int>[];
+      final listener = container
+          .read(_testRefProvider)
+          .watchProjection<int, skir.Duration, skir.Duration>(
+            subject: "test.stale.generation",
+            eventSubject: "test.stale.generation.changed",
+            requestBytes: Uint8List(0),
+            responseSerializer: skir.Duration.serializer,
+            eventSerializer: skir.Duration.serializer,
+            snapshot: (response) => response.milliseconds,
+            reduce: (_, event) => event.milliseconds,
+            delivery: const ProjectionDelivery.ephemeral(),
+            reconciliation: const ProjectionReconciliation.latest(),
+          )
+          .listen(values.add);
+
+      await _waitFor(() => requests == 1);
+      mockClient
+        ..setConnectionState(
+          const NatsReconnecting(
+            NatsClientException(
+              kind: NatsFailureKind.unavailable,
+              message: "Connection interrupted",
+            ),
+          ),
+        )
+        ..setConnectionState(const NatsConnected());
+      await _waitFor(() => values.length == 1);
+
+      firstSnapshot.complete(
+        skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 1)),
+      );
+      await pumpEventQueue();
+
+      expect(values, [2]);
+      expect(requests, 2);
+      await listener.cancel();
+    });
+
     test(
       "cancellation closes a subscription while its refresh is pending",
       () async {
@@ -608,12 +687,16 @@ void main() {
         final values = <int>[];
         final listener = container
             .read(_testRefProvider)
-            .watchRequest<int, skir.Duration>(
+            .watchProjection<int, skir.Duration, skir.Duration>(
               subject: "test.refresh.cancel",
-              listenSubject: "test.refresh.cancel.changed",
+              eventSubject: "test.refresh.cancel.changed",
               requestBytes: Uint8List(0),
-              serializer: skir.Duration.serializer,
-              transformer: (previous, response) => response.milliseconds,
+              responseSerializer: skir.Duration.serializer,
+              eventSerializer: skir.Duration.serializer,
+              snapshot: (response) => response.milliseconds,
+              reduce: (_, event) => event.milliseconds,
+              delivery: const ProjectionDelivery.ephemeral(),
+              reconciliation: const ProjectionReconciliation.latest(),
             )
             .listen(values.add);
         await _waitFor(() => values.isNotEmpty);
@@ -654,19 +737,22 @@ void main() {
       final values = <int>[];
       final subscription = container
           .read(_testRefProvider)
-          .watchSequencedRequest<int, skir.Duration, skir.Duration>(
+          .watchProjection<int, skir.Duration, skir.Duration>(
             subject: "test.sequenced.watch",
             eventSubject: "test.sequenced.changed",
             requestBytes: Uint8List(0),
             responseSerializer: skir.Duration.serializer,
             eventSerializer: skir.Duration.serializer,
-            snapshot: (response) => SequencedSnapshot(
-              sequence: response.milliseconds,
-              value: response.milliseconds,
-            ),
-            eventSequence: (event) => event.milliseconds,
+            snapshot: (response) => response.milliseconds,
             reduce: (_, event) => event.milliseconds,
-            sequenceState: sequenceState,
+            delivery: const ProjectionDelivery.ordered(
+              stream: "TYPEWRITER_MEMBERSHIP",
+            ),
+            reconciliation: ProjectionReconciliation.sequenced(
+              snapshotSequence: (response) => response.milliseconds,
+              eventSequence: (event) => event.milliseconds,
+              sequenceState: sequenceState,
+            ),
           )
           .listen(values.add);
 
@@ -708,6 +794,54 @@ void main() {
     });
 
     test(
+      "a delayed snapshot cannot rewind accepted sequence progress",
+      () async {
+        final delayedSnapshot = Completer<Uint8List>();
+        final sequenceState = SequencedCollection<int>()
+          ..snapshot = const SequencedSnapshot(sequence: 1, value: 10);
+        mockClient.registerHandler(
+          "test.sequenced.delayed",
+          (_) => delayedSnapshot.future,
+        );
+        final values = <int>[];
+        final listener = container
+            .read(_testRefProvider)
+            .watchProjection<int, skir.Duration, skir.Duration>(
+              subject: "test.sequenced.delayed",
+              eventSubject: "test.sequenced.delayed.changed",
+              requestBytes: Uint8List(0),
+              responseSerializer: skir.Duration.serializer,
+              eventSerializer: skir.Duration.serializer,
+              snapshot: (response) => response.milliseconds * 10,
+              reduce: (_, event) => event.milliseconds * 10,
+              delivery: const ProjectionDelivery.ordered(
+                stream: "TYPEWRITER_MEMBERSHIP",
+              ),
+              reconciliation: ProjectionReconciliation.sequenced(
+                snapshotSequence: (response) => response.milliseconds,
+                eventSequence: (event) => event.milliseconds,
+                sequenceState: sequenceState,
+              ),
+            )
+            .listen(values.add);
+
+        await _waitFor(() => mockClient.requests.isNotEmpty);
+        expect(
+          sequenceState.apply(sequence: 2, reduce: (_) => 20),
+          SequencedEventResult.applied,
+        );
+        delayedSnapshot.complete(
+          skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 1)),
+        );
+        await _waitFor(() => values.isNotEmpty);
+
+        expect(sequenceState.snapshot?.sequence, 2);
+        expect(values, [20]);
+        await listener.cancel();
+      },
+    );
+
+    test(
       "sequenced watch preserves stream failure when cleanup also fails",
       () async {
         final primaryFailure = StateError("primary stream failure");
@@ -729,19 +863,22 @@ void main() {
         final completed = Completer<void>();
         failingContainer
             .read(_testRefProvider)
-            .watchSequencedRequest<int, skir.Duration, skir.Duration>(
+            .watchProjection<int, skir.Duration, skir.Duration>(
               subject: "test.sequenced.failure",
               eventSubject: "test.sequenced.failure.changed",
               requestBytes: Uint8List(0),
               responseSerializer: skir.Duration.serializer,
               eventSerializer: skir.Duration.serializer,
-              snapshot: (response) => SequencedSnapshot(
-                sequence: response.milliseconds,
-                value: response.milliseconds,
-              ),
-              eventSequence: (event) => event.milliseconds,
+              snapshot: (response) => response.milliseconds,
               reduce: (_, event) => event.milliseconds,
-              sequenceState: SequencedCollection<int>(),
+              delivery: const ProjectionDelivery.ordered(
+                stream: "TYPEWRITER_MEMBERSHIP",
+              ),
+              reconciliation: ProjectionReconciliation.sequenced(
+                snapshotSequence: (response) => response.milliseconds,
+                eventSequence: (event) => event.milliseconds,
+                sequenceState: SequencedCollection<int>(),
+              ),
             )
             .listen(
               values.add,
@@ -774,19 +911,22 @@ void main() {
       final errors = <Object>[];
       final listener = failingContainer
           .read(_testRefProvider)
-          .watchSequencedRequest<int, skir.Duration, skir.Duration>(
+          .watchProjection<int, skir.Duration, skir.Duration>(
             subject: "test.sequenced.cancel",
             eventSubject: "test.sequenced.cancel.changed",
             requestBytes: Uint8List(0),
             responseSerializer: skir.Duration.serializer,
             eventSerializer: skir.Duration.serializer,
-            snapshot: (response) => SequencedSnapshot(
-              sequence: response.milliseconds,
-              value: response.milliseconds,
-            ),
-            eventSequence: (event) => event.milliseconds,
+            snapshot: (response) => response.milliseconds,
             reduce: (_, event) => event.milliseconds,
-            sequenceState: SequencedCollection<int>(),
+            delivery: const ProjectionDelivery.ordered(
+              stream: "TYPEWRITER_MEMBERSHIP",
+            ),
+            reconciliation: ProjectionReconciliation.sequenced(
+              snapshotSequence: (response) => response.milliseconds,
+              eventSequence: (event) => event.milliseconds,
+              sequenceState: SequencedCollection<int>(),
+            ),
           )
           .listen(
             null,

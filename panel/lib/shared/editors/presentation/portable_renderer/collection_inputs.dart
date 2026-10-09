@@ -52,7 +52,7 @@ extension _PortableCollectionInputRendering
             ? <skir.ListItem>[]
             : null);
     final collection = childScope.location(control.binding);
-    if (items == null || collection == null || childScope.authoring == null) {
+    if (items == null || collection == null) {
       return _diagnostic("The collection binding is unavailable");
     }
     Widget item(int index) {
@@ -105,18 +105,18 @@ extension _PortableCollectionInputRendering
                     canMoveLater: index < items.length - 1,
                     onMoveEarlier: () {
                       final after = index == 1 ? null : items[index - 2].id;
-                      childScope.stage("Edit collection", (operation) {
-                        operation.move(collection, current.id, after);
-                      });
+                      childScope.moveListItem(
+                        control.binding,
+                        current.id,
+                        after,
+                      );
                     },
                     onMoveLater: () {
-                      childScope.stage("Edit collection", (operation) {
-                        operation.move(
-                          collection,
-                          current.id,
-                          items[index + 1].id,
-                        );
-                      });
+                      childScope.moveListItem(
+                        control.binding,
+                        current.id,
+                        items[index + 1].id,
+                      );
                     },
                   ),
                 Expanded(child: content),
@@ -125,9 +125,10 @@ extension _PortableCollectionInputRendering
                     tooltip: "Remove item",
                     onPressed: childScope.enabled && !childScope.readOnly
                         ? () {
-                            childScope.stage("Edit collection", (operation) {
-                              operation.remove(collection, current.id);
-                            });
+                            childScope.removeListItem(
+                              control.binding,
+                              current.id,
+                            );
                           }
                         : null,
                     icon: const Icon(Icons.delete_outline),
@@ -151,9 +152,7 @@ extension _PortableCollectionInputRendering
                     final moving = items[from];
                     final remaining = [...items]..removeAt(from);
                     final after = to == 0 ? null : remaining[to - 1].id;
-                    childScope.stage("Edit collection", (operation) {
-                      operation.move(collection, moving.id, after);
-                    });
+                    childScope.moveListItem(control.binding, moving.id, after);
                   }
                 : (_, _) {},
           )
@@ -194,7 +193,6 @@ extension _PortableCollectionInputRendering
                           control: control,
                           linkControl: linkControl,
                           collection: collection,
-                          items: items,
                           childScope: childScope,
                         ),
                       )
@@ -213,21 +211,9 @@ extension _PortableCollectionInputRendering
     required skir.BoundControl control,
     required skir.LinkControl? linkControl,
     required skir.ValueLocation collection,
-    required List<skir.ListItem> items,
     required PortablePresentationScope childScope,
   }) async {
-    final draft = childScope.authoring;
-    if (draft == null) return;
     final item = skir.ItemId(value: "panel:${const Uuid().v4()}");
-    final itemReference = skir.BindingRef(
-      bindingId: control.binding.bindingId,
-      path: skir.ValuePath(
-        segments: [
-          ...control.binding.path.segments,
-          skir.PathSegment.createItem(id: item),
-        ],
-      ),
-    );
     final itemLocation = skir.ValueLocation(
       resource: collection.resource,
       path: skir.ValuePath(
@@ -262,89 +248,7 @@ extension _PortableCollectionInputRendering
       );
       return;
     }
-    final expected = childScope.expectedType(itemReference);
-    final named = switch (_unwrapNullable(expected)) {
-      skir.TypeUse_namedWrapper(:final value) => value,
-      _ => null,
-    };
-    final representation = named == null
-        ? null
-        : childScope.catalog
-              ?.published(named.definition)
-              ?.definition
-              .representation;
-    final concreteRecord = switch (representation) {
-      skir.RepresentationTemplate_recordWrapper(:final value) =>
-        !value.abstract_,
-      _ => false,
-    };
-    AuthoringEditResult result;
-    if (named != null && concreteRecord) {
-      final prepare = childScope.prepareCreation;
-      if (prepare == null) {
-        childScope.reportStatus?.call("The collection item cannot be prepared");
-        return;
-      }
-      final selection = skir.TypeSelection.wrapComplete(named);
-      final identity = sha256
-          .convert(
-            utf8.encode(
-              "${draft.generation.value}\u0000${collection.resource.value}\u0000${_pathLabel(itemLocation.path)}\u0000$selection",
-            ),
-          )
-          .toString();
-      final request = skir.InitializationRequest(
-        id: skir.InitializationRequestId(value: "panel:item:$identity"),
-        catalog: draft.generation,
-        type: selection,
-        supplied: const [],
-        intentHash: identity,
-      );
-      try {
-        final previousFindingCount = draft.initializationFindings.length;
-        result = await childScope.prepare("Add collection item", (
-          operation,
-        ) async {
-          operation.expect(collection);
-          final prepared = await prepare(request);
-          if (!context.mounted) {
-            throw StateError("The editor closed during preparation");
-          }
-          operation.insertPrepared(
-            collection,
-            items.lastOrNull?.id,
-            item,
-            request,
-            prepared,
-          );
-        });
-        final findings =
-            (childScope.edit?.document.initializationFindings ??
-                    const <skir.InitializationDiagnostic>[])
-                .skip(previousFindingCount);
-        if (findings.isNotEmpty) {
-          childScope.reportStatus?.call(
-            findings.map(formatPortableInitializationDiagnostic).join("\n"),
-          );
-        }
-      } on Object catch (error) {
-        childScope.reportStatus?.call(
-          "The collection item could not be prepared: $error",
-        );
-        return;
-      }
-    } else {
-      result = childScope.stage("Add collection item", (operation) {
-        operation.insert(
-          collection,
-          items.lastOrNull?.id,
-          skir.ListItem(id: item, value: draft.defaultValue(expected)),
-        );
-      });
-    }
-    if (result case AuthoringEditRejected(:final message)) {
-      childScope.reportStatus?.call(message);
-    }
+    await childScope.addCollectionItem(control.binding);
   }
 
   Widget _renderMapInput(
@@ -360,7 +264,7 @@ extension _PortableCollectionInputRendering
       _ => null,
     };
     final collection = childScope.location(control.control.binding);
-    if (rows == null || collection == null || childScope.authoring == null) {
+    if (rows == null || collection == null) {
       return _diagnostic("The map binding is unavailable");
     }
     return _decorateCollection(
@@ -376,7 +280,7 @@ extension _PortableCollectionInputRendering
               alignment: AlignmentDirectional.centerStart,
               child: FilledButton.icon(
                 onPressed: childScope.enabled && !childScope.readOnly
-                    ? () => _addMapRow(control, collection, rows, childScope)
+                    ? () => childScope.addMapRow(control.control.binding)
                     : null,
                 icon: const Icon(Icons.add),
                 label: const Text("Add entry"),
@@ -385,55 +289,6 @@ extension _PortableCollectionInputRendering
         ],
       ),
     );
-  }
-
-  void _addMapRow(
-    skir.MapControl control,
-    skir.ValueLocation collection,
-    List<skir.MapRow> rows,
-    PortablePresentationScope childScope,
-  ) {
-    final draft = childScope.authoring;
-    if (draft == null) return;
-    final item = skir.ItemId(value: "panel:${const Uuid().v4()}");
-    skir.BindingRef reference(skir.PathSegment branch) => skir.BindingRef(
-      bindingId: control.control.binding.bindingId,
-      path: skir.ValuePath(
-        segments: [
-          ...control.control.binding.path.segments,
-          skir.PathSegment.createItem(id: item),
-          branch,
-        ],
-      ),
-    );
-    childScope.stage("Add map row", (operation) {
-      final current = operation.expect(collection);
-      final currentRows = current is PortablePathValue<skir.DataValue>
-          ? switch (current.value.authoredPayload) {
-              skir.DataValue_mapValueWrapper(:final value) =>
-                value.rows.toList(),
-              final value when value == skir.DataValue.unfilled =>
-                <skir.MapRow>[],
-              _ => null,
-            }
-          : null;
-      if (currentRows == null ||
-          !const ListEquality<skir.MapRow>().equals(currentRows, rows)) {
-        throw StateError("The map changed before this edit");
-      }
-      operation.replaceMap(collection, [
-        ...rows,
-        skir.MapRow(
-          id: item,
-          key: draft.defaultValue(
-            childScope.expectedType(reference(skir.PathSegment.mapKey)),
-          ),
-          value: draft.defaultValue(
-            childScope.expectedType(reference(skir.PathSegment.mapValue)),
-          ),
-        ),
-      ]);
-    });
   }
 
   Widget _renderMapRow(
@@ -493,22 +348,10 @@ extension _PortableCollectionInputRendering
                   tooltip: "Remove row",
                   onPressed: childScope.enabled && !childScope.readOnly
                       ? () {
-                          childScope.stage("Remove map row", (operation) {
-                            final current = operation.expect(collection);
-                            final payload =
-                                current is PortablePathValue<skir.DataValue>
-                                ? current.value.authoredPayload
-                                : null;
-                            if (payload is! skir.DataValue_mapValueWrapper) {
-                              throw StateError("The map is unavailable");
-                            }
-                            operation.replaceMap(
-                              collection,
-                              payload.value.rows.where(
-                                (candidate) => candidate.id != row.id,
-                              ),
-                            );
-                          });
+                          childScope.removeMapRow(
+                            control.control.binding,
+                            row.id,
+                          );
                         }
                       : null,
                   icon: const Icon(Icons.delete_outline),

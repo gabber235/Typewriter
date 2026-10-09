@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// The atomic outcome of comparing one local draft with a newer remote value.
@@ -20,13 +22,13 @@ final class EditorReconciliationResult {
     this.diagnostics = const [],
   });
 
-  final DataValue base;
-  final DataValue draft;
+  final skir.DataValue base;
+  final skir.DataValue draft;
   final int revision;
-  final Set<DataPath> dirtyPaths;
-  final Set<DataPath> confirmedPaths;
-  final Map<DataPath, EditorPathConflict> conflicts;
-  final List<TypeDiagnostic> diagnostics;
+  final Set<skir.ValuePath> dirtyPaths;
+  final Set<skir.ValuePath> confirmedPaths;
+  final Map<skir.ValuePath, EditorPathConflict> conflicts;
+  final List<EditorDiagnostic> diagnostics;
 }
 
 /// Applies the editor's merge policy at every locally dirty path.
@@ -41,23 +43,23 @@ final class EditorReconciler {
   const EditorReconciler();
 
   EditorReconciliationResult reconcile({
-    required DataValue base,
-    required DataValue local,
-    required DataValue remote,
+    required skir.DataValue base,
+    required skir.DataValue local,
+    required skir.DataValue remote,
     required int remoteRevision,
-    required Set<DataPath> dirtyPaths,
-    required Map<DataPath, EditorMergePolicy> mergePolicies,
+    required Set<skir.ValuePath> dirtyPaths,
+    required Map<skir.ValuePath, EditorMergePolicy> mergePolicies,
   }) {
     var draft = remote;
-    final remaining = <DataPath>{};
-    final confirmed = <DataPath>{};
-    final conflicts = <DataPath, EditorPathConflict>{};
-    final diagnostics = <TypeDiagnostic>[];
+    final remaining = <skir.ValuePath>{};
+    final confirmed = <skir.ValuePath>{};
+    final conflicts = <skir.ValuePath, EditorPathConflict>{};
+    final diagnostics = <EditorDiagnostic>[];
 
     for (final path in dirtyPaths) {
-      final baseValue = path.read(base).valueOrNull;
-      final localValue = path.read(local).valueOrNull;
-      final remoteValue = path.read(remote).valueOrNull;
+      final baseValue = base.editorValueAt(path);
+      final localValue = local.editorValueAt(path);
+      final remoteValue = remote.editorValueAt(path);
       if (baseValue == null || localValue == null || remoteValue == null) {
         diagnostics.add(_invalidPath(path));
         continue;
@@ -100,12 +102,12 @@ final class EditorReconciler {
   }
 
   _MergeResult _merge({
-    required DataPath path,
-    required DataValue base,
-    required DataValue local,
-    required DataValue remote,
+    required skir.ValuePath path,
+    required skir.DataValue base,
+    required skir.DataValue local,
+    required skir.DataValue remote,
     required EditorMergePolicy policy,
-    required Map<DataPath, EditorMergePolicy> mergePolicies,
+    required Map<skir.ValuePath, EditorMergePolicy> mergePolicies,
   }) => switch (policy) {
     EditorMergePolicy.atomic ||
     EditorMergePolicy.orderedList => _conflict(path, base, local, remote),
@@ -120,31 +122,41 @@ final class EditorReconciler {
   };
 
   _MergeResult _mergeRecord(
-    DataPath path,
-    DataValue base,
-    DataValue local,
-    DataValue remote,
-    Map<DataPath, EditorMergePolicy> policies,
+    skir.ValuePath path,
+    skir.DataValue base,
+    skir.DataValue local,
+    skir.DataValue remote,
+    Map<skir.ValuePath, EditorMergePolicy> policies,
   ) {
-    if (base is! RecordValue ||
-        local is! RecordValue ||
-        remote is! RecordValue) {
+    final baseRecord = base.authoredRecord;
+    final localRecord = local.authoredRecord;
+    final remoteRecord = remote.authoredRecord;
+    if (baseRecord == null || localRecord == null || remoteRecord == null) {
       return _conflict(path, base, local, remote);
     }
-    final names = {
-      ...base.fields.keys,
-      ...local.fields.keys,
-      ...remote.fields.keys,
+    final baseFields = {
+      for (final field in baseRecord.fields) field.name: field.value,
     };
-    final fields = Map<String, DataValue>.of(remote.fields);
-    final dirty = <DataPath>{};
+    final localFields = {
+      for (final field in localRecord.fields) field.name: field.value,
+    };
+    final remoteFields = {
+      for (final field in remoteRecord.fields) field.name: field.value,
+    };
+    final names = {
+      ...baseFields.keys,
+      ...localFields.keys,
+      ...remoteFields.keys,
+    };
+    final fields = Map<String, skir.DataValue>.of(remoteFields);
+    final dirty = <skir.ValuePath>{};
 
-    final conflicts = <DataPath, EditorPathConflict>{};
+    final conflicts = <skir.ValuePath, EditorPathConflict>{};
     for (final name in names) {
       final childPath = path.field(name);
-      final baseChild = base.fields[name];
-      final localChild = local.fields[name];
-      final remoteChild = remote.fields[name];
+      final baseChild = baseFields[name];
+      final localChild = localFields[name];
+      final remoteChild = remoteFields[name];
       if (baseChild == null || localChild == null || remoteChild == null) {
         return _conflict(path, base, local, remote);
       }
@@ -172,28 +184,36 @@ final class EditorReconciler {
       conflicts.addAll(merged.conflicts);
     }
     return _MergeResult(
-      value: RecordValue(fields),
+      value: skir.DataValue.createRecord(
+        fields: [
+          for (final entry in fields.entries)
+            skir.FieldValue(name: entry.key, value: entry.value),
+        ],
+      ),
       dirtyPaths: dirty,
       conflicts: conflicts,
     );
   }
 
   _MergeResult _mergeSet(
-    DataPath path,
-    DataValue base,
-    DataValue local,
-    DataValue remote,
+    skir.ValuePath path,
+    skir.DataValue base,
+    skir.DataValue local,
+    skir.DataValue remote,
   ) {
-    if (base is! ListValue || local is! ListValue || remote is! ListValue) {
+    final baseItems = base.authoredItems;
+    final localItems = local.authoredItems;
+    final remoteItems = remote.authoredItems;
+    if (baseItems == null || localItems == null || remoteItems == null) {
       return _conflict(path, base, local, remote);
     }
-    final ordered = [...local.values, ...remote.values];
-    final merged = <DataValue>[];
+    final ordered = [...localItems, ...remoteItems];
+    final merged = <skir.ListItem>[];
     for (final candidate in ordered) {
-      if (merged.contains(candidate)) continue;
-      final inBase = base.values.contains(candidate);
-      final inLocal = local.values.contains(candidate);
-      final inRemote = remote.values.contains(candidate);
+      if (merged.any((item) => item.value == candidate.value)) continue;
+      final inBase = baseItems.any((item) => item.value == candidate.value);
+      final inLocal = localItems.any((item) => item.value == candidate.value);
+      final inRemote = remoteItems.any((item) => item.value == candidate.value);
 
       final localChanged = inLocal != inBase;
 
@@ -201,17 +221,17 @@ final class EditorReconciler {
       if (present) merged.add(candidate);
     }
     return _MergeResult(
-      value: ListValue(merged),
+      value: skir.DataValue.createSetValue(items: merged),
       dirtyPaths: {path},
       conflicts: const {},
     );
   }
 
   _MergeResult _conflict(
-    DataPath path,
-    DataValue base,
-    DataValue local,
-    DataValue remote,
+    skir.ValuePath path,
+    skir.DataValue base,
+    skir.DataValue local,
+    skir.DataValue remote,
   ) => _MergeResult(
     value: local,
     dirtyPaths: {path},
@@ -221,29 +241,29 @@ final class EditorReconciler {
   );
 
   EditorMergePolicy _policyFor(
-    DataPath path,
-    DataValue value,
-    Map<DataPath, EditorMergePolicy> configured,
+    skir.ValuePath path,
+    skir.DataValue value,
+    Map<skir.ValuePath, EditorMergePolicy> configured,
   ) {
     final selected = configured[path];
     if (selected != null) return selected;
-    if (value is RecordValue) return EditorMergePolicy.record;
-    if (value is ListValue) return EditorMergePolicy.orderedList;
+    if (value.authoredRecord != null) return EditorMergePolicy.record;
+    if (value.authoredItems != null) return EditorMergePolicy.orderedList;
     return EditorMergePolicy.atomic;
   }
 
-  DataValue _replace(
-    DataValue root,
-    DataPath path,
-    DataValue value,
-    List<TypeDiagnostic> diagnostics,
+  skir.DataValue _replace(
+    skir.DataValue root,
+    skir.ValuePath path,
+    skir.DataValue value,
+    List<EditorDiagnostic> diagnostics,
   ) {
-    final replaced = path.replace(root, value);
-    if (replaced case TypeFailure(diagnostics: final failureDiagnostics)) {
-      diagnostics.addAll(failureDiagnostics);
+    final replaced = root.replacingEditorValue(path, value);
+    if (replaced == null) {
+      diagnostics.add(_invalidPath(path));
       return root;
     }
-    return replaced.valueOrNull!;
+    return replaced;
   }
 }
 
@@ -254,14 +274,14 @@ final class _MergeResult {
     required this.conflicts,
   });
 
-  final DataValue value;
-  final Set<DataPath> dirtyPaths;
-  final Map<DataPath, EditorPathConflict> conflicts;
+  final skir.DataValue value;
+  final Set<skir.ValuePath> dirtyPaths;
+  final Map<skir.ValuePath, EditorPathConflict> conflicts;
 }
 
 /// Describes a remote shape that cannot be applied at a locally tracked path.
-TypeDiagnostic _invalidPath(DataPath path) => TypeDiagnostic(
-  code: TypeDiagnosticCode.invalidPath,
+EditorDiagnostic _invalidPath(skir.ValuePath path) => EditorDiagnostic(
+  code: EditorDiagnosticCode.invalidPath,
   message: "Remote value cannot be reconciled at this path",
   path: path,
 );

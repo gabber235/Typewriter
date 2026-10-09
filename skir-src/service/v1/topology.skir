@@ -122,18 +122,6 @@ struct HostExecutionConfiguration {
   primary_engine: HostedEngineConfiguration?;
 }
 
-// Registers a service host and advertises the engine artifacts and Realm capability it supports.
-method RegisterServiceHost(
-  struct {
-    entrypoint: string;
-    can_host_realm: bool;
-    supported_engines: [SupportedEngine];
-  }
-): enum {
-  success: ServiceHost;
-  internal_error: InternalError;
-} = 934206;
-
 // Canonical result of a host configuration attempt, including current child resources and removals.
 // It is also the payload used to reconcile organization topology projections after a committed change.
 struct HostConfigurationChange {
@@ -177,21 +165,25 @@ method ConfigureServiceHost(
   internal_error: InternalError;
 } = 934201;
 
-// Streams an organization topology snapshot followed by resource updates, configuration changes, and removals.
-method WatchOrganizationTopology(
-  struct {}
-): enum {
-  list: struct {
-    hosts: [ServiceHost];
-    realms: [RealmInstance];
-    engines: [EngineInstance];
-  };
+struct OrganizationTopologySnapshot {
+  hosts: [ServiceHost];
+  realms: [RealmInstance];
+  engines: [EngineInstance];
+}
 
+enum OrganizationTopologyChanged {
+  replace: OrganizationTopologySnapshot;
   configuration_changed: HostConfigurationChange;
   host_updated: ServiceHost;
   realm_updated: RealmInstance;
   engine_updated: EngineInstance;
-  resource_removed: RecordId;
+}
+
+// Reads the current organization topology snapshot. Later events use OrganizationTopologyChanged.
+method WatchOrganizationTopology(
+  struct {}
+): enum {
+  list: OrganizationTopologySnapshot;
   internal_error: InternalError;
 } = 934202;
 
@@ -239,3 +231,15 @@ method GetServiceMessagingScope(
   not_found: struct {};
   internal_error: InternalError;
 } = 934205;
+
+// Registers a service host and advertises the engine artifacts and Realm capability it supports.
+method RegisterServiceHost(
+  struct {
+    entrypoint: string;
+    can_host_realm: bool;
+    supported_engines: [SupportedEngine];
+  }
+): enum {
+  success: ServiceHost;
+  internal_error: InternalError;
+} = 934206;

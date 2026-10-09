@@ -267,29 +267,3 @@ String _boundedReportValue(String value) {
   if (normalized.length <= 512) return normalized;
   return "${normalized.substring(0, 512)}…";
 }
-
-String? _canonicalSubmissionId(Object? value) {
-  if (value is! String) return null;
-  final uuid = RegExp(
-    r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
-  );
-  return uuid.hasMatch(value) ? value : null;
-}
-
-bool _needsResourceDetails(
-  LocalWorkResourceState resource,
-  EditorSource? source,
-  EditorSaveState? saveState,
-) {
-  final hasDiagnostics =
-      saveState?.diagnostics.isNotEmpty == true ||
-      source?.draftDiagnostics.isNotEmpty == true;
-  if (hasDiagnostics) return true;
-  return {
-    EditorSavePhase.failed,
-    EditorSavePhase.uncertain,
-    EditorSavePhase.conflict,
-    EditorSavePhase.repeatedContention,
-    EditorSavePhase.deletedElsewhere,
-  }.contains(resource.savePhase);
-}

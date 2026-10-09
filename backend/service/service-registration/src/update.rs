@@ -21,12 +21,12 @@ use wasmcloud_utils::{
     decode_skir, extract_params,
     skir::base::service::v1::{
         organization::{
-            ServiceUpdateValidationError, UpdateOrganizationServiceRequest,
-            UpdateOrganizationServiceResponse, UpdateOrganizationServiceResponse_ConflictError,
+            OrganizationServicesChanged, ServiceUpdateValidationError,
+            UpdateOrganizationServiceRequest, UpdateOrganizationServiceResponse,
+            UpdateOrganizationServiceResponse_ConflictError,
             UpdateOrganizationServiceResponse_InvalidOperationIdError,
             UpdateOrganizationServiceResponse_OperationIdentityReusedError,
             UpdateOrganizationServiceResponse_ServiceNotFoundError,
-            WatchOrganizationServicesResponse,
         },
         service::Service,
     },
@@ -172,8 +172,8 @@ pub async fn handle_update(
 
     // The update is durable before this projection is published. The watch is a convergence
     // mechanism, not part of the transaction's mutation receipt.
-    wasmcloud_utils::skir_subjects::organization_services(org_id)
-        .publish(WatchOrganizationServicesResponse::Update(Box::new(
+    wasmcloud_utils::skir_subjects::organization_services_changed(org_id)
+        .publish(OrganizationServicesChanged::Update(Box::new(
             service.clone(),
         )))
         .await?;

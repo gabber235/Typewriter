@@ -54,7 +54,7 @@ final class OrganizationsProvider
   Organizations create() => Organizations();
 }
 
-String _$organizationsHash() => r'cee411b116915b0b6e4da21ef292d6a4b640f7ec';
+String _$organizationsHash() => r'03367bf3e9afc29e98632e958216fdbc985df475';
 
 /// Owns the current user's organization list projection.
 ///

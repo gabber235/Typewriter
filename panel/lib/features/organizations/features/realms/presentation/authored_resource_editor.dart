@@ -2,7 +2,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-final class AuthoredResourceEditor extends StatefulWidget {
+final class AuthoredResourceEditor extends ConsumerStatefulWidget {
   const AuthoredResourceEditor({
     required this.resource,
     required this.document,
@@ -10,7 +10,7 @@ final class AuthoredResourceEditor extends StatefulWidget {
     required this.budget,
     this.edit,
     this.openResource,
-    this.prepareCreation,
+    this.prepareValue,
     this.invokeCommand,
     this.watchSearch,
     this.reload,
@@ -27,10 +27,10 @@ final class AuthoredResourceEditor extends StatefulWidget {
   final skir.PresentationRole role;
   final skir.EvaluationBudget budget;
   final ValueChanged<skir.ResourceId>? openResource;
-  final Future<skir.PreparedCreation> Function(
-    skir.InitializationRequest request,
+  final Future<skir.PreparedValue> Function(
+    skir.ValuePreparationRequest request,
   )?
-  prepareCreation;
+  prepareValue;
   final Future<void> Function(
     skir.CapabilityId capabilityId,
     skir.DataValue payload,
@@ -47,10 +47,12 @@ final class AuthoredResourceEditor extends StatefulWidget {
   final bool fillAvailableSpace;
 
   @override
-  State<AuthoredResourceEditor> createState() => _AuthoredResourceEditorState();
+  ConsumerState<AuthoredResourceEditor> createState() =>
+      _AuthoredResourceEditorState();
 }
 
-final class _AuthoredResourceEditorState extends State<AuthoredResourceEditor> {
+final class _AuthoredResourceEditorState
+    extends ConsumerState<AuthoredResourceEditor> {
   AuthoredPresentationHost? _host;
   AuthoringDocument get _document => widget.edit?.document ?? widget.document;
   void _updated() {
@@ -81,6 +83,7 @@ final class _AuthoredResourceEditorState extends State<AuthoredResourceEditor> {
 
   @override
   Widget build(BuildContext context) {
+    final workScope = ref.watch(localWorkScopeProvider);
     final record = _document.resource(widget.resource);
     if (record == null) {
       return _diagnostic(context, "The authored resource is absent");
@@ -101,6 +104,7 @@ final class _AuthoredResourceEditorState extends State<AuthoredResourceEditor> {
         selected,
         material,
         localRules,
+        searchHistoryNamespace: workScope.searchHistoryNamespace,
       ),
       MissingEditorPresentation() => _diagnostic(
         context,
@@ -120,15 +124,16 @@ final class _AuthoredResourceEditorState extends State<AuthoredResourceEditor> {
   Widget _renderSelected(
     SelectedEditorPresentation selected,
     skir.PresentationMaterial material,
-    AuthoredRuleProjection localRules,
-  ) {
+    AuthoredRuleProjection localRules, {
+    required String? searchHistoryNamespace,
+  }) {
     final capabilities = PortablePresentationCapabilities(
       invokeCommand: widget.invokeCommand,
       watchSearch: widget.watchSearch,
       reload: widget.reload,
       commit: widget.commit,
       openResource: widget.openResource,
-      prepareCreation: widget.prepareCreation,
+      prepareValue: widget.prepareValue,
     );
     final showsFullDiagnostics =
         widget.role == skir.PresentationRole.editor ||
@@ -151,7 +156,7 @@ final class _AuthoredResourceEditorState extends State<AuthoredResourceEditor> {
         capabilities: capabilities,
         available: widget.enabled,
         readOnly: widget.edit == null,
-        prepareCreation: widget.prepareCreation,
+        prepareValue: widget.prepareValue,
         reportStatus: widget.onStatus,
       );
     } else {
@@ -160,7 +165,7 @@ final class _AuthoredResourceEditorState extends State<AuthoredResourceEditor> {
         capabilities: capabilities,
         available: widget.enabled,
         readOnly: widget.edit == null,
-        prepareCreation: widget.prepareCreation,
+        prepareValue: widget.prepareValue,
         reportStatus: widget.onStatus,
       );
     }
@@ -198,11 +203,10 @@ final class _AuthoredResourceEditorState extends State<AuthoredResourceEditor> {
             reload: capabilities.reload,
             commit: capabilities.commit,
             openResource: capabilities.openResource,
-            prepareCreation: capabilities.prepareCreation,
             reportStatus: reportStatus,
-            authoring: installedHost.authored,
             catalog: document.catalog,
             resource: widget.resource,
+            searchHistoryNamespace: searchHistoryNamespace,
             role: document.role,
             material: document.material,
             activePresentations: document.activePresentations,
@@ -227,6 +231,13 @@ final class _AuthoredResourceEditorState extends State<AuthoredResourceEditor> {
       ],
     );
   }
+}
+
+extension on LocalWorkScope {
+  String? get searchHistoryNamespace => when((user, organization) {
+    if (user == null || organization == null) return null;
+    return "user:$user:organization:${organization.id}";
+  });
 }
 
 Widget _diagnostic(BuildContext context, String message) => Text(

@@ -39,8 +39,8 @@ import com.typewritermc.loader.api.artifact.SharedArtifactRevision
 import com.typewritermc.loader.api.artifact.SharedCatalogRevision
 import com.typewritermc.loader.api.artifact.TransferId
 import com.typewritermc.realm.authoring.AuthoringSeed
-import com.typewritermc.realm.authoring.CreationEvaluator
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
+import com.typewritermc.realm.authoring.PreparationEvaluator
 import com.typewritermc.realm.catalog.RealmCatalogIncarnation
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.catalog.installTestCatalog
@@ -490,7 +490,7 @@ private class RealmLifecycleFixture(
             host = host,
             registrars = emptyList(),
             facts = DeploymentFacts(),
-            creationEvaluator = CreationEvaluator { _, _ -> error("Creation is not used by lifecycle tests.") },
+            preparationEvaluator = PreparationEvaluator { _, _ -> error("Preparation is not used by lifecycle tests.") },
             engine = StagedEngineImplementationSource(EngineImplementationInputs(emptySet(), InputToken("engine"))),
             catalogActivator =
                 catalogActivator ?: RealmCatalogActivator { repository, catalog ->

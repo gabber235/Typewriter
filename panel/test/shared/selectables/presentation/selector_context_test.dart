@@ -107,7 +107,7 @@ void main() {
     await _activate(tester, "secondary");
     expect(tester.takeException(), isNull);
     expect(find.text("Record selection"), findsNothing);
-    target.result = AsyncData(MockSelectable(target, target.value));
+    target.result = AsyncData(MockSelectable(target));
     h.container.invalidate(selectedProvider);
     await tester.pumpAndSettle();
     await tester.tap(find.text("Record selection"));
@@ -126,7 +126,7 @@ void main() {
     expect(tester.takeException(), isNull);
     h.registryEnabled.value = false;
     await tester.pumpAndSettle();
-    target.result = AsyncData(MockSelectable(target, target.value));
+    target.result = AsyncData(MockSelectable(target));
     h.container.invalidate(selectedProvider);
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
@@ -153,7 +153,7 @@ void main() {
     await _activate(tester, "secondary");
     expect(tester.takeException(), isNull);
     h.container.read(selectionProvider.notifier).selectAll([h.other]);
-    target.result = AsyncData(MockSelectable(target, target.value));
+    target.result = AsyncData(MockSelectable(target));
     h.container.invalidate(selectedProvider);
     await tester.pumpAndSettle();
     expect(h.container.read(selectionProvider), [h.other]);

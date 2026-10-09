@@ -65,11 +65,16 @@ void main() {
 
     _buildInspection(harness, owners);
     final owner = _identitySource(owners)
-      ..update(DataPath.root.field("name"), const StringValue("renamed"));
+      ..update(
+        editorRootPath.field("name"),
+        skir.DataValue.wrapStringValue("renamed"),
+      );
     final result = await owner.flush() as MutationSuccess;
     expect(request!.name, "renamed");
     expect(result.revision, 2);
-    expect((result.value as RecordValue).fields.keys, ["name"]);
+    expect(result.value.authoredRecord!.fields.map((field) => field.name), [
+      "name",
+    ]);
 
     expect(harness.nats.requests.map((entry) => entry.subject), [
       "cloud.to.user.user1.organization.org1.services.watch",
@@ -104,6 +109,7 @@ void main() {
         path: skir.ValuePath(segments: const []),
       ),
       skir.DataValue.wrapStringValue("portable_name"),
+      context: host.rootInvocation,
     );
     expect(result, isA<PortablePresentationWriteApplied>());
 
@@ -130,6 +136,7 @@ void main() {
           path: skir.ValuePath(segments: const []),
         ),
         skir.DataValue.wrapStringValue("changed"),
+        context: host.rootInvocation,
       ),
       isA<PortablePresentationWriteRejected>(),
     );
@@ -156,21 +163,19 @@ void main() {
     _buildInspection(harness, owners);
     final owner = _configurationSource(owners)
       ..update(
-        DataPath.root.field("realm"),
-        PolymorphicValue(
-          concreteType: const ResolvedTypeRef(
-            id: QualifiedTypeId(namespace: "panel.host", name: "RealmHosted"),
-            revision: 1,
-          ),
-          value: RecordValue({"target": StringValue("paper@*")}),
-        ),
+        editorRootPath.field("realm"),
+        _mode("RealmHosted", {
+          "target": skir.DataValue.wrapStringValue("paper@*"),
+        }),
       );
 
     final result = await owner.flush() as MutationSuccess;
     expect(request!.execution.realm, isNotNull);
     expect(result.revision, 2);
     expect(
-      (result.value as RecordValue).fields.containsKey("service"),
+      result.value.authoredRecord!.fields.any(
+        (field) => field.name == "service",
+      ),
       isFalse,
     );
     expect(harness.nats.requests.map((entry) => entry.subject), [

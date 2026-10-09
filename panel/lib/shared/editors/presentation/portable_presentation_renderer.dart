@@ -360,6 +360,7 @@ final class _PortablePresentationRendererState
                 entry.key: PortableExpressionBinding(
                   value: entry.value.value,
                   location: entry.value.location,
+                  schema: entry.value.schema,
                 ),
             }.withPresentationEnvironment(
               PresentationEnvironment.maybeOf(context)?.bindings ?? const {},
@@ -455,7 +456,6 @@ final class _PortablePresentationRendererState
       reload: capabilities.reload,
       commit: capabilities.commit,
       openResource: capabilities.openResource,
-      prepareCreation: capabilities.prepareCreation,
       reportStatus: _reportStatus,
       catalog: document.catalog,
       role: document.role,
@@ -471,7 +471,22 @@ final class _PortablePresentationRendererState
   }
 
   Future<void> _write(skir.BindingRef reference, skir.DataValue value) async {
-    final result = await widget.host.write(reference, value);
+    final document = widget.host.document;
+    final result = await widget.host.write(
+      reference,
+      value,
+      context: PortableInvocationContext(
+        bindings: {
+          for (final entry in document.bindings.entries)
+            entry.key: PortableExpressionBinding(
+              value: entry.value.value,
+              location: entry.value.location,
+              schema: entry.value.schema,
+            ),
+        },
+        catalogGeneration: document.catalog.snapshot.generation,
+      ),
+    );
     if (!mounted) return;
     switch (result) {
       case PortablePresentationWriteApplied():

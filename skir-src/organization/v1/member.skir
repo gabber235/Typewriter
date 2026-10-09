@@ -41,7 +41,6 @@ method WatchOrganizationMembers(
   internal_error: InternalError;
 
   snapshot: OrganizationMembersSnapshot;
-  changed: OrganizationMembersChanged;
 } = 638484;
 
 // Applies one assignable role selection to every selected member in one transaction.

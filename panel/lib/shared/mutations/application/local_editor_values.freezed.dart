@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$LocalEditorValue {
 
- DataValue get value; Set<DataPath> get editedPaths;
+ skir.DataValue get value; Set<skir.ValuePath> get editedPaths;
 /// Create a copy of LocalEditorValue
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -51,11 +51,11 @@ abstract mixin class $LocalEditorValueCopyWith<$Res>  {
   factory $LocalEditorValueCopyWith(LocalEditorValue value, $Res Function(LocalEditorValue) _then) = _$LocalEditorValueCopyWithImpl;
 @useResult
 $Res call({
- DataValue value, Set<DataPath> editedPaths
+ skir.DataValue value, Set<skir.ValuePath> editedPaths
 });
 
 
-$DataValueCopyWith<$Res> get value;
+
 
 }
 /// @nodoc
@@ -71,20 +71,11 @@ class _$LocalEditorValueCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') @override $Res call({Object? value = null,Object? editedPaths = null,}) {
   return _then(LocalEditorValue(
 value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
-as DataValue,editedPaths: null == editedPaths ? _self.editedPaths : editedPaths // ignore: cast_nullable_to_non_nullable
-as Set<DataPath>,
+as skir.DataValue,editedPaths: null == editedPaths ? _self.editedPaths : editedPaths // ignore: cast_nullable_to_non_nullable
+as Set<skir.ValuePath>,
   ));
 }
-/// Create a copy of LocalEditorValue
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$DataValueCopyWith<$Res> get value {
-  
-  return $DataValueCopyWith<$Res>(_self.value, (value) {
-    return _then(_self.copyWith(value: value));
-  });
-}
+
 }
 
 
@@ -166,7 +157,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DataValue value,  Set<DataPath> editedPaths)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.DataValue value,  Set<skir.ValuePath> editedPaths)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LocalEditorValue() when $default != null:
 return $default(_that.value,_that.editedPaths);case _:
@@ -187,7 +178,7 @@ return $default(_that.value,_that.editedPaths);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DataValue value,  Set<DataPath> editedPaths)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.DataValue value,  Set<skir.ValuePath> editedPaths)  $default,) {final _that = this;
 switch (_that) {
 case _LocalEditorValue():
 return $default(_that.value,_that.editedPaths);case _:
@@ -207,7 +198,7 @@ return $default(_that.value,_that.editedPaths);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DataValue value,  Set<DataPath> editedPaths)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.DataValue value,  Set<skir.ValuePath> editedPaths)?  $default,) {final _that = this;
 switch (_that) {
 case _LocalEditorValue() when $default != null:
 return $default(_that.value,_that.editedPaths);case _:
@@ -222,12 +213,12 @@ return $default(_that.value,_that.editedPaths);case _:
 
 
 class _LocalEditorValue extends LocalEditorValue {
-  const _LocalEditorValue({required this.value, required  Set<DataPath> editedPaths}): _editedPaths = editedPaths,super._();
-  
+  const _LocalEditorValue({required this.value, required  Set<skir.ValuePath> editedPaths}): _editedPaths = editedPaths,super._();
 
-@override final  DataValue value;
- final  Set<DataPath> _editedPaths;
-@override Set<DataPath> get editedPaths {
+
+@override final  skir.DataValue value;
+ final  Set<skir.ValuePath> _editedPaths;
+@override Set<skir.ValuePath> get editedPaths {
   if (_editedPaths is EqualUnmodifiableSetView) return _editedPaths;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableSetView(_editedPaths);
@@ -266,11 +257,11 @@ abstract mixin class _$LocalEditorValueCopyWith<$Res> implements $LocalEditorVal
   factory _$LocalEditorValueCopyWith(_LocalEditorValue value, $Res Function(_LocalEditorValue) _then) = __$LocalEditorValueCopyWithImpl;
 @override @useResult
 $Res call({
- DataValue value, Set<DataPath> editedPaths
+ skir.DataValue value, Set<skir.ValuePath> editedPaths
 });
 
 
-@override $DataValueCopyWith<$Res> get value;
+
 
 }
 /// @nodoc
@@ -286,21 +277,12 @@ class __$LocalEditorValueCopyWithImpl<$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? value = null,Object? editedPaths = null,}) {
   return _then(_LocalEditorValue(
 value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
-as DataValue,editedPaths: null == editedPaths ? _self._editedPaths : editedPaths // ignore: cast_nullable_to_non_nullable
-as Set<DataPath>,
+as skir.DataValue,editedPaths: null == editedPaths ? _self._editedPaths : editedPaths // ignore: cast_nullable_to_non_nullable
+as Set<skir.ValuePath>,
   ));
 }
 
-/// Create a copy of LocalEditorValue
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$DataValueCopyWith<$Res> get value {
-  
-  return $DataValueCopyWith<$Res>(_self.value, (value) {
-    return _then(_self.copyWith(value: value));
-  });
-}
+
 }
 
 // dart format on

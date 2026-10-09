@@ -127,7 +127,10 @@ void main() {
         definition: skir.ResourceDefinitionId(value: "test.resource"),
         configuration: record.configuration,
       ),
-      prepared: skir.PreparedCreation(record: record, findings: const []),
+      prepared: skir.PreparedValue(
+        content: skir.PreparedContent.wrapRecord(record),
+        findings: const [],
+      ),
     );
 
     expect(staged.resource(created), record);
@@ -156,8 +159,8 @@ void main() {
           ),
         ],
       ),
-      prepared: skir.PreparedCreation(
-        record: fixture.pageRecord,
+      prepared: skir.PreparedValue(
+        content: skir.PreparedContent.wrapRecord(fixture.pageRecord),
         findings: const [],
       ),
     );
@@ -240,7 +243,10 @@ void main() {
           ),
         ],
       ),
-      prepared: skir.PreparedCreation(record: withoutBook, findings: const []),
+      prepared: skir.PreparedValue(
+        content: skir.PreparedContent.wrapRecord(withoutBook),
+        findings: const [],
+      ),
     );
 
     final pageBook = switch (staged.read(
@@ -345,22 +351,24 @@ void main() {
       final fixture = _collectionRepairFixture();
       final item = skir.ItemId(value: "item:record");
       final selection = skir.TypeSelection.wrapComplete(fixture.itemType);
-      final request = skir.InitializationRequest(
+      final request = skir.ValuePreparationRequest(
         id: skir.InitializationRequestId(value: "prepare:item"),
         catalog: fixture.draft.generation,
-        type: selection,
-        supplied: const [],
+        target: skir.PreparationTarget.wrapRecord(selection),
+        suppliedValue: skir.DataValue.createRecord(fields: const []),
         intentHash: "item:record",
       );
-      final prepared = skir.PreparedCreation(
-        record: skir.AuthoringRecord(
-          configuration: selection,
-          fields: [
-            skir.FieldValue(
-              name: "name",
-              value: skir.DataValue.wrapStringValue("prepared"),
-            ),
-          ],
+      final prepared = skir.PreparedValue(
+        content: skir.PreparedContent.wrapRecord(
+          skir.AuthoringRecord(
+            configuration: selection,
+            fields: [
+              skir.FieldValue(
+                name: "name",
+                value: skir.DataValue.wrapStringValue("prepared"),
+              ),
+            ],
+          ),
         ),
         findings: [
           skir.InitializationDiagnostic(
@@ -821,36 +829,38 @@ void main() {
       definition: _definition("Style"),
       arguments: const [],
     );
-    skir.InitializationRequest? observed;
+    skir.ValuePreparationRequest? observed;
 
     final result = await fixture.draft.setWithInitialization(
       fixture.repetitions,
       skir.DataValue.wrapInteger("3"),
       (request) async {
         observed = request;
-        return skir.PreparedCreation(
-          record: skir.AuthoringRecord(
-            configuration: request.type,
-            fields: [
-              skir.FieldValue(
-                name: "style",
-                value: skir.DataValue.createNamed(
-                  actualType: styleUse,
-                  payload: skir.DataValue.createRecord(
-                    fields: [
-                      skir.FieldValue(
-                        name: "bold",
-                        value: skir.DataValue.wrapBoolean(true),
-                      ),
-                      skir.FieldValue(
-                        name: "repetitions",
-                        value: skir.DataValue.unfilled,
-                      ),
-                    ],
+        return skir.PreparedValue(
+          content: skir.PreparedContent.wrapRecord(
+            skir.AuthoringRecord(
+              configuration: request.recordSelection,
+              fields: [
+                skir.FieldValue(
+                  name: "style",
+                  value: skir.DataValue.createNamed(
+                    actualType: styleUse,
+                    payload: skir.DataValue.createRecord(
+                      fields: [
+                        skir.FieldValue(
+                          name: "bold",
+                          value: skir.DataValue.wrapBoolean(true),
+                        ),
+                        skir.FieldValue(
+                          name: "repetitions",
+                          value: skir.DataValue.unfilled,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           findings: const [],
         );
@@ -859,9 +869,11 @@ void main() {
 
     expect(result, isA<PortablePathValue<skir.AuthoringRecord>>());
     expect(observed, isNotNull);
-    expect(observed!.supplied, isEmpty);
+    expect(observed!.recordSuppliedFields, isEmpty);
     expect(
-      (observed!.type as skir.TypeSelection_completeWrapper).value.definition,
+      (observed!.recordSelection as skir.TypeSelection_completeWrapper)
+          .value
+          .definition,
       _definition("Action"),
     );
     final style =
@@ -904,7 +916,7 @@ void main() {
         dynamicContaining: true,
         nullableStyle: true,
       );
-      final requests = <skir.InitializationRequest>[];
+      final requests = <skir.ValuePreparationRequest>[];
 
       final result = await fixture.draft.setWithInitialization(
         fixture.repetitions,
@@ -918,7 +930,7 @@ void main() {
       expect(result, isA<PortablePathValue<skir.AuthoringRecord>>());
       expect(requests, hasLength(1));
       expect(
-        (requests.single.type as skir.TypeSelection_completeWrapper)
+        (requests.single.recordSelection as skir.TypeSelection_completeWrapper)
             .value
             .definition,
         _definition("Action"),
@@ -979,10 +991,10 @@ void main() {
         dynamicContaining: true,
         nullableStyle: true,
       );
-      final requests = <skir.InitializationRequest>[];
+      final requests = <skir.ValuePreparationRequest>[];
 
-      Future<skir.PreparedCreation> fail(
-        skir.InitializationRequest request,
+      Future<skir.PreparedValue> fail(
+        skir.ValuePreparationRequest request,
       ) async {
         requests.add(request);
         throw StateError("temporary failure");
@@ -1020,9 +1032,9 @@ void main() {
         dynamicContaining: true,
         nullableStyle: true,
       );
-      final requests = <skir.InitializationRequest>[];
-      Future<skir.PreparedCreation> prepare(
-        skir.InitializationRequest request,
+      final requests = <skir.ValuePreparationRequest>[];
+      Future<skir.PreparedValue> prepare(
+        skir.ValuePreparationRequest request,
       ) async {
         requests.add(request);
         return _preparedContainingStyle(request, bold: true);
@@ -1103,11 +1115,15 @@ void main() {
       dynamicContaining: true,
       nullableStyle: true,
     );
-    final response = Completer<skir.PreparedCreation>();
+    final response = Completer<skir.PreparedValue>();
+    late skir.ValuePreparationRequest preparationRequest;
     final pending = fixture.draft.setWithInitialization(
       fixture.repetitions,
       skir.DataValue.wrapInteger("3"),
-      (request) => response.future,
+      (request) {
+        preparationRequest = request;
+        return response.future;
+      },
     );
     final concurrent = skir.ResourceId(value: "resource:concurrent");
     fixture.draft.create(
@@ -1122,12 +1138,7 @@ void main() {
         fields: const [],
       ),
     );
-    response.complete(
-      _preparedContainingStyle(
-        skir.InitializationRequest.defaultInstance,
-        bold: true,
-      ),
-    );
+    response.complete(_preparedContainingStyle(preparationRequest, bold: true));
 
     final result = await pending;
     expect(result, isA<PortablePathUnavailable<skir.AuthoringRecord>>());
@@ -1149,12 +1160,17 @@ void main() {
       (request) async {
         invocation++;
         if (invocation == 1) {
-          return skir.PreparedCreation(
-            record: skir.AuthoringRecord(
-              configuration: request.type,
-              fields: [
-                skir.FieldValue(name: "style", value: skir.DataValue.unfilled),
-              ],
+          return skir.PreparedValue(
+            content: skir.PreparedContent.wrapRecord(
+              skir.AuthoringRecord(
+                configuration: request.recordSelection,
+                fields: [
+                  skir.FieldValue(
+                    name: "style",
+                    value: skir.DataValue.unfilled,
+                  ),
+                ],
+              ),
             ),
             findings: [
               skir.InitializationDiagnostic(
@@ -1171,33 +1187,35 @@ void main() {
             ],
           );
         }
-        return skir.PreparedCreation(
-          record: skir.AuthoringRecord(
-            configuration: request.type,
-            fields: [
-              skir.FieldValue(
-                name: "bold",
-                value: skir.DataValue.wrapBoolean(false),
-              ),
-              skir.FieldValue(
-                name: "repetitions",
-                value: skir.DataValue.unfilled,
-              ),
-              skir.FieldValue(
-                name: "bytes",
-                value: skir.DataValue.wrapBytes(skir.ByteString.empty),
-              ),
-              skir.FieldValue(
-                name: "duration",
-                value: skir.DataValue.createDuration(
-                  value: skir.Duration(milliseconds: 0),
+        return skir.PreparedValue(
+          content: skir.PreparedContent.wrapRecord(
+            skir.AuthoringRecord(
+              configuration: request.recordSelection,
+              fields: [
+                skir.FieldValue(
+                  name: "bold",
+                  value: skir.DataValue.wrapBoolean(false),
                 ),
-              ),
-              skir.FieldValue(
-                name: "timestamp",
-                value: skir.DataValue.unfilled,
-              ),
-            ],
+                skir.FieldValue(
+                  name: "repetitions",
+                  value: skir.DataValue.unfilled,
+                ),
+                skir.FieldValue(
+                  name: "bytes",
+                  value: skir.DataValue.wrapBytes(skir.ByteString.empty),
+                ),
+                skir.FieldValue(
+                  name: "duration",
+                  value: skir.DataValue.createDuration(
+                    value: skir.Duration(milliseconds: 0),
+                  ),
+                ),
+                skir.FieldValue(
+                  name: "timestamp",
+                  value: skir.DataValue.unfilled,
+                ),
+              ],
+            ),
           ),
           findings: [
             skir.InitializationDiagnostic(
@@ -1661,8 +1679,8 @@ _parentFixture({
   );
 }
 
-skir.PreparedCreation _preparedContainingStyle(
-  skir.InitializationRequest request, {
+skir.PreparedValue _preparedContainingStyle(
+  skir.ValuePreparationRequest request, {
   required bool bold,
   bool includeItems = false,
 }) {
@@ -1681,21 +1699,23 @@ skir.PreparedCreation _preparedContainingStyle(
         ),
       ),
   ];
-  return skir.PreparedCreation(
-    record: skir.AuthoringRecord(
-      configuration: request.type,
-      fields: [
-        skir.FieldValue(
-          name: "style",
-          value: skir.DataValue.createNamed(
-            actualType: skir.NamedTypeUse(
-              definition: _definition("Style"),
-              arguments: const [],
+  return skir.PreparedValue(
+    content: skir.PreparedContent.wrapRecord(
+      skir.AuthoringRecord(
+        configuration: request.recordSelection,
+        fields: [
+          skir.FieldValue(
+            name: "style",
+            value: skir.DataValue.createNamed(
+              actualType: skir.NamedTypeUse(
+                definition: _definition("Style"),
+                arguments: const [],
+              ),
+              payload: skir.DataValue.createRecord(fields: fields),
             ),
-            payload: skir.DataValue.createRecord(fields: fields),
           ),
-        ),
-      ],
+        ],
+      ),
     ),
     findings: const [],
   );

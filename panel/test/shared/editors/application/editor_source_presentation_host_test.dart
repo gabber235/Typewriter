@@ -68,6 +68,7 @@ void main() {
     final rejected = await host.write(
       _rootReference,
       skir.DataValue.wrapInteger("128"),
+      context: host.rootInvocation,
     );
     expect(rejected, isA<PortablePresentationWriteRejected>());
     expect(writes, 0);
@@ -75,10 +76,14 @@ void main() {
     final accepted = await host.write(
       _rootReference,
       skir.DataValue.wrapInteger("127"),
+      context: host.rootInvocation,
     );
     expect(accepted, isA<PortablePresentationWriteApplied>());
     expect(writes, 1);
-    expect(host.read(_rootReference), skir.DataValue.wrapInteger("127"));
+    expect(
+      host.read(_rootReference, context: host.rootInvocation),
+      skir.DataValue.wrapInteger("127"),
+    );
   });
 
   test(
@@ -114,11 +119,11 @@ void main() {
         ),
       );
       expect(
-        await host.execute(uppercase),
+        await host.execute(uppercase, context: host.rootInvocation),
         isA<PortablePresentationWriteApplied>(),
       );
       expect(
-        host.read(_rootReference),
+        host.read(_rootReference, context: host.rootInvocation),
         skir.DataValue.wrapStringValue("FIRST"),
       );
       expect(writes, 1);
@@ -131,7 +136,7 @@ void main() {
         ),
       );
       expect(
-        await host.execute(invalid),
+        await host.execute(invalid, context: host.rootInvocation),
         isA<PortablePresentationWriteRejected>(),
       );
       expect(writes, 1);
@@ -154,10 +159,11 @@ void main() {
           ),
         ),
       ),
+      context: host.rootInvocation,
     );
     expect(result, isA<PortablePresentationWriteRejected>());
     expect(
-      host.read(_rootReference),
+      host.read(_rootReference, context: host.rootInvocation),
       skir.DataValue.wrapStringValue("original"),
     );
   });
@@ -179,10 +185,17 @@ void main() {
     addTearDown(host.dispose);
 
     expect(
-      await host.write(_rootReference, skir.DataValue.null_),
+      await host.write(
+        _rootReference,
+        skir.DataValue.null_,
+        context: host.rootInvocation,
+      ),
       isA<PortablePresentationWriteApplied>(),
     );
-    expect(host.read(_rootReference), skir.DataValue.null_);
+    expect(
+      host.read(_rootReference, context: host.rootInvocation),
+      skir.DataValue.null_,
+    );
   });
 
   test("refreshes from its owner and detaches when disposed", () {
@@ -191,13 +204,22 @@ void main() {
       bindings: [_binding(read: (_) => owner.value, owner: owner)],
     );
 
-    expect(host.read(_rootReference), skir.DataValue.wrapStringValue("first"));
+    expect(
+      host.read(_rootReference, context: host.rootInvocation),
+      skir.DataValue.wrapStringValue("first"),
+    );
     owner.value = skir.DataValue.wrapStringValue("second");
-    expect(host.read(_rootReference), skir.DataValue.wrapStringValue("second"));
+    expect(
+      host.read(_rootReference, context: host.rootInvocation),
+      skir.DataValue.wrapStringValue("second"),
+    );
 
     host.dispose();
     owner.value = skir.DataValue.wrapStringValue("third");
-    expect(host.read(_rootReference), skir.DataValue.wrapStringValue("second"));
+    expect(
+      host.read(_rootReference, context: host.rootInvocation),
+      skir.DataValue.wrapStringValue("second"),
+    );
     owner.dispose();
   });
 
@@ -213,6 +235,7 @@ void main() {
       await host.write(
         _rootReference,
         skir.DataValue.wrapStringValue("changed"),
+        context: host.rootInvocation,
       ),
       isA<PortablePresentationWriteRejected>(),
     );
@@ -269,6 +292,7 @@ void main() {
             segments: [skir.PathSegment.createField(name: "text")],
           ),
         ),
+        context: host.rootInvocation,
       ),
       _textType,
     );
@@ -340,16 +364,24 @@ void main() {
     );
 
     expect(
-      host.expectedType(valueReference),
+      host.expectedType(valueReference, context: host.rootInvocation),
       skir.TypeUse.createNamed(definition: coin, arguments: const []),
     );
     expect(
-      await host.write(valueReference, _namedValue(item)),
+      await host.write(
+        valueReference,
+        _namedValue(item),
+        context: host.rootInvocation,
+      ),
       isA<PortablePresentationWriteRejected>(),
     );
     expect(writes, 0);
     expect(
-      await host.write(valueReference, _namedValue(coin)),
+      await host.write(
+        valueReference,
+        _namedValue(coin),
+        context: host.rootInvocation,
+      ),
       isA<PortablePresentationWriteApplied>(),
     );
     expect(writes, 1);
@@ -369,23 +401,8 @@ void main() {
     final pending = host.write(
       _rootReference,
       skir.DataValue.wrapStringValue("changed"),
+      context: host.rootInvocation,
     );
-    host.dispose();
-    completion.complete(const PortablePresentationWriteResult.applied());
-
-    expect(await pending, isA<PortablePresentationWriteApplied>());
-  });
-
-  test("a delayed action may finish after the host is disposed", () async {
-    final completion = Completer<PortablePresentationWriteResult>();
-    final host = _host(
-      bindings: [
-        _binding(read: (_) => skir.DataValue.wrapStringValue("value")),
-      ],
-      executeAction: (_) => completion.future,
-    );
-
-    final pending = host.execute(skir.EditorAction.unknown);
     host.dispose();
     completion.complete(const PortablePresentationWriteResult.applied());
 
@@ -394,7 +411,6 @@ void main() {
 
   test("disposed hosts reject fresh writes and actions", () async {
     var writes = 0;
-    var actions = 0;
     final host = _host(
       bindings: [
         _binding(
@@ -405,10 +421,6 @@ void main() {
           },
         ),
       ],
-      executeAction: (_) {
-        actions++;
-        return const PortablePresentationWriteResult.applied();
-      },
     );
     final disposedHost = host..dispose();
 
@@ -416,29 +428,29 @@ void main() {
       await disposedHost.write(
         _rootReference,
         skir.DataValue.wrapStringValue("changed"),
+        context: disposedHost.rootInvocation,
       ),
       isA<PortablePresentationWriteRejected>(),
     );
     expect(
-      await disposedHost.execute(skir.EditorAction.unknown),
+      await disposedHost.execute(
+        skir.EditorAction.unknown,
+        context: disposedHost.rootInvocation,
+      ),
       isA<PortablePresentationWriteRejected>(),
     );
     expect(writes, 0);
-    expect(actions, 0);
   });
 }
 
 EditorSourcePresentationHost _host({
   required Iterable<EditorSourcePresentationBinding> bindings,
   CheckedEditorCatalog? catalog,
-  FutureOr<PortablePresentationWriteResult> Function(skir.EditorAction action)?
-  executeAction,
 }) => EditorSourcePresentationHost(
   catalog: catalog ?? _emptyCatalog(),
   root: () => skir.PresentationNode.defaultInstance,
   bindings: bindings,
   budget: skir.EvaluationBudget(maxSteps: 256, maxCollectionItems: 32),
-  executeAction: executeAction,
 );
 
 EditorSourcePresentationBinding _binding({

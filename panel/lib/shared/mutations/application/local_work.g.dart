@@ -54,7 +54,7 @@ String _$localWorkScopeHash() => r'686c1ecadd0e013b82fac8bde21357df1b062236';
 ///
 /// Riverpod keeps this command surface stable for callers. Mutable resources,
 /// reservations, submissions, and editor lifetimes belong to the current
-/// [LocalWorkSession], which is discarded when [localWorkScope] changes.
+/// [ScopedWorkSession], which is discarded when [localWorkScope] changes.
 
 @ProviderFor(LocalWork)
 final localWorkProvider = LocalWorkProvider._();
@@ -63,14 +63,14 @@ final localWorkProvider = LocalWorkProvider._();
 ///
 /// Riverpod keeps this command surface stable for callers. Mutable resources,
 /// reservations, submissions, and editor lifetimes belong to the current
-/// [LocalWorkSession], which is discarded when [localWorkScope] changes.
+/// [ScopedWorkSession], which is discarded when [localWorkScope] changes.
 final class LocalWorkProvider
     extends $NotifierProvider<LocalWork, LocalWorkState> {
   /// Stable command owner that privately replaces work when its scope changes.
   ///
   /// Riverpod keeps this command surface stable for callers. Mutable resources,
   /// reservations, submissions, and editor lifetimes belong to the current
-  /// [LocalWorkSession], which is discarded when [localWorkScope] changes.
+  /// [ScopedWorkSession], which is discarded when [localWorkScope] changes.
   LocalWorkProvider._()
     : super(
         from: null,
@@ -98,13 +98,13 @@ final class LocalWorkProvider
   }
 }
 
-String _$localWorkHash() => r'ed499a07ae2ebc5e4a8e2788f3c6c17b3d3443cf';
+String _$localWorkHash() => r'6ba53f5b1ce91a41c2f67b533652360c0fb7c4e1';
 
 /// Stable command owner that privately replaces work when its scope changes.
 ///
 /// Riverpod keeps this command surface stable for callers. Mutable resources,
 /// reservations, submissions, and editor lifetimes belong to the current
-/// [LocalWorkSession], which is discarded when [localWorkScope] changes.
+/// [ScopedWorkSession], which is discarded when [localWorkScope] changes.
 
 abstract class _$LocalWork extends $Notifier<LocalWorkState> {
   LocalWorkState build();

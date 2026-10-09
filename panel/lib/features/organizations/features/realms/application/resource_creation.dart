@@ -3,6 +3,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "resource_creation.g.dart";
+part "resource_creation.freezed.dart";
 
 @Riverpod(keepAlive: true)
 ResourceCreationSession resourceCreation(Ref ref) =>
@@ -67,36 +68,45 @@ final class ResourceCreationRequest {
       );
 }
 
-typedef CreatedAuthoringResource = ({
-  skir.ResourceId id,
-  skir.ResourceDefinitionId definition,
-  skir.AuthoringRecord content,
-});
+@freezed
+abstract class CreatedAuthoringResource with _$CreatedAuthoringResource {
+  const factory CreatedAuthoringResource({
+    required skir.ResourceId id,
+    required skir.ResourceDefinitionId definition,
+    required skir.AuthoringRecord content,
+  }) = _CreatedAuthoringResource;
+}
 
-typedef ResourceCreationTemplate = ({
-  skir.ResourceDefinitionId definition,
-  skir.TypeSelection configuration,
-});
+@freezed
+abstract class ResourceCreationTemplate with _$ResourceCreationTemplate {
+  const factory ResourceCreationTemplate({
+    required skir.ResourceDefinitionId definition,
+    required skir.TypeSelection configuration,
+  }) = _ResourceCreationTemplate;
+}
 
-ResourceCreationTemplate? resourceCreationTemplate(
-  CheckedEditorCatalog? checked,
-  String definition,
-) {
-  if (checked == null) return null;
-  final id = skir.ResourceDefinitionId(value: definition);
-  final resource = checked.snapshot.resourceDefinitions
-      .where((candidate) => candidate.id == id)
-      .firstOrNull;
-  if (resource == null) return null;
-  final configuration = checked.beginSelection(resource.root);
-  if (configuration == skir.TypeSelection.unknown) return null;
-  return (definition: id, configuration: configuration);
+extension ResourceCreationCatalog on CheckedEditorCatalog? {
+  ResourceCreationTemplate? resourceCreationTemplate(String definition) {
+    final checked = this;
+    if (checked == null) return null;
+    final id = skir.ResourceDefinitionId(value: definition);
+    final resource = checked.snapshot.resourceDefinitions
+        .where((candidate) => candidate.id == id)
+        .firstOrNull;
+    if (resource == null) return null;
+    final configuration = checked.beginSelection(resource.root);
+    if (configuration == skir.TypeSelection.unknown) return null;
+    return ResourceCreationTemplate(
+      definition: id,
+      configuration: configuration,
+    );
+  }
 }
 
 void createAuthoringResource({
   required AuthoringEdit edit,
   required ResourceCreationRequest request,
-  required skir.PreparedCreation prepared,
+  required skir.PreparedValue prepared,
 }) {
   edit.createPrepared(request.id, prepared, definition: request.definition);
   for (final connection in request.connections) {
@@ -151,17 +161,21 @@ final class ResourceCreationSession {
             checked.isAbstractRecordSelection(effectiveRequest.configuration)) {
           throw StateError("The selected resource type is unavailable");
         }
-        final initialization = skir.InitializationRequest(
+        final initialization = skir.ValuePreparationRequest(
           id: effectiveRequest.initializationId,
           catalog: edit.generation,
-          type: effectiveRequest.configuration,
-          supplied: effectiveRequest.supplied,
+          target: skir.PreparationTarget.wrapRecord(
+            effectiveRequest.configuration,
+          ),
+          suppliedValue: skir.DataValue.createRecord(
+            fields: effectiveRequest.supplied,
+          ),
           intentHash: _initializationHash(
             effectiveRequest.configuration,
             effectiveRequest.supplied,
           ),
         );
-        final prepared = await commands.prepareCreation(initialization);
+        final prepared = await commands.prepareValue(initialization);
         if (!context.mounted) {
           throw StateError("The creation view closed during preparation");
         }
@@ -170,10 +184,10 @@ final class ResourceCreationSession {
           request: effectiveRequest,
           prepared: prepared,
         );
-        created = (
+        created = CreatedAuthoringResource(
           id: effectiveRequest.id,
           definition: effectiveRequest.definition,
-          content: prepared.record,
+          content: prepared.recordContent,
         );
         if (prepared.findings.isNotEmpty && context.mounted) {
           showErrorSnackBar(

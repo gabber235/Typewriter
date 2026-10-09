@@ -202,9 +202,7 @@ void main() {
     expect(next.dirty, isTrue);
   });
 
-  testWidgets("pending work remains accessible without an inspector", (
-    tester,
-  ) async {
+  testWidgets("inline group controls compare retained work", (tester) async {
     final fixture = _fixture();
     final authoring = _editing(fixture.draft);
     authoring.binding.edit(
@@ -216,10 +214,11 @@ void main() {
     );
     authoring.binding.detach();
     await tester.pumpTestApp(
-      child: AuthoringPendingWork(workspace: authoring.workspace),
+      child: AuthoringGroupControls(
+        workspace: authoring.workspace,
+        group: authoring.workspace.state.groups.values.single,
+      ),
     );
-    await tester.tap(find.text("Pending changes (1)"));
-    await tester.pumpAndSettle();
     expect(find.text("Rename message"), findsOneWidget);
     await tester.tap(find.text("View changes"));
     await tester.pumpAndSettle();

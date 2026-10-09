@@ -59,10 +59,10 @@ void _testHostTargetSelection() {
         final owner = _configurationSource(owners);
         expect(
           owner.update(
-            DataPath.root.field("engine"),
+            editorRootPath.field("engine"),
             _mode("EngineEnabled", {
-              "target": const StringValue("paper@*"),
-              "realm": const StringValue(""),
+              "target": skir.DataValue.wrapStringValue("paper@*"),
+              "realm": skir.DataValue.wrapStringValue(""),
             }),
           ),
           isA<AppliedEditorMutation>(),
@@ -85,8 +85,10 @@ void _testHostTargetSelection() {
         await tester.tap(find.text("Compatible Realm").last);
         await tester.pumpAndSettle();
         expect(
-          owner.value(DataPath.root.field("engine").field("realm")).valueOrNull,
-          StringValue(external.realmId.id),
+          owner
+              .value(editorRootPath.field("engine").field("realm"))
+              .valueOrNull,
+          skir.DataValue.wrapStringValue(external.realmId.id),
         );
         expect(owner.draftDiagnostics, isEmpty);
         skir.ConfigureServiceHostRequest? submitted;
@@ -124,10 +126,10 @@ void _testHostTargetSelection() {
         );
         expect(
           owner.update(
-            DataPath.root.field("engine"),
+            editorRootPath.field("engine"),
             _mode("EngineEnabled", {
-              "target": const StringValue("paper@*"),
-              "realm": StringValue(incompatible.realmId.id),
+              "target": skir.DataValue.wrapStringValue("paper@*"),
+              "realm": skir.DataValue.wrapStringValue(incompatible.realmId.id),
             }),
           ),
           isA<AppliedEditorMutation>(),
@@ -135,8 +137,10 @@ void _testHostTargetSelection() {
         expect(owner.draftDiagnostics, isNotEmpty);
 
         owner.update(
-          DataPath.root.field("realm"),
-          _mode("RealmHosted", {"target": const StringValue("paper@*")}),
+          editorRootPath.field("realm"),
+          _mode("RealmHosted", {
+            "target": skir.DataValue.wrapStringValue("paper@*"),
+          }),
         );
         await tester.pumpAndSettle();
         expect(find.text("Assigned Realm"), findsNothing);

@@ -8,81 +8,79 @@ Future<void> _chooseLink({
   required Map<skir.ResourceId, _AuthoredCollectionRow>? candidates,
   required skir.PresentationCollectionDefinition? candidateDefinition,
 }) async {
-  final catalog = scope.catalog;
-  if (scope.edit == null || catalog == null) return;
-  await scope.prepare("Change link", (draft) async {
-    draft.expect(location);
-    final plans = portableLinkPlans(
-      draft: draft,
-      catalog: catalog,
-      source: location,
-    );
-    if (!context.mounted) return;
-    final choices = _authoredLinkChoices(
-      plans: plans,
-      scope: scope,
-      candidates: candidates,
-      candidateDefinition: candidateDefinition,
-    );
-    final decision = await showSearchModal<_AuthoredLinkDecision>(
-      context,
-      (ref, modalContext) {
-        final source = _AuthoredLinkSearchSource(
-          choices,
-          candidatePolicy: control.candidatePolicy,
-          problem: switch (plans) {
-            PortableLinkPlanUnavailable(:final message) => message,
-            PortableLinkPlanReady() => null,
-          },
-        );
-        return SearchContribution(
-          session: SearchSession(
-            source: source,
-            interaction: SearchInteraction(
-              activation: SearchActivation.custom(
-                dependencies: const [],
-                evaluate: (_, result) {
-                  final choice = result.payload as _AuthoredLinkChoice;
-                  final reason = choice.disabledReason;
-                  return reason == null
-                      ? const SearchActivationState.enabled()
-                      : SearchActivationState.disabled(reason);
-                },
-                activate: (_, result) async {
-                  final choice = result.payload as _AuthoredLinkChoice;
-                  try {
-                    final decision = await _resolveAuthoredLinkChoice(
-                      choice: choice,
-                      scope: scope,
-                      source: location,
-                    );
-                    return SearchActivationResult.complete(decision);
-                  } on Object catch (error) {
-                    source.reportFailure(
-                      "The counterpart could not be prepared: $error",
-                    );
-                    return const SearchActivationResult.keepOpen();
-                  }
-                },
-              ),
-              selectionMode: SearchSelectionMode.single,
+  final linkHost = switch (scope.host) {
+    PortableLinkHost value => value,
+    _ => null,
+  };
+  if (linkHost == null) return;
+  final plans = linkHost.planLink(location, context: scope.invocation);
+  if (!context.mounted) return;
+  final choices = _authoredLinkChoices(
+    plans: plans,
+    scope: scope,
+    candidates: candidates,
+    candidateDefinition: candidateDefinition,
+  );
+  final decision = await showSearchModal<_AuthoredLinkDecision>(
+    context,
+    (ref, modalContext) {
+      final source = _AuthoredLinkSearchSource(
+        choices,
+        candidatePolicy: control.candidatePolicy,
+        problem: switch (plans) {
+          PortableLinkPlanUnavailable(:final message) => message,
+          PortableLinkPlanReady() => null,
+        },
+      );
+      return SearchContribution(
+        session: SearchSession(
+          source: source,
+          interaction: SearchInteraction(
+            activation: SearchActivation.custom(
+              dependencies: const [],
+              evaluate: (_, result) {
+                final choice = result.payload as _AuthoredLinkChoice;
+                final reason = choice.disabledReason;
+                return reason == null
+                    ? const SearchActivationState.enabled()
+                    : SearchActivationState.disabled(reason);
+              },
+              activate: (_, result) async {
+                final choice = result.payload as _AuthoredLinkChoice;
+                try {
+                  final decision = await _resolveAuthoredLinkChoice(
+                    choice: choice,
+                  );
+                  return SearchActivationResult.complete(decision);
+                } on Object catch (error) {
+                  source.reportFailure(
+                    "The counterpart could not be prepared: $error",
+                  );
+                  return const SearchActivationResult.keepOpen();
+                }
+              },
             ),
+            selectionMode: SearchSelectionMode.single,
           ),
-        );
-      },
-      searchHint: "Search linked resources",
-      rowRenderers: {
-        _authoredLinkChoiceResultType.rowRendererId:
-            _buildAuthoredLinkChoiceResult,
-      },
-    );
-    if (decision == null) return;
-    draft.connect(
-      decision.plan.source,
-      decision.target.resource,
-      counterpart: decision.counterpart,
-    );
-  });
+        ),
+      );
+    },
+    searchHint: "Search linked resources",
+    rowRenderers: {
+      _authoredLinkChoiceResultType.rowRendererId:
+          _buildAuthoredLinkChoiceResult,
+    },
+  );
+  if (decision == null) return;
+  final result = await linkHost.connectLink(
+    plan: decision.plan,
+    target: decision.target,
+    counterpart: decision.counterpart,
+    context: scope.invocation,
+  );
+  if (result case PortablePresentationWriteRejected(:final message)) {
+    scope.reportStatus?.call(message);
+  }
 }
 
 final class _AuthoredLinkDecision {
@@ -94,7 +92,7 @@ final class _AuthoredLinkDecision {
 
   final PortableLinkPlan plan;
   final PortableLinkTargetChoice target;
-  final skir.CounterpartChoice? counterpart;
+  final PortableLinkCounterpartRequest counterpart;
 }
 
 const _authoredLinkChoiceResultType = SearchResultType(
@@ -157,11 +155,19 @@ List<_AuthoredLinkChoice> _authoredLinkChoices({
     for (final target in plan.targets) {
       final row = candidates?[target.resource];
       if (candidates != null && row == null) continue;
-      final record = scope.authoring?.resource(target.resource);
-      final label = _authoredLinkTargetLabel(record) ?? target.resource.value;
-      final typeLabel = record == null
+      final host = scope.host;
+      final projectionHost = switch (host) {
+        PortableCollectionProjectionHost value => value,
+        _ => null,
+      };
+      final resource = projectionHost?.projectResource(
+        target.resource,
+        context: scope.invocation,
+      );
+      final label = row?.label ?? resource?.label ?? target.resource.value;
+      final typeLabel = resource == null
           ? "Resource"
-          : scope.catalog?.typeSelectionName(record.configuration) ??
+          : scope.catalog?.typeSelectionName(resource.configuration) ??
                 "Resource";
       final targetSearchText = [
         target.resource.value,
@@ -221,7 +227,9 @@ List<_AuthoredLinkChoice> _authoredLinkChoices({
             row: row,
             definition: candidateDefinition,
             slot: slot,
-            disabledReason: scope.prepareCreation == null
+            disabledReason:
+                scope.host is! PortableLinkHost ||
+                    !(scope.host! as PortableLinkHost).canPrepareCounterpart
                 ? "Creation preparation is unavailable"
                 : null,
           ),
@@ -250,15 +258,6 @@ List<_AuthoredLinkChoice> _authoredLinkChoices({
     }
   }
   return choices;
-}
-
-String? _authoredLinkTargetLabel(skir.AuthoringRecord? record) {
-  if (record == null) return null;
-  for (final field in const ["name", "title"]) {
-    final value = record.authoredField(field)?.authoredString?.trim();
-    if (value != null && value.isNotEmpty) return value;
-  }
-  return null;
 }
 
 final class _AuthoredLinkSearchSource implements SearchSource {
@@ -424,73 +423,33 @@ Widget _buildAuthoredLinkChoiceResult(SearchResultRowContext context) {
 
 Future<_AuthoredLinkDecision> _resolveAuthoredLinkChoice({
   required _AuthoredLinkChoice choice,
-  required PortablePresentationScope scope,
-  required skir.ValueLocation source,
 }) async {
   switch (choice.kind) {
     case _AuthoredLinkChoiceKind.automatic:
       return _AuthoredLinkDecision(
         plan: choice.plan,
         target: choice.target,
-        counterpart: null,
+        counterpart: const PortableAutomaticCounterpart(),
       );
     case _AuthoredLinkChoiceKind.existing:
       return _AuthoredLinkDecision(
         plan: choice.plan,
         target: choice.target,
-        counterpart: skir.CounterpartChoice.wrapExisting(choice.occurrence!),
+        counterpart: PortableExistingCounterpart(choice.occurrence!),
       );
     case _AuthoredLinkChoiceKind.create:
-      final prepare = scope.prepareCreation;
-      final draft = scope.authoring;
       final slot = choice.slot;
-      if (prepare == null || draft == null || slot == null) {
+      if (slot == null) {
         throw StateError("Creation preparation is unavailable");
       }
-      final identity = _initializationIdentity(
-        generation: draft.generation,
-        source: source,
-        target: choice.target.resource,
-        slot: slot,
-      );
-      final prepared = await prepare(
-        skir.InitializationRequest(
-          id: skir.InitializationRequestId(value: "panel:link:$identity"),
-          catalog: draft.generation,
-          type: slot.selection,
-          supplied: const [],
-          intentHash: identity,
-        ),
-      );
       return _AuthoredLinkDecision(
         plan: choice.plan,
         target: choice.target,
-        counterpart: skir.CounterpartChoice.createNew(
-          containing: slot.containing,
-          prepared: prepared,
-        ),
+        counterpart: PortableCreatedCounterpart(slot),
       );
     case _AuthoredLinkChoiceKind.unavailable:
       throw StateError("No counterpart location is available");
   }
-}
-
-String _initializationIdentity({
-  required skir.CatalogGeneration generation,
-  required skir.ValueLocation source,
-  required skir.ResourceId target,
-  required PortableNewCounterpartChoice slot,
-}) {
-  final content = [
-    generation.value,
-    source.resource.value,
-    _pathLabel(source.path),
-    target.value,
-    slot.containing.resource.value,
-    _pathLabel(slot.containing.path),
-    slot.selection.toString(),
-  ].join("\u0000");
-  return sha256.convert(utf8.encode(content)).toString();
 }
 
 String _pathLabel(skir.ValuePath path) {

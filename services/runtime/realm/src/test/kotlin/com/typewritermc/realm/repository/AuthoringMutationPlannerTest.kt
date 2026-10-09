@@ -10,8 +10,9 @@ import com.typewritermc.authoring.LinkOccurrence
 import com.typewritermc.authoring.LinkOccurrenceId
 import com.typewritermc.authoring.LinkProjection
 import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.PreparedCreation
+import com.typewritermc.authoring.PreparedContent
 import com.typewritermc.authoring.PreparedEdit
+import com.typewritermc.authoring.PreparedValue
 import com.typewritermc.authoring.RelationProjectionDelta
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
@@ -508,10 +509,12 @@ class AuthoringMutationPlannerTest {
                         target,
                         CounterpartChoice.New(
                             containing,
-                            PreparedCreation(
-                                AuthoringRecord(
-                                    TypeSelection.Complete(WRAPPER_USE),
-                                    mapOf("inner" to DataValue.Unfilled),
+                            PreparedValue(
+                                PreparedContent.Record(
+                                    AuthoringRecord(
+                                        TypeSelection.Complete(WRAPPER_USE),
+                                        mapOf("inner" to DataValue.Unfilled),
+                                    ),
                                 ),
                                 emptyList(),
                             ),

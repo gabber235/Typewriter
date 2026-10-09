@@ -14,7 +14,7 @@ class PageDrag implements ReferenceResourceDragData {
   skir.ResourceId get referenceId => pageId;
 
   @override
-  List<ResolvedTypeRef> get referenceTypes => const [];
+  List<skir.TypeDefinitionId> get referenceTypes => const [];
 }
 
 /// Drag payload for moving a chapter subtree.

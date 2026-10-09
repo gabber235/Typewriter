@@ -129,7 +129,7 @@ return ready(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  loading,TResult Function()?  missing,TResult Function()?  mixed,TResult Function( List<TypeDiagnostic> diagnostics)?  invalid,TResult Function( DataValue value)?  ready,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  loading,TResult Function()?  missing,TResult Function()?  mixed,TResult Function( List<EditorDiagnostic> diagnostics)?  invalid,TResult Function( skir.DataValue value)?  ready,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case LoadingEditorValue() when loading != null:
 return loading();case MissingEditorValue() when missing != null:
@@ -154,7 +154,7 @@ return ready(_that.value);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  loading,required TResult Function()  missing,required TResult Function()  mixed,required TResult Function( List<TypeDiagnostic> diagnostics)  invalid,required TResult Function( DataValue value)  ready,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  loading,required TResult Function()  missing,required TResult Function()  mixed,required TResult Function( List<EditorDiagnostic> diagnostics)  invalid,required TResult Function( skir.DataValue value)  ready,}) {final _that = this;
 switch (_that) {
 case LoadingEditorValue():
 return loading();case MissingEditorValue():
@@ -175,7 +175,7 @@ return ready(_that.value);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  loading,TResult? Function()?  missing,TResult? Function()?  mixed,TResult? Function( List<TypeDiagnostic> diagnostics)?  invalid,TResult? Function( DataValue value)?  ready,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  loading,TResult? Function()?  missing,TResult? Function()?  mixed,TResult? Function( List<EditorDiagnostic> diagnostics)?  invalid,TResult? Function( skir.DataValue value)?  ready,}) {final _that = this;
 switch (_that) {
 case LoadingEditorValue() when loading != null:
 return loading();case MissingEditorValue() when missing != null:
@@ -195,7 +195,7 @@ return ready(_that.value);case _:
 
 class LoadingEditorValue extends EditorValue {
   const LoadingEditorValue(): super._();
-  
+
 
 
 
@@ -227,7 +227,7 @@ String toString() {
 
 class MissingEditorValue extends EditorValue {
   const MissingEditorValue(): super._();
-  
+
 
 
 
@@ -259,7 +259,7 @@ String toString() {
 
 class MixedEditorValue extends EditorValue {
   const MixedEditorValue(): super._();
-  
+
 
 
 
@@ -290,11 +290,11 @@ String toString() {
 
 
 class InvalidEditorValue extends EditorValue {
-  const InvalidEditorValue( List<TypeDiagnostic> diagnostics): _diagnostics = diagnostics,super._();
-  
+  const InvalidEditorValue( List<EditorDiagnostic> diagnostics): _diagnostics = diagnostics,super._();
 
- final  List<TypeDiagnostic> _diagnostics;
- List<TypeDiagnostic> get diagnostics {
+
+ final  List<EditorDiagnostic> _diagnostics;
+ List<EditorDiagnostic> get diagnostics {
   if (_diagnostics is EqualUnmodifiableListView) return _diagnostics;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_diagnostics);
@@ -333,7 +333,7 @@ abstract mixin class $InvalidEditorValueCopyWith<$Res> implements $EditorValueCo
   factory $InvalidEditorValueCopyWith(InvalidEditorValue value, $Res Function(InvalidEditorValue) _then) = _$InvalidEditorValueCopyWithImpl;
 @useResult
 $Res call({
- List<TypeDiagnostic> diagnostics
+ List<EditorDiagnostic> diagnostics
 });
 
 
@@ -353,7 +353,7 @@ class _$InvalidEditorValueCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') $Res call({Object? diagnostics = null,}) {
   return _then(InvalidEditorValue(
 null == diagnostics ? _self._diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
-as List<TypeDiagnostic>,
+as List<EditorDiagnostic>,
   ));
 }
 
@@ -365,9 +365,9 @@ as List<TypeDiagnostic>,
 
 class ReadyEditorValue extends EditorValue {
   const ReadyEditorValue(this.value): super._();
-  
 
- final  DataValue value;
+
+ final  skir.DataValue value;
 
 /// Create a copy of EditorValue
 /// with the given fields replaced by the non-null parameter values.
@@ -401,11 +401,11 @@ abstract mixin class $ReadyEditorValueCopyWith<$Res> implements $EditorValueCopy
   factory $ReadyEditorValueCopyWith(ReadyEditorValue value, $Res Function(ReadyEditorValue) _then) = _$ReadyEditorValueCopyWithImpl;
 @useResult
 $Res call({
- DataValue value
+ skir.DataValue value
 });
 
 
-$DataValueCopyWith<$Res> get value;
+
 
 }
 /// @nodoc
@@ -421,20 +421,11 @@ class _$ReadyEditorValueCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') $Res call({Object? value = null,}) {
   return _then(ReadyEditorValue(
 null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
-as DataValue,
+as skir.DataValue,
   ));
 }
 
-/// Create a copy of EditorValue
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$DataValueCopyWith<$Res> get value {
-  
-  return $DataValueCopyWith<$Res>(_self.value, (value) {
-    return _then(_self.copyWith(value: value));
-  });
-}
+
 }
 
 /// @nodoc
@@ -548,7 +539,7 @@ return invalid(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( DataValue value)?  applied,TResult Function()?  conflict,TResult Function( List<TypeDiagnostic> diagnostics)?  invalid,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( skir.DataValue value)?  applied,TResult Function()?  conflict,TResult Function( List<EditorDiagnostic> diagnostics)?  invalid,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case AppliedEditorMutation() when applied != null:
 return applied(_that.value);case ConflictingEditorMutation() when conflict != null:
@@ -571,7 +562,7 @@ return invalid(_that.diagnostics);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( DataValue value)  applied,required TResult Function()  conflict,required TResult Function( List<TypeDiagnostic> diagnostics)  invalid,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( skir.DataValue value)  applied,required TResult Function()  conflict,required TResult Function( List<EditorDiagnostic> diagnostics)  invalid,}) {final _that = this;
 switch (_that) {
 case AppliedEditorMutation():
 return applied(_that.value);case ConflictingEditorMutation():
@@ -590,7 +581,7 @@ return invalid(_that.diagnostics);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( DataValue value)?  applied,TResult? Function()?  conflict,TResult? Function( List<TypeDiagnostic> diagnostics)?  invalid,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( skir.DataValue value)?  applied,TResult? Function()?  conflict,TResult? Function( List<EditorDiagnostic> diagnostics)?  invalid,}) {final _that = this;
 switch (_that) {
 case AppliedEditorMutation() when applied != null:
 return applied(_that.value);case ConflictingEditorMutation() when conflict != null:
@@ -608,9 +599,9 @@ return invalid(_that.diagnostics);case _:
 
 class AppliedEditorMutation extends EditorMutationResult {
   const AppliedEditorMutation(this.value): super._();
-  
 
- final  DataValue value;
+
+ final  skir.DataValue value;
 
 /// Create a copy of EditorMutationResult
 /// with the given fields replaced by the non-null parameter values.
@@ -644,11 +635,11 @@ abstract mixin class $AppliedEditorMutationCopyWith<$Res> implements $EditorMuta
   factory $AppliedEditorMutationCopyWith(AppliedEditorMutation value, $Res Function(AppliedEditorMutation) _then) = _$AppliedEditorMutationCopyWithImpl;
 @useResult
 $Res call({
- DataValue value
+ skir.DataValue value
 });
 
 
-$DataValueCopyWith<$Res> get value;
+
 
 }
 /// @nodoc
@@ -664,20 +655,11 @@ class _$AppliedEditorMutationCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') $Res call({Object? value = null,}) {
   return _then(AppliedEditorMutation(
 null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
-as DataValue,
+as skir.DataValue,
   ));
 }
 
-/// Create a copy of EditorMutationResult
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$DataValueCopyWith<$Res> get value {
-  
-  return $DataValueCopyWith<$Res>(_self.value, (value) {
-    return _then(_self.copyWith(value: value));
-  });
-}
+
 }
 
 /// @nodoc
@@ -685,7 +667,7 @@ $DataValueCopyWith<$Res> get value {
 
 class ConflictingEditorMutation extends EditorMutationResult {
   const ConflictingEditorMutation(): super._();
-  
+
 
 
 
@@ -716,11 +698,11 @@ String toString() {
 
 
 class InvalidEditorMutation extends EditorMutationResult {
-  const InvalidEditorMutation( List<TypeDiagnostic> diagnostics): _diagnostics = diagnostics,super._();
-  
+  const InvalidEditorMutation( List<EditorDiagnostic> diagnostics): _diagnostics = diagnostics,super._();
 
- final  List<TypeDiagnostic> _diagnostics;
- List<TypeDiagnostic> get diagnostics {
+
+ final  List<EditorDiagnostic> _diagnostics;
+ List<EditorDiagnostic> get diagnostics {
   if (_diagnostics is EqualUnmodifiableListView) return _diagnostics;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_diagnostics);
@@ -759,7 +741,7 @@ abstract mixin class $InvalidEditorMutationCopyWith<$Res> implements $EditorMuta
   factory $InvalidEditorMutationCopyWith(InvalidEditorMutation value, $Res Function(InvalidEditorMutation) _then) = _$InvalidEditorMutationCopyWithImpl;
 @useResult
 $Res call({
- List<TypeDiagnostic> diagnostics
+ List<EditorDiagnostic> diagnostics
 });
 
 
@@ -779,7 +761,7 @@ class _$InvalidEditorMutationCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') $Res call({Object? diagnostics = null,}) {
   return _then(InvalidEditorMutation(
 null == diagnostics ? _self._diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
-as List<TypeDiagnostic>,
+as List<EditorDiagnostic>,
   ));
 }
 

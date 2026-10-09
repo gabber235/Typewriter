@@ -54,6 +54,50 @@ impl ServiceUpdateValidationError {
 }
 
 // ==============================================================================
+// enum OrganizationServicesChanged
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum OrganizationServicesChanged {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<OrganizationServicesChanged>>),
+    Replace(Vec<crate::skirout::base::service::v1::service::Service>),
+    Update(Box<crate::skirout::base::service::v1::service::Service>),
+    Remove(Box<crate::skirout::base::kernel::v1::record_id::RecordId>),
+}
+
+impl Default for OrganizationServicesChanged {
+    fn default() -> Self {
+        OrganizationServicesChanged::Unknown(None)
+    }
+}
+
+impl OrganizationServicesChanged {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<OrganizationServicesChanged> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<OrganizationServicesChanged>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &OrganizationServicesChanged| match x {
+                        OrganizationServicesChanged::Unknown(_) => 0,
+                        OrganizationServicesChanged::Replace(_) => 1,
+                        OrganizationServicesChanged::Update(_) => 2,
+                        OrganizationServicesChanged::Remove(_) => 3,
+                    },
+                    |u| OrganizationServicesChanged::Unknown(Some(u)),
+                    |x: &OrganizationServicesChanged| match x { OrganizationServicesChanged::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "service/v1/organization.skir",
+                    "OrganizationServicesChanged",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<OrganizationServicesChanged> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(OrganizationServicesChanged::_adapter())
+    }
+}
+
+// ==============================================================================
 // struct WatchOrganizationServicesRequest
 // ==============================================================================
 
@@ -99,9 +143,6 @@ pub enum WatchOrganizationServicesResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<WatchOrganizationServicesResponse>>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
     List(Vec<crate::skirout::base::service::v1::service::Service>),
-    Add(Box<crate::skirout::base::service::v1::service::Service>),
-    Update(Box<crate::skirout::base::service::v1::service::Service>),
-    Remove(Box<crate::skirout::base::kernel::v1::record_id::RecordId>),
 }
 
 impl Default for WatchOrganizationServicesResponse {
@@ -119,9 +160,6 @@ impl WatchOrganizationServicesResponse {
                         WatchOrganizationServicesResponse::Unknown(_) => 0,
                         WatchOrganizationServicesResponse::InternalError(_) => 1,
                         WatchOrganizationServicesResponse::List(_) => 2,
-                        WatchOrganizationServicesResponse::Add(_) => 3,
-                        WatchOrganizationServicesResponse::Update(_) => 4,
-                        WatchOrganizationServicesResponse::Remove(_) => 5,
                     },
                     |u| WatchOrganizationServicesResponse::Unknown(Some(u)),
                     |x: &WatchOrganizationServicesResponse| match x { WatchOrganizationServicesResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -396,6 +434,13 @@ fn initialize_module_serializers() {
                 (*a).finalize();
             }
             unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<OrganizationServicesChanged> = OrganizationServicesChanged::_adapter() as *const _ as *mut _;
+                (*a).add_wrapper_variant("replace", 1, 1, crate::skir_client::Serializer::array(crate::skirout::base::service::v1::service::Service::serializer()), "", |v| OrganizationServicesChanged::Replace(v), |x| match x { OrganizationServicesChanged::Replace(v) => v, _ => unreachable!() });
+                (*a).add_wrapper_variant("update", 2, 2, crate::skirout::base::service::v1::service::Service::serializer(), "", |v| OrganizationServicesChanged::Update(Box::new(v)), |x| match x { OrganizationServicesChanged::Update(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("remove", 3, 3, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |v| OrganizationServicesChanged::Remove(Box::new(v)), |x| match x { OrganizationServicesChanged::Remove(b) => b.as_ref(), _ => unreachable!() });
+                (*a).finalize();
+            }
+            unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<WatchOrganizationServicesRequest> = WatchOrganizationServicesRequest::_adapter() as *const _ as *mut _;
                 (*a).finalize();
             }
@@ -403,9 +448,6 @@ fn initialize_module_serializers() {
                 let a: *mut crate::skir_client::internal::EnumAdapter<WatchOrganizationServicesResponse> = WatchOrganizationServicesResponse::_adapter() as *const _ as *mut _;
                 (*a).add_wrapper_variant("internal_error", 1, 1, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| WatchOrganizationServicesResponse::InternalError(Box::new(v)), |x| match x { WatchOrganizationServicesResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("list", 2, 2, crate::skir_client::Serializer::array(crate::skirout::base::service::v1::service::Service::serializer()), "", |v| WatchOrganizationServicesResponse::List(v), |x| match x { WatchOrganizationServicesResponse::List(v) => v, _ => unreachable!() });
-                (*a).add_wrapper_variant("add", 3, 3, crate::skirout::base::service::v1::service::Service::serializer(), "", |v| WatchOrganizationServicesResponse::Add(Box::new(v)), |x| match x { WatchOrganizationServicesResponse::Add(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("update", 4, 4, crate::skirout::base::service::v1::service::Service::serializer(), "", |v| WatchOrganizationServicesResponse::Update(Box::new(v)), |x| match x { WatchOrganizationServicesResponse::Update(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("remove", 5, 5, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |v| WatchOrganizationServicesResponse::Remove(Box::new(v)), |x| match x { WatchOrganizationServicesResponse::Remove(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {

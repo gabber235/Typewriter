@@ -114,7 +114,7 @@ sealed interface CounterpartChoice {
     @Serializable
     data class New(
         val containing: ValueLocation,
-        val prepared: PreparedCreation,
+        val prepared: PreparedValue,
     ) : CounterpartChoice
 }
 

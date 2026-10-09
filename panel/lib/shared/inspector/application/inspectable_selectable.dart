@@ -1,18 +1,18 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// One backend owned projection that can participate in a shared inspection.
 ///
-/// The legacy type information remains the admission boundary for the existing
-/// editor owners. The portable host builder supplies the independently checked
-/// presentation schema and never derives it from this catalog.
+/// The checked type information is shared by admission and presentation.
 abstract interface class PortableMultiInspectionSurface {
   Object get id;
 
   EditorTarget get target;
 
-  TypeExpression get rootType;
+  skir.TypeUse get rootType;
 
-  TypeCatalog get typeCatalog;
+  CheckedEditorCatalog get catalog;
 
   bool isCompatibleWith(PortableMultiInspectionSurface other);
 

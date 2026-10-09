@@ -2,6 +2,25 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+extension PreparedRecordContent on skir.PreparedValue {
+  skir.AuthoringRecord get recordContent => switch (content) {
+    skir.PreparedContent_recordWrapper(:final value) => value,
+    _ => throw StateError("Record preparation returned scalar content"),
+  };
+}
+
+extension RecordPreparationTarget on skir.ValuePreparationRequest {
+  skir.TypeSelection get recordSelection => switch (target) {
+    skir.PreparationTarget_recordWrapper(:final value) => value,
+    _ => throw StateError("Record operation received a scalar preparation"),
+  };
+
+  List<skir.FieldValue> get recordSuppliedFields => switch (suppliedValue) {
+    skir.DataValue_recordWrapper(:final value) => value.fields.toList(),
+    _ => const [],
+  };
+}
+
 abstract interface class PortableAuthoringView {
   skir.CatalogGeneration get generation;
 
@@ -39,8 +58,8 @@ abstract interface class PortableAuthoringEdit
     skir.ValueLocation location,
     skir.ItemId? after,
     skir.ItemId item,
-    skir.InitializationRequest request,
-    skir.PreparedCreation prepared,
+    skir.ValuePreparationRequest request,
+    skir.PreparedValue prepared,
   );
 
   PortablePathResult<skir.AuthoringRecord> remove(
@@ -61,8 +80,8 @@ abstract interface class PortableAuthoringEdit
 
   PortablePathResult<skir.AuthoringRecord> applyPreparedRecord(
     skir.ValueLocation location,
-    skir.InitializationRequest request,
-    skir.PreparedCreation prepared,
+    skir.ValuePreparationRequest request,
+    skir.PreparedValue prepared,
   );
 
   bool stageExpressionEdit(

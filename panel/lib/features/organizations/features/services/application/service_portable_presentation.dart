@@ -74,11 +74,12 @@ EditorSourcePresentationBinding _serviceNamePresentationBinding(
   id: _serviceNameBinding,
   use: _portableTextType,
   owner: identityOwner,
-  read: (_) =>
-      switch (identityOwner.value(DataPath.root.field("name")).valueOrNull) {
-        StringValue(:final value) => skir.DataValue.wrapStringValue(value),
-        _ => skir.DataValue.unfilled,
-      },
+  read: (_) {
+    final value = identityOwner.value(editorRootPath.field("name")).valueOrNull;
+    return value is skir.DataValue_stringValueWrapper
+        ? value
+        : skir.DataValue.unfilled;
+  },
   write: (path, value) {
     if (path.segments.isNotEmpty) {
       return const PortablePresentationWriteResult.rejected(
@@ -87,7 +88,10 @@ EditorSourcePresentationBinding _serviceNamePresentationBinding(
     }
     if (value case skir.DataValue_stringValueWrapper(:final value)) {
       return identityOwner
-          .update(DataPath.root.field("name"), StringValue(value))
+          .update(
+            editorRootPath.field("name"),
+            skir.DataValue.wrapStringValue(value),
+          )
           .portablePresentationResult;
     }
     return const PortablePresentationWriteResult.rejected(

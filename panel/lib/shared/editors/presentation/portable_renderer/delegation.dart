@@ -67,11 +67,17 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
       final actual? => skir.TypeSelection.wrapComplete(actual),
       null => null,
     };
-    target ??= switch ((childScope.authoring, childScope.resource)) {
-      (final draft?, final resource?) =>
-        draft.resource(resource)?.configuration,
+    final host = childScope.host;
+    final resource = childScope.resource;
+    final projectionHost = switch (host) {
+      PortableCollectionProjectionHost value => value,
       _ => null,
     };
+    if (projectionHost != null && resource != null) {
+      target ??= projectionHost
+          .projectResource(resource, context: childScope.invocation)
+          ?.configuration;
+    }
     final material = target == null
         ? null
         : catalog.presentationMaterial(invocation.presentationId, target);
@@ -245,9 +251,16 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
     final actual = value.authoredActualType;
     if (actual != null) return skir.TypeSelection.wrapComplete(actual);
     final resource = childScope.resource;
-    return resource == null
+    final host = childScope.host;
+    final projectionHost = switch (host) {
+      PortableCollectionProjectionHost value => value,
+      _ => null,
+    };
+    return resource == null || projectionHost == null
         ? null
-        : childScope.authoring?.resource(resource)?.configuration;
+        : projectionHost
+              .projectResource(resource, context: childScope.invocation)
+              ?.configuration;
   }
 
   skir.TypeUse? _typeUseForSelection(skir.TypeSelection? selection) =>

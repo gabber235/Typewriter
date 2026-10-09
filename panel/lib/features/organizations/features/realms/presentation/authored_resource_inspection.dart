@@ -86,7 +86,32 @@ final class _AuthoredResourceInspectionState
               resource: widget.resource,
               requested: requested,
             ),
-            commit: widget.commands.commitTypeArguments,
+            commit: (preview) async {
+              final prepared = await widget.commands.prepareTypeArguments(
+                preview,
+              );
+              return switch (prepared) {
+                skir.PreparedEditResult_preparedWrapper(:final value) =>
+                  _binding.stagePrepared(
+                    label: "Change type arguments",
+                    edit: value.edit,
+                  ),
+                skir.PreparedEditResult_needsInputWrapper() =>
+                  const AuthoringEditResult.rejected(
+                    "The type change needs more input",
+                    null,
+                  ),
+                skir.PreparedEditResult_rejectedWrapper() =>
+                  const AuthoringEditResult.rejected(
+                    "The Realm rejected the type change",
+                    null,
+                  ),
+                _ => const AuthoringEditResult.rejected(
+                  "The type change result is unavailable",
+                  null,
+                ),
+              };
+            },
             enabled: !relatedWork && !_binding.saving,
             disabledMessage: relatedWork
                 ? "Save or discard local edits before changing type arguments"
@@ -179,7 +204,7 @@ final class _AuthoredResourceInspectionState
       _binding.reportStatus(message);
     },
     openResource: widget.openResource,
-    prepareCreation: widget.commands.prepareCreation,
+    prepareValue: widget.commands.prepareValue,
     enabled: enabled,
   );
 

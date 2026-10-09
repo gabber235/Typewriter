@@ -898,7 +898,6 @@ final class WatchOrganizationMembersRequest_mutable
 ///     case WatchOrganizationMembersResponse_unknown(): { ... }
 ///     case WatchOrganizationMembersResponse_internalError(:var value): { ... }
 ///     case WatchOrganizationMembersResponse_snapshot(:var value): { ... }
-///     case WatchOrganizationMembersResponse_changed(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -933,24 +932,6 @@ sealed class WatchOrganizationMembersResponse {
     OrganizationMembersSnapshot(sequence: sequence, values: values),
   );
 
-  /// Create a 'changed' variant wrapping around the given value.
-  factory WatchOrganizationMembersResponse.wrapChanged(
-    OrganizationMembersChanged value,
-  ) => WatchOrganizationMembersResponse_changedWrapper._(value);
-
-  /// Same as `wrapChanged(OrganizationMembersChanged(...))`.
-  factory WatchOrganizationMembersResponse.createChanged({
-    required _core.int sequence,
-    required _core.String operationId,
-    required _core.Iterable<OrganizationMembersChange> changes,
-  }) => WatchOrganizationMembersResponse.wrapChanged(
-    OrganizationMembersChanged(
-      sequence: sequence,
-      operationId: operationId,
-      changes: changes,
-    ),
-  );
-
   /// Returns the kind of variant held by this WatchOrganizationMembersResponse.
   WatchOrganizationMembersResponse_kind get kind;
 
@@ -978,16 +959,6 @@ sealed class WatchOrganizationMembersResponse {
         (it) => it.value,
         ordinal: WatchOrganizationMembersResponse_kind.snapshotWrapper._ordinal,
       );
-      _serializerBuilder.addWrapperVariant(
-        3,
-        "changed",
-        "wrapChanged",
-        OrganizationMembersChanged.serializer,
-        "",
-        WatchOrganizationMembersResponse_changedWrapper._,
-        (it) => it.value,
-        ordinal: WatchOrganizationMembersResponse_kind.changedWrapper._ordinal,
-      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -1011,8 +982,7 @@ sealed class WatchOrganizationMembersResponse {
 enum WatchOrganizationMembersResponse_kind {
   unknown(0),
   internalErrorWrapper(1),
-  snapshotWrapper(2),
-  changedWrapper(3);
+  snapshotWrapper(2);
 
   final _core.int _ordinal;
 
@@ -1083,17 +1053,6 @@ final class WatchOrganizationMembersResponse_snapshotWrapper
   @_core.override
   WatchOrganizationMembersResponse_kind get kind =>
       WatchOrganizationMembersResponse_kind.snapshotWrapper;
-}
-
-final class WatchOrganizationMembersResponse_changedWrapper
-    extends _WatchOrganizationMembersResponse_wrapper {
-  final OrganizationMembersChanged value;
-
-  WatchOrganizationMembersResponse_changedWrapper._(this.value);
-
-  @_core.override
-  WatchOrganizationMembersResponse_kind get kind =>
-      WatchOrganizationMembersResponse_kind.changedWrapper;
 }
 
 // -----------------------------------------------------------------------------

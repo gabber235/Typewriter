@@ -17,13 +17,14 @@ void main() {
       );
       final transport = ScriptedAuthoringTransport(AsyncData(document));
       addTearDown(transport.dispose);
-      skir.InitializationRequest? preparedRequest;
+      skir.ValuePreparationRequest? preparedRequest;
       CreatedAuthoringResource? created;
+      AuthoringWorkspace? workspace;
       final commands = AuthoredResourceCommands(
         previewTypeArguments: ({required resource, required requested}) async =>
             throw UnimplementedError(),
-        commitTypeArguments: (_) async => throw UnimplementedError(),
-        prepareCreation: (request) async {
+        prepareTypeArguments: (_) async => throw UnimplementedError(),
+        prepareValue: (request) async {
           preparedRequest = request;
           return fixture.prepared;
         },
@@ -47,6 +48,7 @@ void main() {
           builder: (context, ref, _) => Scaffold(
             body: FilledButton(
               onPressed: () async {
+                workspace = ref.readAuthoringWorkspace();
                 created = await ref
                     .read(resourceCreationProvider)
                     .create(context: context, request: fixture.request);
@@ -59,22 +61,15 @@ void main() {
       await tester.tap(find.text("Create"));
       await tester.pump();
       expect(find.byType(Dialog), findsNothing);
-      expect(preparedRequest?.type, fixture.pending);
+      expect(preparedRequest?.recordSelection, fixture.pending);
       expect(created?.id, fixture.request.id);
       expect(created?.content.configuration, fixture.pending);
-      final scope = AuthoringScope(
-        organizationId: fixture.organization,
-        realmId: fixture.realm,
-      );
-      final workspace = tester.container().read(
-        authoringWorkspaceProvider(scope),
-      );
       expect(
-        workspace.document.entry(fixture.request.id)?.definition,
+        workspace!.document.entry(fixture.request.id)?.definition,
         fixture.request.definition,
       );
       expect(
-        workspace.document.initializationFindings.single.code,
+        workspace!.document.initializationFindings.single.code,
         "dependent_unfilled",
       );
       expect(transport.requests, isEmpty);
@@ -114,7 +109,7 @@ final class _CreationFixture {
   final CheckedEditorCatalog catalog;
   final skir.TypeSelection pending;
   final ResourceCreationRequest request;
-  final skir.PreparedCreation prepared;
+  final skir.PreparedValue prepared;
 }
 
 _CreationFixture _fixture() {
@@ -173,8 +168,10 @@ _CreationFixture _fixture() {
     recommendations: const [],
     roleFallbacks: const [],
   );
-  final prepared = skir.PreparedCreation(
-    record: skir.AuthoringRecord(configuration: pending, fields: const []),
+  final prepared = skir.PreparedValue(
+    content: skir.PreparedContent.wrapRecord(
+      skir.AuthoringRecord(configuration: pending, fields: const []),
+    ),
     findings: [
       skir.InitializationDiagnostic(
         field: null,

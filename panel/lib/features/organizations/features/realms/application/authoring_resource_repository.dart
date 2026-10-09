@@ -142,28 +142,22 @@ final class AuthoringResourceRepository {
     rejectionMessage: (response) => response.rejectionMessage,
   );
 
-  PreparedCommit<skir.CommitTypeArgumentChangeResponse> prepareTypeCommit(
+  Future<skir.PreparedEditResult> prepareTypeArgumentChange(
     skir.TypeArgumentChangePreview preview,
-  ) => session.transport.prepare(
-    address.request("editor.authoring.type.commit"),
-    skir.TypeArgumentChangePreview.serializer.toBytes(preview),
-    skir.CommitTypeArgumentChangeResponse.serializer,
-    submissionId: uuid.v4(),
-    replay: SubmissionReplay.unsupported,
-    label: "Apply type argument repair",
-    resources: {(organization, realm, preview.resource)},
-    classify: (response) => switch (response) {
-      skir.CommitTypeArgumentChangeResponse_resultWrapper(
-        value: skir.CommitResult.committed,
-      ) =>
-        MutationResponseDisposition.confirmed,
-      skir.CommitTypeArgumentChangeResponse_internalErrorWrapper() ||
-      skir.CommitTypeArgumentChangeResponse_unknown() =>
-        MutationResponseDisposition.uncertain,
-      _ => MutationResponseDisposition.rejected,
-    },
-    rejectionMessage: (response) => response.rejectionMessage,
-  );
+  ) async {
+    session.checkActive();
+    final response = await session.transport.request(
+      address.request("editor.authoring.type.commit"),
+      skir.TypeArgumentChangePreview.serializer.toBytes(preview),
+      skir.PrepareTypeArgumentChangeResponse.serializer,
+    );
+    session.checkActive();
+    return switch (response) {
+      skir.PrepareTypeArgumentChangeResponse_resultWrapper(:final value) =>
+        value,
+      _ => throw ApiException.internalServerError(),
+    };
+  }
 
   void _acceptAuthoringMessage(NatsMessage message) {
     if (_isDisposed) return;
@@ -202,15 +196,6 @@ extension CommitPreparedEditResponseMessaging
     on skir.CommitPreparedEditResponse {
   String get rejectionMessage => switch (this) {
     skir.CommitPreparedEditResponse_resultWrapper(:final value) =>
-      value.rejectionMessage,
-    _ => "The operation was rejected",
-  };
-}
-
-extension CommitTypeArgumentChangeResponseMessaging
-    on skir.CommitTypeArgumentChangeResponse {
-  String get rejectionMessage => switch (this) {
-    skir.CommitTypeArgumentChangeResponse_resultWrapper(:final value) =>
       value.rejectionMessage,
     _ => "The operation was rejected",
   };

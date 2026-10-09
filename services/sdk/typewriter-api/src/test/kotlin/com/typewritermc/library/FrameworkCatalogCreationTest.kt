@@ -5,6 +5,9 @@ import com.typewritermc.authoring.GraphPlacementDefinition
 import com.typewritermc.authoring.InitializationCatalogPlanner
 import com.typewritermc.authoring.InitializationRequest
 import com.typewritermc.authoring.InitializationRequestId
+import com.typewritermc.authoring.PreparationTarget
+import com.typewritermc.authoring.PreparedContent
+import com.typewritermc.authoring.PreparedValue
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.ContributionKey
@@ -524,10 +527,13 @@ private fun request(
 ) = InitializationRequest(
     id = InitializationRequestId(id),
     catalog = generation,
-    type = TypeSelection.Complete(use),
-    supplied = emptyMap(),
+    target = PreparationTarget.Record(TypeSelection.Complete(use)),
+    supplied = DataValue.Record(emptyMap()),
     intentHash = "framework creation",
 )
+
+private val PreparedValue.record
+    get() = (content as PreparedContent.Record).record
 
 private fun origin(name: String): ProviderOrigin =
     ProviderOrigin(

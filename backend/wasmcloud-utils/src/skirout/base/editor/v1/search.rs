@@ -659,7 +659,7 @@ pub fn watch_realm_presentation_search_method() -> &'static crate::skir_client::
     static METHOD: std::sync::LazyLock<crate::skir_client::Method<RealmPresentationSearchRequest, RealmPresentationSearchUpdate>> = std::sync::LazyLock::new(|| {
         crate::skir_client::Method {
             name: "WatchRealmPresentationSearch".to_string(),
-            number: 910003_i64,
+            number: 919103_i64,
             request_serializer: RealmPresentationSearchRequest::serializer(),
             response_serializer: RealmPresentationSearchUpdate::serializer(),
             doc: "".to_string(),
@@ -672,7 +672,7 @@ pub fn cancel_realm_presentation_search_method() -> &'static crate::skir_client:
     static METHOD: std::sync::LazyLock<crate::skir_client::Method<CancelRealmPresentationSearchRequest, CancelRealmPresentationSearchResult>> = std::sync::LazyLock::new(|| {
         crate::skir_client::Method {
             name: "CancelRealmPresentationSearch".to_string(),
-            number: 919103_i64,
+            number: 919104_i64,
             request_serializer: CancelRealmPresentationSearchRequest::serializer(),
             response_serializer: CancelRealmPresentationSearchResult::serializer(),
             doc: "".to_string(),

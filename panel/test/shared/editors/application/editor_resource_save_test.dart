@@ -1,27 +1,33 @@
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
+
+import "../../../support/editor_fixture.dart";
 
 const _key = EditorResourceKey(
   scope: "original organization",
   identity: "resource",
 );
-final _title = DataPath.root.field("title");
-RecordValue _value(String title) => RecordValue({"title": StringValue(title)});
+final _title = editorRootPath.field("title");
+skir.DataValue _value(String title) =>
+    recordEditorValue({"title": skir.DataValue.wrapStringValue(title)});
+
+final _fieldTypes = {
+  "title": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+};
 EditorSnapshot _snapshot({String title = "Original", int revision = 1}) =>
     FakeEditorSnapshot(
-      EditorDocument(
-        rootType: RecordType(
-          fields: const {"title": TypeField(name: "title", type: StringType())},
-        ),
-        typeCatalog: const TypeCatalog([]),
-        confirmedValue: _value(title),
-        revision: revision,
+      recordEditorDocument(
+        {"title": skir.DataValue.wrapStringValue(title)},
+        _fieldTypes,
+        revision,
       ),
       validation: acceptTestEditorMutation,
     );
 TransactionalEditorSource _draft(
-  LocalWorkSession workspace,
+  ScopedWorkSession workspace,
   EditableResource resource,
 ) {
   final source = workspace.editor(
@@ -34,7 +40,7 @@ TransactionalEditorSource _draft(
     ),
   ) as TransactionalEditorSource;
   workspace.retain(resource.key);
-  source.update(_title, const StringValue("Draft"));
+  source.update(_title, skir.DataValue.wrapStringValue("Draft"));
   return source;
 }
 
@@ -42,7 +48,7 @@ void main() {
   test(
     "detached save waits for its reservation before reading and capturing",
     () async {
-      final workspace = LocalWorkSession();
+      final workspace = ScopedWorkSession();
       addTearDown(workspace.dispose);
       var reads = 0;
       final resource = FakeEditableResource(
@@ -76,7 +82,7 @@ void main() {
   );
 
   test("refresh conflicts preserve the draft and prevent sending", () async {
-    final workspace = LocalWorkSession();
+    final workspace = ScopedWorkSession();
     addTearDown(workspace.dispose);
     var sends = 0;
     final resource = FakeEditableResource(
@@ -91,14 +97,17 @@ void main() {
     expect(await source.flush(), isA<MutationUnavailable>());
 
     expect(sends, 0);
-    expect(source.value(_title).valueOrNull, const StringValue("Draft"));
+    expect(
+      source.value(_title).valueOrNull,
+      skir.DataValue.wrapStringValue("Draft"),
+    );
     expect(source.document.confirmedValue, _value("Remote"));
   });
 
   test(
     "refresh failure releases the reservation and retains a retryable draft",
     () async {
-      final workspace = LocalWorkSession();
+      final workspace = ScopedWorkSession();
       addTearDown(workspace.dispose);
       var reads = 0;
       final resource = FakeEditableResource(
@@ -121,7 +130,7 @@ void main() {
   );
 
   test("confirmed deletion blocks submission", () async {
-    final workspace = LocalWorkSession();
+    final workspace = ScopedWorkSession();
     addTearDown(workspace.dispose);
     final resource = FakeEditableResource(
       key: _key,
@@ -131,13 +140,13 @@ void main() {
     final source = _draft(workspace, resource);
     expect(await source.flush(), isA<MutationUnavailable>());
     expect(
-      source.saveState(DataPath.root).phase,
+      source.saveState(editorRootPath).phase,
       EditorSavePhase.deletedElsewhere,
     );
   });
 
   test("workspace disposal during refresh prevents submission", () async {
-    final workspace = LocalWorkSession();
+    final workspace = ScopedWorkSession();
     final ready = Completer<EditorSnapshot?>();
     final started = Completer<void>();
     final resource = FakeEditableResource(
@@ -161,7 +170,7 @@ void main() {
   test(
     "uncertain delivery retains the reservation and replays without refresh",
     () async {
-      final workspace = LocalWorkSession();
+      final workspace = ScopedWorkSession();
       addTearDown(workspace.dispose);
       final resource = _UncertainResource();
       final source = _draft(workspace, resource);
@@ -186,7 +195,7 @@ void main() {
   );
 
   test("concurrent flushes share one refresh and submission", () async {
-    final workspace = LocalWorkSession();
+    final workspace = ScopedWorkSession();
     addTearDown(workspace.dispose);
     final ready = Completer<EditorSnapshot?>();
     var reads = 0;

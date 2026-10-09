@@ -37,7 +37,7 @@ extension _EditorPersistence on TransactionalEditorSource {
 
   /// Serializes one captured persistence attempt and resumes autosave after it
   /// settles.
-  Future<TypedMutationResult> _runCommit(Set<DataPath> selected) async {
+  Future<TypedMutationResult> _runCommit(Set<skir.ValuePath> selected) async {
     final commit = _persist(selected);
     _activeCommit = commit;
     try {
@@ -57,7 +57,7 @@ extension _EditorPersistence on TransactionalEditorSource {
   /// revision, while validation and availability failures remain typed and do
   /// not advance canonical state. The generation check prevents asynchronous
   /// results from a replaced or disposed owner from being accepted.
-  Future<TypedMutationResult> _persist(Set<DataPath> paths) async {
+  Future<TypedMutationResult> _persist(Set<skir.ValuePath> paths) async {
     if (resource != null) return _persistResource(paths);
 
     var attempts = 0;
@@ -133,7 +133,7 @@ extension _EditorPersistence on TransactionalEditorSource {
     }
   }
 
-  List<TypeDiagnostic> _saveDiagnostics() {
+  List<EditorDiagnostic> _saveDiagnostics() {
     return draftDiagnostics;
   }
 
@@ -195,7 +195,7 @@ extension _EditorPersistence on TransactionalEditorSource {
   }
 
   Future<bool> _waitForRetry(
-    Set<DataPath> paths,
+    Set<skir.ValuePath> paths,
     int attempts, {
     required int expectedVersion,
     required int observedVersion,
@@ -238,24 +238,27 @@ extension _EditorPersistence on TransactionalEditorSource {
   /// Autosave sends selected local paths over the canonical base. Apply
   /// resource mode sends the complete draft, so its consistency boundary is
   /// the whole resource.
-  DataValue _commitValue(Set<DataPath> paths) {
+  skir.DataValue _commitValue(Set<skir.ValuePath> paths) {
     if (commitPolicy == EditorCommitPolicy.applyResource) return _draft;
     var value = _document.confirmedValue;
     for (final path in paths) {
-      final local = path.read(_draft).valueOrNull;
+      final local = _draft.editorValueAt(path);
       if (local != null) {
-        value = path.replace(value, local).valueOrNull ?? value;
+        value = value.replacingEditorValue(path, local) ?? value;
       }
     }
     return value;
   }
 
-  void _failPaths(Set<DataPath> paths, List<TypeDiagnostic> diagnostics) {
+  void _failPaths(
+    Set<skir.ValuePath> paths,
+    List<EditorDiagnostic> diagnostics,
+  ) {
     _states.fail(paths, diagnostics);
     _notify();
   }
 
-  List<_PendingStructuralMutation> _mutationsFor(Set<DataPath> paths) => [
+  List<_PendingStructuralMutation> _mutationsFor(Set<skir.ValuePath> paths) => [
     for (final pending in _pendingMutations)
       if (paths.any((path) => _pathsOverlap(path, pending.mutation.path)))
         pending,

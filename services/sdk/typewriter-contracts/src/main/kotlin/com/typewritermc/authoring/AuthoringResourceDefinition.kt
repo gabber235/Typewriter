@@ -2,6 +2,7 @@ package com.typewritermc.authoring
 
 import com.typewritermc.types.Resource
 import com.typewritermc.types.TypeDefinitionId
+import com.typewritermc.types.catalog.CheckedCatalog
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
@@ -25,6 +26,21 @@ data class AuthoringResourceDefinition(
 ) {
     init {
         require(navigationHandler.isNotBlank()) { "Resource navigation handlers must not be blank." }
+    }
+}
+
+fun Collection<AuthoringResourceDefinition>.definitionFor(
+    selection: TypeSelection,
+    catalog: CheckedCatalog,
+): AuthoringResourceDefinition {
+    val definition =
+        when (selection) {
+            is TypeSelection.Complete -> selection.use.definition
+            is TypeSelection.Pending -> selection.definition
+        }
+    val candidates = filter { it.root == definition || catalog.isNominalSubtype(definition, it.root) }
+    return requireNotNull(candidates.singleOrNull()) {
+        "Authored type $definition must belong to exactly one resource definition."
     }
 }
 

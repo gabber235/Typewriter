@@ -8,6 +8,7 @@ use wasmcloud_utils::skir::base::service::v1::topology::{
     ConfigureServiceHostResponse, EngineRealmSelection, EngineRealmSelection_ExistingRealm,
     EngineTarget, GetServiceMessagingScopeRequest, GetServiceMessagingScopeResponse,
     HostExecutionConfiguration, HostedEngineConfiguration, HostedRealmConfiguration,
+    OrganizationTopologyChanged,
     RegisterServiceHostRequest, RegisterServiceHostResponse, ReportHostExecutionRequest,
     ReportHostExecutionResponse, SupportedEngine, WatchHostExecutionRequest,
     WatchHostExecutionResponse, WatchOrganizationTopologyRequest,
@@ -155,8 +156,8 @@ async fn configure_creates_local_realm_and_engine_transactionally(
     context.messaging_mock()?.expect_publish(ORGANIZATION_TOPOLOGY_SUBJECT)
         .body_matches(|bytes| {
             matches!(
-                WatchOrganizationTopologyResponse::serializer().from_bytes(bytes, wasmcloud_utils::skir_client::UnrecognizedValues::Drop),
-                Ok(WatchOrganizationTopologyResponse::ConfigurationChanged(change))
+                OrganizationTopologyChanged::serializer().from_bytes(bytes, wasmcloud_utils::skir_client::UnrecognizedValues::Drop),
+                Ok(OrganizationTopologyChanged::ConfigurationChanged(change))
                     if change.host.revision == 2 && change.realm.is_some() && change.engine.is_some()
                         && change.removed_resources.is_empty()
             )

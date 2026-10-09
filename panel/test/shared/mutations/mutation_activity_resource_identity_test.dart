@@ -1,4 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
@@ -10,18 +12,25 @@ void main() {
   ) async {
     const key = EditorResourceKey(scope: "test", identity: "uncertain");
     final document = EditorDocument(
-      rootType: RecordType(
-        fields: const {"name": TypeField(name: "name", type: StringType())},
+      rootType: skir.TypeUse.wrapNamed(
+        skir.NamedTypeUse(definition: _recordType, arguments: const []),
       ),
-      typeCatalog: const TypeCatalog([]),
-      confirmedValue: RecordValue({"name": StringValue("canonical")}),
+      catalog: _recordCatalog,
+      confirmedValue: skir.DataValue.createRecord(
+        fields: [
+          skir.FieldValue(
+            name: "name",
+            value: skir.DataValue.wrapStringValue("canonical"),
+          ),
+        ],
+      ),
       revision: 1,
     );
     final snapshot = FakeEditorSnapshot(
       document,
       validation: acceptTestEditorMutation,
     );
-    final workspace = LocalWorkSession();
+    final workspace = ScopedWorkSession();
     addTearDown(workspace.dispose);
     final source = workspace.editor(
       ResourceEditorTarget(
@@ -34,15 +43,15 @@ void main() {
     );
     workspace.retain(key);
     source.update(
-      DataPath.root.field("name"),
-      const StringValue("local draft"),
+      editorRootPath.field("name"),
+      skir.DataValue.wrapStringValue("local draft"),
     );
     expect(await source.flush(), isA<MutationUncertain>());
 
     await tester.pumpTestApp(
       child: Scaffold(
         appBar: AppBar(
-          actions: [LocalWorkSessionActivityView(controller: workspace)],
+          actions: [ScopedWorkSessionActivityView(controller: workspace)],
         ),
       ),
     );
@@ -56,6 +65,57 @@ void main() {
     expect(find.text("Hide details"), findsNothing);
   });
 }
+
+final _recordType = skir.TypeDefinitionId(
+  typeId: skir.TypeId.createQualified(namespace: "test", name: "Resource"),
+  revision: 1,
+);
+final _recordField = skir.EffectiveFieldTemplate(
+  key: "name",
+  owner: skir.FieldOwner(definition: _recordType, name: "name"),
+  type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+  rules: const [],
+);
+final _recordCatalog = CheckedEditorCatalog(
+  skir.EditorCatalogWireSnapshot(
+    generation: skir.CatalogGeneration(value: "test"),
+    types: [
+      skir.PublishedType(
+        display: null,
+        definition: skir.TypeDefinition(
+          id: _recordType,
+          parameters: const [],
+          representation: skir.RepresentationTemplate.createRecord(
+            fields: [
+              skir.FieldDeclaration(
+                owner: _recordField.owner,
+                type: _recordField.type,
+                overrides: const [],
+                hasConstructorDefault: false,
+              ),
+            ],
+            abstract_: false,
+          ),
+          parents: const [],
+        ),
+        status: skir.DeclarationStatus.ready,
+        effectiveFields: [_recordField],
+        ancestorTemplates: const [],
+      ),
+    ],
+    relations: const [],
+    resourceDefinitions: const [],
+    presentations: const [],
+    presentationMaterials: const [],
+    configuration: const [],
+    diagnostics: const [],
+    initialization: const [],
+    endpointBindings: const [],
+    capabilities: const [],
+    recommendations: const [],
+    roleFallbacks: const [],
+  ),
+);
 
 final class _UncertainResource implements EditableResource {
   _UncertainResource(this.key, this.snapshot);

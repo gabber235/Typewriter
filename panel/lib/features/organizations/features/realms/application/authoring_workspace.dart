@@ -44,6 +44,7 @@ final class AuthoringWorkspace extends ChangeNotifier {
   var _closed = false;
   var _preparations = 0;
   bool get hasPendingWork => _preparations != 0 || _operations.isNotEmpty;
+  bool get isPreparing => _preparations != 0;
   Future<void>? _saving;
   AuthoringDocument? _deferredConfirmed;
 
@@ -86,10 +87,11 @@ final class AuthoringWorkspace extends ChangeNotifier {
     if (owner.phase.blocked) {
       return AuthoringEditResult.rejected(owner.phase.message, null);
     }
-    final branch = AuthoringEdit.fromDocument(from ?? document);
+    final observation = _capturePreparation(from);
+    final branch = AuthoringEdit.fromDocument(observation.document);
     try {
       apply(branch);
-      return _stage(id, label, branch);
+      return _stage(id, label, observation, branch);
     } on Object catch (error) {
       return AuthoringEditResult.rejected(error.toString(), error);
     } finally {
@@ -117,7 +119,8 @@ final class AuthoringWorkspace extends ChangeNotifier {
     if (owner.phase.blocked) {
       return AuthoringEditResult.rejected(owner.phase.message, null);
     }
-    final branch = AuthoringEdit.fromDocument(from ?? document);
+    final observation = _capturePreparation(from);
+    final branch = AuthoringEdit.fromDocument(observation.document);
     _preparations++;
     notifyListeners();
     try {
@@ -128,7 +131,7 @@ final class AuthoringWorkspace extends ChangeNotifier {
           null,
         );
       }
-      return _stage(id, label, branch);
+      return _stage(id, label, observation, branch);
     } on Object catch (error) {
       return AuthoringEditResult.rejected(error.toString(), error);
     } finally {
@@ -138,9 +141,20 @@ final class AuthoringWorkspace extends ChangeNotifier {
     }
   }
 
+  AuthoringEditResult stagePrepared({
+    required AuthoringGroupId group,
+    required String label,
+    required skir.PreparedEdit edit,
+  }) => this.edit(
+    group: group,
+    label: label,
+    apply: (branch) => branch.applyPrepared(edit),
+  );
+
   AuthoringEditResult _stage(
     AuthoringGroupId id,
     String label,
+    PreparationObservation observation,
     AuthoringEdit branch,
   ) {
     if (_closed) {
@@ -149,7 +163,8 @@ final class AuthoringWorkspace extends ChangeNotifier {
         null,
       );
     }
-    if (branch.generation != document.generation ||
+    if (observation.generation != branch.generation ||
+        branch.generation != document.generation ||
         branch.generation != _state.confirmed?.generation) {
       return const AuthoringEditResult.rejected(
         "The editor catalog changed",
@@ -192,6 +207,14 @@ final class AuthoringWorkspace extends ChangeNotifier {
       _schedule(id);
     }
     return AuthoringEditResult.staged(id);
+  }
+
+  PreparationObservation _capturePreparation(AuthoringDocument? requested) {
+    final captured = requested ?? document;
+    return PreparationObservation(
+      generation: captured.generation,
+      document: captured,
+    );
   }
 
   bool _dependsOn(
@@ -525,7 +548,7 @@ final class AuthoringWorkspace extends ChangeNotifier {
 
   /// Refreshes known saved batches without resubmitting uncertain operations.
   Future<void> refreshConfirmed() async {
-    if (_saving != null) return;
+    if (_closed || _saving != null) return;
     late final AuthoringDocument confirmed;
     try {
       confirmed = await transport.fetchConfirmed();
@@ -552,6 +575,38 @@ final class AuthoringWorkspace extends ChangeNotifier {
         _schedule(group.id);
       }
     }
+  }
+
+  bool canSave(AuthoringGroupId id) {
+    final group = _groups[id];
+    return !_closed &&
+        group != null &&
+        (group.phase is AuthoringGroupDirty ||
+            group.phase is AuthoringGroupAwaitingDependency) &&
+        _operations.any((operation) => operation.group == id);
+  }
+
+  bool canRetry(AuthoringGroupId id) {
+    final phase = _groups[id]?.phase;
+    return !_closed &&
+        (phase is AuthoringGroupRejected ||
+            phase is AuthoringGroupCommittedAwaitingRefresh);
+  }
+
+  /// Recovers an explicitly rejected batch or refreshes a known committed batch.
+  /// An uncertain request retains its frozen identity and is never resubmitted here.
+  Future<void> retry(AuthoringGroupId id) async {
+    if (!canRetry(id)) {
+      throw StateError("This authoring work cannot be retried");
+    }
+    final group = _groups[id]!;
+    if (group.phase is AuthoringGroupCommittedAwaitingRefresh) {
+      await refreshConfirmed();
+      return;
+    }
+    group.phase = const AuthoringGroupPhase.dirty();
+    _rebuild();
+    if (canSave(id)) await save(id);
   }
 
   bool canDiscard(AuthoringGroupId id) {
@@ -629,6 +684,16 @@ final class _AuthoringOperation {
   };
 }
 
+final class PreparationObservation {
+  const PreparationObservation({
+    required this.generation,
+    required this.document,
+  });
+
+  final skir.CatalogGeneration generation;
+  final AuthoringDocument document;
+}
+
 @riverpod
 AsyncValue<AuthoringDocument> confirmedAuthoringDocument(
   Ref ref,
@@ -645,14 +710,16 @@ AsyncValue<AuthoringDocument> confirmedAuthoringDocument(
   return const AsyncLoading();
 }
 
-@riverpod
+/// Supplies external settlement without replacing workspace ownership.
+@Riverpod(keepAlive: true)
 AuthoringWorkspaceTransport authoringWorkspaceTransport(
   Ref ref,
   AuthoringScope scope,
-) => _SessionWorkspaceTransport(ref, scope);
+) => _OwnedAuthoringWorkspaceTransport(ref, scope);
 
-final class _SessionWorkspaceTransport implements AuthoringWorkspaceTransport {
-  _SessionWorkspaceTransport(this.ref, this.scope);
+final class _OwnedAuthoringWorkspaceTransport
+    implements AuthoringWorkspaceTransport {
+  _OwnedAuthoringWorkspaceTransport(this.ref, this.scope);
   final Ref ref;
   final AuthoringScope scope;
   AuthoringSession get session => ref.read(
@@ -674,34 +741,14 @@ final class _SessionWorkspaceTransport implements AuthoringWorkspaceTransport {
 
 @riverpod
 AuthoringWorkspace authoringWorkspace(Ref ref, AuthoringScope scope) {
-  ref.watch(localWorkScopeProvider);
-  final workspace = AuthoringWorkspace(
-    transport: ref.watch(authoringWorkspaceTransportProvider(scope)),
-  );
-  ref.listen(confirmedAuthoringDocumentProvider(scope), (_, next) {
-    if (next.value case final document?) {
-      workspace.acceptConfirmed(document);
-    } else if (next.error case final error?) {
-      workspace.acceptFailure(error);
-    }
-  }, fireImmediately: true);
-  KeepAliveLink? pending;
-  void updated() {
-    if (workspace.hasPendingWork) {
-      pending ??= ref.keepAlive();
-    } else {
-      pending?.close();
-      pending = null;
-    }
-  }
-
-  workspace.addListener(updated);
-  ref.onDispose(() {
-    workspace
-      ..removeListener(updated)
-      ..dispose();
-  });
-  return workspace;
+  ref
+    ..watch(localWorkScopeProvider)
+    ..watch(localWorkControllerProvider);
+  final work = ref.read(localWorkProvider.notifier);
+  final driver = work.getOrRegisterAuthoring(scope);
+  final lease = work.lease(driver.id);
+  ref.onDispose(lease.release);
+  return driver.workspace;
 }
 
 @riverpod

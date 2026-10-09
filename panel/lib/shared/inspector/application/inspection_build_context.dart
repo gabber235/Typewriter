@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Owns composite editors created while assembling one inspection model.
@@ -29,24 +31,24 @@ final class InspectionBuildContext {
   /// target owners remain owned by the editor owner registry.
   MultiEditOwner multiEditorFor(
     Iterable<EditorTarget> targets, {
-    required TypeExpression rootType,
-    required TypeCatalog typeCatalog,
+    required skir.TypeUse rootType,
+    required CheckedEditorCatalog catalog,
   }) => multiEditorForOwners(
     targets.map(owners.editor),
     rootType: rootType,
-    typeCatalog: typeCatalog,
+    catalog: catalog,
   );
 
   /// Creates and registers a composite owner from already resolved owners.
   MultiEditOwner multiEditorForOwners(
     Iterable<EditOwner> owners, {
-    required TypeExpression rootType,
-    required TypeCatalog typeCatalog,
+    required skir.TypeUse rootType,
+    required CheckedEditorCatalog catalog,
   }) {
     final editor = MultiEditOwner(
       owners: owners.toList(growable: false),
       rootType: rootType,
-      typeCatalog: typeCatalog,
+      catalog: catalog,
       commitInteractions: (interactions) => interactions.commitAtomically(),
     );
     _multiEditors.add(editor);

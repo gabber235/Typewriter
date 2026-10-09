@@ -122,7 +122,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
   Future<PortablePathResult<skir.AuthoringRecord>> setWithInitialization(
     skir.ValueLocation location,
     skir.DataValue value,
-    Future<skir.PreparedCreation> Function(skir.InitializationRequest request)
+    Future<skir.PreparedValue> Function(skir.ValuePreparationRequest request)
     prepare,
   ) async =>
       _recordResult(await _setWithInitialization(location, value, prepare));
@@ -177,8 +177,8 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     skir.ValueLocation location,
     skir.ItemId? after,
     skir.ItemId item,
-    skir.InitializationRequest request,
-    skir.PreparedCreation prepared,
+    skir.ValuePreparationRequest request,
+    skir.PreparedValue prepared,
   ) => _recordResult(_insertPrepared(location, after, item, request, prepared));
   @override
   PortablePathResult<skir.AuthoringRecord> remove(
@@ -199,8 +199,8 @@ final class AuthoringEdit implements PortableAuthoringEdit {
   @override
   PortablePathResult<skir.AuthoringRecord> applyPreparedRecord(
     skir.ValueLocation location,
-    skir.InitializationRequest request,
-    skir.PreparedCreation prepared,
+    skir.ValuePreparationRequest request,
+    skir.PreparedValue prepared,
   ) => _recordResult(_applyPreparedRecord(location, request, prepared));
 
   skir.PreparedEdit prepare() => skir.PreparedEdit(
@@ -208,6 +208,20 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     expectations: expectations,
     intents: intents,
   );
+
+  void applyPrepared(skir.PreparedEdit prepared) {
+    if (prepared.catalog != generation) {
+      throw StateError("The editor catalog changed");
+    }
+    for (final expected in prepared.expectations) {
+      _observed[_factKey(expected)] = expected;
+    }
+    for (final intent in prepared.intents) {
+      if (_replay(intent) case final message?) {
+        throw StateError(message);
+      }
+    }
+  }
 
   @override
   skir.AuthoringRecord? resource(skir.ResourceId id) => _resources[id];
@@ -284,7 +298,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
   Future<PortablePathResult<skir.AuthoringRecord>> _setWithInitialization(
     skir.ValueLocation location,
     skir.DataValue value,
-    Future<skir.PreparedCreation> Function(skir.InitializationRequest request)
+    Future<skir.PreparedValue> Function(skir.ValuePreparationRequest request)
     prepare,
   ) async {
     final baseline = _EditState.capture(this);
@@ -305,7 +319,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
           "The operation changed while the parent field was being initialized",
         );
       }
-      if (!working._preparedRecordIsUsable(containing, plan.request)) {
+      if (!working._recordIsUsable(containing, plan.request)) {
         return const PortablePathUnavailable(
           "The parent field initialization needs attention",
         );
@@ -316,7 +330,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
           containing.findings,
         ),
       );
-      var parent = containing.record.fields
+      var parent = containing.recordContent.fields
           .where((field) => field.name == plan.field)
           .firstOrNull
           ?.value;
@@ -329,7 +343,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
             "The operation changed while the parent field was being initialized",
           );
         }
-        if (!working._preparedRecordIsUsable(child, plan.childRequest)) {
+        if (!working._recordIsUsable(child, plan.childRequest)) {
           return const PortablePathUnavailable(
             "The parent field initialization needs attention",
           );
@@ -337,7 +351,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
         working._initializationFindings.addAll(
           _locatedInitializationFindings(plan.location.path, child.findings),
         );
-        final actual = switch (child.record.configuration) {
+        final actual = switch (child.recordContent.configuration) {
           skir.TypeSelection_completeWrapper(:final value) => value,
           _ => null,
         };
@@ -353,7 +367,9 @@ final class AuthoringEdit implements PortableAuthoringEdit {
         }
         parent = skir.DataValue.createNamed(
           actualType: actual,
-          payload: skir.DataValue.createRecord(fields: child.record.fields),
+          payload: skir.DataValue.createRecord(
+            fields: child.recordContent.fields,
+          ),
         );
       }
       if (_containsLink(parent)) {
@@ -377,15 +393,19 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     return result;
   }
 
-  bool _preparedRecordIsUsable(
-    skir.PreparedCreation prepared,
-    skir.InitializationRequest request,
+  bool _recordIsUsable(
+    skir.PreparedValue prepared,
+    skir.ValuePreparationRequest request,
   ) {
-    if (prepared.record.configuration != request.type) return false;
-    final actual = prepared.record.fields.map((field) => field.name).toList();
+    if (prepared.recordContent.configuration != request.recordSelection) {
+      return false;
+    }
+    final actual = prepared.recordContent.fields
+        .map((field) => field.name)
+        .toList();
     if (actual.toSet().length != actual.length) return false;
     final expected = catalog
-        ?.fields(request.type)
+        ?.fields(request.recordSelection)
         .map((field) => field.template.key)
         .toSet();
     return expected != null &&
@@ -466,15 +486,15 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     skir.ValueLocation location,
     skir.ItemId? after,
     skir.ItemId item,
-    skir.InitializationRequest request,
-    skir.PreparedCreation prepared,
+    skir.ValuePreparationRequest request,
+    skir.PreparedValue prepared,
   ) {
-    if (!_preparedRecordIsUsable(prepared, request)) {
+    if (!_recordIsUsable(prepared, request)) {
       return const PortablePathUnavailable(
         "The prepared collection item does not match the requested type",
       );
     }
-    final actual = switch (prepared.record.configuration) {
+    final actual = switch (prepared.recordContent.configuration) {
       skir.TypeSelection_completeWrapper(:final value) => value,
       _ => null,
     };
@@ -491,7 +511,9 @@ final class AuthoringEdit implements PortableAuthoringEdit {
         id: item,
         value: skir.DataValue.createNamed(
           actualType: actual,
-          payload: skir.DataValue.createRecord(fields: prepared.record.fields),
+          payload: skir.DataValue.createRecord(
+            fields: prepared.recordContent.fields,
+          ),
         ),
       ),
     );
@@ -576,15 +598,15 @@ final class AuthoringEdit implements PortableAuthoringEdit {
 
   PortablePathResult<skir.AuthoringRecord> _applyPreparedRecord(
     skir.ValueLocation location,
-    skir.InitializationRequest request,
-    skir.PreparedCreation prepared,
+    skir.ValuePreparationRequest request,
+    skir.PreparedValue prepared,
   ) {
-    if (!_preparedRecordIsUsable(prepared, request)) {
+    if (!_recordIsUsable(prepared, request)) {
       return const PortablePathUnavailable(
         "The prepared form does not match the requested type",
       );
     }
-    final actual = switch (prepared.record.configuration) {
+    final actual = switch (prepared.recordContent.configuration) {
       skir.TypeSelection_completeWrapper(:final value) => value,
       _ => null,
     };
@@ -598,7 +620,9 @@ final class AuthoringEdit implements PortableAuthoringEdit {
       location,
       skir.DataValue.createNamed(
         actualType: actual,
-        payload: skir.DataValue.createRecord(fields: prepared.record.fields),
+        payload: skir.DataValue.createRecord(
+          fields: prepared.recordContent.fields,
+        ),
       ),
     );
     if (result case PortablePathValue()) {
@@ -629,10 +653,10 @@ final class AuthoringEdit implements PortableAuthoringEdit {
 
   void createPrepared(
     skir.ResourceId id,
-    skir.PreparedCreation prepared, {
+    skir.PreparedValue prepared, {
     skir.ResourceDefinitionId? definition,
   }) {
-    create(id, prepared.record, definition: definition);
+    create(id, prepared.recordContent, definition: definition);
     _initializationFindings.addAll(
       _locatedInitializationFindings(
         skir.ValuePath(segments: const []),
@@ -989,7 +1013,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     if (choice.containing.resource != target) return null;
     final targetRecord = _resources[target];
     if (targetRecord == null) return null;
-    final actual = switch (choice.prepared.record.configuration) {
+    final actual = switch (choice.prepared.recordContent.configuration) {
       skir.TypeSelection_completeWrapper(:final value) => value,
       _ => null,
     };
@@ -997,7 +1021,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     final materialized = skir.DataValue.createNamed(
       actualType: actual,
       payload: skir.DataValue.createRecord(
-        fields: choice.prepared.record.fields,
+        fields: choice.prepared.recordContent.fields,
       ),
     );
     var embedded = choice.containing;
@@ -1647,22 +1671,24 @@ final class AuthoringEdit implements PortableAuthoringEdit {
             containing: containingLocation,
             field: value.name,
             expected: expected,
-            request: skir.InitializationRequest(
+            request: skir.ValuePreparationRequest(
               id: skir.InitializationRequestId(
                 value: "panel:materialize:${operation.id}:containing",
               ),
               catalog: generation,
-              type: selection,
-              supplied: supplied,
+              target: skir.PreparationTarget.wrapRecord(selection),
+              suppliedValue: skir.DataValue.createRecord(fields: supplied),
               intentHash: containingIdentity,
             ),
-            childRequest: skir.InitializationRequest(
+            childRequest: skir.ValuePreparationRequest(
               id: skir.InitializationRequestId(
                 value: "panel:materialize:${operation.id}:child",
               ),
               catalog: generation,
-              type: skir.TypeSelection.wrapComplete(expected),
-              supplied: const [],
+              target: skir.PreparationTarget.wrapRecord(
+                skir.TypeSelection.wrapComplete(expected),
+              ),
+              suppliedValue: skir.DataValue.createRecord(fields: const []),
               intentHash: childIdentity,
             ),
           );
@@ -1808,8 +1834,8 @@ final class _ParentInitialization {
   final skir.ValueLocation containing;
   final String field;
   final skir.NamedTypeUse expected;
-  final skir.InitializationRequest request;
-  final skir.InitializationRequest childRequest;
+  final skir.ValuePreparationRequest request;
+  final skir.ValuePreparationRequest childRequest;
 }
 
 final class _MaterializationOperation {

@@ -5376,103 +5376,232 @@ final class CatalogInvalidated_mutable implements CatalogInvalidated_orMutable {
 }
 
 // -----------------------------------------------------------------------------
-// struct InitializationRequest
+// enum PreparationTarget
 // -----------------------------------------------------------------------------
 
-sealed class InitializationRequest_orMutable {
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case PreparationTarget_unknown(): { ... }
+///     case PreparationTarget_value(:var value): { ... }
+///     case PreparationTarget_record(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class PreparationTarget {
+  /// Constant indicating an unknown `PreparationTarget`.
+  /// Default value for fields of type `PreparationTarget`.
+  static const PreparationTarget unknown = PreparationTarget_unknown._instance;
+
+  /// Create a 'value' variant wrapping around the given value.
+  factory PreparationTarget.wrapValue(
+    _lib_editor_v1_type_catalog.TypeUse value,
+  ) => PreparationTarget_valueWrapper._(value);
+
+  /// Create a 'record' variant wrapping around the given value.
+  factory PreparationTarget.wrapRecord(
+    _lib_editor_v1_type_catalog.TypeSelection value,
+  ) => PreparationTarget_recordWrapper._(value);
+
+  /// Returns the kind of variant held by this PreparationTarget.
+  PreparationTarget_kind get kind;
+
+  /// Serializer for `PreparationTarget` instances.
+  static _skir.EnumSerializer<PreparationTarget> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "value",
+        "wrapValue",
+        _lib_editor_v1_type_catalog.TypeUse.serializer,
+        "",
+        PreparationTarget_valueWrapper._,
+        (it) => it.value,
+        ordinal: PreparationTarget_kind.valueWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "record",
+        "wrapRecord",
+        _lib_editor_v1_type_catalog.TypeSelection.serializer,
+        "",
+        PreparationTarget_recordWrapper._,
+        (it) => it.value,
+        ordinal: PreparationTarget_kind.recordWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/catalog.skir:PreparationTarget",
+        doc: "",
+        unknownInstance: PreparationTarget_unknown._instance,
+        enumInstance: PreparationTarget.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PreparationTarget_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `PreparationTarget`.
+enum PreparationTarget_kind {
+  unknown(0),
+  valueWrapper(1),
+  recordWrapper(2);
+
+  final _core.int _ordinal;
+
+  const PreparationTarget_kind(this._ordinal);
+}
+
+final class PreparationTarget_unknown implements PreparationTarget {
+  static const _instance = PreparationTarget_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const PreparationTarget_unknown._() : _u = null;
+  PreparationTarget_unknown._unrecognized(this._u);
+
+  @_core.override
+  PreparationTarget_kind get kind => PreparationTarget_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is PreparationTarget_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PreparationTarget.serializer);
+}
+
+sealed class _PreparationTarget_wrapper implements PreparationTarget {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _PreparationTarget_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PreparationTarget.serializer);
+}
+
+final class PreparationTarget_valueWrapper extends _PreparationTarget_wrapper {
+  final _lib_editor_v1_type_catalog.TypeUse value;
+
+  PreparationTarget_valueWrapper._(this.value);
+
+  @_core.override
+  PreparationTarget_kind get kind => PreparationTarget_kind.valueWrapper;
+}
+
+final class PreparationTarget_recordWrapper extends _PreparationTarget_wrapper {
+  final _lib_editor_v1_type_catalog.TypeSelection value;
+
+  PreparationTarget_recordWrapper._(this.value);
+
+  @_core.override
+  PreparationTarget_kind get kind => PreparationTarget_kind.recordWrapper;
+}
+
+// -----------------------------------------------------------------------------
+// struct ValuePreparationRequest
+// -----------------------------------------------------------------------------
+
+sealed class ValuePreparationRequest_orMutable {
   _lib_editor_v1_type_catalog.InitializationRequestId_orMutable get id;
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get catalog;
-  _lib_editor_v1_type_catalog.TypeSelection get type;
-  _core.Iterable<_lib_editor_v1_type_catalog.FieldValue_orMutable> get supplied;
+  PreparationTarget get target;
+  _lib_editor_v1_type_catalog.DataValue? get suppliedValue;
   _core.String get intentHash;
 
-  InitializationRequest toFrozen();
+  ValuePreparationRequest toFrozen();
 }
 
 /// Deeply immutable.
-final class InitializationRequest implements InitializationRequest_orMutable {
+final class ValuePreparationRequest
+    implements ValuePreparationRequest_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.InitializationRequestId id;
   @_core.override
   final _lib_editor_v1_type_catalog.CatalogGeneration catalog;
   @_core.override
-  final _lib_editor_v1_type_catalog.TypeSelection type;
+  final PreparationTarget target;
   @_core.override
-  final _skir.KeyedIterable<
-    _lib_editor_v1_type_catalog.FieldValue,
-    _core.String
-  >
-  supplied;
+  final _lib_editor_v1_type_catalog.DataValue? suppliedValue;
   @_core.override
   final _core.String intentHash;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory InitializationRequest({
+  factory ValuePreparationRequest({
     required _lib_editor_v1_type_catalog.InitializationRequestId_orMutable id,
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog,
-    required _lib_editor_v1_type_catalog.TypeSelection type,
-    required _core.Iterable<_lib_editor_v1_type_catalog.FieldValue_orMutable>
-    supplied,
+    required PreparationTarget target,
+    required _lib_editor_v1_type_catalog.DataValue? suppliedValue,
     required _core.String intentHash,
-  }) => InitializationRequest._(
+  }) => ValuePreparationRequest._(
     id.toFrozen(),
     catalog.toFrozen(),
-    type,
-    _skir.internal__keyedMappedCopy(
-      supplied,
-      "name",
-      (it) => it.name,
-      (it) => it.toFrozen(),
-    ),
+    target,
+    suppliedValue,
     intentHash,
   );
 
-  InitializationRequest._(
+  ValuePreparationRequest._(
     this.id,
     this.catalog,
-    this.type,
-    this.supplied,
+    this.target,
+    this.suppliedValue,
     this.intentHash,
   );
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = InitializationRequest._(
+  static final defaultInstance = ValuePreparationRequest._(
     _lib_editor_v1_type_catalog.InitializationRequestId.defaultInstance,
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    _lib_editor_v1_type_catalog.TypeSelection.unknown,
-    _skir.KeyedIterable.empty,
+    PreparationTarget.unknown,
+    null,
     "",
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static InitializationRequest_mutable mutable() =>
-      InitializationRequest_mutable._(
+  static ValuePreparationRequest_mutable mutable() =>
+      ValuePreparationRequest_mutable._(
         _lib_editor_v1_type_catalog.InitializationRequestId.defaultInstance,
         _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-        _lib_editor_v1_type_catalog.TypeSelection.unknown,
-        _skir.KeyedIterable.empty,
+        PreparationTarget.unknown,
+        null,
         "",
       );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  InitializationRequest toFrozen() => this;
+  ValuePreparationRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  InitializationRequest_mutable toMutable() => InitializationRequest_mutable._(
-    this.id,
-    this.catalog,
-    this.type,
-    this.supplied,
-    this.intentHash,
-  );
+  ValuePreparationRequest_mutable toMutable() =>
+      ValuePreparationRequest_mutable._(
+        this.id,
+        this.catalog,
+        this.target,
+        this.suppliedValue,
+        this.intentHash,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! InitializationRequest) return false;
+    if (other is! ValuePreparationRequest) return false;
     return _skir.internal__listEquality.equals(
       _equality_proxy,
       other._equality_proxy,
@@ -5485,18 +5614,18 @@ final class InitializationRequest implements InitializationRequest_orMutable {
   _core.List get _equality_proxy => [
     this.id,
     this.catalog,
-    this.type,
-    this.supplied,
+    this.target,
+    this.suppliedValue,
     this.intentHash,
   ];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `InitializationRequest` instances.
+  /// Serializer for `ValuePreparationRequest` instances.
   static _skir.StructSerializer<
-    InitializationRequest,
-    InitializationRequest_mutable
+    ValuePreparationRequest,
+    ValuePreparationRequest_mutable
   >
   get serializer {
     if (_serializerBuilder.mustInitialize()) {
@@ -5519,26 +5648,24 @@ final class InitializationRequest implements InitializationRequest_orMutable {
         (it, v) => it.catalog = v,
       );
       _serializerBuilder.addField(
-        "type",
-        "type",
+        "target",
+        "target",
         2,
-        _lib_editor_v1_type_catalog.TypeSelection.serializer,
+        PreparationTarget.serializer,
         "",
-        (it) => it.type,
-        (it, v) => it.type = v,
+        (it) => it.target,
+        (it, v) => it.target = v,
       );
       _serializerBuilder.addField(
-        "supplied",
-        "supplied",
+        "supplied_value",
+        "suppliedValue",
         3,
-        _skir.Serializers.keyedIterable(
-          _lib_editor_v1_type_catalog.FieldValue.serializer,
-          (_lib_editor_v1_type_catalog.FieldValue it) => it.name,
-          internal__getKeySpec: "name",
+        _skir.Serializers.optional(
+          _lib_editor_v1_type_catalog.DataValue.serializer,
         ),
         "",
-        (it) => it.supplied,
-        (it, v) => it.supplied = v,
+        (it) => it.suppliedValue,
+        (it, v) => it.suppliedValue = v,
       );
       _serializerBuilder.addField(
         "intent_hash",
@@ -5555,31 +5682,31 @@ final class InitializationRequest implements InitializationRequest_orMutable {
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/catalog.skir:InitializationRequest",
+    recordId: "editor/v1/catalog.skir:ValuePreparationRequest",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (InitializationRequest_mutable it) => it.toFrozen(),
+    toFrozen: (ValuePreparationRequest_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [InitializationRequest].
-final class InitializationRequest_mutable
-    implements InitializationRequest_orMutable {
+/// Mutable version of [ValuePreparationRequest].
+final class ValuePreparationRequest_mutable
+    implements ValuePreparationRequest_orMutable {
   _lib_editor_v1_type_catalog.InitializationRequestId_orMutable id;
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog;
-  _lib_editor_v1_type_catalog.TypeSelection type;
-  _core.Iterable<_lib_editor_v1_type_catalog.FieldValue_orMutable> supplied;
+  PreparationTarget target;
+  _lib_editor_v1_type_catalog.DataValue? suppliedValue;
   _core.String intentHash;
   _skir.internal__UnrecognizedFields? _u;
 
-  InitializationRequest_mutable._(
+  ValuePreparationRequest_mutable._(
     this.id,
     this.catalog,
-    this.type,
-    this.supplied,
+    this.target,
+    this.suppliedValue,
     this.intentHash,
   );
 
@@ -5608,92 +5735,226 @@ final class InitializationRequest_mutable
     }
   }
 
-  /// If the value of [supplied] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [supplied] and returns it.
-  _core.List<_lib_editor_v1_type_catalog.FieldValue_orMutable>
-  get mutableSupplied {
-    final value = this.supplied;
-    if (value
-        is _skir.internal__MutableList<
-          _lib_editor_v1_type_catalog.FieldValue_orMutable
-        >) {
-      return value;
-    } else {
-      return this.supplied = _skir.internal__MutableList([...value]);
-    }
-  }
-
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  InitializationRequest toFrozen() => InitializationRequest(
+  ValuePreparationRequest toFrozen() => ValuePreparationRequest(
     id: this.id,
     catalog: this.catalog,
-    type: this.type,
-    supplied: this.supplied,
+    target: this.target,
+    suppliedValue: this.suppliedValue,
     intentHash: this.intentHash,
   ).._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
-// struct PreparedCreation
+// enum PreparedContent
 // -----------------------------------------------------------------------------
 
-sealed class PreparedCreation_orMutable {
-  _lib_editor_v1_type_catalog.AuthoringRecord_orMutable get record;
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case PreparedContent_unknown(): { ... }
+///     case PreparedContent_value(:var value): { ... }
+///     case PreparedContent_record(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class PreparedContent {
+  /// Constant indicating an unknown `PreparedContent`.
+  /// Default value for fields of type `PreparedContent`.
+  static const PreparedContent unknown = PreparedContent_unknown._instance;
+
+  /// Create a 'value' variant wrapping around the given value.
+  factory PreparedContent.wrapValue(
+    _lib_editor_v1_type_catalog.DataValue value,
+  ) => PreparedContent_valueWrapper._(value);
+
+  /// Create a 'record' variant wrapping around the given value.
+  factory PreparedContent.wrapRecord(
+    _lib_editor_v1_type_catalog.AuthoringRecord value,
+  ) => PreparedContent_recordWrapper._(value);
+
+  /// Same as `wrapRecord(_lib_editor_v1_type_catalog.AuthoringRecord(...))`.
+  factory PreparedContent.createRecord({
+    required _lib_editor_v1_type_catalog.TypeSelection configuration,
+    required _core.Iterable<_lib_editor_v1_type_catalog.FieldValue_orMutable>
+    fields,
+  }) => PreparedContent.wrapRecord(
+    _lib_editor_v1_type_catalog.AuthoringRecord(
+      configuration: configuration,
+      fields: fields,
+    ),
+  );
+
+  /// Returns the kind of variant held by this PreparedContent.
+  PreparedContent_kind get kind;
+
+  /// Serializer for `PreparedContent` instances.
+  static _skir.EnumSerializer<PreparedContent> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "value",
+        "wrapValue",
+        _lib_editor_v1_type_catalog.DataValue.serializer,
+        "",
+        PreparedContent_valueWrapper._,
+        (it) => it.value,
+        ordinal: PreparedContent_kind.valueWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "record",
+        "wrapRecord",
+        _lib_editor_v1_type_catalog.AuthoringRecord.serializer,
+        "",
+        PreparedContent_recordWrapper._,
+        (it) => it.value,
+        ordinal: PreparedContent_kind.recordWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/catalog.skir:PreparedContent",
+        doc: "",
+        unknownInstance: PreparedContent_unknown._instance,
+        enumInstance: PreparedContent.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PreparedContent_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `PreparedContent`.
+enum PreparedContent_kind {
+  unknown(0),
+  valueWrapper(1),
+  recordWrapper(2);
+
+  final _core.int _ordinal;
+
+  const PreparedContent_kind(this._ordinal);
+}
+
+final class PreparedContent_unknown implements PreparedContent {
+  static const _instance = PreparedContent_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const PreparedContent_unknown._() : _u = null;
+  PreparedContent_unknown._unrecognized(this._u);
+
+  @_core.override
+  PreparedContent_kind get kind => PreparedContent_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is PreparedContent_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PreparedContent.serializer);
+}
+
+sealed class _PreparedContent_wrapper implements PreparedContent {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _PreparedContent_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PreparedContent.serializer);
+}
+
+final class PreparedContent_valueWrapper extends _PreparedContent_wrapper {
+  final _lib_editor_v1_type_catalog.DataValue value;
+
+  PreparedContent_valueWrapper._(this.value);
+
+  @_core.override
+  PreparedContent_kind get kind => PreparedContent_kind.valueWrapper;
+}
+
+final class PreparedContent_recordWrapper extends _PreparedContent_wrapper {
+  final _lib_editor_v1_type_catalog.AuthoringRecord value;
+
+  PreparedContent_recordWrapper._(this.value);
+
+  @_core.override
+  PreparedContent_kind get kind => PreparedContent_kind.recordWrapper;
+}
+
+// -----------------------------------------------------------------------------
+// struct PreparedValue
+// -----------------------------------------------------------------------------
+
+sealed class PreparedValue_orMutable {
+  PreparedContent get content;
   _core.Iterable<_lib_editor_v1_diagnostic.InitializationDiagnostic_orMutable>
   get findings;
 
-  PreparedCreation toFrozen();
+  PreparedValue toFrozen();
 }
 
 /// Deeply immutable.
-final class PreparedCreation implements PreparedCreation_orMutable {
+final class PreparedValue implements PreparedValue_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.AuthoringRecord record;
+  final PreparedContent content;
   @_core.override
   final _core.Iterable<_lib_editor_v1_diagnostic.InitializationDiagnostic>
   findings;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory PreparedCreation({
-    required _lib_editor_v1_type_catalog.AuthoringRecord_orMutable record,
+  factory PreparedValue({
+    required PreparedContent content,
     required _core.Iterable<
       _lib_editor_v1_diagnostic.InitializationDiagnostic_orMutable
     >
     findings,
-  }) => PreparedCreation._(
-    record.toFrozen(),
+  }) => PreparedValue._(
+    content,
     _skir.internal__frozenMappedCopy(findings, (it) => it.toFrozen()),
   );
 
-  PreparedCreation._(this.record, this.findings);
+  PreparedValue._(this.content, this.findings);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = PreparedCreation._(
-    _lib_editor_v1_type_catalog.AuthoringRecord.defaultInstance,
+  static final defaultInstance = PreparedValue._(
+    PreparedContent.unknown,
     _skir.KeyedIterable.empty,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static PreparedCreation_mutable mutable() => PreparedCreation_mutable._(
-    _lib_editor_v1_type_catalog.AuthoringRecord.defaultInstance,
+  static PreparedValue_mutable mutable() => PreparedValue_mutable._(
+    PreparedContent.unknown,
     _skir.KeyedIterable.empty,
   );
 
   /// Returns this instance (no-op).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
-  PreparedCreation toFrozen() => this;
+  PreparedValue toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  PreparedCreation_mutable toMutable() =>
-      PreparedCreation_mutable._(this.record, this.findings);
+  PreparedValue_mutable toMutable() =>
+      PreparedValue_mutable._(this.content, this.findings);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
-    if (other is! PreparedCreation) return false;
+    if (other is! PreparedValue) return false;
     return _skir.internal__listEquality.equals(
       _equality_proxy,
       other._equality_proxy,
@@ -5703,23 +5964,23 @@ final class PreparedCreation implements PreparedCreation_orMutable {
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.record, this.findings];
+  _core.List get _equality_proxy => [this.content, this.findings];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
-  /// Serializer for `PreparedCreation` instances.
-  static _skir.StructSerializer<PreparedCreation, PreparedCreation_mutable>
+  /// Serializer for `PreparedValue` instances.
+  static _skir.StructSerializer<PreparedValue, PreparedValue_mutable>
   get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
-        "record",
-        "record",
+        "content",
+        "content",
         0,
-        _lib_editor_v1_type_catalog.AuthoringRecord.serializer,
+        PreparedContent.serializer,
         "",
-        (it) => it.record,
-        (it, v) => it.record = v,
+        (it) => it.content,
+        (it, v) => it.content = v,
       );
       _serializerBuilder.addField(
         "findings",
@@ -5738,36 +5999,24 @@ final class PreparedCreation implements PreparedCreation_orMutable {
   }
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/catalog.skir:PreparedCreation",
+    recordId: "editor/v1/catalog.skir:PreparedValue",
     doc: "",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (PreparedCreation_mutable it) => it.toFrozen(),
+    toFrozen: (PreparedValue_mutable it) => it.toFrozen(),
     getUnrecognizedFields: (it) => it._u,
     setUnrecognizedFields: (it, u) => it._u = u,
   );
 }
 
-/// Mutable version of [PreparedCreation].
-final class PreparedCreation_mutable implements PreparedCreation_orMutable {
-  _lib_editor_v1_type_catalog.AuthoringRecord_orMutable record;
+/// Mutable version of [PreparedValue].
+final class PreparedValue_mutable implements PreparedValue_orMutable {
+  PreparedContent content;
   _core.Iterable<_lib_editor_v1_diagnostic.InitializationDiagnostic_orMutable>
   findings;
   _skir.internal__UnrecognizedFields? _u;
 
-  PreparedCreation_mutable._(this.record, this.findings);
-
-  /// If the value of [record] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [record] and returns it.
-  _lib_editor_v1_type_catalog.AuthoringRecord_mutable get mutableRecord {
-    final value = this.record;
-    if (value is _lib_editor_v1_type_catalog.AuthoringRecord_mutable) {
-      return value;
-    } else {
-      return this.record =
-          (value as _lib_editor_v1_type_catalog.AuthoringRecord).toMutable();
-    }
-  }
+  PreparedValue_mutable._(this.content, this.findings);
 
   /// If the value of [findings] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [findings] and returns it.
@@ -5786,85 +6035,85 @@ final class PreparedCreation_mutable implements PreparedCreation_orMutable {
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  PreparedCreation toFrozen() =>
-      PreparedCreation(record: this.record, findings: this.findings)
+  PreparedValue toFrozen() =>
+      PreparedValue(content: this.content, findings: this.findings)
         .._u = this._u;
 }
 
 // -----------------------------------------------------------------------------
-// enum PrepareCreationResult
+// enum PrepareValueResult
 // -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
-///     case PrepareCreationResult_unknown(): { ... }
-///     case PrepareCreationResult_prepared(:var value): { ... }
-///     case PrepareCreationResult_catalogChanged(:var value): { ... }
-///     case PrepareCreationResult_internalError(:var value): { ... }
+///     case PrepareValueResult_unknown(): { ... }
+///     case PrepareValueResult_prepared(:var value): { ... }
+///     case PrepareValueResult_catalogChanged(:var value): { ... }
+///     case PrepareValueResult_internalError(:var value): { ... }
 ///   }
 ///   ```
 ///
 /// Deeply immutable.
-sealed class PrepareCreationResult {
-  /// Constant indicating an unknown `PrepareCreationResult`.
-  /// Default value for fields of type `PrepareCreationResult`.
-  static const PrepareCreationResult unknown =
-      PrepareCreationResult_unknown._instance;
+sealed class PrepareValueResult {
+  /// Constant indicating an unknown `PrepareValueResult`.
+  /// Default value for fields of type `PrepareValueResult`.
+  static const PrepareValueResult unknown =
+      PrepareValueResult_unknown._instance;
 
   /// Create a 'prepared' variant wrapping around the given value.
-  factory PrepareCreationResult.wrapPrepared(PreparedCreation value) =>
-      PrepareCreationResult_preparedWrapper._(value);
+  factory PrepareValueResult.wrapPrepared(PreparedValue value) =>
+      PrepareValueResult_preparedWrapper._(value);
 
-  /// Same as `wrapPrepared(PreparedCreation(...))`.
-  factory PrepareCreationResult.createPrepared({
-    required _lib_editor_v1_type_catalog.AuthoringRecord_orMutable record,
+  /// Same as `wrapPrepared(PreparedValue(...))`.
+  factory PrepareValueResult.createPrepared({
+    required PreparedContent content,
     required _core.Iterable<
       _lib_editor_v1_diagnostic.InitializationDiagnostic_orMutable
     >
     findings,
-  }) => PrepareCreationResult.wrapPrepared(
-    PreparedCreation(record: record, findings: findings),
+  }) => PrepareValueResult.wrapPrepared(
+    PreparedValue(content: content, findings: findings),
   );
 
   /// Create a 'catalog_changed' variant wrapping around the given value.
-  factory PrepareCreationResult.wrapCatalogChanged(
+  factory PrepareValueResult.wrapCatalogChanged(
     _lib_editor_v1_type_catalog.CatalogGeneration value,
-  ) => PrepareCreationResult_catalogChangedWrapper._(value);
+  ) => PrepareValueResult_catalogChangedWrapper._(value);
 
   /// Same as `wrapCatalogChanged(_lib_editor_v1_type_catalog.CatalogGeneration(...))`.
-  factory PrepareCreationResult.createCatalogChanged({
+  factory PrepareValueResult.createCatalogChanged({
     required _core.String value,
-  }) => PrepareCreationResult.wrapCatalogChanged(
+  }) => PrepareValueResult.wrapCatalogChanged(
     _lib_editor_v1_type_catalog.CatalogGeneration(value: value),
   );
 
   /// Create a 'internal_error' variant wrapping around the given value.
-  factory PrepareCreationResult.wrapInternalError(
+  factory PrepareValueResult.wrapInternalError(
     _lib_kernel_v1_errors.InternalError value,
-  ) => PrepareCreationResult_internalErrorWrapper._(value);
+  ) => PrepareValueResult_internalErrorWrapper._(value);
 
   /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory PrepareCreationResult.createInternalError() =>
-      PrepareCreationResult.wrapInternalError(
+  factory PrepareValueResult.createInternalError() =>
+      PrepareValueResult.wrapInternalError(
         _lib_kernel_v1_errors.InternalError(),
       );
 
-  /// Returns the kind of variant held by this PrepareCreationResult.
-  PrepareCreationResult_kind get kind;
+  /// Returns the kind of variant held by this PrepareValueResult.
+  PrepareValueResult_kind get kind;
 
-  /// Serializer for `PrepareCreationResult` instances.
-  static _skir.EnumSerializer<PrepareCreationResult> get serializer {
+  /// Serializer for `PrepareValueResult` instances.
+  static _skir.EnumSerializer<PrepareValueResult> get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addWrapperVariant(
         1,
         "prepared",
         "wrapPrepared",
-        PreparedCreation.serializer,
+        PreparedValue.serializer,
         "",
-        PrepareCreationResult_preparedWrapper._,
+        PrepareValueResult_preparedWrapper._,
         (it) => it.value,
-        ordinal: PrepareCreationResult_kind.preparedWrapper._ordinal,
+        ordinal: PrepareValueResult_kind.preparedWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         2,
@@ -5872,9 +6121,9 @@ sealed class PrepareCreationResult {
         "wrapCatalogChanged",
         _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
         "",
-        PrepareCreationResult_catalogChangedWrapper._,
+        PrepareValueResult_catalogChangedWrapper._,
         (it) => it.value,
-        ordinal: PrepareCreationResult_kind.catalogChangedWrapper._ordinal,
+        ordinal: PrepareValueResult_kind.catalogChangedWrapper._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         3,
@@ -5882,9 +6131,9 @@ sealed class PrepareCreationResult {
         "wrapInternalError",
         _lib_kernel_v1_errors.InternalError.serializer,
         "",
-        PrepareCreationResult_internalErrorWrapper._,
+        PrepareValueResult_internalErrorWrapper._,
         (it) => it.value,
-        ordinal: PrepareCreationResult_kind.internalErrorWrapper._ordinal,
+        ordinal: PrepareValueResult_kind.internalErrorWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -5893,18 +6142,18 @@ sealed class PrepareCreationResult {
 
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
-        recordId: "editor/v1/catalog.skir:PrepareCreationResult",
+        recordId: "editor/v1/catalog.skir:PrepareValueResult",
         doc: "",
-        unknownInstance: PrepareCreationResult_unknown._instance,
-        enumInstance: PrepareCreationResult.unknown,
+        unknownInstance: PrepareValueResult_unknown._instance,
+        enumInstance: PrepareValueResult.unknown,
         getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: PrepareCreationResult_unknown._unrecognized,
+        wrapUnrecognized: PrepareValueResult_unknown._unrecognized,
         getUnrecognized: (it) => it._u,
       );
 }
 
-/// The kind of variant held by a `PrepareCreationResult`.
-enum PrepareCreationResult_kind {
+/// The kind of variant held by a `PrepareValueResult`.
+enum PrepareValueResult_kind {
   unknown(0),
   preparedWrapper(1),
   catalogChangedWrapper(2),
@@ -5912,34 +6161,34 @@ enum PrepareCreationResult_kind {
 
   final _core.int _ordinal;
 
-  const PrepareCreationResult_kind(this._ordinal);
+  const PrepareValueResult_kind(this._ordinal);
 }
 
-final class PrepareCreationResult_unknown implements PrepareCreationResult {
-  static const _instance = PrepareCreationResult_unknown._();
+final class PrepareValueResult_unknown implements PrepareValueResult {
+  static const _instance = PrepareValueResult_unknown._();
 
   final _skir.internal__UnrecognizedVariant? _u;
 
-  const PrepareCreationResult_unknown._() : _u = null;
-  PrepareCreationResult_unknown._unrecognized(this._u);
+  const PrepareValueResult_unknown._() : _u = null;
+  PrepareValueResult_unknown._unrecognized(this._u);
 
   @_core.override
-  PrepareCreationResult_kind get kind => PrepareCreationResult_kind.unknown;
+  PrepareValueResult_kind get kind => PrepareValueResult_kind.unknown;
   @_core.override
-  _core.bool operator ==(other) => other is PrepareCreationResult_unknown;
+  _core.bool operator ==(other) => other is PrepareValueResult_unknown;
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
   _core.String toString() =>
-      _skir.internal__stringify(this, PrepareCreationResult.serializer);
+      _skir.internal__stringify(this, PrepareValueResult.serializer);
 }
 
-sealed class _PrepareCreationResult_wrapper implements PrepareCreationResult {
+sealed class _PrepareValueResult_wrapper implements PrepareValueResult {
   _core.dynamic get value;
 
   @_core.override
   _core.bool operator ==(other) {
-    if (other is! _PrepareCreationResult_wrapper) return false;
+    if (other is! _PrepareValueResult_wrapper) return false;
     return kind == other.kind && value == other.value;
   }
 
@@ -5948,40 +6197,39 @@ sealed class _PrepareCreationResult_wrapper implements PrepareCreationResult {
 
   @_core.override
   _core.String toString() =>
-      _skir.internal__stringify(this, PrepareCreationResult.serializer);
+      _skir.internal__stringify(this, PrepareValueResult.serializer);
 }
 
-final class PrepareCreationResult_preparedWrapper
-    extends _PrepareCreationResult_wrapper {
-  final PreparedCreation value;
+final class PrepareValueResult_preparedWrapper
+    extends _PrepareValueResult_wrapper {
+  final PreparedValue value;
 
-  PrepareCreationResult_preparedWrapper._(this.value);
+  PrepareValueResult_preparedWrapper._(this.value);
 
   @_core.override
-  PrepareCreationResult_kind get kind =>
-      PrepareCreationResult_kind.preparedWrapper;
+  PrepareValueResult_kind get kind => PrepareValueResult_kind.preparedWrapper;
 }
 
-final class PrepareCreationResult_catalogChangedWrapper
-    extends _PrepareCreationResult_wrapper {
+final class PrepareValueResult_catalogChangedWrapper
+    extends _PrepareValueResult_wrapper {
   final _lib_editor_v1_type_catalog.CatalogGeneration value;
 
-  PrepareCreationResult_catalogChangedWrapper._(this.value);
+  PrepareValueResult_catalogChangedWrapper._(this.value);
 
   @_core.override
-  PrepareCreationResult_kind get kind =>
-      PrepareCreationResult_kind.catalogChangedWrapper;
+  PrepareValueResult_kind get kind =>
+      PrepareValueResult_kind.catalogChangedWrapper;
 }
 
-final class PrepareCreationResult_internalErrorWrapper
-    extends _PrepareCreationResult_wrapper {
+final class PrepareValueResult_internalErrorWrapper
+    extends _PrepareValueResult_wrapper {
   final _lib_kernel_v1_errors.InternalError value;
 
-  PrepareCreationResult_internalErrorWrapper._(this.value);
+  PrepareValueResult_internalErrorWrapper._(this.value);
 
   @_core.override
-  PrepareCreationResult_kind get kind =>
-      PrepareCreationResult_kind.internalErrorWrapper;
+  PrepareValueResult_kind get kind =>
+      PrepareValueResult_kind.internalErrorWrapper;
 }
 
 // -----------------------------------------------------------------------------
@@ -6504,11 +6752,11 @@ watchEditorCatalogMethod = _skir.Method(
   "",
 );
 
-final _skir.Method<InitializationRequest, PrepareCreationResult>
-prepareCreationMethod = _skir.Method(
-  "PrepareCreation",
-  910004,
-  InitializationRequest.serializer,
-  PrepareCreationResult.serializer,
+final _skir.Method<ValuePreparationRequest, PrepareValueResult>
+prepareValueMethod = _skir.Method(
+  "PrepareValue",
+  910003,
+  ValuePreparationRequest.serializer,
+  PrepareValueResult.serializer,
   "",
 );

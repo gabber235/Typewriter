@@ -20,14 +20,22 @@ final class NatsRealmPresentationSearchTransport {
     skir.RealmPresentationSearchRequest request,
   ) async* {
     try {
-      yield* ref.watchRequest(
+      yield* ref.watchProjection<
+        skir.RealmPresentationSearchUpdate,
+        skir.RealmPresentationSearchUpdate,
+        skir.RealmPresentationSearchUpdate
+      >(
         subject: _address.request("editor.presentation.search"),
-        listenSubject: _address.event("editor.presentation.search"),
+        eventSubject: _address.event("editor.presentation.search"),
         requestBytes: skir.RealmPresentationSearchRequest.serializer.toBytes(
           request,
         ),
-        serializer: skir.RealmPresentationSearchUpdate.serializer,
-        transformer: (_, update) => update,
+        responseSerializer: skir.RealmPresentationSearchUpdate.serializer,
+        eventSerializer: skir.RealmPresentationSearchUpdate.serializer,
+        snapshot: (update) => update,
+        reduce: (_, update) => update,
+        delivery: const ProjectionDelivery.ephemeral(),
+        reconciliation: const ProjectionReconciliation.latest(),
       );
     } finally {
       await ref.requestSkir(

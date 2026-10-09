@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 typedef MultiInteractionCommitter = Future<void> Function(
@@ -16,7 +18,7 @@ final class MultiEditOwner extends ChangeNotifier implements EditOwner {
   MultiEditOwner({
     required List<EditOwner> owners,
     required this.rootType,
-    required this.typeCatalog,
+    required this.catalog,
     required this.commitInteractions,
   }) : owners = List.unmodifiable(owners) {
     if (this.owners.isEmpty) {
@@ -37,13 +39,13 @@ final class MultiEditOwner extends ChangeNotifier implements EditOwner {
   final List<EditOwner> owners;
   final MultiInteractionCommitter commitInteractions;
   @override
-  final TypeExpression rootType;
+  final skir.TypeUse rootType;
   @override
-  final TypeCatalog typeCatalog;
+  final CheckedEditorCatalog catalog;
   @override
   bool get readOnly => owners.any((owner) => owner.readOnly);
   @override
-  EditorValue value(DataPath path) {
+  EditorValue value(skir.ValuePath path) {
     final values = owners.map((owner) => owner.value(path)).toList();
     if (values.any((value) => value is LoadingEditorValue)) {
       return const EditorValue.loading();
@@ -60,8 +62,8 @@ final class MultiEditOwner extends ChangeNotifier implements EditOwner {
 
   @override
   EditorMutationResult update(
-    DataPath path,
-    DataValue value, {
+    skir.ValuePath path,
+    skir.DataValue value, {
     EditorStructuralMutation? structuralMutation,
   }) {
     final validation = validate(path, value);
@@ -78,7 +80,7 @@ final class MultiEditOwner extends ChangeNotifier implements EditOwner {
   }
 
   @override
-  EditorMutationResult validate(DataPath path, DataValue value) {
+  EditorMutationResult validate(skir.ValuePath path, skir.DataValue value) {
     if (readOnly) return const EditorMutationResult.conflict();
     return owners
         .map((owner) => owner.validate(path, value))
@@ -86,11 +88,14 @@ final class MultiEditOwner extends ChangeNotifier implements EditOwner {
   }
 
   @override
-  EditorInteractionSession beginInteraction(DataPath path) => _MultiInteraction(
-    path,
-    owners.map((owner) => owner.beginInteraction(path)).toList(growable: false),
-    commitInteractions,
-  );
+  EditorInteractionSession beginInteraction(skir.ValuePath path) =>
+      _MultiInteraction(
+        path,
+        owners
+            .map((owner) => owner.beginInteraction(path))
+            .toList(growable: false),
+        commitInteractions,
+      );
   @override
   void dispose() {
     for (final owner in owners) {
@@ -104,7 +109,7 @@ final class _MultiInteraction implements EditorInteractionSession {
   _MultiInteraction(this.path, this.sessions, this.commitAll);
 
   @override
-  final DataPath path;
+  final skir.ValuePath path;
   final List<EditorInteractionSession> sessions;
   final MultiInteractionCommitter commitAll;
 
@@ -138,7 +143,7 @@ extension IndependentInteractionCommit on Iterable<EditorInteractionSession> {
 /// valid only when at least one owner accepts the path and every applied owner
 /// returns the same value.
 extension SelectionEditorMutationAggregation on Iterable<EditorMutationResult> {
-  EditorMutationResult aggregateEditorMutationsFor(DataPath path) {
+  EditorMutationResult aggregateEditorMutationsFor(skir.ValuePath path) {
     final results = toList();
     final diagnostics = results
         .whereType<InvalidEditorMutation>()
@@ -154,8 +159,8 @@ extension SelectionEditorMutationAggregation on Iterable<EditorMutationResult> {
     final applied = results.whereType<AppliedEditorMutation>().toList();
     if (applied.isEmpty) {
       return EditorMutationResult.invalid([
-        TypeDiagnostic(
-          code: TypeDiagnosticCode.invalidPath,
+        EditorDiagnostic(
+          code: EditorDiagnosticCode.invalidPath,
           message: "No inspected selection can accept the mutation",
           path: path,
         ),

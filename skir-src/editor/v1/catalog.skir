@@ -16,7 +16,6 @@ import {
   DeclarationOwner,
   EndpointId,
   FieldOwner,
-  FieldValue,
   InitializationRequestId,
   NamedTypeTemplate,
   NamedTypeUse,
@@ -30,6 +29,7 @@ import {
   TypeDefinitionId,
   TypeSelection,
   TypeTemplate,
+  TypeUse,
 } from "editor/v1/type_catalog.skir";
 import { BoundedTransferChunk } from "kernel/v1/bounded_transfer.skir";
 import { InternalError } from "kernel/v1/errors.skir";
@@ -241,26 +241,36 @@ struct CatalogInvalidated(810900030) {
   generation: CatalogGeneration = 0;
 }
 
-struct InitializationRequest(810900031) {
+enum PreparationTarget(810900031) {
+  value: TypeUse = 1;
+  record: TypeSelection = 2;
+}
+
+struct ValuePreparationRequest(810900032) {
   id: InitializationRequestId = 0;
   catalog: CatalogGeneration = 1;
-  type: TypeSelection = 2;
-  supplied: [FieldValue|name] = 3;
+  target: PreparationTarget = 2;
+  supplied_value: DataValue? = 3;
   intent_hash: string = 4;
 }
 
-struct PreparedCreation(810900032) {
-  record: AuthoringRecord = 0;
+enum PreparedContent(810900033) {
+  value: DataValue = 1;
+  record: AuthoringRecord = 2;
+}
+
+struct PreparedValue(810900034) {
+  content: PreparedContent = 0;
   findings: [InitializationDiagnostic] = 1;
 }
 
-enum PrepareCreationResult(810900033) {
-  prepared: PreparedCreation = 1;
+enum PrepareValueResult(810900035) {
+  prepared: PreparedValue = 1;
   catalog_changed: CatalogGeneration = 2;
   internal_error: InternalError = 3;
 }
 
-struct EndpointBindingTemplate(810900034) {
+struct EndpointBindingTemplate(810900036) {
   endpoint: EndpointId = 0;
   containing_resource: NamedTypeTemplate = 1;
   value_owner: TypeDefinitionId = 2;
@@ -269,7 +279,7 @@ struct EndpointBindingTemplate(810900034) {
   contains_collection: bool = 5;
 }
 
-struct TypeRecommendation(810900035) {
+struct TypeRecommendation(810900037) {
   type: NamedTypeUse = 0;
   occurrences: int64 = 1;
 }
@@ -282,6 +292,6 @@ method WatchEditorCatalog(
   struct {}
 ): CatalogInvalidated = 910002;
 
-method PrepareCreation(
-  InitializationRequest
-): PrepareCreationResult = 910004;
+method PrepareValue(
+  ValuePreparationRequest
+): PrepareValueResult = 910003;

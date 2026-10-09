@@ -109,19 +109,17 @@ EditorSourcePresentationHost topologyHostPortableHost({
   final engineRealm = _topologyBinding("host.configuration.engine.realm");
   final lastSeen = service?.lastSeen;
   String? selectedEngineTarget() => configurationOwner
-      .value(DataPath.root.field("engine").field("target"))
+      .value(editorRootPath.field("engine").field("target"))
       .valueOrNull
-      ?.asStringOrNull;
+      ?.authoredString;
   bool usesHostedRealm() {
     final realm = configurationOwner
-        .value(DataPath.root.field("realm"))
+        .value(editorRootPath.field("realm"))
         .valueOrNull;
     final engine = configurationOwner
-        .value(DataPath.root.field("engine"))
+        .value(editorRootPath.field("engine"))
         .valueOrNull;
-    return realm is PolymorphicValue &&
-        engine is PolymorphicValue &&
-        _usesHostedRealm(realm, engine);
+    return realm != null && engine != null && _usesHostedRealm(realm, engine);
   }
 
   final runtime = <String, skir.DataValue>{
@@ -156,23 +154,24 @@ EditorSourcePresentationHost topologyHostPortableHost({
         id: _serviceNameBinding,
         use: _portableTextType,
         owner: identityOwner,
-        read: (_) => identityOwner == null
-            ? skir.DataValue.wrapStringValue(
-                service?.displayName ?? host.hostId.id,
-              )
-            : switch (identityOwner
-                  .value(DataPath.root.field("name"))
-                  .valueOrNull) {
-                StringValue(:final value) => skir.DataValue.wrapStringValue(
-                  value,
-                ),
-                _ => skir.DataValue.unfilled,
-              },
+        read: (_) {
+          if (identityOwner == null) {
+            return skir.DataValue.wrapStringValue(
+              service?.displayName ?? host.hostId.id,
+            );
+          }
+          final value = identityOwner
+              .value(editorRootPath.field("name"))
+              .valueOrNull;
+          return value is skir.DataValue_stringValueWrapper
+              ? value
+              : skir.DataValue.unfilled;
+        },
         write: identityOwner == null
             ? null
             : (path, value) => _writeLegacyString(
                 identityOwner,
-                DataPath.root.field("name"),
+                editorRootPath.field("name"),
                 path,
                 value,
               ),
@@ -182,33 +181,35 @@ EditorSourcePresentationHost topologyHostPortableHost({
       id: realmEnabled,
       owner: configurationOwner,
       field: "realm",
-      enabled: _draftVariant(_realmHosted, {"target": "".asValue}),
+      enabled: _draftVariant(_realmHosted, {
+        "target": skir.DataValue.wrapStringValue(""),
+      }),
       disabled: _realmDisabled,
     ),
     _configurationString(
       id: realmTarget,
       owner: configurationOwner,
-      path: DataPath.root.field("realm").field("target"),
+      path: editorRootPath.field("realm").field("target"),
     ),
     _configurationToggle(
       id: engineEnabled,
       owner: configurationOwner,
       field: "engine",
       enabled: _draftVariant(_engineEnabled, {
-        "target": "".asValue,
-        "realm": "".asValue,
+        "target": skir.DataValue.wrapStringValue(""),
+        "realm": skir.DataValue.wrapStringValue(""),
       }),
       disabled: _engineDisabled,
     ),
     _configurationString(
       id: engineTarget,
       owner: configurationOwner,
-      path: DataPath.root.field("engine").field("target"),
+      path: editorRootPath.field("engine").field("target"),
     ),
     _configurationString(
       id: engineRealm,
       owner: configurationOwner,
-      path: DataPath.root.field("engine").field("realm"),
+      path: editorRootPath.field("engine").field("realm"),
     ),
   ];
 
@@ -409,17 +410,16 @@ EditorSourcePresentationBinding _configurationToggle({
   required skir.ExpressionBindingId id,
   required EditOwner owner,
   required String field,
-  required PolymorphicValue enabled,
-  required ResolvedTypeRef disabled,
+  required skir.DataValue enabled,
+  required skir.TypeDefinitionId disabled,
 }) => EditorSourcePresentationBinding(
   id: id,
   use: _portableBooleanType,
   owner: owner,
   read: (_) {
-    final current = owner.value(DataPath.root.field(field)).valueOrNull;
+    final current = owner.value(editorRootPath.field(field)).valueOrNull;
     return skir.DataValue.wrapBoolean(
-      current is PolymorphicValue &&
-          current.concreteType == enabled.concreteType,
+      current != null && _actualType(current) == _actualType(enabled),
     );
   },
   write: (path, value) {
@@ -430,7 +430,7 @@ EditorSourcePresentationBinding _configurationToggle({
     }
     return owner
         .update(
-          DataPath.root.field(field),
+          editorRootPath.field(field),
           value.value ? enabled : _draftVariant(disabled),
         )
         .portablePresentationResult;
@@ -440,21 +440,20 @@ EditorSourcePresentationBinding _configurationToggle({
 EditorSourcePresentationBinding _configurationString({
   required skir.ExpressionBindingId id,
   required EditOwner owner,
-  required DataPath path,
+  required skir.ValuePath path,
 }) => EditorSourcePresentationBinding(
   id: id,
   use: _portableTextType,
   owner: owner,
-  read: (_) => switch (owner.value(path).valueOrNull) {
-    StringValue(:final value) => skir.DataValue.wrapStringValue(value),
-    _ => skir.DataValue.wrapStringValue(""),
-  },
+  read: (_) => skir.DataValue.wrapStringValue(
+    owner.value(path).valueOrNull?.authoredString ?? "",
+  ),
   write: (suffix, value) => _writeLegacyString(owner, path, suffix, value),
 );
 
 PortablePresentationWriteResult _writeLegacyString(
   EditOwner owner,
-  DataPath path,
+  skir.ValuePath path,
   skir.ValuePath suffix,
   skir.DataValue value,
 ) {
@@ -464,9 +463,7 @@ PortablePresentationWriteResult _writeLegacyString(
       "The selected value is invalid",
     );
   }
-  return owner
-      .update(path, StringValue(value.value))
-      .portablePresentationResult;
+  return owner.update(path, value).portablePresentationResult;
 }
 
 skir.TypeUse _portableUse(skir.DataValue value) {

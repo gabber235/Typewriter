@@ -12,6 +12,7 @@ import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.ValueProblem
+import com.typewritermc.authoring.definitionFor
 import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.AuthoringViewStore
@@ -88,7 +89,9 @@ internal class RealmAuthoringOwner(
                     raw.copy(
                         definitions =
                             raw.resources.mapValues { (_, record) ->
-                                record.resourceDefinition(current.catalog.resources, current.catalog.checked).id
+                                current.catalog.resources
+                                    .definitionFor(record.configuration, current.catalog.checked)
+                                    .id
                             },
                     )
                 val next = views.prepare(AuthoringViewDelta(plan.resources, plan.removedResources, resourceDefinitions = plan.definitions))
@@ -145,25 +148,3 @@ internal fun EditExpectation.location(): ValueLocation =
         is EditExpectation.Links -> ValueLocation(resource, ValuePath())
         is EditExpectation.ResourceIds -> ValueLocation(ResourceId("realm"), ValuePath())
     }
-
-private fun AuthoringRecord.resourceDefinition(
-    definitions: List<AuthoringResourceDefinition>,
-    catalog: CheckedCatalog,
-): AuthoringResourceDefinition {
-    val definition =
-        when (val selected = configuration) {
-            is TypeSelection.Complete -> selected.use.definition
-            is TypeSelection.Pending -> selected.definition
-        }
-    val candidates =
-        definitions.filter { resource ->
-            if (resource.root == definition) return@filter true
-            val complete =
-                (configuration as? TypeSelection.Complete)?.use
-                    ?: return@filter catalog.isNominalSubtype(definition, resource.root)
-            val resolved = catalog.resolve(complete) as? Resolution.Ready ?: return@filter false
-            resolved.value.schema.ancestors
-                .any { it.definition == resource.root }
-        }
-    return requireNotNull(candidates.singleOrNull()) { "Authored type $definition must belong to exactly one resource definition." }
-}

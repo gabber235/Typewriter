@@ -8,6 +8,7 @@ import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.LinkOccurrence
 import com.typewritermc.authoring.LinkOccurrenceId
 import com.typewritermc.authoring.PathSegment
+import com.typewritermc.authoring.PreparedContent
 import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.RelationProjectionDelta
 import com.typewritermc.authoring.StructuralResult
@@ -424,7 +425,12 @@ internal class AuthoringMutationPlanner(
                         problems += ValueProblem(counterpart.containing, "counterpart_resource_mismatch")
                         return
                     }
-                    val prepared = counterpart.prepared.record
+                    val prepared =
+                        (counterpart.prepared.content as? PreparedContent.Record)?.record
+                            ?: run {
+                                problems += ValueProblem(counterpart.containing, "counterpart_requires_record")
+                                return
+                            }
                     val actual = (prepared.configuration as? TypeSelection.Complete)?.use
                     if (actual == null) {
                         problems += ValueProblem(counterpart.containing, "counterpart_type_pending")

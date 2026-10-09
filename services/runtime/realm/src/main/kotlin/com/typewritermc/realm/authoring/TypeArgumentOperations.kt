@@ -1,21 +1,18 @@
 package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.ArgumentLocation
-import com.typewritermc.authoring.CommitResult
-import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.EditIntent
 import com.typewritermc.authoring.LinkOccurrenceId
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.PreparedEdit
+import com.typewritermc.authoring.PreparedEditResult
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.ValueProblem
-import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.realm.repository.AuthoringMutationPlanner
-import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.realm.repository.MutationPlanningResult
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.realm.repository.conflicts
@@ -35,28 +32,10 @@ import com.typewritermc.types.catalog.ResolvedRepresentation
 internal data class TypeArgumentChangePreview(
     val resource: ResourceId,
     val next: TypeSelection,
-    val catalog: CatalogGeneration,
-    val expectations: List<EditExpectation>,
-    val intents: List<TypeRepairIntent>,
+    val edit: PreparedEdit,
     val linkRepairs: List<LinkRepairIntent>,
     val clearedLocations: List<ValueLocation>,
 )
-
-internal sealed interface TypeRepairIntent {
-    data class ConfigureResource(
-        val resource: ResourceId,
-        val configuration: TypeSelection,
-    ) : TypeRepairIntent
-
-    data class Retag(
-        val at: ValueLocation,
-        val type: TypeUse.Named,
-    ) : TypeRepairIntent
-
-    data class Clear(
-        val at: ValueLocation,
-    ) : TypeRepairIntent
-}
 
 internal sealed interface LinkRepairIntent {
     data class Clear(
@@ -93,12 +72,11 @@ internal interface TypeArgumentOperations {
         snapshot: AuthoringLease,
     ): TypePreviewResult
 
-    suspend fun confirm(preview: TypeArgumentChangePreview): CommitResult
+    suspend fun prepare(preview: TypeArgumentChangePreview): PreparedEditResult
 }
 
-/** Previews precise repairs and commits them through ordinary prepared acceptance. */
+/** Previews repairs and prepares validated edits without persisting them. */
 internal class DefaultTypeArgumentOperations(
-    private val repository: AuthoringRepository,
     private val snapshots: AuthoringViewStore,
 ) : TypeArgumentOperations {
     override fun preview(
@@ -127,7 +105,7 @@ internal class DefaultTypeArgumentOperations(
         next as Resolution.Ready
 
         val cleared = mutableListOf<ValueLocation>()
-        val nestedRetags = mutableListOf<TypeRepairIntent.Retag>()
+        val nestedRetags = mutableListOf<EditIntent.Retag>()
         val inspected = linkedSetOf<InputIdentity>()
         val rootLocation = ValueLocation(resource, ValuePath())
         val oldFields = old.value.knownFields.associateBy { it.key }
@@ -186,30 +164,16 @@ internal class DefaultTypeArgumentOperations(
             }.toMutableSet()
         val repairs =
             buildList {
-                add(TypeRepairIntent.ConfigureResource(resource, requested))
+                add(EditIntent.ConfigureResource(resource, requested))
                 addAll(nestedRetags)
                 cleared
                     .distinct()
                     .filterNot(relationRepairLocations::contains)
-                    .forEach { add(TypeRepairIntent.Clear(it)) }
+                    .forEach { add(EditIntent.SetValue(it, DataValue.Unfilled)) }
             }
         val plannedIntents =
             buildList {
-                repairs.forEach { repair ->
-                    when (repair) {
-                        is TypeRepairIntent.ConfigureResource -> {
-                            add(EditIntent.ConfigureResource(repair.resource, repair.configuration))
-                        }
-
-                        is TypeRepairIntent.Retag -> {
-                            add(EditIntent.Retag(repair.at, repair.type))
-                        }
-
-                        is TypeRepairIntent.Clear -> {
-                            add(EditIntent.SetValue(repair.at, DataValue.Unfilled))
-                        }
-                    }
-                }
+                addAll(repairs)
                 relationRepairs.forEach { repair ->
                     val occurrence =
                         when (repair) {
@@ -251,9 +215,7 @@ internal class DefaultTypeArgumentOperations(
             TypeArgumentChangePreview(
                 resource = resource,
                 next = requested,
-                catalog = root.catalog.generation,
-                expectations = observed,
-                intents = repairs,
+                edit = PreparedEdit(root.catalog.generation, observed, plannedIntents),
                 linkRepairs = relationRepairs,
                 clearedLocations =
                     (cleared + relationRepairLocations).distinct(),
@@ -261,16 +223,19 @@ internal class DefaultTypeArgumentOperations(
         )
     }
 
-    override suspend fun confirm(preview: TypeArgumentChangePreview): CommitResult {
+    override suspend fun prepare(preview: TypeArgumentChangePreview): PreparedEditResult {
         val rootLocation = ValueLocation(preview.resource, ValuePath())
         if (!preview.hasCoherentMetadata()) {
-            return CommitResult.Rejected(listOf(ValueProblem(rootLocation, "type_argument_preview_mismatch")))
+            return PreparedEditResult.Rejected(listOf(ValueProblem(rootLocation, "type_argument_preview_mismatch")))
         }
-        val prepared = preview.preparedEdit()
         return snapshots.capture().use { snapshot ->
-            if (snapshot.root.catalog.generation != preview.catalog) return CommitResult.CatalogChanged(snapshot.root.catalog.generation)
-            val conflicts = snapshot.root.values.conflicts(preview.expectations)
-            if (conflicts.isNotEmpty()) return CommitResult.Conflict(conflicts)
+            if (snapshot.root.catalog.generation != preview.edit.catalog) {
+                return PreparedEditResult.Rejected(listOf(ValueProblem(rootLocation, "catalog_changed")))
+            }
+            val conflicts = snapshot.root.values.conflicts(preview.edit.expectations)
+            if (conflicts.isNotEmpty()) {
+                return PreparedEditResult.Rejected(listOf(ValueProblem(rootLocation, "expectation_conflict")))
+            }
             val verified =
                 when (val regenerated = preview(preview.resource, preview.next, snapshot)) {
                     is TypePreviewResult.Ready -> {
@@ -278,80 +243,46 @@ internal class DefaultTypeArgumentOperations(
                     }
 
                     is TypePreviewResult.Rejected -> {
-                        return CommitResult.Rejected(regenerated.problems)
+                        return PreparedEditResult.Rejected(regenerated.problems)
                     }
 
                     else -> {
-                        return CommitResult.Rejected(
+                        return PreparedEditResult.Rejected(
                             listOf(ValueProblem(rootLocation, "type_argument_preview_no_longer_valid")),
                         )
                     }
                 }
             if (!verified.sameRepairs(preview)) {
-                return CommitResult.Rejected(listOf(ValueProblem(rootLocation, "type_argument_preview_mismatch")))
+                return PreparedEditResult.Rejected(listOf(ValueProblem(rootLocation, "type_argument_preview_mismatch")))
             }
-            if (preview.expectations.any { expected -> verified.expectations.none { it.sameFact(expected) } } ||
-                verified.expectations.any { expected -> preview.expectations.none { it.sameFact(expected) } }
+            if (preview.edit.expectations.any { expected -> verified.edit.expectations.none { it.sameFact(expected) } } ||
+                verified.edit.expectations.any { expected -> preview.edit.expectations.none { it.sameFact(expected) } }
             ) {
-                return CommitResult.Rejected(listOf(ValueProblem(rootLocation, "type_argument_preview_mismatch")))
+                return PreparedEditResult.Rejected(listOf(ValueProblem(rootLocation, "type_argument_preview_mismatch")))
             }
-            repository.commit(prepared)
+            PreparedEditResult.Prepared(verified.edit)
         }
     }
 
     private fun TypeArgumentChangePreview.sameRepairs(other: TypeArgumentChangePreview): Boolean =
         resource == other.resource &&
             next == other.next &&
-            catalog == other.catalog &&
-            intents == other.intents &&
+            edit.intents == other.edit.intents &&
             linkRepairs == other.linkRepairs &&
             clearedLocations == other.clearedLocations
 
     private fun TypeArgumentChangePreview.hasCoherentMetadata(): Boolean {
-        val configuration = intents.filterIsInstance<TypeRepairIntent.ConfigureResource>()
-        if (configuration != listOf(TypeRepairIntent.ConfigureResource(resource, next))) return false
+        val configuration = edit.intents.filterIsInstance<EditIntent.ConfigureResource>()
+        if (configuration != listOf(EditIntent.ConfigureResource(resource, next))) return false
         val cleared =
             (
-                intents.filterIsInstance<TypeRepairIntent.Clear>().map { it.at } +
+                edit.intents
+                    .filterIsInstance<EditIntent.SetValue>()
+                    .filter { it.value == DataValue.Unfilled }
+                    .map { it.at } +
                     linkRepairs.map(LinkRepairIntent::location)
             ).distinct()
         return clearedLocations == cleared
-    }
-
-    private fun TypeArgumentChangePreview.preparedEdit(): PreparedEdit {
-        val intents =
-            buildList {
-                this@preparedEdit.intents.forEach { repair ->
-                    when (repair) {
-                        is TypeRepairIntent.ConfigureResource -> {
-                            add(EditIntent.ConfigureResource(repair.resource, repair.configuration))
-                        }
-
-                        is TypeRepairIntent.Retag -> {
-                            add(EditIntent.Retag(repair.at, repair.type))
-                        }
-
-                        is TypeRepairIntent.Clear -> {
-                            add(EditIntent.SetValue(repair.at, DataValue.Unfilled))
-                        }
-                    }
-                }
-                linkRepairs.forEach { repair ->
-                    val occurrence =
-                        when (repair) {
-                            is LinkRepairIntent.Clear -> repair.occurrence
-                            is LinkRepairIntent.Remove -> repair.occurrence
-                        }
-                    add(EditIntent.DisconnectRelation(occurrence))
-                }
-            }
-        val prepared =
-            PreparedEdit(
-                catalog = catalog,
-                expectations = expectations,
-                intents = intents,
-            )
-        return prepared
     }
 }
 
@@ -362,7 +293,7 @@ private fun collectRepairs(
     at: ValueLocation,
     catalog: CheckedCatalog,
     repairs: MutableList<ValueLocation>,
-    retags: MutableList<TypeRepairIntent.Retag>,
+    retags: MutableList<EditIntent.Retag>,
     inspected: MutableSet<InputIdentity>,
 ) {
     inspected += InputIdentity.Value(at)
@@ -401,7 +332,7 @@ private fun collectRepairs(
         repairs += at
         return
     }
-    retags += TypeRepairIntent.Retag(at, expectedType)
+    retags += EditIntent.Retag(at, expectedType)
     val payload = requireNotNull(namedValue).payload
     when {
         payload is DataValue.Record && oldRepresentation is ResolvedRepresentation.Record &&

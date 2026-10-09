@@ -19,7 +19,7 @@ extension _EditorReconciliation on TransactionalEditorSource {
       return false;
     }
     final divergent = document.confirmedValue != _document.confirmedValue;
-    var reconciliationDiagnostics = const <TypeDiagnostic>[];
+    var reconciliationDiagnostics = const <EditorDiagnostic>[];
     if (divergent) {
       final result = _reconciler.reconcile(
         base: _document.confirmedValue,
@@ -44,7 +44,7 @@ extension _EditorReconciliation on TransactionalEditorSource {
     }
     final refreshed = _document.copyWith(
       rootType: document.rootType,
-      typeCatalog: document.typeCatalog,
+      catalog: document.catalog,
       mergePolicies: document.mergePolicies,
       diagnostics: [...document.diagnostics, ...reconciliationDiagnostics],
       readOnly: document.readOnly,
@@ -67,7 +67,7 @@ extension _EditorReconciliation on TransactionalEditorSource {
     acceptRemote(revision: document.revision, value: document.confirmedValue);
     final refreshed = _document.copyWith(
       rootType: document.rootType,
-      typeCatalog: document.typeCatalog,
+      catalog: document.catalog,
 
       mergePolicies: document.mergePolicies,
 
@@ -88,7 +88,7 @@ extension _EditorReconciliation on TransactionalEditorSource {
   /// reconciler returns the next canonical value, draft, dirty paths,
   /// confirmed paths, conflicts, and diagnostics together so observers never
   /// see only part of the transition.
-  void _acceptRemote({required int revision, required DataValue value}) {
+  void _acceptRemote({required int revision, required skir.DataValue value}) {
     if (_disposed || _deleted || revision < _document.revision) return;
     if (revision == _document.revision) {
       if (value == _document.confirmedValue) return;
@@ -132,15 +132,15 @@ extension _EditorReconciliation on TransactionalEditorSource {
   /// successful response from overwriting a newer draft.
   void _acceptSuccess(
     int revision,
-    DataValue value,
-    DataValue sent,
-    Set<DataPath> committed,
+    skir.DataValue value,
+    skir.DataValue sent,
+    Set<skir.ValuePath> committed,
     int submittedRevision,
   ) {
     var nextDraft = value;
-    final confirmed = <DataPath>{};
+    final confirmed = <skir.ValuePath>{};
     for (final path in _states.dirtyPaths) {
-      final local = path.read(_draft).valueOrNull;
+      final local = _draft.editorValueAt(path);
       final editedAfterSubmission = _pendingMutations.any(
         (pending) =>
             pending.revision > submittedRevision &&
@@ -148,12 +148,12 @@ extension _EditorReconciliation on TransactionalEditorSource {
       );
       if (committed.contains(path) &&
           !editedAfterSubmission &&
-          local == path.read(sent).valueOrNull) {
+          local == sent.editorValueAt(path)) {
         confirmed.add(path);
         continue;
       }
       if (local != null) {
-        nextDraft = path.replace(nextDraft, local).valueOrNull ?? nextDraft;
+        nextDraft = nextDraft.replacingEditorValue(path, local) ?? nextDraft;
       }
     }
     _states.confirm(confirmed, EditorSavePhase.saved);

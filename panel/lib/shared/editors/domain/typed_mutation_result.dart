@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "typed_mutation_result.freezed.dart";
@@ -14,17 +16,17 @@ sealed class TypedMutationResult with _$TypedMutationResult {
   @Assert("revision >= 0", "Revision must not be negative.")
   const factory TypedMutationResult.success({
     required int revision,
-    required DataValue value,
+    required skir.DataValue value,
   }) = MutationSuccess;
 
   const factory TypedMutationResult.conflict({
     required int expectedRevision,
     required int actualRevision,
-    required DataValue actualValue,
+    required skir.DataValue actualValue,
   }) = MutationConflict;
 
   @Assert("diagnostics.isNotEmpty", "Diagnostics must not be empty.")
-  factory TypedMutationResult.invalid(List<TypeDiagnostic> diagnostics) =
+  factory TypedMutationResult.invalid(List<EditorDiagnostic> diagnostics) =
       MutationInvalid;
 
   const factory TypedMutationResult.permissionDenied(String message) =
@@ -39,13 +41,13 @@ sealed class TypedMutationResult with _$TypedMutationResult {
   }) = MutationUncertain;
 
   @Assert("diagnostics.isNotEmpty", "Diagnostics must not be empty.")
-  factory TypedMutationResult.unavailable(List<TypeDiagnostic> diagnostics) =
+  factory TypedMutationResult.unavailable(List<EditorDiagnostic> diagnostics) =
       MutationUnavailable;
 }
 
 /// Creates a rejected mutation with one actionable diagnostic.
 MutationInvalid invalidMutation(String message) => MutationInvalid([
-  TypeDiagnostic(code: TypeDiagnosticCode.invalidValue, message: message),
+  EditorDiagnostic(code: EditorDiagnosticCode.invalidValue, message: message),
 ]);
 
 /// Creates an unavailable mutation and records a deleted target when known.
@@ -53,11 +55,9 @@ MutationUnavailable unavailableMutation(
   String message, {
   bool targetDeleted = false,
 }) => MutationUnavailable([
-  TypeDiagnostic(
-    code: TypeDiagnosticCode.invalidValue,
+  EditorDiagnostic(
+    code: EditorDiagnosticCode.invalidValue,
     message: message,
-    details: targetDeleted
-        ? const [TypeDiagnosticDetail(key: "editor.target", value: "deleted")]
-        : const [],
+    details: targetDeleted ? const {"editor.target": "deleted"} : const {},
   ),
 ]);

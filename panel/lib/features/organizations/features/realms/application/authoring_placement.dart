@@ -1,26 +1,28 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-final elementValuePath = DataPath.root;
-final elementPlacementPath = DataPath.root.field("placement");
+final elementValuePath = editorRootPath;
+final elementPlacementPath = editorRootPath.field("placement");
 
-final placementRootTypeRef = ResolvedTypeRef(
-  id: TypeId.declared("d134aec7caa54a288ab42275756cfe8d"),
+final placementRootTypeRef = skir.TypeDefinitionId(
+  typeId: skir.TypeId.createDeclared(value: "d134aec7caa54a288ab42275756cfe8d"),
   revision: 1,
 );
-final graphPlacementTypeRef = ResolvedTypeRef(
-  id: TypeId.declared("578f0d42bc964b1fab52c8de5e02f9c5"),
+final graphPlacementTypeRef = skir.TypeDefinitionId(
+  typeId: skir.TypeId.createDeclared(value: "578f0d42bc964b1fab52c8de5e02f9c5"),
   revision: 1,
 );
-final timelineEntryPlacementTypeRef = ResolvedTypeRef(
-  id: TypeId.declared("bf3c5268557a4dfba0e7c1f72d3e67bd"),
+final timelineEntryPlacementTypeRef = skir.TypeDefinitionId(
+  typeId: skir.TypeId.createDeclared(value: "bf3c5268557a4dfba0e7c1f72d3e67bd"),
   revision: 1,
 );
-final timelineSegmentPlacementTypeRef = ResolvedTypeRef(
-  id: TypeId.declared("54e38e56871243d2ae747ed6c0083381"),
+final timelineSegmentPlacementTypeRef = skir.TypeDefinitionId(
+  typeId: skir.TypeId.createDeclared(value: "54e38e56871243d2ae747ed6c0083381"),
   revision: 1,
 );
-final timelineKeyframePlacementTypeRef = ResolvedTypeRef(
-  id: TypeId.declared("e0369811aac94bf6a291f65d1c719e1b"),
+final timelineKeyframePlacementTypeRef = skir.TypeDefinitionId(
+  typeId: skir.TypeId.createDeclared(value: "e0369811aac94bf6a291f65d1c719e1b"),
   revision: 1,
 );
 
@@ -29,17 +31,18 @@ const placementTypeRefs = PlacementTypeReferences();
 final class PlacementTypeReferences {
   const PlacementTypeReferences();
 
-  ResolvedTypeRef get root => placementRootTypeRef;
-  ResolvedTypeRef get graph => graphPlacementTypeRef;
-  ResolvedTypeRef get timelineEntry => timelineEntryPlacementTypeRef;
-  ResolvedTypeRef get timelineSegment => timelineSegmentPlacementTypeRef;
-  ResolvedTypeRef get timelineKeyframe => timelineKeyframePlacementTypeRef;
+  skir.TypeDefinitionId get root => placementRootTypeRef;
+  skir.TypeDefinitionId get graph => graphPlacementTypeRef;
+  skir.TypeDefinitionId get timelineEntry => timelineEntryPlacementTypeRef;
+  skir.TypeDefinitionId get timelineSegment => timelineSegmentPlacementTypeRef;
+  skir.TypeDefinitionId get timelineKeyframe =>
+      timelineKeyframePlacementTypeRef;
 }
 
 sealed class Placement {
   const Placement();
 
-  ResolvedTypeRef get concreteType;
+  skir.TypeDefinitionId get concreteType;
 }
 
 final class GraphPlacement extends Placement {
@@ -56,7 +59,7 @@ final class GraphPlacement extends Placement {
   final int height;
 
   @override
-  ResolvedTypeRef get concreteType => graphPlacementTypeRef;
+  skir.TypeDefinitionId get concreteType => graphPlacementTypeRef;
 
   GraphPlacement copyWith({int? x, int? y, int? width, int? height}) =>
       GraphPlacement(
@@ -84,7 +87,7 @@ final class TimelineEntryPlacement extends Placement {
   final int trackIndex;
 
   @override
-  ResolvedTypeRef get concreteType => timelineEntryPlacementTypeRef;
+  skir.TypeDefinitionId get concreteType => timelineEntryPlacementTypeRef;
 
   @override
   bool operator ==(Object other) =>
@@ -104,7 +107,7 @@ final class TimelineSegmentPlacement extends Placement {
   final int endFrame;
 
   @override
-  ResolvedTypeRef get concreteType => timelineSegmentPlacementTypeRef;
+  skir.TypeDefinitionId get concreteType => timelineSegmentPlacementTypeRef;
 
   @override
   bool operator ==(Object other) =>
@@ -122,7 +125,7 @@ final class TimelineKeyframePlacement extends Placement {
   final int frame;
 
   @override
-  ResolvedTypeRef get concreteType => timelineKeyframePlacementTypeRef;
+  skir.TypeDefinitionId get concreteType => timelineKeyframePlacementTypeRef;
 
   @override
   bool operator ==(Object other) =>
@@ -132,13 +135,18 @@ final class TimelineKeyframePlacement extends Placement {
   int get hashCode => frame.hashCode;
 }
 
-Placement decodePlacement(DataValue value) {
-  if (value is! PolymorphicValue || value.value is! RecordValue) {
+Placement decodePlacement(skir.DataValue value) {
+  final named = value is skir.DataValue_namedWrapper ? value.value : null;
+  final fields = named?.payload.authoredRecord?.fields;
+  if (named == null || fields == null) {
     throw ArgumentError("Placement must be polymorphic record data");
   }
-  final fields = (value.value as RecordValue).fields;
-  int number(String key) => (fields[key]! as IntegerValue).value.toInt();
-  return switch (value.concreteType) {
+  int number(String key) => fields
+      .singleWhere((field) => field.name == key)
+      .value
+      .authoredInteger!
+      .toInt();
+  return switch (named.actualType.definition) {
     final type when type == placementTypeRefs.graph => GraphPlacement(
       x: number("x"),
       y: number("y"),
@@ -155,12 +163,12 @@ Placement decodePlacement(DataValue value) {
     final type when type == placementTypeRefs.timelineKeyframe =>
       TimelineKeyframePlacement(frame: number("frame")),
     _ => throw ArgumentError(
-      "Unknown placement concrete type ${value.concreteType}",
+      "Unknown placement concrete type ${named.actualType.definition}",
     ),
   };
 }
 
-PolymorphicValue placementValue(Placement placement) {
+skir.DataValue placementValue(Placement placement) {
   switch (placement) {
     case GraphPlacement(:final width, :final height)
         when width <= 0 || height <= 0:
@@ -174,23 +182,32 @@ PolymorphicValue placementValue(Placement placement) {
       throw ArgumentError("Timeline keyframe must not be negative");
     default:
   }
-  return PolymorphicValue(
-    concreteType: placement.concreteType,
-    value: RecordValue(switch (placement) {
-      GraphPlacement(:final x, :final y, :final width, :final height) => {
-        "x": x.asValue,
-        "y": y.asValue,
-        "width": width.asValue,
-        "height": height.asValue,
-      },
-      TimelineSegmentPlacement(:final startFrame, :final endFrame) => {
-        "startFrame": startFrame.asValue,
-        "endFrame": endFrame.asValue,
-      },
-      TimelineKeyframePlacement(:final frame) => {"frame": frame.asValue},
-      TimelineEntryPlacement(:final trackIndex) => {
-        "trackIndex": trackIndex.asValue,
-      },
-    }),
+  final fields = switch (placement) {
+    GraphPlacement(:final x, :final y, :final width, :final height) => {
+      "x": x,
+      "y": y,
+      "width": width,
+      "height": height,
+    },
+    TimelineSegmentPlacement(:final startFrame, :final endFrame) => {
+      "startFrame": startFrame,
+      "endFrame": endFrame,
+    },
+    TimelineKeyframePlacement(:final frame) => {"frame": frame},
+    TimelineEntryPlacement(:final trackIndex) => {"trackIndex": trackIndex},
+  };
+  return skir.DataValue.createNamed(
+    actualType: skir.NamedTypeUse(
+      definition: placement.concreteType,
+      arguments: const [],
+    ),
+    payload: skir.DataValue.createRecord(
+      fields: fields.entries.map(
+        (field) => skir.FieldValue(
+          name: field.key,
+          value: skir.DataValue.wrapInteger(field.value.toString()),
+        ),
+      ),
+    ),
   );
 }

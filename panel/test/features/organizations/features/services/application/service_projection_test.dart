@@ -32,8 +32,15 @@ void main() {
     () {
       final canonical = _service(_firstId, "Canonical");
       final local = LocalEditorValue(
-        value: RecordValue({"name": "Edited".asValue}),
-        editedPaths: {DataPath.root.field("name")},
+        value: skir.DataValue.createRecord(
+          fields: [
+            skir.FieldValue(
+              name: "name",
+              value: skir.DataValue.wrapStringValue("Edited"),
+            ),
+          ],
+        ),
+        editedPaths: {editorRootPath.field("name")},
       );
 
       final projected = canonical.projected(local);
@@ -64,21 +71,17 @@ void main() {
         targetId: _firstId,
         scope: EditorResourceScope(organizationId: _organization),
         label: "First",
-        document: EditorDocument(
-          rootType: RecordType(
-            fields: {"name": TypeField(name: "name", type: StringType())},
-          ),
-          typeCatalog: const TypeCatalog([]),
-          confirmedValue: first.identityValue,
-          revision: first.revision,
-        ),
+        document: first.editorSnapshot.document,
         validation: acceptTestEditorMutation,
         commitPolicy: EditorCommitPolicy.applyResource,
         commit: (_) async => throw StateError("No save expected"),
       );
       workspace
           .editor(target)
-          .update(DataPath.root.field("name"), "Edited first".asValue);
+          .update(
+            editorRootPath.field("name"),
+            skir.DataValue.wrapStringValue("Edited first"),
+          );
       await container.read(canonicalServicesProvider.future);
       await container.read(canonicalServiceProvider(_firstId).future);
       await container.read(canonicalServiceProvider(_secondId).future);

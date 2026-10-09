@@ -77,8 +77,7 @@ extension _PortableStructuredInputRendering
             onPressed:
                 childScope.enabled &&
                     !childScope.readOnly &&
-                    childScope.authoring != null &&
-                    childScope.prepareCreation != null
+                    childScope.canExecuteAction
                 ? () async {
                     final chosen = await showAuthoredTypeSearch(
                       context,
@@ -93,10 +92,12 @@ extension _PortableStructuredInputRendering
                       },
                     );
                     if (chosen == null || !context.mounted) return;
-                    await childScope._chooseForm(
-                      skir.ChooseFormAction(
-                        target: control.control.binding,
-                        type: chosen.concreteType,
+                    await childScope.executeAction(
+                      skir.EditorAction.wrapLocal(
+                        skir.LocalEditorAction.createChooseForm(
+                          target: control.control.binding,
+                          type: chosen.concreteType,
+                        ),
                       ),
                     );
                   }

@@ -8,7 +8,7 @@ final class _AuthoredReorderTarget {
     required this.index,
   });
 
-  final skir.ValueLocation containing;
+  final skir.BindingRef containing;
   final skir.ItemId item;
   final List<skir.ListItem> items;
   final int index;

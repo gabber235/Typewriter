@@ -759,6 +759,11 @@ void main() {
   testWidgets("invokes the presentation for a configured concrete value", (
     tester,
   ) async {
+    final host = _BindingHost(
+      catalog: _polymorphicCatalog,
+      expected: skir.TypeUse.wrapNamed(_iconifyType),
+    );
+    addTearDown(host.dispose);
     final scope = PortablePresentationScope(
       bindings: {
         _bindingId: PortableExpressionBinding(
@@ -775,11 +780,15 @@ void main() {
               ],
             ),
           ),
+          schema: PortablePresentationBindingSchema.complete(
+            skir.TypeUse.wrapNamed(_iconifyType),
+          ),
         ),
       },
       budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
       setBinding: (_, _) {},
       catalog: _polymorphicCatalog,
+      host: host,
     );
 
     await tester.pumpTestApp(
@@ -835,6 +844,13 @@ void main() {
         ),
       ],
     );
+    final host = _BindingHost(
+      catalog: skir.EditorCatalogWireSnapshot.defaultInstance
+          .asTrustedLocalCatalog(),
+      expected: _integerType,
+      onWrite: (reference, value) => writes.add((reference, value)),
+    );
+    addTearDown(host.dispose);
     final node = _node(
       "placement",
       skir.PresentationElement.createRecordInput(
@@ -863,6 +879,7 @@ void main() {
       bindings: {_configuredBindingId: PortableExpressionBinding(value: root)},
       budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
       setBinding: (reference, value) => writes.add((reference, value)),
+      host: host,
     );
 
     await tester.pumpTestApp(
@@ -880,14 +897,79 @@ void main() {
     await tester.enterText(input, "6");
     await tester.pumpAndSettle();
     expect(writes, hasLength(1));
-    expect(writes.single.$1, placementReference);
-    expect(
-      writes.single.$2.authoredActualType,
-      skir.NamedTypeUse.defaultInstance,
+    expect(writes.single.$1, xReference);
+    expect(writes.single.$2, skir.DataValue.wrapInteger("6"));
+  });
+
+  test("resolves a row binding to its authoritative collection item", () {
+    final item = skir.ItemId(value: "item:one");
+    final root = skir.ExpressionBindingId(value: "root");
+    final row = skir.ExpressionBindingId(value: "row");
+    final rowAlias = skir.ExpressionBindingId(value: "row_alias");
+    final resource = skir.ResourceId(value: "resource:rows");
+    final rowLocation = skir.ValueLocation(
+      resource: resource,
+      path: skir.ValuePath(
+        segments: [
+          skir.PathSegment.createField(name: "items"),
+          skir.PathSegment.createItem(id: item),
+        ],
+      ),
     );
+    final scope = PortablePresentationScope(
+      bindings: {
+        root: PortableExpressionBinding(
+          value: skir.DataValue.unfilled,
+          location: skir.ValueLocation(
+            resource: resource,
+            path: skir.ValuePath(segments: const []),
+          ),
+        ),
+        row: PortableExpressionBinding(
+          value: skir.DataValue.wrapStringValue("Row"),
+          location: rowLocation,
+        ),
+        rowAlias: PortableExpressionBinding(
+          value: skir.DataValue.wrapStringValue("Alias"),
+          location: rowLocation,
+        ),
+      },
+      budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
+      setBinding: (_, _) {},
+      host: _BindingHost(
+        catalog: skir.EditorCatalogWireSnapshot.defaultInstance
+            .asTrustedLocalCatalog(),
+        expected: _integerType,
+        documentBindings: {
+          root: PortablePresentationBinding(
+            schema: CompletePortablePresentationBinding(_integerType),
+            value: skir.DataValue.unfilled,
+            editable: true,
+            location: skir.ValueLocation(
+              resource: resource,
+              path: skir.ValuePath(segments: const []),
+            ),
+          ),
+        },
+      ),
+    );
+
     expect(
-      writes.single.$2.authoredField("x")?.authoredInteger,
-      BigInt.from(6),
+      scope.sourceReference(
+        skir.BindingRef(
+          bindingId: row,
+          path: skir.ValuePath(segments: const []),
+        ),
+      ),
+      skir.BindingRef(
+        bindingId: root,
+        path: skir.ValuePath(
+          segments: [
+            skir.PathSegment.createField(name: "items"),
+            skir.PathSegment.createItem(id: item),
+          ],
+        ),
+      ),
     );
   });
 
@@ -902,7 +984,7 @@ void main() {
 
     expect(find.text("The collection binding is unavailable"), findsNothing);
     await tester.tap(find.text("Add item"));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     final submitted = await _submit(tester, fixture.document);
     expect(submitted.intents, hasLength(1));
@@ -1141,7 +1223,27 @@ void main() {
         ),
       },
     );
-    skir.InitializationRequest? request;
+    skir.ValuePreparationRequest? request;
+    final host = _authoredHost(
+      document,
+      prepareValue: (value) async {
+        request = value;
+        return skir.PreparedValue(
+          content: skir.PreparedContent.wrapRecord(
+            skir.AuthoringRecord(
+              configuration: value.recordSelection,
+              fields: [
+                skir.FieldValue(
+                  name: "value",
+                  value: skir.DataValue.wrapStringValue(""),
+                ),
+              ],
+            ),
+          ),
+          findings: const [],
+        );
+      },
+    );
     await tester.pumpTestApp(
       child: Material(
         child: PortablePresentationNodeRenderer(
@@ -1163,24 +1265,8 @@ void main() {
               maxCollectionItems: 100,
             ),
             setBinding: (_, _) {},
-            authoring: document.workspace.document,
-            edit: document.binding,
             catalog: _polymorphicCatalog,
-            prepareCreation: (value) async {
-              request = value;
-              return skir.PreparedCreation(
-                record: skir.AuthoringRecord(
-                  configuration: value.type,
-                  fields: [
-                    skir.FieldValue(
-                      name: "value",
-                      value: skir.DataValue.wrapStringValue(""),
-                    ),
-                  ],
-                ),
-                findings: const [],
-              );
-            },
+            host: host,
           ),
         ),
       ),
@@ -1194,7 +1280,10 @@ void main() {
     await tester.tap(find.text("Iconify").last);
     await tester.pumpAndSettle();
 
-    expect(request?.type, skir.TypeSelection.wrapComplete(_iconifyType));
+    expect(
+      request?.recordSelection,
+      skir.TypeSelection.wrapComplete(_iconifyType),
+    );
     expect(
       document.workspace.document
           .resource(_resource)!
@@ -1811,6 +1900,10 @@ _linkCollectionFixture({
       segments: [skir.PathSegment.createField(name: "links")],
     ),
   );
+  final host = _authoredHost(
+    document,
+    material: adaptiveAppearance ? collectionMaterial : null,
+  );
   return (
     document: document,
     catalog: checked,
@@ -1881,10 +1974,9 @@ _linkCollectionFixture({
           },
           budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
           setBinding: (_, _) {},
-          authoring: document.workspace.document,
-          edit: document.binding,
           catalog: checked,
           material: adaptiveAppearance ? collectionMaterial : null,
+          host: host,
         ),
       ),
     ),
@@ -1909,10 +2001,29 @@ PortablePresentationScope _authoringScope(
   },
   budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
   setBinding: (_, _) {},
-  authoring: document.workspace.document,
-  edit: document.binding,
   catalog: document.workspace.document.catalog,
+  host: _authoredHost(document),
 );
+
+AuthoredPresentationHost _authoredHost(
+  _RendererWorkspace document, {
+  skir.PresentationMaterial? material,
+  Future<skir.PreparedValue> Function(skir.ValuePreparationRequest)?
+  prepareValue,
+}) {
+  final host = AuthoredPresentationHost(
+    resource: _resource,
+    source: document.workspace.document,
+    material: material ?? skir.PresentationMaterial.defaultInstance,
+    role: skir.PresentationRole.editor,
+    budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
+    capabilities: const PortablePresentationCapabilities(),
+    prepareValue: prepareValue,
+    edit: document.binding,
+  );
+  addTearDown(host.dispose);
+  return host;
+}
 
 skir.BoundControl _boundControl(skir.BindingRef reference) => skir.BoundControl(
   binding: reference,
@@ -1921,6 +2032,81 @@ skir.BoundControl _boundControl(skir.BindingRef reference) => skir.BoundControl(
   prefix: null,
   semanticLabel: null,
 );
+
+final class _BindingHost extends ChangeNotifier
+    implements PortablePresentationHost {
+  _BindingHost({
+    required this.catalog,
+    required this.expected,
+    this.onWrite,
+    this.documentBindings = const {},
+  });
+
+  final CheckedEditorCatalog catalog;
+  final skir.TypeUse expected;
+  final void Function(skir.BindingRef reference, skir.DataValue value)? onWrite;
+  final Map<skir.ExpressionBindingId, PortablePresentationBinding>
+  documentBindings;
+
+  @override
+  PortablePresentationCapabilities get capabilities =>
+      const PortablePresentationCapabilities();
+
+  @override
+  PortablePresentationDocument get document => PortablePresentationDocument(
+    catalog: catalog,
+    root: skir.PresentationNode.defaultInstance,
+    bindings: documentBindings,
+    budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
+  );
+
+  @override
+  bool get enabled => true;
+
+  @override
+  bool get readOnly => false;
+
+  @override
+  Future<PortablePresentationWriteResult> execute(
+    skir.EditorAction editorAction, {
+    required PortableInvocationContext context,
+  }) async => const PortablePresentationWriteApplied();
+
+  @override
+  skir.TypeUse? expectedType(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => expected;
+
+  @override
+  skir.ValueLocation? location(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => null;
+
+  @override
+  skir.DataValue? read(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) {
+    final root = context.bindings[reference.bindingId]?.value;
+    if (root == null || reference.path.segments.isEmpty) return root;
+    return switch (root.readAt(reference.path)) {
+      PortablePathValue(:final value) => value,
+      PortablePathUnavailable() => null,
+    };
+  }
+
+  @override
+  Future<PortablePresentationWriteResult> write(
+    skir.BindingRef reference,
+    skir.DataValue value, {
+    required PortableInvocationContext context,
+  }) async {
+    onWrite?.call(reference, value);
+    return const PortablePresentationWriteApplied();
+  }
+}
 
 final class _TestPortableHost extends ChangeNotifier
     implements PortablePresentationHost {
@@ -1965,30 +2151,40 @@ final class _TestPortableHost extends ChangeNotifier
 
   @override
   Future<PortablePresentationWriteResult> execute(
-    skir.EditorAction editorAction,
-  ) async {
+    skir.EditorAction editorAction, {
+    required PortableInvocationContext context,
+  }) async {
     actions.add(editorAction);
     return const PortablePresentationWriteResult.applied();
   }
 
   @override
-  skir.TypeUse? expectedType(skir.BindingRef reference) {
+  skir.TypeUse? expectedType(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) {
     expectedTypeReads++;
     return _integerType;
   }
 
   @override
-  skir.ValueLocation? location(skir.BindingRef reference) => null;
+  skir.ValueLocation? location(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => null;
 
   @override
-  skir.DataValue? read(skir.BindingRef reference) =>
-      _document.bindings[reference.bindingId]?.value;
+  skir.DataValue? read(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => _document.bindings[reference.bindingId]?.value;
 
   @override
   Future<PortablePresentationWriteResult> write(
     skir.BindingRef reference,
-    skir.DataValue value,
-  ) async {
+    skir.DataValue value, {
+    required PortableInvocationContext context,
+  }) async {
     writes.add((reference, value));
     if (rejectWrites) {
       return const PortablePresentationWriteResult.rejected(

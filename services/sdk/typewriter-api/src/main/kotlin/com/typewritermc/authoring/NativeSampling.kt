@@ -103,7 +103,7 @@ class WorklistDefaultModeResolver : DefaultModeResolver {
 }
 
 interface InitializationRuntime {
-    suspend fun prepare(request: InitializationRequest): PreparedCreation
+    suspend fun prepare(request: InitializationRequest): PreparedValue
 }
 
-suspend fun InitializationRequest.prepareWith(runtime: InitializationRuntime): PreparedCreation = runtime.prepare(this)
+suspend fun InitializationRequest.prepareWith(runtime: InitializationRuntime): PreparedValue = runtime.prepare(this)

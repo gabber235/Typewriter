@@ -106,17 +106,17 @@ final class _StoryEditorSource extends ChangeNotifier implements EditorSource {
 
   final EditorSnapshot _snapshot;
   EditorDocument _document;
-  DataValue _value;
+  skir.DataValue _value;
   bool _hasWork = false;
 
   @override
   EditorDocument get document => _document;
 
   @override
-  TypeExpression get rootType => _document.rootType;
+  skir.TypeUse get rootType => _document.rootType;
 
   @override
-  TypeCatalog get typeCatalog => _document.typeCatalog;
+  CheckedEditorCatalog get catalog => _document.catalog;
 
   @override
   bool get readOnly => false;
@@ -128,35 +128,42 @@ final class _StoryEditorSource extends ChangeNotifier implements EditorSource {
   bool get hasWork => _hasWork;
 
   @override
-  List<TypeDiagnostic> get draftDiagnostics => _snapshot.validateDraft(_value);
+  List<EditorDiagnostic> get draftDiagnostics =>
+      _snapshot.validateDraft(_value);
 
   @override
-  EditorValue value(DataPath path) => _value.readEditorValue(path);
+  EditorValue value(skir.ValuePath path) => _value.readEditorValue(path);
 
   @override
-  EditorMutationResult validate(DataPath path, DataValue value) =>
+  EditorMutationResult validate(skir.ValuePath path, skir.DataValue value) =>
       _snapshot.validate(path, value);
 
   @override
   EditorMutationResult update(
-    DataPath path,
-    DataValue value, {
+    skir.ValuePath path,
+    skir.DataValue value, {
     EditorStructuralMutation? structuralMutation,
   }) {
     final accepted = validate(path, value);
     if (accepted is! AppliedEditorMutation) return accepted;
-    final replaced = path.replace(_value, value);
-    if (replaced case TypeFailure(:final diagnostics)) {
-      return EditorMutationResult.invalid(diagnostics);
+    final replaced = _value.replaceAt(path, value);
+    if (replaced case PortablePathUnavailable(:final message)) {
+      return EditorMutationResult.invalid([
+        EditorDiagnostic(
+          code: EditorDiagnosticCode.invalidPath,
+          message: message,
+          path: path,
+        ),
+      ]);
     }
-    _value = replaced.valueOrNull!;
+    _value = (replaced as PortablePathValue<skir.DataValue>).value;
     _hasWork = true;
     notifyListeners();
     return accepted;
   }
 
   @override
-  EditorInteractionSession beginInteraction(DataPath path) =>
+  EditorInteractionSession beginInteraction(skir.ValuePath path) =>
       _StoryServiceInteraction(this, path, value(path).valueOrNull);
 
   @override
@@ -175,10 +182,11 @@ final class _StoryEditorSource extends ChangeNotifier implements EditorSource {
   }
 
   @override
-  EditorSaveState saveState(DataPath path) => const EditorSaveState.idle();
+  EditorSaveState saveState(skir.ValuePath path) =>
+      const EditorSaveState.idle();
 
   @override
-  Future<TypedMutationResult> flush({Set<DataPath>? paths}) async {
+  Future<TypedMutationResult> flush({Set<skir.ValuePath>? paths}) async {
     _document = _document.copyWith(
       revision: _document.revision + 1,
       confirmedValue: _value,
@@ -192,7 +200,7 @@ final class _StoryEditorSource extends ChangeNotifier implements EditorSource {
   }
 
   @override
-  void acceptRemote({required int revision, required DataValue value}) {
+  void acceptRemote({required int revision, required skir.DataValue value}) {
     refreshDocument(
       _document.copyWith(revision: revision, confirmedValue: value),
     );
@@ -202,20 +210,21 @@ final class _StoryEditorSource extends ChangeNotifier implements EditorSource {
   void acceptRemoteDeletion() {}
 
   @override
-  void useRemote(DataPath path) => discardDraft();
+  void useRemote(skir.ValuePath path) => discardDraft();
 
   @override
-  Future<TypedMutationResult> keepLocal(DataPath path) => flush(paths: {path});
+  Future<TypedMutationResult> keepLocal(skir.ValuePath path) =>
+      flush(paths: {path});
 }
 
 final class _StoryServiceInteraction implements EditorInteractionSession {
   _StoryServiceInteraction(this._source, this.path, this._origin);
 
   final _StoryEditorSource _source;
-  final DataValue? _origin;
+  final skir.DataValue? _origin;
 
   @override
-  final DataPath path;
+  final skir.ValuePath path;
 
   @override
   bool active = true;

@@ -68,39 +68,58 @@ class OrganizationRoles extends _$OrganizationRoles {
 
     final request = skir.WatchOrganizationRolesRequest();
 
-    yield* ref.watchRequest(
+    yield* ref.watchProjection<
+      List<OrganizationRole>,
+      skir.WatchOrganizationRolesResponse,
+      skir.WatchOrganizationRolesResponse
+    >(
       subject:
           "cloud.to.user.$userId.organization.${organizationId.id}.roles.watch",
-      listenSubject: "cloud.from.organization.${organizationId.id}.roles.watch",
+      eventSubject: "cloud.from.organization.${organizationId.id}.roles.watch",
       requestBytes: skir.WatchOrganizationRolesRequest.serializer.toBytes(
         request,
       ),
-      serializer: skir.WatchOrganizationRolesResponse.serializer,
-      transformer: (previous, response) {
-        switch (response) {
-          case skir.WatchOrganizationRolesResponse_unknown():
-            throw ApiException.unknownResponseMessage();
-          case skir.WatchOrganizationRolesResponse_internalErrorWrapper():
-            throw ApiException.internalServerError();
-          case skir.WatchOrganizationRolesResponse_listWrapper(:final value):
-            return value.map(OrganizationRole.fromSkir).toList();
-          case skir.WatchOrganizationRolesResponse_addWrapper(:final value):
-            return previous.upsertByKey(
-              (role) => role.roleId,
-              OrganizationRole.fromSkir(value),
-            );
-          case skir.WatchOrganizationRolesResponse_updateWrapper(:final value):
-            return previous.upsertByKey(
-              (role) => role.roleId,
-              OrganizationRole.fromSkir(value),
-            );
-          case skir.WatchOrganizationRolesResponse_removeWrapper(:final value):
-            return previous?.where((role) => role.roleId != value).toList() ??
-                [];
-        }
-      },
+      responseSerializer: skir.WatchOrganizationRolesResponse.serializer,
+      eventSerializer: skir.WatchOrganizationRolesResponse.serializer,
+      snapshot: _roleSnapshot,
+      reduce: _applyRoleEvent,
+      delivery: const ProjectionDelivery.ephemeral(),
+      reconciliation: const ProjectionReconciliation.latest(),
     );
   }
 }
+
+List<OrganizationRole> _roleSnapshot(
+  skir.WatchOrganizationRolesResponse response,
+) => switch (response) {
+  skir.WatchOrganizationRolesResponse_listWrapper(:final value) =>
+    value.map(OrganizationRole.fromSkir).toList(),
+  skir.WatchOrganizationRolesResponse_unknown() =>
+    throw ApiException.unknownResponseMessage(),
+  skir.WatchOrganizationRolesResponse_internalErrorWrapper() =>
+    throw ApiException.internalServerError(),
+  _ => throw StateError("Snapshot request returned a role event"),
+};
+
+List<OrganizationRole> _applyRoleEvent(
+  List<OrganizationRole> current,
+  skir.WatchOrganizationRolesResponse event,
+) => switch (event) {
+  skir.WatchOrganizationRolesResponse_listWrapper(:final value) =>
+    value.map(OrganizationRole.fromSkir).toList(),
+  skir.WatchOrganizationRolesResponse_addWrapper(:final value) ||
+  skir.WatchOrganizationRolesResponse_updateWrapper(
+    :final value,
+  ) => current.upsertByKey(
+    (role) => role.roleId,
+    OrganizationRole.fromSkir(value),
+  ),
+  skir.WatchOrganizationRolesResponse_removeWrapper(:final value) =>
+    current.where((role) => role.roleId != value).toList(),
+  skir.WatchOrganizationRolesResponse_unknown() =>
+    throw ApiException.unknownResponseMessage(),
+  skir.WatchOrganizationRolesResponse_internalErrorWrapper() =>
+    throw ApiException.internalServerError(),
+};
 
 /// Provider for the list of members in the current organization.

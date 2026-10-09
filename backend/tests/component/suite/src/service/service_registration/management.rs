@@ -4,7 +4,7 @@ use typewriter_component_test::prelude::skir_record_id;
 use wasmcloud_utils::skir::base::{
     kernel::v1::record_id::RecordId,
     service::v1::organization::{
-        ServiceUpdateValidationError, UpdateOrganizationServiceRequest,
+        OrganizationServicesChanged, ServiceUpdateValidationError, UpdateOrganizationServiceRequest,
         UpdateOrganizationServiceResponse, WatchOrganizationServicesRequest,
         WatchOrganizationServicesResponse,
     },
@@ -72,12 +72,12 @@ async fn update_renames_owned_service_and_publishes_new_value(
         .messaging_mock()?
         .expect_publish("typewriter.to.organization.test_org.services.watch")
         .body_matches(|body| {
-            WatchOrganizationServicesResponse::serializer()
+            OrganizationServicesChanged::serializer()
                 .from_bytes(body, wasmcloud_utils::skir_client::UnrecognizedValues::Drop)
                 .is_ok_and(|response| {
                     matches!(
                         response,
-                        WatchOrganizationServicesResponse::Update(service)
+                        OrganizationServicesChanged::Update(service)
                             if service.name == "new_name" && service.revision == 2
                     )
                 })

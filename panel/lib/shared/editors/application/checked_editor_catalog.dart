@@ -567,9 +567,10 @@ final class CheckedEditorCatalog {
     skir.TypeSelection selection,
   ) {
     final definitions = nominalDefinitions(selection);
-    return snapshot.resourceDefinitions
+    final candidates = snapshot.resourceDefinitions
         .where((resource) => definitions.contains(resource.root))
-        .firstOrNull;
+        .toList(growable: false);
+    return candidates.length == 1 ? candidates.single : null;
   }
 
   bool isResourceDefinition(

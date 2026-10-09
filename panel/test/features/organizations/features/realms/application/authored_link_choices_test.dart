@@ -47,16 +47,18 @@ void main() {
       (candidate) => candidate.resource == fixture.emptyTarget,
     );
     final slot = target.creatable.single;
-    final prepared = skir.PreparedCreation(
-      record: skir.AuthoringRecord(
-        configuration: fixture.wrapperSelection,
-        fields: [
-          skir.FieldValue(name: "back", value: skir.DataValue.unfilled),
-          skir.FieldValue(
-            name: "label",
-            value: skir.DataValue.wrapStringValue("captured default"),
-          ),
-        ],
+    final prepared = skir.PreparedValue(
+      content: skir.PreparedContent.wrapRecord(
+        skir.AuthoringRecord(
+          configuration: fixture.wrapperSelection,
+          fields: [
+            skir.FieldValue(name: "back", value: skir.DataValue.unfilled),
+            skir.FieldValue(
+              name: "label",
+              value: skir.DataValue.wrapStringValue("captured default"),
+            ),
+          ],
+        ),
       ),
       findings: const [],
     );
@@ -161,25 +163,27 @@ void main() {
   ) async {
     final fixture = _fixture();
     final editing = _LinkWorkspace(fixture.draft, fixture.source.resource);
-    final prepared = skir.PreparedCreation(
-      record: skir.AuthoringRecord(
-        configuration: fixture.wrapperSelection,
-        fields: [
-          skir.FieldValue(name: "back", value: skir.DataValue.unfilled),
-          skir.FieldValue(
-            name: "label",
-            value: skir.DataValue.wrapStringValue("prepared"),
-          ),
-        ],
+    final prepared = skir.PreparedValue(
+      content: skir.PreparedContent.wrapRecord(
+        skir.AuthoringRecord(
+          configuration: fixture.wrapperSelection,
+          fields: [
+            skir.FieldValue(name: "back", value: skir.DataValue.unfilled),
+            skir.FieldValue(
+              name: "label",
+              value: skir.DataValue.wrapStringValue("prepared"),
+            ),
+          ],
+        ),
       ),
       findings: const [],
     );
-    skir.InitializationRequest? request;
+    skir.ValuePreparationRequest? request;
     await tester.pumpWidget(
       _linkControl(
         fixture,
         editing: editing,
-        prepareCreation: (value) async {
+        prepareValue: (value) async {
           request = value;
           return prepared;
         },
@@ -195,7 +199,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(request?.type, fixture.wrapperSelection);
+    expect(request?.recordSelection, fixture.wrapperSelection);
     unawaited(editing.binding.save());
     await tester.pump();
     final intent =
@@ -251,11 +255,23 @@ Widget _linkControl(
   })
   fixture, {
   required _LinkWorkspace editing,
-  Future<skir.PreparedCreation> Function(skir.InitializationRequest)?
-  prepareCreation,
+  Future<skir.PreparedValue> Function(skir.ValuePreparationRequest)?
+  prepareValue,
 }) {
   final root = skir.ExpressionBindingId(value: "configured_value");
   final record = fixture.draft.resource(fixture.source.resource)!;
+  final budget = skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100);
+  final host = AuthoredPresentationHost(
+    resource: fixture.source.resource,
+    source: editing.workspace.document,
+    material: skir.PresentationMaterial.defaultInstance,
+    role: skir.PresentationRole.editor,
+    budget: budget,
+    capabilities: const PortablePresentationCapabilities(),
+    prepareValue: prepareValue,
+    edit: editing.binding,
+  );
+  addTearDown(host.dispose);
   return testApp(
     child: Scaffold(
       body: PortablePresentationNodeRenderer(
@@ -292,12 +308,10 @@ Widget _linkControl(
               ),
             ),
           },
-          budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
+          budget: budget,
           setBinding: (_, _) {},
-          authoring: editing.workspace.document,
-          edit: editing.binding,
           catalog: fixture.catalog,
-          prepareCreation: prepareCreation,
+          host: host,
         ),
       ),
     ),

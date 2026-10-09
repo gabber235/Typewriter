@@ -177,7 +177,7 @@ return partial(_that.selection);case _:
 
 class CompletePortablePresentationBinding implements PortablePresentationBindingSchema {
   const CompletePortablePresentationBinding(this.use);
-  
+
 
  final  skir.TypeUse use;
 
@@ -245,7 +245,7 @@ as skir.TypeUse,
 
 class PartialPortablePresentationBinding implements PortablePresentationBindingSchema {
   const PartialPortablePresentationBinding(this.selection);
-  
+
 
  final  skir.TypeSelection selection;
 
@@ -378,7 +378,7 @@ as skir.ValueLocation?,
 @override
 @pragma('vm:prefer-inline')
 $PortablePresentationBindingSchemaCopyWith<$Res> get schema {
-  
+
   return $PortablePresentationBindingSchemaCopyWith<$Res>(_self.schema, (value) {
     return _then(_self.copyWith(schema: value));
   });
@@ -521,7 +521,7 @@ return $default(_that.schema,_that.value,_that.editable,_that.location);case _:
 
 class _PortablePresentationBinding implements PortablePresentationBinding {
   const _PortablePresentationBinding({required this.schema, required this.value, this.editable = false, this.location});
-  
+
 
 @override final  PortablePresentationBindingSchema schema;
 @override final  skir.DataValue value;
@@ -592,7 +592,7 @@ as skir.ValueLocation?,
 @override
 @pragma('vm:prefer-inline')
 $PortablePresentationBindingSchemaCopyWith<$Res> get schema {
-  
+
   return $PortablePresentationBindingSchemaCopyWith<$Res>(_self.schema, (value) {
     return _then(_self.copyWith(schema: value));
   });
@@ -637,7 +637,7 @@ String toString() {
 
 class _PortablePresentationDocument extends PortablePresentationDocument {
   const _PortablePresentationDocument({required this.catalog, required this.root, required  Map<skir.ExpressionBindingId, PortablePresentationBinding> bindings, required this.budget, required this.role, required this.material, required  Set<skir.PresentationId> activePresentations, required  Map<String, skir.PresentationNode> slots}): _bindings = bindings,_activePresentations = activePresentations,_slots = slots,super._();
-  
+
 
 @override final  CheckedEditorCatalog catalog;
 @override final  skir.PresentationNode root;
@@ -694,7 +694,7 @@ String toString() {
 /// @nodoc
 mixin _$PortablePresentationCapabilities {
 
- Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)? get invokeCommand; Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? get watchSearch; Future<void> Function()? get reload; Future<void> Function()? get commit; ValueChanged<skir.ResourceId>? get openResource; Future<skir.PreparedCreation> Function(skir.InitializationRequest request)? get prepareCreation;
+ Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)? get invokeCommand; Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? get watchSearch; Future<void> Function()? get reload; Future<void> Function()? get commit; ValueChanged<skir.ResourceId>? get openResource; Future<skir.PreparedValue> Function(skir.ValuePreparationRequest request)? get prepareValue;
 /// Create a copy of PortablePresentationCapabilities
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -706,20 +706,20 @@ $PortablePresentationCapabilitiesCopyWith<PortablePresentationCapabilities> get 
 @override
 bool operator ==(Object other) {
   final _this = this as PortablePresentationCapabilities;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortablePresentationCapabilities&&(identical(other.invokeCommand, _this.invokeCommand) || other.invokeCommand == _this.invokeCommand)&&(identical(other.watchSearch, _this.watchSearch) || other.watchSearch == _this.watchSearch)&&(identical(other.reload, _this.reload) || other.reload == _this.reload)&&(identical(other.commit, _this.commit) || other.commit == _this.commit)&&(identical(other.openResource, _this.openResource) || other.openResource == _this.openResource)&&(identical(other.prepareCreation, _this.prepareCreation) || other.prepareCreation == _this.prepareCreation));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortablePresentationCapabilities&&(identical(other.invokeCommand, _this.invokeCommand) || other.invokeCommand == _this.invokeCommand)&&(identical(other.watchSearch, _this.watchSearch) || other.watchSearch == _this.watchSearch)&&(identical(other.reload, _this.reload) || other.reload == _this.reload)&&(identical(other.commit, _this.commit) || other.commit == _this.commit)&&(identical(other.openResource, _this.openResource) || other.openResource == _this.openResource)&&(identical(other.prepareValue, _this.prepareValue) || other.prepareValue == _this.prepareValue));
 }
 
 
 @override
 int get hashCode {
   final _this = this as PortablePresentationCapabilities;
-  return Object.hash(runtimeType,_this.invokeCommand,_this.watchSearch,_this.reload,_this.commit,_this.openResource,_this.prepareCreation);
+  return Object.hash(runtimeType,_this.invokeCommand,_this.watchSearch,_this.reload,_this.commit,_this.openResource,_this.prepareValue);
 }
 
 @override
 String toString() {
   final _this = this as PortablePresentationCapabilities;
-  return 'PortablePresentationCapabilities(invokeCommand: ${_this.invokeCommand}, watchSearch: ${_this.watchSearch}, reload: ${_this.reload}, commit: ${_this.commit}, openResource: ${_this.openResource}, prepareCreation: ${_this.prepareCreation})';
+  return 'PortablePresentationCapabilities(invokeCommand: ${_this.invokeCommand}, watchSearch: ${_this.watchSearch}, reload: ${_this.reload}, commit: ${_this.commit}, openResource: ${_this.openResource}, prepareValue: ${_this.prepareValue})';
 }
 
 
@@ -730,7 +730,7 @@ abstract mixin class $PortablePresentationCapabilitiesCopyWith<$Res>  {
   factory $PortablePresentationCapabilitiesCopyWith(PortablePresentationCapabilities value, $Res Function(PortablePresentationCapabilities) _then) = _$PortablePresentationCapabilitiesCopyWithImpl;
 @useResult
 $Res call({
- Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)? invokeCommand, Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch, Future<void> Function()? reload, Future<void> Function()? commit, ValueChanged<skir.ResourceId>? openResource, Future<skir.PreparedCreation> Function(skir.InitializationRequest request)? prepareCreation
+ Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)? invokeCommand, Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch, Future<void> Function()? reload, Future<void> Function()? commit, ValueChanged<skir.ResourceId>? openResource, Future<skir.PreparedValue> Function(skir.ValuePreparationRequest request)? prepareValue
 });
 
 
@@ -747,15 +747,15 @@ class _$PortablePresentationCapabilitiesCopyWithImpl<$Res>
 
 /// Create a copy of PortablePresentationCapabilities
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? invokeCommand = freezed,Object? watchSearch = freezed,Object? reload = freezed,Object? commit = freezed,Object? openResource = freezed,Object? prepareCreation = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? invokeCommand = freezed,Object? watchSearch = freezed,Object? reload = freezed,Object? commit = freezed,Object? openResource = freezed,Object? prepareValue = freezed,}) {
   return _then(PortablePresentationCapabilities(
 invokeCommand: freezed == invokeCommand ? _self.invokeCommand : invokeCommand // ignore: cast_nullable_to_non_nullable
 as Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)?,watchSearch: freezed == watchSearch ? _self.watchSearch : watchSearch // ignore: cast_nullable_to_non_nullable
 as Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)?,reload: freezed == reload ? _self.reload : reload // ignore: cast_nullable_to_non_nullable
 as Future<void> Function()?,commit: freezed == commit ? _self.commit : commit // ignore: cast_nullable_to_non_nullable
 as Future<void> Function()?,openResource: freezed == openResource ? _self.openResource : openResource // ignore: cast_nullable_to_non_nullable
-as ValueChanged<skir.ResourceId>?,prepareCreation: freezed == prepareCreation ? _self.prepareCreation : prepareCreation // ignore: cast_nullable_to_non_nullable
-as Future<skir.PreparedCreation> Function(skir.InitializationRequest request)?,
+as ValueChanged<skir.ResourceId>?,prepareValue: freezed == prepareValue ? _self.prepareValue : prepareValue // ignore: cast_nullable_to_non_nullable
+as Future<skir.PreparedValue> Function(skir.ValuePreparationRequest request)?,
   ));
 }
 
@@ -840,10 +840,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)? invokeCommand,  Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch,  Future<void> Function()? reload,  Future<void> Function()? commit,  ValueChanged<skir.ResourceId>? openResource,  Future<skir.PreparedCreation> Function(skir.InitializationRequest request)? prepareCreation)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)? invokeCommand,  Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch,  Future<void> Function()? reload,  Future<void> Function()? commit,  ValueChanged<skir.ResourceId>? openResource,  Future<skir.PreparedValue> Function(skir.ValuePreparationRequest request)? prepareValue)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PortablePresentationCapabilities() when $default != null:
-return $default(_that.invokeCommand,_that.watchSearch,_that.reload,_that.commit,_that.openResource,_that.prepareCreation);case _:
+return $default(_that.invokeCommand,_that.watchSearch,_that.reload,_that.commit,_that.openResource,_that.prepareValue);case _:
   return orElse();
 
 }
@@ -861,10 +861,10 @@ return $default(_that.invokeCommand,_that.watchSearch,_that.reload,_that.commit,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)? invokeCommand,  Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch,  Future<void> Function()? reload,  Future<void> Function()? commit,  ValueChanged<skir.ResourceId>? openResource,  Future<skir.PreparedCreation> Function(skir.InitializationRequest request)? prepareCreation)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)? invokeCommand,  Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch,  Future<void> Function()? reload,  Future<void> Function()? commit,  ValueChanged<skir.ResourceId>? openResource,  Future<skir.PreparedValue> Function(skir.ValuePreparationRequest request)? prepareValue)  $default,) {final _that = this;
 switch (_that) {
 case _PortablePresentationCapabilities():
-return $default(_that.invokeCommand,_that.watchSearch,_that.reload,_that.commit,_that.openResource,_that.prepareCreation);case _:
+return $default(_that.invokeCommand,_that.watchSearch,_that.reload,_that.commit,_that.openResource,_that.prepareValue);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -881,10 +881,10 @@ return $default(_that.invokeCommand,_that.watchSearch,_that.reload,_that.commit,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)? invokeCommand,  Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch,  Future<void> Function()? reload,  Future<void> Function()? commit,  ValueChanged<skir.ResourceId>? openResource,  Future<skir.PreparedCreation> Function(skir.InitializationRequest request)? prepareCreation)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)? invokeCommand,  Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch,  Future<void> Function()? reload,  Future<void> Function()? commit,  ValueChanged<skir.ResourceId>? openResource,  Future<skir.PreparedValue> Function(skir.ValuePreparationRequest request)? prepareValue)?  $default,) {final _that = this;
 switch (_that) {
 case _PortablePresentationCapabilities() when $default != null:
-return $default(_that.invokeCommand,_that.watchSearch,_that.reload,_that.commit,_that.openResource,_that.prepareCreation);case _:
+return $default(_that.invokeCommand,_that.watchSearch,_that.reload,_that.commit,_that.openResource,_that.prepareValue);case _:
   return null;
 
 }
@@ -896,15 +896,15 @@ return $default(_that.invokeCommand,_that.watchSearch,_that.reload,_that.commit,
 
 
 class _PortablePresentationCapabilities implements PortablePresentationCapabilities {
-  const _PortablePresentationCapabilities({this.invokeCommand, this.watchSearch, this.reload, this.commit, this.openResource, this.prepareCreation});
-  
+  const _PortablePresentationCapabilities({this.invokeCommand, this.watchSearch, this.reload, this.commit, this.openResource, this.prepareValue});
+
 
 @override final  Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)? invokeCommand;
 @override final  Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch;
 @override final  Future<void> Function()? reload;
 @override final  Future<void> Function()? commit;
 @override final  ValueChanged<skir.ResourceId>? openResource;
-@override final  Future<skir.PreparedCreation> Function(skir.InitializationRequest request)? prepareCreation;
+@override final  Future<skir.PreparedValue> Function(skir.ValuePreparationRequest request)? prepareValue;
 
 /// Create a copy of PortablePresentationCapabilities
 /// with the given fields replaced by the non-null parameter values.
@@ -916,18 +916,18 @@ _$PortablePresentationCapabilitiesCopyWith<_PortablePresentationCapabilities> ge
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortablePresentationCapabilities&&(identical(other.invokeCommand, invokeCommand) || other.invokeCommand == invokeCommand)&&(identical(other.watchSearch, watchSearch) || other.watchSearch == watchSearch)&&(identical(other.reload, reload) || other.reload == reload)&&(identical(other.commit, commit) || other.commit == commit)&&(identical(other.openResource, openResource) || other.openResource == openResource)&&(identical(other.prepareCreation, prepareCreation) || other.prepareCreation == prepareCreation));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortablePresentationCapabilities&&(identical(other.invokeCommand, invokeCommand) || other.invokeCommand == invokeCommand)&&(identical(other.watchSearch, watchSearch) || other.watchSearch == watchSearch)&&(identical(other.reload, reload) || other.reload == reload)&&(identical(other.commit, commit) || other.commit == commit)&&(identical(other.openResource, openResource) || other.openResource == openResource)&&(identical(other.prepareValue, prepareValue) || other.prepareValue == prepareValue));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,invokeCommand,watchSearch,reload,commit,openResource,prepareCreation);
+    return Object.hash(runtimeType,invokeCommand,watchSearch,reload,commit,openResource,prepareValue);
 }
 
 @override
 String toString() {
-    return 'PortablePresentationCapabilities(invokeCommand: $invokeCommand, watchSearch: $watchSearch, reload: $reload, commit: $commit, openResource: $openResource, prepareCreation: $prepareCreation)';
+    return 'PortablePresentationCapabilities(invokeCommand: $invokeCommand, watchSearch: $watchSearch, reload: $reload, commit: $commit, openResource: $openResource, prepareValue: $prepareValue)';
 }
 
 
@@ -938,7 +938,7 @@ abstract mixin class _$PortablePresentationCapabilitiesCopyWith<$Res> implements
   factory _$PortablePresentationCapabilitiesCopyWith(_PortablePresentationCapabilities value, $Res Function(_PortablePresentationCapabilities) _then) = __$PortablePresentationCapabilitiesCopyWithImpl;
 @override @useResult
 $Res call({
- Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)? invokeCommand, Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch, Future<void> Function()? reload, Future<void> Function()? commit, ValueChanged<skir.ResourceId>? openResource, Future<skir.PreparedCreation> Function(skir.InitializationRequest request)? prepareCreation
+ Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)? invokeCommand, Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch, Future<void> Function()? reload, Future<void> Function()? commit, ValueChanged<skir.ResourceId>? openResource, Future<skir.PreparedValue> Function(skir.ValuePreparationRequest request)? prepareValue
 });
 
 
@@ -955,15 +955,15 @@ class __$PortablePresentationCapabilitiesCopyWithImpl<$Res>
 
 /// Create a copy of PortablePresentationCapabilities
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? invokeCommand = freezed,Object? watchSearch = freezed,Object? reload = freezed,Object? commit = freezed,Object? openResource = freezed,Object? prepareCreation = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? invokeCommand = freezed,Object? watchSearch = freezed,Object? reload = freezed,Object? commit = freezed,Object? openResource = freezed,Object? prepareValue = freezed,}) {
   return _then(_PortablePresentationCapabilities(
 invokeCommand: freezed == invokeCommand ? _self.invokeCommand : invokeCommand // ignore: cast_nullable_to_non_nullable
 as Future<void> Function(skir.CapabilityId capabilityId, skir.DataValue payload)?,watchSearch: freezed == watchSearch ? _self.watchSearch : watchSearch // ignore: cast_nullable_to_non_nullable
 as Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)?,reload: freezed == reload ? _self.reload : reload // ignore: cast_nullable_to_non_nullable
 as Future<void> Function()?,commit: freezed == commit ? _self.commit : commit // ignore: cast_nullable_to_non_nullable
 as Future<void> Function()?,openResource: freezed == openResource ? _self.openResource : openResource // ignore: cast_nullable_to_non_nullable
-as ValueChanged<skir.ResourceId>?,prepareCreation: freezed == prepareCreation ? _self.prepareCreation : prepareCreation // ignore: cast_nullable_to_non_nullable
-as Future<skir.PreparedCreation> Function(skir.InitializationRequest request)?,
+as ValueChanged<skir.ResourceId>?,prepareValue: freezed == prepareValue ? _self.prepareValue : prepareValue // ignore: cast_nullable_to_non_nullable
+as Future<skir.PreparedValue> Function(skir.ValuePreparationRequest request)?,
   ));
 }
 
@@ -1135,7 +1135,7 @@ return rejected(_that.message);case _:
 
 class PortablePresentationWriteApplied implements PortablePresentationWriteResult {
   const PortablePresentationWriteApplied();
-  
+
 
 
 
@@ -1167,7 +1167,7 @@ String toString() {
 
 class PortablePresentationWriteRejected implements PortablePresentationWriteResult {
   const PortablePresentationWriteRejected(this.message);
-  
+
 
  final  String message;
 

@@ -55,7 +55,7 @@ extension EditorResourceBinding on TransactionalEditorSource {
   bool reconcilePendingContract() {
     final candidate = _pendingContractSnapshot;
     if (candidate == null) return false;
-    final mutation = candidate.validate(DataPath.root, _draft);
+    final mutation = candidate.validate(editorRootPath, _draft);
     if (mutation is! AppliedEditorMutation ||
         candidate.validateDraft(_draft).isNotEmpty) {
       return false;
@@ -105,15 +105,14 @@ extension EditorResourceBinding on TransactionalEditorSource {
   void _pauseForContractChange({
     String message = "The editor contract changed. Reconcile or discard the draft to continue",
   }) {
-    final diagnostic = TypeDiagnostic(
-      code: TypeDiagnosticCode.invalidRevision,
+    final diagnostic = EditorDiagnostic(
+      code: EditorDiagnosticCode.invalidRevision,
       message: message,
-      pathPresent: false,
     );
     _document = _document.copyWith(
       diagnostics: [
         ..._document.diagnostics.where(
-          (item) => item.code != TypeDiagnosticCode.invalidRevision,
+          (item) => item.code != EditorDiagnosticCode.invalidRevision,
         ),
         diagnostic,
       ],
@@ -140,7 +139,7 @@ final class _ResourceSave {
   final bool authoritativeDivergence;
 
   static Future<_ResourceSave> run(
-    Map<TransactionalEditorSource, Set<DataPath>> paths,
+    Map<TransactionalEditorSource, Set<skir.ValuePath>> paths,
   ) async {
     final workspace = paths.keys.first.workspace!;
     final commits = <TransactionalEditorSource, EditorCommit>{};
@@ -306,7 +305,9 @@ extension _ResourcePersistence on TransactionalEditorSource {
   /// result stops the loop and stores the unresolved commit for explicit
   /// recovery, while successful commits are accepted before the source is
   /// notified.
-  Future<TypedMutationResult> _persistResource(Set<DataPath> paths) async {
+  Future<TypedMutationResult> _persistResource(
+    Set<skir.ValuePath> paths,
+  ) async {
     var activePaths = paths;
     var attempts = 0;
     try {

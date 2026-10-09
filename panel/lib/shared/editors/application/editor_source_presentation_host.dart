@@ -59,7 +59,6 @@ final class EditorSourcePresentationHost extends ChangeNotifier
     this.material,
     this.activePresentations = const {},
     this.slots = const {},
-    this.executeAction,
   }) : _bindings = _indexBindings(bindings) {
     _document = _snapshot();
     for (final owner in _owners) {
@@ -71,10 +70,6 @@ final class EditorSourcePresentationHost extends ChangeNotifier
   final skir.PresentationNode Function() root;
   final Map<skir.ExpressionBindingId, EditorSourcePresentationBinding>
   _bindings;
-  final FutureOr<PortablePresentationWriteResult> Function(
-    skir.EditorAction action,
-  )?
-  executeAction;
   final skir.EvaluationBudget budget;
   final skir.PresentationRole? role;
   final skir.PresentationMaterial? material;
@@ -103,8 +98,12 @@ final class EditorSourcePresentationHost extends ChangeNotifier
   PortablePresentationDocument get document => _document;
 
   @override
-  skir.DataValue? read(skir.BindingRef reference) {
-    final exposed = _document.bindings[reference.bindingId];
+  skir.DataValue? read(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) {
+    if (context.catalogGeneration != catalog.snapshot.generation) return null;
+    final exposed = context.bindings[reference.bindingId];
     if (exposed == null) return null;
     if (reference.path.segments.isEmpty) return exposed.value;
     return switch (exposed.value.readAt(reference.path)) {
@@ -114,15 +113,26 @@ final class EditorSourcePresentationHost extends ChangeNotifier
   }
 
   @override
-  skir.ValueLocation? location(skir.BindingRef reference) => null;
+  skir.ValueLocation? location(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => null;
 
   @override
-  skir.TypeUse? expectedType(skir.BindingRef reference) {
-    final source = _bindings[reference.bindingId];
-    final exposed = _document.bindings[reference.bindingId];
-    if (source == null || exposed == null) return null;
-    if (reference.path.segments.isEmpty) return source.use;
-    final selection = switch (source.use) {
+  skir.TypeUse? expectedType(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) {
+    if (context.catalogGeneration != catalog.snapshot.generation) return null;
+    final exposed = context.bindings[reference.bindingId];
+    if (exposed == null) return null;
+    final root = switch (exposed.schema) {
+      CompletePortablePresentationBinding(:final use) => use,
+      _ => null,
+    };
+    if (root == null) return null;
+    if (reference.path.segments.isEmpty) return root;
+    final selection = switch (root) {
       skir.TypeUse_namedWrapper(:final value) =>
         skir.TypeSelection.wrapComplete(value),
       _ => null,
@@ -135,8 +145,9 @@ final class EditorSourcePresentationHost extends ChangeNotifier
   @override
   Future<PortablePresentationWriteResult> write(
     skir.BindingRef reference,
-    skir.DataValue value,
-  ) async {
+    skir.DataValue value, {
+    required PortableInvocationContext context,
+  }) async {
     if (!enabled || readOnly) {
       return const PortablePresentationWriteRejected(
         "This presentation is read only",
@@ -148,7 +159,7 @@ final class EditorSourcePresentationHost extends ChangeNotifier
         "This presentation binding is read only",
       );
     }
-    final expected = expectedType(reference);
+    final expected = expectedType(reference, context: context);
     if (expected == null || !catalog.admitsPortableValue(expected, value)) {
       return const PortablePresentationWriteRejected(
         "The value does not match the binding type",
@@ -161,42 +172,38 @@ final class EditorSourcePresentationHost extends ChangeNotifier
 
   @override
   Future<PortablePresentationWriteResult> execute(
-    skir.EditorAction editorAction,
-  ) async {
+    skir.EditorAction editorAction, {
+    required PortableInvocationContext context,
+  }) async {
     if (!enabled || readOnly) {
       return const PortablePresentationWriteRejected(
         "This presentation is read only",
       );
     }
-    final executor = executeAction;
-    if (executor == null) {
-      if (editorAction case skir.EditorAction_localWrapper(
-        value: skir.LocalEditorAction_setValueWrapper(:final value),
-      )) {
-        final evaluated = PortableExpressionEvaluator({
-          for (final entry in document.bindings.entries)
-            entry.key: entry.value.value,
-        }, budget: budget).evaluate(value.value);
-        return switch (evaluated) {
-          PortableExpressionAvailable(value: final replacement) => write(
-            value.target,
-            replacement,
+    if (editorAction case skir.EditorAction_localWrapper(
+      value: skir.LocalEditorAction_setValueWrapper(:final value),
+    )) {
+      final evaluated = PortableExpressionEvaluator.located(
+        context.bindings,
+        budget: budget,
+      ).evaluate(value.value);
+      return switch (evaluated) {
+        PortableExpressionAvailable(value: final replacement) => write(
+          value.target,
+          replacement,
+          context: context,
+        ),
+        PortableExpressionFailed(:final message) =>
+          PortablePresentationWriteRejected(message),
+        PortableExpressionUnavailable() =>
+          const PortablePresentationWriteRejected(
+            "The action value is unavailable",
           ),
-          PortableExpressionFailed(:final message) =>
-            PortablePresentationWriteRejected(message),
-          PortableExpressionUnavailable() =>
-            const PortablePresentationWriteRejected(
-              "The action value is unavailable",
-            ),
-        };
-      }
-      return const PortablePresentationWriteRejected(
-        "This presentation action is unavailable",
-      );
+      };
     }
-    final result = await executor(editorAction);
-    if (result is PortablePresentationWriteApplied && !_disposed) _changed();
-    return result;
+    return const PortablePresentationWriteRejected(
+      "This presentation action is unavailable",
+    );
   }
 
   PortablePresentationDocument _snapshot() => PortablePresentationDocument(

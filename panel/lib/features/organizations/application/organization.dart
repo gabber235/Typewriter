@@ -61,7 +61,11 @@ class Organizations extends _$Organizations {
       return;
     }
 
-    yield* ref.watchSequencedRequest(
+    yield* ref.watchProjection<
+      List<OrganizationData>,
+      skir.WatchUserOrganizationsResponse,
+      skir.UserOrganizationsChanged
+    >(
       subject: "cloud.to.user.$userId.organization.watch",
       eventSubject: "cloud.from.user.$userId.organizations.changed",
       requestBytes: skir.WatchUserOrganizationsRequest.serializer.toBytes(
@@ -69,24 +73,20 @@ class Organizations extends _$Organizations {
       ),
       responseSerializer: skir.WatchUserOrganizationsResponse.serializer,
       eventSerializer: skir.UserOrganizationsChanged.serializer,
-      snapshot: (response) {
-        return switch (response) {
-          skir.WatchUserOrganizationsResponse_unknown() =>
-            throw ApiException.unknownResponseMessage(),
-          skir.WatchUserOrganizationsResponse_internalErrorWrapper() =>
-            throw ApiException.internalServerError(),
-          skir.WatchUserOrganizationsResponse_snapshotWrapper(:final value) =>
-            SequencedSnapshot(
-              sequence: value.sequence,
-              value: value.values.map(OrganizationData.fromSkir).toList(),
-            ),
-          skir.WatchUserOrganizationsResponse_changedWrapper() =>
-            throw StateError("Snapshot request returned a delta"),
-        };
-      },
-      eventSequence: (event) => event.sequence,
+      snapshot: (response) =>
+          _organizationSnapshot(response).values
+              .map(OrganizationData.fromSkir)
+              .toList(),
       reduce: _reduceOrganizations,
-      sequenceState: _sequenceState,
+      delivery: const ProjectionDelivery.ordered(
+        stream: "TYPEWRITER_MEMBERSHIP",
+      ),
+      reconciliation: ProjectionReconciliation.sequenced(
+        snapshotSequence: (response) =>
+            _organizationSnapshot(response).sequence,
+        eventSequence: (event) => event.sequence,
+        sequenceState: _sequenceState,
+      ),
     );
   }
 
@@ -168,6 +168,19 @@ class Organizations extends _$Organizations {
     }
   }
 }
+
+skir.UserOrganizationsSnapshot _organizationSnapshot(
+  skir.WatchUserOrganizationsResponse response,
+) => switch (response) {
+  skir.WatchUserOrganizationsResponse_snapshotWrapper(:final value) => value,
+  skir.WatchUserOrganizationsResponse_unknown() =>
+    throw ApiException.unknownResponseMessage(),
+  skir.WatchUserOrganizationsResponse_internalErrorWrapper() =>
+    throw ApiException.internalServerError(),
+  skir.WatchUserOrganizationsResponse_changedWrapper() => throw StateError(
+    "Snapshot request returned a delta",
+  ),
+};
 
 List<OrganizationData> _reduceOrganizations(
   List<OrganizationData> organizations,

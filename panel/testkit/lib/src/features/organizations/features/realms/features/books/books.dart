@@ -5,8 +5,6 @@ import "package:faker/faker.dart" hide Color, random;
 
 // ignore: depend_on_referenced_packages, implementation_imports
 
-import "package:typewriter_testkit/src/features/organizations/features/realms/features/books/features/pages/features/editor/typed_data.dart";
-
 export "features/features.dart";
 
 Book Function() generateRandomBook(List<Tag> tags) {
@@ -29,7 +27,7 @@ Book Function() generateRandomBook(List<Tag> tags) {
     return Book(
       bookId: skir.ResourceId(value: "book:$title"),
       title: title,
-      icon: generateRandomIconName(),
+      icon: "book",
       color: safeColors.randomElement(),
       tagIds: tagIds,
     );

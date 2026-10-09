@@ -287,11 +287,12 @@ async fn publish_report(
     realm: Option<&RealmInstanceViewRecord>,
     engine: Option<&EngineInstanceViewRecord>,
 ) -> Result<(), otel_wasi::Error> {
-    let topology =
-        wasmcloud_utils::skir_subjects::organization_topology(&organization_id.key.to_string());
+    let topology = wasmcloud_utils::skir_subjects::organization_topology_changed(
+        &organization_id.key.to_string(),
+    );
     topology
         .publish(
-            wasmcloud_utils::skir::base::service::v1::topology::WatchOrganizationTopologyResponse::HostUpdated(
+            wasmcloud_utils::skir::base::service::v1::topology::OrganizationTopologyChanged::HostUpdated(
                 Box::new(host.clone().into()),
             ),
         )
@@ -299,7 +300,7 @@ async fn publish_report(
     if let Some(realm) = realm {
         topology
             .publish(
-                wasmcloud_utils::skir::base::service::v1::topology::WatchOrganizationTopologyResponse::RealmUpdated(
+                wasmcloud_utils::skir::base::service::v1::topology::OrganizationTopologyChanged::RealmUpdated(
                     Box::new(realm.clone().into()),
                 ),
             )
@@ -308,7 +309,7 @@ async fn publish_report(
     if let Some(engine) = engine {
         topology
             .publish(
-                wasmcloud_utils::skir::base::service::v1::topology::WatchOrganizationTopologyResponse::EngineUpdated(
+                wasmcloud_utils::skir::base::service::v1::topology::OrganizationTopologyChanged::EngineUpdated(
                     Box::new(engine.clone().into()),
                 ),
             )

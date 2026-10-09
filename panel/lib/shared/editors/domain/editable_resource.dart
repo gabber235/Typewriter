@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Bridges an editor owner to one resource without owning its live state.
@@ -42,8 +44,8 @@ abstract class EditorSnapshot {
   EditorDocument get document;
 
   /// Applies resource specific validation to the complete local draft.
-  List<TypeDiagnostic> validateDraft(DataValue value) {
-    final result = validate(DataPath.root, value);
+  List<EditorDiagnostic> validateDraft(skir.DataValue value) {
+    final result = validate(editorRootPath, value);
     return switch (result) {
       InvalidEditorMutation(:final diagnostics) => diagnostics,
       _ => const [],
@@ -51,7 +53,7 @@ abstract class EditorSnapshot {
   }
 
   /// Validates one path and value against the snapshot's type context.
-  EditorMutationResult validate(DataPath path, DataValue value);
+  EditorMutationResult validate(skir.ValuePath path, skir.DataValue value);
 }
 
 /// Marks a snapshot whose interpretation contract can change independently.

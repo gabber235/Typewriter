@@ -2,10 +2,10 @@ package com.typewritermc.realm.routes
 
 import com.typewritermc.authoring.InitializationRuntime
 import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
-import com.typewritermc.realm.authoring.CreationCatalogChanged
+import com.typewritermc.realm.authoring.PreparationCatalogChanged
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import com.typewritermc.types.skir.getOrThrow
-import skirout.editor.v1.catalog.PrepareCreationResult
+import skirout.editor.v1.catalog.PrepareValueResult
 
 /**
  * Owns the transport adapters for editor catalog fetches and generation watches.
@@ -15,7 +15,7 @@ import skirout.editor.v1.catalog.PrepareCreationResult
  */
 internal class EditorCatalogRoutes(
     private val source: RealmEditorCatalogSource,
-    private val creation: InitializationRuntime,
+    private val preparation: InitializationRuntime,
     private val contracts: EditorContracts,
 ) {
     /** Registers catalog fetch and initial generation operations on the current Realm router. */
@@ -28,14 +28,14 @@ internal class EditorCatalogRoutes(
                 }
                 transfer.initial
             }
-            unary(contracts.prepareCreation) { call ->
+            unary(contracts.prepareValue) { call ->
                 try {
                     val request = SkirAuthoringOperationCodec.decode(call.request).getOrThrow()
-                    PrepareCreationResult.PreparedWrapper(
-                        SkirAuthoringOperationCodec.encode(creation.prepare(request)).getOrThrow(),
+                    PrepareValueResult.PreparedWrapper(
+                        SkirAuthoringOperationCodec.encode(preparation.prepare(request)).getOrThrow(),
                     )
-                } catch (changed: CreationCatalogChanged) {
-                    PrepareCreationResult.createCatalogChanged(value = changed.actual.value)
+                } catch (changed: PreparationCatalogChanged) {
+                    PrepareValueResult.createCatalogChanged(value = changed.actual.value)
                 }
             }
             watch(contracts.watchEditorCatalog) { call ->

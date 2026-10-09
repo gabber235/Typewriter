@@ -15,6 +15,7 @@ import com.typewritermc.authoring.SelectionId
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.definitionFor
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.configuration.ConfigurationRecipe
@@ -236,7 +237,7 @@ class InMemoryAuthoringViewStore(
             val immutable = immutableResources(resources)
             val resolved =
                 immutable.mapValues { (id, record) ->
-                    definitions[id] ?: record.resourceDefinition(catalog.resources, catalog.checked).id
+                    definitions[id] ?: catalog.resources.definitionFor(record.configuration, catalog.checked).id
                 }
             return RootRetention(AuthoringView(catalog, immutable, immutableMap(resolved), immutableMap(discoverLinks(immutable))))
         } catch (failure: Throwable) {
@@ -483,26 +484,6 @@ private fun immutableValue(value: DataValue): DataValue =
             value
         }
     }
-
-private fun AuthoringRecord.resourceDefinition(
-    definitions: List<AuthoringResourceDefinition>,
-    catalog: CheckedCatalog,
-): AuthoringResourceDefinition {
-    val definition = configuration.definition()
-    val candidates =
-        definitions.filter { resource ->
-            if (resource.root == definition) return@filter true
-            val complete =
-                (configuration as? TypeSelection.Complete)?.use
-                    ?: return@filter catalog.isNominalSubtype(definition, resource.root)
-            val resolved = catalog.resolve(complete) as? Resolution.Ready ?: return@filter false
-            resolved.value.schema.ancestors
-                .any { it.definition == resource.root }
-        }
-    return requireNotNull(candidates.singleOrNull()) {
-        "Authored type $definition must belong to exactly one resource definition."
-    }
-}
 
 private fun TypeSelection.definition(): com.typewritermc.types.TypeDefinitionId =
     when (this) {

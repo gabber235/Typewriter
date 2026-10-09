@@ -19,7 +19,7 @@ internal class RealmRouteFactory(
     private val compiledContent: PublicationResults,
     private val publisher: RealmPublicationCoordinator,
     private val editorCatalog: RealmEditorCatalogSource,
-    private val creation: InitializationRuntime,
+    private val preparation: InitializationRuntime,
     private val presentationSearch: RealmPresentationSearchSource,
     private val capabilityInvocations: RealmCapabilityInvocationSource? = null,
     private val checkEvents: EditorCheckEvents? = null,
@@ -40,7 +40,7 @@ internal class RealmRouteFactory(
         val compiledContentRoutes = EditorCompiledContentRoutes(compiledContent, contracts)
         val compiledResourceStatusRoutes = EditorCompiledResourceStatusRoutes(compiledContent, contracts)
         val publicationRoutes = PublicationRoutes(publisher, compiledContent, contracts, address)
-        val editorCatalogRoutes = EditorCatalogRoutes(editorCatalog, creation, contracts)
+        val editorCatalogRoutes = EditorCatalogRoutes(editorCatalog, preparation, contracts)
         val presentationSearchRoutes = RealmPresentationSearchRoutes(presentationSearch, contracts, address)
         val capabilityInvocationRoutes = capabilityInvocations?.let { RealmCapabilityInvocationRoutes(it, contracts) }
         return communicatorRoutes {

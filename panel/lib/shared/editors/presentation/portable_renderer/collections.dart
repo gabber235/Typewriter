@@ -3,6 +3,8 @@ part of "../portable_presentation_renderer.dart";
 final class _AuthoredCollectionRow {
   const _AuthoredCollectionRow({
     required this.resource,
+    required this.configuration,
+    required this.label,
     required this.row,
     required this.key,
     required this.canonicalKey,
@@ -11,6 +13,8 @@ final class _AuthoredCollectionRow {
   });
 
   final skir.ResourceId resource;
+  final skir.TypeSelection configuration;
+  final String label;
   final skir.DataValue row;
   final skir.DataValue key;
   final String canonicalKey;
@@ -222,239 +226,63 @@ extension _PortableCollectionRendering on PortablePresentationNodeRenderer {
     String? problem,
   })
   _authoredCollection(String sourceId, PortablePresentationScope scope) {
-    final definition = scope.material?.dependencies.collections
-        .where((candidate) => candidate.sourceId == sourceId)
-        .firstOrNull;
-    final draft = scope.authoring;
-    final catalog = scope.catalog;
-    if (definition == null || draft == null || catalog == null) {
+    final host = scope.host;
+    if (host is! PortableCollectionProjectionHost) {
       return (
-        definition: definition,
+        definition: null,
         rows: const [],
         problem: "The presentation collection is unavailable",
       );
     }
-    final projected = definition.projection;
-    final resources = definition.resources;
-    if ((projected == null) == (resources == null)) {
+    final collectionHost = switch (host) {
+      PortableCollectionProjectionHost value => value,
+      _ => throw StateError("Collection host checked before projection"),
+    };
+    final material = scope.material;
+    if (material == null) {
+      return (
+        definition: null,
+        rows: const [],
+        problem: "The presentation collection is unavailable",
+      );
+    }
+    final projected = collectionHost.projectCollection(
+      sourceId,
+      material: material,
+      context: scope.invocation,
+    );
+    final definition = projected.definition;
+    if (definition == null || projected.problem != null) {
       return (
         definition: definition,
         rows: const [],
-        problem: "The presentation collection source is invalid",
+        problem: projected.problem,
       );
     }
-    final rows = <_AuthoredCollectionRow>[];
-    final entries = draft.resources.entries.toList()
-      ..sort((left, right) => left.key.value.compareTo(right.key.value));
-    for (final entry in entries) {
-      final record = entry.value;
-      final eligible = resources != null
-          ? catalog
-                .nominalDefinitions(record.configuration)
-                .contains(resources.root)
-          : catalog.matchesNamedTemplate(record.configuration, projected!.root);
-      if (!eligible) continue;
-      final row = resources != null
-          ? _authoredResourceRow(record)
-          : _authoredProjectionRow(definition, projected!, record, catalog);
-      if (row == null) {
-        return (
-          definition: definition,
-          rows: const [],
-          problem: "A presentation collection row could not be projected",
-        );
-      }
-      final resourceBinding =
-          resources?.resourceBindingId ?? projected!.resourceBindingId;
-      final rowScope = scope.withValues({
-        definition.rowBindingId: row,
-        resourceBinding: skir.DataValue.wrapStringValue(entry.key.value),
-      });
-      final key = rowScope.evaluate(definition.key);
-      final selectable = rowScope.evaluate(definition.selectability);
-      if (key is! PortableExpressionAvailable) {
-        return (
-          definition: definition,
-          rows: const [],
-          problem: "A presentation collection key is unavailable",
-        );
-      }
-      final selected = switch (selectable) {
-        PortableExpressionAvailable(
-          value: skir.DataValue_booleanWrapper(:final value),
-        ) =>
-          value,
-        _ => false,
-      };
-      rows.add(
-        _AuthoredCollectionRow(
-          resource: entry.key,
-          row: row,
-          key: key.value,
-          canonicalKey: canonicalAuthoredValue(key.value),
-          selectable: selected,
-          scope: rowScope,
-        ),
-      );
-    }
-    return (definition: definition, rows: rows, problem: null);
-  }
-
-  skir.DataValue _authoredResourceRow(skir.AuthoringRecord record) {
-    final payload = skir.DataValue.createRecord(fields: record.fields);
-    return switch (record.configuration) {
-      skir.TypeSelection_completeWrapper(:final value) =>
-        skir.DataValue.createNamed(actualType: value, payload: payload),
-      _ => payload,
-    };
-  }
-
-  skir.DataValue? _authoredProjectionRow(
-    skir.PresentationCollectionDefinition definition,
-    skir.PresentationCollectionProjection projection,
-    skir.AuthoringRecord record,
-    CheckedEditorCatalog catalog,
-  ) {
-    skir.DataValue? row;
-    for (final field in projection.fields) {
-      final source = switch (field.source) {
-        skir.PresentationCollectionProjectionValue_contentWrapper(
-          :final value,
-        ) =>
-          switch (record.readAt(value)) {
-            PortablePathValue(:final value) => value,
-            PortablePathUnavailable() => skir.DataValue.unfilled,
-          },
-        skir.PresentationCollectionProjectionValue_literalWrapper(
-          :final value,
-        ) =>
-          value,
-        _ => null,
-      };
-      if (source == null) return null;
-      if (field.target.segments.isEmpty) {
-        if (row != null || projection.fields.length != 1) return null;
-        row = source;
-        continue;
-      }
-      row = _writeProjectionValue(
-        row ?? skir.DataValue.createRecord(fields: const []),
-        field.target.segments.toList(growable: false),
-        source,
-      );
-      if (row == null) return null;
-    }
-    row ??= skir.DataValue.createRecord(fields: const []);
-    if (row == skir.DataValue.unfilled) return row;
-    final applied = catalog.applyTemplate(
-      definition.rowType,
-      record.configuration,
-    );
-    return applied == null
-        ? row
-        : _completeProjectedValue(row, applied, catalog);
-  }
-
-  skir.DataValue? _completeProjectedValue(
-    skir.DataValue authored,
-    skir.TypeUse expected,
-    CheckedEditorCatalog catalog,
-  ) {
-    if (authored == skir.DataValue.unfilled) return authored;
-    return switch (expected) {
-      skir.TypeUse_nullableWrapper(:final value) =>
-        authored == skir.DataValue.null_
-            ? authored
-            : _completeProjectedValue(authored, value.value, catalog),
-      skir.TypeUse_namedWrapper(:final value) => _completeProjectedNamedValue(
-        value: authored,
-        expected: value,
-        catalog: catalog,
-      ),
-      _ => authored,
-    };
-  }
-
-  skir.DataValue? _completeProjectedNamedValue({
-    required skir.DataValue value,
-    required skir.NamedTypeUse expected,
-    required CheckedEditorCatalog catalog,
-  }) {
-    final payload = switch (value) {
-      skir.DataValue_namedWrapper(:final value)
-          when value.actualType == expected =>
-        value.payload,
-      skir.DataValue_namedWrapper() => null,
-      _ => value,
-    };
-    if (payload == null) return null;
-    final representation = catalog
-        .published(expected.definition)
-        ?.definition
-        .representation;
-    if (representation is! skir.RepresentationTemplate_recordWrapper) {
-      return skir.DataValue.createNamed(actualType: expected, payload: payload);
-    }
-    final projected = payload.authoredRecord;
-    if (projected == null) return null;
-    final fields = catalog.fields(skir.TypeSelection.wrapComplete(expected));
-    final expectedNames = {for (final field in fields) field.template.key};
-    if (projected.fields.any((field) => !expectedNames.contains(field.name))) {
-      return null;
-    }
-    final completed = <skir.FieldValue>[];
-    for (final field in fields) {
-      final existing = projected.fields
-          .where((candidate) => candidate.name == field.template.key)
-          .firstOrNull;
-      final expectedField = field.type;
-      final fieldValue = existing?.value ?? skir.DataValue.unfilled;
-      final normalized = expectedField == null
-          ? fieldValue
-          : _completeProjectedValue(fieldValue, expectedField, catalog);
-      if (normalized == null) return null;
-      completed.add(
-        skir.FieldValue(name: field.template.key, value: normalized),
-      );
-    }
-    return skir.DataValue.createNamed(
-      actualType: expected,
-      payload: skir.DataValue.createRecord(fields: completed),
-    );
-  }
-
-  skir.DataValue? _writeProjectionValue(
-    skir.DataValue current,
-    List<skir.PathSegment> segments,
-    skir.DataValue value,
-  ) {
-    if (segments.isEmpty) return value;
-    final field = switch (segments.first) {
-      skir.PathSegment_fieldWrapper(:final value) => value.name,
-      _ => null,
-    };
-    if (field == null) return null;
-    final payload = current.authoredPayload;
-    final record = payload.authoredRecord;
-    if (record == null) return null;
-    final fields = <skir.FieldValue>[...record.fields];
-    final index = fields.indexWhere((candidate) => candidate.name == field);
-    final nested = _writeProjectionValue(
-      index < 0
-          ? skir.DataValue.createRecord(fields: const [])
-          : fields[index].value,
-      segments.sublist(1),
-      value,
-    );
-    if (nested == null) return null;
-    final replacement = skir.FieldValue(name: field, value: nested);
-    if (index < 0) {
-      fields.add(replacement);
-    } else {
-      fields[index] = replacement;
-    }
-    return current.withAuthoredPayload(
-      skir.DataValue.createRecord(fields: fields),
+    final resourceBinding =
+        definition.resources?.resourceBindingId ??
+        definition.projection!.resourceBindingId;
+    return (
+      definition: definition,
+      rows: [
+        for (final row in projected.rows)
+          _AuthoredCollectionRow(
+            resource: row.resource,
+            configuration: row.configuration,
+            label: row.label,
+            row: row.row,
+            key: row.key,
+            canonicalKey: row.canonicalKey,
+            selectable: row.selectable,
+            scope: scope.withValues({
+              definition.rowBindingId: row.row,
+              resourceBinding: skir.DataValue.wrapStringValue(
+                row.resource.value,
+              ),
+            }),
+          ),
+      ],
+      problem: null,
     );
   }
 
@@ -494,21 +322,18 @@ final class _AuthoredCollectionRowAppearance extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final catalog = row.scope.catalog;
-    final record = row.scope.authoring?.resource(row.resource);
-    final fallbackLabel =
-        _authoredLinkTargetLabel(record) ?? row.resource.value;
-    if (catalog == null || record == null) return Text(fallbackLabel);
+    if (catalog == null) return Text(row.label);
     final appearance = definition.resources?.appearance;
     final material = appearance == null
         ? switch (catalog.selectPresentation(
-            record.configuration,
+            row.configuration,
             skir.PresentationRole.referenceOption,
           )) {
             SelectedEditorPresentation(:final material) => material,
             _ => null,
           }
-        : catalog.presentationMaterial(appearance, record.configuration);
-    if (material == null) return Text(fallbackLabel);
+        : catalog.presentationMaterial(appearance, row.configuration);
+    if (material == null) return Text(row.label);
     final scope = row.scope
         .withValues({
           _configuredValueBindingId: row.row,

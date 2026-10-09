@@ -2,7 +2,7 @@ package com.typewritermc.realm.routes
 
 import com.typewritermc.authoring.InitializationRequest
 import com.typewritermc.authoring.InitializationRuntime
-import com.typewritermc.authoring.PreparedCreation
+import com.typewritermc.authoring.PreparedValue
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.catalog.installTestCatalog
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
@@ -74,5 +74,5 @@ val EditorCatalogRoutesTest by testSuite {
 }
 
 private data object UnusedInitialization : InitializationRuntime {
-    override suspend fun prepare(request: InitializationRequest): PreparedCreation = error("Not used")
+    override suspend fun prepare(request: InitializationRequest): PreparedValue = error("Not used")
 }

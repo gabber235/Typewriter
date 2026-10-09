@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Describes the strongest save condition currently affecting a path.
@@ -32,9 +34,9 @@ final class EditorPathConflict {
     required this.remote,
   });
 
-  final DataValue base;
-  final DataValue local;
-  final DataValue remote;
+  final skir.DataValue base;
+  final skir.DataValue local;
+  final skir.DataValue remote;
 }
 
 /// Identifies why the persistence boundary repeatedly rejected a commit.
@@ -50,7 +52,7 @@ final class EditorContentionDetails {
     required this.kind,
     required this.attempts,
     required this.retryLimit,
-    required Iterable<DataPath> paths,
+    required Iterable<skir.ValuePath> paths,
     this.expectedVersion,
     this.observedVersion,
   }) : paths = Set.unmodifiable(paths),
@@ -61,7 +63,7 @@ final class EditorContentionDetails {
   final EditorContentionKind kind;
   final int attempts;
   final int retryLimit;
-  final Set<DataPath> paths;
+  final Set<skir.ValuePath> paths;
   final int? expectedVersion;
   final int? observedVersion;
 }
@@ -89,12 +91,12 @@ final class EditorSaveState {
   const EditorSaveState.idle() : this(phase: EditorSavePhase.idle);
 
   final EditorSavePhase phase;
-  final DataPath? path;
+  final skir.ValuePath? path;
   final bool replayAvailable;
   final Object? submissionId;
   final EditorPathConflict? conflict;
   final EditorContentionDetails? contention;
-  final List<TypeDiagnostic> diagnostics;
+  final List<EditorDiagnostic> diagnostics;
 
   bool get canRetry =>
       (phase == EditorSavePhase.uncertain && replayAvailable) ||
@@ -109,7 +111,7 @@ final class EditorSaveState {
 /// `cancel` restores the interaction's local boundary. Overlapping sessions
 /// are resolved by the owner so only one session controls a path.
 abstract interface class EditorInteractionSession {
-  DataPath get path;
+  skir.ValuePath get path;
 
   bool get active;
 

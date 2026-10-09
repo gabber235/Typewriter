@@ -98,14 +98,22 @@ abstract class Service with _$Service {
 /// should use the canonical service for mutation expectations.
 extension ServiceIdentityConversion on Service {
   /// The canonical value owned by the service identity editor.
-  RecordValue get identityValue => RecordValue({"name": name.asValue});
+  skir.DataValue get identityValue => skir.DataValue.createRecord(
+    fields: [
+      skir.FieldValue(
+        name: "name",
+        value: skir.DataValue.wrapStringValue(name),
+      ),
+    ],
+  );
 
   /// Returns this identity with [value] applied when it is valid.
-  Service? withIdentityValue(DataValue value) {
-    if (value is! RecordValue) return null;
-    final name = value.fields["name"];
-    if (name is! StringValue || name.value.trim().isEmpty) return null;
-    return copyWith(name: name.value);
+  Service? withIdentityValue(skir.DataValue value) {
+    final name = value
+        .editorValueAt(editorRootPath.field("name"))
+        ?.authoredString;
+    if (name == null || name.trim().isEmpty) return null;
+    return copyWith(name: name);
   }
 
   /// Projects unsaved identity edits over canonical data for presentation.

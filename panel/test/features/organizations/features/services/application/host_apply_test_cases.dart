@@ -1,15 +1,23 @@
 part of "service_host_selectable_test.dart";
 
-PolymorphicValue _mode(
+skir.DataValue _mode(
   String name, [
-  Map<String, DataValue> fields = const {},
-]) => PolymorphicValue(
-  concreteType: ResolvedTypeRef(
-    id: QualifiedTypeId(namespace: "panel.host", name: name),
+  Map<String, skir.DataValue> fields = const {},
+]) {
+  final type = skir.TypeDefinitionId(
+    typeId: skir.TypeId.createQualified(namespace: "panel.host", name: name),
     revision: 1,
-  ),
-  value: RecordValue(fields),
-);
+  );
+  return skir.DataValue.createNamed(
+    actualType: skir.NamedTypeUse(definition: type, arguments: const []),
+    payload: skir.DataValue.createRecord(
+      fields: [
+        for (final entry in fields.entries)
+          skir.FieldValue(name: entry.key, value: entry.value),
+      ],
+    ),
+  );
+}
 
 void _testHostApply() {
   test(
@@ -22,10 +30,13 @@ void _testHostApply() {
       addTearDown(owners.dispose);
       _buildInspection(harness, owners);
       final owner = _configurationSource(owners);
-      final path = DataPath.root.field("realm");
+      final path = editorRootPath.field("realm");
       final interaction = owner.beginInteraction(path);
 
-      owner.update(path, _mode("RealmHosted", {"target": StringValue("")}));
+      owner.update(
+        path,
+        _mode("RealmHosted", {"target": skir.DataValue.wrapStringValue("")}),
+      );
       await interaction.commit();
 
       expect(
@@ -44,14 +55,16 @@ void _testHostApply() {
 
       owner.update(
         path,
-        _mode("RealmHosted", {"target": StringValue("paper@*")}),
+        _mode("RealmHosted", {
+          "target": skir.DataValue.wrapStringValue("paper@*"),
+        }),
       );
       expect(
         owner.update(
-          DataPath.root.field("engine"),
+          editorRootPath.field("engine"),
           _mode("EngineEnabled", {
-            "target": StringValue("paper@*"),
-            "realm": StringValue("realm_instance:elsewhere"),
+            "target": skir.DataValue.wrapStringValue("paper@*"),
+            "realm": skir.DataValue.wrapStringValue("realm_instance:elsewhere"),
           }),
         ),
         isA<AppliedEditorMutation>(),
@@ -118,8 +131,10 @@ void _testHostApply() {
     _buildInspection(harness, view);
     final owner = _configurationSource(view)
       ..update(
-        DataPath.root.field("realm"),
-        _mode("RealmHosted", {"target": StringValue("paper@*")}),
+        editorRootPath.field("realm"),
+        _mode("RealmHosted", {
+          "target": skir.DataValue.wrapStringValue("paper@*"),
+        }),
       );
     view.dispose();
     harness.servicesSubscription.close();
@@ -164,10 +179,10 @@ void _testHostApply() {
       final owner = _configurationSource(owners);
       expect(
         owner.update(
-          DataPath.root.field("engine"),
+          editorRootPath.field("engine"),
           _mode("EngineEnabled", {
-            "target": StringValue("paper@*"),
-            "realm": StringValue(""),
+            "target": skir.DataValue.wrapStringValue("paper@*"),
+            "realm": skir.DataValue.wrapStringValue(""),
           }),
         ),
         isA<AppliedEditorMutation>(),
@@ -175,7 +190,7 @@ void _testHostApply() {
 
       expect(
         owner.draftDiagnostics.map((issue) => issue.path),
-        contains(DataPath.root.field("engine").field("realm")),
+        contains(editorRootPath.field("engine").field("realm")),
       );
       expect(await owner.flush(), isA<MutationInvalid>());
       expect(
@@ -186,11 +201,13 @@ void _testHostApply() {
       );
 
       owner.update(
-        DataPath.root.field("realm"),
-        _mode("RealmHosted", {"target": StringValue("paper@*")}),
+        editorRootPath.field("realm"),
+        _mode("RealmHosted", {
+          "target": skir.DataValue.wrapStringValue("paper@*"),
+        }),
       );
       expect(owner.draftDiagnostics, isEmpty);
-      owner.update(DataPath.root.field("realm"), _mode("RealmDisabled"));
+      owner.update(editorRootPath.field("realm"), _mode("RealmDisabled"));
       expect(await owner.flush(), isA<MutationInvalid>());
       expect(
         harness.nats.requests.where(

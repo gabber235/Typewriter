@@ -8,6 +8,36 @@ part of "services.dart";
 /// state only. Timestamp and revision checks prevent an older observation from
 /// erasing newer knowledge when responses and watch events overlap.
 extension OrganizationTopologyConfiguration on OrganizationTopology {
+  /// Uses incoming snapshot membership and retains accepted configuration and
+  /// runtime progress only for resources that remain present.
+  OrganizationTopology reconcileSnapshot(OrganizationTopology previous) =>
+      copyWith(
+        hosts: [
+          for (final incoming in hosts)
+            incoming.reconcileSnapshot(
+              previous.hosts.firstWhereOrNull(
+                (item) => item.hostId == incoming.hostId,
+              ),
+            ),
+        ],
+        realmInstances: [
+          for (final incoming in realmInstances)
+            incoming.reconcileSnapshot(
+              previous.realmInstances.firstWhereOrNull(
+                (item) => item.realmId == incoming.realmId,
+              ),
+            ),
+        ],
+        engineInstances: [
+          for (final incoming in engineInstances)
+            incoming.reconcileSnapshot(
+              previous.engineInstances.firstWhereOrNull(
+                (item) => item.engineId == incoming.engineId,
+              ),
+            ),
+        ],
+      );
+
   /// Merges a host runtime observation without changing its desired
   /// configuration.
   OrganizationTopology applyHostObservation(TopologyHost incoming) {
@@ -135,6 +165,59 @@ extension OrganizationTopologyConfiguration on OrganizationTopology {
       hosts: _upsertById(hosts, host, (item) => item.hostId),
       realmInstances: realms,
       engineInstances: engines,
+    );
+  }
+}
+
+extension TopologyHostSnapshotProgress on TopologyHost {
+  TopologyHost reconcileSnapshot(TopologyHost? previous) {
+    final incoming = this;
+    if (previous == null) return incoming;
+    final configuration = previous.revision > incoming.revision
+        ? previous
+        : incoming;
+    final observation =
+        previous.state.updatedAt.isAfter(incoming.state.updatedAt)
+        ? previous
+        : incoming;
+    return configuration.copyWith(
+      state: observation.state,
+      topologyRevision: configuration.topologyRevision.copyWith(
+        applied: max(
+          previous.topologyRevision.applied,
+          incoming.topologyRevision.applied,
+        ),
+      ),
+    );
+  }
+}
+
+extension TopologyRealmSnapshotProgress on TopologyRealm {
+  TopologyRealm reconcileSnapshot(TopologyRealm? previous) {
+    final incoming = this;
+    if (previous == null) return incoming;
+    final configuration = previous.revision > incoming.revision
+        ? previous
+        : incoming;
+    return configuration.copyWith(
+      state: previous.state.updatedAt.isAfter(incoming.state.updatedAt)
+          ? previous.state
+          : incoming.state,
+    );
+  }
+}
+
+extension TopologyEngineSnapshotProgress on TopologyEngine {
+  TopologyEngine reconcileSnapshot(TopologyEngine? previous) {
+    final incoming = this;
+    if (previous == null) return incoming;
+    final configuration = previous.revision > incoming.revision
+        ? previous
+        : incoming;
+    return configuration.copyWith(
+      state: previous.state.updatedAt.isAfter(incoming.state.updatedAt)
+          ? previous.state
+          : incoming.state,
     );
   }
 }

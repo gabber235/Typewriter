@@ -15,7 +15,7 @@ AuthoredResourceCommands authoredResourceCommands(
   );
   return AuthoredResourceCommands(
     previewTypeArguments: session.previewTypeArguments,
-    commitTypeArguments: (preview) {
+    prepareTypeArguments: (preview) {
       if (ref
           .read(authoringWorkspaceProvider(scope))
           .hasWorkFor(preview.resource)) {
@@ -23,9 +23,9 @@ AuthoredResourceCommands authoredResourceCommands(
           "Save or discard pending work before changing type arguments",
         );
       }
-      return session.commitTypeArguments(preview);
+      return session.prepareTypeArguments(preview);
     },
-    prepareCreation: session.prepareCreation,
+    prepareValue: session.prepareValue,
     invokeCommand: session.invokeCommand,
     watchSearch: session.watchPresentationSearch,
     search: session.search,
@@ -37,8 +37,8 @@ AuthoredResourceCommands authoredResourceCommands(
 final class AuthoredResourceCommands {
   const AuthoredResourceCommands({
     required this.previewTypeArguments,
-    required this.commitTypeArguments,
-    required this.prepareCreation,
+    required this.prepareTypeArguments,
+    required this.prepareValue,
     required this.invokeCommand,
     required this.watchSearch,
     required this.search,
@@ -50,14 +50,14 @@ final class AuthoredResourceCommands {
     required skir.TypeSelection requested,
   })
   previewTypeArguments;
-  final Future<skir.CommitTypeArgumentChangeResponse> Function(
+  final Future<skir.PreparedEditResult> Function(
     skir.TypeArgumentChangePreview preview,
   )
-  commitTypeArguments;
-  final Future<skir.PreparedCreation> Function(
-    skir.InitializationRequest request,
+  prepareTypeArguments;
+  final Future<skir.PreparedValue> Function(
+    skir.ValuePreparationRequest request,
   )
-  prepareCreation;
+  prepareValue;
   final Future<skir.CommandResult> Function({
     required skir.CapabilityId capabilityId,
     required skir.DataValue payload,

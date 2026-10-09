@@ -78,7 +78,7 @@ final class CanonicalOrganizationServicesProvider
 }
 
 String _$canonicalOrganizationServicesHash() =>
-    r'ca7f3899d62573786c7d08d150f840767584f6a1';
+    r'dcbce148312a9415b321bf71448befda9ee40775';
 
 /// Owns the organization scoped canonical service identity projection.
 ///
@@ -289,7 +289,7 @@ final class CanonicalServicesProvider
   CanonicalServices create() => CanonicalServices();
 }
 
-String _$canonicalServicesHash() => r'068de9cecaf6154f42b023858fd20ea83e4ee603';
+String _$canonicalServicesHash() => r'3625242d8dd9a201a22b89eab7eef9a8e7abadd9';
 
 /// Adapts the organization scoped service projection to the current route.
 ///
@@ -617,7 +617,7 @@ final class OrganizationTopologyControllerProvider
 }
 
 String _$organizationTopologyControllerHash() =>
-    r'e4d5e6e601dcc11697e8f21b0dbec696e82dc012';
+    r'8e7e2d452d38427bae587168778f7b1009fd8a9d';
 
 /// Owns the live organization topology projection.
 ///

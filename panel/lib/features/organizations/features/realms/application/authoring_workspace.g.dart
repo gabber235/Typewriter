@@ -100,9 +100,13 @@ final class ConfirmedAuthoringDocumentFamily extends $Family
   String toString() => r'confirmedAuthoringDocumentProvider';
 }
 
+/// Supplies external settlement without replacing workspace ownership.
+
 @ProviderFor(authoringWorkspaceTransport)
 final authoringWorkspaceTransportProvider =
     AuthoringWorkspaceTransportFamily._();
+
+/// Supplies external settlement without replacing workspace ownership.
 
 final class AuthoringWorkspaceTransportProvider
     extends
@@ -112,13 +116,14 @@ final class AuthoringWorkspaceTransportProvider
           AuthoringWorkspaceTransport
         >
     with $Provider<AuthoringWorkspaceTransport> {
+  /// Supplies external settlement without replacing workspace ownership.
   AuthoringWorkspaceTransportProvider._({
     required AuthoringWorkspaceTransportFamily super.from,
     required AuthoringScope super.argument,
   }) : super(
          retry: null,
          name: r'authoringWorkspaceTransportProvider',
-         isAutoDispose: true,
+         isAutoDispose: false,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
@@ -166,7 +171,9 @@ final class AuthoringWorkspaceTransportProvider
 }
 
 String _$authoringWorkspaceTransportHash() =>
-    r'ecc6308a011cb6054af1f41f4fd42f86c3c81165';
+    r'9b92461c846092176335da7fc1539b16ebcb8b27';
+
+/// Supplies external settlement without replacing workspace ownership.
 
 final class AuthoringWorkspaceTransportFamily extends $Family
     with
@@ -177,8 +184,10 @@ final class AuthoringWorkspaceTransportFamily extends $Family
         name: r'authoringWorkspaceTransportProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
-        isAutoDispose: true,
+        isAutoDispose: false,
       );
+
+  /// Supplies external settlement without replacing workspace ownership.
 
   AuthoringWorkspaceTransportProvider call(AuthoringScope scope) =>
       AuthoringWorkspaceTransportProvider._(argument: scope, from: this);
@@ -251,7 +260,7 @@ final class AuthoringWorkspaceProvider
 }
 
 String _$authoringWorkspaceHash() =>
-    r'6a0245a0cb9cec2b9ea9b55f74bdd0aeb9bcceb5';
+    r'cd6bf2eda6041dde3ecba36b503b47c9560d5cf3';
 
 final class AuthoringWorkspaceFamily extends $Family
     with $FunctionalFamilyOverride<AuthoringWorkspace, AuthoringScope> {

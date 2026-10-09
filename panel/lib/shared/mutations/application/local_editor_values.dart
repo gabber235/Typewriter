@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "local_editor_values.freezed.dart";
@@ -11,8 +13,8 @@ part "local_editor_values.freezed.dart";
 @freezed
 abstract class LocalEditorValue with _$LocalEditorValue {
   const factory LocalEditorValue({
-    required DataValue value,
-    required Set<DataPath> editedPaths,
+    required skir.DataValue value,
+    required Set<skir.ValuePath> editedPaths,
   }) = _LocalEditorValue;
 
   const LocalEditorValue._();
@@ -21,12 +23,12 @@ abstract class LocalEditorValue with _$LocalEditorValue {
   ///
   /// A path that cannot be read or replaced is ignored. This keeps a stale
   /// local projection from hiding otherwise valid canonical content.
-  DataValue projectOnto(DataValue canonical) {
+  skir.DataValue projectOnto(skir.DataValue canonical) {
     var projected = canonical;
     for (final path in editedPaths) {
-      final local = path.read(value).valueOrNull;
+      final local = value.editorValueAt(path);
       if (local == null) continue;
-      projected = path.replace(projected, local).valueOrNull ?? projected;
+      projected = projected.replacingEditorValue(path, local) ?? projected;
     }
     return projected;
   }
