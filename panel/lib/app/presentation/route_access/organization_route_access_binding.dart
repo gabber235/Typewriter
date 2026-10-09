@@ -1,6 +1,7 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "organization_route_access_binding.freezed.dart";
+part "organization_route_access_binding.g.dart";
 
 @freezed
 abstract class _OrganizationAccessSnapshot with _$OrganizationAccessSnapshot {
@@ -14,12 +15,11 @@ abstract class _OrganizationAccessSnapshot with _$OrganizationAccessSnapshot {
 ///
 /// Keeping the observations together makes a session change one coherent
 /// route access update rather than two independently ordered callbacks.
-final _organizationAccessSnapshotProvider =
-    Provider<_OrganizationAccessSnapshot>(
-      (ref) => _OrganizationAccessSnapshot(
-        principal: ref.watch(userIdProvider),
-        membership: ref.watch(organizationsProvider),
-      ),
+@Riverpod(keepAlive: true)
+_OrganizationAccessSnapshot _organizationAccessSnapshot(Ref ref) =>
+    _OrganizationAccessSnapshot(
+      principal: ref.watch(userIdProvider),
+      membership: ref.watch(organizationsProvider),
     );
 
 /// Mirrors principal and organization membership providers into [access].

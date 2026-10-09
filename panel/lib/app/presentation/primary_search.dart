@@ -1,5 +1,7 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "primary_search.g.dart";
+
 /// The modal configuration produced for the current route context.
 final class PrimarySearchRequest {
   const PrimarySearchRequest({
@@ -20,9 +22,9 @@ final class PrimarySearchRequest {
 /// Keeping the complete request behind a provider lets alternate application
 /// hosts supply their own data source while retaining the production surface
 /// and result renderers.
-final primarySearchRequestProvider = Provider<PrimarySearchRequest>(
-  buildPrimarySearchRequest,
-);
+@Riverpod(keepAlive: true)
+PrimarySearchRequest primarySearchRequest(Ref ref) =>
+    buildPrimarySearchRequest(ref);
 
 /// Opens the route supplied primary search request.
 Future<void> openPrimarySearch(BuildContext context, WidgetRef ref) async {
