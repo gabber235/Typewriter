@@ -32,7 +32,7 @@ import com.typewritermc.services.libs.registrar.RegistrarResult
 import com.typewritermc.services.libs.registrar.RegistrarState
 import com.typewritermc.services.libs.registrar.ServiceId
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
-import com.typewritermc.services.libs.utils.rethrowExceptionalThrowable
+import com.typewritermc.services.libs.utils.rethrowExceptional
 import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -144,7 +144,7 @@ class ArtifactHost(
                             }
                             break
                         } catch (failure: Throwable) {
-                            rethrowExceptionalThrowable(failure)
+                            failure.rethrowExceptional()
                             delay(1.seconds)
                         }
                     }
@@ -192,7 +192,7 @@ class ArtifactHost(
                                 }
                             }
                         } catch (failure: Throwable) {
-                            rethrowExceptionalThrowable(failure)
+                            failure.rethrowExceptional()
                         }
                     }
                     delay(1.seconds)
@@ -404,7 +404,7 @@ internal class AssignmentRuntime(
         try {
             block()
         } catch (failure: Throwable) {
-            rethrowExceptionalThrowable(failure)
+            failure.rethrowExceptional()
         }
     }
 

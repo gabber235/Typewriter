@@ -7,7 +7,7 @@ import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.utils.DelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
-import com.typewritermc.services.libs.utils.findExceptionalThrowable
+import com.typewritermc.services.libs.utils.findExceptional
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.context.Context
 import kotlinx.coroutines.CompletableDeferred
@@ -289,12 +289,12 @@ class ServiceRegistrar(
                     } catch (thrown: Throwable) {
                         cleanupFailure = thrown
                     }
-                    if (findExceptionalThrowable(failure) == null) {
+                    if (failure.findExceptional() == null) {
                         terminal(RegistrarFailure.Internal("unexpected_failure"))
                     }
                 }
             }
-            val originalExceptional = findExceptionalThrowable(failure)
+            val originalExceptional = failure.findExceptional()
             if (originalExceptional != null && lifecycleState != LifecycleState.STOPPED) {
                 withContext(NonCancellable) {
                     lifecycleState = LifecycleState.STOPPED
@@ -307,7 +307,7 @@ class ServiceRegistrar(
                     transition(RegistrarState.Stopped(result))
                 }
             }
-            val cleanupExceptional = cleanupFailure?.let(::findExceptionalThrowable)
+            val cleanupExceptional = cleanupFailure?.findExceptional()
             val primary = originalExceptional ?: cleanupExceptional ?: failure
             sequenceOf(originalExceptional, cleanupExceptional)
                 .filterNotNull()
@@ -975,7 +975,7 @@ class ServiceRegistrar(
                     }
                 }
             } catch (thrown: Throwable) {
-                val found = findExceptionalThrowable(thrown)
+                val found = thrown.findExceptional()
                 if (found == null) {
                     failures += RegistrarStopFailure.Runtime(RuntimeStopOperation.SHUTDOWN_THROWN)
                 } else {
@@ -996,7 +996,7 @@ class ServiceRegistrar(
                 }
             }
         } catch (thrown: Throwable) {
-            val found = findExceptionalThrowable(thrown)
+            val found = thrown.findExceptional()
             if (found == null) {
                 failures += RegistrarStopFailure.Runtime(RuntimeStopOperation.CLOSE_THROWN)
             } else {

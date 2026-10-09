@@ -10,9 +10,9 @@ import java.util.IdentityHashMap
  * Identity based cycle protection prevents loops. The first exceptional throwable encountered is returned
  * unchanged.
  */
-fun findExceptionalThrowable(throwable: Throwable): Throwable? {
+fun Throwable.findExceptional(): Throwable? {
     val visited = Collections.newSetFromMap(IdentityHashMap<Throwable, Boolean>())
-    val pending = ArrayDeque<Throwable>().apply { add(throwable) }
+    val pending = ArrayDeque<Throwable>().apply { add(this@findExceptional) }
     while (pending.isNotEmpty()) {
         val current = pending.removeFirst()
         if (!visited.add(current)) continue
@@ -29,8 +29,8 @@ fun findExceptionalThrowable(throwable: Throwable): Throwable? {
  * Wrapped and suppressed exceptional failures are included so recovery code cannot classify them as retryable
  * errors.
  */
-fun rethrowExceptionalThrowable(throwable: Throwable) {
-    findExceptionalThrowable(throwable)?.let { throw it }
+fun Throwable.rethrowExceptional() {
+    findExceptional()?.let { throw it }
 }
 
 @Suppress("DEPRECATION")

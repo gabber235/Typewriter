@@ -8,7 +8,7 @@ import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.mainSpan
-import com.typewritermc.services.libs.utils.rethrowExceptionalThrowable
+import com.typewritermc.services.libs.utils.rethrowExceptional
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -74,7 +74,7 @@ class RealmCatalogInvalidationProcess internal constructor(
                                 }.fold(
                                     onSuccess = { true },
                                     onFailure = {
-                                        rethrowExceptionalThrowable(it)
+                                        it.rethrowExceptional()
                                         false
                                     },
                                 )

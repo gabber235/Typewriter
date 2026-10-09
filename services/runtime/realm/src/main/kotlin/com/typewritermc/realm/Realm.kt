@@ -41,7 +41,7 @@ import com.typewritermc.services.libs.telemetry.childSpan
 import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.utils.DelayScheduler
 import com.typewritermc.services.libs.utils.RetryPolicy
-import com.typewritermc.services.libs.utils.rethrowExceptionalThrowable
+import com.typewritermc.services.libs.utils.rethrowExceptional
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -258,7 +258,7 @@ internal class Realm(
                     error("Realm router stopped while its messaging session remained active")
                 }
             } catch (failure: Throwable) {
-                rethrowExceptionalThrowable(failure)
+                failure.rethrowExceptional()
                 if (host.messaging.value?.id != session.id) return
                 delayScheduler.delay(retryPolicy.delayFor(retry++, 0.5))
             }

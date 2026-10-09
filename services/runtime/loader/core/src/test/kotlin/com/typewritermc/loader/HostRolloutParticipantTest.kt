@@ -66,7 +66,7 @@ import com.typewritermc.services.libs.communicator.transport.InboundMessage
 import com.typewritermc.services.libs.communicator.transport.TransportDelivery
 import com.typewritermc.services.libs.registrar.ServiceId
 import com.typewritermc.services.libs.telemetry.serviceTelemetry
-import com.typewritermc.services.libs.utils.findExceptionalThrowable
+import com.typewritermc.services.libs.utils.findExceptional
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
@@ -450,7 +450,7 @@ val HostRolloutParticipantTest by testSuite {
                     failure.message shouldBe "Hosted runtime $operationName exceeded lifecycle deadline of 1s"
                     failure.cause shouldBe null
                     failure.suppressed.size shouldBe 0
-                    findExceptionalThrowable(failure) shouldBe null
+                    failure.findExceptional() shouldBe null
                     currentCoroutineContext().isActive shouldBe true
                 } finally {
                     projection.close()
@@ -471,7 +471,7 @@ val HostRolloutParticipantTest by testSuite {
             )
             val failure = shouldThrow<TimeoutException> { projection.close() }
             failure.message shouldBe "Hosted runtime close exceeded lifecycle deadline of 1s"
-            findExceptionalThrowable(failure) shouldBe null
+            failure.findExceptional() shouldBe null
             unfinished.suspendOn.clear()
             projection.close()
             projection.close()
@@ -498,7 +498,7 @@ val HostRolloutParticipantTest by testSuite {
                 failure.suppressed.size shouldBe 1
                 (failure.suppressed.single() is TimeoutException) shouldBe true
                 failure.suppressed.single().message shouldBe "Hosted runtime quiesce compensation exceeded lifecycle deadline of 1s"
-                findExceptionalThrowable(failure) shouldBe null
+                failure.findExceptional() shouldBe null
                 completed.operations shouldContainExactly listOf("activate", "quiesce")
                 failing.operations shouldContainExactly listOf("activate")
                 currentCoroutineContext().isActive shouldBe true

@@ -28,7 +28,7 @@ import com.typewritermc.services.libs.registrar.ServiceId
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
-import com.typewritermc.services.libs.utils.rethrowExceptionalThrowable
+import com.typewritermc.services.libs.utils.rethrowExceptional
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
@@ -177,7 +177,7 @@ class HostRolloutParticipant(
             } catch (rejection: CommandRejectedException) {
                 CommandAcceptance(serviceId, false, rejection.message)
             } catch (failure: Throwable) {
-                rethrowExceptionalThrowable(failure)
+                failure.rethrowExceptional()
                 span?.recordDegraded(ErrorSlug.of("artifact-rollout-command-internal-failure"), failure)
                 val recoverable = localState.toRecoverable()
                 publish(
@@ -757,7 +757,7 @@ private suspend fun <Value> runCatchingSuspend(block: suspend () -> Value): Resu
     try {
         Result.success(block())
     } catch (failure: Throwable) {
-        rethrowExceptionalThrowable(failure)
+        failure.rethrowExceptional()
         Result.failure(failure)
     }
 
