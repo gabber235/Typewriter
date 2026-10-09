@@ -22,12 +22,10 @@ const double _kMinimumWidth = 112.0;
 /// index. Enter toggles that entry, and Escape returns focus to the surrounding
 /// field through [inputFieldController] when one is supplied. Use
 /// [inputFieldController] when another control owns the input and surrounding
-/// focus lifecycle; [focusNode] is retained for callers using the older input
-/// only contract.
+/// focus lifecycle. Standalone dropdowns create and own a controller.
 class MultiselectDropdown<T extends Object> extends HookWidget {
   const MultiselectDropdown({
     required this.dropdownMenuEntries,
-    this.focusNode,
     this.selectedItems = const [],
     this.onSelectionChanged,
     this.enabled = true,
@@ -35,15 +33,11 @@ class MultiselectDropdown<T extends Object> extends HookWidget {
     this.actions,
     this.menuActions,
     this.surroundingActions,
-    this.inputDecorationTheme,
     this.menuStyle,
     this.placeholder,
     this.itemBuilder,
     super.key,
   });
-
-  /// Optional legacy focus node used by the dropdown's input.
-  final FocusNode? focusNode;
 
   /// Optional controller used for input/surrounding focus.
   final InputFieldController? inputFieldController;
@@ -68,12 +62,6 @@ class MultiselectDropdown<T extends Object> extends HookWidget {
 
   /// Actions available when the surrounding has focus.
   final List<ActionShortcut>? surroundingActions;
-
-  /// Legacy input decoration configuration retained for source compatibility.
-  ///
-  /// The component currently uses its own input decoration and does not apply
-  /// this value.
-  final InputDecorationTheme? inputDecorationTheme;
 
   /// Style of the dropdown menu.
   final MenuStyle? menuStyle;

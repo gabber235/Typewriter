@@ -9,7 +9,6 @@ import "package:typewriter_panel/typewriter_panel.dart";
 class Dropdown<T extends Object> extends HookWidget {
   const Dropdown({
     required this.dropdownMenuEntries,
-    this.focusNode,
     this.selected,
     this.defaultValue,
     this.onSelected,
@@ -24,9 +23,6 @@ class Dropdown<T extends Object> extends HookWidget {
     this.menuStyle,
     super.key,
   });
-
-  /// Optional legacy focus node for the inner dropdown menu input.
-  final FocusNode? focusNode;
 
   /// Optional controller used for input/surrounding focus.
   final InputFieldController? inputFieldController;
@@ -75,7 +71,6 @@ class Dropdown<T extends Object> extends HookWidget {
     final controller =
         this.controller ?? useTextEditingController(text: currentLabel);
     final defaultInputFieldController = useInputFieldController(
-      inputFocusNode: this.focusNode,
       inputDebugLabel: "Dropdown",
       surroundingDebugLabel: "Surrounding focus node",
     );

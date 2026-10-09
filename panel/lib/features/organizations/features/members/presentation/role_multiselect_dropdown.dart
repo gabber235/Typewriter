@@ -20,12 +20,12 @@ class RoleMultiselectDropdown extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final rolesAsync = ref.watch(organizationRolesProvider);
-    final focusNode = useFocusNode();
+    final field = useInputFieldController(inputDebugLabel: "Member roles");
     return rolesAsync(
       name: "Roles",
       builder: (availableRoles) {
         return MultiselectDropdown<OrganizationRole>(
-          focusNode: focusNode,
+          inputFieldController: field,
           dropdownMenuEntries: [
             for (final role in availableRoles)
               DropdownMenuEntry(

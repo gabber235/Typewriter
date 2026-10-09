@@ -45,10 +45,13 @@ Widget multiselectDropdownDefaultUseCase(BuildContext context) {
             HookBuilder(
               builder: (context) {
                 final selected = useState<List<_ColoredItem>>([]);
-                final focusNode = useFocusNode();
+                final field = useInputFieldController(
+                  inputDebugLabel: "Multiselect story",
+                  surroundingDebugLabel: "Surrounding focus node",
+                );
 
                 return MultiselectDropdown<_ColoredItem>(
-                  focusNode: focusNode,
+                  inputFieldController: field,
                   dropdownMenuEntries: [
                     for (final item in items)
                       DropdownMenuEntry(
@@ -121,7 +124,10 @@ Widget multiselectDropdownWithCallbacksUseCase(BuildContext context) {
       builder: (context) {
         final selected = useState<List<_ColoredItem>>([]);
         final events = useState<List<_CallbackEvent>>([]);
-        final focusNode = useFocusNode();
+        final field = useInputFieldController(
+          inputDebugLabel: "Multiselect callback story",
+          surroundingDebugLabel: "Surrounding focus node",
+        );
 
         void addEvent(String action, List<_ColoredItem> items) {
           final event = _CallbackEvent(
@@ -142,7 +148,7 @@ Widget multiselectDropdownWithCallbacksUseCase(BuildContext context) {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               MultiselectDropdown<_ColoredItem>(
-                focusNode: focusNode,
+                inputFieldController: field,
                 dropdownMenuEntries: [
                   for (final item in items)
                     DropdownMenuEntry<_ColoredItem>(
