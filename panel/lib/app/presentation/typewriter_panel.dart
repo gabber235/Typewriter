@@ -38,12 +38,17 @@ class TypewriterPanel extends HookConsumerWidget {
           shortcuts: typewriterShortcuts,
           scrollBehavior: GlobalCustomScrollBehavior(),
           builder: (context, child) {
-            return AppOverlay(
-              child: Scaffold(
-                body: AppRequiredWidgets(
-                  child: Responsive(
-                    child: RequiredNatsConnection(
-                      child: child ?? const SizedBox.shrink(),
+            return Surface(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              foreground: context.colors.contentPrimary,
+              secondaryForeground: context.colors.contentSecondary,
+              child: AppOverlay(
+                child: Scaffold(
+                  body: AppRequiredWidgets(
+                    child: Responsive(
+                      child: RequiredNatsConnection(
+                        child: child ?? const SizedBox.shrink(),
+                      ),
                     ),
                   ),
                 ),

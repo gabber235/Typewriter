@@ -33,7 +33,8 @@ class StatusIndicator extends HookWidget {
         : describeRelativeTime(value: lastSeen!, now: now);
     final effectiveDotColor =
         dotColor ?? (isOnline ? context.colors.online : context.colors.offline);
-    final effectiveTextColor = textColor ?? context.colors.contentSecondary;
+    final effectiveTextColor =
+        textColor ?? Surface.secondaryForegroundOf(context);
 
     useRefreshAt(
       isOnline

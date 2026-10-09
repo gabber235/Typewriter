@@ -507,6 +507,8 @@ class _FloatingCard extends StatelessWidget {
 
     return Surface(
       color: colors.surfaceContainer,
+      foreground: context.colors.contentPrimary,
+      secondaryForeground: context.colors.contentSecondary,
       child: Material(
         color: colors.surfaceContainer,
         shape: RoundedRectangleBorder(

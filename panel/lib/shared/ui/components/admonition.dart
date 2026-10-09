@@ -54,7 +54,6 @@ class Admonition extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final color =
         _color ??
         switch (_kind) {
@@ -63,39 +62,37 @@ class Admonition extends StatelessWidget {
           _AdmonitionKind.danger => context.colors.danger,
           _AdmonitionKind.custom => throw StateError("Missing custom color"),
         };
-    final surfaceColor = Surface.colorOf(context);
-    final backgroundColor = Color.alphaBlend(
-      color.withValues(alpha: 0.1),
-      surfaceColor,
-    );
-    return Surface(
-      color: backgroundColor,
-      child: Material(
-        animationDuration: 500.ms,
+    final backgroundColor = color.withValues(alpha: color.a * 0.1);
+    return SurfaceContainer(
+      duration: animationDuration,
+      decoration: BoxDecoration(
         color: backgroundColor,
-        shape: RoundedRectangleBorder(
-          side: BorderSide(color: color, width: 1),
-          borderRadius: context.shapes.mediumBorderRadius,
-        ),
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-            child: Row(
-              children: [
-                IconTheme(
-                  data: IconThemeData(color: color),
-                  child: icon,
-                ),
-                SizedBox(width: context.spacing.space3),
-                Flexible(
-                  child: AnimatedDefaultTextStyle(
-                    duration: animationDuration,
-                    style: theme.textTheme.titleSmall!.copyWith(color: color),
-                    child: child,
+        border: Border.all(color: color, width: 1),
+        borderRadius: context.shapes.mediumBorderRadius,
+      ),
+      foreground: color,
+      child: Builder(
+        builder: (context) => Material(
+          color: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: context.shapes.mediumBorderRadius,
+          ),
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+              child: Row(
+                children: [
+                  icon,
+                  SizedBox(width: context.spacing.space3),
+                  Flexible(
+                    child: DefaultTextStyle.merge(
+                      style: Theme.of(context).textTheme.titleSmall,
+                      child: child,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

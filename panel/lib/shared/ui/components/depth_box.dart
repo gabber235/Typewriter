@@ -62,7 +62,16 @@ class DepthBox extends HookWidget {
             RoundedRectangleBorder(
               borderRadius: context.shapes.mediumBorderRadius,
             ),
-        child: Surface(color: color, child: child),
+        child: Surface(
+          color: color,
+          foreground: enabled && !(surfaceColor != null && depth == 0)
+              ? context.colors.contentPrimary
+              : null,
+          secondaryForeground: enabled && !(surfaceColor != null && depth == 0)
+              ? context.colors.contentSecondary
+              : null,
+          child: child,
+        ),
       ),
     );
 

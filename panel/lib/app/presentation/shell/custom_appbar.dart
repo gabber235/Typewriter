@@ -53,6 +53,12 @@ class CustomAppBar extends HookConsumerWidget implements PreferredSizeWidget {
             borderRadius: context.shapes.mediumBorderRadius,
             child: Surface(
               color: color,
+              foreground: backgroundColor == null
+                  ? context.colors.contentPrimary
+                  : color.on(context),
+              secondaryForeground: backgroundColor == null
+                  ? context.colors.contentSecondary
+                  : null,
               child: Padding(
                 padding: EdgeInsets.symmetric(
                   horizontal: context.spacing.space2,
@@ -130,25 +136,30 @@ class _MobileSidebarMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      child: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const ModalHeader(),
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: context.spacing.space4,
+    return Surface(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      foreground: context.colors.contentPrimary,
+      secondaryForeground: context.colors.contentSecondary,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const ModalHeader(),
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: context.spacing.space4,
+                  ),
+                  child: child,
                 ),
-                child: child,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -131,7 +131,12 @@ class _AnchoredPopupState extends State<AnchoredPopup> {
                         autofocus: true,
                         child: Surface(
                           color: color,
-                          child: widget.popupBuilder(context, _close),
+                          foreground: context.colors.contentPrimary,
+                          secondaryForeground: context.colors.contentSecondary,
+                          child: Builder(
+                            builder: (context) =>
+                                widget.popupBuilder(context, _close),
+                          ),
                         ),
                       ),
                     ),

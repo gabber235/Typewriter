@@ -50,6 +50,8 @@ class _PageTile extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isSelected = ref.watch(pageIdProvider.select((e) => e == pageId));
+    final states = useWidgetStatesController();
+    useListenable(states);
 
     final backgroundColor = isSelected
         ? context.theme.colorScheme.primaryContainer
@@ -64,7 +66,13 @@ class _PageTile extends HookConsumerWidget {
       child: Row(
         children: [
           SizedBox(width: context.spacing.space1),
-          Expanded(child: _PageRoleTile(pageId: pageId)),
+          Expanded(
+            child: PresentationInteractionScope(
+              value: PresentationInteraction.fromWidgetStates(states.value)
+                  .copyWith(selected: isSelected),
+              child: _PageRoleTile(pageId: pageId),
+            ),
+          ),
           SizedBox(width: context.spacing.space2),
           Icon(Icons.chevron_right, size: 16, color: foregroundColor),
         ],
@@ -145,6 +153,7 @@ class _PageTile extends HookConsumerWidget {
                     ),
                     child: Surface(
                       color: backgroundColor,
+                      foreground: foregroundColor,
                       child: Material(
                         color: backgroundColor,
                         shape: RoundedRectangleBorder(
@@ -159,6 +168,7 @@ class _PageTile extends HookConsumerWidget {
                               : BorderSide.none,
                         ),
                         child: InkWell(
+                          statesController: states,
                           onTap: () {
                             if (isSelected) return;
                             ref

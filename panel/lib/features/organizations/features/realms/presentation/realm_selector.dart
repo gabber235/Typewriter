@@ -126,44 +126,48 @@ class _RealmMenuItem extends HookConsumerWidget {
         color: isSelected ? realmServiceRoleColor : null,
         child: Surface(
           color: isSelected ? realmServiceRoleColor : Surface.colorOf(context),
-          child: ListTile(
-            dense: true,
-            leading: Icon(
-              Icons.cloud,
-              size: 20,
-              color: isSelected ? onColor : realmServiceRoleColor,
-            ),
-            title: Text(
-              realm.ownerHost.name.formatted,
-              style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(fontSize: 14, color: isSelected ? onColor : null),
-            ),
-            subtitle: StatusIndicator(
-              isOnline: isOnline,
-              lastSeen: realm.state.updatedAt,
-              dotColor: isSelected
-                  ? onColor
-                  : _statusDotColor(context, isOnline),
-              textColor: isSelected
-                  ? onColor.withValues(alpha: 0.7)
-                  : _statusTextColor(context, isOnline),
-            ),
-            trailing: Icon(
-              Icons.arrow_forward_ios,
-              size: 14,
-              color: isSelected ? onColor : null,
-            ),
-            onTap: () {
-              final orgId = ref.read(organizationIdProvider);
-              if (orgId == null) return;
-              context.router.navigate(
-                OrganizationRoute(
-                  organizationId: orgId.id,
-                  children: [RealmRoute(realmId: realm.realmId.id)],
+          foreground: isSelected ? onColor : null,
+          secondaryForeground: isSelected
+              ? onColor.withValues(alpha: 0.7)
+              : null,
+          child: Builder(
+            builder: (context) => ListTileTheme.merge(
+              textColor: Surface.foregroundOf(context),
+              iconColor: Surface.foregroundOf(context),
+              child: ListTile(
+                dense: true,
+                leading: Icon(
+                  Icons.cloud,
+                  size: 20,
+                  color: isSelected ? null : realmServiceRoleColor,
                 ),
-              );
-              onDismiss(realm);
-            },
+                title: Text(
+                  realm.ownerHost.name.formatted,
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(fontSize: 14),
+                ),
+                subtitle: StatusIndicator(
+                  isOnline: isOnline,
+                  lastSeen: realm.state.updatedAt,
+                  dotColor: isSelected
+                      ? onColor
+                      : _statusDotColor(context, isOnline),
+                  textColor: Surface.secondaryForegroundOf(context),
+                ),
+                trailing: Icon(Icons.arrow_forward_ios, size: 14),
+                onTap: () {
+                  final orgId = ref.read(organizationIdProvider);
+                  if (orgId == null) return;
+                  context.router.navigate(
+                    OrganizationRoute(
+                      organizationId: orgId.id,
+                      children: [RealmRoute(realmId: realm.realmId.id)],
+                    ),
+                  );
+                  onDismiss(realm);
+                },
+              ),
+            ),
           ),
         ),
       ),
@@ -173,6 +177,3 @@ class _RealmMenuItem extends HookConsumerWidget {
 
 Color _statusDotColor(BuildContext context, bool isOnline) =>
     isOnline ? context.colors.online : context.colors.offline;
-
-Color _statusTextColor(BuildContext context, bool isOnline) =>
-    context.colors.contentSecondary;

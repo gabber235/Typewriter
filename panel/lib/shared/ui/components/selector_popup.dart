@@ -160,23 +160,28 @@ class _MobileMenu<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-      ),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const ModalHeader(),
-            Expanded(
-              child: contentBuilder(
-                items,
-                selected,
-                (item) => Navigator.of(context).pop(),
+    return Surface(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      foreground: context.colors.contentPrimary,
+      secondaryForeground: context.colors.contentSecondary,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const ModalHeader(),
+              Expanded(
+                child: contentBuilder(
+                  items,
+                  selected,
+                  (item) => Navigator.of(context).pop(),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

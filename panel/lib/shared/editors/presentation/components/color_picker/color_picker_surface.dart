@@ -70,6 +70,8 @@ class ColorPickerSurface extends HookConsumerWidget {
           onKeyEvent: handleKey,
           child: Surface(
             color: Theme.of(context).colorScheme.surfaceContainer,
+            foreground: context.colors.contentPrimary,
+            secondaryForeground: context.colors.contentSecondary,
             child: Material(
               color: Theme.of(context).colorScheme.surfaceContainer,
               elevation: 8,
