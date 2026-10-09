@@ -50,6 +50,7 @@ final class _ConnectionLayerSurfaceState
 
   @override
   Widget build(BuildContext context) => _ConnectionLayerRenderSurface(
+    colors: PresentationColorEnvironment.of(context),
     connections: widget.connections,
     scope: widget.scope,
     textDirection: Directionality.of(context),
@@ -96,6 +97,7 @@ final class _ConnectionLayerSurfaceState
 final class _ConnectionLayerRenderSurface
     extends SingleChildRenderObjectWidget {
   const _ConnectionLayerRenderSurface({
+    required this.colors,
     required this.connections,
     required this.scope,
     required this.textDirection,
@@ -105,12 +107,14 @@ final class _ConnectionLayerRenderSurface
 
   final List<skir.PresentationConnection> connections;
   final PortablePresentationScope scope;
+  final PresentationColorEnvironment colors;
   final TextDirection textDirection;
   final ValueChanged<_ConnectionOverlay> onOverlayChanged;
 
   @override
   RenderObject createRenderObject(BuildContext context) =>
       _RenderConnectionLayerSurface(
+        colors: colors,
         connections: connections,
         scope: scope,
         textDirection: textDirection,
@@ -123,6 +127,7 @@ final class _ConnectionLayerRenderSurface
     covariant _RenderConnectionLayerSurface renderObject,
   ) {
     renderObject.update(
+      colors: colors,
       connections: connections,
       scope: scope,
       textDirection: textDirection,
@@ -139,12 +144,14 @@ final class _ConnectionLayerRenderSurface
 /// inspection, while the stroke and marker render objects own their painting.
 final class _RenderConnectionLayerSurface extends RenderProxyBox {
   _RenderConnectionLayerSurface({
+    required this._colors,
     required this._connections,
     required this._scope,
     required this._textDirection,
     required this._onOverlayChanged,
   });
 
+  PresentationColorEnvironment _colors;
   List<skir.PresentationConnection> _connections;
   PortablePresentationScope _scope;
   TextDirection _textDirection;
@@ -158,11 +165,13 @@ final class _RenderConnectionLayerSurface extends RenderProxyBox {
   _ConnectionResolution get debugResolution => _lastResolution;
 
   void update({
+    required PresentationColorEnvironment colors,
     required List<skir.PresentationConnection> connections,
     required PortablePresentationScope scope,
     required TextDirection textDirection,
     required ValueChanged<_ConnectionOverlay> onOverlayChanged,
   }) {
+    _colors = colors;
     _connections = connections;
     _scope = scope;
     _textDirection = textDirection;
@@ -181,6 +190,7 @@ final class _RenderConnectionLayerSurface extends RenderProxyBox {
     // paint, then defer widget overlay mutation through the callback above.
     final anchors = _collectAnchors();
     final resolution = _resolveConnections(
+      colors: _colors,
       connections: _connections,
       scope: _scope,
       textDirection: _textDirection,

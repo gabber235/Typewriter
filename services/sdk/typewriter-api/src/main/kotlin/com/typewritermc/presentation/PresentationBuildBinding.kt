@@ -175,6 +175,11 @@ interface Layout :
         body: Layout.() -> Unit,
     )
 
+    fun align(
+        alignment: PresentationAlignment,
+        body: Layout.() -> Unit,
+    )
+
     fun padding(
         insets: PresentationInsets,
         body: Layout.() -> Unit,
@@ -245,13 +250,30 @@ data class PresentationInsets(
 
 data class PresentationBorder(
     val width: Double,
-    val color: String,
+    val color: PresentationColor,
 )
 
 data class ContainerStyle(
-    val color: Expr<com.typewritermc.types.Color, Handled>? = null,
+    val background: PresentationColor? = null,
+    val foreground: PresentationColor? = null,
     val border: PresentationBorder? = null,
+    val radius: PresentationRadius = PresentationRadius.None,
+    val transitionMilliseconds: Int = 0,
 )
+
+sealed interface PresentationRadius {
+    data object None : PresentationRadius
+
+    data object Small : PresentationRadius
+
+    data object Medium : PresentationRadius
+
+    data object Large : PresentationRadius
+
+    data class Custom(
+        val value: Expr<Double, Handled>,
+    ) : PresentationRadius
+}
 
 data class PresentationProperties(
     val enabledIf: Expr<Boolean, Handled>? = null,
@@ -274,7 +296,7 @@ interface AdaptiveLeadingScope {
     fun minimumCenterWidth(value: Double)
 }
 
-enum class AnchorAlignment { TopStart, TopCenter, TopEnd, CenterStart, Center, CenterEnd, BottomStart, BottomCenter, BottomEnd }
+enum class PresentationAlignment { TopStart, TopCenter, TopEnd, CenterStart, Center, CenterEnd, BottomStart, BottomCenter, BottomEnd }
 
 data class PresentationOffset(
     val x: Expr<Double, Handled>,
@@ -284,7 +306,7 @@ data class PresentationOffset(
 interface AnchorPointScope {
     fun groups(vararg ids: String)
 
-    fun alignment(value: AnchorAlignment)
+    fun alignment(value: PresentationAlignment)
 
     fun offset(value: PresentationOffset)
 
@@ -338,7 +360,7 @@ sealed interface ConnectorEndpointMarker {
 }
 
 data class ConnectorStyle(
-    val color: Expr<com.typewritermc.types.Color, Handled>,
+    val color: PresentationColor,
     val width: Expr<Double, Handled>,
     val cornerRadius: Expr<Double, Handled>,
     val startMarker: ConnectorEndpointMarker? = null,

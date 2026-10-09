@@ -26,7 +26,7 @@ interface PresentationContent {
 
     fun markdown(
         value: Expr<String, Handled>,
-        color: Expr<Color, Handled>? = null,
+        color: PresentationColor? = null,
     )
 
     fun icon(
@@ -46,7 +46,7 @@ interface PresentationContent {
 
     fun chip(
         label: Expr<String, Handled>,
-        color: Expr<Color, Handled>? = null,
+        color: PresentationColor? = null,
     )
 
     fun <N> progress(
@@ -216,13 +216,13 @@ interface ConnectionsScope {
 }
 
 data class TextStyle(
-    val color: Expr<Color, Handled>? = null,
+    val color: PresentationColor? = null,
     val weight: Int? = null,
     val sizing: TextSizing? = null,
 )
 
 data class TextStyleOverride(
-    val color: Expr<Color, Handled>? = null,
+    val color: PresentationColor? = null,
     val weight: Int? = null,
 )
 
@@ -252,7 +252,7 @@ data class TextParagraph(
 
 data class IconOptions(
     val size: Double? = null,
-    val color: String? = null,
+    val color: PresentationColor? = null,
 )
 
 data class StatusCase<V>(

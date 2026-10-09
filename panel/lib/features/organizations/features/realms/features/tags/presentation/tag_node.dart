@@ -134,41 +134,19 @@ class _TagNodeContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    final backgroundColor = Color.alphaBlend(
-      theme.colorScheme.primary.withValues(
-        alpha: switch ((isHovered, isSelected)) {
-          (false, false) => 0.2,
-          (true, false) => 0.5,
-          (false, true) => 1.0,
-          (true, true) => 0.7,
-        },
+    return PresentationInteractionScope(
+      value: PresentationInteraction(
+        selected: isSelected,
+        focused: isFocused,
+        hovered: isHovered,
       ),
-      Surface.colorOf(context),
-    );
-
-    return AnimatedContainer(
-      duration: 100.ms,
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: context.shapes.largeBorderRadius,
-        border: Border.all(
-          color: isFocused
-              ? theme.brightness == Brightness.dark
-                    ? Colors.white
-                    : Colors.black
-              : isSelected
-              ? Colors.transparent
-              : theme.colorScheme.outline,
-          width: 2,
+      child: SizedBox.expand(
+        child: AuthoringSubjectRole(
+          resourceId: tag.tagId,
+          role: skir.PresentationRole.graphNode,
+          fillAvailableSpace: true,
         ),
       ),
-      padding: EdgeInsets.symmetric(
-        horizontal: context.spacing.space3,
-        vertical: context.spacing.space2,
-      ),
-      child: Center(child: _TagRoleNode(tagId: tag.tagId)),
     );
   }
 }

@@ -77,6 +77,8 @@ skir.PresentationNode _inspectorCard(
 ) => _inspectorNode(
   id,
   skir.PresentationElement.createContainer(
+    foregroundColor: null,
+    transitionMilliseconds: 0,
     backgroundColor: _inspectorColor(color.withAlpha(24)),
     radius: skir.PresentationRadius.medium,
     border: null,
@@ -152,9 +154,11 @@ skir.TextContent _inspectorTextContent(
 skir.ExpressionNode? _inspectorNumber(double? value) => value == null
     ? null
     : skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapFloat(value));
-skir.ExpressionNode _inspectorColor(Color color) =>
-    skir.ExpressionNode.wrapLiteral(
-      skir.DataValue.wrapInteger(color.toARGB32().toString()),
+skir.PresentationColor _inspectorColor(Color color) =>
+    skir.PresentationColor.wrapValue(
+      skir.ExpressionNode.wrapLiteral(
+        skir.DataValue.wrapInteger(color.toARGB32().toString()),
+      ),
     );
 
 skir.PresentationNode _inspectorConnectionStatus(

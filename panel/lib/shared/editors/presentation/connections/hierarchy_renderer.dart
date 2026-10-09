@@ -59,6 +59,7 @@ final class _PortableHierarchySequenceRendererState
   Widget build(BuildContext context) {
     assert(widget.children.length == widget.itemScopes.length);
     final layout = _resolvePortableHierarchyLayout(
+      PresentationColorEnvironment.of(context),
       widget.layout,
       widget.scope,
       widget.itemScopes,
@@ -87,6 +88,7 @@ final class _PortableHierarchySequenceRendererState
 }
 
 _ResolvedHierarchyLayout _resolvePortableHierarchyLayout(
+  PresentationColorEnvironment colors,
   skir.HierarchySequenceLayout layout,
   PortablePresentationScope scope,
   List<PortablePresentationScope> itemScopes,
@@ -139,18 +141,25 @@ _ResolvedHierarchyLayout _resolvePortableHierarchyLayout(
 
   final unaryScope = itemScopes.firstOrNull ?? scope;
   final unary = _resolveConnectorStyle(
+    colors,
     layout.unaryConnector,
     unaryScope,
     diagnostics,
   );
   final trunk = _resolveConnectorStyle(
+    colors,
     layout.trunkConnector,
     scope,
     diagnostics,
   );
   final branches = [
     for (final itemScope in itemScopes)
-      _resolveConnectorStyle(layout.branchConnector, itemScope, diagnostics),
+      _resolveConnectorStyle(
+        colors,
+        layout.branchConnector,
+        itemScope,
+        diagnostics,
+      ),
   ];
   return _ResolvedHierarchyLayout(
     itemSpacing: itemSpacing.valueOrNull ?? 0,

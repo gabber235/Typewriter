@@ -102,33 +102,28 @@ double? _dataNumber(skir.DataValue? value) => switch (value) {
   _ => null,
 };
 
-Color? _color(PortablePresentationScope scope, skir.ExpressionNode? value) {
-  if (value == null) return null;
-  return switch (scope.evaluate(value)) {
-    PortableExpressionAvailable(value: final result)
-        when result.authoredInteger != null =>
-      Color(result.authoredInteger!.toUnsigned(32).toInt()),
-    _ => null,
-  };
-}
+Color? _color(
+  BuildContext context,
+  PortablePresentationScope scope,
+  skir.PresentationColor? value, {
+  SurfaceAppearance? appearance,
+}) => value == null
+    ? null
+    : PresentationColorEnvironment.of(
+        context,
+        appearance: appearance,
+      ).resolve(value, scope);
 
 _Resolved<Color?> _optionalTextColor(
+  BuildContext context,
   PortablePresentationScope scope,
-  skir.ExpressionNode? expressionNode,
+  skir.PresentationColor? color,
 ) {
-  if (expressionNode == null) return const _ResolvedValue(null);
-  return switch (scope.evaluate(expressionNode)) {
-    PortableExpressionAvailable(value: final value)
-        when value.authoredInteger != null =>
-      _ResolvedValue(Color(value.authoredInteger!.toUnsigned(32).toInt())),
-    PortableExpressionAvailable() => const _ResolvedFailure(
-      "Text color must evaluate to a color",
-    ),
-    PortableExpressionUnavailable() => const _ResolvedFailure(
-      "Text color is unavailable",
-    ),
-    PortableExpressionFailed(:final message) => _ResolvedFailure(message),
-  };
+  try {
+    return _ResolvedValue(_color(context, scope, color));
+  } on PresentationColorFailure catch (failure) {
+    return _ResolvedFailure(failure.message);
+  }
 }
 
 _Resolved<double?> _optionalTextNumber(
@@ -291,12 +286,13 @@ _Resolved<ResolvedTextSizing?> _resolveTextSizing(
 }
 
 _Resolved<TextStyle?> _resolveTextStyle(
+  BuildContext context,
   PortablePresentationScope scope,
   skir.TextStyleOverride? style, {
   List<FontVariation>? inheritedVariations,
 }) {
   if (style == null) return const _ResolvedValue(null);
-  final color = _optionalTextColor(scope, style.color);
+  final color = _optionalTextColor(context, scope, style.color);
   if (color case _ResolvedFailure(:final message)) {
     return _ResolvedFailure(message);
   }

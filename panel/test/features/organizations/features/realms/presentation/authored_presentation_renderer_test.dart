@@ -728,8 +728,10 @@ void main() {
                     path: skir.ConnectionPath.straight,
                     style: skir.ConnectorStyle(
                       stroke: skir.ConnectorStroke(
-                        color: skir.ExpressionNode.wrapLiteral(
-                          skir.DataValue.wrapInteger("4278190335"),
+                        color: skir.PresentationColor.wrapValue(
+                          skir.ExpressionNode.wrapLiteral(
+                            skir.DataValue.wrapInteger("4278190335"),
+                          ),
                         ),
                         width: skir.ExpressionNode.wrapLiteral(
                           skir.DataValue.wrapInteger("2"),

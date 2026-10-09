@@ -371,11 +371,23 @@ extension _PortableActionRendering on PortablePresentationNodeRenderer {
   ) {
     final label = _string(childScope, button.label);
     return switch (label) {
-      _ResolvedValue(:final value) => FilledButton(
-        onPressed: childScope.canExecuteAction
-            ? () => unawaited(childScope.executeAction(button.action))
-            : null,
-        child: Text(value),
+      _ResolvedValue(:final value) => HookBuilder(
+        builder: (context) {
+          final states = useWidgetStatesController();
+          return FilledButton(
+            statesController: states,
+            onPressed: childScope.canExecuteAction
+                ? () => unawaited(childScope.executeAction(button.action))
+                : null,
+            child: ValueListenableBuilder<Set<WidgetState>>(
+              valueListenable: states,
+              builder: (context, observed, _) => PresentationInteractionScope(
+                value: PresentationInteraction.fromWidgetStates(observed),
+                child: Text(value),
+              ),
+            ),
+          );
+        },
       ),
       _ResolvedFailure(:final message) => _diagnostic(message),
     };

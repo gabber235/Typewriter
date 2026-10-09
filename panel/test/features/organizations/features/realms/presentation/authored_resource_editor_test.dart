@@ -1375,6 +1375,8 @@ _fixture({
         nodeId: "message.graph.icon.color",
         properties: skir.PresentationProperties.defaultInstance,
         element: skir.PresentationElement.createContainer(
+          foregroundColor: null,
+          transitionMilliseconds: 0,
           child: skir.PresentationNode(
             nodeId: "message.graph.icon.padding",
             properties: skir.PresentationProperties.defaultInstance,
@@ -1406,8 +1408,10 @@ _fixture({
             header: null,
           ),
           border: null,
-          backgroundColor: skir.ExpressionNode.wrapLiteral(
-            skir.DataValue.wrapInteger("4288585374"),
+          backgroundColor: skir.PresentationColor.wrapValue(
+            skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapInteger("4288585374"),
+            ),
           ),
           radius: skir.PresentationRadius.none,
         ),

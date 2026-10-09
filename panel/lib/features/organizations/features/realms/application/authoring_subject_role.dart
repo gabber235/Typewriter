@@ -6,11 +6,13 @@ final class AuthoringSubjectRole extends ConsumerWidget {
   const AuthoringSubjectRole({
     required this.resourceId,
     required this.role,
+    this.fillAvailableSpace = false,
     super.key,
   });
 
   final skir.ResourceId resourceId;
   final skir.PresentationRole role;
+  final bool fillAvailableSpace;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -32,6 +34,7 @@ final class AuthoringSubjectRole extends ConsumerWidget {
       draft: draft,
       catalog: catalog,
       role: role,
+      fillAvailableSpace: fillAvailableSpace,
       budget: skir.EvaluationBudget(maxSteps: 10000, maxCollectionItems: 10000),
       enabled: false,
     );

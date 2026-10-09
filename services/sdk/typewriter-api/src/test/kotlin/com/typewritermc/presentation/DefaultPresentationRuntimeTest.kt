@@ -53,6 +53,48 @@ import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
 
 val DefaultPresentationRuntimeTest by testSuite {
+    test("surface policies serialize through ordinary presentation nodes") {
+        val catalog = DefaultCheckedCatalog(CatalogGeneration("surface policies"), StandardTypes.definitions)
+        val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
+        val accent = literalColor(com.typewritermc.types.Color(0x803366ccu))
+        val fill =
+            stateColor(accent.withAlpha(0.2)) {
+                whenAll(PresentationInteractionState.Selected, color = accent)
+                whenAll(PresentationInteractionState.Hovered, color = accent.withAlpha(0.5))
+            }
+        val result =
+            DefaultPresentationRuntime().build(
+                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.INSPECTOR),
+            ) { build ->
+                build.container(
+                    ContainerStyle(
+                        background = fill,
+                        foreground = ambientBackground().on(),
+                        radius = PresentationRadius.Large,
+                        transitionMilliseconds = 100,
+                    ),
+                ) {
+                    align(PresentationAlignment.Center) { text(literal("Adventure")) }
+                }
+            }
+        val container = (result.layout.singleFixed().element as PresentationElement.ContainerWrapper).value
+        val states = (container.backgroundColor as skirout.editor.v1.presentation.PresentationColor.StatesWrapper).value
+        states.rules.map { it.match.required } shouldBe
+            listOf(
+                listOf(skirout.editor.v1.presentation.PresentationInteractionState.SELECTED),
+                listOf(skirout.editor.v1.presentation.PresentationInteractionState.HOVERED),
+            )
+        (states.fallback as skirout.editor.v1.presentation.PresentationColor.AlphaWrapper).value.alpha shouldBe 0.2
+        val contrast = (container.foregroundColor as skirout.editor.v1.presentation.PresentationColor.ContrastWrapper).value
+        contrast.source shouldBe
+            skirout.editor.v1.presentation.PresentationColor.AmbientWrapper(
+                skirout.editor.v1.presentation.PresentationAmbientColor.BACKGROUND,
+            )
+        container.transitionMilliseconds shouldBe 100
+        val alignment = (container.child.singleFixed().element as PresentationElement.AlignWrapper).value
+        alignment.alignment shouldBe skirout.editor.v1.presentation.PresentationAlignment.CENTER
+    }
+
     test("resource headings compose ordinary nodes with identity and pane context") {
         val catalog = DefaultCheckedCatalog(CatalogGeneration("headings"), StandardTypes.definitions)
         val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
@@ -113,7 +155,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                 build.richText {
                     sizing(TextSizing.Fit(literal(18.0), literal(40.0)))
                     paragraph(TextParagraph(maximumLines = 2, softWrap = true, selectable = true, tone = TextTone.Secondary))
-                    style(TextStyleOverride(color = literal(com.typewritermc.types.Color(0xff123456u)), weight = 500))
+                    style(TextStyleOverride(color = literal(com.typewritermc.types.Color(0xff123456u)).asPresentationColor(), weight = 500))
                     run(literal("First"))
                     run(literal("Second"), TextStyleOverride(weight = 700))
                 }
@@ -701,15 +743,15 @@ val DefaultPresentationRuntimeTest by testSuite {
                     wrap(2.0, 3.0) { divider() }
                     grid(2, 4.0, 5.0) { divider() }
                     stack { divider() }
-                    section(PresentationBorder(1.0, "border")) { divider() }
+                    section(PresentationBorder(1.0, literalColor(com.typewritermc.types.Color(0xff3366ccu)))) { divider() }
                     padding(PresentationInsets(1.0, 2.0, 3.0, 4.0)) { divider() }
                     container(
                         ContainerStyle(
-                            color =
+                            background =
                                 literal(
                                     com.typewritermc.types.Color
                                         .parseRgb("#3366CC"),
-                                ),
+                                ).asPresentationColor(),
                         ),
                     ) { divider() }
                     tooltip(literal("help")) { divider() }

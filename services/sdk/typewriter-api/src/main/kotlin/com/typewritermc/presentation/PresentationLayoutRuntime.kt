@@ -136,8 +136,20 @@ internal fun PresentationLayoutHandler.container(args: Array<out Any?>) {
             PresentationElement.createContainer(
                 child = child(args.last()),
                 border = style.border?.wire(),
-                backgroundColor = style.color?.let(::expression),
-                radius = skirout.editor.v1.presentation.PresentationRadius.NONE,
+                backgroundColor = style.background?.wire(),
+                radius = style.radius.wire(),
+                foregroundColor = style.foreground?.wire(),
+                transitionMilliseconds = style.transitionMilliseconds,
+            ),
+        )
+}
+
+internal fun PresentationLayoutHandler.align(args: Array<out Any?>) {
+    target +=
+        state.node(
+            PresentationElement.createAlign(
+                child = child(args.last()),
+                alignment = (args[0] as PresentationAlignment).wire(),
             ),
         )
 }

@@ -1545,6 +1545,8 @@ Iterable<skir.PresentationNode> _nestedPresentationNodes(
       yield* _sequenceNodes(value.rootSequence);
       yield value.node;
       yield* _sequenceNodes(value.children);
+    case skir.PresentationElement_alignWrapper(:final value):
+      yield value.child;
     case skir.PresentationElement_containerWrapper(:final value):
       yield value.child;
     case skir.PresentationElement_anchorWrapper(:final value):

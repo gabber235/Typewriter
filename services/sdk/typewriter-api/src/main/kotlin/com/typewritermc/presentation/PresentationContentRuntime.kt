@@ -15,7 +15,7 @@ internal fun PresentationLayoutHandler.text(args: Array<out Any?>) {
         state.node(
             PresentationElement.createText(
                 value = expression(args[0]),
-                color = style.color?.let(::expression),
+                color = style.color?.wire(),
                 sizing = style.sizing?.wire(),
                 fontWeight = style.weight?.let(::expression),
                 fontItalic = null,
@@ -37,7 +37,7 @@ internal fun PresentationLayoutHandler.markdown(args: Array<out Any?>) {
         state.node(
             PresentationElement.createMarkdown(
                 value = expression(args[0]),
-                color = args.getOrNull(1)?.let(::expression),
+                color = (args.getOrNull(1) as? PresentationColor)?.wire(),
                 sizing = null,
                 fontWeight = null,
                 fontItalic = null,
@@ -63,7 +63,7 @@ internal fun PresentationLayoutHandler.icon(args: Array<out Any?>) {
             PresentationElement.createIcon(
                 name = expression(args[0]),
                 semanticLabel = null,
-                color = options.color?.let(::expression),
+                color = options.color?.wire(),
                 size = options.size?.let(::expression),
             ),
         )
@@ -215,7 +215,7 @@ private fun portableLiteral(value: Any?): DataValue =
 
 private fun TextStyleOverride.wire(): skirout.editor.v1.presentation.TextStyleOverride =
     skirout.editor.v1.presentation.TextStyleOverride(
-        color = color?.let(::expression),
+        color = color?.wire(),
         fontWeight = weight?.let(::expression),
         fontItalic = null,
         decoration = null,

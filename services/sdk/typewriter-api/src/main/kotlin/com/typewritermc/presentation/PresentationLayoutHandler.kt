@@ -152,6 +152,10 @@ internal class PresentationLayoutHandler(
                 padding(args)
             }
 
+            "align" -> {
+                align(args)
+            }
+
             "container" -> {
                 container(args)
             }
@@ -231,7 +235,7 @@ internal class PresentationLayoutHandler(
                     state.node(
                         PresentationElement.createChip(
                             label = expression(args[0]),
-                            color = args.getOrNull(1)?.let(::expression),
+                            color = (args.getOrNull(1) as? PresentationColor)?.wire(),
                         ),
                     )
             }

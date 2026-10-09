@@ -111,9 +111,33 @@ internal fun CrossAxisAlignment.wire(): WireCrossAxisAlignment =
 
 internal fun PresentationBorder.wire(): skirout.editor.v1.presentation.PresentationBorder =
     skirout.editor.v1.presentation.PresentationBorder.createAll(
-        color = expression(color),
+        color = color.wire(),
         width = width,
     )
+
+internal fun PresentationRadius.wire(): skirout.editor.v1.presentation.PresentationRadius =
+    when (this) {
+        PresentationRadius.None -> {
+            skirout.editor.v1.presentation.PresentationRadius.NONE
+        }
+
+        PresentationRadius.Small -> {
+            skirout.editor.v1.presentation.PresentationRadius.SMALL
+        }
+
+        PresentationRadius.Medium -> {
+            skirout.editor.v1.presentation.PresentationRadius.MEDIUM
+        }
+
+        PresentationRadius.Large -> {
+            skirout.editor.v1.presentation.PresentationRadius.LARGE
+        }
+
+        is PresentationRadius.Custom -> {
+            skirout.editor.v1.presentation.PresentationRadius
+                .CustomWrapper(expression(value))
+        }
+    }
 
 internal fun PresentationInsets.wire(): skirout.editor.v1.presentation.PresentationInsets =
     skirout.editor.v1.presentation.PresentationInsets.createOnly(

@@ -724,7 +724,9 @@ final class ResourceHeadingGallery extends StatelessWidget {
                 skir.TextRun(
                   text: "authored emphasis".portableExpression,
                   style: skir.TextStyleOverride(
-                    color: Colors.orange.portableExpression,
+                    color: skir.PresentationColor.wrapValue(
+                      Colors.orange.portableExpression,
+                    ),
                     fontWeight: skir.ExpressionNode.wrapLiteral(
                       skir.DataValue.wrapFloat(700),
                     ),

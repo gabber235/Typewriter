@@ -69,11 +69,17 @@ void _resolveMarkers({
 /// suppresses only the stroke that cannot be painted; accumulated diagnostics
 /// remain available to the layer overlay.
 _ResolvedConnectorStyle? _resolveConnectorStyle(
+  PresentationColorEnvironment colors,
   skir.ConnectorStyle style,
   PortablePresentationScope scope,
   List<String> diagnostics,
 ) {
-  final colorResult = scope.evaluate(style.stroke.color);
+  Color? color;
+  try {
+    color = colors.resolve(style.stroke.color, scope);
+  } on PresentationColorFailure catch (failure) {
+    diagnostics.add(failure.message);
+  }
   final widthResult = _evaluateNonnegative(
     style.stroke.width,
     scope,
@@ -84,22 +90,8 @@ _ResolvedConnectorStyle? _resolveConnectorStyle(
     scope,
     "corner radius",
   );
-  diagnostics.addAll([
-    ...colorResult.diagnostics,
-    ...widthResult.diagnostics,
-    ...radiusResult.diagnostics,
-  ]);
+  diagnostics.addAll([...widthResult.diagnostics, ...radiusResult.diagnostics]);
 
-  final colorValue = colorResult.valueOrNull;
-
-  final color = colorValue is skir.DataValue_integerWrapper
-      ? _connectorColor(colorValue.value)
-      : null;
-  if (colorResult is PortableExpressionAvailable && color == null) {
-    diagnostics.add(
-      _connectionDiagnostic("Connector color must evaluate to a Color"),
-    );
-  }
   if (color == null ||
       widthResult.valueOrNull == null ||
       radiusResult.valueOrNull == null) {
@@ -209,8 +201,3 @@ _ConnectionResult<double> _evaluateNonnegative(
 }
 
 String _connectionDiagnostic(String message) => message;
-
-Color? _connectorColor(String value) {
-  final parsed = BigInt.tryParse(value);
-  return parsed == null ? null : Color(parsed.toUnsigned(32).toInt());
-}

@@ -19,15 +19,7 @@ import com.typewritermc.types.IconSvgDefinition
 import com.typewritermc.types.IconSvgExpressions
 import com.typewritermc.types.PresentationRole
 
-object BookSdkProvider : BookConfiguration, BookPresentation {
-    override val roles =
-        setOf(
-            PresentationRole.INSPECTOR,
-            PresentationRole.REFERENCE_SUMMARY,
-            PresentationRole.REFERENCE_OPTION,
-            PresentationRole.AUTHORING_RESULT,
-        )
-
+object BookConfigurationProvider : BookConfiguration {
     override fun BookConfigurationScope.configure() {
         title {
             nonBlank()
@@ -35,66 +27,71 @@ object BookSdkProvider : BookConfiguration, BookPresentation {
         }
         color { opaque() }
     }
+}
+
+object BookInspectorPresentation : BookPresentation {
+    override val roles = setOf(PresentationRole.INSPECTOR)
 
     override fun BookPresentationScope.present() {
-        if (role == PresentationRole.INSPECTOR) {
-            val tagOptions = libraryTagCollectionSource()
-            inspectorLayout {
-                resourceHeading(
-                    title = expressions.title.orIfBlank("Unnamed Book"),
-                    color = expressions.color.orElse(literal(Color(0xff3f51b5u))),
-                    identifier = subject.identifier,
-                )
-                inspectorSection("title", "Title") {
-                    title { textInput() }
-                }
-                inspectorSection("icon", "Icon") {
-                    icon {
-                        polymorphicInput {
-                            form(
-                                AppliedPresentation(IconIconifyDefinition.use, CoreIconSdkProvider),
-                                literal("Iconify"),
-                            )
-                            form(
-                                AppliedPresentation(IconSvgDefinition.use, CoreIconSdkProvider),
-                                literal("SVG"),
-                            )
-                        }
-                    }
-                }
-                inspectorSection("color", "Color") {
-                    color { colorInput(includeAlpha = false) }
-                }
-                inspectorSection("tags", "Direct Tags") {
-                    tags { collectionInput { linkInput(source = tagOptions) } }
-                }
-                inspectorSection("effective-tags", "Effective Tags") {
-                    collectionGraph(tagOptions) {
-                        roots(
-                            expressions.tags
-                                .map { target }
-                                .orElse(emptyListExpression()),
-                        )
-                        relation("parents")
-                        node { tagGraphNode() }
-                    }
-                }
-                remainingFields {
-                    exclude(title)
-                    exclude(icon)
-                    exclude(color)
-                    exclude(tags)
-                    exclude(pages)
-                }
-            }
-        } else {
-            val iconInput = icon.input
-            librarySubjectLayout(
-                label = expressions.title.orIfBlank("Unnamed Book"),
+        val tagOptions = libraryTagCollectionSource()
+        inspectorLayout {
+            resourceHeading(
+                title = expressions.title.orIfBlank("Unnamed Book"),
                 color = expressions.color.orElse(literal(Color(0xff3f51b5u))),
-            ) {
-                bookSubjectIcon(iconInput)
+                identifier = subject.identifier,
+            )
+            inspectorSection("title", "Title") {
+                title { textInput() }
             }
+            inspectorSection("icon", "Icon") {
+                icon {
+                    polymorphicInput {
+                        form(
+                            AppliedPresentation(IconIconifyDefinition.use, CoreIconSdkProvider),
+                            literal("Iconify"),
+                        )
+                        form(
+                            AppliedPresentation(IconSvgDefinition.use, CoreIconSdkProvider),
+                            literal("SVG"),
+                        )
+                    }
+                }
+            }
+            inspectorSection("color", "Color") {
+                color { colorInput(includeAlpha = false) }
+            }
+            inspectorSection("tags", "Direct Tags") {
+                tags { collectionInput { linkInput(source = tagOptions) } }
+            }
+            inspectorSection("effective-tags", "Effective Tags") {
+                collectionGraph(tagOptions) {
+                    roots(
+                        expressions.tags
+                            .map { target }
+                            .orElse(emptyListExpression()),
+                    )
+                    relation("parents")
+                    node { tagGraphNode() }
+                }
+            }
+            remainingFields {
+                exclude(title)
+                exclude(icon)
+                exclude(color)
+                exclude(tags)
+                exclude(pages)
+            }
+        }
+    }
+}
+
+object BookReferencePresentation : BookPresentation {
+    override val roles = setOf(PresentationRole.REFERENCE_SUMMARY, PresentationRole.REFERENCE_OPTION, PresentationRole.AUTHORING_RESULT)
+
+    override fun BookPresentationScope.present() {
+        val iconInput = icon.input
+        librarySubjectLayout(expressions.title.orIfBlank("Unnamed Book")) {
+            bookSubjectIcon(iconInput)
         }
     }
 }

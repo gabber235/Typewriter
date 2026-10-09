@@ -231,7 +231,7 @@ enum ChildrenElement(810800029) {
 }
 
 struct PresentationBorderSide(810800030) {
-  color: ExpressionNode? = 0;
+  color: PresentationColor? = 0;
   width: float64 = 1;
 }
 
@@ -282,7 +282,7 @@ struct SpacerLayout(810800038) {
 
 struct TextContent(810800039) {
   value: ExpressionNode = 0;
-  color: ExpressionNode? = 1;
+  color: PresentationColor? = 1;
   sizing: TextSizing? = 2;
   font_weight: ExpressionNode? = 3;
   font_italic: ExpressionNode? = 4;
@@ -316,7 +316,7 @@ struct TextParagraph(810800042) {
 }
 
 struct TextStyleOverride(810800043) {
-  color: ExpressionNode? = 0;
+  color: PresentationColor? = 0;
   font_weight: ExpressionNode? = 1;
   font_italic: ExpressionNode? = 2;
   decoration: ExpressionNode? = 3;
@@ -347,7 +347,7 @@ struct AdaptiveLeadingElement(810800046) {
 struct IconContent(810800047) {
   name: ExpressionNode = 0;
   semantic_label: ExpressionNode? = 1;
-  color: ExpressionNode? = 2;
+  color: PresentationColor? = 2;
   size: ExpressionNode? = 3;
 }
 
@@ -363,7 +363,7 @@ struct BadgeContent(810800049) {
 
 struct ChipContent(810800050) {
   label: ExpressionNode = 0;
-  color: ExpressionNode? = 1;
+  color: PresentationColor? = 1;
 }
 
 struct ProgressContent(810800051) {
@@ -494,11 +494,13 @@ enum PresentationRadius(810800068) {
 struct ContainerLayout(810800069) {
   child: PresentationNode = 0;
   border: PresentationBorder? = 1;
-  background_color: ExpressionNode? = 2;
+  background_color: PresentationColor? = 2;
   radius: PresentationRadius = 3;
+  foreground_color: PresentationColor? = 4;
+  transition_milliseconds: int32 = 5;
 }
 
-enum PresentationAnchorAlignment(810800070) {
+enum PresentationAlignment(810800070) {
   top_start = 1;
   top_center = 2;
   top_end = 3;
@@ -518,7 +520,7 @@ struct PresentationOffset(810800071) {
 struct PresentationAnchorPoint(810800072) {
   anchor_id: string = 0;
   group_ids: [string] = 1;
-  alignment: PresentationAnchorAlignment = 2;
+  alignment: PresentationAlignment = 2;
   offset: PresentationOffset? = 3;
   visible_if: ExpressionNode? = 4;
   export_to_parent: bool = 5;
@@ -541,7 +543,7 @@ enum ConnectionExpressionScope(810800075) {
 }
 
 struct ConnectorStroke(810800076) {
-  color: ExpressionNode = 0;
+  color: PresentationColor = 0;
   width: ExpressionNode = 1;
 }
 
@@ -1026,6 +1028,7 @@ enum PresentationElement(810800143) {
   set_input: SetControl = 56;
   page_graph: PageGraphElement = 57;
   page_timeline: PageTimelineElement = 58;
+  align: AlignmentLayout = 59;
 }
 
 struct PresentationDefinition(810800144) {
@@ -1165,4 +1168,77 @@ struct TextFit(810800165) {
 enum TextSizing(810800166) {
   exact: ExpressionNode = 1;
   fit: TextFit = 2;
+}
+
+enum PresentationInteractionState(810800167) {
+  hovered = 1;
+  selected = 2;
+  focused = 3;
+  pressed = 4;
+  disabled = 5;
+}
+
+struct PresentationStateMatch(810800168) {
+  required: [PresentationInteractionState] = 0;
+  excluded: [PresentationInteractionState] = 1;
+}
+
+enum PresentationThemeColor(810800169) {
+  primary = 1;
+  on_primary = 2;
+  surface = 3;
+  on_surface = 4;
+  on_surface_variant = 5;
+  focus_outline = 6;
+}
+
+enum PresentationAmbientColor(810800170) {
+  background = 1;
+  foreground = 2;
+  secondary_foreground = 3;
+}
+
+enum PresentationContrastMode(810800171) {
+  tonal = 1;
+  monochrome = 2;
+}
+
+struct PresentationContrastColor(810800172) {
+  source: PresentationColor = 0;
+  mode: PresentationContrastMode = 1;
+}
+
+struct PresentationAlphaColor(810800173) {
+  source: PresentationColor = 0;
+  alpha: float64 = 1;
+}
+
+struct PresentationBlendColor(810800174) {
+  foreground: PresentationColor = 0;
+  background: PresentationColor = 1;
+}
+
+struct PresentationStateColorRule(810800175) {
+  match: PresentationStateMatch = 0;
+  color: PresentationColor = 1;
+}
+
+struct PresentationStateColor(810800176) {
+  rules: [PresentationStateColorRule] = 0;
+  fallback: PresentationColor = 1;
+}
+
+enum PresentationColor(810800177) {
+  value: ExpressionNode = 1;
+  theme: PresentationThemeColor = 2;
+  ambient: PresentationAmbientColor = 3;
+  contrast: PresentationContrastColor = 4;
+  alpha: PresentationAlphaColor = 5;
+  blend: PresentationBlendColor = 6;
+  states: PresentationStateColor = 7;
+}
+
+struct AlignmentLayout(810800178) {
+  child: PresentationNode = 0;
+  alignment: PresentationAlignment = 1;
 }

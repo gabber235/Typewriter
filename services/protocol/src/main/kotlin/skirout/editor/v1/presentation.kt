@@ -4339,7 +4339,7 @@ sealed class ChildrenElement private constructor() {
 }
 
 sealed interface PresentationBorderSide_OrMutable {
-    val color: skirout.editor.v1.expression.ExpressionNode?;
+    val color: skirout.editor.v1.presentation.PresentationColor?;
     val width: kotlin.Double;
 
     fun toFrozen(): skirout.editor.v1.presentation.PresentationBorderSide;
@@ -4348,7 +4348,7 @@ sealed interface PresentationBorderSide_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class PresentationBorderSide private constructor(
-    override val color: skirout.editor.v1.expression.ExpressionNode?,
+    override val color: skirout.editor.v1.presentation.PresentationColor?,
     override val width: kotlin.Double,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationBorderSide>? =
         null,
@@ -4356,7 +4356,7 @@ class PresentationBorderSide private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        color: skirout.editor.v1.expression.ExpressionNode?,
+        color: skirout.editor.v1.presentation.PresentationColor?,
         width: kotlin.Double,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationBorderSide>? =
             null,
@@ -4379,7 +4379,7 @@ class PresentationBorderSide private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        color: skirout.editor.v1.expression.ExpressionNode? =
+        color: skirout.editor.v1.presentation.PresentationColor? =
             this.color,
         width: kotlin.Double =
             this.width,
@@ -4411,7 +4411,7 @@ class PresentationBorderSide private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var color: skirout.editor.v1.expression.ExpressionNode? =
+        override var color: skirout.editor.v1.presentation.PresentationColor? =
             null,
         override var width: kotlin.Double =
             0.0,
@@ -4444,7 +4444,7 @@ class PresentationBorderSide private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            color: skirout.editor.v1.expression.ExpressionNode? =
+            color: skirout.editor.v1.presentation.PresentationColor? =
                 null,
             width: kotlin.Double =
                 0.0,
@@ -4699,7 +4699,7 @@ sealed class PresentationBorder private constructor() {
         fun createAll(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            color: skirout.editor.v1.expression.ExpressionNode?,
+            color: skirout.editor.v1.presentation.PresentationColor?,
             width: kotlin.Double,
         ) = AllWrapper(
             skirout.editor.v1.presentation.PresentationBorderSide(
@@ -5525,7 +5525,7 @@ class SpacerLayout private constructor(
 
 sealed interface TextContent_OrMutable {
     val value: skirout.editor.v1.expression.ExpressionNode;
-    val color: skirout.editor.v1.expression.ExpressionNode?;
+    val color: skirout.editor.v1.presentation.PresentationColor?;
     val sizing: skirout.editor.v1.presentation.TextSizing?;
     val fontWeight: skirout.editor.v1.expression.ExpressionNode?;
     val fontItalic: skirout.editor.v1.expression.ExpressionNode?;
@@ -5546,7 +5546,7 @@ sealed interface TextContent_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class TextContent private constructor(
     override val value: skirout.editor.v1.expression.ExpressionNode,
-    override val color: skirout.editor.v1.expression.ExpressionNode?,
+    override val color: skirout.editor.v1.presentation.PresentationColor?,
     override val sizing: skirout.editor.v1.presentation.TextSizing?,
     override val fontWeight: skirout.editor.v1.expression.ExpressionNode?,
     override val fontItalic: skirout.editor.v1.expression.ExpressionNode?,
@@ -5566,7 +5566,7 @@ class TextContent private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         value: skirout.editor.v1.expression.ExpressionNode,
-        color: skirout.editor.v1.expression.ExpressionNode?,
+        color: skirout.editor.v1.presentation.PresentationColor?,
         sizing: skirout.editor.v1.presentation.TextSizing?,
         fontWeight: skirout.editor.v1.expression.ExpressionNode?,
         fontItalic: skirout.editor.v1.expression.ExpressionNode?,
@@ -5626,7 +5626,7 @@ class TextContent private constructor(
             _MustNameArguments,
         value: skirout.editor.v1.expression.ExpressionNode =
             this.value,
-        color: skirout.editor.v1.expression.ExpressionNode? =
+        color: skirout.editor.v1.presentation.PresentationColor? =
             this.color,
         sizing: skirout.editor.v1.presentation.TextSizing? =
             this.sizing,
@@ -5694,7 +5694,7 @@ class TextContent private constructor(
             _MustNameArguments,
         override var value: skirout.editor.v1.expression.ExpressionNode =
             skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var color: skirout.editor.v1.expression.ExpressionNode? =
+        override var color: skirout.editor.v1.presentation.PresentationColor? =
             null,
         override var sizing: skirout.editor.v1.presentation.TextSizing? =
             null,
@@ -5791,7 +5791,7 @@ class TextContent private constructor(
                 _MustNameArguments,
             value: skirout.editor.v1.expression.ExpressionNode =
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            color: skirout.editor.v1.expression.ExpressionNode? =
+            color: skirout.editor.v1.presentation.PresentationColor? =
                 null,
             sizing: skirout.editor.v1.presentation.TextSizing? =
                 null,
@@ -6161,7 +6161,7 @@ class TextParagraph private constructor(
 }
 
 sealed interface TextStyleOverride_OrMutable {
-    val color: skirout.editor.v1.expression.ExpressionNode?;
+    val color: skirout.editor.v1.presentation.PresentationColor?;
     val fontWeight: skirout.editor.v1.expression.ExpressionNode?;
     val fontItalic: skirout.editor.v1.expression.ExpressionNode?;
     val decoration: skirout.editor.v1.expression.ExpressionNode?;
@@ -6172,7 +6172,7 @@ sealed interface TextStyleOverride_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class TextStyleOverride private constructor(
-    override val color: skirout.editor.v1.expression.ExpressionNode?,
+    override val color: skirout.editor.v1.presentation.PresentationColor?,
     override val fontWeight: skirout.editor.v1.expression.ExpressionNode?,
     override val fontItalic: skirout.editor.v1.expression.ExpressionNode?,
     override val decoration: skirout.editor.v1.expression.ExpressionNode?,
@@ -6182,7 +6182,7 @@ class TextStyleOverride private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        color: skirout.editor.v1.expression.ExpressionNode?,
+        color: skirout.editor.v1.presentation.PresentationColor?,
         fontWeight: skirout.editor.v1.expression.ExpressionNode?,
         fontItalic: skirout.editor.v1.expression.ExpressionNode?,
         decoration: skirout.editor.v1.expression.ExpressionNode?,
@@ -6211,7 +6211,7 @@ class TextStyleOverride private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        color: skirout.editor.v1.expression.ExpressionNode? =
+        color: skirout.editor.v1.presentation.PresentationColor? =
             this.color,
         fontWeight: skirout.editor.v1.expression.ExpressionNode? =
             this.fontWeight,
@@ -6249,7 +6249,7 @@ class TextStyleOverride private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var color: skirout.editor.v1.expression.ExpressionNode? =
+        override var color: skirout.editor.v1.presentation.PresentationColor? =
             null,
         override var fontWeight: skirout.editor.v1.expression.ExpressionNode? =
             null,
@@ -6290,7 +6290,7 @@ class TextStyleOverride private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            color: skirout.editor.v1.expression.ExpressionNode? =
+            color: skirout.editor.v1.presentation.PresentationColor? =
                 null,
             fontWeight: skirout.editor.v1.expression.ExpressionNode? =
                 null,
@@ -6826,7 +6826,7 @@ class AdaptiveLeadingElement private constructor(
 sealed interface IconContent_OrMutable {
     val name: skirout.editor.v1.expression.ExpressionNode;
     val semanticLabel: skirout.editor.v1.expression.ExpressionNode?;
-    val color: skirout.editor.v1.expression.ExpressionNode?;
+    val color: skirout.editor.v1.presentation.PresentationColor?;
     val size: skirout.editor.v1.expression.ExpressionNode?;
 
     fun toFrozen(): skirout.editor.v1.presentation.IconContent;
@@ -6837,7 +6837,7 @@ sealed interface IconContent_OrMutable {
 class IconContent private constructor(
     override val name: skirout.editor.v1.expression.ExpressionNode,
     override val semanticLabel: skirout.editor.v1.expression.ExpressionNode?,
-    override val color: skirout.editor.v1.expression.ExpressionNode?,
+    override val color: skirout.editor.v1.presentation.PresentationColor?,
     override val size: skirout.editor.v1.expression.ExpressionNode?,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.IconContent>? =
         null,
@@ -6847,7 +6847,7 @@ class IconContent private constructor(
             _MustNameArguments,
         name: skirout.editor.v1.expression.ExpressionNode,
         semanticLabel: skirout.editor.v1.expression.ExpressionNode?,
-        color: skirout.editor.v1.expression.ExpressionNode?,
+        color: skirout.editor.v1.presentation.PresentationColor?,
         size: skirout.editor.v1.expression.ExpressionNode?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.IconContent>? =
             null,
@@ -6878,7 +6878,7 @@ class IconContent private constructor(
             this.name,
         semanticLabel: skirout.editor.v1.expression.ExpressionNode? =
             this.semanticLabel,
-        color: skirout.editor.v1.expression.ExpressionNode? =
+        color: skirout.editor.v1.presentation.PresentationColor? =
             this.color,
         size: skirout.editor.v1.expression.ExpressionNode? =
             this.size,
@@ -6916,7 +6916,7 @@ class IconContent private constructor(
             skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
         override var semanticLabel: skirout.editor.v1.expression.ExpressionNode? =
             null,
-        override var color: skirout.editor.v1.expression.ExpressionNode? =
+        override var color: skirout.editor.v1.presentation.PresentationColor? =
             null,
         override var size: skirout.editor.v1.expression.ExpressionNode? =
             null,
@@ -6957,7 +6957,7 @@ class IconContent private constructor(
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
             semanticLabel: skirout.editor.v1.expression.ExpressionNode? =
                 null,
-            color: skirout.editor.v1.expression.ExpressionNode? =
+            color: skirout.editor.v1.presentation.PresentationColor? =
                 null,
             size: skirout.editor.v1.expression.ExpressionNode? =
                 null,
@@ -7227,7 +7227,7 @@ class BadgeContent private constructor(
 
 sealed interface ChipContent_OrMutable {
     val label: skirout.editor.v1.expression.ExpressionNode;
-    val color: skirout.editor.v1.expression.ExpressionNode?;
+    val color: skirout.editor.v1.presentation.PresentationColor?;
 
     fun toFrozen(): skirout.editor.v1.presentation.ChipContent;
 }
@@ -7236,7 +7236,7 @@ sealed interface ChipContent_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ChipContent private constructor(
     override val label: skirout.editor.v1.expression.ExpressionNode,
-    override val color: skirout.editor.v1.expression.ExpressionNode?,
+    override val color: skirout.editor.v1.presentation.PresentationColor?,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ChipContent>? =
         null,
 ): skirout.editor.v1.presentation.ChipContent_OrMutable {
@@ -7244,7 +7244,7 @@ class ChipContent private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         label: skirout.editor.v1.expression.ExpressionNode,
-        color: skirout.editor.v1.expression.ExpressionNode?,
+        color: skirout.editor.v1.presentation.PresentationColor?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ChipContent>? =
             null,
     ): this(
@@ -7268,7 +7268,7 @@ class ChipContent private constructor(
             _MustNameArguments,
         label: skirout.editor.v1.expression.ExpressionNode =
             this.label,
-        color: skirout.editor.v1.expression.ExpressionNode? =
+        color: skirout.editor.v1.presentation.PresentationColor? =
             this.color,
     ) = skirout.editor.v1.presentation.ChipContent(
         label,
@@ -7300,7 +7300,7 @@ class ChipContent private constructor(
             _MustNameArguments,
         override var label: skirout.editor.v1.expression.ExpressionNode =
             skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-        override var color: skirout.editor.v1.expression.ExpressionNode? =
+        override var color: skirout.editor.v1.presentation.PresentationColor? =
             null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ChipContent>? =
             null,
@@ -7333,7 +7333,7 @@ class ChipContent private constructor(
                 _MustNameArguments,
             label: skirout.editor.v1.expression.ExpressionNode =
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
-            color: skirout.editor.v1.expression.ExpressionNode? =
+            color: skirout.editor.v1.presentation.PresentationColor? =
                 null,
         ) = skirout.editor.v1.presentation.ChipContent(
             label = label,
@@ -9977,8 +9977,10 @@ sealed class PresentationRadius private constructor() {
 sealed interface ContainerLayout_OrMutable {
     val child: skirout.editor.v1.presentation.PresentationNode_OrMutable;
     val border: skirout.editor.v1.presentation.PresentationBorder?;
-    val backgroundColor: skirout.editor.v1.expression.ExpressionNode?;
+    val backgroundColor: skirout.editor.v1.presentation.PresentationColor?;
     val radius: skirout.editor.v1.presentation.PresentationRadius;
+    val foregroundColor: skirout.editor.v1.presentation.PresentationColor?;
+    val transitionMilliseconds: kotlin.Int;
 
     fun toFrozen(): skirout.editor.v1.presentation.ContainerLayout;
 }
@@ -9988,8 +9990,10 @@ sealed interface ContainerLayout_OrMutable {
 class ContainerLayout private constructor(
     override val child: skirout.editor.v1.presentation.PresentationNode,
     override val border: skirout.editor.v1.presentation.PresentationBorder?,
-    override val backgroundColor: skirout.editor.v1.expression.ExpressionNode?,
+    override val backgroundColor: skirout.editor.v1.presentation.PresentationColor?,
     override val radius: skirout.editor.v1.presentation.PresentationRadius,
+    override val foregroundColor: skirout.editor.v1.presentation.PresentationColor?,
+    override val transitionMilliseconds: kotlin.Int,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ContainerLayout>? =
         null,
 ): skirout.editor.v1.presentation.ContainerLayout_OrMutable {
@@ -9998,8 +10002,10 @@ class ContainerLayout private constructor(
             _MustNameArguments,
         child: skirout.editor.v1.presentation.PresentationNode_OrMutable,
         border: skirout.editor.v1.presentation.PresentationBorder?,
-        backgroundColor: skirout.editor.v1.expression.ExpressionNode?,
+        backgroundColor: skirout.editor.v1.presentation.PresentationColor?,
         radius: skirout.editor.v1.presentation.PresentationRadius,
+        foregroundColor: skirout.editor.v1.presentation.PresentationColor?,
+        transitionMilliseconds: kotlin.Int,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ContainerLayout>? =
             null,
     ): this(
@@ -10007,6 +10013,8 @@ class ContainerLayout private constructor(
         border,
         backgroundColor,
         radius,
+        foregroundColor,
+        transitionMilliseconds,
         _unrecognizedFields,
     ) {}
 
@@ -10019,6 +10027,8 @@ class ContainerLayout private constructor(
         border = this.border,
         backgroundColor = this.backgroundColor,
         radius = this.radius,
+        foregroundColor = this.foregroundColor,
+        transitionMilliseconds = this.transitionMilliseconds,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -10029,15 +10039,21 @@ class ContainerLayout private constructor(
             this.child,
         border: skirout.editor.v1.presentation.PresentationBorder? =
             this.border,
-        backgroundColor: skirout.editor.v1.expression.ExpressionNode? =
+        backgroundColor: skirout.editor.v1.presentation.PresentationColor? =
             this.backgroundColor,
         radius: skirout.editor.v1.presentation.PresentationRadius =
             this.radius,
+        foregroundColor: skirout.editor.v1.presentation.PresentationColor? =
+            this.foregroundColor,
+        transitionMilliseconds: kotlin.Int =
+            this.transitionMilliseconds,
     ) = skirout.editor.v1.presentation.ContainerLayout(
         child.toFrozen(),
         border,
         backgroundColor,
         radius,
+        foregroundColor,
+        transitionMilliseconds,
         this._unrecognizedFields,
     );
 
@@ -10045,11 +10061,11 @@ class ContainerLayout private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.presentation.ContainerLayout && this.child == other.child && this.border == other.border && this.backgroundColor == other.backgroundColor && this.radius == other.radius);
+        return this === other || (other is skirout.editor.v1.presentation.ContainerLayout && this.child == other.child && this.border == other.border && this.backgroundColor == other.backgroundColor && this.radius == other.radius && this.foregroundColor == other.foregroundColor && this.transitionMilliseconds == other.transitionMilliseconds);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.child, this.border, this.backgroundColor, this.radius).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.child, this.border, this.backgroundColor, this.radius, this.foregroundColor, this.transitionMilliseconds).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -10067,10 +10083,14 @@ class ContainerLayout private constructor(
             skirout.editor.v1.presentation.PresentationNode.partial(),
         override var border: skirout.editor.v1.presentation.PresentationBorder? =
             null,
-        override var backgroundColor: skirout.editor.v1.expression.ExpressionNode? =
+        override var backgroundColor: skirout.editor.v1.presentation.PresentationColor? =
             null,
         override var radius: skirout.editor.v1.presentation.PresentationRadius =
             skirout.editor.v1.presentation.PresentationRadius.UNKNOWN,
+        override var foregroundColor: skirout.editor.v1.presentation.PresentationColor? =
+            null,
+        override var transitionMilliseconds: kotlin.Int =
+            0,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ContainerLayout>? =
             null,
     ): skirout.editor.v1.presentation.ContainerLayout_OrMutable {
@@ -10080,6 +10100,8 @@ class ContainerLayout private constructor(
             border = this.border,
             backgroundColor = this.backgroundColor,
             radius = this.radius,
+            foregroundColor = this.foregroundColor,
+            transitionMilliseconds = this.transitionMilliseconds,
             _unrecognizedFields = this._unrecognizedFields,
         );
     }
@@ -10091,6 +10113,8 @@ class ContainerLayout private constructor(
                 null,
                 null,
                 skirout.editor.v1.presentation.PresentationRadius.UNKNOWN,
+                null,
+                0,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -10108,15 +10132,21 @@ class ContainerLayout private constructor(
                 skirout.editor.v1.presentation.PresentationNode.partial(),
             border: skirout.editor.v1.presentation.PresentationBorder? =
                 null,
-            backgroundColor: skirout.editor.v1.expression.ExpressionNode? =
+            backgroundColor: skirout.editor.v1.presentation.PresentationColor? =
                 null,
             radius: skirout.editor.v1.presentation.PresentationRadius =
                 skirout.editor.v1.presentation.PresentationRadius.UNKNOWN,
+            foregroundColor: skirout.editor.v1.presentation.PresentationColor? =
+                null,
+            transitionMilliseconds: kotlin.Int =
+                0,
         ) = skirout.editor.v1.presentation.ContainerLayout(
             child = child,
             border = border,
             backgroundColor = backgroundColor,
             radius = radius,
+            foregroundColor = foregroundColor,
+            transitionMilliseconds = transitionMilliseconds,
             _unrecognizedFields = null,
         );
 
@@ -10129,8 +10159,8 @@ class ContainerLayout private constructor(
 }
 
 /** Deeply immutable. */
-sealed class PresentationAnchorAlignment private constructor() {
-    /** The kind of variant held by a `PresentationAnchorAlignment`. */
+sealed class PresentationAlignment private constructor() {
+    /** The kind of variant held by a `PresentationAlignment`. */
     enum class Kind {
         UNKNOWN,
         TOP_START_CONST,
@@ -10144,14 +10174,14 @@ sealed class PresentationAnchorAlignment private constructor() {
         BOTTOM_END_CONST,
     }
 
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.PresentationAnchorAlignment.UNKNOWN")) internal constructor(
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.PresentationAlignment.UNKNOWN")) internal constructor(
         internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.PresentationAnchorAlignment>?,
-    ) : skirout.editor.v1.presentation.PresentationAnchorAlignment() {
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.PresentationAlignment>?,
+    ) : skirout.editor.v1.presentation.PresentationAlignment() {
         override val kind get() = _kind;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.presentation.PresentationAnchorAlignment && other.kind == kind;
+            return other is skirout.editor.v1.presentation.PresentationAlignment && other.kind == kind;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -10159,11 +10189,11 @@ sealed class PresentationAnchorAlignment private constructor() {
         }
     }
 
-    object TOP_START : skirout.editor.v1.presentation.PresentationAnchorAlignment() {
+    object TOP_START : skirout.editor.v1.presentation.PresentationAlignment() {
         override val kind get() = Kind.TOP_START_CONST;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.presentation.PresentationAnchorAlignment && other.kind == Kind.TOP_START_CONST;
+            return other is skirout.editor.v1.presentation.PresentationAlignment && other.kind == Kind.TOP_START_CONST;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -10171,11 +10201,11 @@ sealed class PresentationAnchorAlignment private constructor() {
         }
     }
 
-    object TOP_CENTER : skirout.editor.v1.presentation.PresentationAnchorAlignment() {
+    object TOP_CENTER : skirout.editor.v1.presentation.PresentationAlignment() {
         override val kind get() = Kind.TOP_CENTER_CONST;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.presentation.PresentationAnchorAlignment && other.kind == Kind.TOP_CENTER_CONST;
+            return other is skirout.editor.v1.presentation.PresentationAlignment && other.kind == Kind.TOP_CENTER_CONST;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -10183,11 +10213,11 @@ sealed class PresentationAnchorAlignment private constructor() {
         }
     }
 
-    object TOP_END : skirout.editor.v1.presentation.PresentationAnchorAlignment() {
+    object TOP_END : skirout.editor.v1.presentation.PresentationAlignment() {
         override val kind get() = Kind.TOP_END_CONST;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.presentation.PresentationAnchorAlignment && other.kind == Kind.TOP_END_CONST;
+            return other is skirout.editor.v1.presentation.PresentationAlignment && other.kind == Kind.TOP_END_CONST;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -10195,11 +10225,11 @@ sealed class PresentationAnchorAlignment private constructor() {
         }
     }
 
-    object CENTER_START : skirout.editor.v1.presentation.PresentationAnchorAlignment() {
+    object CENTER_START : skirout.editor.v1.presentation.PresentationAlignment() {
         override val kind get() = Kind.CENTER_START_CONST;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.presentation.PresentationAnchorAlignment && other.kind == Kind.CENTER_START_CONST;
+            return other is skirout.editor.v1.presentation.PresentationAlignment && other.kind == Kind.CENTER_START_CONST;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -10207,11 +10237,11 @@ sealed class PresentationAnchorAlignment private constructor() {
         }
     }
 
-    object CENTER : skirout.editor.v1.presentation.PresentationAnchorAlignment() {
+    object CENTER : skirout.editor.v1.presentation.PresentationAlignment() {
         override val kind get() = Kind.CENTER_CONST;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.presentation.PresentationAnchorAlignment && other.kind == Kind.CENTER_CONST;
+            return other is skirout.editor.v1.presentation.PresentationAlignment && other.kind == Kind.CENTER_CONST;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -10219,11 +10249,11 @@ sealed class PresentationAnchorAlignment private constructor() {
         }
     }
 
-    object CENTER_END : skirout.editor.v1.presentation.PresentationAnchorAlignment() {
+    object CENTER_END : skirout.editor.v1.presentation.PresentationAlignment() {
         override val kind get() = Kind.CENTER_END_CONST;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.presentation.PresentationAnchorAlignment && other.kind == Kind.CENTER_END_CONST;
+            return other is skirout.editor.v1.presentation.PresentationAlignment && other.kind == Kind.CENTER_END_CONST;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -10231,11 +10261,11 @@ sealed class PresentationAnchorAlignment private constructor() {
         }
     }
 
-    object BOTTOM_START : skirout.editor.v1.presentation.PresentationAnchorAlignment() {
+    object BOTTOM_START : skirout.editor.v1.presentation.PresentationAlignment() {
         override val kind get() = Kind.BOTTOM_START_CONST;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.presentation.PresentationAnchorAlignment && other.kind == Kind.BOTTOM_START_CONST;
+            return other is skirout.editor.v1.presentation.PresentationAlignment && other.kind == Kind.BOTTOM_START_CONST;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -10243,11 +10273,11 @@ sealed class PresentationAnchorAlignment private constructor() {
         }
     }
 
-    object BOTTOM_CENTER : skirout.editor.v1.presentation.PresentationAnchorAlignment() {
+    object BOTTOM_CENTER : skirout.editor.v1.presentation.PresentationAlignment() {
         override val kind get() = Kind.BOTTOM_CENTER_CONST;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.presentation.PresentationAnchorAlignment && other.kind == Kind.BOTTOM_CENTER_CONST;
+            return other is skirout.editor.v1.presentation.PresentationAlignment && other.kind == Kind.BOTTOM_CENTER_CONST;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -10255,11 +10285,11 @@ sealed class PresentationAnchorAlignment private constructor() {
         }
     }
 
-    object BOTTOM_END : skirout.editor.v1.presentation.PresentationAnchorAlignment() {
+    object BOTTOM_END : skirout.editor.v1.presentation.PresentationAlignment() {
         override val kind get() = Kind.BOTTOM_END_CONST;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.presentation.PresentationAnchorAlignment && other.kind == Kind.BOTTOM_END_CONST;
+            return other is skirout.editor.v1.presentation.PresentationAlignment && other.kind == Kind.BOTTOM_END_CONST;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -10267,29 +10297,29 @@ sealed class PresentationAnchorAlignment private constructor() {
         }
     }
 
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.PresentationAnchorAlignment>? get() = null;
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.PresentationAlignment>? get() = null;
 
     abstract val kind: Kind;
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            _SerializerRegistry.PresentationAnchorAlignmentSerializerImpl,
+            _SerializerRegistry.PresentationAlignmentSerializerImpl,
         )
     }
 
     companion object {
         /**
-         * Constant indicating an unknown [PresentationAnchorAlignment].
-         * Default value for fields of type [PresentationAnchorAlignment].
+         * Constant indicating an unknown [PresentationAlignment].
+         * Default value for fields of type [PresentationAlignment].
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        /** Serializer for [PresentationAnchorAlignment] instances. */
-        val serializer get() = _SerializerRegistry.PresentationAnchorAlignmentSerializer;
+        /** Serializer for [PresentationAlignment] instances. */
+        val serializer get() = _SerializerRegistry.PresentationAlignmentSerializer;
 
-        /** Describes the [PresentationAnchorAlignment] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.PresentationAnchorAlignmentSerializerImpl.typeDescriptor;
+        /** Describes the [PresentationAlignment] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.PresentationAlignmentSerializerImpl.typeDescriptor;
     }
 }
 
@@ -10420,7 +10450,7 @@ class PresentationOffset private constructor(
 sealed interface PresentationAnchorPoint_OrMutable {
     val anchorId: kotlin.String;
     val groupIds: kotlin.collections.List<kotlin.String>;
-    val alignment: skirout.editor.v1.presentation.PresentationAnchorAlignment;
+    val alignment: skirout.editor.v1.presentation.PresentationAlignment;
     val offset: skirout.editor.v1.presentation.PresentationOffset_OrMutable?;
     val visibleIf: skirout.editor.v1.expression.ExpressionNode?;
     val exportToParent: kotlin.Boolean;
@@ -10433,7 +10463,7 @@ sealed interface PresentationAnchorPoint_OrMutable {
 class PresentationAnchorPoint private constructor(
     override val anchorId: kotlin.String,
     override val groupIds: kotlin.collections.List<kotlin.String>,
-    override val alignment: skirout.editor.v1.presentation.PresentationAnchorAlignment,
+    override val alignment: skirout.editor.v1.presentation.PresentationAlignment,
     override val offset: skirout.editor.v1.presentation.PresentationOffset?,
     override val visibleIf: skirout.editor.v1.expression.ExpressionNode?,
     override val exportToParent: kotlin.Boolean,
@@ -10445,7 +10475,7 @@ class PresentationAnchorPoint private constructor(
             _MustNameArguments,
         anchorId: kotlin.String,
         groupIds: kotlin.collections.Iterable<kotlin.String>,
-        alignment: skirout.editor.v1.presentation.PresentationAnchorAlignment,
+        alignment: skirout.editor.v1.presentation.PresentationAlignment,
         offset: skirout.editor.v1.presentation.PresentationOffset_OrMutable?,
         visibleIf: skirout.editor.v1.expression.ExpressionNode?,
         exportToParent: kotlin.Boolean,
@@ -10482,7 +10512,7 @@ class PresentationAnchorPoint private constructor(
             this.anchorId,
         groupIds: kotlin.collections.Iterable<kotlin.String> =
             this.groupIds,
-        alignment: skirout.editor.v1.presentation.PresentationAnchorAlignment =
+        alignment: skirout.editor.v1.presentation.PresentationAlignment =
             this.alignment,
         offset: skirout.editor.v1.presentation.PresentationOffset_OrMutable? =
             this.offset,
@@ -10526,8 +10556,8 @@ class PresentationAnchorPoint private constructor(
             "",
         override var groupIds: kotlin.collections.List<kotlin.String> =
             build.skir.internal.emptyFrozenList<kotlin.String>(),
-        override var alignment: skirout.editor.v1.presentation.PresentationAnchorAlignment =
-            skirout.editor.v1.presentation.PresentationAnchorAlignment.UNKNOWN,
+        override var alignment: skirout.editor.v1.presentation.PresentationAlignment =
+            skirout.editor.v1.presentation.PresentationAlignment.UNKNOWN,
         override var offset: skirout.editor.v1.presentation.PresentationOffset_OrMutable? =
             null,
         override var visibleIf: skirout.editor.v1.expression.ExpressionNode? =
@@ -10570,7 +10600,7 @@ class PresentationAnchorPoint private constructor(
             skirout.editor.v1.presentation.PresentationAnchorPoint(
                 "",
                 build.skir.internal.emptyFrozenList<kotlin.String>(),
-                skirout.editor.v1.presentation.PresentationAnchorAlignment.UNKNOWN,
+                skirout.editor.v1.presentation.PresentationAlignment.UNKNOWN,
                 null,
                 null,
                 false,
@@ -10591,8 +10621,8 @@ class PresentationAnchorPoint private constructor(
                 "",
             groupIds: kotlin.collections.Iterable<kotlin.String> =
                 build.skir.internal.emptyFrozenList<kotlin.String>(),
-            alignment: skirout.editor.v1.presentation.PresentationAnchorAlignment =
-                skirout.editor.v1.presentation.PresentationAnchorAlignment.UNKNOWN,
+            alignment: skirout.editor.v1.presentation.PresentationAlignment =
+                skirout.editor.v1.presentation.PresentationAlignment.UNKNOWN,
             offset: skirout.editor.v1.presentation.PresentationOffset_OrMutable? =
                 null,
             visibleIf: skirout.editor.v1.expression.ExpressionNode? =
@@ -10923,7 +10953,7 @@ sealed class ConnectionExpressionScope private constructor() {
 }
 
 sealed interface ConnectorStroke_OrMutable {
-    val color: skirout.editor.v1.expression.ExpressionNode;
+    val color: skirout.editor.v1.presentation.PresentationColor;
     val width: skirout.editor.v1.expression.ExpressionNode;
 
     fun toFrozen(): skirout.editor.v1.presentation.ConnectorStroke;
@@ -10932,7 +10962,7 @@ sealed interface ConnectorStroke_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ConnectorStroke private constructor(
-    override val color: skirout.editor.v1.expression.ExpressionNode,
+    override val color: skirout.editor.v1.presentation.PresentationColor,
     override val width: skirout.editor.v1.expression.ExpressionNode,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ConnectorStroke>? =
         null,
@@ -10940,7 +10970,7 @@ class ConnectorStroke private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        color: skirout.editor.v1.expression.ExpressionNode,
+        color: skirout.editor.v1.presentation.PresentationColor,
         width: skirout.editor.v1.expression.ExpressionNode,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ConnectorStroke>? =
             null,
@@ -10963,7 +10993,7 @@ class ConnectorStroke private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        color: skirout.editor.v1.expression.ExpressionNode =
+        color: skirout.editor.v1.presentation.PresentationColor =
             this.color,
         width: skirout.editor.v1.expression.ExpressionNode =
             this.width,
@@ -10995,8 +11025,8 @@ class ConnectorStroke private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var color: skirout.editor.v1.expression.ExpressionNode =
-            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+        override var color: skirout.editor.v1.presentation.PresentationColor =
+            skirout.editor.v1.presentation.PresentationColor.UNKNOWN,
         override var width: skirout.editor.v1.expression.ExpressionNode =
             skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.ConnectorStroke>? =
@@ -11013,7 +11043,7 @@ class ConnectorStroke private constructor(
     companion object {
         private val default =
             skirout.editor.v1.presentation.ConnectorStroke(
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+                skirout.editor.v1.presentation.PresentationColor.UNKNOWN,
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
             );
 
@@ -11028,8 +11058,8 @@ class ConnectorStroke private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            color: skirout.editor.v1.expression.ExpressionNode =
-                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+            color: skirout.editor.v1.presentation.PresentationColor =
+                skirout.editor.v1.presentation.PresentationColor.UNKNOWN,
             width: skirout.editor.v1.expression.ExpressionNode =
                 skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
         ) = skirout.editor.v1.presentation.ConnectorStroke(
@@ -21078,6 +21108,7 @@ sealed class PresentationElement private constructor() {
         SET_INPUT_WRAPPER,
         PAGE_GRAPH_WRAPPER,
         PAGE_TIMELINE_WRAPPER,
+        ALIGN_WRAPPER,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.PresentationElement.UNKNOWN")) internal constructor(
@@ -22129,6 +22160,24 @@ sealed class PresentationElement private constructor() {
         }
     }
 
+    class AlignWrapper private constructor (
+        val value: skirout.editor.v1.presentation.AlignmentLayout,
+    ) : skirout.editor.v1.presentation.PresentationElement() {
+        constructor(
+            value: skirout.editor.v1.presentation.AlignmentLayout_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.ALIGN_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationElement.AlignWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 92903173;
+        }
+    }
+
     internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.PresentationElement>? get() = null;
 
     abstract val kind: Kind;
@@ -22227,7 +22276,7 @@ sealed class PresentationElement private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             value: skirout.editor.v1.expression.ExpressionNode,
-            color: skirout.editor.v1.expression.ExpressionNode?,
+            color: skirout.editor.v1.presentation.PresentationColor?,
             sizing: skirout.editor.v1.presentation.TextSizing?,
             fontWeight: skirout.editor.v1.expression.ExpressionNode?,
             fontItalic: skirout.editor.v1.expression.ExpressionNode?,
@@ -22265,7 +22314,7 @@ sealed class PresentationElement private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             value: skirout.editor.v1.expression.ExpressionNode,
-            color: skirout.editor.v1.expression.ExpressionNode?,
+            color: skirout.editor.v1.presentation.PresentationColor?,
             sizing: skirout.editor.v1.presentation.TextSizing?,
             fontWeight: skirout.editor.v1.expression.ExpressionNode?,
             fontItalic: skirout.editor.v1.expression.ExpressionNode?,
@@ -22304,7 +22353,7 @@ sealed class PresentationElement private constructor() {
                 _MustNameArguments,
             name: skirout.editor.v1.expression.ExpressionNode,
             semanticLabel: skirout.editor.v1.expression.ExpressionNode?,
-            color: skirout.editor.v1.expression.ExpressionNode?,
+            color: skirout.editor.v1.presentation.PresentationColor?,
             size: skirout.editor.v1.expression.ExpressionNode?,
         ) = IconWrapper(
             skirout.editor.v1.presentation.IconContent(
@@ -22349,7 +22398,7 @@ sealed class PresentationElement private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             label: skirout.editor.v1.expression.ExpressionNode,
-            color: skirout.editor.v1.expression.ExpressionNode?,
+            color: skirout.editor.v1.presentation.PresentationColor?,
         ) = ChipWrapper(
             skirout.editor.v1.presentation.ChipContent(
                 label = label,
@@ -22928,14 +22977,18 @@ sealed class PresentationElement private constructor() {
                 _MustNameArguments,
             child: skirout.editor.v1.presentation.PresentationNode_OrMutable,
             border: skirout.editor.v1.presentation.PresentationBorder?,
-            backgroundColor: skirout.editor.v1.expression.ExpressionNode?,
+            backgroundColor: skirout.editor.v1.presentation.PresentationColor?,
             radius: skirout.editor.v1.presentation.PresentationRadius,
+            foregroundColor: skirout.editor.v1.presentation.PresentationColor?,
+            transitionMilliseconds: kotlin.Int,
         ) = ContainerWrapper(
             skirout.editor.v1.presentation.ContainerLayout(
                 child = child,
                 border = border,
                 backgroundColor = backgroundColor,
                 radius = radius,
+                foregroundColor = foregroundColor,
+                transitionMilliseconds = transitionMilliseconds,
             )
         );
 
@@ -23130,6 +23183,20 @@ sealed class PresentationElement private constructor() {
         ) = PageTimelineWrapper(
             skirout.editor.v1.presentation.PageTimelineElement(
                 control = control,
+            )
+        );
+
+        /** Shortcut for `AlignWrapper(skirout.editor.v1.presentation.AlignmentLayout(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createAlign(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            child: skirout.editor.v1.presentation.PresentationNode_OrMutable,
+            alignment: skirout.editor.v1.presentation.PresentationAlignment,
+        ) = AlignWrapper(
+            skirout.editor.v1.presentation.AlignmentLayout(
+                child = child,
+                alignment = alignment,
             )
         );
 
@@ -26485,6 +26552,1547 @@ sealed class TextSizing private constructor() {
     }
 }
 
+/** Deeply immutable. */
+sealed class PresentationInteractionState private constructor() {
+    /** The kind of variant held by a `PresentationInteractionState`. */
+    enum class Kind {
+        UNKNOWN,
+        HOVERED_CONST,
+        SELECTED_CONST,
+        FOCUSED_CONST,
+        PRESSED_CONST,
+        DISABLED_CONST,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.PresentationInteractionState.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.PresentationInteractionState>?,
+    ) : skirout.editor.v1.presentation.PresentationInteractionState() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationInteractionState && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    object HOVERED : skirout.editor.v1.presentation.PresentationInteractionState() {
+        override val kind get() = Kind.HOVERED_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationInteractionState && other.kind == Kind.HOVERED_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.HOVERED_CONST.ordinal;
+        }
+    }
+
+    object SELECTED : skirout.editor.v1.presentation.PresentationInteractionState() {
+        override val kind get() = Kind.SELECTED_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationInteractionState && other.kind == Kind.SELECTED_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.SELECTED_CONST.ordinal;
+        }
+    }
+
+    object FOCUSED : skirout.editor.v1.presentation.PresentationInteractionState() {
+        override val kind get() = Kind.FOCUSED_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationInteractionState && other.kind == Kind.FOCUSED_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.FOCUSED_CONST.ordinal;
+        }
+    }
+
+    object PRESSED : skirout.editor.v1.presentation.PresentationInteractionState() {
+        override val kind get() = Kind.PRESSED_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationInteractionState && other.kind == Kind.PRESSED_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.PRESSED_CONST.ordinal;
+        }
+    }
+
+    object DISABLED : skirout.editor.v1.presentation.PresentationInteractionState() {
+        override val kind get() = Kind.DISABLED_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationInteractionState && other.kind == Kind.DISABLED_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.DISABLED_CONST.ordinal;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.PresentationInteractionState>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.PresentationInteractionStateSerializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [PresentationInteractionState].
+         * Default value for fields of type [PresentationInteractionState].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Serializer for [PresentationInteractionState] instances. */
+        val serializer get() = _SerializerRegistry.PresentationInteractionStateSerializer;
+
+        /** Describes the [PresentationInteractionState] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.PresentationInteractionStateSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface PresentationStateMatch_OrMutable {
+    val required: kotlin.collections.List<skirout.editor.v1.presentation.PresentationInteractionState>;
+    val excluded: kotlin.collections.List<skirout.editor.v1.presentation.PresentationInteractionState>;
+
+    fun toFrozen(): skirout.editor.v1.presentation.PresentationStateMatch;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class PresentationStateMatch private constructor(
+    override val required: kotlin.collections.List<skirout.editor.v1.presentation.PresentationInteractionState>,
+    override val excluded: kotlin.collections.List<skirout.editor.v1.presentation.PresentationInteractionState>,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationStateMatch>? =
+        null,
+): skirout.editor.v1.presentation.PresentationStateMatch_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        required: kotlin.collections.Iterable<skirout.editor.v1.presentation.PresentationInteractionState>,
+        excluded: kotlin.collections.Iterable<skirout.editor.v1.presentation.PresentationInteractionState>,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationStateMatch>? =
+            null,
+    ): this(
+        build.skir.internal.toFrozenList(required),
+        build.skir.internal.toFrozenList(excluded),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        required = this.required,
+        excluded = this.excluded,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        required: kotlin.collections.Iterable<skirout.editor.v1.presentation.PresentationInteractionState> =
+            this.required,
+        excluded: kotlin.collections.Iterable<skirout.editor.v1.presentation.PresentationInteractionState> =
+            this.excluded,
+    ) = skirout.editor.v1.presentation.PresentationStateMatch(
+        build.skir.internal.toFrozenList(required),
+        build.skir.internal.toFrozenList(excluded),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.PresentationStateMatch && this.required == other.required && this.excluded == other.excluded);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.required, this.excluded).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.PresentationStateMatchSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [PresentationStateMatch]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var required: kotlin.collections.List<skirout.editor.v1.presentation.PresentationInteractionState> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.PresentationInteractionState>(),
+        override var excluded: kotlin.collections.List<skirout.editor.v1.presentation.PresentationInteractionState> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.PresentationInteractionState>(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationStateMatch>? =
+            null,
+    ): skirout.editor.v1.presentation.PresentationStateMatch_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.PresentationStateMatch(
+            required = this.required,
+            excluded = this.excluded,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [required] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [required] and returns it.
+         */
+        val mutableRequired: kotlin.collections.MutableList<skirout.editor.v1.presentation.PresentationInteractionState> get() {
+            var value = this.required;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.required = value;
+                    value;
+                }
+            }
+        }
+
+        /**
+         * If the value of [excluded] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [excluded] and returns it.
+         */
+        val mutableExcluded: kotlin.collections.MutableList<skirout.editor.v1.presentation.PresentationInteractionState> get() {
+            var value = this.excluded;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.excluded = value;
+                    value;
+                }
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.PresentationStateMatch(
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.PresentationInteractionState>(),
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.PresentationInteractionState>(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [PresentationStateMatch].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            required: kotlin.collections.Iterable<skirout.editor.v1.presentation.PresentationInteractionState> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.PresentationInteractionState>(),
+            excluded: kotlin.collections.Iterable<skirout.editor.v1.presentation.PresentationInteractionState> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.PresentationInteractionState>(),
+        ) = skirout.editor.v1.presentation.PresentationStateMatch(
+            required = required,
+            excluded = excluded,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [PresentationStateMatch] instances. */
+        val serializer get() = _SerializerRegistry.PresentationStateMatchSerializer;
+
+        /** Describes the [PresentationStateMatch] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.PresentationStateMatchSerializerImpl.typeDescriptor;
+    }
+}
+
+/** Deeply immutable. */
+sealed class PresentationThemeColor private constructor() {
+    /** The kind of variant held by a `PresentationThemeColor`. */
+    enum class Kind {
+        UNKNOWN,
+        PRIMARY_CONST,
+        ON_PRIMARY_CONST,
+        SURFACE_CONST,
+        ON_SURFACE_CONST,
+        ON_SURFACE_VARIANT_CONST,
+        FOCUS_OUTLINE_CONST,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.PresentationThemeColor.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.PresentationThemeColor>?,
+    ) : skirout.editor.v1.presentation.PresentationThemeColor() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationThemeColor && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    object PRIMARY : skirout.editor.v1.presentation.PresentationThemeColor() {
+        override val kind get() = Kind.PRIMARY_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationThemeColor && other.kind == Kind.PRIMARY_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.PRIMARY_CONST.ordinal;
+        }
+    }
+
+    object ON_PRIMARY : skirout.editor.v1.presentation.PresentationThemeColor() {
+        override val kind get() = Kind.ON_PRIMARY_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationThemeColor && other.kind == Kind.ON_PRIMARY_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.ON_PRIMARY_CONST.ordinal;
+        }
+    }
+
+    object SURFACE : skirout.editor.v1.presentation.PresentationThemeColor() {
+        override val kind get() = Kind.SURFACE_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationThemeColor && other.kind == Kind.SURFACE_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.SURFACE_CONST.ordinal;
+        }
+    }
+
+    object ON_SURFACE : skirout.editor.v1.presentation.PresentationThemeColor() {
+        override val kind get() = Kind.ON_SURFACE_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationThemeColor && other.kind == Kind.ON_SURFACE_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.ON_SURFACE_CONST.ordinal;
+        }
+    }
+
+    object ON_SURFACE_VARIANT : skirout.editor.v1.presentation.PresentationThemeColor() {
+        override val kind get() = Kind.ON_SURFACE_VARIANT_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationThemeColor && other.kind == Kind.ON_SURFACE_VARIANT_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.ON_SURFACE_VARIANT_CONST.ordinal;
+        }
+    }
+
+    object FOCUS_OUTLINE : skirout.editor.v1.presentation.PresentationThemeColor() {
+        override val kind get() = Kind.FOCUS_OUTLINE_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationThemeColor && other.kind == Kind.FOCUS_OUTLINE_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.FOCUS_OUTLINE_CONST.ordinal;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.PresentationThemeColor>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.PresentationThemeColorSerializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [PresentationThemeColor].
+         * Default value for fields of type [PresentationThemeColor].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Serializer for [PresentationThemeColor] instances. */
+        val serializer get() = _SerializerRegistry.PresentationThemeColorSerializer;
+
+        /** Describes the [PresentationThemeColor] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.PresentationThemeColorSerializerImpl.typeDescriptor;
+    }
+}
+
+/** Deeply immutable. */
+sealed class PresentationAmbientColor private constructor() {
+    /** The kind of variant held by a `PresentationAmbientColor`. */
+    enum class Kind {
+        UNKNOWN,
+        BACKGROUND_CONST,
+        FOREGROUND_CONST,
+        SECONDARY_FOREGROUND_CONST,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.PresentationAmbientColor.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.PresentationAmbientColor>?,
+    ) : skirout.editor.v1.presentation.PresentationAmbientColor() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationAmbientColor && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    object BACKGROUND : skirout.editor.v1.presentation.PresentationAmbientColor() {
+        override val kind get() = Kind.BACKGROUND_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationAmbientColor && other.kind == Kind.BACKGROUND_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.BACKGROUND_CONST.ordinal;
+        }
+    }
+
+    object FOREGROUND : skirout.editor.v1.presentation.PresentationAmbientColor() {
+        override val kind get() = Kind.FOREGROUND_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationAmbientColor && other.kind == Kind.FOREGROUND_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.FOREGROUND_CONST.ordinal;
+        }
+    }
+
+    object SECONDARY_FOREGROUND : skirout.editor.v1.presentation.PresentationAmbientColor() {
+        override val kind get() = Kind.SECONDARY_FOREGROUND_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationAmbientColor && other.kind == Kind.SECONDARY_FOREGROUND_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.SECONDARY_FOREGROUND_CONST.ordinal;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.PresentationAmbientColor>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.PresentationAmbientColorSerializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [PresentationAmbientColor].
+         * Default value for fields of type [PresentationAmbientColor].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Serializer for [PresentationAmbientColor] instances. */
+        val serializer get() = _SerializerRegistry.PresentationAmbientColorSerializer;
+
+        /** Describes the [PresentationAmbientColor] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.PresentationAmbientColorSerializerImpl.typeDescriptor;
+    }
+}
+
+/** Deeply immutable. */
+sealed class PresentationContrastMode private constructor() {
+    /** The kind of variant held by a `PresentationContrastMode`. */
+    enum class Kind {
+        UNKNOWN,
+        TONAL_CONST,
+        MONOCHROME_CONST,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.PresentationContrastMode.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.PresentationContrastMode>?,
+    ) : skirout.editor.v1.presentation.PresentationContrastMode() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationContrastMode && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    object TONAL : skirout.editor.v1.presentation.PresentationContrastMode() {
+        override val kind get() = Kind.TONAL_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationContrastMode && other.kind == Kind.TONAL_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.TONAL_CONST.ordinal;
+        }
+    }
+
+    object MONOCHROME : skirout.editor.v1.presentation.PresentationContrastMode() {
+        override val kind get() = Kind.MONOCHROME_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationContrastMode && other.kind == Kind.MONOCHROME_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.MONOCHROME_CONST.ordinal;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.PresentationContrastMode>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.PresentationContrastModeSerializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [PresentationContrastMode].
+         * Default value for fields of type [PresentationContrastMode].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Serializer for [PresentationContrastMode] instances. */
+        val serializer get() = _SerializerRegistry.PresentationContrastModeSerializer;
+
+        /** Describes the [PresentationContrastMode] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.PresentationContrastModeSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface PresentationContrastColor_OrMutable {
+    val source: skirout.editor.v1.presentation.PresentationColor;
+    val mode: skirout.editor.v1.presentation.PresentationContrastMode;
+
+    fun toFrozen(): skirout.editor.v1.presentation.PresentationContrastColor;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class PresentationContrastColor private constructor(
+    override val source: skirout.editor.v1.presentation.PresentationColor,
+    override val mode: skirout.editor.v1.presentation.PresentationContrastMode,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationContrastColor>? =
+        null,
+): skirout.editor.v1.presentation.PresentationContrastColor_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        source: skirout.editor.v1.presentation.PresentationColor,
+        mode: skirout.editor.v1.presentation.PresentationContrastMode,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationContrastColor>? =
+            null,
+    ): this(
+        source,
+        mode,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        source = this.source,
+        mode = this.mode,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        source: skirout.editor.v1.presentation.PresentationColor =
+            this.source,
+        mode: skirout.editor.v1.presentation.PresentationContrastMode =
+            this.mode,
+    ) = skirout.editor.v1.presentation.PresentationContrastColor(
+        source,
+        mode,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.PresentationContrastColor && this.source == other.source && this.mode == other.mode);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.mode).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.PresentationContrastColorSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [PresentationContrastColor]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var source: skirout.editor.v1.presentation.PresentationColor =
+            skirout.editor.v1.presentation.PresentationColor.UNKNOWN,
+        override var mode: skirout.editor.v1.presentation.PresentationContrastMode =
+            skirout.editor.v1.presentation.PresentationContrastMode.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationContrastColor>? =
+            null,
+    ): skirout.editor.v1.presentation.PresentationContrastColor_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.PresentationContrastColor(
+            source = this.source,
+            mode = this.mode,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.PresentationContrastColor(
+                skirout.editor.v1.presentation.PresentationColor.UNKNOWN,
+                skirout.editor.v1.presentation.PresentationContrastMode.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [PresentationContrastColor].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            source: skirout.editor.v1.presentation.PresentationColor =
+                skirout.editor.v1.presentation.PresentationColor.UNKNOWN,
+            mode: skirout.editor.v1.presentation.PresentationContrastMode =
+                skirout.editor.v1.presentation.PresentationContrastMode.UNKNOWN,
+        ) = skirout.editor.v1.presentation.PresentationContrastColor(
+            source = source,
+            mode = mode,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [PresentationContrastColor] instances. */
+        val serializer get() = _SerializerRegistry.PresentationContrastColorSerializer;
+
+        /** Describes the [PresentationContrastColor] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.PresentationContrastColorSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface PresentationAlphaColor_OrMutable {
+    val source: skirout.editor.v1.presentation.PresentationColor;
+    val alpha: kotlin.Double;
+
+    fun toFrozen(): skirout.editor.v1.presentation.PresentationAlphaColor;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class PresentationAlphaColor private constructor(
+    override val source: skirout.editor.v1.presentation.PresentationColor,
+    override val alpha: kotlin.Double,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationAlphaColor>? =
+        null,
+): skirout.editor.v1.presentation.PresentationAlphaColor_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        source: skirout.editor.v1.presentation.PresentationColor,
+        alpha: kotlin.Double,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationAlphaColor>? =
+            null,
+    ): this(
+        source,
+        alpha,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        source = this.source,
+        alpha = this.alpha,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        source: skirout.editor.v1.presentation.PresentationColor =
+            this.source,
+        alpha: kotlin.Double =
+            this.alpha,
+    ) = skirout.editor.v1.presentation.PresentationAlphaColor(
+        source,
+        alpha,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.PresentationAlphaColor && this.source == other.source && this.alpha == other.alpha);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.alpha).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.PresentationAlphaColorSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [PresentationAlphaColor]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var source: skirout.editor.v1.presentation.PresentationColor =
+            skirout.editor.v1.presentation.PresentationColor.UNKNOWN,
+        override var alpha: kotlin.Double =
+            0.0,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationAlphaColor>? =
+            null,
+    ): skirout.editor.v1.presentation.PresentationAlphaColor_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.PresentationAlphaColor(
+            source = this.source,
+            alpha = this.alpha,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.PresentationAlphaColor(
+                skirout.editor.v1.presentation.PresentationColor.UNKNOWN,
+                0.0,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [PresentationAlphaColor].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            source: skirout.editor.v1.presentation.PresentationColor =
+                skirout.editor.v1.presentation.PresentationColor.UNKNOWN,
+            alpha: kotlin.Double =
+                0.0,
+        ) = skirout.editor.v1.presentation.PresentationAlphaColor(
+            source = source,
+            alpha = alpha,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [PresentationAlphaColor] instances. */
+        val serializer get() = _SerializerRegistry.PresentationAlphaColorSerializer;
+
+        /** Describes the [PresentationAlphaColor] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.PresentationAlphaColorSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface PresentationBlendColor_OrMutable {
+    val foreground: skirout.editor.v1.presentation.PresentationColor;
+    val background: skirout.editor.v1.presentation.PresentationColor;
+
+    fun toFrozen(): skirout.editor.v1.presentation.PresentationBlendColor;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class PresentationBlendColor private constructor(
+    override val foreground: skirout.editor.v1.presentation.PresentationColor,
+    override val background: skirout.editor.v1.presentation.PresentationColor,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationBlendColor>? =
+        null,
+): skirout.editor.v1.presentation.PresentationBlendColor_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        foreground: skirout.editor.v1.presentation.PresentationColor,
+        background: skirout.editor.v1.presentation.PresentationColor,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationBlendColor>? =
+            null,
+    ): this(
+        foreground,
+        background,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        foreground = this.foreground,
+        background = this.background,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        foreground: skirout.editor.v1.presentation.PresentationColor =
+            this.foreground,
+        background: skirout.editor.v1.presentation.PresentationColor =
+            this.background,
+    ) = skirout.editor.v1.presentation.PresentationBlendColor(
+        foreground,
+        background,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.PresentationBlendColor && this.foreground == other.foreground && this.background == other.background);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.foreground, this.background).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.PresentationBlendColorSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [PresentationBlendColor]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var foreground: skirout.editor.v1.presentation.PresentationColor =
+            skirout.editor.v1.presentation.PresentationColor.UNKNOWN,
+        override var background: skirout.editor.v1.presentation.PresentationColor =
+            skirout.editor.v1.presentation.PresentationColor.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationBlendColor>? =
+            null,
+    ): skirout.editor.v1.presentation.PresentationBlendColor_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.PresentationBlendColor(
+            foreground = this.foreground,
+            background = this.background,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.PresentationBlendColor(
+                skirout.editor.v1.presentation.PresentationColor.UNKNOWN,
+                skirout.editor.v1.presentation.PresentationColor.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [PresentationBlendColor].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            foreground: skirout.editor.v1.presentation.PresentationColor =
+                skirout.editor.v1.presentation.PresentationColor.UNKNOWN,
+            background: skirout.editor.v1.presentation.PresentationColor =
+                skirout.editor.v1.presentation.PresentationColor.UNKNOWN,
+        ) = skirout.editor.v1.presentation.PresentationBlendColor(
+            foreground = foreground,
+            background = background,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [PresentationBlendColor] instances. */
+        val serializer get() = _SerializerRegistry.PresentationBlendColorSerializer;
+
+        /** Describes the [PresentationBlendColor] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.PresentationBlendColorSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface PresentationStateColorRule_OrMutable {
+    val match: skirout.editor.v1.presentation.PresentationStateMatch_OrMutable;
+    val color: skirout.editor.v1.presentation.PresentationColor;
+
+    fun toFrozen(): skirout.editor.v1.presentation.PresentationStateColorRule;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class PresentationStateColorRule private constructor(
+    override val match: skirout.editor.v1.presentation.PresentationStateMatch,
+    override val color: skirout.editor.v1.presentation.PresentationColor,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationStateColorRule>? =
+        null,
+): skirout.editor.v1.presentation.PresentationStateColorRule_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        match: skirout.editor.v1.presentation.PresentationStateMatch_OrMutable,
+        color: skirout.editor.v1.presentation.PresentationColor,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationStateColorRule>? =
+            null,
+    ): this(
+        match.toFrozen(),
+        color,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        match = this.match,
+        color = this.color,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        match: skirout.editor.v1.presentation.PresentationStateMatch_OrMutable =
+            this.match,
+        color: skirout.editor.v1.presentation.PresentationColor =
+            this.color,
+    ) = skirout.editor.v1.presentation.PresentationStateColorRule(
+        match.toFrozen(),
+        color,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.PresentationStateColorRule && this.match == other.match && this.color == other.color);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.match, this.color).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.PresentationStateColorRuleSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [PresentationStateColorRule]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var match: skirout.editor.v1.presentation.PresentationStateMatch_OrMutable =
+            skirout.editor.v1.presentation.PresentationStateMatch.partial(),
+        override var color: skirout.editor.v1.presentation.PresentationColor =
+            skirout.editor.v1.presentation.PresentationColor.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationStateColorRule>? =
+            null,
+    ): skirout.editor.v1.presentation.PresentationStateColorRule_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.PresentationStateColorRule(
+            match = this.match,
+            color = this.color,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [match] is already mutable, returns it as-is.
+         * Otherwise, makes a mutable copy, assigns it back to [match] and returns it.
+         */
+        val mutableMatch: skirout.editor.v1.presentation.PresentationStateMatch.Mutable get() {
+            var value = this.match;
+            return when (value) {
+                is skirout.editor.v1.presentation.PresentationStateMatch -> {
+                    value = value.toMutable();
+                    this.match = value;
+                    return value;
+                }
+                is skirout.editor.v1.presentation.PresentationStateMatch.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.PresentationStateColorRule(
+                skirout.editor.v1.presentation.PresentationStateMatch.partial(),
+                skirout.editor.v1.presentation.PresentationColor.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [PresentationStateColorRule].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            match: skirout.editor.v1.presentation.PresentationStateMatch_OrMutable =
+                skirout.editor.v1.presentation.PresentationStateMatch.partial(),
+            color: skirout.editor.v1.presentation.PresentationColor =
+                skirout.editor.v1.presentation.PresentationColor.UNKNOWN,
+        ) = skirout.editor.v1.presentation.PresentationStateColorRule(
+            match = match,
+            color = color,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [PresentationStateColorRule] instances. */
+        val serializer get() = _SerializerRegistry.PresentationStateColorRuleSerializer;
+
+        /** Describes the [PresentationStateColorRule] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.PresentationStateColorRuleSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface PresentationStateColor_OrMutable {
+    val rules: kotlin.collections.List<skirout.editor.v1.presentation.PresentationStateColorRule_OrMutable>;
+    val fallback: skirout.editor.v1.presentation.PresentationColor;
+
+    fun toFrozen(): skirout.editor.v1.presentation.PresentationStateColor;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class PresentationStateColor private constructor(
+    override val rules: kotlin.collections.List<skirout.editor.v1.presentation.PresentationStateColorRule>,
+    override val fallback: skirout.editor.v1.presentation.PresentationColor,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationStateColor>? =
+        null,
+): skirout.editor.v1.presentation.PresentationStateColor_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        rules: kotlin.collections.Iterable<skirout.editor.v1.presentation.PresentationStateColorRule_OrMutable>,
+        fallback: skirout.editor.v1.presentation.PresentationColor,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationStateColor>? =
+            null,
+    ): this(
+        build.skir.internal.toFrozenList(rules, { it.toFrozen() }),
+        fallback,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        rules = this.rules,
+        fallback = this.fallback,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        rules: kotlin.collections.Iterable<skirout.editor.v1.presentation.PresentationStateColorRule_OrMutable> =
+            this.rules,
+        fallback: skirout.editor.v1.presentation.PresentationColor =
+            this.fallback,
+    ) = skirout.editor.v1.presentation.PresentationStateColor(
+        build.skir.internal.toFrozenList(rules, { it.toFrozen() }),
+        fallback,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.PresentationStateColor && this.rules == other.rules && this.fallback == other.fallback);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.rules, this.fallback).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.PresentationStateColorSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [PresentationStateColor]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var rules: kotlin.collections.List<skirout.editor.v1.presentation.PresentationStateColorRule> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.PresentationStateColorRule>(),
+        override var fallback: skirout.editor.v1.presentation.PresentationColor =
+            skirout.editor.v1.presentation.PresentationColor.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.PresentationStateColor>? =
+            null,
+    ): skirout.editor.v1.presentation.PresentationStateColor_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.PresentationStateColor(
+            rules = this.rules,
+            fallback = this.fallback,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.PresentationStateColor(
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.PresentationStateColorRule>(),
+                skirout.editor.v1.presentation.PresentationColor.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [PresentationStateColor].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            rules: kotlin.collections.Iterable<skirout.editor.v1.presentation.PresentationStateColorRule_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.presentation.PresentationStateColorRule>(),
+            fallback: skirout.editor.v1.presentation.PresentationColor =
+                skirout.editor.v1.presentation.PresentationColor.UNKNOWN,
+        ) = skirout.editor.v1.presentation.PresentationStateColor(
+            rules = rules,
+            fallback = fallback,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [PresentationStateColor] instances. */
+        val serializer get() = _SerializerRegistry.PresentationStateColorSerializer;
+
+        /** Describes the [PresentationStateColor] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.PresentationStateColorSerializerImpl.typeDescriptor;
+    }
+}
+
+/** Deeply immutable. */
+sealed class PresentationColor private constructor() {
+    /** The kind of variant held by a `PresentationColor`. */
+    enum class Kind {
+        UNKNOWN,
+        VALUE_WRAPPER,
+        THEME_WRAPPER,
+        AMBIENT_WRAPPER,
+        CONTRAST_WRAPPER,
+        ALPHA_WRAPPER,
+        BLEND_WRAPPER,
+        STATES_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.presentation.PresentationColor.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.PresentationColor>?,
+    ) : skirout.editor.v1.presentation.PresentationColor() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationColor && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    class ValueWrapper(
+        val value: skirout.editor.v1.expression.ExpressionNode,
+    ) : skirout.editor.v1.presentation.PresentationColor() {
+        override val kind get() = Kind.VALUE_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationColor.ValueWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 111972721;
+        }
+    }
+
+    class ThemeWrapper(
+        val value: skirout.editor.v1.presentation.PresentationThemeColor,
+    ) : skirout.editor.v1.presentation.PresentationColor() {
+        override val kind get() = Kind.THEME_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationColor.ThemeWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 110327241;
+        }
+    }
+
+    class AmbientWrapper(
+        val value: skirout.editor.v1.presentation.PresentationAmbientColor,
+    ) : skirout.editor.v1.presentation.PresentationColor() {
+        override val kind get() = Kind.AMBIENT_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationColor.AmbientWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -892145000;
+        }
+    }
+
+    class ContrastWrapper private constructor (
+        val value: skirout.editor.v1.presentation.PresentationContrastColor,
+    ) : skirout.editor.v1.presentation.PresentationColor() {
+        constructor(
+            value: skirout.editor.v1.presentation.PresentationContrastColor_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.CONTRAST_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationColor.ContrastWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -566947070;
+        }
+    }
+
+    class AlphaWrapper private constructor (
+        val value: skirout.editor.v1.presentation.PresentationAlphaColor,
+    ) : skirout.editor.v1.presentation.PresentationColor() {
+        constructor(
+            value: skirout.editor.v1.presentation.PresentationAlphaColor_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.ALPHA_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationColor.AlphaWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 92909918;
+        }
+    }
+
+    class BlendWrapper private constructor (
+        val value: skirout.editor.v1.presentation.PresentationBlendColor,
+    ) : skirout.editor.v1.presentation.PresentationColor() {
+        constructor(
+            value: skirout.editor.v1.presentation.PresentationBlendColor_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.BLEND_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationColor.BlendWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 93823057;
+        }
+    }
+
+    class StatesWrapper private constructor (
+        val value: skirout.editor.v1.presentation.PresentationStateColor,
+    ) : skirout.editor.v1.presentation.PresentationColor() {
+        constructor(
+            value: skirout.editor.v1.presentation.PresentationStateColor_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.STATES_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.presentation.PresentationColor.StatesWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -892482046;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.presentation.PresentationColor>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.PresentationColorSerializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [PresentationColor].
+         * Default value for fields of type [PresentationColor].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `ContrastWrapper(skirout.editor.v1.presentation.PresentationContrastColor(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createContrast(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            source: skirout.editor.v1.presentation.PresentationColor,
+            mode: skirout.editor.v1.presentation.PresentationContrastMode,
+        ) = ContrastWrapper(
+            skirout.editor.v1.presentation.PresentationContrastColor(
+                source = source,
+                mode = mode,
+            )
+        );
+
+        /** Shortcut for `AlphaWrapper(skirout.editor.v1.presentation.PresentationAlphaColor(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createAlpha(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            source: skirout.editor.v1.presentation.PresentationColor,
+            alpha: kotlin.Double,
+        ) = AlphaWrapper(
+            skirout.editor.v1.presentation.PresentationAlphaColor(
+                source = source,
+                alpha = alpha,
+            )
+        );
+
+        /** Shortcut for `BlendWrapper(skirout.editor.v1.presentation.PresentationBlendColor(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createBlend(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            foreground: skirout.editor.v1.presentation.PresentationColor,
+            background: skirout.editor.v1.presentation.PresentationColor,
+        ) = BlendWrapper(
+            skirout.editor.v1.presentation.PresentationBlendColor(
+                foreground = foreground,
+                background = background,
+            )
+        );
+
+        /** Shortcut for `StatesWrapper(skirout.editor.v1.presentation.PresentationStateColor(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createStates(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            rules: kotlin.collections.Iterable<skirout.editor.v1.presentation.PresentationStateColorRule_OrMutable>,
+            fallback: skirout.editor.v1.presentation.PresentationColor,
+        ) = StatesWrapper(
+            skirout.editor.v1.presentation.PresentationStateColor(
+                rules = rules,
+                fallback = fallback,
+            )
+        );
+
+        /** Serializer for [PresentationColor] instances. */
+        val serializer get() = _SerializerRegistry.PresentationColorSerializer;
+
+        /** Describes the [PresentationColor] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.PresentationColorSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface AlignmentLayout_OrMutable {
+    val child: skirout.editor.v1.presentation.PresentationNode_OrMutable;
+    val alignment: skirout.editor.v1.presentation.PresentationAlignment;
+
+    fun toFrozen(): skirout.editor.v1.presentation.AlignmentLayout;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class AlignmentLayout private constructor(
+    override val child: skirout.editor.v1.presentation.PresentationNode,
+    override val alignment: skirout.editor.v1.presentation.PresentationAlignment,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.AlignmentLayout>? =
+        null,
+): skirout.editor.v1.presentation.AlignmentLayout_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        child: skirout.editor.v1.presentation.PresentationNode_OrMutable,
+        alignment: skirout.editor.v1.presentation.PresentationAlignment,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.AlignmentLayout>? =
+            null,
+    ): this(
+        child.toFrozen(),
+        alignment,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        child = this.child,
+        alignment = this.alignment,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        child: skirout.editor.v1.presentation.PresentationNode_OrMutable =
+            this.child,
+        alignment: skirout.editor.v1.presentation.PresentationAlignment =
+            this.alignment,
+    ) = skirout.editor.v1.presentation.AlignmentLayout(
+        child.toFrozen(),
+        alignment,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.presentation.AlignmentLayout && this.child == other.child && this.alignment == other.alignment);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.child, this.alignment).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.AlignmentLayoutSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [AlignmentLayout]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var child: skirout.editor.v1.presentation.PresentationNode =
+            skirout.editor.v1.presentation.PresentationNode.partial(),
+        override var alignment: skirout.editor.v1.presentation.PresentationAlignment =
+            skirout.editor.v1.presentation.PresentationAlignment.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.presentation.AlignmentLayout>? =
+            null,
+    ): skirout.editor.v1.presentation.AlignmentLayout_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.presentation.AlignmentLayout(
+            child = this.child,
+            alignment = this.alignment,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.presentation.AlignmentLayout(
+                skirout.editor.v1.presentation.PresentationNode.partial(),
+                skirout.editor.v1.presentation.PresentationAlignment.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [AlignmentLayout].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            child: skirout.editor.v1.presentation.PresentationNode_OrMutable =
+                skirout.editor.v1.presentation.PresentationNode.partial(),
+            alignment: skirout.editor.v1.presentation.PresentationAlignment =
+                skirout.editor.v1.presentation.PresentationAlignment.UNKNOWN,
+        ) = skirout.editor.v1.presentation.AlignmentLayout(
+            child = child,
+            alignment = alignment,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [AlignmentLayout] instances. */
+        val serializer get() = _SerializerRegistry.AlignmentLayoutSerializer;
+
+        /** Describes the [AlignmentLayout] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.AlignmentLayoutSerializerImpl.typeDescriptor;
+    }
+}
+
 private object _SerializerRegistry {
     val AdaptiveLeadingElementSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:AdaptiveLeadingElement",
@@ -26497,6 +28105,18 @@ private object _SerializerRegistry {
     );
 
     val AdaptiveLeadingElementSerializer = build.skir.internal.makeSerializer(AdaptiveLeadingElementSerializerImpl);
+
+    val AlignmentLayoutSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/presentation.skir:AlignmentLayout",
+        doc = "",
+        defaultInstance = skirout.editor.v1.presentation.AlignmentLayout.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.AlignmentLayout.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val AlignmentLayoutSerializer = build.skir.internal.makeSerializer(AlignmentLayoutSerializerImpl);
 
     val AnchoredConnectionSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:AnchoredConnection",
@@ -27537,18 +29157,43 @@ private object _SerializerRegistry {
 
     val PolymorphicMatchElementSerializer = build.skir.internal.makeSerializer(PolymorphicMatchElementSerializerImpl);
 
-    val PresentationAnchorAlignmentSerializerImpl =
-        build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.PresentationAnchorAlignment, skirout.editor.v1.presentation.PresentationAnchorAlignment.Unknown>(
-            recordId = "editor/v1/presentation.skir:PresentationAnchorAlignment",
+    val PresentationAlignmentSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.PresentationAlignment, skirout.editor.v1.presentation.PresentationAlignment.Unknown>(
+            recordId = "editor/v1/presentation.skir:PresentationAlignment",
             doc = "",
             getKindOrdinal = { it.kind.ordinal },
-            kindCount = skirout.editor.v1.presentation.PresentationAnchorAlignment.Kind.values().size,
-            unknownInstance = skirout.editor.v1.presentation.PresentationAnchorAlignment.UNKNOWN,
-            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.presentation.PresentationAnchorAlignment.Unknown(skirout.editor.v1.presentation.PresentationAnchorAlignment.Kind.UNKNOWN, it) },
+            kindCount = skirout.editor.v1.presentation.PresentationAlignment.Kind.values().size,
+            unknownInstance = skirout.editor.v1.presentation.PresentationAlignment.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.presentation.PresentationAlignment.Unknown(skirout.editor.v1.presentation.PresentationAlignment.Kind.UNKNOWN, it) },
             getUnrecognized = { it._unrecognized },
         );
 
-    val PresentationAnchorAlignmentSerializer = build.skir.internal.makeSerializer(PresentationAnchorAlignmentSerializerImpl);
+    val PresentationAlignmentSerializer = build.skir.internal.makeSerializer(PresentationAlignmentSerializerImpl);
+
+    val PresentationAlphaColorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/presentation.skir:PresentationAlphaColor",
+        doc = "",
+        defaultInstance = skirout.editor.v1.presentation.PresentationAlphaColor.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.PresentationAlphaColor.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val PresentationAlphaColorSerializer = build.skir.internal.makeSerializer(PresentationAlphaColorSerializerImpl);
+
+    val PresentationAmbientColorSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.PresentationAmbientColor, skirout.editor.v1.presentation.PresentationAmbientColor.Unknown>(
+            recordId = "editor/v1/presentation.skir:PresentationAmbientColor",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.presentation.PresentationAmbientColor.Kind.values().size,
+            unknownInstance = skirout.editor.v1.presentation.PresentationAmbientColor.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.presentation.PresentationAmbientColor.Unknown(skirout.editor.v1.presentation.PresentationAmbientColor.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val PresentationAmbientColorSerializer = build.skir.internal.makeSerializer(PresentationAmbientColorSerializerImpl);
 
     val PresentationAnchorLayoutSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:PresentationAnchorLayout",
@@ -27598,6 +29243,18 @@ private object _SerializerRegistry {
     );
 
     val PresentationArgumentSerializer = build.skir.internal.makeSerializer(PresentationArgumentSerializerImpl);
+
+    val PresentationBlendColorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/presentation.skir:PresentationBlendColor",
+        doc = "",
+        defaultInstance = skirout.editor.v1.presentation.PresentationBlendColor.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.PresentationBlendColor.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val PresentationBlendColorSerializer = build.skir.internal.makeSerializer(PresentationBlendColorSerializerImpl);
 
     val PresentationBorderSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.PresentationBorder, skirout.editor.v1.presentation.PresentationBorder.Unknown>(
@@ -27685,6 +29342,19 @@ private object _SerializerRegistry {
 
     val PresentationCollectionRelationDefinitionSerializer = build.skir.internal.makeSerializer(PresentationCollectionRelationDefinitionSerializerImpl);
 
+    val PresentationColorSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.PresentationColor, skirout.editor.v1.presentation.PresentationColor.Unknown>(
+            recordId = "editor/v1/presentation.skir:PresentationColor",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.presentation.PresentationColor.Kind.values().size,
+            unknownInstance = skirout.editor.v1.presentation.PresentationColor.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.presentation.PresentationColor.Unknown(skirout.editor.v1.presentation.PresentationColor.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val PresentationColorSerializer = build.skir.internal.makeSerializer(PresentationColorSerializerImpl);
+
     val PresentationConnectionSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.PresentationConnection, skirout.editor.v1.presentation.PresentationConnection.Unknown>(
             recordId = "editor/v1/presentation.skir:PresentationConnection",
@@ -27697,6 +29367,31 @@ private object _SerializerRegistry {
         );
 
     val PresentationConnectionSerializer = build.skir.internal.makeSerializer(PresentationConnectionSerializerImpl);
+
+    val PresentationContrastColorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/presentation.skir:PresentationContrastColor",
+        doc = "",
+        defaultInstance = skirout.editor.v1.presentation.PresentationContrastColor.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.PresentationContrastColor.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val PresentationContrastColorSerializer = build.skir.internal.makeSerializer(PresentationContrastColorSerializerImpl);
+
+    val PresentationContrastModeSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.PresentationContrastMode, skirout.editor.v1.presentation.PresentationContrastMode.Unknown>(
+            recordId = "editor/v1/presentation.skir:PresentationContrastMode",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.presentation.PresentationContrastMode.Kind.values().size,
+            unknownInstance = skirout.editor.v1.presentation.PresentationContrastMode.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.presentation.PresentationContrastMode.Unknown(skirout.editor.v1.presentation.PresentationContrastMode.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val PresentationContrastModeSerializer = build.skir.internal.makeSerializer(PresentationContrastModeSerializerImpl);
 
     val PresentationDefinitionSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:PresentationDefinition",
@@ -27798,6 +29493,19 @@ private object _SerializerRegistry {
 
     val PresentationInsetsSerializer = build.skir.internal.makeSerializer(PresentationInsetsSerializerImpl);
 
+    val PresentationInteractionStateSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.PresentationInteractionState, skirout.editor.v1.presentation.PresentationInteractionState.Unknown>(
+            recordId = "editor/v1/presentation.skir:PresentationInteractionState",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.presentation.PresentationInteractionState.Kind.values().size,
+            unknownInstance = skirout.editor.v1.presentation.PresentationInteractionState.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.presentation.PresentationInteractionState.Unknown(skirout.editor.v1.presentation.PresentationInteractionState.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val PresentationInteractionStateSerializer = build.skir.internal.makeSerializer(PresentationInteractionStateSerializerImpl);
+
     val PresentationInvocationSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:PresentationInvocation",
         doc = "",
@@ -27883,6 +29591,42 @@ private object _SerializerRegistry {
 
     val PresentationSlotElementSerializer = build.skir.internal.makeSerializer(PresentationSlotElementSerializerImpl);
 
+    val PresentationStateColorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/presentation.skir:PresentationStateColor",
+        doc = "",
+        defaultInstance = skirout.editor.v1.presentation.PresentationStateColor.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.PresentationStateColor.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val PresentationStateColorSerializer = build.skir.internal.makeSerializer(PresentationStateColorSerializerImpl);
+
+    val PresentationStateColorRuleSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/presentation.skir:PresentationStateColorRule",
+        doc = "",
+        defaultInstance = skirout.editor.v1.presentation.PresentationStateColorRule.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.PresentationStateColorRule.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val PresentationStateColorRuleSerializer = build.skir.internal.makeSerializer(PresentationStateColorRuleSerializerImpl);
+
+    val PresentationStateMatchSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/presentation.skir:PresentationStateMatch",
+        doc = "",
+        defaultInstance = skirout.editor.v1.presentation.PresentationStateMatch.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.PresentationStateMatch.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val PresentationStateMatchSerializer = build.skir.internal.makeSerializer(PresentationStateMatchSerializerImpl);
+
     val PresentationTextOverflowSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.PresentationTextOverflow, skirout.editor.v1.presentation.PresentationTextOverflow.Unknown>(
             recordId = "editor/v1/presentation.skir:PresentationTextOverflow",
@@ -27908,6 +29652,19 @@ private object _SerializerRegistry {
         );
 
     val PresentationTextToneSerializer = build.skir.internal.makeSerializer(PresentationTextToneSerializerImpl);
+
+    val PresentationThemeColorSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.presentation.PresentationThemeColor, skirout.editor.v1.presentation.PresentationThemeColor.Unknown>(
+            recordId = "editor/v1/presentation.skir:PresentationThemeColor",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.presentation.PresentationThemeColor.Kind.values().size,
+            unknownInstance = skirout.editor.v1.presentation.PresentationThemeColor.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.presentation.PresentationThemeColor.Unknown(skirout.editor.v1.presentation.PresentationThemeColor.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val PresentationThemeColorSerializer = build.skir.internal.makeSerializer(PresentationThemeColorSerializerImpl);
 
     val ProgressContentSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:ProgressContent",
@@ -28588,6 +30345,26 @@ private object _SerializerRegistry {
         );
         AdaptiveLeadingElementSerializerImpl.finalizeStruct();
 
+        AlignmentLayoutSerializerImpl.addField(
+            "child",
+            "child",
+            0,
+            _SerializerRegistry.PresentationNodeSerializer,
+            "",
+            { it.child },
+            { mut, v -> mut.child = v },
+        );
+        AlignmentLayoutSerializerImpl.addField(
+            "alignment",
+            "alignment",
+            1,
+            _SerializerRegistry.PresentationAlignmentSerializer,
+            "",
+            { it.alignment },
+            { mut, v -> mut.alignment = v },
+        );
+        AlignmentLayoutSerializerImpl.finalizeStruct();
+
         AnchoredConnectionSerializerImpl.addField(
             "source",
             "source",
@@ -29040,7 +30817,7 @@ private object _SerializerRegistry {
             "color",
             1,
             build.skir.Serializers.optional(
-                skirout.editor.v1.expression.ExpressionNode.serializer,
+                _SerializerRegistry.PresentationColorSerializer,
             ),
             "",
             { it.color },
@@ -29548,7 +31325,7 @@ private object _SerializerRegistry {
             "color",
             "color",
             0,
-            skirout.editor.v1.expression.ExpressionNode.serializer,
+            _SerializerRegistry.PresentationColorSerializer,
             "",
             { it.color },
             { mut, v -> mut.color = v },
@@ -29631,7 +31408,7 @@ private object _SerializerRegistry {
             "backgroundColor",
             2,
             build.skir.Serializers.optional(
-                skirout.editor.v1.expression.ExpressionNode.serializer,
+                _SerializerRegistry.PresentationColorSerializer,
             ),
             "",
             { it.backgroundColor },
@@ -29645,6 +31422,26 @@ private object _SerializerRegistry {
             "",
             { it.radius },
             { mut, v -> mut.radius = v },
+        );
+        ContainerLayoutSerializerImpl.addField(
+            "foreground_color",
+            "foregroundColor",
+            4,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.PresentationColorSerializer,
+            ),
+            "",
+            { it.foregroundColor },
+            { mut, v -> mut.foregroundColor = v },
+        );
+        ContainerLayoutSerializerImpl.addField(
+            "transition_milliseconds",
+            "transitionMilliseconds",
+            5,
+            build.skir.Serializers.int32,
+            "",
+            { it.transitionMilliseconds },
+            { mut, v -> mut.transitionMilliseconds = v },
         );
         ContainerLayoutSerializerImpl.finalizeStruct();
 
@@ -30711,7 +32508,7 @@ private object _SerializerRegistry {
             "color",
             2,
             build.skir.Serializers.optional(
-                skirout.editor.v1.expression.ExpressionNode.serializer,
+                _SerializerRegistry.PresentationColorSerializer,
             ),
             "",
             { it.color },
@@ -31403,70 +33200,113 @@ private object _SerializerRegistry {
         );
         PolymorphicMatchElementSerializerImpl.finalizeStruct();
 
-        PresentationAnchorAlignmentSerializerImpl.addConstantVariant(
+        PresentationAlignmentSerializerImpl.addConstantVariant(
             1,
             "top_start",
-            skirout.editor.v1.presentation.PresentationAnchorAlignment.Kind.TOP_START_CONST.ordinal,
+            skirout.editor.v1.presentation.PresentationAlignment.Kind.TOP_START_CONST.ordinal,
             "",
-            skirout.editor.v1.presentation.PresentationAnchorAlignment.TOP_START,
+            skirout.editor.v1.presentation.PresentationAlignment.TOP_START,
         );
-        PresentationAnchorAlignmentSerializerImpl.addConstantVariant(
+        PresentationAlignmentSerializerImpl.addConstantVariant(
             2,
             "top_center",
-            skirout.editor.v1.presentation.PresentationAnchorAlignment.Kind.TOP_CENTER_CONST.ordinal,
+            skirout.editor.v1.presentation.PresentationAlignment.Kind.TOP_CENTER_CONST.ordinal,
             "",
-            skirout.editor.v1.presentation.PresentationAnchorAlignment.TOP_CENTER,
+            skirout.editor.v1.presentation.PresentationAlignment.TOP_CENTER,
         );
-        PresentationAnchorAlignmentSerializerImpl.addConstantVariant(
+        PresentationAlignmentSerializerImpl.addConstantVariant(
             3,
             "top_end",
-            skirout.editor.v1.presentation.PresentationAnchorAlignment.Kind.TOP_END_CONST.ordinal,
+            skirout.editor.v1.presentation.PresentationAlignment.Kind.TOP_END_CONST.ordinal,
             "",
-            skirout.editor.v1.presentation.PresentationAnchorAlignment.TOP_END,
+            skirout.editor.v1.presentation.PresentationAlignment.TOP_END,
         );
-        PresentationAnchorAlignmentSerializerImpl.addConstantVariant(
+        PresentationAlignmentSerializerImpl.addConstantVariant(
             4,
             "center_start",
-            skirout.editor.v1.presentation.PresentationAnchorAlignment.Kind.CENTER_START_CONST.ordinal,
+            skirout.editor.v1.presentation.PresentationAlignment.Kind.CENTER_START_CONST.ordinal,
             "",
-            skirout.editor.v1.presentation.PresentationAnchorAlignment.CENTER_START,
+            skirout.editor.v1.presentation.PresentationAlignment.CENTER_START,
         );
-        PresentationAnchorAlignmentSerializerImpl.addConstantVariant(
+        PresentationAlignmentSerializerImpl.addConstantVariant(
             5,
             "center",
-            skirout.editor.v1.presentation.PresentationAnchorAlignment.Kind.CENTER_CONST.ordinal,
+            skirout.editor.v1.presentation.PresentationAlignment.Kind.CENTER_CONST.ordinal,
             "",
-            skirout.editor.v1.presentation.PresentationAnchorAlignment.CENTER,
+            skirout.editor.v1.presentation.PresentationAlignment.CENTER,
         );
-        PresentationAnchorAlignmentSerializerImpl.addConstantVariant(
+        PresentationAlignmentSerializerImpl.addConstantVariant(
             6,
             "center_end",
-            skirout.editor.v1.presentation.PresentationAnchorAlignment.Kind.CENTER_END_CONST.ordinal,
+            skirout.editor.v1.presentation.PresentationAlignment.Kind.CENTER_END_CONST.ordinal,
             "",
-            skirout.editor.v1.presentation.PresentationAnchorAlignment.CENTER_END,
+            skirout.editor.v1.presentation.PresentationAlignment.CENTER_END,
         );
-        PresentationAnchorAlignmentSerializerImpl.addConstantVariant(
+        PresentationAlignmentSerializerImpl.addConstantVariant(
             7,
             "bottom_start",
-            skirout.editor.v1.presentation.PresentationAnchorAlignment.Kind.BOTTOM_START_CONST.ordinal,
+            skirout.editor.v1.presentation.PresentationAlignment.Kind.BOTTOM_START_CONST.ordinal,
             "",
-            skirout.editor.v1.presentation.PresentationAnchorAlignment.BOTTOM_START,
+            skirout.editor.v1.presentation.PresentationAlignment.BOTTOM_START,
         );
-        PresentationAnchorAlignmentSerializerImpl.addConstantVariant(
+        PresentationAlignmentSerializerImpl.addConstantVariant(
             8,
             "bottom_center",
-            skirout.editor.v1.presentation.PresentationAnchorAlignment.Kind.BOTTOM_CENTER_CONST.ordinal,
+            skirout.editor.v1.presentation.PresentationAlignment.Kind.BOTTOM_CENTER_CONST.ordinal,
             "",
-            skirout.editor.v1.presentation.PresentationAnchorAlignment.BOTTOM_CENTER,
+            skirout.editor.v1.presentation.PresentationAlignment.BOTTOM_CENTER,
         );
-        PresentationAnchorAlignmentSerializerImpl.addConstantVariant(
+        PresentationAlignmentSerializerImpl.addConstantVariant(
             9,
             "bottom_end",
-            skirout.editor.v1.presentation.PresentationAnchorAlignment.Kind.BOTTOM_END_CONST.ordinal,
+            skirout.editor.v1.presentation.PresentationAlignment.Kind.BOTTOM_END_CONST.ordinal,
             "",
-            skirout.editor.v1.presentation.PresentationAnchorAlignment.BOTTOM_END,
+            skirout.editor.v1.presentation.PresentationAlignment.BOTTOM_END,
         );
-        PresentationAnchorAlignmentSerializerImpl.finalizeEnum();
+        PresentationAlignmentSerializerImpl.finalizeEnum();
+
+        PresentationAlphaColorSerializerImpl.addField(
+            "source",
+            "source",
+            0,
+            _SerializerRegistry.PresentationColorSerializer,
+            "",
+            { it.source },
+            { mut, v -> mut.source = v },
+        );
+        PresentationAlphaColorSerializerImpl.addField(
+            "alpha",
+            "alpha",
+            1,
+            build.skir.Serializers.float64,
+            "",
+            { it.alpha },
+            { mut, v -> mut.alpha = v },
+        );
+        PresentationAlphaColorSerializerImpl.finalizeStruct();
+
+        PresentationAmbientColorSerializerImpl.addConstantVariant(
+            1,
+            "background",
+            skirout.editor.v1.presentation.PresentationAmbientColor.Kind.BACKGROUND_CONST.ordinal,
+            "",
+            skirout.editor.v1.presentation.PresentationAmbientColor.BACKGROUND,
+        );
+        PresentationAmbientColorSerializerImpl.addConstantVariant(
+            2,
+            "foreground",
+            skirout.editor.v1.presentation.PresentationAmbientColor.Kind.FOREGROUND_CONST.ordinal,
+            "",
+            skirout.editor.v1.presentation.PresentationAmbientColor.FOREGROUND,
+        );
+        PresentationAmbientColorSerializerImpl.addConstantVariant(
+            3,
+            "secondary_foreground",
+            skirout.editor.v1.presentation.PresentationAmbientColor.Kind.SECONDARY_FOREGROUND_CONST.ordinal,
+            "",
+            skirout.editor.v1.presentation.PresentationAmbientColor.SECONDARY_FOREGROUND,
+        );
+        PresentationAmbientColorSerializerImpl.finalizeEnum();
 
         PresentationAnchorLayoutSerializerImpl.addField(
             "child",
@@ -31516,7 +33356,7 @@ private object _SerializerRegistry {
             "alignment",
             "alignment",
             2,
-            _SerializerRegistry.PresentationAnchorAlignmentSerializer,
+            _SerializerRegistry.PresentationAlignmentSerializer,
             "",
             { it.alignment },
             { mut, v -> mut.alignment = v },
@@ -31594,6 +33434,26 @@ private object _SerializerRegistry {
         );
         PresentationArgumentSerializerImpl.finalizeStruct();
 
+        PresentationBlendColorSerializerImpl.addField(
+            "foreground",
+            "foreground",
+            0,
+            _SerializerRegistry.PresentationColorSerializer,
+            "",
+            { it.foreground },
+            { mut, v -> mut.foreground = v },
+        );
+        PresentationBlendColorSerializerImpl.addField(
+            "background",
+            "background",
+            1,
+            _SerializerRegistry.PresentationColorSerializer,
+            "",
+            { it.background },
+            { mut, v -> mut.background = v },
+        );
+        PresentationBlendColorSerializerImpl.finalizeStruct();
+
         PresentationBorderSerializerImpl.addWrapperVariant(
             1,
             "all",
@@ -31619,7 +33479,7 @@ private object _SerializerRegistry {
             "color",
             0,
             build.skir.Serializers.optional(
-                skirout.editor.v1.expression.ExpressionNode.serializer,
+                _SerializerRegistry.PresentationColorSerializer,
             ),
             "",
             { it.color },
@@ -31809,6 +33669,71 @@ private object _SerializerRegistry {
         );
         PresentationCollectionRelationDefinitionSerializerImpl.finalizeStruct();
 
+        PresentationColorSerializerImpl.addWrapperVariant(
+            1,
+            "value",
+            skirout.editor.v1.presentation.PresentationColor.Kind.VALUE_WRAPPER.ordinal,
+            skirout.editor.v1.expression.ExpressionNode.serializer,
+            "",
+            { skirout.editor.v1.presentation.PresentationColor.ValueWrapper(it) },
+            { it.value },
+        );
+        PresentationColorSerializerImpl.addWrapperVariant(
+            2,
+            "theme",
+            skirout.editor.v1.presentation.PresentationColor.Kind.THEME_WRAPPER.ordinal,
+            _SerializerRegistry.PresentationThemeColorSerializer,
+            "",
+            { skirout.editor.v1.presentation.PresentationColor.ThemeWrapper(it) },
+            { it.value },
+        );
+        PresentationColorSerializerImpl.addWrapperVariant(
+            3,
+            "ambient",
+            skirout.editor.v1.presentation.PresentationColor.Kind.AMBIENT_WRAPPER.ordinal,
+            _SerializerRegistry.PresentationAmbientColorSerializer,
+            "",
+            { skirout.editor.v1.presentation.PresentationColor.AmbientWrapper(it) },
+            { it.value },
+        );
+        PresentationColorSerializerImpl.addWrapperVariant(
+            4,
+            "contrast",
+            skirout.editor.v1.presentation.PresentationColor.Kind.CONTRAST_WRAPPER.ordinal,
+            _SerializerRegistry.PresentationContrastColorSerializer,
+            "",
+            { skirout.editor.v1.presentation.PresentationColor.ContrastWrapper(it) },
+            { it.value },
+        );
+        PresentationColorSerializerImpl.addWrapperVariant(
+            5,
+            "alpha",
+            skirout.editor.v1.presentation.PresentationColor.Kind.ALPHA_WRAPPER.ordinal,
+            _SerializerRegistry.PresentationAlphaColorSerializer,
+            "",
+            { skirout.editor.v1.presentation.PresentationColor.AlphaWrapper(it) },
+            { it.value },
+        );
+        PresentationColorSerializerImpl.addWrapperVariant(
+            6,
+            "blend",
+            skirout.editor.v1.presentation.PresentationColor.Kind.BLEND_WRAPPER.ordinal,
+            _SerializerRegistry.PresentationBlendColorSerializer,
+            "",
+            { skirout.editor.v1.presentation.PresentationColor.BlendWrapper(it) },
+            { it.value },
+        );
+        PresentationColorSerializerImpl.addWrapperVariant(
+            7,
+            "states",
+            skirout.editor.v1.presentation.PresentationColor.Kind.STATES_WRAPPER.ordinal,
+            _SerializerRegistry.PresentationStateColorSerializer,
+            "",
+            { skirout.editor.v1.presentation.PresentationColor.StatesWrapper(it) },
+            { it.value },
+        );
+        PresentationColorSerializerImpl.finalizeEnum();
+
         PresentationConnectionSerializerImpl.addWrapperVariant(
             1,
             "connection",
@@ -31828,6 +33753,42 @@ private object _SerializerRegistry {
             { it.value },
         );
         PresentationConnectionSerializerImpl.finalizeEnum();
+
+        PresentationContrastColorSerializerImpl.addField(
+            "source",
+            "source",
+            0,
+            _SerializerRegistry.PresentationColorSerializer,
+            "",
+            { it.source },
+            { mut, v -> mut.source = v },
+        );
+        PresentationContrastColorSerializerImpl.addField(
+            "mode",
+            "mode",
+            1,
+            _SerializerRegistry.PresentationContrastModeSerializer,
+            "",
+            { it.mode },
+            { mut, v -> mut.mode = v },
+        );
+        PresentationContrastColorSerializerImpl.finalizeStruct();
+
+        PresentationContrastModeSerializerImpl.addConstantVariant(
+            1,
+            "tonal",
+            skirout.editor.v1.presentation.PresentationContrastMode.Kind.TONAL_CONST.ordinal,
+            "",
+            skirout.editor.v1.presentation.PresentationContrastMode.TONAL,
+        );
+        PresentationContrastModeSerializerImpl.addConstantVariant(
+            2,
+            "monochrome",
+            skirout.editor.v1.presentation.PresentationContrastMode.Kind.MONOCHROME_CONST.ordinal,
+            "",
+            skirout.editor.v1.presentation.PresentationContrastMode.MONOCHROME,
+        );
+        PresentationContrastModeSerializerImpl.finalizeEnum();
 
         PresentationDefinitionSerializerImpl.addField(
             "presentation_id",
@@ -32459,6 +34420,15 @@ private object _SerializerRegistry {
             { skirout.editor.v1.presentation.PresentationElement.PageTimelineWrapper(it) },
             { it.value },
         );
+        PresentationElementSerializerImpl.addWrapperVariant(
+            59,
+            "align",
+            skirout.editor.v1.presentation.PresentationElement.Kind.ALIGN_WRAPPER.ordinal,
+            _SerializerRegistry.AlignmentLayoutSerializer,
+            "",
+            { skirout.editor.v1.presentation.PresentationElement.AlignWrapper(it) },
+            { it.value },
+        );
         PresentationElementSerializerImpl.finalizeEnum();
 
         PresentationHeaderSerializerImpl.addField(
@@ -32642,6 +34612,43 @@ private object _SerializerRegistry {
             { it.value },
         );
         PresentationInsetsSerializerImpl.finalizeEnum();
+
+        PresentationInteractionStateSerializerImpl.addConstantVariant(
+            1,
+            "hovered",
+            skirout.editor.v1.presentation.PresentationInteractionState.Kind.HOVERED_CONST.ordinal,
+            "",
+            skirout.editor.v1.presentation.PresentationInteractionState.HOVERED,
+        );
+        PresentationInteractionStateSerializerImpl.addConstantVariant(
+            2,
+            "selected",
+            skirout.editor.v1.presentation.PresentationInteractionState.Kind.SELECTED_CONST.ordinal,
+            "",
+            skirout.editor.v1.presentation.PresentationInteractionState.SELECTED,
+        );
+        PresentationInteractionStateSerializerImpl.addConstantVariant(
+            3,
+            "focused",
+            skirout.editor.v1.presentation.PresentationInteractionState.Kind.FOCUSED_CONST.ordinal,
+            "",
+            skirout.editor.v1.presentation.PresentationInteractionState.FOCUSED,
+        );
+        PresentationInteractionStateSerializerImpl.addConstantVariant(
+            4,
+            "pressed",
+            skirout.editor.v1.presentation.PresentationInteractionState.Kind.PRESSED_CONST.ordinal,
+            "",
+            skirout.editor.v1.presentation.PresentationInteractionState.PRESSED,
+        );
+        PresentationInteractionStateSerializerImpl.addConstantVariant(
+            5,
+            "disabled",
+            skirout.editor.v1.presentation.PresentationInteractionState.Kind.DISABLED_CONST.ordinal,
+            "",
+            skirout.editor.v1.presentation.PresentationInteractionState.DISABLED,
+        );
+        PresentationInteractionStateSerializerImpl.finalizeEnum();
 
         PresentationInvocationSerializerImpl.addField(
             "presentation_id",
@@ -32830,6 +34837,72 @@ private object _SerializerRegistry {
         );
         PresentationSlotElementSerializerImpl.finalizeStruct();
 
+        PresentationStateColorSerializerImpl.addField(
+            "rules",
+            "rules",
+            0,
+            build.skir.Serializers.list(
+                _SerializerRegistry.PresentationStateColorRuleSerializer,
+            ),
+            "",
+            { it.rules },
+            { mut, v -> mut.rules = v },
+        );
+        PresentationStateColorSerializerImpl.addField(
+            "fallback",
+            "fallback",
+            1,
+            _SerializerRegistry.PresentationColorSerializer,
+            "",
+            { it.fallback },
+            { mut, v -> mut.fallback = v },
+        );
+        PresentationStateColorSerializerImpl.finalizeStruct();
+
+        PresentationStateColorRuleSerializerImpl.addField(
+            "match",
+            "match",
+            0,
+            _SerializerRegistry.PresentationStateMatchSerializer,
+            "",
+            { it.match },
+            { mut, v -> mut.match = v },
+        );
+        PresentationStateColorRuleSerializerImpl.addField(
+            "color",
+            "color",
+            1,
+            _SerializerRegistry.PresentationColorSerializer,
+            "",
+            { it.color },
+            { mut, v -> mut.color = v },
+        );
+        PresentationStateColorRuleSerializerImpl.finalizeStruct();
+
+        PresentationStateMatchSerializerImpl.addField(
+            "required",
+            "required",
+            0,
+            build.skir.Serializers.list(
+                _SerializerRegistry.PresentationInteractionStateSerializer,
+            ),
+            "",
+            { it.required },
+            { mut, v -> mut.required = v },
+        );
+        PresentationStateMatchSerializerImpl.addField(
+            "excluded",
+            "excluded",
+            1,
+            build.skir.Serializers.list(
+                _SerializerRegistry.PresentationInteractionStateSerializer,
+            ),
+            "",
+            { it.excluded },
+            { mut, v -> mut.excluded = v },
+        );
+        PresentationStateMatchSerializerImpl.finalizeStruct();
+
         PresentationTextOverflowSerializerImpl.addConstantVariant(
             1,
             "clip",
@@ -32861,6 +34934,50 @@ private object _SerializerRegistry {
             skirout.editor.v1.presentation.PresentationTextTone.SECONDARY,
         );
         PresentationTextToneSerializerImpl.finalizeEnum();
+
+        PresentationThemeColorSerializerImpl.addConstantVariant(
+            1,
+            "primary",
+            skirout.editor.v1.presentation.PresentationThemeColor.Kind.PRIMARY_CONST.ordinal,
+            "",
+            skirout.editor.v1.presentation.PresentationThemeColor.PRIMARY,
+        );
+        PresentationThemeColorSerializerImpl.addConstantVariant(
+            2,
+            "on_primary",
+            skirout.editor.v1.presentation.PresentationThemeColor.Kind.ON_PRIMARY_CONST.ordinal,
+            "",
+            skirout.editor.v1.presentation.PresentationThemeColor.ON_PRIMARY,
+        );
+        PresentationThemeColorSerializerImpl.addConstantVariant(
+            3,
+            "surface",
+            skirout.editor.v1.presentation.PresentationThemeColor.Kind.SURFACE_CONST.ordinal,
+            "",
+            skirout.editor.v1.presentation.PresentationThemeColor.SURFACE,
+        );
+        PresentationThemeColorSerializerImpl.addConstantVariant(
+            4,
+            "on_surface",
+            skirout.editor.v1.presentation.PresentationThemeColor.Kind.ON_SURFACE_CONST.ordinal,
+            "",
+            skirout.editor.v1.presentation.PresentationThemeColor.ON_SURFACE,
+        );
+        PresentationThemeColorSerializerImpl.addConstantVariant(
+            5,
+            "on_surface_variant",
+            skirout.editor.v1.presentation.PresentationThemeColor.Kind.ON_SURFACE_VARIANT_CONST.ordinal,
+            "",
+            skirout.editor.v1.presentation.PresentationThemeColor.ON_SURFACE_VARIANT,
+        );
+        PresentationThemeColorSerializerImpl.addConstantVariant(
+            6,
+            "focus_outline",
+            skirout.editor.v1.presentation.PresentationThemeColor.Kind.FOCUS_OUTLINE_CONST.ordinal,
+            "",
+            skirout.editor.v1.presentation.PresentationThemeColor.FOCUS_OUTLINE,
+        );
+        PresentationThemeColorSerializerImpl.finalizeEnum();
 
         ProgressContentSerializerImpl.addField(
             "value",
@@ -34148,7 +36265,7 @@ private object _SerializerRegistry {
             "color",
             1,
             build.skir.Serializers.optional(
-                skirout.editor.v1.expression.ExpressionNode.serializer,
+                _SerializerRegistry.PresentationColorSerializer,
             ),
             "",
             { it.color },
@@ -34509,7 +36626,7 @@ private object _SerializerRegistry {
             "color",
             0,
             build.skir.Serializers.optional(
-                skirout.editor.v1.expression.ExpressionNode.serializer,
+                _SerializerRegistry.PresentationColorSerializer,
             ),
             "",
             { it.color },

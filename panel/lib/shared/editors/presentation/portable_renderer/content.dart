@@ -11,7 +11,7 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
       return _diagnostic(message);
     }
     final text = (value as _ResolvedValue<String>).value;
-    final color = _optionalTextColor(childScope, content.color);
+    final color = _optionalTextColor(context, childScope, content.color);
     if (color case _ResolvedFailure(:final message)) {
       return _diagnostic(message);
     }
@@ -143,28 +143,48 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
     if (resolved is FitTextSizing) {
       return _diagnostic("Markdown does not support fitted text sizing");
     }
+    final color = _optionalTextColor(context, childScope, content.color);
+    if (color case _ResolvedFailure(:final message)) {
+      return _diagnostic(message);
+    }
+    final foreground =
+        (color as _ResolvedValue<Color?>).value ??
+        _paragraphToneColor(context, content.paragraph.tone);
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme.apply(
+      bodyColor: foreground,
+      displayColor: foreground,
+    );
     final value = _string(childScope, content.value);
     return switch (value) {
       _ResolvedValue(:final value) => MarkdownBody(
         data: value,
         selectable: content.paragraph.selectable,
-        styleSheet: resolved is ExactTextSizing
-            ? MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
-                p: DefaultTextStyle.of(context).style
-                    .copyWith(fontSize: resolved.size),
-              )
-            : null,
+        styleSheet:
+            MarkdownStyleSheet.fromTheme(
+              theme.copyWith(textTheme: textTheme),
+            ).copyWith(
+              p: DefaultTextStyle.of(context).style.copyWith(
+                color: foreground,
+                fontSize: resolved is ExactTextSizing ? resolved.size : null,
+              ),
+            ),
       ),
       _ResolvedFailure(:final message) => _diagnostic(message),
     };
   }
 
   Widget _renderIcon(
+    BuildContext context,
     skir.IconContent content,
     PortablePresentationScope childScope,
   ) {
     final name = _string(childScope, content.name);
     if (name case _ResolvedFailure(:final message)) {
+      return _diagnostic(message);
+    }
+    final color = _optionalTextColor(context, childScope, content.color);
+    if (color case _ResolvedFailure(:final message)) {
       return _diagnostic(message);
     }
     final iconName = (name as _ResolvedValue<String>).value;
@@ -180,7 +200,7 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
       child: ExcludeSemantics(
         child: Icones(
           iconName,
-          color: _color(childScope, content.color),
+          color: (color as _ResolvedValue<Color?>).value,
           size: _number(childScope, content.size),
         ),
       ),
@@ -236,7 +256,11 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
     if (label case _ResolvedFailure(:final message)) {
       return _diagnostic(message);
     }
-    final resolvedColor = _optionalTextColor(childScope, content.color);
+    final resolvedColor = _optionalTextColor(
+      context,
+      childScope,
+      content.color,
+    );
     if (resolvedColor case _ResolvedFailure(:final message)) {
       return _diagnostic(message);
     }
@@ -438,7 +462,7 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
     if (sizing case _ResolvedFailure(:final message)) {
       return _diagnostic(message);
     }
-    final overall = _resolveTextStyle(childScope, content.style);
+    final overall = _resolveTextStyle(context, childScope, content.style);
     if (overall case _ResolvedFailure(:final message)) {
       return _diagnostic(message);
     }
@@ -449,6 +473,7 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
         return _diagnostic(message);
       }
       final style = _resolveTextStyle(
+        context,
         childScope,
         run.style,
         inheritedVariations:

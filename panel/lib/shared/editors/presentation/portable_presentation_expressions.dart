@@ -47,7 +47,7 @@ extension PortableResourceHeading on skir.ExpressionNode {
     final title =
         (skir.TextContent.mutable()
               ..value = this
-              ..color = color
+              ..color = skir.PresentationColor.wrapValue(color)
               ..fontWeight = number(700)
               ..sizing = skir.TextSizing.createFit(
                 minimum: number(18),

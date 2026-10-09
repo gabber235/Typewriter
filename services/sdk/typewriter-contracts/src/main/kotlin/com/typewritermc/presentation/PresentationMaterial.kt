@@ -309,6 +309,10 @@ private fun PresentationNode.children(): List<PresentationNode> =
                 add(element.value.child)
             }
 
+            is PresentationElement.AlignWrapper -> {
+                add(element.value.child)
+            }
+
             is PresentationElement.ContainerWrapper -> {
                 add(element.value.child)
             }

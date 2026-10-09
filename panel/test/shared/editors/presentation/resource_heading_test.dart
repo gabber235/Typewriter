@@ -313,7 +313,9 @@ void main() {
                 skir.TextRun(
                   text: "مرحبا ".portableExpression,
                   style: skir.TextStyleOverride(
-                    color: Colors.blue.portableExpression,
+                    color: skir.PresentationColor.wrapValue(
+                      Colors.blue.portableExpression,
+                    ),
                     fontWeight: null,
                     fontItalic: null,
                     decoration: null,
@@ -322,7 +324,9 @@ void main() {
                 skir.TextRun(
                   text: "العالم".portableExpression,
                   style: skir.TextStyleOverride(
-                    color: Colors.red.portableExpression,
+                    color: skir.PresentationColor.wrapValue(
+                      Colors.red.portableExpression,
+                    ),
                     fontWeight: _number(700),
                     fontItalic: _number(1),
                     decoration: "underline".portableExpression,

@@ -125,15 +125,23 @@ val FrameworkCatalogCreationTest by testSuite {
         val placementProvider =
             com.typewritermc.authoring
                 .com_typewritermc_authoring_PlacementSdkProvider_GraphPlacementPresentationProvider(runtime)
-        val bookProvider = com_typewritermc_library_BookSdkProvider_BookPresentationProvider(runtime)
-        val tagProvider = com_typewritermc_library_TagSdkProvider_TagPresentationProvider(runtime)
-        val pageProvider = com_typewritermc_library_PageSdkProvider_PagePresentationProvider(runtime)
+        val bookProvider = com_typewritermc_library_BookInspectorPresentation_BookPresentationProvider(runtime)
+        val tagProvider = com_typewritermc_library_TagInspectorPresentation_TagPresentationProvider(runtime)
+        val pageProvider = com_typewritermc_library_PageInspectorPresentation_PagePresentationProvider(runtime)
+        val bookReferenceProvider = com_typewritermc_library_BookReferencePresentation_BookPresentationProvider(runtime)
+        val tagReferenceProvider = com_typewritermc_library_TagReferencePresentation_TagPresentationProvider(runtime)
+        val tagGraphProvider = com_typewritermc_library_TagGraphNodePresentation_TagPresentationProvider(runtime)
+        val pageReferenceProvider = com_typewritermc_library_PageReferencePresentation_PagePresentationProvider(runtime)
         val iconifyDescriptor = iconifyProvider.descriptor(origin("iconify"))
         val svgDescriptor = svgProvider.descriptor(origin("svg"))
         val placementDescriptor = placementProvider.descriptor(origin("placement"))
         bookProvider.descriptor(origin("book"))
         tagProvider.descriptor(origin("tag"))
         pageProvider.descriptor(origin("page"))
+        bookReferenceProvider.descriptor(origin("book"))
+        tagReferenceProvider.descriptor(origin("tag"))
+        tagGraphProvider.descriptor(origin("tag"))
+        pageReferenceProvider.descriptor(origin("page"))
         val checkedBook = (catalog.resolve(BookDefinition.use) as Resolution.Ready).value
         val resourceTypes =
             factories
@@ -200,6 +208,28 @@ val FrameworkCatalogCreationTest by testSuite {
             .collectionGraphSource() shouldBe TAG_COLLECTION_SOURCE_ID
 
         val checkedTag = (catalog.resolve(TagDefinition.use) as Resolution.Ready).value
+        val graphMaterial =
+            tagGraphProvider.build(
+                PresentationBuildBinding(checkedTag.presentationTemplate(), PresentationRole.GRAPH_NODE, resourceTypes),
+            )
+        val graphSurface = (graphMaterial.layout.singleFixed().element as PresentationElement.ContainerWrapper).value
+        graphSurface.transitionMilliseconds shouldBe 100
+        val graphColors = (graphSurface.backgroundColor as skirout.editor.v1.presentation.PresentationColor.StatesWrapper).value
+        graphColors.rules.map { it.match.required } shouldBe
+            listOf(
+                listOf(
+                    skirout.editor.v1.presentation.PresentationInteractionState.SELECTED,
+                    skirout.editor.v1.presentation.PresentationInteractionState.HOVERED,
+                ),
+                listOf(skirout.editor.v1.presentation.PresentationInteractionState.SELECTED),
+                listOf(skirout.editor.v1.presentation.PresentationInteractionState.HOVERED),
+            )
+        val graphForeground = (graphSurface.foregroundColor as skirout.editor.v1.presentation.PresentationColor.StatesWrapper).value
+        graphForeground.rules.map { it.match.required } shouldBe
+            listOf(
+                listOf(skirout.editor.v1.presentation.PresentationInteractionState.HOVERED),
+                listOf(skirout.editor.v1.presentation.PresentationInteractionState.SELECTED),
+            )
         val tagMaterial =
             tagProvider.build(
                 PresentationBuildBinding(
@@ -252,7 +282,7 @@ val FrameworkCatalogCreationTest by testSuite {
             listOf("Book", "Name", "Chapter", "Priority")
 
         val bookSummary =
-            bookProvider.build(
+            bookReferenceProvider.build(
                 PresentationBuildBinding(
                     checkedBook.presentationTemplate(),
                     PresentationRole.REFERENCE_SUMMARY,
@@ -264,17 +294,7 @@ val FrameworkCatalogCreationTest by testSuite {
                 .adaptiveLeading()
                 .leading
                 .singleFixed()
-        val bookColor = bookLeading.element as PresentationElement.ContainerWrapper
-        (bookColor.value.backgroundColor != null) shouldBe true
-        val bookIcon =
-            bookColor.value.child
-                .singleFixed()
-                .element as PresentationElement.PaddingWrapper
-        (
-            bookIcon.value.child
-                .singleFixed()
-                .element is PresentationElement.PolymorphicMatchWrapper
-        ) shouldBe true
+        (bookLeading.element is PresentationElement.PolymorphicMatchWrapper) shouldBe true
         val summary = bookSummary.layout.adaptiveLeading()
         val authoredBook =
             DataValue.Named(
@@ -294,10 +314,7 @@ val FrameworkCatalogCreationTest by testSuite {
             ),
         ) shouldBe DataValue.StringValue("Unnamed Book")
 
-        val match =
-            bookIcon.value.child
-                .singleFixed()
-                .element as PresentationElement.PolymorphicMatchWrapper
+        val match = bookLeading.element as PresentationElement.PolymorphicMatchWrapper
         val iconValue = requireNotNull(authoredBook.at(match.value.binding.path))
         val iconCase =
             match.value.cases.single { candidate ->
@@ -311,7 +328,7 @@ val FrameworkCatalogCreationTest by testSuite {
             DataValue.StringValue("material-symbols:book")
 
         val tagSummary =
-            tagProvider.build(
+            tagReferenceProvider.build(
                 PresentationBuildBinding(
                     checkedTag.presentationTemplate(),
                     PresentationRole.REFERENCE_SUMMARY,
@@ -323,20 +340,11 @@ val FrameworkCatalogCreationTest by testSuite {
                 .adaptiveLeading()
                 .leading
                 .singleFixed()
-        val tagColor = tagLeading.element as PresentationElement.ContainerWrapper
-        (tagColor.value.backgroundColor != null) shouldBe true
-        val tagIcon =
-            (
-                tagColor.value.child
-                    .singleFixed()
-                    .element as PresentationElement.PaddingWrapper
-            ).value.child
-                .singleFixed()
-                .element
+        val tagIcon = tagLeading.element
         (tagIcon is PresentationElement.IconWrapper) shouldBe true
 
         val pageSummary =
-            pageProvider.build(
+            pageReferenceProvider.build(
                 PresentationBuildBinding(
                     checkedPage.presentationTemplate(),
                     PresentationRole.REFERENCE_SUMMARY,

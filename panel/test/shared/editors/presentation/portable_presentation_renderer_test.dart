@@ -481,8 +481,10 @@ void main() {
               semanticLabel: skir.ExpressionNode.wrapLiteral(
                 skir.DataValue.wrapStringValue("Book icon"),
               ),
-              color: skir.ExpressionNode.wrapLiteral(
-                skir.DataValue.wrapInteger(color.toARGB32().toString()),
+              color: skir.PresentationColor.wrapValue(
+                skir.ExpressionNode.wrapLiteral(
+                  skir.DataValue.wrapInteger(color.toARGB32().toString()),
+                ),
               ),
               size: skir.ExpressionNode.wrapLiteral(
                 skir.DataValue.wrapFloat(28),
@@ -538,6 +540,8 @@ void main() {
       final coloredIcon = _node(
         "tag.icon.color",
         skir.PresentationElement.createContainer(
+          foregroundColor: null,
+          transitionMilliseconds: 0,
           child: _node(
             "tag.icon.padding",
             skir.PresentationElement.createPadding(
@@ -549,8 +553,10 @@ void main() {
             ),
           ),
           border: null,
-          backgroundColor: skir.ExpressionNode.wrapLiteral(
-            skir.DataValue.wrapInteger("4288585374"),
+          backgroundColor: skir.PresentationColor.wrapValue(
+            skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapInteger("4288585374"),
+            ),
           ),
           radius: skir.PresentationRadius.none,
         ),
@@ -672,8 +678,10 @@ void main() {
         value: skir.ExpressionNode.wrapLiteral(
           skir.DataValue.wrapStringValue("Styled title"),
         ),
-        color: skir.ExpressionNode.wrapLiteral(
-          skir.DataValue.wrapInteger(color.toARGB32().toString()),
+        color: skir.PresentationColor.wrapValue(
+          skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapInteger(color.toARGB32().toString()),
+          ),
         ),
         sizing: skir.TextSizing.wrapExact(
           skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapFloat(22)),
@@ -1181,8 +1189,10 @@ void main() {
     final itemBinding = skir.ExpressionBindingId(value: "hierarchy.item");
     skir.ConnectorStyle connector() => skir.ConnectorStyle(
       stroke: skir.ConnectorStroke(
-        color: skir.ExpressionNode.wrapLiteral(
-          skir.DataValue.wrapInteger("4286611584"),
+        color: skir.PresentationColor.wrapValue(
+          skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapInteger("4286611584"),
+          ),
         ),
         width: skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapFloat(2)),
       ),
@@ -1496,6 +1506,8 @@ _linkCollectionFixture({
   final coloredIcon = _node(
     "node.reference.icon.color",
     skir.PresentationElement.createContainer(
+      foregroundColor: null,
+      transitionMilliseconds: 0,
       child: _node(
         "node.reference.icon.padding",
         skir.PresentationElement.createPadding(
@@ -1507,8 +1519,10 @@ _linkCollectionFixture({
         ),
       ),
       border: null,
-      backgroundColor: skir.ExpressionNode.wrapLiteral(
-        skir.DataValue.wrapInteger("4288585374"),
+      backgroundColor: skir.PresentationColor.wrapValue(
+        skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapInteger("4288585374"),
+        ),
       ),
       radius: skir.PresentationRadius.none,
     ),

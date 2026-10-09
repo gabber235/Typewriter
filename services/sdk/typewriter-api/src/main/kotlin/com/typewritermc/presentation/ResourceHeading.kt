@@ -24,7 +24,7 @@ fun Layout.resourceHeading(
         column(spacing = 8.0, cross = CrossAxisAlignment.Stretch) {
             text(
                 title,
-                style = TextStyle(color = color, weight = 700, sizing = TextSizing.Fit(literal(18.0), literal(40.0))),
+                style = TextStyle(color = color.asPresentationColor(), weight = 700, sizing = TextSizing.Fit(literal(18.0), literal(40.0))),
                 paragraph = TextParagraph(maximumLines = 1, overflow = TextOverflow.Ellipsis, selectable = true),
             )
             if (identifier != null) {

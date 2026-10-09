@@ -67,7 +67,11 @@ extension _PortableLayoutRendering on PortablePresentationNodeRenderer {
         first = false;
         var rendered = switch (child) {
           skir.AxisChild_fixedWrapper(:final value) =>
-            PortablePresentationNodeRenderer(node: value, scope: childScope),
+            PortablePresentationNodeRenderer(
+              node: value,
+              scope: childScope,
+              fillAvailableSpace: forwardsViewport,
+            ),
           skir.AxisChild_flexibleWrapper(:final value) => Flexible(
             flex: value.flex <= 0 ? 1 : value.flex,
             fit: value.fit == skir.FlexFit.tight
@@ -308,14 +312,48 @@ extension _PortableLayoutRendering on PortablePresentationNodeRenderer {
     BuildContext context,
     skir.ContainerLayout container,
     PortablePresentationScope childScope,
-  ) => DecoratedBox(
-    decoration: BoxDecoration(
-      color: _color(childScope, container.backgroundColor),
-      border: _border(context, container.border, childScope),
-      borderRadius: _radius(context, container.radius, childScope),
-    ),
+  ) => _PresentationSurface(
+    style: container,
+    scope: childScope,
+    diagnostic: _diagnostic,
     child: PortablePresentationNodeRenderer(
       node: container.child,
+      scope: childScope,
+      fillAvailableSpace: fillAvailableSpace,
+    ),
+  );
+
+  Widget _renderAlignment(
+    skir.AlignmentLayout layout,
+    PortablePresentationScope childScope,
+  ) => Align(
+    alignment: switch (layout.alignment.kind) {
+      skir.PresentationAlignment_kind.topStartConst =>
+        AlignmentDirectional.topStart,
+      skir.PresentationAlignment_kind.topCenterConst =>
+        AlignmentDirectional.topCenter,
+      skir.PresentationAlignment_kind.topEndConst =>
+        AlignmentDirectional.topEnd,
+      skir.PresentationAlignment_kind.centerStartConst =>
+        AlignmentDirectional.centerStart,
+      skir.PresentationAlignment_kind.centerConst =>
+        AlignmentDirectional.center,
+      skir.PresentationAlignment_kind.centerEndConst =>
+        AlignmentDirectional.centerEnd,
+      skir.PresentationAlignment_kind.bottomStartConst =>
+        AlignmentDirectional.bottomStart,
+      skir.PresentationAlignment_kind.bottomCenterConst =>
+        AlignmentDirectional.bottomCenter,
+      skir.PresentationAlignment_kind.bottomEndConst =>
+        AlignmentDirectional.bottomEnd,
+      _ => throw const PresentationColorFailure(
+        "Presentation alignment is unavailable",
+      ),
+    },
+    widthFactor: fillAvailableSpace ? null : 1,
+    heightFactor: fillAvailableSpace ? null : 1,
+    child: PortablePresentationNodeRenderer(
+      node: layout.child,
       scope: childScope,
     ),
   );

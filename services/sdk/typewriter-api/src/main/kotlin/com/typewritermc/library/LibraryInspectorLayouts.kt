@@ -12,12 +12,12 @@ import com.typewritermc.expression.orElse
 import com.typewritermc.expression.target
 import com.typewritermc.presentation.AxisLayout
 import com.typewritermc.presentation.CollectionSource
-import com.typewritermc.presentation.ContainerStyle
 import com.typewritermc.presentation.CrossAxisAlignment
 import com.typewritermc.presentation.ExpressionNode
 import com.typewritermc.presentation.GraphNodeScope
 import com.typewritermc.presentation.Layout
 import com.typewritermc.presentation.PresentationInsets
+import com.typewritermc.presentation.asPresentationColor
 import com.typewritermc.presentation.projectedCollectionSource
 import com.typewritermc.types.Color
 import com.typewritermc.types.ResourceId
@@ -59,26 +59,17 @@ internal fun GraphNodeScope<TagCollectionRow>.tagGraphNode() {
     val tag = generatedExpressionScope(TagCollectionRowExpressions::class, row)
     chip(
         label = tag.name.orElse(literal("Unnamed tag")),
-        color = tag.color.orElse(literal(Color(0xff9e9e9eu))),
+        color = tag.color.orElse(literal(Color(0xff9e9e9eu))).asPresentationColor(),
     )
     descendants()
 }
 
 internal fun Layout.librarySubjectLayout(
     label: Expr<String, Handled>,
-    color: Expr<Color, Handled>? = null,
     leadingContent: Layout.() -> Unit,
 ) {
     adaptiveLeading {
-        leading {
-            if (color == null) {
-                leadingContent()
-            } else {
-                container(ContainerStyle(color = color)) {
-                    padding(PresentationInsets(6.0, 6.0, 6.0, 6.0), leadingContent)
-                }
-            }
-        }
+        leading(leadingContent)
         center { text(label) }
         padding(PresentationInsets(8.0, 8.0, 8.0, 8.0))
         compactPadding(PresentationInsets(4.0, 4.0, 4.0, 4.0))

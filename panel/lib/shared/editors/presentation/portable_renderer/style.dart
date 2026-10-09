@@ -22,7 +22,7 @@ Color? _paragraphToneColor(
   skir.PresentationTextTone tone,
 ) => switch (tone.kind) {
   skir.PresentationTextTone_kind.secondaryConst =>
-    context.colors.contentSecondary,
+    Surface.secondaryForegroundOf(context),
   _ => null,
 };
 
@@ -88,33 +88,37 @@ BorderRadius? _radius(
 BorderSide _borderSide(
   BuildContext context,
   skir.PresentationBorderSide side,
-  PortablePresentationScope scope,
-) => BorderSide(
-  color: _color(scope, side.color) ?? context.colors.borderSubtle,
+  PortablePresentationScope scope, {
+  SurfaceAppearance? appearance,
+}) => BorderSide(
+  color:
+      _color(context, scope, side.color, appearance: appearance) ??
+      context.colors.borderSubtle,
   width: side.width,
 );
 
 BoxBorder? _border(
   BuildContext context,
   skir.PresentationBorder? border,
-  PortablePresentationScope scope,
-) => switch (border) {
+  PortablePresentationScope scope, {
+  SurfaceAppearance? appearance,
+}) => switch (border) {
   skir.PresentationBorder_allWrapper(:final value) => Border.fromBorderSide(
-    _borderSide(context, value, scope),
+    _borderSide(context, value, scope, appearance: appearance),
   ),
   skir.PresentationBorder_sidesWrapper(:final value) => BorderDirectional(
     top: value.top == null
         ? BorderSide.none
-        : _borderSide(context, value.top!, scope),
+        : _borderSide(context, value.top!, scope, appearance: appearance),
     start: value.start == null
         ? BorderSide.none
-        : _borderSide(context, value.start!, scope),
+        : _borderSide(context, value.start!, scope, appearance: appearance),
     end: value.end == null
         ? BorderSide.none
-        : _borderSide(context, value.end!, scope),
+        : _borderSide(context, value.end!, scope, appearance: appearance),
     bottom: value.bottom == null
         ? BorderSide.none
-        : _borderSide(context, value.bottom!, scope),
+        : _borderSide(context, value.bottom!, scope, appearance: appearance),
   ),
   _ => null,
 };

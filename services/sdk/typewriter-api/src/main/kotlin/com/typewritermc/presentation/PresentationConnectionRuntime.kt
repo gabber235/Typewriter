@@ -22,7 +22,7 @@ private class RuntimeAnchorPointScope(
     private val id: String,
 ) : AnchorPointScope {
     private val groups = linkedSetOf<String>()
-    private var alignment = AnchorAlignment.Center
+    private var alignment = PresentationAlignment.Center
     private var offset: PresentationOffset? = null
     private var visibleIf: Expr<Boolean, Handled>? = null
     private var exportToParent = false
@@ -32,7 +32,7 @@ private class RuntimeAnchorPointScope(
         groups += ids
     }
 
-    override fun alignment(value: AnchorAlignment) {
+    override fun alignment(value: PresentationAlignment) {
         alignment = value
     }
 
@@ -183,17 +183,17 @@ private class RuntimeConnectionBundleScope(
         )
 }
 
-private fun AnchorAlignment.wire(): skirout.editor.v1.presentation.PresentationAnchorAlignment =
+internal fun PresentationAlignment.wire(): skirout.editor.v1.presentation.PresentationAlignment =
     when (this) {
-        AnchorAlignment.TopStart -> skirout.editor.v1.presentation.PresentationAnchorAlignment.TOP_START
-        AnchorAlignment.TopCenter -> skirout.editor.v1.presentation.PresentationAnchorAlignment.TOP_CENTER
-        AnchorAlignment.TopEnd -> skirout.editor.v1.presentation.PresentationAnchorAlignment.TOP_END
-        AnchorAlignment.CenterStart -> skirout.editor.v1.presentation.PresentationAnchorAlignment.CENTER_START
-        AnchorAlignment.Center -> skirout.editor.v1.presentation.PresentationAnchorAlignment.CENTER
-        AnchorAlignment.CenterEnd -> skirout.editor.v1.presentation.PresentationAnchorAlignment.CENTER_END
-        AnchorAlignment.BottomStart -> skirout.editor.v1.presentation.PresentationAnchorAlignment.BOTTOM_START
-        AnchorAlignment.BottomCenter -> skirout.editor.v1.presentation.PresentationAnchorAlignment.BOTTOM_CENTER
-        AnchorAlignment.BottomEnd -> skirout.editor.v1.presentation.PresentationAnchorAlignment.BOTTOM_END
+        PresentationAlignment.TopStart -> skirout.editor.v1.presentation.PresentationAlignment.TOP_START
+        PresentationAlignment.TopCenter -> skirout.editor.v1.presentation.PresentationAlignment.TOP_CENTER
+        PresentationAlignment.TopEnd -> skirout.editor.v1.presentation.PresentationAlignment.TOP_END
+        PresentationAlignment.CenterStart -> skirout.editor.v1.presentation.PresentationAlignment.CENTER_START
+        PresentationAlignment.Center -> skirout.editor.v1.presentation.PresentationAlignment.CENTER
+        PresentationAlignment.CenterEnd -> skirout.editor.v1.presentation.PresentationAlignment.CENTER_END
+        PresentationAlignment.BottomStart -> skirout.editor.v1.presentation.PresentationAlignment.BOTTOM_START
+        PresentationAlignment.BottomCenter -> skirout.editor.v1.presentation.PresentationAlignment.BOTTOM_CENTER
+        PresentationAlignment.BottomEnd -> skirout.editor.v1.presentation.PresentationAlignment.BOTTOM_END
     }
 
 private fun PresentationOffset.wire(): skirout.editor.v1.presentation.PresentationOffset =
@@ -257,7 +257,7 @@ internal fun ConnectorStyle.wire(): skirout.editor.v1.presentation.ConnectorStyl
     skirout.editor.v1.presentation.ConnectorStyle(
         stroke =
             skirout.editor.v1.presentation.ConnectorStroke(
-                color = expression(color),
+                color = color.wire(),
                 width = expression(width),
             ),
         cornerRadius = expression(cornerRadius),

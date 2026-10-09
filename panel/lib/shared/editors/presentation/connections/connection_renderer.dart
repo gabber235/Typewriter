@@ -142,7 +142,7 @@ final class _ResolvedAnchorPoint {
 
   final String id;
   final List<String> groupIds;
-  final skir.PresentationAnchorAlignment alignment;
+  final skir.PresentationAlignment alignment;
   final Offset offset;
   final bool exportToParent;
   final bool visible;
@@ -151,36 +151,34 @@ final class _ResolvedAnchorPoint {
     final start = direction == TextDirection.ltr ? 0.0 : size.width;
     final end = direction == TextDirection.ltr ? size.width : 0.0;
     final aligned = switch (alignment.kind) {
-      skir.PresentationAnchorAlignment_kind.topStartConst => Offset(start, 0),
-      skir.PresentationAnchorAlignment_kind.topCenterConst => Offset(
+      skir.PresentationAlignment_kind.topStartConst => Offset(start, 0),
+      skir.PresentationAlignment_kind.topCenterConst => Offset(
         size.width / 2,
         0,
       ),
-      skir.PresentationAnchorAlignment_kind.topEndConst => Offset(end, 0),
-      skir.PresentationAnchorAlignment_kind.centerStartConst => Offset(
+      skir.PresentationAlignment_kind.topEndConst => Offset(end, 0),
+      skir.PresentationAlignment_kind.centerStartConst => Offset(
         start,
         size.height / 2,
       ),
-      skir.PresentationAnchorAlignment_kind.centerConst => size.center(
-        Offset.zero,
-      ),
-      skir.PresentationAnchorAlignment_kind.centerEndConst => Offset(
+      skir.PresentationAlignment_kind.centerConst => size.center(Offset.zero),
+      skir.PresentationAlignment_kind.centerEndConst => Offset(
         end,
         size.height / 2,
       ),
-      skir.PresentationAnchorAlignment_kind.bottomStartConst => Offset(
+      skir.PresentationAlignment_kind.bottomStartConst => Offset(
         start,
         size.height,
       ),
-      skir.PresentationAnchorAlignment_kind.bottomCenterConst => Offset(
+      skir.PresentationAlignment_kind.bottomCenterConst => Offset(
         size.width / 2,
         size.height,
       ),
-      skir.PresentationAnchorAlignment_kind.bottomEndConst => Offset(
+      skir.PresentationAlignment_kind.bottomEndConst => Offset(
         end,
         size.height,
       ),
-      skir.PresentationAnchorAlignment_kind.unknown => size.center(Offset.zero),
+      skir.PresentationAlignment_kind.unknown => size.center(Offset.zero),
     };
     final logicalOffset = direction == TextDirection.ltr
         ? offset

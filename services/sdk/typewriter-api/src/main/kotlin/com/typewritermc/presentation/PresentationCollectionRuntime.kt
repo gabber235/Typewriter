@@ -244,7 +244,7 @@ private fun PresentationLayoutHandler.hierarchySequence(
         cornerRadius: Double,
         marker: ConnectorEndpointMarker?,
     ) = ConnectorStyle(
-        color = neutral,
+        color = neutral.asPresentationColor(),
         width = literal(2.0),
         cornerRadius = literal(cornerRadius),
         startMarker = marker,

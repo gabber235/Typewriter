@@ -3,6 +3,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "portable_renderer/actions.dart";
+part "portable_renderer/appearance.dart";
 part "portable_renderer/collection_inputs.dart";
 part "portable_renderer/collections.dart";
 part "portable_renderer/content.dart";
@@ -48,6 +49,19 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
     if (element == null) {
       return _diagnostic("The presentation node has no element");
     }
+    try {
+      return _renderNode(context, element, childScope, available);
+    } on PresentationColorFailure catch (failure) {
+      return _diagnostic(failure.message);
+    }
+  }
+
+  Widget _renderNode(
+    BuildContext context,
+    skir.PresentationElement element,
+    PortablePresentationScope childScope,
+    bool available,
+  ) {
     final rendered = _renderElement(context, element, childScope);
     var child = node.header == null
         ? rendered
@@ -104,6 +118,7 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
       childScope,
     ),
     skir.PresentationElement_iconWrapper(:final value) => _renderIcon(
+      context,
       value,
       childScope,
     ),
@@ -244,6 +259,10 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
     ),
     skir.PresentationElement_adaptiveLeadingWrapper(:final value) =>
       _renderAdaptiveLeading(value, childScope),
+    skir.PresentationElement_alignWrapper(:final value) => _renderAlignment(
+      value,
+      childScope,
+    ),
     skir.PresentationElement_containerWrapper(:final value) => _renderContainer(
       context,
       value,
@@ -309,6 +328,7 @@ final class PortablePresentationRenderer extends StatefulWidget {
     this.scopeBuilder,
     this.onStatus,
     this.compactDiagnostics = const [],
+    this.fillAvailableSpace = false,
     super.key,
   });
 
@@ -316,6 +336,7 @@ final class PortablePresentationRenderer extends StatefulWidget {
   final PortablePresentationScopeBuilder? scopeBuilder;
   final ValueChanged<String>? onStatus;
   final List<skir.DiagnosticTemplate> compactDiagnostics;
+  final bool fillAvailableSpace;
 
   @override
   State<PortablePresentationRenderer> createState() =>
@@ -358,7 +379,9 @@ final class _PortablePresentationRendererState
       final root = PortablePresentationNodeRenderer(
         node: document.root,
         scope: scope,
-        fillAvailableSpace: document.role == skir.PresentationRole.editor,
+        fillAvailableSpace:
+            widget.fillAvailableSpace ||
+            document.role == skir.PresentationRole.editor,
       );
       if (document.role == skir.PresentationRole.editor) {
         return Column(

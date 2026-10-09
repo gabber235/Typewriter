@@ -18,6 +18,7 @@ final class AuthoredResourceEditor extends StatefulWidget {
     this.onStatus,
     this.commit,
     this.enabled = true,
+    this.fillAvailableSpace = false,
     super.key,
   });
 
@@ -45,6 +46,7 @@ final class AuthoredResourceEditor extends StatefulWidget {
   final ValueChanged<String>? onStatus;
   final Future<void> Function()? commit;
   final bool enabled;
+  final bool fillAvailableSpace;
 
   @override
   State<AuthoredResourceEditor> createState() => _AuthoredResourceEditorState();
@@ -143,6 +145,7 @@ final class _AuthoredResourceEditorState extends State<AuthoredResourceEditor> {
     );
     final renderer = PortablePresentationRenderer(
       host: authoredHost,
+      fillAvailableSpace: widget.fillAvailableSpace,
       onStatus: widget.onStatus,
       compactDiagnostics: showsFullDiagnostics
           ? const []

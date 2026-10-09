@@ -1248,7 +1248,7 @@ impl ChildrenElement {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PresentationBorderSide {
-    pub color: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub color: Option<PresentationColor>,
     pub width: f64,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationBorderSide>>,
@@ -1625,7 +1625,7 @@ impl SpacerLayout {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct TextContent {
     pub value: crate::skirout::base::editor::v1::expression::ExpressionNode,
-    pub color: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub color: Option<PresentationColor>,
     pub sizing: Option<TextSizing>,
     pub font_weight: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     pub font_italic: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
@@ -1801,7 +1801,7 @@ impl TextParagraph {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct TextStyleOverride {
-    pub color: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub color: Option<PresentationColor>,
     pub font_weight: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     pub font_italic: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     pub decoration: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
@@ -1968,7 +1968,7 @@ impl AdaptiveLeadingElement {
 pub struct IconContent {
     pub name: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub semantic_label: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
-    pub color: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub color: Option<PresentationColor>,
     pub size: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<IconContent>>,
@@ -2086,7 +2086,7 @@ impl BadgeContent {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ChipContent {
     pub label: crate::skirout::base::editor::v1::expression::ExpressionNode,
-    pub color: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub color: Option<PresentationColor>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ChipContent>>,
 }
@@ -2892,8 +2892,10 @@ impl PresentationRadius {
 pub struct ContainerLayout {
     pub child: PresentationNode,
     pub border: Option<PresentationBorder>,
-    pub background_color: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub background_color: Option<PresentationColor>,
     pub radius: PresentationRadius,
+    pub foreground_color: Option<PresentationColor>,
+    pub transition_milliseconds: i32,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ContainerLayout>>,
 }
@@ -2926,12 +2928,12 @@ impl ContainerLayout {
 }
 
 // ==============================================================================
-// enum PresentationAnchorAlignment
+// enum PresentationAlignment
 // ==============================================================================
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum PresentationAnchorAlignment {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<PresentationAnchorAlignment>>),
+pub enum PresentationAlignment {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<PresentationAlignment>>),
     TopStart,
     TopCenter,
     TopEnd,
@@ -2943,41 +2945,41 @@ pub enum PresentationAnchorAlignment {
     BottomEnd,
 }
 
-impl Default for PresentationAnchorAlignment {
+impl Default for PresentationAlignment {
     fn default() -> Self {
-        PresentationAnchorAlignment::Unknown(None)
+        PresentationAlignment::Unknown(None)
     }
 }
 
-impl PresentationAnchorAlignment {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PresentationAnchorAlignment> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<PresentationAnchorAlignment>> =
+impl PresentationAlignment {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PresentationAlignment> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<PresentationAlignment>> =
             std::sync::LazyLock::new(|| {
                 crate::skir_client::internal::EnumAdapter::new(
-                    |x: &PresentationAnchorAlignment| match x {
-                        PresentationAnchorAlignment::Unknown(_) => 0,
-                        PresentationAnchorAlignment::TopStart => 1,
-                        PresentationAnchorAlignment::TopCenter => 2,
-                        PresentationAnchorAlignment::TopEnd => 3,
-                        PresentationAnchorAlignment::CenterStart => 4,
-                        PresentationAnchorAlignment::Center => 5,
-                        PresentationAnchorAlignment::CenterEnd => 6,
-                        PresentationAnchorAlignment::BottomStart => 7,
-                        PresentationAnchorAlignment::BottomCenter => 8,
-                        PresentationAnchorAlignment::BottomEnd => 9,
+                    |x: &PresentationAlignment| match x {
+                        PresentationAlignment::Unknown(_) => 0,
+                        PresentationAlignment::TopStart => 1,
+                        PresentationAlignment::TopCenter => 2,
+                        PresentationAlignment::TopEnd => 3,
+                        PresentationAlignment::CenterStart => 4,
+                        PresentationAlignment::Center => 5,
+                        PresentationAlignment::CenterEnd => 6,
+                        PresentationAlignment::BottomStart => 7,
+                        PresentationAlignment::BottomCenter => 8,
+                        PresentationAlignment::BottomEnd => 9,
                     },
-                    |u| PresentationAnchorAlignment::Unknown(Some(u)),
-                    |x: &PresentationAnchorAlignment| match x { PresentationAnchorAlignment::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    |u| PresentationAlignment::Unknown(Some(u)),
+                    |x: &PresentationAlignment| match x { PresentationAlignment::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
                     "editor/v1/presentation.skir",
-                    "PresentationAnchorAlignment",
+                    "PresentationAlignment",
                     "",
                 )
             });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<PresentationAnchorAlignment> {
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationAlignment> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(PresentationAnchorAlignment::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(PresentationAlignment::_adapter())
     }
 }
 
@@ -3028,7 +3030,7 @@ impl PresentationOffset {
 pub struct PresentationAnchorPoint {
     pub anchor_id: String,
     pub group_ids: Vec<String>,
-    pub alignment: PresentationAnchorAlignment,
+    pub alignment: PresentationAlignment,
     pub offset: Option<PresentationOffset>,
     pub visible_if: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
     pub export_to_parent: bool,
@@ -3211,7 +3213,7 @@ impl ConnectionExpressionScope {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ConnectorStroke {
-    pub color: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub color: PresentationColor,
     pub width: crate::skirout::base::editor::v1::expression::ExpressionNode,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ConnectorStroke>>,
@@ -6092,6 +6094,7 @@ pub enum PresentationElement {
     SetInput(Box<SetControl>),
     PageGraph(Box<PageGraphElement>),
     PageTimeline(Box<PageTimelineElement>),
+    Align(Box<AlignmentLayout>),
 }
 
 impl Default for PresentationElement {
@@ -6165,6 +6168,7 @@ impl PresentationElement {
                         PresentationElement::SetInput(_) => 56,
                         PresentationElement::PageGraph(_) => 57,
                         PresentationElement::PageTimeline(_) => 58,
+                        PresentationElement::Align(_) => 59,
                     },
                     |u| PresentationElement::Unknown(Some(u)),
                     |x: &PresentationElement| match x { PresentationElement::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
@@ -7153,6 +7157,515 @@ impl TextSizing {
 }
 
 // ==============================================================================
+// enum PresentationInteractionState
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum PresentationInteractionState {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<PresentationInteractionState>>),
+    Hovered,
+    Selected,
+    Focused,
+    Pressed,
+    Disabled,
+}
+
+impl Default for PresentationInteractionState {
+    fn default() -> Self {
+        PresentationInteractionState::Unknown(None)
+    }
+}
+
+impl PresentationInteractionState {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PresentationInteractionState> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<PresentationInteractionState>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &PresentationInteractionState| match x {
+                        PresentationInteractionState::Unknown(_) => 0,
+                        PresentationInteractionState::Hovered => 1,
+                        PresentationInteractionState::Selected => 2,
+                        PresentationInteractionState::Focused => 3,
+                        PresentationInteractionState::Pressed => 4,
+                        PresentationInteractionState::Disabled => 5,
+                    },
+                    |u| PresentationInteractionState::Unknown(Some(u)),
+                    |x: &PresentationInteractionState| match x { PresentationInteractionState::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "editor/v1/presentation.skir",
+                    "PresentationInteractionState",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationInteractionState> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(PresentationInteractionState::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct PresentationStateMatch
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PresentationStateMatch {
+    pub required: Vec<PresentationInteractionState>,
+    pub excluded: Vec<PresentationInteractionState>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationStateMatch>>,
+}
+
+impl PresentationStateMatch {
+    pub fn default_ref() -> &'static PresentationStateMatch {
+        static D: std::sync::LazyLock<PresentationStateMatch> = std::sync::LazyLock::new(PresentationStateMatch::default);
+        &D
+    }
+}
+
+impl PresentationStateMatch {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PresentationStateMatch> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<PresentationStateMatch>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "PresentationStateMatch",
+                    "",
+                    |x: &PresentationStateMatch| &x._unrecognized,
+                    |x: &mut PresentationStateMatch, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationStateMatch> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(PresentationStateMatch::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum PresentationThemeColor
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum PresentationThemeColor {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<PresentationThemeColor>>),
+    Primary,
+    OnPrimary,
+    Surface,
+    OnSurface,
+    OnSurfaceVariant,
+    FocusOutline,
+}
+
+impl Default for PresentationThemeColor {
+    fn default() -> Self {
+        PresentationThemeColor::Unknown(None)
+    }
+}
+
+impl PresentationThemeColor {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PresentationThemeColor> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<PresentationThemeColor>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &PresentationThemeColor| match x {
+                        PresentationThemeColor::Unknown(_) => 0,
+                        PresentationThemeColor::Primary => 1,
+                        PresentationThemeColor::OnPrimary => 2,
+                        PresentationThemeColor::Surface => 3,
+                        PresentationThemeColor::OnSurface => 4,
+                        PresentationThemeColor::OnSurfaceVariant => 5,
+                        PresentationThemeColor::FocusOutline => 6,
+                    },
+                    |u| PresentationThemeColor::Unknown(Some(u)),
+                    |x: &PresentationThemeColor| match x { PresentationThemeColor::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "editor/v1/presentation.skir",
+                    "PresentationThemeColor",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationThemeColor> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(PresentationThemeColor::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum PresentationAmbientColor
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum PresentationAmbientColor {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<PresentationAmbientColor>>),
+    Background,
+    Foreground,
+    SecondaryForeground,
+}
+
+impl Default for PresentationAmbientColor {
+    fn default() -> Self {
+        PresentationAmbientColor::Unknown(None)
+    }
+}
+
+impl PresentationAmbientColor {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PresentationAmbientColor> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<PresentationAmbientColor>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &PresentationAmbientColor| match x {
+                        PresentationAmbientColor::Unknown(_) => 0,
+                        PresentationAmbientColor::Background => 1,
+                        PresentationAmbientColor::Foreground => 2,
+                        PresentationAmbientColor::SecondaryForeground => 3,
+                    },
+                    |u| PresentationAmbientColor::Unknown(Some(u)),
+                    |x: &PresentationAmbientColor| match x { PresentationAmbientColor::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "editor/v1/presentation.skir",
+                    "PresentationAmbientColor",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationAmbientColor> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(PresentationAmbientColor::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum PresentationContrastMode
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum PresentationContrastMode {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<PresentationContrastMode>>),
+    Tonal,
+    Monochrome,
+}
+
+impl Default for PresentationContrastMode {
+    fn default() -> Self {
+        PresentationContrastMode::Unknown(None)
+    }
+}
+
+impl PresentationContrastMode {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PresentationContrastMode> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<PresentationContrastMode>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &PresentationContrastMode| match x {
+                        PresentationContrastMode::Unknown(_) => 0,
+                        PresentationContrastMode::Tonal => 1,
+                        PresentationContrastMode::Monochrome => 2,
+                    },
+                    |u| PresentationContrastMode::Unknown(Some(u)),
+                    |x: &PresentationContrastMode| match x { PresentationContrastMode::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "editor/v1/presentation.skir",
+                    "PresentationContrastMode",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationContrastMode> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(PresentationContrastMode::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct PresentationContrastColor
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PresentationContrastColor {
+    pub source: PresentationColor,
+    pub mode: PresentationContrastMode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationContrastColor>>,
+}
+
+impl PresentationContrastColor {
+    pub fn default_ref() -> &'static PresentationContrastColor {
+        static D: std::sync::LazyLock<PresentationContrastColor> = std::sync::LazyLock::new(PresentationContrastColor::default);
+        &D
+    }
+}
+
+impl PresentationContrastColor {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PresentationContrastColor> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<PresentationContrastColor>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "PresentationContrastColor",
+                    "",
+                    |x: &PresentationContrastColor| &x._unrecognized,
+                    |x: &mut PresentationContrastColor, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationContrastColor> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(PresentationContrastColor::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct PresentationAlphaColor
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PresentationAlphaColor {
+    pub source: PresentationColor,
+    pub alpha: f64,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationAlphaColor>>,
+}
+
+impl PresentationAlphaColor {
+    pub fn default_ref() -> &'static PresentationAlphaColor {
+        static D: std::sync::LazyLock<PresentationAlphaColor> = std::sync::LazyLock::new(PresentationAlphaColor::default);
+        &D
+    }
+}
+
+impl PresentationAlphaColor {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PresentationAlphaColor> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<PresentationAlphaColor>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "PresentationAlphaColor",
+                    "",
+                    |x: &PresentationAlphaColor| &x._unrecognized,
+                    |x: &mut PresentationAlphaColor, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationAlphaColor> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(PresentationAlphaColor::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct PresentationBlendColor
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PresentationBlendColor {
+    pub foreground: PresentationColor,
+    pub background: PresentationColor,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationBlendColor>>,
+}
+
+impl PresentationBlendColor {
+    pub fn default_ref() -> &'static PresentationBlendColor {
+        static D: std::sync::LazyLock<PresentationBlendColor> = std::sync::LazyLock::new(PresentationBlendColor::default);
+        &D
+    }
+}
+
+impl PresentationBlendColor {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PresentationBlendColor> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<PresentationBlendColor>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "PresentationBlendColor",
+                    "",
+                    |x: &PresentationBlendColor| &x._unrecognized,
+                    |x: &mut PresentationBlendColor, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationBlendColor> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(PresentationBlendColor::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct PresentationStateColorRule
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PresentationStateColorRule {
+    pub match_: PresentationStateMatch,
+    pub color: PresentationColor,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationStateColorRule>>,
+}
+
+impl PresentationStateColorRule {
+    pub fn default_ref() -> &'static PresentationStateColorRule {
+        static D: std::sync::LazyLock<PresentationStateColorRule> = std::sync::LazyLock::new(PresentationStateColorRule::default);
+        &D
+    }
+}
+
+impl PresentationStateColorRule {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PresentationStateColorRule> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<PresentationStateColorRule>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "PresentationStateColorRule",
+                    "",
+                    |x: &PresentationStateColorRule| &x._unrecognized,
+                    |x: &mut PresentationStateColorRule, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationStateColorRule> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(PresentationStateColorRule::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct PresentationStateColor
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PresentationStateColor {
+    pub rules: Vec<PresentationStateColorRule>,
+    pub fallback: PresentationColor,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationStateColor>>,
+}
+
+impl PresentationStateColor {
+    pub fn default_ref() -> &'static PresentationStateColor {
+        static D: std::sync::LazyLock<PresentationStateColor> = std::sync::LazyLock::new(PresentationStateColor::default);
+        &D
+    }
+}
+
+impl PresentationStateColor {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PresentationStateColor> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<PresentationStateColor>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "PresentationStateColor",
+                    "",
+                    |x: &PresentationStateColor| &x._unrecognized,
+                    |x: &mut PresentationStateColor, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationStateColor> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(PresentationStateColor::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum PresentationColor
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum PresentationColor {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<PresentationColor>>),
+    Value(Box<crate::skirout::base::editor::v1::expression::ExpressionNode>),
+    Theme(Box<PresentationThemeColor>),
+    Ambient(Box<PresentationAmbientColor>),
+    Contrast(Box<PresentationContrastColor>),
+    Alpha(Box<PresentationAlphaColor>),
+    Blend(Box<PresentationBlendColor>),
+    States(Box<PresentationStateColor>),
+}
+
+impl Default for PresentationColor {
+    fn default() -> Self {
+        PresentationColor::Unknown(None)
+    }
+}
+
+impl PresentationColor {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PresentationColor> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<PresentationColor>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::EnumAdapter::new(
+                    |x: &PresentationColor| match x {
+                        PresentationColor::Unknown(_) => 0,
+                        PresentationColor::Value(_) => 1,
+                        PresentationColor::Theme(_) => 2,
+                        PresentationColor::Ambient(_) => 3,
+                        PresentationColor::Contrast(_) => 4,
+                        PresentationColor::Alpha(_) => 5,
+                        PresentationColor::Blend(_) => 6,
+                        PresentationColor::States(_) => 7,
+                    },
+                    |u| PresentationColor::Unknown(Some(u)),
+                    |x: &PresentationColor| match x { PresentationColor::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    "editor/v1/presentation.skir",
+                    "PresentationColor",
+                    "",
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationColor> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(PresentationColor::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct AlignmentLayout
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct AlignmentLayout {
+    pub child: PresentationNode,
+    pub alignment: PresentationAlignment,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AlignmentLayout>>,
+}
+
+impl AlignmentLayout {
+    pub fn default_ref() -> &'static AlignmentLayout {
+        static D: std::sync::LazyLock<AlignmentLayout> = std::sync::LazyLock::new(AlignmentLayout::default);
+        &D
+    }
+}
+
+impl AlignmentLayout {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<AlignmentLayout> {
+        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<AlignmentLayout>> =
+            std::sync::LazyLock::new(|| {
+                crate::skir_client::internal::StructAdapter::new(
+                    "editor/v1/presentation.skir",
+                    "AlignmentLayout",
+                    "",
+                    |x: &AlignmentLayout| &x._unrecognized,
+                    |x: &mut AlignmentLayout, u| x._unrecognized = u,
+                )
+            });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<AlignmentLayout> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(AlignmentLayout::_adapter())
+    }
+}
+
+// ==============================================================================
 // initialize_module_serializers()
 // ==============================================================================
 
@@ -7385,7 +7898,7 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<PresentationBorderSide> = PresentationBorderSide::_adapter() as *const _ as *mut _;
-                (*a).add_field("color", 0, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &PresentationBorderSide| &x.color, |x: &mut PresentationBorderSide, v| x.color = v);
+                (*a).add_field("color", 0, crate::skir_client::Serializer::optional(crate::skir_client::internal::enum_serializer_from_static(PresentationColor::_adapter())), "", |x: &PresentationBorderSide| &x.color, |x: &mut PresentationBorderSide, v| x.color = v);
                 (*a).add_field("width", 1, crate::skir_client::Serializer::float64(), "", |x: &PresentationBorderSide| &x.width, |x: &mut PresentationBorderSide, v| x.width = v);
                 (*a).finalize();
             }
@@ -7445,7 +7958,7 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<TextContent> = TextContent::_adapter() as *const _ as *mut _;
                 (*a).add_field("value", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &TextContent| &x.value, |x: &mut TextContent, v| x.value = v);
-                (*a).add_field("color", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextContent| &x.color, |x: &mut TextContent, v| x.color = v);
+                (*a).add_field("color", 1, crate::skir_client::Serializer::optional(crate::skir_client::internal::enum_serializer_from_static(PresentationColor::_adapter())), "", |x: &TextContent| &x.color, |x: &mut TextContent, v| x.color = v);
                 (*a).add_field("sizing", 2, crate::skir_client::Serializer::optional(crate::skir_client::internal::enum_serializer_from_static(TextSizing::_adapter())), "", |x: &TextContent| &x.sizing, |x: &mut TextContent, v| x.sizing = v);
                 (*a).add_field("font_weight", 3, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextContent| &x.font_weight, |x: &mut TextContent, v| x.font_weight = v);
                 (*a).add_field("font_italic", 4, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextContent| &x.font_italic, |x: &mut TextContent, v| x.font_italic = v);
@@ -7483,7 +7996,7 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<TextStyleOverride> = TextStyleOverride::_adapter() as *const _ as *mut _;
-                (*a).add_field("color", 0, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextStyleOverride| &x.color, |x: &mut TextStyleOverride, v| x.color = v);
+                (*a).add_field("color", 0, crate::skir_client::Serializer::optional(crate::skir_client::internal::enum_serializer_from_static(PresentationColor::_adapter())), "", |x: &TextStyleOverride| &x.color, |x: &mut TextStyleOverride, v| x.color = v);
                 (*a).add_field("font_weight", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextStyleOverride| &x.font_weight, |x: &mut TextStyleOverride, v| x.font_weight = v);
                 (*a).add_field("font_italic", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextStyleOverride| &x.font_italic, |x: &mut TextStyleOverride, v| x.font_italic = v);
                 (*a).add_field("decoration", 3, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &TextStyleOverride| &x.decoration, |x: &mut TextStyleOverride, v| x.decoration = v);
@@ -7518,7 +8031,7 @@ fn initialize_module_serializers() {
                 let a: *mut crate::skir_client::internal::StructAdapter<IconContent> = IconContent::_adapter() as *const _ as *mut _;
                 (*a).add_field("name", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &IconContent| &x.name, |x: &mut IconContent, v| x.name = v);
                 (*a).add_field("semantic_label", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &IconContent| &x.semantic_label, |x: &mut IconContent, v| x.semantic_label = v);
-                (*a).add_field("color", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &IconContent| &x.color, |x: &mut IconContent, v| x.color = v);
+                (*a).add_field("color", 2, crate::skir_client::Serializer::optional(crate::skir_client::internal::enum_serializer_from_static(PresentationColor::_adapter())), "", |x: &IconContent| &x.color, |x: &mut IconContent, v| x.color = v);
                 (*a).add_field("size", 3, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &IconContent| &x.size, |x: &mut IconContent, v| x.size = v);
                 (*a).finalize();
             }
@@ -7537,7 +8050,7 @@ fn initialize_module_serializers() {
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ChipContent> = ChipContent::_adapter() as *const _ as *mut _;
                 (*a).add_field("label", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &ChipContent| &x.label, |x: &mut ChipContent, v| x.label = v);
-                (*a).add_field("color", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &ChipContent| &x.color, |x: &mut ChipContent, v| x.color = v);
+                (*a).add_field("color", 1, crate::skir_client::Serializer::optional(crate::skir_client::internal::enum_serializer_from_static(PresentationColor::_adapter())), "", |x: &ChipContent| &x.color, |x: &mut ChipContent, v| x.color = v);
                 (*a).finalize();
             }
             unsafe {
@@ -7687,21 +8200,23 @@ fn initialize_module_serializers() {
                 let a: *mut crate::skir_client::internal::StructAdapter<ContainerLayout> = ContainerLayout::_adapter() as *const _ as *mut _;
                 (*a).add_field("child", 0, crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter()), "", |x: &ContainerLayout| &x.child, |x: &mut ContainerLayout, v| x.child = v);
                 (*a).add_field("border", 1, crate::skir_client::Serializer::optional(crate::skir_client::internal::enum_serializer_from_static(PresentationBorder::_adapter())), "", |x: &ContainerLayout| &x.border, |x: &mut ContainerLayout, v| x.border = v);
-                (*a).add_field("background_color", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &ContainerLayout| &x.background_color, |x: &mut ContainerLayout, v| x.background_color = v);
+                (*a).add_field("background_color", 2, crate::skir_client::Serializer::optional(crate::skir_client::internal::enum_serializer_from_static(PresentationColor::_adapter())), "", |x: &ContainerLayout| &x.background_color, |x: &mut ContainerLayout, v| x.background_color = v);
                 (*a).add_field("radius", 3, crate::skir_client::internal::enum_serializer_from_static(PresentationRadius::_adapter()), "", |x: &ContainerLayout| &x.radius, |x: &mut ContainerLayout, v| x.radius = v);
+                (*a).add_field("foreground_color", 4, crate::skir_client::Serializer::optional(crate::skir_client::internal::enum_serializer_from_static(PresentationColor::_adapter())), "", |x: &ContainerLayout| &x.foreground_color, |x: &mut ContainerLayout, v| x.foreground_color = v);
+                (*a).add_field("transition_milliseconds", 5, crate::skir_client::Serializer::int32(), "", |x: &ContainerLayout| &x.transition_milliseconds, |x: &mut ContainerLayout, v| x.transition_milliseconds = v);
                 (*a).finalize();
             }
             unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<PresentationAnchorAlignment> = PresentationAnchorAlignment::_adapter() as *const _ as *mut _;
-                (*a).add_constant_variant("top_start", 1, 1, "", PresentationAnchorAlignment::TopStart);
-                (*a).add_constant_variant("top_center", 2, 2, "", PresentationAnchorAlignment::TopCenter);
-                (*a).add_constant_variant("top_end", 3, 3, "", PresentationAnchorAlignment::TopEnd);
-                (*a).add_constant_variant("center_start", 4, 4, "", PresentationAnchorAlignment::CenterStart);
-                (*a).add_constant_variant("center", 5, 5, "", PresentationAnchorAlignment::Center);
-                (*a).add_constant_variant("center_end", 6, 6, "", PresentationAnchorAlignment::CenterEnd);
-                (*a).add_constant_variant("bottom_start", 7, 7, "", PresentationAnchorAlignment::BottomStart);
-                (*a).add_constant_variant("bottom_center", 8, 8, "", PresentationAnchorAlignment::BottomCenter);
-                (*a).add_constant_variant("bottom_end", 9, 9, "", PresentationAnchorAlignment::BottomEnd);
+                let a: *mut crate::skir_client::internal::EnumAdapter<PresentationAlignment> = PresentationAlignment::_adapter() as *const _ as *mut _;
+                (*a).add_constant_variant("top_start", 1, 1, "", PresentationAlignment::TopStart);
+                (*a).add_constant_variant("top_center", 2, 2, "", PresentationAlignment::TopCenter);
+                (*a).add_constant_variant("top_end", 3, 3, "", PresentationAlignment::TopEnd);
+                (*a).add_constant_variant("center_start", 4, 4, "", PresentationAlignment::CenterStart);
+                (*a).add_constant_variant("center", 5, 5, "", PresentationAlignment::Center);
+                (*a).add_constant_variant("center_end", 6, 6, "", PresentationAlignment::CenterEnd);
+                (*a).add_constant_variant("bottom_start", 7, 7, "", PresentationAlignment::BottomStart);
+                (*a).add_constant_variant("bottom_center", 8, 8, "", PresentationAlignment::BottomCenter);
+                (*a).add_constant_variant("bottom_end", 9, 9, "", PresentationAlignment::BottomEnd);
                 (*a).finalize();
             }
             unsafe {
@@ -7714,7 +8229,7 @@ fn initialize_module_serializers() {
                 let a: *mut crate::skir_client::internal::StructAdapter<PresentationAnchorPoint> = PresentationAnchorPoint::_adapter() as *const _ as *mut _;
                 (*a).add_field("anchor_id", 0, crate::skir_client::Serializer::string(), "", |x: &PresentationAnchorPoint| &x.anchor_id, |x: &mut PresentationAnchorPoint, v| x.anchor_id = v);
                 (*a).add_field("group_ids", 1, crate::skir_client::Serializer::array(crate::skir_client::Serializer::string()), "", |x: &PresentationAnchorPoint| &x.group_ids, |x: &mut PresentationAnchorPoint, v| x.group_ids = v);
-                (*a).add_field("alignment", 2, crate::skir_client::internal::enum_serializer_from_static(PresentationAnchorAlignment::_adapter()), "", |x: &PresentationAnchorPoint| &x.alignment, |x: &mut PresentationAnchorPoint, v| x.alignment = v);
+                (*a).add_field("alignment", 2, crate::skir_client::internal::enum_serializer_from_static(PresentationAlignment::_adapter()), "", |x: &PresentationAnchorPoint| &x.alignment, |x: &mut PresentationAnchorPoint, v| x.alignment = v);
                 (*a).add_field("offset", 3, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(PresentationOffset::_adapter())), "", |x: &PresentationAnchorPoint| &x.offset, |x: &mut PresentationAnchorPoint, v| x.offset = v);
                 (*a).add_field("visible_if", 4, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::expression::ExpressionNode::serializer()), "", |x: &PresentationAnchorPoint| &x.visible_if, |x: &mut PresentationAnchorPoint, v| x.visible_if = v);
                 (*a).add_field("export_to_parent", 5, crate::skir_client::Serializer::bool(), "", |x: &PresentationAnchorPoint| &x.export_to_parent, |x: &mut PresentationAnchorPoint, v| x.export_to_parent = v);
@@ -7741,7 +8256,7 @@ fn initialize_module_serializers() {
             }
             unsafe {
                 let a: *mut crate::skir_client::internal::StructAdapter<ConnectorStroke> = ConnectorStroke::_adapter() as *const _ as *mut _;
-                (*a).add_field("color", 0, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &ConnectorStroke| &x.color, |x: &mut ConnectorStroke, v| x.color = v);
+                (*a).add_field("color", 0, crate::skir_client::internal::enum_serializer_from_static(PresentationColor::_adapter()), "", |x: &ConnectorStroke| &x.color, |x: &mut ConnectorStroke, v| x.color = v);
                 (*a).add_field("width", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &ConnectorStroke| &x.width, |x: &mut ConnectorStroke, v| x.width = v);
                 (*a).finalize();
             }
@@ -8290,6 +8805,7 @@ fn initialize_module_serializers() {
                 (*a).add_wrapper_variant("set_input", 56, 56, crate::skir_client::internal::struct_serializer_from_static(SetControl::_adapter()), "", |v| PresentationElement::SetInput(Box::new(v)), |x| match x { PresentationElement::SetInput(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("page_graph", 57, 57, crate::skir_client::internal::struct_serializer_from_static(PageGraphElement::_adapter()), "", |v| PresentationElement::PageGraph(Box::new(v)), |x| match x { PresentationElement::PageGraph(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("page_timeline", 58, 58, crate::skir_client::internal::struct_serializer_from_static(PageTimelineElement::_adapter()), "", |v| PresentationElement::PageTimeline(Box::new(v)), |x| match x { PresentationElement::PageTimeline(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("align", 59, 59, crate::skir_client::internal::struct_serializer_from_static(AlignmentLayout::_adapter()), "", |v| PresentationElement::Align(Box::new(v)), |x| match x { PresentationElement::Align(b) => b.as_ref(), _ => unreachable!() });
                 (*a).finalize();
             }
             unsafe {
@@ -8449,6 +8965,91 @@ fn initialize_module_serializers() {
                 let a: *mut crate::skir_client::internal::EnumAdapter<TextSizing> = TextSizing::_adapter() as *const _ as *mut _;
                 (*a).add_wrapper_variant("exact", 1, 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |v| TextSizing::Exact(Box::new(v)), |x| match x { TextSizing::Exact(b) => b.as_ref(), _ => unreachable!() });
                 (*a).add_wrapper_variant("fit", 2, 2, crate::skir_client::internal::struct_serializer_from_static(TextFit::_adapter()), "", |v| TextSizing::Fit(Box::new(v)), |x| match x { TextSizing::Fit(b) => b.as_ref(), _ => unreachable!() });
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<PresentationInteractionState> = PresentationInteractionState::_adapter() as *const _ as *mut _;
+                (*a).add_constant_variant("hovered", 1, 1, "", PresentationInteractionState::Hovered);
+                (*a).add_constant_variant("selected", 2, 2, "", PresentationInteractionState::Selected);
+                (*a).add_constant_variant("focused", 3, 3, "", PresentationInteractionState::Focused);
+                (*a).add_constant_variant("pressed", 4, 4, "", PresentationInteractionState::Pressed);
+                (*a).add_constant_variant("disabled", 5, 5, "", PresentationInteractionState::Disabled);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<PresentationStateMatch> = PresentationStateMatch::_adapter() as *const _ as *mut _;
+                (*a).add_field("required", 0, crate::skir_client::Serializer::array(crate::skir_client::internal::enum_serializer_from_static(PresentationInteractionState::_adapter())), "", |x: &PresentationStateMatch| &x.required, |x: &mut PresentationStateMatch, v| x.required = v);
+                (*a).add_field("excluded", 1, crate::skir_client::Serializer::array(crate::skir_client::internal::enum_serializer_from_static(PresentationInteractionState::_adapter())), "", |x: &PresentationStateMatch| &x.excluded, |x: &mut PresentationStateMatch, v| x.excluded = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<PresentationThemeColor> = PresentationThemeColor::_adapter() as *const _ as *mut _;
+                (*a).add_constant_variant("primary", 1, 1, "", PresentationThemeColor::Primary);
+                (*a).add_constant_variant("on_primary", 2, 2, "", PresentationThemeColor::OnPrimary);
+                (*a).add_constant_variant("surface", 3, 3, "", PresentationThemeColor::Surface);
+                (*a).add_constant_variant("on_surface", 4, 4, "", PresentationThemeColor::OnSurface);
+                (*a).add_constant_variant("on_surface_variant", 5, 5, "", PresentationThemeColor::OnSurfaceVariant);
+                (*a).add_constant_variant("focus_outline", 6, 6, "", PresentationThemeColor::FocusOutline);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<PresentationAmbientColor> = PresentationAmbientColor::_adapter() as *const _ as *mut _;
+                (*a).add_constant_variant("background", 1, 1, "", PresentationAmbientColor::Background);
+                (*a).add_constant_variant("foreground", 2, 2, "", PresentationAmbientColor::Foreground);
+                (*a).add_constant_variant("secondary_foreground", 3, 3, "", PresentationAmbientColor::SecondaryForeground);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<PresentationContrastMode> = PresentationContrastMode::_adapter() as *const _ as *mut _;
+                (*a).add_constant_variant("tonal", 1, 1, "", PresentationContrastMode::Tonal);
+                (*a).add_constant_variant("monochrome", 2, 2, "", PresentationContrastMode::Monochrome);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<PresentationContrastColor> = PresentationContrastColor::_adapter() as *const _ as *mut _;
+                (*a).add_field("source", 0, crate::skir_client::internal::enum_serializer_from_static(PresentationColor::_adapter()), "", |x: &PresentationContrastColor| &x.source, |x: &mut PresentationContrastColor, v| x.source = v);
+                (*a).add_field("mode", 1, crate::skir_client::internal::enum_serializer_from_static(PresentationContrastMode::_adapter()), "", |x: &PresentationContrastColor| &x.mode, |x: &mut PresentationContrastColor, v| x.mode = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<PresentationAlphaColor> = PresentationAlphaColor::_adapter() as *const _ as *mut _;
+                (*a).add_field("source", 0, crate::skir_client::internal::enum_serializer_from_static(PresentationColor::_adapter()), "", |x: &PresentationAlphaColor| &x.source, |x: &mut PresentationAlphaColor, v| x.source = v);
+                (*a).add_field("alpha", 1, crate::skir_client::Serializer::float64(), "", |x: &PresentationAlphaColor| &x.alpha, |x: &mut PresentationAlphaColor, v| x.alpha = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<PresentationBlendColor> = PresentationBlendColor::_adapter() as *const _ as *mut _;
+                (*a).add_field("foreground", 0, crate::skir_client::internal::enum_serializer_from_static(PresentationColor::_adapter()), "", |x: &PresentationBlendColor| &x.foreground, |x: &mut PresentationBlendColor, v| x.foreground = v);
+                (*a).add_field("background", 1, crate::skir_client::internal::enum_serializer_from_static(PresentationColor::_adapter()), "", |x: &PresentationBlendColor| &x.background, |x: &mut PresentationBlendColor, v| x.background = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<PresentationStateColorRule> = PresentationStateColorRule::_adapter() as *const _ as *mut _;
+                (*a).add_field("match", 0, crate::skir_client::internal::struct_serializer_from_static(PresentationStateMatch::_adapter()), "", |x: &PresentationStateColorRule| &x.match_, |x: &mut PresentationStateColorRule, v| x.match_ = v);
+                (*a).add_field("color", 1, crate::skir_client::internal::enum_serializer_from_static(PresentationColor::_adapter()), "", |x: &PresentationStateColorRule| &x.color, |x: &mut PresentationStateColorRule, v| x.color = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<PresentationStateColor> = PresentationStateColor::_adapter() as *const _ as *mut _;
+                (*a).add_field("rules", 0, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(PresentationStateColorRule::_adapter())), "", |x: &PresentationStateColor| &x.rules, |x: &mut PresentationStateColor, v| x.rules = v);
+                (*a).add_field("fallback", 1, crate::skir_client::internal::enum_serializer_from_static(PresentationColor::_adapter()), "", |x: &PresentationStateColor| &x.fallback, |x: &mut PresentationStateColor, v| x.fallback = v);
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::EnumAdapter<PresentationColor> = PresentationColor::_adapter() as *const _ as *mut _;
+                (*a).add_wrapper_variant("value", 1, 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |v| PresentationColor::Value(Box::new(v)), |x| match x { PresentationColor::Value(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("theme", 2, 2, crate::skir_client::internal::enum_serializer_from_static(PresentationThemeColor::_adapter()), "", |v| PresentationColor::Theme(Box::new(v)), |x| match x { PresentationColor::Theme(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("ambient", 3, 3, crate::skir_client::internal::enum_serializer_from_static(PresentationAmbientColor::_adapter()), "", |v| PresentationColor::Ambient(Box::new(v)), |x| match x { PresentationColor::Ambient(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("contrast", 4, 4, crate::skir_client::internal::struct_serializer_from_static(PresentationContrastColor::_adapter()), "", |v| PresentationColor::Contrast(Box::new(v)), |x| match x { PresentationColor::Contrast(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("alpha", 5, 5, crate::skir_client::internal::struct_serializer_from_static(PresentationAlphaColor::_adapter()), "", |v| PresentationColor::Alpha(Box::new(v)), |x| match x { PresentationColor::Alpha(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("blend", 6, 6, crate::skir_client::internal::struct_serializer_from_static(PresentationBlendColor::_adapter()), "", |v| PresentationColor::Blend(Box::new(v)), |x| match x { PresentationColor::Blend(b) => b.as_ref(), _ => unreachable!() });
+                (*a).add_wrapper_variant("states", 7, 7, crate::skir_client::internal::struct_serializer_from_static(PresentationStateColor::_adapter()), "", |v| PresentationColor::States(Box::new(v)), |x| match x { PresentationColor::States(b) => b.as_ref(), _ => unreachable!() });
+                (*a).finalize();
+            }
+            unsafe {
+                let a: *mut crate::skir_client::internal::StructAdapter<AlignmentLayout> = AlignmentLayout::_adapter() as *const _ as *mut _;
+                (*a).add_field("child", 0, crate::skir_client::internal::struct_serializer_from_static(PresentationNode::_adapter()), "", |x: &AlignmentLayout| &x.child, |x: &mut AlignmentLayout, v| x.child = v);
+                (*a).add_field("alignment", 1, crate::skir_client::internal::enum_serializer_from_static(PresentationAlignment::_adapter()), "", |x: &AlignmentLayout| &x.alignment, |x: &mut AlignmentLayout, v| x.alignment = v);
                 (*a).finalize();
             }
         });

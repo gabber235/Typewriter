@@ -8,6 +8,7 @@ part of "portable_connections.dart";
 /// diagnostics. It does not mutate widgets or render objects, so the paint
 /// owner can publish one complete result for the current frame.
 _ConnectionResolution _resolveConnections({
+  required PresentationColorEnvironment colors,
   required List<skir.PresentationConnection> connections,
   required PortablePresentationScope scope,
   required TextDirection textDirection,
@@ -50,6 +51,7 @@ _ConnectionResolution _resolveConnections({
         value: final configured,
       ):
         _resolveSingle(
+          colors,
           configured,
           (connectionIndex, configured),
           scope,
@@ -62,6 +64,7 @@ _ConnectionResolution _resolveConnections({
         );
       case skir.PresentationConnection_bundleWrapper(value: final configured):
         _resolveBundle(
+          colors,
           configured,
           (connectionIndex, configured),
           scope,
@@ -83,6 +86,7 @@ _ConnectionResolution _resolveConnections({
 }
 
 void _resolveSingle(
+  PresentationColorEnvironment colors,
   skir.AnchoredConnection connection,
   Object connectionIdentity,
   PortablePresentationScope layerScope,
@@ -120,6 +124,7 @@ void _resolveSingle(
 
   final target = targets.single;
   final style = _resolveConnectorStyle(
+    colors,
     connection.style,
     target.snapshot.scope,
     diagnostics,
@@ -151,6 +156,7 @@ void _resolveSingle(
 }
 
 void _resolveBundle(
+  PresentationColorEnvironment colors,
   skir.AnchoredConnectionBundle connection,
   Object connectionIdentity,
   PortablePresentationScope layerScope,
@@ -176,6 +182,7 @@ void _resolveBundle(
 
   final source = sources.single;
   final trunkStyle = _resolveConnectorStyle(
+    colors,
     connection.trunkStyle,
     source.snapshot.scope,
     diagnostics,
@@ -183,6 +190,7 @@ void _resolveBundle(
   final branchStyles = [
     for (final target in targets)
       _resolveConnectorStyle(
+        colors,
         connection.branchStyle,
         target.snapshot.scope,
         diagnostics,
