@@ -10,12 +10,32 @@ final class SectionSearchSource extends DelegatingSearchSource {
     required this.id,
     required this.title,
     this.subtitle,
-  }) : assert(id.isNotEmpty),
-       assert(title.isNotEmpty);
+  }) : assert(id.isNotEmpty);
 
   final String id;
-  final String title;
+  final String Function(SearchQueryContext context) title;
   final String? subtitle;
+  String _activeTitle = "";
+
+  void _selectContext(SearchQueryContext context) {
+    final resolved = title(context);
+    if (resolved.isEmpty) {
+      throw ArgumentError.value(resolved, "title", "must not be empty");
+    }
+    _activeTitle = resolved;
+  }
+
+  @override
+  void initialize(SearchQueryContext context) {
+    _selectContext(context);
+    super.initialize(context);
+  }
+
+  @override
+  void search(SearchQueryContext context) {
+    _selectContext(context);
+    super.search(context);
+  }
 
   @override
   void onSnapshot(SearchSourceSnapshot snapshot) {
@@ -29,7 +49,7 @@ final class SectionSearchSource extends DelegatingSearchSource {
         nodes: [
           SearchNode.section(
             id: id,
-            title: title,
+            title: _activeTitle,
             subtitle: subtitle,
             children: snapshot.nodes,
           ),
@@ -43,7 +63,7 @@ final class SectionSearchSource extends DelegatingSearchSource {
 extension SectionSearchSourceX on SearchSource {
   SearchSource inSection({
     required String id,
-    required String title,
+    required String Function(SearchQueryContext context) title,
     String? subtitle,
   }) {
     return SectionSearchSource(

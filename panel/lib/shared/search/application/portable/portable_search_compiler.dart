@@ -174,20 +174,21 @@ final class PortableSearchCompiler {
           ),
       ]),
     skir.SearchProvider_limitWrapper(:final value) =>
-      _PortableLimitedSearchSource(
-        source: _compile(
-          value.child,
-          evaluation,
-          committedSelections,
-          "$path.limit",
-        ),
-        maximum: (query) => _integer(
-          evaluation.evaluate(
-            value.maximum,
-            query: query,
-            selectors: value.child.selectorDefinitions,
-          ),
-        ),
+      _compile(
+        value.child,
+        evaluation,
+        committedSelections,
+        "$path.limit",
+      ).limited(
+        (query) =>
+            _integer(
+              evaluation.evaluate(
+                value.maximum,
+                query: query,
+                selectors: value.child.selectorDefinitions,
+              ),
+            )?.clamp(0, 100000) ??
+            0,
       ),
     skir.SearchProvider_distinctWrapper(:final value) => _compile(
       value.child,
@@ -219,25 +220,24 @@ final class PortableSearchCompiler {
           (selection) => selection.belongsToProviderSubtree("$path.history"),
         ),
       ),
-    skir.SearchProvider_sectionWrapper(:final value) =>
-      _PortableSectionSearchSource(
-        source: _compile(
-          value.child,
-          evaluation,
-          committedSelections,
-          "$path.section",
-        ),
-        id: value.sectionId,
-        title: (query) =>
-            _text(
-              evaluation.evaluate(
-                value.label,
-                query: query,
-                selectors: value.child.selectorDefinitions,
-              ),
-            ) ??
-            value.sectionId,
+    skir.SearchProvider_sectionWrapper(:final value) => SectionSearchSource(
+      source: _compile(
+        value.child,
+        evaluation,
+        committedSelections,
+        "$path.section",
       ),
+      id: value.sectionId,
+      title: (query) =>
+          _text(
+            evaluation.evaluate(
+              value.label,
+              query: query,
+              selectors: value.child.selectorDefinitions,
+            ),
+          ) ??
+          value.sectionId,
+    ),
     skir.SearchProvider_mergeWrapper(:final value) =>
       value.children.isEmpty
           ? _PortableUnavailableSearchSource(
@@ -1199,93 +1199,6 @@ final class _PortableUnavailableSearchSource implements SearchSource {
 
   @override
   void dispose() => unawaited(_snapshots.close());
-}
-
-final class _PortableLimitedSearchSource extends DelegatingSearchSource {
-  _PortableLimitedSearchSource({required super.source, required this.maximum});
-
-  final int? Function(SearchQueryContext query) maximum;
-  int _activeMaximum = 0;
-
-  @override
-  void initialize(SearchQueryContext context) {
-    _activeMaximum = maximum(context)?.clamp(0, 100000) ?? 0;
-    super.initialize(context);
-  }
-
-  @override
-  void search(SearchQueryContext context) {
-    _activeMaximum = maximum(context)?.clamp(0, 100000) ?? 0;
-    super.search(context);
-  }
-
-  @override
-  void onSnapshot(SearchSourceSnapshot snapshot) => emit(
-    snapshot.copyWith(nodes: _limitNodes(snapshot.nodes, _activeMaximum)),
-  );
-}
-
-List<SearchNode> _limitNodes(List<SearchNode> nodes, int available) {
-  if (available == 0) return const [];
-  final limited = <SearchNode>[];
-  var remaining = available;
-  for (final node in nodes) {
-    if (remaining == 0) break;
-    switch (node) {
-      case SearchResultNode():
-        limited.add(node);
-        remaining--;
-      case SearchSectionNode():
-        final children = _limitNodes(node.children, remaining);
-        if (children.isEmpty) continue;
-        limited.add(node.copyWith(children: children));
-        remaining -= children.walk().whereType<SearchResultNode>().length;
-    }
-  }
-  return limited;
-}
-
-final class _PortableSectionSearchSource extends DelegatingSearchSource {
-  _PortableSectionSearchSource({
-    required super.source,
-    required this.id,
-    required this.title,
-  });
-
-  final String id;
-  final String Function(SearchQueryContext query) title;
-  String _activeTitle = "";
-
-  @override
-  void initialize(SearchQueryContext context) {
-    _activeTitle = title(context);
-    super.initialize(context);
-  }
-
-  @override
-  void search(SearchQueryContext context) {
-    _activeTitle = title(context);
-    super.search(context);
-  }
-
-  @override
-  void onSnapshot(SearchSourceSnapshot snapshot) {
-    if (snapshot.nodes.isEmpty) {
-      emit(snapshot);
-      return;
-    }
-    emit(
-      snapshot.copyWith(
-        nodes: [
-          SearchNode.section(
-            id: id,
-            title: _activeTitle,
-            children: snapshot.nodes,
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 final class _PortableRealmSearchSource extends _PortableLeafSearchSource {

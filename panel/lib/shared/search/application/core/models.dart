@@ -376,7 +376,7 @@ abstract class SearchPreviewRequest with _$SearchPreviewRequest {
 
 /// Success or user visible failure from a preview request.
 @freezed
-abstract class SearchPreviewRequestResult with _$SearchPreviewRequestResult {
+sealed class SearchPreviewRequestResult with _$SearchPreviewRequestResult {
   const factory SearchPreviewRequestResult.data({required Object data}) =
       SearchPreviewRequestResultData;
 

@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'portable_search_payload.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -17,7 +17,7 @@ mixin _$PortableSearchPayload {
 
  skir.DataValue get selectedValue; String get providerPath; SearchQueryContext get query;
 /// Create a copy of PortableSearchPayload
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableSearchPayloadCopyWith<PortableSearchPayload> get copyWith => _$PortableSearchPayloadCopyWithImpl<PortableSearchPayload>(this as PortableSearchPayload, _$identity);
@@ -67,7 +67,7 @@ class _$PortableSearchPayloadCopyWithImpl<$Res>
   final $Res Function(PortableSearchPayload) _then;
 
 /// Create a copy of PortableSearchPayload
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? selectedValue = null,Object? providerPath = null,Object? query = null,}) {
   return _then(_self.copyWith(
 selectedValue: null == selectedValue ? _self.selectedValue : selectedValue // ignore: cast_nullable_to_non_nullable
@@ -77,7 +77,7 @@ as SearchQueryContext,
   ));
 }
 /// Create a copy of PortableSearchPayload
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $SearchQueryContextCopyWith<$Res> get query {
@@ -89,7 +89,7 @@ $SearchQueryContextCopyWith<$Res> get query {
 }
 
 
-/// Adds pattern-matching-related methods to [PortableSearchPayload].
+/// Adds pattern matching related methods to [PortableSearchPayload].
 extension PortableSearchPayloadPatterns on PortableSearchPayload {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -113,7 +113,7 @@ return custom(_that);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -176,7 +176,7 @@ return custom(_that.selectedValue,_that.providerPath,_that.query);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -234,7 +234,7 @@ class PortableMappedSearchPayload implements PortableSearchPayload {
 @override final  SearchQueryContext query;
 
 /// Create a copy of PortableSearchPayload
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableMappedSearchPayloadCopyWith<PortableMappedSearchPayload> get copyWith => _$PortableMappedSearchPayloadCopyWithImpl<PortableMappedSearchPayload>(this, _$identity);
@@ -281,7 +281,7 @@ class _$PortableMappedSearchPayloadCopyWithImpl<$Res>
   final $Res Function(PortableMappedSearchPayload) _then;
 
 /// Create a copy of PortableSearchPayload
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? sourceValue = null,Object? selectedValue = null,Object? mapping = null,Object? providerPath = null,Object? distinctKey = null,Object? query = null,}) {
   return _then(PortableMappedSearchPayload(
 sourceValue: null == sourceValue ? _self.sourceValue : sourceValue // ignore: cast_nullable_to_non_nullable
@@ -295,7 +295,7 @@ as SearchQueryContext,
 }
 
 /// Create a copy of PortableSearchPayload
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $SearchQueryContextCopyWith<$Res> get query {
@@ -318,7 +318,7 @@ class PortableCustomSearchPayload implements PortableSearchPayload {
 @override final  SearchQueryContext query;
 
 /// Create a copy of PortableSearchPayload
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableCustomSearchPayloadCopyWith<PortableCustomSearchPayload> get copyWith => _$PortableCustomSearchPayloadCopyWithImpl<PortableCustomSearchPayload>(this, _$identity);
@@ -365,7 +365,7 @@ class _$PortableCustomSearchPayloadCopyWithImpl<$Res>
   final $Res Function(PortableCustomSearchPayload) _then;
 
 /// Create a copy of PortableSearchPayload
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? selectedValue = null,Object? providerPath = null,Object? query = null,}) {
   return _then(PortableCustomSearchPayload(
 selectedValue: null == selectedValue ? _self.selectedValue : selectedValue // ignore: cast_nullable_to_non_nullable
@@ -376,7 +376,7 @@ as SearchQueryContext,
 }
 
 /// Create a copy of PortableSearchPayload
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $SearchQueryContextCopyWith<$Res> get query {
@@ -417,7 +417,7 @@ $PortableSearchSelectionResultCopyWith(PortableSearchSelectionResult _, $Res Fun
 }
 
 
-/// Adds pattern-matching-related methods to [PortableSearchSelectionResult].
+/// Adds pattern matching related methods to [PortableSearchSelectionResult].
 extension PortableSearchSelectionResultPatterns on PortableSearchSelectionResult {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -441,7 +441,7 @@ return rejected(_that);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -504,7 +504,7 @@ return rejected(_that.message);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -557,7 +557,7 @@ class PortableSearchSelectionApplied implements PortableSearchSelectionResult {
  final  bool added;
 
 /// Create a copy of PortableSearchSelectionResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableSearchSelectionAppliedCopyWith<PortableSearchSelectionApplied> get copyWith => _$PortableSearchSelectionAppliedCopyWithImpl<PortableSearchSelectionApplied>(this, _$identity);
@@ -604,7 +604,7 @@ class _$PortableSearchSelectionAppliedCopyWithImpl<$Res>
   final $Res Function(PortableSearchSelectionApplied) _then;
 
 /// Create a copy of PortableSearchSelectionResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? added = null,}) {
   return _then(PortableSearchSelectionApplied(
 added: null == added ? _self.added : added // ignore: cast_nullable_to_non_nullable
@@ -625,7 +625,7 @@ class PortableSearchSelectionRejected implements PortableSearchSelectionResult {
  final  String message;
 
 /// Create a copy of PortableSearchSelectionResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableSearchSelectionRejectedCopyWith<PortableSearchSelectionRejected> get copyWith => _$PortableSearchSelectionRejectedCopyWithImpl<PortableSearchSelectionRejected>(this, _$identity);
@@ -672,7 +672,7 @@ class _$PortableSearchSelectionRejectedCopyWithImpl<$Res>
   final $Res Function(PortableSearchSelectionRejected) _then;
 
 /// Create a copy of PortableSearchSelectionResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
   return _then(PortableSearchSelectionRejected(
 null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable

@@ -75,7 +75,6 @@ class SearchPreview extends HookConsumerWidget {
               message: message,
             ),
           ),
-          SearchPreviewRequestResult() => throw UnimplementedError(),
         };
       },
     );
