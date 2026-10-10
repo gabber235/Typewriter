@@ -17,8 +17,16 @@ import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.validate
+import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.ksp.toTypeName
 import com.typewritermc.capability.codegen.CapabilityProviderProcessor
+import com.typewritermc.codegen.TypeParameterBindings
+import com.typewritermc.codegen.appliedUseCode
+import com.typewritermc.codegen.completeUseCode
+import com.typewritermc.codegen.kotlinCode
+import com.typewritermc.codegen.kotlinLiteral
+import com.typewritermc.codegen.parameterKeys
+import com.typewritermc.codegen.portableScalarKind
 import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.configuration.RepresentationKind
@@ -174,9 +182,9 @@ package $packageName
 object $objectName : com.typewritermc.discovery.GeneratedResourceProvider {
     override val definition: com.typewritermc.authoring.AuthoringResourceDefinition =
         com.typewritermc.authoring.AuthoringResourceDefinition(
-            id = com.typewritermc.authoring.ResourceDefinitionId(${id.kotlinString()}),
-            root = ${root.typeDefinitionIdentity().code()},
-            navigationHandler = ${navigation.kotlinString()},
+            id = com.typewritermc.authoring.ResourceDefinitionId(${id.kotlinLiteral()}),
+            root = ${root.typeDefinitionIdentity().kotlinCode()},
+            navigationHandler = ${navigation.kotlinLiteral()},
         )
 }
 """.trimStart()
@@ -291,14 +299,14 @@ object $generatedName : com.typewritermc.discovery.GeneratedRelationProvider {
         first = com.typewritermc.types.EndpointDefinition(
             id = id.endpointId(com.typewritermc.types.EndpointSlot.First),
             slot = com.typewritermc.types.EndpointSlot.First,
-            resource = ${first.resourceType.endpointResourceTemplate().templateCode()},
+            resource = ${first.resourceType.endpointResourceTemplate().kotlinCode()},
             cardinality = com.typewritermc.types.EndpointCardinality.${first.cardinality},
             onDelete = com.typewritermc.types.RelationDeletePolicy.${first.deletion},
         ),
         second = com.typewritermc.types.EndpointDefinition(
             id = id.endpointId(com.typewritermc.types.EndpointSlot.Second),
             slot = com.typewritermc.types.EndpointSlot.Second,
-            resource = ${second.resourceType.endpointResourceTemplate().templateCode()},
+            resource = ${second.resourceType.endpointResourceTemplate().kotlinCode()},
             cardinality = com.typewritermc.types.EndpointCardinality.${second.cardinality},
             onDelete = com.typewritermc.types.RelationDeletePolicy.${second.deletion},
         ),
@@ -416,7 +424,7 @@ object $generatedName : com.typewritermc.discovery.GeneratedRelationProvider {
 package $packageName
 
 object $objectName : com.typewritermc.discovery.GeneratedTypeProvider {
-    override val definition: com.typewritermc.types.TypeDefinition = ${definition.code()}
+    override val definition: com.typewritermc.types.TypeDefinition = ${definition.kotlinCode()}
 }
 """.trimStart()
         codeGenerator
@@ -548,16 +556,16 @@ object $objectName : com.typewritermc.discovery.GeneratedEndpointBindingsProvide
             (typeParameters + typeParameters.indices.map { "D$it" })
                 .joinToString(prefix = "<", postfix = ">")
         val ownerType = "$name$starArguments"
-        val definition = definitionId.code()
+        val definition = definitionId.kotlinCode()
         val rootTemplate =
             TypeTemplate
                 .Named(
                     definitionId,
                     typeDefinition.parameters.map { TypeTemplate.Parameter(it.key) },
-                ).templateCode()
+                ).kotlinCode()
         val rootConfigurationExpected =
             when (val representation = typeDefinition.representation) {
-                is RepresentationTemplate.Scalar -> TypeTemplate.Scalar(representation.kind).templateCode()
+                is RepresentationTemplate.Scalar -> TypeTemplate.Scalar(representation.kind).kotlinCode()
                 else -> rootTemplate
             }
         val resource = declaration.getAllSuperTypes().any { it.declaration.qualifiedName?.asString() == RESOURCE_TYPE }
@@ -668,7 +676,7 @@ object $objectName : com.typewritermc.discovery.GeneratedEndpointBindingsProvide
                 val scope = configurationScope(field.template, property?.type?.resolve())
                 val kind = representationKind(field.template, property?.type?.resolve())
                 val pattern = fieldPattern(field.name)
-                val expected = configurationExpectedTemplate(field.template, property?.type?.resolve()).templateCode()
+                val expected = configurationExpectedTemplate(field.template, property?.type?.resolve()).kotlinCode()
                 val scopeClass = configurationScopeClass(field.template, property?.type?.resolve())
                 val nested = configurationNestedScopes(field.template, property?.type?.resolve())
                 val expressions = expressionScopeClass(field.template, property?.type?.resolve())
@@ -789,14 +797,14 @@ ${exposedFields.joinToString("\n") { field ->
             if (field.template.containsParameter()) {
                 "    val ${field.sourceName} = com.typewritermc.authoring.GenericField<$ownerType>($definition, ${fieldPath(
                     field.name,
-                )}, ${field.template.templateCode()})"
+                )}, ${field.template.kotlinCode()})"
             } else {
                 val property = properties[field.sourceName]
                 val valueType =
                     property?.type?.let { it.resolve().sourceType(it.explicitNullable) } ?: "com.typewritermc.authoring.PortableValue"
                 "    val ${field.sourceName} = com.typewritermc.authoring.typedPath<$ownerType, $valueType>($definition, ${fieldPath(
                     field.name,
-                )}, ${field.template.code()})"
+                )}, ${field.template.completeUseCode()})"
             }
         }}
 }
@@ -994,7 +1002,7 @@ class ${name}ExactDraftType$exactDraftParameters(
 
 object ${name}Definition : com.typewritermc.discovery.GeneratedTypeProvider {
     val id: com.typewritermc.types.TypeDefinitionId = $definition
-    val declaration: com.typewritermc.types.TypeDefinition = ${typeDefinition.code()}
+    val declaration: com.typewritermc.types.TypeDefinition = ${typeDefinition.kotlinCode()}
     override val definition: com.typewritermc.types.TypeDefinition get() = declaration
     override val display: com.typewritermc.types.TypeDisplay? = $display
     fun applied(arguments: List<com.typewritermc.types.TypeUse> = emptyList()): com.typewritermc.types.TypeUse.Named {
@@ -1017,8 +1025,8 @@ $nativeFactory
         if (!declaration.supportsNativeBinding()) return ""
         val name = declaration.generatedTypeName()
         val nativeType = declaration.nativeAppliedType()
-        val provider = "com.typewritermc.authoring.NativeBindingId(${(declaration.qualifiedName?.asString() ?: name).kotlinString()})"
-        val signature = (declaration.qualifiedName?.asString() ?: name).kotlinString()
+        val provider = "com.typewritermc.authoring.NativeBindingId(${(declaration.qualifiedName?.asString() ?: name).kotlinLiteral()})"
+        val signature = (declaration.qualifiedName?.asString() ?: name).kotlinLiteral()
         val opaqueArguments =
             declaration.typeParameters
                 .mapIndexedNotNull { index, parameter ->
@@ -1060,12 +1068,12 @@ $nativeFactory
                     val encodeCases =
                         cases.joinToString("\n") { case ->
                             val key = case.serialName ?: case.simpleName.asString()
-                            "                $name.${case.simpleName.asString()} -> ${key.kotlinString()}"
+                            "                $name.${case.simpleName.asString()} -> ${key.kotlinLiteral()}"
                         }
                     val decodeCases =
                         cases.joinToString("\n") { case ->
                             val key = case.serialName ?: case.simpleName.asString()
-                            "                ${key.kotlinString()} -> $name.${case.simpleName.asString()}"
+                            "                ${key.kotlinLiteral()} -> $name.${case.simpleName.asString()}"
                         }
                     """com.typewritermc.types.GeneratedEnumNativeBinding<$name>(
             checked = actual,
@@ -1107,7 +1115,7 @@ $decodeCases
             provider = provider,
             signature = $signature,
             nativeClass = $name::class,
-            representation = arguments.resolver.bind(com.typewritermc.types.TypeUse.Scalar(${kind.code()})),
+            representation = arguments.resolver.bind(com.typewritermc.types.TypeUse.Scalar(${kind.kotlinCode()})),
             unwrap = { value -> value.${field.sourceName} },
             construct = { value -> $name(value as $nativeRepresentation) },
         )"""
@@ -1118,7 +1126,7 @@ $decodeCases
                         fields.mapNotNull { field ->
                             val property = properties[field.sourceName] ?: return@mapNotNull null
                             val fieldType = property.type.resolve().nativeType(declaration)
-                            val use = field.template.nativeAppliedCode(definition.id)
+                            val use = field.template.generatedNativeAppliedCode(definition.id).toString()
                             NativeFactoryField(
                                 field.name,
                                 field.sourceName,
@@ -1130,12 +1138,12 @@ $decodeCases
                     val fieldBindings =
                         nativeFields.joinToString(",\n") { field ->
                             "                com.typewritermc.types.GeneratedNativeField(" +
-                                "${field.name.kotlinString()}, arguments.resolver.bind(${field.use}), " +
+                                "${field.name.kotlinLiteral()}, arguments.resolver.bind(${field.use}), " +
                                 "{ value -> value.${field.propertyName} })"
                         }
                     val constructor =
                         nativeFields.joinToString(",\n") { field ->
-                            "                ${field.propertyName} = values.getValue(${field.name.kotlinString()}) as ${field.nativeType}"
+                            "                ${field.propertyName} = values.getValue(${field.name.kotlinLiteral()}) as ${field.nativeType}"
                         }
                     """com.typewritermc.types.GeneratedRecordNativeBinding<$nativeType>(
             checked = actual,
@@ -1172,7 +1180,7 @@ $constructor,
 $constructionPlan
 
 object ${name}NativeBindingFactory : com.typewritermc.types.NativeBindingFactory {
-    override val definition: com.typewritermc.types.TypeDefinitionId = ${definition.id.code()}
+    override val definition: com.typewritermc.types.TypeDefinitionId = ${definition.id.kotlinCode()}
     override val provider: com.typewritermc.authoring.NativeBindingId = $provider
     override val nativeClass: kotlin.reflect.KClass<*> = $name::class
     $constructionPlanProperty
@@ -1198,21 +1206,21 @@ object ${name}NativeBindingFactory : com.typewritermc.types.NativeBindingFactory
         val defaulted = fields.filter(OwnedFieldDeclaration::hasConstructorDefault)
         val required = fields.filterNot(OwnedFieldDeclaration::hasConstructorDefault)
         val ownerCode = { field: OwnedFieldDeclaration ->
-            "com.typewritermc.types.FieldOwner(${field.owner.code()}, ${field.name.kotlinString()})"
+            "com.typewritermc.types.FieldOwner(${field.owner.kotlinCode()}, ${field.name.kotlinLiteral()})"
         }
         val missingOwners = required.joinToString { ownerCode(it) }
         val requiredConstructor =
             required.joinToString(",\n") { field ->
                 val property = properties.getValue(field.sourceName)
                 val nativeType = property.type.resolve().nativeType(declaration)
-                val use = field.template.nativeAppliedCode(definition.id)
+                val use = field.template.generatedNativeAppliedCode(definition.id)
                 "                ${field.sourceName} = arguments.resolver.bind($use).decode(requiredInputs.required.getValue(${ownerCode(
                     field,
                 )})) as $nativeType"
             }
         val captured =
             defaulted.joinToString(",\n") { field ->
-                val use = field.template.nativeAppliedCode(definition.id)
+                val use = field.template.generatedNativeAppliedCode(definition.id)
                 "                ${ownerCode(field)} to arguments.resolver.bind($use).encodeGeneratedDefault(sampled.${field.sourceName})"
             }
         val constructorType = declaration.nativeAppliedType()
@@ -1577,7 +1585,7 @@ private fun KSClassDeclaration.generatedTypeName(): String =
 
 private fun KSClassDeclaration.identityCode(): String {
     val definition = typeDefinitionIdentity()
-    return "com.typewritermc.types.TypeTemplate.Named(${definition.code()})"
+    return "com.typewritermc.types.TypeTemplate.Named(${definition.kotlinCode()})"
 }
 
 private fun KSType.endpointResourceTemplate(): TypeTemplate.Named =
@@ -1598,7 +1606,7 @@ private fun KSType.endpointTemplate(): TypeTemplate {
     val declaration =
         declaration as? KSClassDeclaration
             ?: error("Relation endpoint arguments must use class or parameter types.")
-    scalarKind(declaration.qualifiedName?.asString())?.let { scalar ->
+    portableScalarKind()?.let { scalar ->
         return TypeTemplate.Scalar(scalar).withNullability(this)
     }
     val qualified = declaration.qualifiedName?.asString()
@@ -1650,35 +1658,8 @@ private fun KSClassDeclaration.supportsNativeBinding(): Boolean =
 private fun KSClassDeclaration.valueClassScalarKind(): ScalarKind? {
     if (Modifier.VALUE !in modifiers && annotation(JVM_INLINE_ANNOTATION) == null) return null
     val parameter = primaryConstructor?.parameters?.singleOrNull() ?: return null
-    return scalarKind(
-        parameter.type
-            .resolve()
-            .declaration.qualifiedName
-            ?.asString(),
-    )
+    return parameter.type.resolve().portableScalarKind()
 }
-
-private fun scalarKind(qualified: String?): ScalarKind? =
-    when (qualified) {
-        "kotlin.Unit" -> ScalarKind.Unit
-        "kotlin.Boolean" -> ScalarKind.Boolean
-        "kotlin.String", "kotlin.Char" -> ScalarKind.Text
-        "kotlin.ByteArray" -> ScalarKind.Bytes
-        "kotlin.Byte" -> ScalarKind.Integer(com.typewritermc.types.IntegerWidth.SIGNED_8)
-        "kotlin.Short" -> ScalarKind.Integer(com.typewritermc.types.IntegerWidth.SIGNED_16)
-        "kotlin.Int" -> ScalarKind.Integer(com.typewritermc.types.IntegerWidth.SIGNED_32)
-        "kotlin.Long", "java.math.BigInteger" -> ScalarKind.Integer(com.typewritermc.types.IntegerWidth.SIGNED_64)
-        "kotlin.UByte" -> ScalarKind.Integer(com.typewritermc.types.IntegerWidth.UNSIGNED_8)
-        "kotlin.UShort" -> ScalarKind.Integer(com.typewritermc.types.IntegerWidth.UNSIGNED_16)
-        "kotlin.UInt" -> ScalarKind.Integer(com.typewritermc.types.IntegerWidth.UNSIGNED_32)
-        "kotlin.ULong" -> ScalarKind.Integer(com.typewritermc.types.IntegerWidth.UNSIGNED_64)
-        "kotlin.Float" -> ScalarKind.Float(com.typewritermc.types.FloatWidth.FLOAT_32)
-        "kotlin.Double" -> ScalarKind.Float(com.typewritermc.types.FloatWidth.FLOAT_64)
-        "java.math.BigDecimal" -> ScalarKind.Decimal
-        "kotlin.time.Instant", "java.time.Instant" -> ScalarKind.Timestamp
-        "kotlin.time.Duration", "java.time.Duration" -> ScalarKind.Duration
-        else -> null
-    }
 
 private fun KSClassDeclaration.valueClassRepresentationType(): KSType? =
     primaryConstructor
@@ -1749,10 +1730,10 @@ private fun KSClassDeclaration.typeDisplayCode(): String {
     val icon = annotation.argument("icon") as? String ?: return "null"
     val color = annotation.argument("color") as? String ?: return "null"
     return "com.typewritermc.types.TypeDisplay(" +
-        "name = ${name.kotlinString()}, " +
-        "description = ${description.kotlinString()}, " +
-        "icon = ${icon.kotlinString()}, " +
-        "color = ${color.kotlinString()}" +
+        "name = ${name.kotlinLiteral()}, " +
+        "description = ${description.kotlinLiteral()}, " +
+        "icon = ${icon.kotlinLiteral()}, " +
+        "color = ${color.kotlinLiteral()}" +
         ")"
 }
 
@@ -2273,7 +2254,7 @@ private fun nestedConfigurationDescriptor(
     type: KSType?,
 ): String {
     val kind = representationKind(template, type)
-    val expected = configurationExpectedTemplate(template, type).templateCode()
+    val expected = configurationExpectedTemplate(template, type).kotlinCode()
     val expressions = expressionScopeClass(template, type)
     val scope =
         if (template is TypeTemplate.Named && type != null &&
@@ -2300,7 +2281,7 @@ private fun configurationScopeCreation(
     val scopeClass = configurationScopeClass(template, type)
     val kind = representationKind(template, type)
     val nested = configurationNestedScopes(template, type)
-    val expected = configurationExpectedTemplate(template, type).templateCode()
+    val expected = configurationExpectedTemplate(template, type).kotlinCode()
     val expressions = expressionScopeClass(template, type)
     return "$collection.field(com.typewritermc.configuration.RelativeFieldPattern(), " +
         "com.typewritermc.configuration.RepresentationKind.$kind, " +
@@ -2812,13 +2793,13 @@ private fun draftProjectionCode(
 
         is TypeTemplate.Scalar -> {
             "com.typewritermc.authoring.nativeReadProjection<${configurationValueType(template, type)}>(" +
-                "${template.appliedCode(owner, parameters)})"
+                "${template.generatedAppliedCode(owner, parameters)})"
         }
 
         is TypeTemplate.Named -> {
             val declaration = type?.declaration as? KSClassDeclaration
             val qualified = declaration?.qualifiedName?.asString()
-            val expected = template.appliedCode(owner, parameters)
+            val expected = template.generatedAppliedCode(owner, parameters)
             val scalar = declaration?.valueClassScalarKind()
             when {
                 declaration?.annotation(TYPEWRITER_STRING_ANNOTATION) != null -> {
@@ -2829,7 +2810,7 @@ private fun draftProjectionCode(
                 scalar != null -> {
                     val native = declaration.valueClassRepresentationType()?.sourceType() ?: "kotlin.Any"
                     "com.typewritermc.authoring.representationReadProjection<$native>(" +
-                        "$expected, com.typewritermc.types.TypeUse.Scalar(${scalar.code()}))"
+                        "$expected, com.typewritermc.types.TypeUse.Scalar(${scalar.kotlinCode()}))"
                 }
 
                 qualified in LIST_TYPES -> {
@@ -2972,79 +2953,13 @@ private fun draftType(
     return result + if (nullable) "?" else ""
 }
 
-private fun TypeDefinitionId.code(): String =
-    when (val id = type) {
-        is TypeId.Declared -> {
-            "com.typewritermc.types.TypeDefinitionId(com.typewritermc.types.TypeId.Declared(" +
-                "com.typewritermc.types.DeclaredTypeId.parse(\"${id.id}\")), $revision)"
-        }
-
-        is TypeId.Qualified -> {
-            "com.typewritermc.types.TypeDefinitionId(com.typewritermc.types.TypeId.Qualified(" +
-                "\"${id.namespace}\", \"${id.name}\"), $revision)"
-        }
-    }
-
-private fun TypeDefinition.code(): String =
-    "com.typewritermc.types.TypeDefinition(" +
-        "id = ${id.code()}, " +
-        "parameters = listOf(${parameters.joinToString { it.code() }}), " +
-        "representation = ${representation.code()}, " +
-        "parents = listOf(${parents.joinToString { it.templateCode() }}))"
-
-private fun TypeParameter.code(): String =
-    "com.typewritermc.types.TypeParameter(" +
-        "key = com.typewritermc.types.ParameterKey(${key.owner.code()}, ${key.index}), " +
-        "name = ${name.kotlinString()}, " +
-        "bounds = listOf(${bounds.joinToString { it.templateCode() }}))"
-
-private fun RepresentationTemplate.code(): String =
-    when (this) {
-        is RepresentationTemplate.Scalar -> {
-            "com.typewritermc.types.RepresentationTemplate.Scalar(${kind.code()})"
-        }
-
-        is RepresentationTemplate.Record -> {
-            "com.typewritermc.types.RepresentationTemplate.Record(" +
-                "fields = listOf(${fields.joinToString { it.code() }}), abstract = $abstract)"
-        }
-
-        is RepresentationTemplate.Sequence -> {
-            "com.typewritermc.types.RepresentationTemplate.Sequence(" +
-                "${item.templateCode()}, com.typewritermc.types.CollectionKind.${kind.name})"
-        }
-
-        is RepresentationTemplate.Mapping -> {
-            "com.typewritermc.types.RepresentationTemplate.Mapping(${key.templateCode()}, ${value.templateCode()})"
-        }
-
-        is RepresentationTemplate.Enumeration -> {
-            "com.typewritermc.types.RepresentationTemplate.Enumeration(" +
-                "listOf(${cases.joinToString { "com.typewritermc.types.EnumVariant(${it.key.kotlinString()})" }}))"
-        }
-
-        is RepresentationTemplate.Link -> {
-            "com.typewritermc.types.RepresentationTemplate.Link(" +
-                "com.typewritermc.types.EndpointId(${endpoint.value.kotlinString()}), ${target.templateCode()})"
-        }
-    }
-
-private fun FieldDeclaration.code(): String =
-    "com.typewritermc.types.FieldDeclaration(" +
-        "owner = com.typewritermc.types.FieldOwner(${owner.definition.code()}, ${owner.name.kotlinString()}), " +
-        "type = ${type.templateCode()}, " +
-        "overrides = listOf(${overrides.joinToString {
-            "com.typewritermc.types.FieldOwner(${it.definition.code()}, ${it.name.kotlinString()})"
-        }}), " +
-        "hasConstructorDefault = $hasConstructorDefault)"
-
 private fun EndpointBindingTemplate.code(): String =
     "com.typewritermc.types.EndpointBindingTemplate(" +
-        "endpoint = com.typewritermc.types.EndpointId(${endpoint.value.kotlinString()}), " +
-        "containingResource = ${containingResource.templateCode()}, " +
-        "valueOwner = ${valueOwner.code()}, " +
+        "endpoint = com.typewritermc.types.EndpointId(${endpoint.value.kotlinLiteral()}), " +
+        "containingResource = ${containingResource.kotlinCode()}, " +
+        "valueOwner = ${valueOwner.kotlinCode()}, " +
         "relativePath = ${relativePath.code()}, " +
-        "target = ${target.templateCode()}, " +
+        "target = ${target.kotlinCode()}, " +
         "containsCollection = $containsCollection)"
 
 private fun RelativeFieldPattern.code(): String =
@@ -3053,7 +2968,7 @@ private fun RelativeFieldPattern.code(): String =
 private fun FieldPatternSegment.code(): String =
     when (this) {
         is FieldPatternSegment.Field -> {
-            "com.typewritermc.configuration.FieldPatternSegment.Field(${name.kotlinString()})"
+            "com.typewritermc.configuration.FieldPatternSegment.Field(${name.kotlinLiteral()})"
         }
 
         FieldPatternSegment.Items -> {
@@ -3069,112 +2984,29 @@ private fun FieldPatternSegment.code(): String =
         }
     }
 
-private fun String.kotlinString(): String =
-    buildString {
-        append('"')
-        this@kotlinString.forEach { character ->
-            when (character) {
-                '\\' -> append("\\\\")
-                '"' -> append("\\\"")
-                '\n' -> append("\\n")
-                '\r' -> append("\\r")
-                '\t' -> append("\\t")
-                else -> append(character)
-            }
-        }
-        append('"')
-    }
-
-private fun TypeUse.code(): String =
-    when (this) {
-        is TypeUse.Named -> "com.typewritermc.types.TypeUse.Named(${definition.code()}, listOf(${arguments.joinToString { it.code() }}))"
-        is TypeUse.Nullable -> "com.typewritermc.types.TypeUse.Nullable(${value.code()})"
-        is TypeUse.Scalar -> "com.typewritermc.types.TypeUse.Scalar(${kind.code()})"
-    }
-
-private fun TypeTemplate.code(): String =
-    when (this) {
-        is TypeTemplate.Parameter -> error("A free parameter does not form a complete type use")
-
-        is TypeTemplate.Named -> "com.typewritermc.types.TypeUse.Named(${definition.code()}, listOf(${arguments.joinToString {
-            it.code()
-        }}))"
-
-        is TypeTemplate.Nullable -> "com.typewritermc.types.TypeUse.Nullable(${value.code()})"
-
-        is TypeTemplate.Scalar -> "com.typewritermc.types.TypeUse.Scalar(${kind.code()})"
-    }
-
-private fun TypeTemplate.appliedCode(
+private fun TypeTemplate.generatedAppliedCode(
     owner: TypeDefinitionId,
     parameters: List<String>,
-): String =
-    when (this) {
-        is TypeTemplate.Parameter -> {
-            require(key.owner == owner)
-            "argument${key.index}.expected"
-        }
+): CodeBlock {
+    val bindings =
+        TypeParameterBindings.from(
+            parameters.indices.associate { index ->
+                ParameterKey(owner, index) to CodeBlock.of("argument%L.expected", index)
+            },
+        )
+    return with(bindings) { appliedUseCode() }
+}
 
-        is TypeTemplate.Named -> {
-            "com.typewritermc.types.TypeUse.Named(${definition.code()}, listOf(${arguments.joinToString {
-                it.appliedCode(
-                    owner,
-                    parameters,
-                )
-            }}))"
-        }
-
-        is TypeTemplate.Nullable -> {
-            "com.typewritermc.types.TypeUse.Nullable(${value.appliedCode(owner, parameters)})"
-        }
-
-        is TypeTemplate.Scalar -> {
-            "com.typewritermc.types.TypeUse.Scalar(${kind.code()})"
-        }
-    }
-
-private fun TypeTemplate.nativeAppliedCode(owner: TypeDefinitionId): String =
-    when (this) {
-        is TypeTemplate.Parameter -> {
-            require(key.owner == owner)
-            "arguments.portable[${key.index}]"
-        }
-
-        is TypeTemplate.Named -> {
-            "com.typewritermc.types.TypeUse.Named(${definition.code()}, listOf(${arguments.joinToString { it.nativeAppliedCode(owner) }}))"
-        }
-
-        is TypeTemplate.Nullable -> {
-            "com.typewritermc.types.TypeUse.Nullable(${value.nativeAppliedCode(owner)})"
-        }
-
-        is TypeTemplate.Scalar -> {
-            "com.typewritermc.types.TypeUse.Scalar(${kind.code()})"
-        }
-    }
-
-private fun TypeTemplate.templateCode(): String =
-    when (this) {
-        is TypeTemplate.Parameter -> {
-            "com.typewritermc.types.TypeTemplate.Parameter(" +
-                "com.typewritermc.types.ParameterKey(${key.owner.code()}, ${key.index}))"
-        }
-
-        is TypeTemplate.Named -> {
-            "com.typewritermc.types.TypeTemplate.Named(${definition.code()}, listOf(${arguments.joinToString {
-                it
-                    .templateCode()
-            }}))"
-        }
-
-        is TypeTemplate.Nullable -> {
-            "com.typewritermc.types.TypeTemplate.Nullable(${value.templateCode()})"
-        }
-
-        is TypeTemplate.Scalar -> {
-            "com.typewritermc.types.TypeTemplate.Scalar(${kind.code()})"
-        }
-    }
+private fun TypeTemplate.generatedNativeAppliedCode(owner: TypeDefinitionId): CodeBlock {
+    val bindings =
+        TypeParameterBindings.from(
+            parameterKeys().associateWith { key ->
+                require(key.owner == owner)
+                CodeBlock.of("arguments.portable[%L]", key.index)
+            },
+        )
+    return with(bindings) { appliedUseCode() }
+}
 
 private fun TypeTemplate.containsParameter(): Boolean =
     when (this) {
@@ -3184,21 +3016,8 @@ private fun TypeTemplate.containsParameter(): Boolean =
         is TypeTemplate.Scalar -> false
     }
 
-private fun ScalarKind.code(): String =
-    when (this) {
-        ScalarKind.Unit -> "com.typewritermc.types.ScalarKind.Unit"
-        ScalarKind.Boolean -> "com.typewritermc.types.ScalarKind.Boolean"
-        ScalarKind.Text -> "com.typewritermc.types.ScalarKind.Text"
-        ScalarKind.Bytes -> "com.typewritermc.types.ScalarKind.Bytes"
-        is ScalarKind.Integer -> "com.typewritermc.types.ScalarKind.Integer(com.typewritermc.types.IntegerWidth.${width.name})"
-        is ScalarKind.Float -> "com.typewritermc.types.ScalarKind.Float(com.typewritermc.types.FloatWidth.${width.name})"
-        ScalarKind.Decimal -> "com.typewritermc.types.ScalarKind.Decimal"
-        ScalarKind.Timestamp -> "com.typewritermc.types.ScalarKind.Timestamp"
-        ScalarKind.Duration -> "com.typewritermc.types.ScalarKind.Duration"
-    }
-
 private fun fieldPath(name: String): String =
-    "com.typewritermc.authoring.ValuePath(listOf(com.typewritermc.authoring.PathSegment.Field(\"$name\")))"
+    "com.typewritermc.authoring.ValuePath(listOf(com.typewritermc.authoring.PathSegment.Field(${name.kotlinLiteral()})))"
 
 private fun draftEditMethods(
     field: OwnedFieldDeclaration,
@@ -3211,7 +3030,7 @@ private fun draftEditMethods(
             ?.type
             ?.let { reference -> reference.resolve().sourceType(reference.explicitNullable) }
             ?: "com.typewritermc.authoring.PortableValue"
-    val expected = field.template.appliedCode(owner, parameters)
+    val expected = field.template.generatedAppliedCode(owner, parameters)
     val suffix = field.sourceName.replaceFirstChar(Char::uppercaseChar)
     return """
     @OptIn(com.typewritermc.authoring.GeneratedEditApi::class)

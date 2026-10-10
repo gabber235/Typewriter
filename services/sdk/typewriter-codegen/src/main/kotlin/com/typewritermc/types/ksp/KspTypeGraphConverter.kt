@@ -9,13 +9,12 @@ import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.Modifier
+import com.typewritermc.codegen.portableScalarKind
 import com.typewritermc.types.DeclaredTypeId
 import com.typewritermc.types.EndpointId
 import com.typewritermc.types.EnumVariant
 import com.typewritermc.types.FieldDeclaration
 import com.typewritermc.types.FieldOwner
-import com.typewritermc.types.FloatWidth
-import com.typewritermc.types.IntegerWidth
 import com.typewritermc.types.ParameterKey
 import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.ScalarKind
@@ -165,7 +164,7 @@ class KspTypeGraphConverter(
         owner: KSClassDeclaration?,
         path: List<String>,
     ): TypeTemplate? {
-        scalar(declaration.qualifiedName?.asString())?.let { return TypeTemplate.Scalar(it) }
+        type.portableScalarKind()?.let { return TypeTemplate.Scalar(it) }
         val qualified = declaration.qualifiedName?.asString()
         if (qualified == REFERENCE_TYPE) return referenceTemplate(type, owner, path)
         if (qualified in LIST_TYPES || qualified in SET_TYPES || qualified in MAP_TYPES) {
@@ -308,12 +307,7 @@ class KspTypeGraphConverter(
     private fun KSClassDeclaration.valueClassScalarKind(): ScalarKind? {
         if (Modifier.VALUE !in modifiers && !hasAnnotation(JVM_INLINE_ANNOTATION)) return null
         val parameter = primaryConstructor?.parameters?.singleOrNull() ?: return null
-        return scalar(
-            parameter.type
-                .resolve()
-                .declaration.qualifiedName
-                ?.asString(),
-        )
+        return parameter.type.resolve().portableScalarKind()
     }
 
     private fun ensureCollectionDefinition(qualified: String) {
@@ -401,28 +395,6 @@ private fun generatedEndpoint(declaration: KSClassDeclaration): EndpointId? {
             ?.lowercase() ?: return null
     return EndpointId("$relation:$slot")
 }
-
-private fun scalar(qualified: String?): ScalarKind? =
-    when (qualified) {
-        "kotlin.Unit" -> ScalarKind.Unit
-        "kotlin.Boolean" -> ScalarKind.Boolean
-        "kotlin.String", "kotlin.Char" -> ScalarKind.Text
-        "kotlin.ByteArray" -> ScalarKind.Bytes
-        "kotlin.Byte" -> ScalarKind.Integer(IntegerWidth.SIGNED_8)
-        "kotlin.Short" -> ScalarKind.Integer(IntegerWidth.SIGNED_16)
-        "kotlin.Int" -> ScalarKind.Integer(IntegerWidth.SIGNED_32)
-        "kotlin.Long", "java.math.BigInteger" -> ScalarKind.Integer(IntegerWidth.SIGNED_64)
-        "kotlin.UByte" -> ScalarKind.Integer(IntegerWidth.UNSIGNED_8)
-        "kotlin.UShort" -> ScalarKind.Integer(IntegerWidth.UNSIGNED_16)
-        "kotlin.UInt" -> ScalarKind.Integer(IntegerWidth.UNSIGNED_32)
-        "kotlin.ULong" -> ScalarKind.Integer(IntegerWidth.UNSIGNED_64)
-        "kotlin.Float" -> ScalarKind.Float(FloatWidth.FLOAT_32)
-        "kotlin.Double" -> ScalarKind.Float(FloatWidth.FLOAT_64)
-        "java.math.BigDecimal" -> ScalarKind.Decimal
-        "kotlin.time.Instant", "java.time.Instant" -> ScalarKind.Timestamp
-        "kotlin.time.Duration", "java.time.Duration" -> ScalarKind.Duration
-        else -> null
-    }
 
 private fun collectionIdentity(qualified: String): TypeDefinitionId =
     TypeDefinitionId(

@@ -9,7 +9,6 @@ import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.GeneratedProviderArtifact
-import com.typewritermc.discovery.GeneratedProviderInstantiator
 import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.discovery.GeneratedProviderLoader
 import com.typewritermc.discovery.assemble
@@ -204,11 +203,7 @@ fun main() {
                     GeneratedProviderKind.Configuration,
                     GeneratedProviderKind.Presentation,
                 ),
-            instantiator =
-                GeneratedProviderInstantiator.resolving { requested ->
-                    require(requested == PresentationRuntime::class.java)
-                    runtime
-                },
+            runtimeServices = mapOf(PresentationRuntime::class.java to runtime),
             parentClassLoader = FixtureParent(requireNotNull(Example::class.java.classLoader)),
         ).use { deployment ->
             val contributions = deployment.providers.contributions

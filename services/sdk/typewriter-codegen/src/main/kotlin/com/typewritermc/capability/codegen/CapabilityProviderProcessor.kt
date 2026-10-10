@@ -13,10 +13,8 @@ import com.google.devtools.ksp.validate
 import com.squareup.kotlinpoet.ksp.toTypeName
 import com.typewritermc.codegen.GeneratedProviderContribution
 import com.typewritermc.codegen.ProviderProcessingResult
-import com.typewritermc.types.DeclaredTypeId
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
+import com.typewritermc.codegen.kotlinCode
+import com.typewritermc.codegen.kotlinLiteral
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.ksp.KspTypeConversionResult
 import com.typewritermc.types.ksp.KspTypeGraphConverter
@@ -177,8 +175,8 @@ private data class CapabilityDeclaration(
     val source: KSFunctionDeclaration,
 ) {
     fun sourceCode(): String {
-        val requestUseCode = requestUse.code()
-        val resultUseCode = resultUse?.code()
+        val requestUseCode = requestUse.kotlinCode()
+        val resultUseCode = resultUse?.kotlinCode()
         val descriptor =
             when (kind) {
                 CapabilityKind.Search -> {
@@ -212,7 +210,7 @@ private data class CapabilityDeclaration(
                     "com.typewritermc.capability.RealmCommandCapabilityRef<$requestKotlinType>"
                 }
             }
-        val referenceId = "com.typewritermc.capability.CapabilityId(${id.kotlinString()})"
+        val referenceId = "com.typewritermc.capability.CapabilityId(${id.kotlinLiteral()})"
         val referenceValue =
             when (kind) {
                 CapabilityKind.Search -> {
@@ -287,7 +285,7 @@ import com.typewritermc.capability.mapValues
 val ${functionName}Capability: $referenceType = $referenceValue
 
 class $factoryName : com.typewritermc.discovery.GeneratedCapabilityProvider {
-    private val id = com.typewritermc.capability.CapabilityId(${id.kotlinString()})
+    private val id = com.typewritermc.capability.CapabilityId(${id.kotlinLiteral()})
     override val descriptor: com.typewritermc.capability.RealmCapabilityDescriptor = $descriptor
 
     override fun bind(
@@ -325,55 +323,6 @@ private fun KSAnnotated.hasAnnotation(qualifiedName: String): Boolean =
 private fun String.sha256(): String =
     MessageDigest.getInstance("SHA-256").digest(encodeToByteArray()).joinToString("") { byte ->
         "%02x".format(byte.toInt() and 0xff)
-    }
-
-private fun String.kotlinString(): String =
-    buildString {
-        append('"')
-        this@kotlinString.forEach { character ->
-            when (character) {
-                '\\' -> append("\\\\")
-                '"' -> append("\\\"")
-                '\n' -> append("\\n")
-                '\r' -> append("\\r")
-                '\t' -> append("\\t")
-                else -> append(character)
-            }
-        }
-        append('"')
-    }
-
-private fun TypeUse.code(): String =
-    when (this) {
-        is TypeUse.Named -> "com.typewritermc.types.TypeUse.Named(${definition.code()}, listOf(${arguments.joinToString { it.code() }}))"
-        is TypeUse.Nullable -> "com.typewritermc.types.TypeUse.Nullable(${value.code()})"
-        is TypeUse.Scalar -> "com.typewritermc.types.TypeUse.Scalar(${kind.code()})"
-    }
-
-private fun TypeDefinitionId.code(): String =
-    when (val identity = type) {
-        is TypeId.Declared -> {
-            "com.typewritermc.types.TypeDefinitionId(com.typewritermc.types.TypeId.Declared(" +
-                "com.typewritermc.types.DeclaredTypeId.parse(\"${identity.id}\")), $revision)"
-        }
-
-        is TypeId.Qualified -> {
-            "com.typewritermc.types.TypeDefinitionId(com.typewritermc.types.TypeId.Qualified(" +
-                "${identity.namespace.kotlinString()}, ${identity.name.kotlinString()}), $revision)"
-        }
-    }
-
-private fun ScalarKind.code(): String =
-    when (this) {
-        ScalarKind.Unit -> "com.typewritermc.types.ScalarKind.Unit"
-        ScalarKind.Boolean -> "com.typewritermc.types.ScalarKind.Boolean"
-        ScalarKind.Text -> "com.typewritermc.types.ScalarKind.Text"
-        ScalarKind.Bytes -> "com.typewritermc.types.ScalarKind.Bytes"
-        is ScalarKind.Integer -> "com.typewritermc.types.ScalarKind.Integer(com.typewritermc.types.IntegerWidth.${width.name})"
-        is ScalarKind.Float -> "com.typewritermc.types.ScalarKind.Float(com.typewritermc.types.FloatWidth.${width.name})"
-        ScalarKind.Decimal -> "com.typewritermc.types.ScalarKind.Decimal"
-        ScalarKind.Timestamp -> "com.typewritermc.types.ScalarKind.Timestamp"
-        ScalarKind.Duration -> "com.typewritermc.types.ScalarKind.Duration"
     }
 
 private val CAPABILITY_ANNOTATIONS = listOf(REALM_SEARCH_ANNOTATION, REALM_COMPUTATION_ANNOTATION, REALM_COMMAND_ANNOTATION)
