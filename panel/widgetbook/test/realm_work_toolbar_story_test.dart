@@ -67,14 +67,18 @@ void main() {
           _ => "Published",
         };
         expect(find.text(phase), findsOneWidget);
-        await tester.tap(find.text("Saved Page publication status (2 Pages)"));
+        await tester.tap(find.text("Saved compilation roots (2)"));
         await tester.pumpAndSettle();
         expect(
-          find.text("Welcome: Last published in publication:town"),
+          find.text(
+            "Welcome (typewriter.page): Last published in publication:town",
+          ),
           findsOneWidget,
         );
         expect(
-          find.text("Market: Not in the selected publication"),
+          find.text(
+            "Market (typewriter.page): Not in the selected publication",
+          ),
           findsOneWidget,
         );
         if (scenario == RealmWorkToolbarScenario.blocked) {

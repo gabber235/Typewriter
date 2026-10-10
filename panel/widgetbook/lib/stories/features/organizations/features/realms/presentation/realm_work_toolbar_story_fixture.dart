@@ -114,18 +114,36 @@ final class RealmWorkToolbarStoryRepository
 
   @override
   Future<List<skir.CompiledResourceStatus>> states(
-    List<skir.CompilationRoot> roots,
-  ) async => [
-    for (final root in roots)
-      skir.CompiledResourceStatus(
-        root: root,
-        state: root.resource == fixture.page
-            ? skir.CompiledResourceState.wrapActive(
-                skir.PublicationId(value: "publication:town"),
-              )
-            : skir.CompiledResourceState.notCompiled,
+    skir.CompilationStatusSelection selection,
+  ) async {
+    final allRoots = [
+      skir.CompilationRoot(
+        projection: skir.CompilationProjectionId(value: "typewriter.page"),
+        resource: fixture.page,
       ),
-  ];
+      skir.CompilationRoot(
+        projection: skir.CompilationProjectionId(value: "typewriter.page"),
+        resource: fixture.otherPage,
+      ),
+    ];
+    final roots = switch (selection) {
+      skir.CompilationStatusSelection_suppliedRootsWrapper(:final value) =>
+        value,
+      _ when selection == skir.CompilationStatusSelection.allRoots => allRoots,
+      _ => const <skir.CompilationRoot>[],
+    };
+    return [
+      for (final root in roots)
+        skir.CompiledResourceStatus(
+          root: root,
+          state: root.resource == fixture.page
+              ? skir.CompiledResourceState.wrapActive(
+                  skir.PublicationId(value: "publication:town"),
+                )
+              : skir.CompiledResourceState.notCompiled,
+        ),
+    ];
+  }
 
   @override
   PreparedCommit<skir.PublishAuthoringResponse> preparePublish() =>

@@ -23,27 +23,11 @@ final class RealmWorkToolbar extends HookConsumerWidget {
     );
     final view = publication.value;
     final saved = workspace.state.confirmed;
-    final roots = useMemoized(
-      () => [
-        if (saved != null)
-          for (final entry in saved.entries.values)
-            if (entry.definition == corePageResourceDefinition)
-              skir.CompilationRoot(
-                projection: skir.CompilationProjectionId(
-                  value: "typewriter.page",
-                ),
-                resource: entry.id,
-              ),
-      ],
-      [saved],
-    );
     final statuses = useFuture(
-      useMemoized(() => controller.states(roots), [
-        controller,
-        roots,
-        view?.report?.id,
-        view?.report?.state,
-      ]),
+      useMemoized(
+        () => controller.states(skir.CompilationStatusSelection.allRoots),
+        [controller, saved, view?.report?.id, view?.report?.state],
+      ),
     );
     return Material(
       child: Padding(
@@ -100,12 +84,10 @@ final class RealmWorkToolbar extends HookConsumerWidget {
                 ),
             ],
             if (statuses.hasError)
-              const Text("Selected publication status is unavailable"),
+              const Text("Saved compilation status is unavailable"),
             if (statuses.data case final values? when values.isNotEmpty)
               ExpansionTile(
-                title: Text(
-                  "Saved Page publication status (${values.length} Pages)",
-                ),
+                title: Text("Saved compilation roots (${values.length})"),
                 children: [
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxHeight: 200),
@@ -114,7 +96,7 @@ final class RealmWorkToolbar extends HookConsumerWidget {
                         children: [
                           for (final status in values)
                             Text(
-                              "${saved?.resource(status.root.resource)?.authoredField("name")?.authoredString ?? saved?.resource(status.root.resource)?.authoredField("title")?.authoredString ?? "Page ${status.root.resource.value}"}: ${status.state.selectedPublicationLabel}",
+                              "${saved?.resource(status.root.resource)?.authoredField("name")?.authoredString ?? saved?.resource(status.root.resource)?.authoredField("title")?.authoredString ?? status.root.resource.value} (${status.root.projection.value}): ${status.state.selectedPublicationLabel}",
                             ),
                         ],
                       ),
