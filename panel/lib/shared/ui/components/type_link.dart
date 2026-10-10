@@ -87,6 +87,20 @@ class TypeLink extends HookWidget {
 
     return FocusableActionDetector(
       enabled: clickable,
+      actions: {
+        ActivateIntent: CallbackAction<ActivateIntent>(
+          onInvoke: (_) {
+            if (clickable) unawaited(handleTap());
+            return null;
+          },
+        ),
+        ButtonActivateIntent: CallbackAction<ButtonActivateIntent>(
+          onInvoke: (_) {
+            if (clickable) unawaited(handleTap());
+            return null;
+          },
+        ),
+      },
       mouseCursor: clickable
           ? SystemMouseCursors.click
           : SystemMouseCursors.basic,
@@ -100,6 +114,7 @@ class TypeLink extends HookWidget {
           link: clickable,
           label: text,
           enabled: clickable,
+          onTap: clickable ? () => unawaited(handleTap()) : null,
           child: AnimatedDefaultTextStyle(
             duration: const Duration(milliseconds: 180),
             curve: Curves.fastEaseInToSlowEaseOut,
