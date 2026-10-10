@@ -6,13 +6,11 @@ import ch.qos.logback.classic.Level
 import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputToken
-import com.typewritermc.discovery.CapabilityOwnerResolver
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.GeneratedProviderArtifact
 import com.typewritermc.discovery.GeneratedProviderDeployment
-import com.typewritermc.discovery.GeneratedProviderInstantiator
 import com.typewritermc.discovery.GeneratedProviderLoader
 import com.typewritermc.discovery.assemble
 import com.typewritermc.loader.api.HostedArtifact
@@ -44,9 +42,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import java.lang.reflect.Modifier
 import java.nio.file.Path
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration.Companion.seconds
 
@@ -63,14 +59,12 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                     context.host.openTelemetry,
                     Level.toLevel(configuration.diagnosticLevel.name, Level.WARN),
                 )
-            val resolver = ReflectiveRuntimeResolver()
             val loaded =
                 GeneratedProviderLoader().load(
                     artifacts = context.generatedProviderArtifacts(),
                     facts = DeploymentFacts(context.facts),
                     domain = DiscoveryDomains.Realm,
-                    instantiator = GeneratedProviderInstantiator.resolving(resolver::resolve),
-                    capabilityOwners = CapabilityOwnerResolver { owner -> resolver.resolve(owner.java) },
+                    runtimeServices = mapOf(PresentationRuntime::class.java to DefaultPresentationRuntime()),
                 )
             deployment = loaded
             val generation =
@@ -132,31 +126,6 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
             runCatching { logback?.close() }.exceptionOrNull()?.let(failure::addSuppressed)
             throw failure
         }
-    }
-}
-
-private class ReflectiveRuntimeResolver {
-    private val instances = ConcurrentHashMap<Class<*>, Any>()
-
-    fun resolve(type: Class<*>): Any =
-        instances.computeIfAbsent(type) { requested ->
-            when (requested) {
-                PresentationRuntime::class.java -> DefaultPresentationRuntime()
-                else -> instantiate(requested)
-            }
-        }
-
-    private fun instantiate(type: Class<*>): Any {
-        type.fields
-            .singleOrNull { field ->
-                field.name == "INSTANCE" && Modifier.isStatic(field.modifiers) && field.type == type
-            }?.let { return it.get(null) }
-        val constructors = type.constructors.filter { Modifier.isPublic(it.modifiers) }
-        require(constructors.size == 1) {
-            "Runtime owner ${type.name} requires one public constructor."
-        }
-        val constructor = constructors.single()
-        return constructor.newInstance(*constructor.parameterTypes.map(::resolve).toTypedArray())
     }
 }
 

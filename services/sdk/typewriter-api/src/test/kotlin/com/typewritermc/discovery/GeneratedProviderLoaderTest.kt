@@ -6,6 +6,7 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CoroutineScope
+import java.lang.reflect.InvocationTargetException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.jar.JarEntry
@@ -13,6 +14,67 @@ import java.util.jar.JarOutputStream
 import kotlin.reflect.KClass
 
 val GeneratedProviderLoaderTest by testSuite {
+    test("deployment owners share constructor dependencies and borrowed services") {
+        val service = FixtureRuntimeService()
+        val owners =
+            DeploymentRuntimeOwners(
+                requireNotNull(OwnerConsumer::class.java.classLoader),
+                mapOf(FixtureRuntimeServiceContract::class.java to service),
+            )
+
+        val first = owners.resolve(OwnerConsumer::class.java) as OwnerConsumer
+        val second = owners.resolve(OwnerConsumer::class.java) as OwnerConsumer
+
+        first shouldBe second
+        first.service shouldBe service
+    }
+
+    test("deployment owners reject missing services and constructor cycles") {
+        val owners = DeploymentRuntimeOwners(requireNotNull(OwnerConsumer::class.java.classLoader), emptyMap())
+
+        shouldThrow<IllegalArgumentException> { owners.resolve(OwnerConsumer::class.java) }
+        shouldThrow<IllegalArgumentException> { owners.resolve(CycleOwnerA::class.java) }
+    }
+
+    test("deployment owners enforce exact deployment class identity") {
+        val ownerClass = OwnerConsumer::class.java
+        val deploymentLoader = requireNotNull(ownerClass.classLoader)
+        val binaryName = ownerClass.name
+        val resourceName = binaryName.replace('.', '/') + ".class"
+        val bytecode = requireNotNull(deploymentLoader.getResourceAsStream(resourceName)).use { it.readBytes() }
+        val foreignClass =
+            object : ClassLoader(deploymentLoader) {
+                override fun loadClass(
+                    name: String,
+                    resolve: Boolean,
+                ): Class<*> {
+                    if (name != binaryName) return super.loadClass(name, resolve)
+                    val loaded = findLoadedClass(name)
+                    val defined = loaded ?: defineClass(name, bytecode, 0, bytecode.size)
+                    if (resolve) resolveClass(defined)
+                    return defined
+                }
+            }.loadClass(binaryName)
+        val owners = DeploymentRuntimeOwners(deploymentLoader, emptyMap())
+
+        shouldThrow<IllegalArgumentException> { owners.resolve(foreignClass) }.message shouldBe
+            "Runtime owner $binaryName belongs to a different deployment."
+    }
+
+    test("deployment owners clear constructor resolution after failure") {
+        val owners =
+            DeploymentRuntimeOwners(
+                requireNotNull(FailingOwner::class.java.classLoader),
+                emptyMap(),
+            )
+
+        repeat(2) {
+            shouldThrow<InvocationTargetException> { owners.resolve(FailingOwner::class.java) }
+                .cause
+                ?.message shouldBe "construction failed"
+        }
+    }
+
     test("identical shadow copies retain one physical provider owner") {
         val root = Files.createTempDirectory("generated-provider-identical")
         val first = providerArtifact(root.resolve("first.jar"), "main")
@@ -140,12 +202,8 @@ val GeneratedProviderLoaderTest by testSuite {
             val root = Files.createTempDirectory("generated-registrar-domains")
             val execution = providerArtifact(root.resolve("execution.jar"), "execution")
             val realm = providerArtifact(root.resolve("realm.jar"), "realm", providerClass = RealmFixtureRegistrarProvider::class)
-            val constructed = mutableListOf<String>()
-            val instantiator =
-                GeneratedProviderInstantiator { type ->
-                    constructed += type.name
-                    GeneratedProviderInstantiator.PublicZeroArgument.instantiate(type)
-                }
+            ExecutionFixtureRegistrar.constructions = 0
+            RealmFixtureRegistrar.constructions = 0
             GeneratedProviderLoader()
                 .load(
                     artifacts =
@@ -155,17 +213,48 @@ val GeneratedProviderLoaderTest by testSuite {
                         ),
                     facts = DeploymentFacts(),
                     domain = domain,
-                    instantiator = instantiator,
                 ).use { deployment ->
                     val selected = deployment.providers.registrars.single()
                     selected.descriptor.id shouldBe if (domain == DiscoveryDomains.Realm) "realm.runtime" else "shadow.runtime"
                     selected.descriptor.domains shouldBe setOf(domain)
-                    val eligible = if (domain == DiscoveryDomains.Realm) RealmFixtureRegistrar::class else ExecutionFixtureRegistrar::class
-                    val excluded = if (domain == DiscoveryDomains.Realm) ExecutionFixtureRegistrar::class else RealmFixtureRegistrar::class
-                    constructed.count { it == eligible.java.name } shouldBe 1
-                    constructed.count { it == excluded.java.name } shouldBe 0
+                    val eligibleConstructions =
+                        if (domain == DiscoveryDomains.Realm) {
+                            RealmFixtureRegistrar.constructions
+                        } else {
+                            ExecutionFixtureRegistrar.constructions
+                        }
+                    val excludedConstructions =
+                        if (domain == DiscoveryDomains.Realm) {
+                            ExecutionFixtureRegistrar.constructions
+                        } else {
+                            RealmFixtureRegistrar.constructions
+                        }
+                    eligibleConstructions shouldBe 1
+                    excludedConstructions shouldBe 0
                 }
         }
+    }
+}
+
+private interface FixtureRuntimeServiceContract
+
+private class FixtureRuntimeService : FixtureRuntimeServiceContract
+
+private class OwnerConsumer(
+    val service: FixtureRuntimeServiceContract,
+)
+
+private class CycleOwnerA(
+    val next: CycleOwnerB,
+)
+
+private class CycleOwnerB(
+    val next: CycleOwnerA,
+)
+
+private class FailingOwner {
+    init {
+        error("construction failed")
     }
 }
 
@@ -191,13 +280,29 @@ class RealmFixtureRegistrarProvider : GeneratedRuntimeRegistrarProvider {
 }
 
 class ExecutionFixtureRegistrar : RuntimeRegistrar {
+    init {
+        constructions += 1
+    }
+
     context(scope: RuntimeScope)
     override suspend fun register() = Unit
+
+    companion object {
+        var constructions = 0
+    }
 }
 
 class RealmFixtureRegistrar : RuntimeRegistrar {
+    init {
+        constructions += 1
+    }
+
     context(scope: RuntimeScope)
     override suspend fun register() = Unit
+
+    companion object {
+        var constructions = 0
+    }
 }
 
 private fun providerArtifact(

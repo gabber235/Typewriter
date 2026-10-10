@@ -168,7 +168,10 @@ val SyntheticDiscoveryTest by testSuite {
             val provider = SyntheticRuntimeRegistrarGeneratedRegistrarProvider()
             provider.descriptor.domains shouldBe setOf(DiscoveryDomains.Execution)
             provider.descriptor.id shouldBe "synthetic"
-            val registrar = provider.bind(GeneratedProviderInstantiator.PublicZeroArgument)
+            val registrar =
+                provider.bind(
+                    GeneratedProviderInstantiator { type -> type.getDeclaredConstructor().newInstance() },
+                )
             with(scope) { registrar.register() }
 
             scope.owned shouldBe 1

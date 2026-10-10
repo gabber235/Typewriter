@@ -8,7 +8,6 @@ import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
 import com.typewritermc.types.DeclarationOwner
 import com.typewritermc.types.NativeBindingFactory
-import java.lang.reflect.Modifier
 import java.net.URL
 import java.net.URLClassLoader
 import java.nio.file.Files
@@ -25,35 +24,6 @@ data class GeneratedProviderArtifact(
 
 fun interface GeneratedProviderInstantiator {
     fun instantiate(providerClass: Class<*>): Any
-
-    companion object {
-        val PublicZeroArgument =
-            GeneratedProviderInstantiator { providerClass ->
-                providerClass.fields
-                    .singleOrNull { field ->
-                        field.name == "INSTANCE" && Modifier.isStatic(field.modifiers) && field.type == providerClass
-                    }?.let { return@GeneratedProviderInstantiator it.get(null) }
-                val constructor = providerClass.getDeclaredConstructor()
-                require(Modifier.isPublic(constructor.modifiers)) {
-                    "Generated provider ${providerClass.name} requires a public zero argument constructor."
-                }
-                constructor.newInstance()
-            }
-
-        fun resolving(resolve: (Class<*>) -> Any): GeneratedProviderInstantiator =
-            GeneratedProviderInstantiator { providerClass ->
-                providerClass.fields
-                    .singleOrNull { field ->
-                        field.name == "INSTANCE" && Modifier.isStatic(field.modifiers) && field.type == providerClass
-                    }?.let { return@GeneratedProviderInstantiator it.get(null) }
-                val constructors = providerClass.constructors.filter { Modifier.isPublic(it.modifiers) }
-                require(constructors.size == 1) {
-                    "Generated provider ${providerClass.name} requires one public constructor."
-                }
-                val constructor = constructors.single()
-                constructor.newInstance(*constructor.parameterTypes.map(resolve).toTypedArray())
-            }
-    }
 }
 
 data class OwnedRealmCapability(
@@ -205,8 +175,7 @@ class GeneratedProviderLoader {
         facts: DeploymentFacts,
         domain: DiscoveryDomainId,
         acceptedKinds: Set<GeneratedProviderKind> = GeneratedProviderKind.entries.toSet(),
-        instantiator: GeneratedProviderInstantiator = GeneratedProviderInstantiator.PublicZeroArgument,
-        capabilityOwners: CapabilityOwnerResolver? = null,
+        runtimeServices: Map<Class<*>, Any> = emptyMap(),
         parentClassLoader: ClassLoader = requireNotNull(javaClass.classLoader),
     ): GeneratedProviderDeployment {
         require(artifacts.map(GeneratedProviderArtifact::artifact).distinct().size == artifacts.size) {
@@ -228,6 +197,7 @@ class GeneratedProviderLoader {
                 parentClassLoader,
                 canonical.mapTo(linkedSetOf()) { it.entry.providerClass },
             )
+        val owners = DeploymentRuntimeOwners(classLoader, runtimeServices)
         return try {
             val loaded =
                 canonical
@@ -237,9 +207,9 @@ class GeneratedProviderLoader {
                         val providerClass = Class.forName(entry.providerClass, false, classLoader)
                         requirePhysicalOwner(providerClass, artifact)
                         requireProviderType(providerClass, entry.kind)
-                        LoadedProvider(entry, origin(artifact, entry), instantiator.instantiate(providerClass))
+                        LoadedProvider(entry, origin(artifact, entry), owners.resolve(providerClass))
                     }.sortedWith(compareBy({ it.origin.artifact.value }, { it.entry.sourcePart }, { it.entry.providerClass }))
-            GeneratedProviderDeployment(assemble(loaded, capabilityOwners, domain, instantiator), facts, classLoader)
+            GeneratedProviderDeployment(with(owners) { assemble(loaded, domain) }, facts, classLoader)
         } catch (failure: Throwable) {
             runCatching { classLoader.close() }.exceptionOrNull()?.let(failure::addSuppressed)
             throw failure
@@ -448,11 +418,10 @@ class GeneratedProviderLoader {
         )
     }
 
+    context(owners: DeploymentRuntimeOwners)
     private fun assemble(
         loaded: List<LoadedProvider>,
-        capabilityOwners: CapabilityOwnerResolver?,
         domain: DiscoveryDomainId,
-        instantiator: GeneratedProviderInstantiator,
     ): LoadedGeneratedProviders {
         val declarations = mutableListOf<OwnedTypeDeclaration>()
         val relations = mutableListOf<com.typewritermc.types.RelationContract>()
@@ -511,11 +480,7 @@ class GeneratedProviderLoader {
                     capabilities +=
                         OwnedRealmCapability(
                             origin,
-                            factory.bind(
-                                requireNotNull(capabilityOwners) {
-                                    "Capability providers require an owner resolver."
-                                },
-                            ),
+                            factory.bind(owners.capabilities),
                         )
                 }
 
@@ -525,7 +490,7 @@ class GeneratedProviderLoader {
                         require(registrarIds.add(origin.owner.source.source to provider.descriptor.id)) {
                             "Duplicate runtime registrar ${provider.descriptor.id} in contribution source ${origin.owner.source.source}."
                         }
-                        registrars += OwnedRuntimeRegistrar(origin, provider.descriptor, provider.bind(instantiator))
+                        registrars += OwnedRuntimeRegistrar(origin, provider.descriptor, provider.bind(owners.instantiator))
                     }
                 }
 
