@@ -161,9 +161,13 @@ void main() {
     final scenario = completeTopologyScenario();
     final topology = scenario.topology;
     final services = scenario.services;
+    final nats = FakeNatsClient();
+    addTearDown(nats.dispose);
     await tester.pumpWidget(
       FakeApp(
         overrides: [
+          userIdProvider.overrideWith((ref) async => "story-user"),
+          natsProvider.overrideWithValue(nats),
           canonicalOrganizationServicesProvider.overrideWith2(
             (_) => _StoryServices(services),
           ),
