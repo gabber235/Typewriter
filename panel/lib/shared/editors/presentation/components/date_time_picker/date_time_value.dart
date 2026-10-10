@@ -1,3 +1,30 @@
+/// English month names indexed by the Dart [DateTime] month minus one.
+const calendarMonthNames = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+/// English weekday names indexed by the Dart [DateTime] weekday minus one.
+const calendarWeekdayNames = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+
 /// Formats the enabled timestamp parts as the editor's canonical text form.
 ///
 /// The formatter reads the value's calendar and clock components and omits
@@ -114,6 +141,18 @@ extension DateTimeEditorDraft on String {
 }
 
 extension DateTimeCalendarOperations on DateTime {
+  /// Returns this value at midnight UTC using its existing calendar fields.
+  DateTime get calendarDate => DateTime.utc(year, month, day);
+
+  /// Compares calendar fields without converting either timestamp.
+  bool hasSameCalendarDate(DateTime other) =>
+      year == other.year && month == other.month && day == other.day;
+
+  /// Produces the spoken label shared by calendar focus and date cells.
+  String get semanticCalendarLabel =>
+      "${calendarWeekdayNames[weekday - 1]}, "
+      "${calendarMonthNames[month - 1]} $day, $year";
+
   /// Replaces the calendar date while preserving time and subsecond precision.
   DateTime withDate(DateTime date) => DateTime.utc(
     date.year,

@@ -74,6 +74,14 @@ void main() {
     expect(DateTime.utc(2024, 2, 29).moveMonth(12), DateTime.utc(2025, 2, 28));
   });
 
+  test("calendar operations retain fields without timezone conversion", () {
+    final local = DateTime(2024, 2, 29, 23, 58);
+
+    expect(local.calendarDate, DateTime.utc(2024, 2, 29));
+    expect(local.hasSameCalendarDate(DateTime.utc(2024, 2, 29, 1)), isTrue);
+    expect(local.semanticCalendarLabel, "Thursday, February 29, 2024");
+  });
+
   test("both hidden is a deliberate parsing failure", () {
     expect(
       () => "".parseEditorDateTime(

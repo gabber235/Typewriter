@@ -30,7 +30,7 @@ class DateTimeDayCell extends StatelessWidget {
       button: true,
       selected: selected,
       enabled: enabled,
-      label: semanticCalendarDate(date),
+      label: date.semanticCalendarLabel,
       onTap: enabled ? () => onPressed(date) : null,
       child: ExcludeSemantics(
         child: InkWell(
@@ -62,18 +62,3 @@ class DateTimeDayCell extends StatelessWidget {
     );
   }
 }
-
-/// Returns [value] at midnight UTC, retaining only its calendar date.
-DateTime dateOnly(DateTime value) =>
-    DateTime.utc(value.year, value.month, value.day);
-
-/// Compares the year, month, and day fields without converting timestamps.
-bool sameCalendarDate(DateTime left, DateTime right) =>
-    left.year == right.year &&
-    left.month == right.month &&
-    left.day == right.day;
-
-/// Produces the spoken calendar label used by date cells and calendar focus.
-String semanticCalendarDate(DateTime value) =>
-    "${calendarWeekdayNames[value.weekday - 1]}, "
-    "${calendarMonthNames[value.month - 1]} ${value.day}, ${value.year}";
