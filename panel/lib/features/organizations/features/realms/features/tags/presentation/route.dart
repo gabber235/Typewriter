@@ -13,6 +13,7 @@ class TagsPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final scope = ref.watch(selectedAuthoringScopeProvider);
     final tagsAsync = ref.watch(workingTagsProvider);
     final viewportCenter = useRef<Offset?>(null);
     final document = ref.watch(selectedWorkingAuthoringDocumentProvider).value;
@@ -24,7 +25,9 @@ class TagsPage extends HookConsumerWidget {
         ? null
         : document?.catalog.beginSelection(definition.root);
     final canCreate =
-        selection != null && selection != skir.TypeSelection.unknown;
+        scope != null &&
+        selection != null &&
+        selection != skir.TypeSelection.unknown;
 
     Future<void> handleCreateTag() async {
       final current = definition == null
@@ -38,7 +41,7 @@ class TagsPage extends HookConsumerWidget {
         throw StateError("Tag creation is unavailable");
       }
       final created = await ref
-          .read(resourceCreationProvider)
+          .read(resourceCreationProvider(scope!))
           .create(
             context: context,
             request: ResourceCreationRequest(
@@ -47,7 +50,11 @@ class TagsPage extends HookConsumerWidget {
             ),
           );
       if (created == null) return;
-      ref.read(selectionProvider.notifier).select(TagIdentifier(created.id));
+      ref
+          .read(selectionProvider.notifier)
+          .select(
+            AuthoringResourceIdentifier.inScope(created.scope, created.id),
+          );
     }
 
     return Pane(

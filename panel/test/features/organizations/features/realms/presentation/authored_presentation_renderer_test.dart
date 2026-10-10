@@ -136,10 +136,6 @@ void main() {
                 ),
               },
               budget: _budget,
-              setBinding: (reference, value) {
-                expect(reference, placementReference);
-                written = (reference, value);
-              },
               host: host,
             ),
           ),
@@ -193,10 +189,6 @@ void main() {
                 ),
               },
               budget: _budget,
-              setBinding: (reference, value) {
-                expect(reference, enabledReference);
-                written = value;
-              },
               host: host,
             ),
           ),
@@ -254,10 +246,6 @@ void main() {
                 ),
               },
               budget: _budget,
-              setBinding: (reference, value) {
-                expect(reference, enabledReference);
-                written = value;
-              },
               host: host,
             ),
           ),
@@ -433,7 +421,6 @@ void main() {
           ),
         },
         budget: _budget,
-        setBinding: (_, value) => written = value,
         catalog: checked,
         host: host,
       );
@@ -799,7 +786,6 @@ void main() {
             scope: PortablePresentationScope(
               bindings: const {},
               budget: _budget,
-              setBinding: (_, _) {},
             ),
           ),
         ),
@@ -888,10 +874,6 @@ Future<void> _pumpControl(
                 _rootBinding: PortableExpressionBinding(value: current),
               },
               budget: _budget,
-              setBinding: (_, replacement) {
-                onWrite(replacement);
-                if (rebindWrites) setState(() => current = replacement);
-              },
               readOnly: readOnly,
               enabled: enabled,
               host: host,

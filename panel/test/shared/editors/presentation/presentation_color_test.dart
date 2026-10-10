@@ -9,7 +9,6 @@ void main() {
   final scope = PortablePresentationScope(
     bindings: const {},
     budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
-    setBinding: (_, _) {},
   );
   final appearance = SurfaceAppearance(
     color: Colors.black,
@@ -375,7 +374,6 @@ void main() {
     final limited = PortablePresentationScope(
       bindings: const {},
       budget: skir.EvaluationBudget(maxSteps: 1, maxCollectionItems: 1),
-      setBinding: (_, _) {},
     );
     expect(
       () => colors.resolve(

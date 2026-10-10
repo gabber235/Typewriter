@@ -78,6 +78,10 @@ SearchContribution<void> _builder(Ref ref, BuildContext context) {
     );
 
     if (realmId != null) {
+      final scope = AuthoringScope(
+        organizationId: organizationId,
+        realmId: realmId,
+      );
       sources.addAll([
         AuthoringCreationSearchSource(ref),
         RealmAuthoringSearchSource(
@@ -88,7 +92,7 @@ SearchContribution<void> _builder(Ref ref, BuildContext context) {
       ]);
       commands.addAll([
         ...openAuthoringCommands(organizationId, realmId),
-        createAuthoringResourceCommand(ref: ref),
+        createAuthoringResourceCommand(ref: ref, scope: scope),
       ]);
     }
   }
@@ -138,10 +142,7 @@ List<SearchHostEffectExecutor<SearchHostEffect>> _buildHostEffectExecutors(
         .navigate(realmNavigationRoute(effect.organizationId, effect.realmId));
   }),
   SearchHostEffectExecutor<OpenAuthoringResourceEffect>((effect) async {
-    final registry = AuthoringResourceNavigationRegistry(const [
-      BookAuthoringNavigationAdapter(),
-      TagAuthoringNavigationAdapter(),
-    ]);
+    final registry = ref.read(authoringResourceNavigationRegistryProvider);
     if (await registry.open(ref, effect.navigationHandler, effect)) return;
     await ref
         .read(appRouterProvider)

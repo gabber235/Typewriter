@@ -1,20 +1,14 @@
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
 
-sealed class PortablePathResult<T> {
-  const PortablePathResult();
-}
+part "portable_value_tree.freezed.dart";
 
-final class PortablePathValue<T> extends PortablePathResult<T> {
-  const PortablePathValue(this.value);
-
-  final T value;
-}
-
-final class PortablePathUnavailable<T> extends PortablePathResult<T> {
-  const PortablePathUnavailable(this.message);
-
-  final String message;
+@freezed
+sealed class PortablePathResult<T> with _$PortablePathResult<T> {
+  const factory PortablePathResult.value(T value) = PortablePathValue<T>;
+  const factory PortablePathResult.unavailable(String message) =
+      PortablePathUnavailable<T>;
 }
 
 extension PortableValueTree on skir.DataValue {
@@ -276,16 +270,6 @@ Iterable<skir.ValuePath> expandAuthoredPattern(
   }
 
   yield* expand(skir.ValuePath(segments: const []), 0);
-}
-
-bool authoredPathStartsWith(skir.ValuePath path, skir.ValuePath prefix) {
-  final value = path.segments.toList(growable: false);
-  final expected = prefix.segments.toList(growable: false);
-  if (expected.length > value.length) return false;
-  for (var index = 0; index < expected.length; index++) {
-    if (value[index] != expected[index]) return false;
-  }
-  return true;
 }
 
 PortablePathResult<Object> _unwrapForPath(Object value) {

@@ -5,5 +5,4 @@
 library;
 
 export "tag_authoring_navigation.dart";
-export "tag_selectable.dart";
 export "tags.dart";

@@ -29,10 +29,6 @@ void main() {
                 maxSteps: 100,
                 maxCollectionItems: 100,
               ),
-              setBinding: (reference, value) {
-                writtenReference = reference;
-                writtenValue = value;
-              },
               host: presentationHost,
             ),
           ),
@@ -108,7 +104,6 @@ void main() {
                 maxSteps: 100,
                 maxCollectionItems: 100,
               ),
-              setBinding: (_, _) => writes++,
               host: presentationHost,
             ),
           ),

@@ -6,59 +6,77 @@ final _configuredValueBindingId = skir.ExpressionBindingId(
 
 typedef PortableSlotBuilder = Widget Function(PortablePresentationScope scope);
 
-final class PortablePresentationScope {
-  const PortablePresentationScope({
-    required this.bindings,
-    required this.budget,
-    required this.setBinding,
-    this.readOnly = false,
-    this.enabled = true,
-    this.invokeCommand,
-    this.watchSearch,
-    this.reload,
-    this.reportStatus,
-    this.commit,
-    this.catalog,
-    this.resource,
-    this.searchHistoryNamespace,
-    this.openResource,
-    this.role,
-    this.material,
-    this.activePresentations = const {},
-    this.slots = const {},
-    this.slotBuilders = const {},
-    this.host,
-    this.projectedWriters = const {},
-  });
+@Freezed(map: FreezedMapOptions.none, when: FreezedWhenOptions.none)
+abstract class PortablePresentationScope with _$PortablePresentationScope {
+  factory PortablePresentationScope({
+    required Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings,
+    required skir.EvaluationBudget budget,
+    bool readOnly = false,
+    bool enabled = true,
+    Stream<skir.RealmPresentationSearchUpdate> Function(
+      skir.RealmPresentationSearchRequest request,
+    )?
+    watchSearch,
+    ValueChanged<String>? reportStatus,
+    Future<void> Function()? commit,
+    CheckedEditorCatalog? catalog,
+    skir.ResourceId? resource,
+    String? searchHistoryNamespace,
+    ValueChanged<skir.ResourceId>? openResource,
+    skir.PresentationRole? role,
+    skir.PresentationMaterial? material,
+    Set<skir.PresentationId> activePresentations = const {},
+    Map<String, skir.PresentationNode> slots = const {},
+    Map<String, PortableSlotBuilder> slotBuilders = const {},
+    PortablePresentationHost? host,
+    Map<skir.ExpressionBindingId, PortableBindingSetter> projectedWriters =
+        const {},
+  }) => PortablePresentationScope._value(
+    bindings: Map.unmodifiable(bindings),
+    budget: budget,
+    readOnly: readOnly,
+    enabled: enabled,
+    watchSearch: watchSearch,
+    reportStatus: reportStatus,
+    commit: commit,
+    catalog: catalog,
+    resource: resource,
+    searchHistoryNamespace: searchHistoryNamespace,
+    openResource: openResource,
+    role: role,
+    material: material,
+    activePresentations: Set.unmodifiable(activePresentations),
+    slots: Map.unmodifiable(slots),
+    slotBuilders: Map.unmodifiable(slotBuilders),
+    host: host,
+    projectedWriters: Map.unmodifiable(projectedWriters),
+  );
 
-  final Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings;
-  final skir.EvaluationBudget budget;
-  final PortableBindingSetter setBinding;
-  final bool readOnly;
-  final bool enabled;
-  final Future<void> Function(
-    skir.CapabilityId capabilityId,
-    skir.DataValue payload,
-  )?
-  invokeCommand;
-  final Stream<skir.RealmPresentationSearchUpdate> Function(
-    skir.RealmPresentationSearchRequest request,
-  )?
-  watchSearch;
-  final Future<void> Function()? reload;
-  final ValueChanged<String>? reportStatus;
-  final Future<void> Function()? commit;
-  final CheckedEditorCatalog? catalog;
-  final skir.ResourceId? resource;
-  final String? searchHistoryNamespace;
-  final ValueChanged<skir.ResourceId>? openResource;
-  final skir.PresentationRole? role;
-  final skir.PresentationMaterial? material;
-  final Set<skir.PresentationId> activePresentations;
-  final Map<String, skir.PresentationNode> slots;
-  final Map<String, PortableSlotBuilder> slotBuilders;
-  final PortablePresentationHost? host;
-  final Map<skir.ExpressionBindingId, PortableBindingSetter> projectedWriters;
+  const factory PortablePresentationScope._value({
+    required Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings,
+    required skir.EvaluationBudget budget,
+    required bool readOnly,
+    required bool enabled,
+    required Stream<skir.RealmPresentationSearchUpdate> Function(
+      skir.RealmPresentationSearchRequest request,
+    )?
+    watchSearch,
+    required ValueChanged<String>? reportStatus,
+    required Future<void> Function()? commit,
+    required CheckedEditorCatalog? catalog,
+    required skir.ResourceId? resource,
+    required String? searchHistoryNamespace,
+    required ValueChanged<skir.ResourceId>? openResource,
+    required skir.PresentationRole? role,
+    required skir.PresentationMaterial? material,
+    required Set<skir.PresentationId> activePresentations,
+    required Map<String, skir.PresentationNode> slots,
+    required Map<String, PortableSlotBuilder> slotBuilders,
+    required PortablePresentationHost? host,
+    required Map<skir.ExpressionBindingId, PortableBindingSetter>
+    projectedWriters,
+  }) = _PortablePresentationScope;
+  const PortablePresentationScope._();
 
   PortableInvocationContext get invocation => PortableInvocationContext(
     bindings: bindings,
@@ -94,7 +112,7 @@ final class PortablePresentationScope {
     for (final candidate in document.bindings.entries) {
       final base = candidate.value.location;
       if (base == null || base.resource != local.resource) continue;
-      if (!_isPathPrefix(base.path.segments.toList(), targetSegments)) {
+      if (!skir.ValuePath(segments: targetSegments).isAtOrBelow(base.path)) {
         continue;
       }
       final previous = owner?.value.location?.path.segments.length ?? -1;
@@ -116,7 +134,7 @@ final class PortablePresentationScope {
 
   skir.TypeUse? expectedPayloadType(skir.BindingRef reference) {
     final expected = expectedType(reference);
-    final unwrapped = _unwrapNullable(expected);
+    final unwrapped = expected.withoutNullableWrappers;
     if (unwrapped case skir.TypeUse_namedWrapper(:final value)) {
       final representation = catalog
           ?.published(value.definition)
@@ -150,14 +168,14 @@ final class PortablePresentationScope {
 
   void writePayload(skir.BindingRef reference, skir.DataValue payload) {
     final current = read(reference);
-    final actual = switch (_unwrapNullable(expectedType(reference))) {
+    final actual = switch (expectedType(reference).withoutNullableWrappers) {
       skir.TypeUse_namedWrapper(:final value) => value,
       _ => null,
     };
     write(
       reference,
       current is skir.DataValue_namedWrapper
-          ? _preserveNamedIdentity(current, payload)
+          ? current.preservingNamedIdentity(payload)
           : actual == null
           ? payload
           : skir.DataValue.createNamed(actualType: actual, payload: payload),
@@ -167,55 +185,13 @@ final class PortablePresentationScope {
   bool get canExecuteAction => enabled && !readOnly && host != null;
 
   PortablePresentationScope withReadOnly(bool value) =>
-      PortablePresentationScope(
-        bindings: bindings,
-        budget: budget,
-        setBinding: setBinding,
-        readOnly: readOnly || value,
-        enabled: enabled,
-        invokeCommand: invokeCommand,
-        watchSearch: watchSearch,
-        reload: reload,
-        reportStatus: reportStatus,
-        commit: commit,
-        catalog: catalog,
-        resource: resource,
-        searchHistoryNamespace: searchHistoryNamespace,
-        openResource: openResource,
-        role: role,
-        material: material,
-        activePresentations: activePresentations,
-        slots: slots,
-        slotBuilders: slotBuilders,
-        host: host,
-        projectedWriters: projectedWriters,
-      );
+      copyWith(readOnly: readOnly || value);
 
   PortablePresentationScope withEnabled(bool value) =>
-      PortablePresentationScope(
-        bindings: bindings,
-        budget: budget,
-        setBinding: setBinding,
-        readOnly: readOnly,
-        enabled: enabled && value,
-        invokeCommand: invokeCommand,
-        watchSearch: watchSearch,
-        reload: reload,
-        reportStatus: reportStatus,
-        commit: commit,
-        catalog: catalog,
-        resource: resource,
-        searchHistoryNamespace: searchHistoryNamespace,
-        openResource: openResource,
-        role: role,
-        material: material,
-        activePresentations: activePresentations,
-        slots: slots,
-        slotBuilders: slotBuilders,
-        host: host,
-        projectedWriters: projectedWriters,
-      );
+      copyWith(enabled: enabled && value);
 
+  // Collection replacements allocate owned values because generated copyWith
+  // enters the private Freezed value constructor directly.
   PortablePresentationScope withNamedPayload(PortableNamedPayload payload) {
     final configured = skir.ExpressionBindingId(value: "configured_value");
     void writeConfigured(skir.BindingRef reference, skir.DataValue value) {
@@ -227,7 +203,7 @@ final class PortablePresentationScope {
       }
     }
 
-    return PortablePresentationScope(
+    return copyWith(
       bindings: {
         ...bindings.withSubjectAt(payload.location),
         configured: PortableExpressionBinding(
@@ -235,103 +211,12 @@ final class PortablePresentationScope {
           location: payload.location,
         ),
       },
-      budget: budget,
-      readOnly: readOnly,
-      enabled: enabled,
-      invokeCommand: invokeCommand,
-      watchSearch: watchSearch,
-      reload: reload,
-      reportStatus: reportStatus,
-      commit: commit,
-      catalog: catalog,
-      resource: resource,
-      searchHistoryNamespace: searchHistoryNamespace,
-      openResource: openResource,
-      role: role,
-      material: material,
-      activePresentations: activePresentations,
-      slots: slots,
-      slotBuilders: slotBuilders,
-      host: host,
       projectedWriters: {...projectedWriters, configured: writeConfigured},
-      setBinding: (reference, value) {
-        if (reference.bindingId != configured) {
-          setBinding(reference, value);
-          return;
-        }
-        writeConfigured(reference, value);
-      },
     );
   }
 
-  PortablePresentationScope? withConfiguredValue(skir.BindingRef reference) {
-    final source = bindings[reference.bindingId];
-    if (source == null) return null;
-    final resolved = reference.path.segments.isEmpty
-        ? PortablePathValue(source.value)
-        : source.value.readAt(reference.path);
-    if (resolved case PortablePathUnavailable()) return null;
-    final configured = skir.ExpressionBindingId(value: "configured_value");
-    final value = (resolved as PortablePathValue<skir.DataValue>).value;
-    final baseLocation = source.location;
-    final location = baseLocation == null
-        ? null
-        : skir.ValueLocation(
-            resource: baseLocation.resource,
-            path: skir.ValuePath(
-              segments: [
-                ...baseLocation.path.segments,
-                ...reference.path.segments,
-              ],
-            ),
-          );
-    return PortablePresentationScope(
-      bindings: {
-        ...bindings.withSubjectAt(location),
-        configured: PortableExpressionBinding(
-          value: value,
-          location: location,
-          schema: switch (expectedType(reference)) {
-            final use? => CompletePortablePresentationBinding(use),
-            null => null,
-          },
-        ),
-      },
-      budget: budget,
-      readOnly: readOnly,
-      enabled: enabled,
-      invokeCommand: invokeCommand,
-      watchSearch: watchSearch,
-      reload: reload,
-      reportStatus: reportStatus,
-      commit: commit,
-      catalog: catalog,
-      resource: resource,
-      searchHistoryNamespace: searchHistoryNamespace,
-      openResource: openResource,
-      setBinding: (nestedReference, replacement) {
-        if (nestedReference.bindingId != configured) {
-          write(nestedReference, replacement);
-          return;
-        }
-        if (nestedReference.path.segments.isEmpty) {
-          writePayload(reference, replacement);
-          return;
-        }
-        final replaced = value.replaceAt(nestedReference.path, replacement);
-        if (replaced case PortablePathValue(value: final next)) {
-          write(reference, next);
-        }
-      },
-      role: role,
-      material: material,
-      activePresentations: activePresentations,
-      slots: slots,
-      slotBuilders: slotBuilders,
-      host: host,
-      projectedWriters: projectedWriters,
-    );
-  }
+  PortablePresentationScope? withConfiguredValue(skir.BindingRef reference) =>
+      withBinding(reference, _configuredValueBindingId);
 
   PortablePresentationScope? withBinding(
     skir.BindingRef reference,
@@ -356,7 +241,25 @@ final class PortablePresentationScope {
               ],
             ),
           );
-    return PortablePresentationScope(
+    final originalWriter = projectedWriters[reference.bindingId];
+    final nextWriters = {...projectedWriters}..remove(id);
+    if (originalWriter != null) {
+      nextWriters[id] = (nestedReference, replacement) {
+        originalWriter(
+          skir.BindingRef(
+            bindingId: reference.bindingId,
+            path: skir.ValuePath(
+              segments: [
+                ...reference.path.segments,
+                ...nestedReference.path.segments,
+              ],
+            ),
+          ),
+          replacement,
+        );
+      };
+    }
+    return copyWith(
       bindings: {
         ...(id == _configuredValueBindingId
             ? bindings.withSubjectAt(location)
@@ -370,175 +273,51 @@ final class PortablePresentationScope {
           },
         ),
       },
-      budget: budget,
-      readOnly: readOnly,
-      enabled: enabled,
-      invokeCommand: invokeCommand,
-      watchSearch: watchSearch,
-      reload: reload,
-      reportStatus: reportStatus,
-      commit: commit,
-      catalog: catalog,
-      resource: resource,
-      searchHistoryNamespace: searchHistoryNamespace,
-      openResource: openResource,
-      role: role,
-      material: material,
-      activePresentations: activePresentations,
-      slots: slots,
-      slotBuilders: slotBuilders,
-      host: host,
-      projectedWriters: projectedWriters,
-      setBinding: (nestedReference, replacement) {
-        if (nestedReference.bindingId != id) {
-          write(nestedReference, replacement);
-          return;
-        }
-        if (nestedReference.path.segments.isEmpty) {
-          writePayload(reference, replacement);
-          return;
-        }
-        final replaced = value.replaceAt(nestedReference.path, replacement);
-        if (replaced case PortablePathValue(value: final next)) {
-          write(reference, next);
-        }
-      },
+      projectedWriters: nextWriters,
     );
   }
 
   PortablePresentationScope withValues(
     Map<skir.ExpressionBindingId, skir.DataValue> values,
-  ) => PortablePresentationScope(
+  ) => copyWith(
     bindings: {
       ...bindings,
       for (final entry in values.entries)
         entry.key: PortableExpressionBinding(value: entry.value),
     },
-    budget: budget,
-    setBinding: setBinding,
-    readOnly: readOnly,
-    enabled: enabled,
-    invokeCommand: invokeCommand,
-    watchSearch: watchSearch,
-    reload: reload,
-    reportStatus: reportStatus,
-    commit: commit,
-    catalog: catalog,
-    resource: resource,
-    searchHistoryNamespace: searchHistoryNamespace,
-    openResource: openResource,
-    role: role,
-    material: material,
-    activePresentations: activePresentations,
-    slots: slots,
-    slotBuilders: slotBuilders,
-    host: host,
-    projectedWriters: projectedWriters,
   );
 
   PortablePresentationScope withSlotBuilders(
     Map<String, PortableSlotBuilder> values,
-  ) => PortablePresentationScope(
-    bindings: bindings,
-    budget: budget,
-    setBinding: setBinding,
-    readOnly: readOnly,
-    enabled: enabled,
-    invokeCommand: invokeCommand,
-    watchSearch: watchSearch,
-    reload: reload,
-    reportStatus: reportStatus,
-    commit: commit,
-    catalog: catalog,
-    resource: resource,
-    searchHistoryNamespace: searchHistoryNamespace,
-    openResource: openResource,
-    role: role,
-    material: material,
-    activePresentations: activePresentations,
-    slots: slots,
-    slotBuilders: {...slotBuilders, ...values},
-    host: host,
-    projectedWriters: projectedWriters,
-  );
+  ) => copyWith(slotBuilders: {...slotBuilders, ...values});
 
   PortablePresentationScope withActivePresentation(
     skir.PresentationId presentation,
-  ) => PortablePresentationScope(
-    bindings: bindings,
-    budget: budget,
-    setBinding: setBinding,
-    readOnly: readOnly,
-    enabled: enabled,
-    invokeCommand: invokeCommand,
-    watchSearch: watchSearch,
-    reload: reload,
-    reportStatus: reportStatus,
-    commit: commit,
-    catalog: catalog,
-    resource: resource,
-    searchHistoryNamespace: searchHistoryNamespace,
-    openResource: openResource,
-    role: role,
-    material: material,
-    activePresentations: {...activePresentations, presentation},
-    slots: slots,
-    slotBuilders: slotBuilders,
-    host: host,
-    projectedWriters: projectedWriters,
-  );
+  ) => copyWith(activePresentations: {...activePresentations, presentation});
 
   PortablePresentationScope withMaterial(skir.PresentationMaterial value) =>
-      PortablePresentationScope(
-        bindings: bindings,
-        budget: budget,
-        setBinding: setBinding,
-        readOnly: readOnly,
-        enabled: enabled,
-        invokeCommand: invokeCommand,
-        watchSearch: watchSearch,
-        reload: reload,
-        reportStatus: reportStatus,
-        commit: commit,
-        catalog: catalog,
-        resource: resource,
-        searchHistoryNamespace: searchHistoryNamespace,
-        openResource: openResource,
-        role: role,
-        material: value,
-        activePresentations: activePresentations,
-        slots: slots,
-        slotBuilders: slotBuilders,
-        host: host,
-        projectedWriters: projectedWriters,
-      );
+      copyWith(material: value);
 }
 
-bool _isPathPrefix(List<skir.PathSegment> prefix, List<skir.PathSegment> path) {
-  if (prefix.length > path.length) return false;
-  for (var index = 0; index < prefix.length; index++) {
-    if (prefix[index] != path[index]) return false;
+extension _PortableNamedIdentity on skir.DataValue? {
+  skir.DataValue preservingNamedIdentity(skir.DataValue payload) {
+    final current = this;
+    if (current is! skir.DataValue_namedWrapper) return payload;
+    return skir.DataValue.createNamed(
+      actualType: current.value.actualType,
+      payload: current.value.payload.preservingNamedIdentity(payload),
+    );
   }
-  return true;
 }
 
-skir.DataValue _preserveNamedIdentity(
-  skir.DataValue? current,
-  skir.DataValue payload,
-) {
-  if (current is! skir.DataValue_namedWrapper) return payload;
-  return skir.DataValue.createNamed(
-    actualType: current.value.actualType,
-    payload: _preserveNamedIdentity(current.value.payload, payload),
-  );
-}
-
-skir.TypeUse? _unwrapNullable(skir.TypeUse? type) {
-  var current = type;
-  while (current is skir.TypeUse_nullableWrapper) {
-    current = current.value.value;
+extension _PortableNullableTypeUse on skir.TypeUse? {
+  skir.TypeUse? get withoutNullableWrappers {
+    var current = this;
+    while (current is skir.TypeUse_nullableWrapper) {
+      current = current.value.value;
+    }
+    return current;
   }
-  return current;
 }
 
 extension _PresentationSubjectBindings

@@ -118,20 +118,19 @@ void main() {
     final fixture = _fixture();
     final created = skir.ResourceId(value: "resource:created");
     final record = fixture.snapshot.resources.single.content;
-    final staged = fixture.draft.fork();
-    createAuthoringResource(
-      edit: staged,
-      request: ResourceCreationRequest(
-        id: created,
-        initializationId: skir.InitializationRequestId(value: "create:1"),
-        definition: skir.ResourceDefinitionId(value: "test.resource"),
-        configuration: record.configuration,
-      ),
-      prepared: skir.PreparedValue(
-        content: skir.PreparedContent.wrapRecord(record),
-        findings: const [],
-      ),
-    );
+    final staged = fixture.draft.fork()
+      ..createPreparedResource(
+        request: ResourceCreationRequest(
+          id: created,
+          initializationId: skir.InitializationRequestId(value: "create:1"),
+          definition: skir.ResourceDefinitionId(value: "test.resource"),
+          configuration: record.configuration,
+        ),
+        prepared: skir.PreparedValue(
+          content: skir.PreparedContent.wrapRecord(record),
+          findings: const [],
+        ),
+      );
 
     expect(staged.resource(created), record);
     expect(staged.intents, hasLength(1));
@@ -142,28 +141,27 @@ void main() {
   test("page creation inserts its book slot before connecting", () {
     final fixture = _pageCreationFixture();
     final item = skir.ItemId(value: "page:item");
-    final staged = fixture.draft.fork();
-    createAuthoringResource(
-      edit: staged,
-      request: ResourceCreationRequest(
-        id: fixture.page,
-        initializationId: skir.InitializationRequestId(value: "create:page"),
-        definition: fixture.pageResource,
-        configuration: skir.TypeSelection.wrapComplete(fixture.sequenceUse),
-        connections: [
-          ResourceCreationConnection.collection(
-            source: fixture.book,
-            endpoint: fixture.bookEndpoint,
-            containing: _fieldPath("pages"),
-            item: item,
-          ),
-        ],
-      ),
-      prepared: skir.PreparedValue(
-        content: skir.PreparedContent.wrapRecord(fixture.pageRecord),
-        findings: const [],
-      ),
-    );
+    final staged = fixture.draft.fork()
+      ..createPreparedResource(
+        request: ResourceCreationRequest(
+          id: fixture.page,
+          initializationId: skir.InitializationRequestId(value: "create:page"),
+          definition: fixture.pageResource,
+          configuration: skir.TypeSelection.wrapComplete(fixture.sequenceUse),
+          connections: [
+            ResourceCreationConnection.collection(
+              source: fixture.book,
+              endpoint: fixture.bookEndpoint,
+              containing: _fieldPath("pages"),
+              item: item,
+            ),
+          ],
+        ),
+        prepared: skir.PreparedValue(
+          content: skir.PreparedContent.wrapRecord(fixture.pageRecord),
+          findings: const [],
+        ),
+      );
 
     expect(staged.intents, [
       isA<skir.EditIntent_createResourceWrapper>(),
@@ -226,28 +224,27 @@ void main() {
       configuration: fixture.pageRecord.configuration,
       fields: fixture.pageRecord.fields.where((field) => field.name != "book"),
     );
-    final staged = fixture.draft.fork();
-    createAuthoringResource(
-      edit: staged,
-      request: ResourceCreationRequest(
-        id: fixture.page,
-        initializationId: skir.InitializationRequestId(value: "create:page"),
-        definition: fixture.pageResource,
-        configuration: skir.TypeSelection.wrapComplete(fixture.sequenceUse),
-        connections: [
-          ResourceCreationConnection.collection(
-            source: fixture.book,
-            endpoint: fixture.bookEndpoint,
-            containing: _fieldPath("pages"),
-            item: skir.ItemId(value: "page:item"),
-          ),
-        ],
-      ),
-      prepared: skir.PreparedValue(
-        content: skir.PreparedContent.wrapRecord(withoutBook),
-        findings: const [],
-      ),
-    );
+    final staged = fixture.draft.fork()
+      ..createPreparedResource(
+        request: ResourceCreationRequest(
+          id: fixture.page,
+          initializationId: skir.InitializationRequestId(value: "create:page"),
+          definition: fixture.pageResource,
+          configuration: skir.TypeSelection.wrapComplete(fixture.sequenceUse),
+          connections: [
+            ResourceCreationConnection.collection(
+              source: fixture.book,
+              endpoint: fixture.bookEndpoint,
+              containing: _fieldPath("pages"),
+              item: skir.ItemId(value: "page:item"),
+            ),
+          ],
+        ),
+        prepared: skir.PreparedValue(
+          content: skir.PreparedContent.wrapRecord(withoutBook),
+          findings: const [],
+        ),
+      );
 
     final pageBook = switch (staged.read(
       skir.ValueLocation(resource: fixture.page, path: _fieldPath("book")),

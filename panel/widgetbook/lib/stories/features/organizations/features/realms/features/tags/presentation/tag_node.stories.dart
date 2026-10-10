@@ -81,7 +81,14 @@ Widget mixedTagSelectionStory({bool initiallySelected = true}) {
     child: InspectorScaffold(
       child: SelectedInspectorStory(
         selection: initiallySelected
-            ? [for (final tag in selected) TagIdentifier(tag.tagId)]
+            ? [
+                for (final tag in selected)
+                  AuthoringResourceIdentifier(
+                    organizationId: skir.recordId("organization:widgetbook"),
+                    realmId: skir.recordId("service:widgetbook"),
+                    resourceId: tag.tagId,
+                  ),
+              ]
             : const [],
         child: Center(
           child: Wrap(

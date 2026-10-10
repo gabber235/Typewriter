@@ -17,8 +17,10 @@ void main() {
 
   test("explicit book and page selectors override the current page", () {
     expect(
-      resolveElementCreationPage(
-        query: _query(book: _otherBook.title, page: _otherPage.name),
+      _query(
+        book: _otherBook.title,
+        page: _otherPage.name,
+      ).resolveElementCreationPage(
         books: [_currentBook, _otherBook],
         pages: [_currentPage, _otherPage],
         currentPage: _currentPage,
@@ -26,12 +28,47 @@ void main() {
       _otherPage,
     );
     expect(
-      resolveElementCreationPage(
-        query: _query(book: _otherBook.title),
+      _query(book: _otherBook.title).resolveElementCreationPage(
         books: [_currentBook, _otherBook],
         pages: [_currentPage, _otherPage],
         currentPage: _currentPage,
       ),
+      isNull,
+    );
+  });
+
+  test("ambiguous selectors and titles do not choose a page", () {
+    final duplicateTitle = _otherBook.copyWith(
+      bookId: skir.ResourceId(value: "duplicate"),
+    );
+
+    expect(
+      _query(
+        book: _otherBook.title,
+        page: _otherPage.name,
+      ).resolveElementCreationPage(
+        books: [_otherBook, duplicateTitle],
+        pages: [_otherPage],
+        currentPage: _currentPage,
+      ),
+      isNull,
+    );
+    expect(
+      SearchQueryContext(
+        normalizedQuery: "",
+        selectors: const [
+          SearchParsedSelector(
+            selectorId: authoringPageSelectorId,
+            key: "page:",
+            value: "Intro",
+          ),
+          SearchParsedSelector(
+            selectorId: authoringPageSelectorId,
+            key: "page:",
+            value: "Other",
+          ),
+        ],
+      ).resolvePage([_otherBook], [_otherPage]),
       isNull,
     );
   });

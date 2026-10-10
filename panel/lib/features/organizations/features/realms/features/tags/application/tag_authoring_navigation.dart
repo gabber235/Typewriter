@@ -24,6 +24,12 @@ final class TagAuthoringNavigationAdapter
         );
     ref
         .read(selectionProvider.notifier)
-        .select(TagIdentifier(effect.resourceId));
+        .select(
+          AuthoringResourceIdentifier(
+            organizationId: effect.organizationId,
+            realmId: effect.realmId,
+            resourceId: effect.resourceId,
+          ),
+        );
   }
 }

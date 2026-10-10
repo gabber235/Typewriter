@@ -39,14 +39,17 @@ class _TagNode extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final focusNode = useFocusNode();
+    final scope = ref.watch(selectedAuthoringScopeProvider);
 
     final graphDrag = GraphDrag.maybeOf(context);
     useListenable(graphDrag?.draggingInsideGraph);
+    if (scope == null) return const SizedBox.shrink();
+    final identifier = AuthoringResourceIdentifier.inScope(scope, tag.tagId);
 
     return LayoutBuilder(
       builder: (context, constraints) {
         return Selector(
-          selectableId: TagIdentifier(tag.tagId),
+          selectableId: identifier,
           focusNode: focusNode,
           builder: (isSelected, isFocused, isHovered) {
             final content = _TagNodeContent(
@@ -55,9 +58,7 @@ class _TagNode extends HookConsumerWidget {
               isFocused: isFocused,
               isHovered: isHovered,
             );
-            final identifier = TagIdentifier(tag.tagId);
-
-            return Draggable<TagIdentifier>(
+            return Draggable<AuthoringResourceIdentifier>(
               data: identifier,
               onDragStarted: () => graphDrag?.beginDrag(identifier),
               onDragEnd: (_) => graphDrag?.endDrag(),
@@ -78,31 +79,34 @@ class _TagNode extends HookConsumerWidget {
                   : const PlaceholderTagNode(),
               child: GraphDragTargetRegion(
                 targetId: identifier.graphId,
-                child: DragTarget<TagIdentifier>(
+                child: DragTarget<AuthoringResourceIdentifier>(
                   onWillAcceptWithDetails: (details) =>
+                      details.data.scope == scope &&
                       tagParentDropAction(
-                        ref.read(workingTagsProvider).value ?? const [],
-                        childId: tag.tagId,
-                        parentId: details.data.tagId,
-                      ) !=
-                      null,
+                            ref.read(workingTagsProvider).value ?? const [],
+                            childId: tag.tagId,
+                            parentId: details.data.resourceId,
+                          ) !=
+                          null,
                   onAcceptWithDetails: (details) {
                     final tags = ref.read(workingTagsProvider).requireValue;
                     final action = tagParentDropAction(
                       tags,
                       childId: tag.tagId,
-                      parentId: details.data.tagId,
+                      parentId: details.data.resourceId,
                     );
                     if (action == null) return;
                     final child = tags.firstWhere(
                       (value) => value.tagId == tag.tagId,
                     );
                     final parents = action == TagParentDropAction.link
-                        ? [...child.parentIds, details.data.tagId]
+                        ? [...child.parentIds, details.data.resourceId]
                         : child.parentIds
-                              .where((id) => id != details.data.tagId)
+                              .where((id) => id != details.data.resourceId)
                               .toList();
-                    final workspace = ref.readAuthoringWorkspace();
+                    final workspace = ref.read(
+                      authoringWorkspaceProvider(scope),
+                    );
                     workspace
                         .edit(
                           label: "Change tag parents",

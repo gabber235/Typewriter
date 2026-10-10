@@ -3,19 +3,24 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "pages.g.dart";
+part "pages.freezed.dart";
 
 /// Immutable page metadata used by library and page editor consumers.
 ///
 /// The shared workspace owns authored values. This model is a pure typed view.
-final class Page {
-  const Page({
-    required this.pageId,
-    required this.bookId,
-    required this.name,
-    required this.configuration,
-    required this.chapter,
-    required this.priority,
-  }) : assert(name != "", "Name must not be empty.");
+@freezed
+abstract class Page with _$Page {
+  @Assert("name != \"\"", "Name must not be empty.")
+  const factory Page({
+    required skir.ResourceId pageId,
+    required skir.ResourceId? bookId,
+    required String name,
+    required skir.TypeSelection configuration,
+    required String chapter,
+    required int priority,
+  }) = _Page;
+
+  const Page._();
 
   factory Page.fromAuthoring(skir.AuthoringResource resource) {
     final content = resource.content;
@@ -32,34 +37,10 @@ final class Page {
     );
   }
 
-  final skir.ResourceId pageId;
-
-  final skir.ResourceId? bookId;
-  final String name;
-  final skir.TypeSelection configuration;
-  final String chapter;
-  final int priority;
-
   skir.NamedTypeUse? get rootType => switch (configuration) {
     skir.TypeSelection_completeWrapper(:final value) => value,
     _ => null,
   };
-
-  Page copyWith({
-    skir.ResourceId? pageId,
-    skir.ResourceId? bookId,
-    String? name,
-    skir.TypeSelection? configuration,
-    String? chapter,
-    int? priority,
-  }) => Page(
-    pageId: pageId ?? this.pageId,
-    bookId: bookId ?? this.bookId,
-    name: name ?? this.name,
-    configuration: configuration ?? this.configuration,
-    chapter: chapter ?? this.chapter,
-    priority: priority ?? this.priority,
-  );
 }
 
 /// All pages in the working document, including resources without a book yet.

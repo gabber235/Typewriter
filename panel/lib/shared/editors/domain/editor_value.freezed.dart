@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'editor_value.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -42,7 +42,7 @@ $EditorValueCopyWith(EditorValue _, $Res Function(EditorValue) __);
 }
 
 
-/// Adds pattern-matching-related methods to [EditorValue].
+/// Adds pattern matching related methods to [EditorValue].
 extension EditorValuePatterns on EditorValue {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -69,7 +69,7 @@ return ready(_that);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -141,7 +141,7 @@ return ready(_that.value);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -302,7 +302,7 @@ class InvalidEditorValue extends EditorValue {
 
 
 /// Create a copy of EditorValue
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $InvalidEditorValueCopyWith<InvalidEditorValue> get copyWith => _$InvalidEditorValueCopyWithImpl<InvalidEditorValue>(this, _$identity);
@@ -349,7 +349,7 @@ class _$InvalidEditorValueCopyWithImpl<$Res>
   final $Res Function(InvalidEditorValue) _then;
 
 /// Create a copy of EditorValue
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? diagnostics = null,}) {
   return _then(InvalidEditorValue(
 null == diagnostics ? _self._diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
@@ -370,7 +370,7 @@ class ReadyEditorValue extends EditorValue {
  final  skir.DataValue value;
 
 /// Create a copy of EditorValue
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ReadyEditorValueCopyWith<ReadyEditorValue> get copyWith => _$ReadyEditorValueCopyWithImpl<ReadyEditorValue>(this, _$identity);
@@ -417,7 +417,7 @@ class _$ReadyEditorValueCopyWithImpl<$Res>
   final $Res Function(ReadyEditorValue) _then;
 
 /// Create a copy of EditorValue
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? value = null,}) {
   return _then(ReadyEditorValue(
 null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
@@ -458,7 +458,7 @@ $EditorMutationResultCopyWith(EditorMutationResult _, $Res Function(EditorMutati
 }
 
 
-/// Adds pattern-matching-related methods to [EditorMutationResult].
+/// Adds pattern matching related methods to [EditorMutationResult].
 extension EditorMutationResultPatterns on EditorMutationResult {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -483,7 +483,7 @@ return invalid(_that);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -549,7 +549,7 @@ return invalid(_that.diagnostics);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -604,7 +604,7 @@ class AppliedEditorMutation extends EditorMutationResult {
  final  skir.DataValue value;
 
 /// Create a copy of EditorMutationResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $AppliedEditorMutationCopyWith<AppliedEditorMutation> get copyWith => _$AppliedEditorMutationCopyWithImpl<AppliedEditorMutation>(this, _$identity);
@@ -651,7 +651,7 @@ class _$AppliedEditorMutationCopyWithImpl<$Res>
   final $Res Function(AppliedEditorMutation) _then;
 
 /// Create a copy of EditorMutationResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? value = null,}) {
   return _then(AppliedEditorMutation(
 null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
@@ -710,7 +710,7 @@ class InvalidEditorMutation extends EditorMutationResult {
 
 
 /// Create a copy of EditorMutationResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $InvalidEditorMutationCopyWith<InvalidEditorMutation> get copyWith => _$InvalidEditorMutationCopyWithImpl<InvalidEditorMutation>(this, _$identity);
@@ -757,7 +757,7 @@ class _$InvalidEditorMutationCopyWithImpl<$Res>
   final $Res Function(InvalidEditorMutation) _then;
 
 /// Create a copy of EditorMutationResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? diagnostics = null,}) {
   return _then(InvalidEditorMutation(
 null == diagnostics ? _self._diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable

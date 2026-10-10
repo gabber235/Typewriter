@@ -206,50 +206,48 @@ abstract interface class PortableCollectionMutationHost {
   });
 }
 
-final class PortableCollectionRowProjection {
-  const PortableCollectionRowProjection({
-    required this.resource,
-    required this.configuration,
-    required this.label,
-    required this.row,
-    required this.key,
-    required this.canonicalKey,
-    required this.selectable,
-  });
-
-  final skir.ResourceId resource;
-  final skir.TypeSelection configuration;
-  final String label;
-  final skir.DataValue row;
-  final skir.DataValue key;
-  final String canonicalKey;
-  final bool selectable;
+@freezed
+abstract class PortableCollectionRowProjection
+    with _$PortableCollectionRowProjection {
+  const factory PortableCollectionRowProjection({
+    required skir.ResourceId resource,
+    required skir.TypeSelection configuration,
+    required String label,
+    required skir.DataValue row,
+    required skir.DataValue key,
+    required String canonicalKey,
+    required bool selectable,
+  }) = _PortableCollectionRowProjection;
 }
 
-final class PortableCollectionProjection {
-  const PortableCollectionProjection({
-    required this.definition,
-    required this.rows,
-    this.problem,
-  });
+@Freezed(map: FreezedMapOptions.none, when: FreezedWhenOptions.none)
+abstract class PortableCollectionProjection
+    with _$PortableCollectionProjection {
+  factory PortableCollectionProjection({
+    required skir.PresentationCollectionDefinition? definition,
+    required List<PortableCollectionRowProjection> rows,
+    String? problem,
+  }) => PortableCollectionProjection._value(
+    definition: definition,
+    rows: List.unmodifiable(rows),
+    problem: problem,
+  );
 
-  final skir.PresentationCollectionDefinition? definition;
-  final List<PortableCollectionRowProjection> rows;
-  final String? problem;
+  const factory PortableCollectionProjection._value({
+    required skir.PresentationCollectionDefinition? definition,
+    required List<PortableCollectionRowProjection> rows,
+    required String? problem,
+  }) = _PortableCollectionProjection;
 }
 
-final class PortableResourceProjection {
-  const PortableResourceProjection({
-    required this.resource,
-    required this.configuration,
-    required this.label,
-    required this.value,
-  });
-
-  final skir.ResourceId resource;
-  final skir.TypeSelection configuration;
-  final String label;
-  final skir.DataValue value;
+@freezed
+abstract class PortableResourceProjection with _$PortableResourceProjection {
+  const factory PortableResourceProjection({
+    required skir.ResourceId resource,
+    required skir.TypeSelection configuration,
+    required String label,
+    required skir.DataValue value,
+  }) = _PortableResourceProjection;
 }
 
 abstract interface class PortableCollectionProjectionHost {
@@ -307,89 +305,91 @@ abstract interface class PortableLinkHost {
   });
 }
 
-final class PortablePageGraphPlacement {
-  const PortablePageGraphPlacement({
-    required this.x,
-    required this.y,
-    required this.width,
-    required this.height,
-  });
-
-  final int x;
-  final int y;
-  final int width;
-  final int height;
+@freezed
+abstract class PortablePageGraphPlacement with _$PortablePageGraphPlacement {
+  const factory PortablePageGraphPlacement({
+    required int x,
+    required int y,
+    required int width,
+    required int height,
+  }) = _PortablePageGraphPlacement;
 }
 
-final class PortablePageEntryProjection {
-  const PortablePageEntryProjection({
-    required this.resource,
-    required this.occurrence,
-    required this.resourceProjection,
-    this.graph,
-  });
-
-  final skir.ResourceId resource;
-  final skir.LinkOccurrence occurrence;
-  final PortableResourceProjection resourceProjection;
-  final PortablePageGraphPlacement? graph;
+@freezed
+abstract class PortablePageEntryProjection with _$PortablePageEntryProjection {
+  const factory PortablePageEntryProjection({
+    required skir.ResourceId resource,
+    required skir.LinkOccurrence occurrence,
+    required PortableResourceProjection resourceProjection,
+    PortablePageGraphPlacement? graph,
+  }) = _PortablePageEntryProjection;
 }
 
-final class PortablePageEdgeProjection {
-  const PortablePageEdgeProjection({
-    required this.id,
-    required this.source,
-    required this.target,
-  });
-
-  final String id;
-  final skir.ResourceId source;
-  final skir.ResourceId target;
+@freezed
+abstract class PortablePageEdgeProjection with _$PortablePageEdgeProjection {
+  const factory PortablePageEdgeProjection({
+    required String id,
+    required skir.ResourceId source,
+    required skir.ResourceId target,
+  }) = _PortablePageEdgeProjection;
 }
 
-sealed class PortableTimelinePlacement {
-  const PortableTimelinePlacement();
+@freezed
+sealed class PortableTimelinePlacement with _$PortableTimelinePlacement {
+  const factory PortableTimelinePlacement.keyframe(int frame) =
+      PortableTimelineKeyframe;
+  const factory PortableTimelinePlacement.segment(
+    int startFrame,
+    int endFrame,
+  ) = PortableTimelineSegment;
 }
 
-final class PortableTimelineKeyframe extends PortableTimelinePlacement {
-  const PortableTimelineKeyframe(this.frame);
+@Freezed(map: FreezedMapOptions.none, when: FreezedWhenOptions.none)
+abstract class PortableTimelineCueProjection
+    with _$PortableTimelineCueProjection {
+  factory PortableTimelineCueProjection({
+    required skir.ResourceId resource,
+    required String label,
+    required PortableTimelinePlacement placement,
+    required List<PortableTimelineCueProjection> children,
+  }) => PortableTimelineCueProjection._value(
+    resource: resource,
+    label: label,
+    placement: placement,
+    children: List.unmodifiable(children),
+  );
 
-  final int frame;
+  const factory PortableTimelineCueProjection._value({
+    required skir.ResourceId resource,
+    required String label,
+    required PortableTimelinePlacement placement,
+    required List<PortableTimelineCueProjection> children,
+  }) = _PortableTimelineCueProjection;
 }
 
-final class PortableTimelineSegment extends PortableTimelinePlacement {
-  const PortableTimelineSegment(this.startFrame, this.endFrame);
+@Freezed(map: FreezedMapOptions.none, when: FreezedWhenOptions.none)
+abstract class PortablePageProjection with _$PortablePageProjection {
+  factory PortablePageProjection({
+    required List<PortablePageEntryProjection> entries,
+    required List<PortablePageEdgeProjection> edges,
+    required Map<skir.ResourceId, List<PortableTimelineCueProjection>> timeline,
+    String? problem,
+  }) => PortablePageProjection._value(
+    entries: List.unmodifiable(entries),
+    edges: List.unmodifiable(edges),
+    timeline: {
+      for (final entry in timeline.entries)
+        entry.key: List.unmodifiable(entry.value),
+    },
+    problem: problem,
+  );
 
-  final int startFrame;
-  final int endFrame;
-}
-
-final class PortableTimelineCueProjection {
-  const PortableTimelineCueProjection({
-    required this.resource,
-    required this.label,
-    required this.placement,
-    required this.children,
-  });
-
-  final skir.ResourceId resource;
-  final String label;
-  final PortableTimelinePlacement placement;
-  final List<PortableTimelineCueProjection> children;
-}
-
-final class PortablePageProjection {
-  const PortablePageProjection({
-    required this.entries,
-    required this.edges,
-    required this.timeline,
-    this.problem,
-  });
-
-  final List<PortablePageEntryProjection> entries;
-  final List<PortablePageEdgeProjection> edges;
-  final Map<skir.ResourceId, List<PortableTimelineCueProjection>> timeline;
-  final String? problem;
+  const factory PortablePageProjection._value({
+    required List<PortablePageEntryProjection> entries,
+    required List<PortablePageEdgeProjection> edges,
+    required Map<skir.ResourceId, List<PortableTimelineCueProjection>> timeline,
+    required String? problem,
+  }) = _PortablePageProjection;
 }
 
 final class PortableGraphPositionChange {

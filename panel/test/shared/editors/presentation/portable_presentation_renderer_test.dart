@@ -7,6 +7,55 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 import "../../../support/test_utils.dart";
 
 void main() {
+  test("scope owns retained collection inputs", () {
+    final bindingId = skir.ExpressionBindingId(value: "retained");
+    final presentation = skir.PresentationId(
+      namespace: "test",
+      name: "retained",
+    );
+    final bindings = <skir.ExpressionBindingId, PortableExpressionBinding>{
+      bindingId: PortableExpressionBinding(
+        value: skir.DataValue.wrapStringValue("original"),
+      ),
+    };
+    final activePresentations = <skir.PresentationId>{presentation};
+    final slots = <String, skir.PresentationNode>{
+      "body": _visualText("retained.body", "Body"),
+    };
+    final slotBuilders = <String, PortableSlotBuilder>{
+      "body": (_) => const SizedBox.shrink(),
+    };
+    final projectedWriters = <skir.ExpressionBindingId, PortableBindingSetter>{
+      bindingId: (_, _) {},
+    };
+
+    final scope = PortablePresentationScope(
+      bindings: bindings,
+      budget: skir.EvaluationBudget(maxSteps: 10, maxCollectionItems: 10),
+      activePresentations: activePresentations,
+      slots: slots,
+      slotBuilders: slotBuilders,
+      projectedWriters: projectedWriters,
+    );
+
+    bindings.clear();
+    activePresentations.clear();
+    slots.clear();
+    slotBuilders.clear();
+    projectedWriters.clear();
+
+    expect(scope.bindings, contains(bindingId));
+    expect(scope.activePresentations, contains(presentation));
+    expect(scope.slots, contains("body"));
+    expect(scope.slotBuilders, contains("body"));
+    expect(scope.projectedWriters, contains(bindingId));
+    expect(scope.bindings.clear, throwsUnsupportedError);
+    expect(scope.activePresentations.clear, throwsUnsupportedError);
+    expect(scope.slots.clear, throwsUnsupportedError);
+    expect(scope.slotBuilders.clear, throwsUnsupportedError);
+    expect(scope.projectedWriters.clear, throwsUnsupportedError);
+  });
+
   testWidgets("relative time refreshes without a new host snapshot", (
     tester,
   ) async {
@@ -498,7 +547,6 @@ void main() {
               maxSteps: 100,
               maxCollectionItems: 100,
             ),
-            setBinding: (_, _) {},
           ),
         ),
       ),
@@ -613,7 +661,6 @@ void main() {
     final scope = PortablePresentationScope(
       bindings: const {},
       budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-      setBinding: (_, _) {},
     );
 
     await tester.pumpTestApp(
@@ -717,7 +764,6 @@ void main() {
     final scope = PortablePresentationScope(
       bindings: const {},
       budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-      setBinding: (_, _) {},
     );
     await tester.pumpTestApp(
       child: Material(
@@ -786,7 +832,6 @@ void main() {
         ),
       },
       budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-      setBinding: (_, _) {},
       catalog: _polymorphicCatalog,
       host: host,
     );
@@ -878,7 +923,6 @@ void main() {
     final scope = PortablePresentationScope(
       bindings: {_configuredBindingId: PortableExpressionBinding(value: root)},
       budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-      setBinding: (reference, value) => writes.add((reference, value)),
       host: host,
     );
 
@@ -935,7 +979,6 @@ void main() {
         ),
       },
       budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-      setBinding: (_, _) {},
       host: _BindingHost(
         catalog: skir.EditorCatalogWireSnapshot.defaultInstance
             .asTrustedLocalCatalog(),
@@ -1264,7 +1307,6 @@ void main() {
               maxSteps: 100,
               maxCollectionItems: 100,
             ),
-            setBinding: (_, _) {},
             catalog: _polymorphicCatalog,
             host: host,
           ),
@@ -1377,7 +1419,6 @@ void main() {
     final scope = PortablePresentationScope(
       bindings: const {},
       budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-      setBinding: (_, _) {},
     );
     Future<void> pumpHierarchy(List<String> values) => tester.pumpTestApp(
       child: Material(
@@ -1973,7 +2014,6 @@ _linkCollectionFixture({
             ),
           },
           budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-          setBinding: (_, _) {},
           catalog: checked,
           material: adaptiveAppearance ? collectionMaterial : null,
           host: host,
@@ -2000,7 +2040,6 @@ PortablePresentationScope _authoringScope(
     ),
   },
   budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-  setBinding: (_, _) {},
   catalog: document.workspace.document.catalog,
   host: _authoredHost(document),
 );

@@ -119,7 +119,6 @@ final class _PageWorkspaceStoryState extends State<PageWorkspaceStory> {
                   ),
                 },
                 budget: _budget,
-                setBinding: (_, _) {},
                 catalog: _fixture.catalog,
                 resource: _fixture.page,
                 role: skir.PresentationRole.editor,

@@ -7,6 +7,10 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 import "../../../../../../../support/test_utils.dart";
 
 final _testTagId = skir.ResourceId(value: "test_tag");
+final _testScope = AuthoringScope(
+  organizationId: skir.recordId("organization:fixture"),
+  realmId: skir.recordId("realm:fixture"),
+);
 Tag _testTag({int x = 0, int y = 0}) => Tag(
   tagId: _testTagId,
   name: "Test Tag",
@@ -68,8 +72,10 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    testWidgets("TagIdentifier implements GraphDragData", (tester) async {
-      final tagId = TagIdentifier(_testTagId);
+    testWidgets("scoped authored identity implements GraphDragData", (
+      tester,
+    ) async {
+      final tagId = AuthoringResourceIdentifier.inScope(_testScope, _testTagId);
 
       expect(tagId, isA<GraphDragData>());
       expect(tagId.graphId, equals(const GraphIdentifier("test_tag")));
@@ -95,7 +101,9 @@ void main() {
         settle: true,
       );
 
-      final draggableFinder = find.byType(Draggable<TagIdentifier>);
+      final draggableFinder = find.byType(
+        Draggable<AuthoringResourceIdentifier>,
+      );
       expect(draggableFinder, findsOneWidget);
     });
 
@@ -319,7 +327,9 @@ void main() {
         settle: true,
       );
 
-      final dragTargetFinder = find.byType(DragTarget<TagIdentifier>);
+      final dragTargetFinder = find.byType(
+        DragTarget<AuthoringResourceIdentifier>,
+      );
       expect(dragTargetFinder, findsOneWidget);
     });
   });

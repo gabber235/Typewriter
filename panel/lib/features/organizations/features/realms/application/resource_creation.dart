@@ -6,8 +6,8 @@ part "resource_creation.g.dart";
 part "resource_creation.freezed.dart";
 
 @Riverpod(keepAlive: true)
-ResourceCreationSession resourceCreation(Ref ref) =>
-    ResourceCreationSession(ref);
+ResourceCreationSession resourceCreation(Ref ref, AuthoringScope scope) =>
+    ResourceCreationSession(ref, scope);
 
 final class ResourceCreationConnection {
   const ResourceCreationConnection({
@@ -71,6 +71,7 @@ final class ResourceCreationRequest {
 @freezed
 abstract class CreatedAuthoringResource with _$CreatedAuthoringResource {
   const factory CreatedAuthoringResource({
+    required AuthoringScope scope,
     required skir.ResourceId id,
     required skir.ResourceDefinitionId definition,
     required skir.AuthoringRecord content,
@@ -103,41 +104,42 @@ extension ResourceCreationCatalog on CheckedEditorCatalog? {
   }
 }
 
-void createAuthoringResource({
-  required AuthoringEdit edit,
-  required ResourceCreationRequest request,
-  required skir.PreparedValue prepared,
-}) {
-  edit.createPrepared(request.id, prepared, definition: request.definition);
-  for (final connection in request.connections) {
-    edit.connect(
-      skir.LinkOccurrence(
-        id: skir.LinkOccurrenceId(
-          endpoint: connection.endpoint,
-          location: skir.ValueLocation(
-            resource: connection.source,
-            path: connection.path,
+extension AuthoringResourceCreation on AuthoringEdit {
+  void createPreparedResource({
+    required ResourceCreationRequest request,
+    required skir.PreparedValue prepared,
+  }) {
+    createPrepared(request.id, prepared, definition: request.definition);
+    for (final connection in request.connections) {
+      connect(
+        skir.LinkOccurrence(
+          id: skir.LinkOccurrenceId(
+            endpoint: connection.endpoint,
+            location: skir.ValueLocation(
+              resource: connection.source,
+              path: connection.path,
+            ),
           ),
+          source: connection.source,
+          target: skir.LinkTarget(resource: request.id, opposite: null),
         ),
-        source: connection.source,
-        target: skir.LinkTarget(resource: request.id, opposite: null),
-      ),
-      request.id,
-    );
+        request.id,
+      );
+    }
   }
 }
 
 final class ResourceCreationSession {
-  const ResourceCreationSession(this.ref);
+  const ResourceCreationSession(this.ref, this.scope);
 
   final Ref ref;
+  final AuthoringScope scope;
 
   Future<CreatedAuthoringResource?> create({
     required BuildContext context,
     required ResourceCreationRequest request,
   }) async {
-    final workspace = ref.readAuthoringWorkspace();
-    final scope = ref.read(selectedAuthoringScopeProvider)!;
+    final workspace = ref.read(authoringWorkspaceProvider(scope));
     final checked = workspace.document.catalog;
     final commands = ref.read(authoredResourceCommandsProvider(scope));
     CreatedAuthoringResource? created;
@@ -179,12 +181,12 @@ final class ResourceCreationSession {
         if (!context.mounted) {
           throw StateError("The creation view closed during preparation");
         }
-        createAuthoringResource(
-          edit: edit,
+        edit.createPreparedResource(
           request: effectiveRequest,
           prepared: prepared,
         );
         created = CreatedAuthoringResource(
+          scope: scope,
           id: effectiveRequest.id,
           definition: effectiveRequest.definition,
           content: prepared.recordContent,

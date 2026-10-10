@@ -102,13 +102,42 @@ final class _SearchInputStoryState extends State<_SearchInputStory> {
 
   skir.DataValue _value = skir.DataValue.unfilled;
 
+  late final _host = EditorSourcePresentationHost(
+    catalog: skir.EditorCatalogWireSnapshot.defaultInstance
+        .asTrustedLocalCatalog(),
+    root: () => skir.PresentationNode(
+      nodeId: "reward.search",
+      properties: skir.PresentationProperties.defaultInstance,
+      element: skir.PresentationElement.wrapSearchInput(_control),
+      header: null,
+    ),
+    bindings: [
+      EditorSourcePresentationBinding(
+        id: _target,
+        use: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+        read: (_) => _value,
+        write: (_, value) async {
+          setState(() => _value = value);
+          return const PortablePresentationWriteApplied();
+        },
+      ),
+    ],
+    budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 1000),
+  );
+
+  @override
+  void dispose() {
+    _host.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) => PortableSearchInput(
     control: _control,
     scope: PortablePresentationScope(
       bindings: {_target: PortableExpressionBinding(value: _value)},
       budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 1000),
-      setBinding: (_, value) => setState(() => _value = value),
+      host: _host,
     ),
   );
 }

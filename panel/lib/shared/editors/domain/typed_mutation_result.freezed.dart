@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'typed_mutation_result.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -42,7 +42,7 @@ $TypedMutationResultCopyWith(TypedMutationResult _, $Res Function(TypedMutationR
 }
 
 
-/// Adds pattern-matching-related methods to [TypedMutationResult].
+/// Adds pattern matching related methods to [TypedMutationResult].
 extension TypedMutationResultPatterns on TypedMutationResult {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -70,7 +70,7 @@ return unavailable(_that);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -145,7 +145,7 @@ return unavailable(_that.diagnostics);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -207,7 +207,7 @@ class MutationSuccess implements TypedMutationResult {
  final  skir.DataValue value;
 
 /// Create a copy of TypedMutationResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $MutationSuccessCopyWith<MutationSuccess> get copyWith => _$MutationSuccessCopyWithImpl<MutationSuccess>(this, _$identity);
@@ -254,7 +254,7 @@ class _$MutationSuccessCopyWithImpl<$Res>
   final $Res Function(MutationSuccess) _then;
 
 /// Create a copy of TypedMutationResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? revision = null,Object? value = null,}) {
   return _then(MutationSuccess(
 revision: null == revision ? _self.revision : revision // ignore: cast_nullable_to_non_nullable
@@ -278,7 +278,7 @@ class MutationConflict implements TypedMutationResult {
  final  skir.DataValue actualValue;
 
 /// Create a copy of TypedMutationResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $MutationConflictCopyWith<MutationConflict> get copyWith => _$MutationConflictCopyWithImpl<MutationConflict>(this, _$identity);
@@ -325,7 +325,7 @@ class _$MutationConflictCopyWithImpl<$Res>
   final $Res Function(MutationConflict) _then;
 
 /// Create a copy of TypedMutationResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? expectedRevision = null,Object? actualRevision = null,Object? actualValue = null,}) {
   return _then(MutationConflict(
 expectedRevision: null == expectedRevision ? _self.expectedRevision : expectedRevision // ignore: cast_nullable_to_non_nullable
@@ -354,7 +354,7 @@ class MutationInvalid implements TypedMutationResult {
 
 
 /// Create a copy of TypedMutationResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $MutationInvalidCopyWith<MutationInvalid> get copyWith => _$MutationInvalidCopyWithImpl<MutationInvalid>(this, _$identity);
@@ -401,7 +401,7 @@ class _$MutationInvalidCopyWithImpl<$Res>
   final $Res Function(MutationInvalid) _then;
 
 /// Create a copy of TypedMutationResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? diagnostics = null,}) {
   return _then(MutationInvalid(
 null == diagnostics ? _self._diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
@@ -422,7 +422,7 @@ class MutationPermissionDenied implements TypedMutationResult {
  final  String message;
 
 /// Create a copy of TypedMutationResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $MutationPermissionDeniedCopyWith<MutationPermissionDenied> get copyWith => _$MutationPermissionDeniedCopyWithImpl<MutationPermissionDenied>(this, _$identity);
@@ -469,7 +469,7 @@ class _$MutationPermissionDeniedCopyWithImpl<$Res>
   final $Res Function(MutationPermissionDenied) _then;
 
 /// Create a copy of TypedMutationResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
   return _then(MutationPermissionDenied(
 null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
@@ -494,7 +494,7 @@ class MutationUncertain implements TypedMutationResult {
  final  Object? submissionId;
 
 /// Create a copy of TypedMutationResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $MutationUncertainCopyWith<MutationUncertain> get copyWith => _$MutationUncertainCopyWithImpl<MutationUncertain>(this, _$identity);
@@ -541,7 +541,7 @@ class _$MutationUncertainCopyWithImpl<$Res>
   final $Res Function(MutationUncertain) _then;
 
 /// Create a copy of TypedMutationResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? message = null,Object? cause = null,Object? stackTrace = null,Object? replay = freezed,Object? submissionId = freezed,}) {
   return _then(MutationUncertain(
 message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
@@ -570,7 +570,7 @@ class MutationUnavailable implements TypedMutationResult {
 
 
 /// Create a copy of TypedMutationResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $MutationUnavailableCopyWith<MutationUnavailable> get copyWith => _$MutationUnavailableCopyWithImpl<MutationUnavailable>(this, _$identity);
@@ -617,7 +617,7 @@ class _$MutationUnavailableCopyWithImpl<$Res>
   final $Res Function(MutationUnavailable) _then;
 
 /// Create a copy of TypedMutationResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? diagnostics = null,}) {
   return _then(MutationUnavailable(
 null == diagnostics ? _self._diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable

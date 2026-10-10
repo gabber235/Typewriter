@@ -22,6 +22,7 @@ part "portable_renderer/scope.dart";
 part "portable_renderer/structured_inputs.dart";
 part "portable_renderer/style.dart";
 part "portable_search_input.dart";
+part "portable_presentation_renderer.freezed.dart";
 
 final class PortablePresentationNodeRenderer extends StatelessWidget {
   const PortablePresentationNodeRenderer({
@@ -318,7 +319,6 @@ typedef PortablePresentationScopeBuilder = PortablePresentationScope Function({
   required PortablePresentationHost host,
   required PortablePresentationDocument document,
   required Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings,
-  required void Function(skir.BindingRef, skir.DataValue) setBinding,
   required ValueChanged<String> reportStatus,
 });
 
@@ -373,7 +373,6 @@ final class _PortablePresentationRendererState
             host: widget.host,
             document: document,
             bindings: bindings,
-            setBinding: _setBinding,
             reportStatus: _reportStatus,
           ) ??
           _defaultScope(document, bindings);
@@ -448,12 +447,9 @@ final class _PortablePresentationRendererState
     return PortablePresentationScope(
       bindings: bindings,
       budget: document.budget,
-      setBinding: _setBinding,
       enabled: widget.host.enabled,
       readOnly: widget.host.readOnly,
-      invokeCommand: capabilities.invokeCommand,
       watchSearch: capabilities.watchSearch,
-      reload: capabilities.reload,
       commit: capabilities.commit,
       openResource: capabilities.openResource,
       reportStatus: _reportStatus,
@@ -464,36 +460,6 @@ final class _PortablePresentationRendererState
       slots: document.slots,
       host: widget.host,
     );
-  }
-
-  void _setBinding(skir.BindingRef reference, skir.DataValue value) {
-    unawaited(_write(reference, value));
-  }
-
-  Future<void> _write(skir.BindingRef reference, skir.DataValue value) async {
-    final document = widget.host.document;
-    final result = await widget.host.write(
-      reference,
-      value,
-      context: PortableInvocationContext(
-        bindings: {
-          for (final entry in document.bindings.entries)
-            entry.key: PortableExpressionBinding(
-              value: entry.value.value,
-              location: entry.value.location,
-              schema: entry.value.schema,
-            ),
-        },
-        catalogGeneration: document.catalog.snapshot.generation,
-      ),
-    );
-    if (!mounted) return;
-    switch (result) {
-      case PortablePresentationWriteApplied():
-        if (_status != null) setState(() => _status = null);
-      case PortablePresentationWriteRejected(:final message):
-        _reportStatus(message);
-    }
   }
 
   void _reportStatus(String message) {

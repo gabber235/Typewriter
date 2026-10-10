@@ -1,8 +1,8 @@
-import "package:flutter/foundation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
 
-import "../application/portable_value_tree.dart";
+part "editor_diagnostic.freezed.dart";
 
 enum EditorDiagnosticCode {
   invalidPath,
@@ -14,40 +14,19 @@ enum EditorDiagnosticCode {
 
 enum EditorDiagnosticSeverity { information, warning, error }
 
-final class EditorDiagnostic {
-  const EditorDiagnostic({
-    required this.code,
-    required this.message,
-    this.path,
-    this.severity = EditorDiagnosticSeverity.error,
-    this.details = const {},
-  });
+@freezed
+abstract class EditorDiagnostic with _$EditorDiagnostic {
+  const factory EditorDiagnostic({
+    required EditorDiagnosticCode code,
+    required String message,
+    skir.ValuePath? path,
+    @Default(EditorDiagnosticSeverity.error) EditorDiagnosticSeverity severity,
+    @Default({}) Map<String, String> details,
+  }) = _EditorDiagnostic;
+  const EditorDiagnostic._();
 
-  final EditorDiagnosticCode code;
-  final String message;
-  final skir.ValuePath? path;
-  final EditorDiagnosticSeverity severity;
-  final Map<String, String> details;
-
-  EditorDiagnostic at(skir.ValuePath prefix) => EditorDiagnostic(
-    code: code,
-    message: message,
-    path: path == null ? prefix : prefix.followedBy(path!),
-    severity: severity,
-    details: details,
-  );
-
-  @override
-  bool operator ==(Object other) =>
-      other is EditorDiagnostic &&
-      other.code == code &&
-      other.message == message &&
-      other.path == path &&
-      other.severity == severity &&
-      mapEquals(other.details, details);
-
-  @override
-  int get hashCode => Object.hash(code, message, path, severity, details);
+  EditorDiagnostic at(skir.ValuePath prefix) =>
+      copyWith(path: path == null ? prefix : prefix.followedBy(path!));
 }
 
 extension EditorValuePathOperations on skir.ValuePath {

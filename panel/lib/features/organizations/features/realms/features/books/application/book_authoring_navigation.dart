@@ -17,29 +17,33 @@ final class BookAuthoringNavigationAdapter
 
   @override
   Future<void> open(Ref ref, OpenAuthoringResourceEffect effect) async {
-    final ownerPath = effect._ownerPath(ref, effect.resourceId);
+    final scope = AuthoringScope(
+      organizationId: effect.organizationId,
+      realmId: effect.realmId,
+    );
+    final document = ref
+        .read(workingAuthoringDocumentProvider(scope))
+        .requireValue;
+    final ownership = document.relations.ownerPath(effect.resourceId);
+    if (ownership.problem case final problem?) throw StateError(problem);
+    final ownerPath = ownership.owners;
     switch (effect.navigationHandler) {
       case "typewriter.book":
         await _openBook(ref, effect, effect.resourceId);
       case "typewriter.page":
         final bookId = ownerPath.firstOrNull;
-        if (bookId != null) {
-          await _openBook(ref, effect, bookId, pageId: effect.resourceId);
-        }
+        if (bookId == null) throw StateError("The Page has no Book owner");
+        await _openBook(ref, effect, bookId, pageId: effect.resourceId);
       case "typewriter.page-element":
         final pageId = ownerPath.firstOrNull;
         final bookId = ownerPath.skip(1).firstOrNull;
-        if (bookId == null || pageId == null) return;
+        if (bookId == null || pageId == null) {
+          throw StateError("The element has no Page and Book owner path");
+        }
         await _openBook(ref, effect, bookId, pageId: pageId);
-        ref
-            .read(selectionProvider.notifier)
-            .select(
-              AuthoringResourceIdentifier(
-                organizationId: effect.organizationId,
-                realmId: effect.realmId,
-                resourceId: effect.resourceId,
-              ),
-            );
+        ref.read(selectionProvider.notifier).selectAll([
+          AuthoringResourceIdentifier.inScope(scope, effect.resourceId),
+        ]);
     }
   }
 
@@ -58,40 +62,4 @@ final class BookAuthoringNavigationAdapter
           children: [if (pageId != null) RouteRoute(pageId: pageId.id)],
         ),
       );
-}
-
-extension on OpenAuthoringResourceEffect {
-  List<skir.ResourceId> _ownerPath(Ref ref, skir.ResourceId start) {
-    final draft = ref
-        .read(
-          workingAuthoringDocumentProvider(
-            AuthoringScope(
-              organizationId: this.organizationId,
-              realmId: this.realmId,
-            ),
-          ),
-        )
-        .value;
-    if (draft == null) return const [];
-    final catalog = draft.catalog;
-    final ownership = {
-      for (final relation in catalog.snapshot.relations)
-        if (relation.families.any(
-          (family) => family.value == "resource.ownership",
-        ))
-          relation.id,
-    };
-    final parents = {
-      for (final link in draft.links)
-        if (ownership.contains(link.contract)) link.second: link.first,
-    };
-    final path = <skir.ResourceId>[];
-    final visited = <skir.ResourceId>{start};
-    var current = parents[start];
-    while (current != null && visited.add(current)) {
-      path.add(current);
-      current = parents[current];
-    }
-    return path;
-  }
 }

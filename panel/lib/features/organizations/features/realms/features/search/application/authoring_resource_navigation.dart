@@ -1,5 +1,7 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "authoring_resource_navigation.g.dart";
+
 abstract interface class AuthoringResourceNavigationAdapter {
   bool supports(String handler);
 
@@ -13,6 +15,9 @@ final class AuthoringResourceNavigationRegistry {
 
   final List<AuthoringResourceNavigationAdapter> _adapters;
 
+  bool supports(String handler) =>
+      _adapters.where((adapter) => adapter.supports(handler)).length == 1;
+
   Future<bool> open(
     Ref ref,
     String? handler,
@@ -25,3 +30,11 @@ final class AuthoringResourceNavigationRegistry {
     return true;
   }
 }
+
+@Riverpod(keepAlive: true)
+AuthoringResourceNavigationRegistry authoringResourceNavigationRegistry(
+  Ref ref,
+) => AuthoringResourceNavigationRegistry(const [
+  BookAuthoringNavigationAdapter(),
+  TagAuthoringNavigationAdapter(),
+]);

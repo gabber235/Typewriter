@@ -92,7 +92,14 @@ Widget mixedBookSelectionStory({bool initiallySelected = true}) {
     child: InspectorScaffold(
       child: SelectedInspectorStory(
         selection: initiallySelected
-            ? [for (final book in books) BookIdentifier(book.bookId)]
+            ? [
+                for (final book in books)
+                  AuthoringResourceIdentifier(
+                    organizationId: skir.recordId("organization:widgetbook"),
+                    realmId: skir.recordId("service:widgetbook"),
+                    resourceId: book.bookId,
+                  ),
+              ]
             : const [],
         child: const Center(child: _BookWidgetStory()),
       ),

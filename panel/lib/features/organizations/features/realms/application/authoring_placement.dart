@@ -2,6 +2,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "authoring_placement.freezed.dart";
+
 final elementValuePath = editorRootPath;
 final elementPlacementPath = editorRootPath.field("placement");
 
@@ -39,100 +41,74 @@ final class PlacementTypeReferences {
       timelineKeyframePlacementTypeRef;
 }
 
-sealed class Placement {
-  const Placement();
+@freezed
+sealed class Placement with _$Placement {
+  const factory Placement.graph({
+    required int x,
+    required int y,
+    required int width,
+    required int height,
+  }) = GraphPlacement;
+  const factory Placement.timelineEntry({required int trackIndex}) =
+      TimelineEntryPlacement;
+  const factory Placement.timelineSegment({
+    required int startFrame,
+    required int endFrame,
+  }) = TimelineSegmentPlacement;
+  const factory Placement.timelineKeyframe({required int frame}) =
+      TimelineKeyframePlacement;
+  const Placement._();
 
-  skir.TypeDefinitionId get concreteType;
-}
+  skir.TypeDefinitionId get concreteType => switch (this) {
+    GraphPlacement() => graphPlacementTypeRef,
+    TimelineEntryPlacement() => timelineEntryPlacementTypeRef,
+    TimelineSegmentPlacement() => timelineSegmentPlacementTypeRef,
+    TimelineKeyframePlacement() => timelineKeyframePlacementTypeRef,
+  };
 
-final class GraphPlacement extends Placement {
-  const GraphPlacement({
-    required this.x,
-    required this.y,
-    required this.width,
-    required this.height,
-  });
-
-  final int x;
-  final int y;
-  final int width;
-  final int height;
-
-  @override
-  skir.TypeDefinitionId get concreteType => graphPlacementTypeRef;
-
-  GraphPlacement copyWith({int? x, int? y, int? width, int? height}) =>
-      GraphPlacement(
-        x: x ?? this.x,
-        y: y ?? this.y,
-        width: width ?? this.width,
-        height: height ?? this.height,
-      );
-
-  @override
-  bool operator ==(Object other) =>
-      other is GraphPlacement &&
-      x == other.x &&
-      y == other.y &&
-      width == other.width &&
-      height == other.height;
-
-  @override
-  int get hashCode => Object.hash(x, y, width, height);
-}
-
-final class TimelineEntryPlacement extends Placement {
-  const TimelineEntryPlacement({required this.trackIndex});
-
-  final int trackIndex;
-
-  @override
-  skir.TypeDefinitionId get concreteType => timelineEntryPlacementTypeRef;
-
-  @override
-  bool operator ==(Object other) =>
-      other is TimelineEntryPlacement && trackIndex == other.trackIndex;
-
-  @override
-  int get hashCode => trackIndex.hashCode;
-}
-
-final class TimelineSegmentPlacement extends Placement {
-  const TimelineSegmentPlacement({
-    required this.startFrame,
-    required this.endFrame,
-  });
-
-  final int startFrame;
-  final int endFrame;
-
-  @override
-  skir.TypeDefinitionId get concreteType => timelineSegmentPlacementTypeRef;
-
-  @override
-  bool operator ==(Object other) =>
-      other is TimelineSegmentPlacement &&
-      startFrame == other.startFrame &&
-      endFrame == other.endFrame;
-
-  @override
-  int get hashCode => Object.hash(startFrame, endFrame);
-}
-
-final class TimelineKeyframePlacement extends Placement {
-  const TimelineKeyframePlacement({required this.frame});
-
-  final int frame;
-
-  @override
-  skir.TypeDefinitionId get concreteType => timelineKeyframePlacementTypeRef;
-
-  @override
-  bool operator ==(Object other) =>
-      other is TimelineKeyframePlacement && frame == other.frame;
-
-  @override
-  int get hashCode => frame.hashCode;
+  skir.DataValue toAuthoredValue() {
+    switch (this) {
+      case GraphPlacement(:final width, :final height)
+          when width <= 0 || height <= 0:
+        throw ArgumentError("Graph placement dimensions must be positive");
+      case TimelineEntryPlacement(:final trackIndex) when trackIndex < 0:
+        throw ArgumentError("Timeline track index must not be negative");
+      case TimelineSegmentPlacement(:final startFrame, :final endFrame)
+          when startFrame < 0 || endFrame < startFrame:
+        throw ArgumentError("Timeline segment frames are invalid");
+      case TimelineKeyframePlacement(:final frame) when frame < 0:
+        throw ArgumentError("Timeline keyframe must not be negative");
+      default:
+    }
+    final fields = switch (this) {
+      GraphPlacement(:final x, :final y, :final width, :final height) => {
+        "x": x,
+        "y": y,
+        "width": width,
+        "height": height,
+      },
+      TimelineEntryPlacement(:final trackIndex) => {"trackIndex": trackIndex},
+      TimelineSegmentPlacement(:final startFrame, :final endFrame) => {
+        "startFrame": startFrame,
+        "endFrame": endFrame,
+      },
+      TimelineKeyframePlacement(:final frame) => {"frame": frame},
+    };
+    return skir.DataValue.createNamed(
+      actualType: skir.NamedTypeUse(
+        definition: concreteType,
+        arguments: const [],
+      ),
+      payload: skir.DataValue.createRecord(
+        fields: fields.entries.map(
+          (field) => skir.FieldValue(
+            name: field.key,
+            value: skir.DataValue.wrapInteger(field.value.toString()),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 Placement decodePlacement(skir.DataValue value) {
@@ -166,48 +142,4 @@ Placement decodePlacement(skir.DataValue value) {
       "Unknown placement concrete type ${named.actualType.definition}",
     ),
   };
-}
-
-skir.DataValue placementValue(Placement placement) {
-  switch (placement) {
-    case GraphPlacement(:final width, :final height)
-        when width <= 0 || height <= 0:
-      throw ArgumentError("Graph placement dimensions must be positive");
-    case TimelineEntryPlacement(:final trackIndex) when trackIndex < 0:
-      throw ArgumentError("Timeline track index must not be negative");
-    case TimelineSegmentPlacement(:final startFrame, :final endFrame)
-        when startFrame < 0 || endFrame < startFrame:
-      throw ArgumentError("Timeline segment frames are invalid");
-    case TimelineKeyframePlacement(:final frame) when frame < 0:
-      throw ArgumentError("Timeline keyframe must not be negative");
-    default:
-  }
-  final fields = switch (placement) {
-    GraphPlacement(:final x, :final y, :final width, :final height) => {
-      "x": x,
-      "y": y,
-      "width": width,
-      "height": height,
-    },
-    TimelineSegmentPlacement(:final startFrame, :final endFrame) => {
-      "startFrame": startFrame,
-      "endFrame": endFrame,
-    },
-    TimelineKeyframePlacement(:final frame) => {"frame": frame},
-    TimelineEntryPlacement(:final trackIndex) => {"trackIndex": trackIndex},
-  };
-  return skir.DataValue.createNamed(
-    actualType: skir.NamedTypeUse(
-      definition: placement.concreteType,
-      arguments: const [],
-    ),
-    payload: skir.DataValue.createRecord(
-      fields: fields.entries.map(
-        (field) => skir.FieldValue(
-          name: field.key,
-          value: skir.DataValue.wrapInteger(field.value.toString()),
-        ),
-      ),
-    ),
-  );
 }

@@ -46,7 +46,18 @@ Widget bookAndTagSelectionStory({required bool sharedColor}) {
     ],
     child: InspectorScaffold(
       child: SelectedInspectorStory(
-        selection: [BookIdentifier(book.bookId), TagIdentifier(tag.tagId)],
+        selection: [
+          AuthoringResourceIdentifier(
+            organizationId: skir.recordId("organization:widgetbook"),
+            realmId: skir.recordId("service:widgetbook"),
+            resourceId: book.bookId,
+          ),
+          AuthoringResourceIdentifier(
+            organizationId: skir.recordId("organization:widgetbook"),
+            realmId: skir.recordId("service:widgetbook"),
+            resourceId: tag.tagId,
+          ),
+        ],
         child: Center(
           child: Wrap(
             spacing: 16,

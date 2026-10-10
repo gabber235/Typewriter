@@ -1064,7 +1064,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
         staged,
         binding.template.relativePath,
       )) {
-        if (authoredPathStartsWith(path, embedded.path)) {
+        if (path.isAtOrBelow(embedded.path)) {
           locations.add(skir.ValueLocation(resource: target, path: path));
         }
       }

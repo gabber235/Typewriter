@@ -203,17 +203,6 @@ final class _AuthoredInteractionGalleryState
               maxSteps: 1000,
               maxCollectionItems: 1000,
             ),
-            setBinding: (reference, value) {
-              final location = skir.ValueLocation(
-                resource: _interactionResource,
-                path: reference.path,
-              );
-              _binding.edit(
-                label: "Edit field",
-                apply: (edit) => edit.set(location, value),
-              );
-              setState(() {});
-            },
             resource: _interactionResource,
             reportStatus: (status) => setState(() => _status = status),
             host: _host,
@@ -808,7 +797,6 @@ final class ResourceHeadingGallery extends StatelessWidget {
         ),
       },
       budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
-      setBinding: (_, _) {},
     );
     final rich =
         (skir.RichTextContent.mutable()

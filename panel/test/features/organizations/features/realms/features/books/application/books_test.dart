@@ -226,27 +226,79 @@ void main() {
     });
   });
 
-  group("BookIdentifier", () {
+  group("AuthoringResourceIdentifier", () {
+    final organization = skir.recordId("organization:test");
+    final realm = skir.recordId("realm:test");
+
     test("equality works correctly", () {
-      final id1 = BookIdentifier(_rid("abc"));
-      final id2 = BookIdentifier(_rid("abc"));
-      final id3 = BookIdentifier(_rid("xyz"));
+      final id1 = AuthoringResourceIdentifier(
+        organizationId: organization,
+        realmId: realm,
+        resourceId: _rid("abc"),
+      );
+      final id2 = AuthoringResourceIdentifier(
+        organizationId: organization,
+        realmId: realm,
+        resourceId: _rid("abc"),
+      );
+      final id3 = AuthoringResourceIdentifier(
+        organizationId: organization,
+        realmId: realm,
+        resourceId: _rid("xyz"),
+      );
 
       expect(id1, equals(id2));
       expect(id1, isNot(equals(id3)));
     });
 
+    test("same resource stays distinct across authoring scopes", () {
+      final resource = _rid("shared");
+      final first = AuthoringResourceIdentifier(
+        organizationId: organization,
+        realmId: realm,
+        resourceId: resource,
+      );
+      final second = AuthoringResourceIdentifier(
+        organizationId: skir.recordId("organization:other"),
+        realmId: realm,
+        resourceId: resource,
+      );
+      final third = AuthoringResourceIdentifier(
+        organizationId: organization,
+        realmId: skir.recordId("realm:other"),
+        resourceId: resource,
+      );
+
+      expect({first, second, third}, hasLength(3));
+    });
+
     test("hashCode is consistent with equality", () {
-      final id1 = BookIdentifier(_rid("abc"));
-      final id2 = BookIdentifier(_rid("abc"));
+      final id1 = AuthoringResourceIdentifier(
+        organizationId: organization,
+        realmId: realm,
+        resourceId: _rid("abc"),
+      );
+      final id2 = AuthoringResourceIdentifier(
+        organizationId: organization,
+        realmId: realm,
+        resourceId: _rid("abc"),
+      );
 
       expect(id1.hashCode, equals(id2.hashCode));
     });
 
     test("can be used as map key", () {
-      final map = <BookIdentifier, String>{};
-      final id1 = BookIdentifier(_rid("one"));
-      final id2 = BookIdentifier(_rid("one"));
+      final map = <AuthoringResourceIdentifier, String>{};
+      final id1 = AuthoringResourceIdentifier(
+        organizationId: organization,
+        realmId: realm,
+        resourceId: _rid("one"),
+      );
+      final id2 = AuthoringResourceIdentifier(
+        organizationId: organization,
+        realmId: realm,
+        resourceId: _rid("one"),
+      );
 
       map[id1] = "value1";
       map[id2] = "value2";
@@ -256,7 +308,11 @@ void main() {
     });
 
     test("toString returns descriptive string", () {
-      final id = BookIdentifier(_rid("book123"));
+      final id = AuthoringResourceIdentifier(
+        organizationId: organization,
+        realmId: realm,
+        resourceId: _rid("book123"),
+      );
 
       expect(id.toString(), contains("book123"));
     });

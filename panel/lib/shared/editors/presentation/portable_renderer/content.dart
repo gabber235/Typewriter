@@ -400,10 +400,7 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
         final displayNow = content.timeZone == skir.DateTimeZone.utc
             ? now.toUtc()
             : now.toLocal();
-        final description = describeRelativeTime(
-          value: display,
-          now: displayNow,
-        );
+        final description = display.describeRelativeTo(now: displayNow);
         useRefreshAt(description.nextRefreshAt, now: clock.now);
         final tooltipKey = useMemoized(GlobalKey<TooltipState>.new);
         final label = content.style == skir.RelativeTimeStyle.compact

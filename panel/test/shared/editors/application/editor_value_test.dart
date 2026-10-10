@@ -5,6 +5,22 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   group("EditorValue", () {
+    test("diagnostic details use structural equality and hashing", () {
+      const first = EditorDiagnostic(
+        code: EditorDiagnosticCode.invalidValue,
+        message: "Invalid value",
+        details: {"field": "name"},
+      );
+      const second = EditorDiagnostic(
+        code: EditorDiagnosticCode.invalidValue,
+        message: "Invalid value",
+        details: {"field": "name"},
+      );
+
+      expect(first, second);
+      expect(first.hashCode, second.hashCode);
+    });
+
     test("ready exposes its typed value", () {
       final state = EditorValue.ready(skir.DataValue.wrapStringValue("ready"));
 

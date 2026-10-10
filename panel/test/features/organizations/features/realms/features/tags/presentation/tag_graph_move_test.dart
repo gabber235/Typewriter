@@ -11,8 +11,8 @@ void main() {
     final parentId = skir.ResourceId(value: "parent");
     final childId = skir.ResourceId(value: "child");
     final tags = [
-      _tag(TagIdentifier(parentId), "Parent", x: 0),
-      _tag(TagIdentifier(childId), "Child", x: 0, y: 3, parentIds: [parentId]),
+      _tag(parentId, "Parent", x: 0),
+      _tag(childId, "Child", x: 0, y: 3, parentIds: [parentId]),
     ];
 
     await tester.pumpTestApp(
@@ -35,7 +35,7 @@ void main() {
   ) async {
     final id = skir.ResourceId(value: "tag:shared");
     final document = fixtureAuthoringDocument(
-      tags: [_tag(TagIdentifier(id), "Original", x: 0)],
+      tags: [_tag(id, "Original", x: 0)],
     );
     final transport = ScriptedAuthoringTransport(AsyncData(document));
     addTearDown(transport.dispose);
@@ -86,8 +86,8 @@ void main() {
       final firstId = skir.ResourceId(value: "first");
       final secondId = skir.ResourceId(value: "second");
       final tags = [
-        _tag(TagIdentifier(firstId), "First Tag", x: 0),
-        _tag(TagIdentifier(secondId), "Second Tag", x: 3),
+        _tag(firstId, "First Tag", x: 0),
+        _tag(secondId, "Second Tag", x: 3),
       ];
       final transport = ScriptedAuthoringTransport(
         AsyncData(fixtureAuthoringDocument(tags: tags)),
@@ -108,8 +108,8 @@ void main() {
           selector.selectableId.id: selector,
       };
       tester.container().read(selectionProvider.notifier).selectAll([
-        TagIdentifier(firstId),
-        TagIdentifier(secondId),
+        AuthoringResourceIdentifier.inScope(_scope, firstId),
+        AuthoringResourceIdentifier.inScope(_scope, secondId),
       ]);
       selectors[firstId.id]!.focusNode.requestFocus();
       await tester.pump();
@@ -154,17 +154,22 @@ void main() {
 }
 
 Tag _tag(
-  TagIdentifier identifier,
+  skir.ResourceId id,
   String name, {
   required int x,
   int y = 0,
   List<skir.ResourceId> parentIds = const [],
 }) {
   return Tag(
-    tagId: identifier.tagId,
+    tagId: id,
     name: name,
     color: Colors.blue,
     parentIds: parentIds,
     placement: GraphPlacement(x: x, y: y, width: 2, height: 1),
   );
 }
+
+final _scope = AuthoringScope(
+  organizationId: skir.recordId("organization:fixture"),
+  realmId: skir.recordId("realm:fixture"),
+);

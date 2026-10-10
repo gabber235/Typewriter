@@ -593,7 +593,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
   }) {
     final location = this.location(source, context: context);
     if (location == null) {
-      return const PortablePageProjection(
+      return PortablePageProjection(
         entries: [],
         edges: [],
         timeline: {},
@@ -608,10 +608,10 @@ final class AuthoredPresentationHost extends ChangeNotifier
     for (final link in authored.links) {
       final first =
           link.first == location.resource &&
-          _pathIsAtOrBelow(link.firstLocation, location.path);
+          (link.firstLocation?.isAtOrBelow(location.path) ?? false);
       final second =
           link.second == location.resource &&
-          _pathIsAtOrBelow(link.secondLocation, location.path);
+          (link.secondLocation?.isAtOrBelow(location.path) ?? false);
       if (!first && !second) continue;
       final relation = relations[link.contract];
       final endpoint = first ? relation?.first.id : relation?.second.id;
@@ -654,18 +654,26 @@ final class AuthoredPresentationHost extends ChangeNotifier
       );
     }
     final direct = {for (final entry in entries) entry.resource};
+    final ownership = authored.relations;
     final timeline = <skir.ResourceId, List<PortableTimelineCueProjection>>{};
     for (final entry in entries) {
       final visited = <skir.ResourceId>{entry.resource};
       timeline[entry.resource] = [
-        for (final target in _ownedTimelineTargets(entry.resource))
-          ?_timelineCue(target, direct, visited),
+        for (final target in _ownedTimelineTargets(entry.resource, ownership))
+          ?_timelineCue(target, direct, visited, ownership),
       ];
     }
     return PortablePageProjection(
       entries: entries,
       edges: edges,
       timeline: timeline,
+      problem: switch ({
+        for (final resource in {location.resource, ...direct})
+          ...(ownership.resourceProblems[resource] ?? const <String>[]),
+      }) {
+        final problems when problems.isNotEmpty => problems.join("\n"),
+        _ => null,
+      },
     );
   }
 
@@ -750,17 +758,6 @@ final class AuthoredPresentationHost extends ChangeNotifier
     return _stage(label, apply, independent: true);
   }
 
-  bool _pathIsAtOrBelow(skir.ValuePath? candidate, skir.ValuePath parent) {
-    if (candidate == null) return false;
-    final child = candidate.segments.toList(growable: false);
-    final root = parent.segments.toList(growable: false);
-    if (child.length < root.length) return false;
-    for (var index = 0; index < root.length; index++) {
-      if (child[index] != root[index]) return false;
-    }
-    return true;
-  }
-
   PortablePageGraphPlacement? _graphPlacement(skir.DataValue? value) {
     final x = value?.authoredField("x")?.authoredInteger?.toInt();
     final y = value?.authoredField("y")?.authoredInteger?.toInt();
@@ -805,30 +802,10 @@ final class AuthoredPresentationHost extends ChangeNotifier
 
   Iterable<skir.ResourceId> _ownedTimelineTargets(
     skir.ResourceId source,
+    AuthoringRelationIndex relations,
   ) sync* {
     if (authored.resource(source) == null) return;
-    final relations = {
-      for (final relation in authored.catalog.snapshot.relations)
-        relation.id: relation,
-    };
-    for (final link in authored.links) {
-      final sourceIsFirst = link.first == source;
-      final sourceIsSecond = link.second == source;
-      if (!sourceIsFirst && !sourceIsSecond) continue;
-      final relation = relations[link.contract];
-      if (relation == null ||
-          !relation.families.any(
-            (family) => family.value == "resource.ownership",
-          )) {
-        continue;
-      }
-      final sourceEndpoint = sourceIsFirst ? relation.first : relation.second;
-      final targetEndpoint = sourceIsFirst ? relation.second : relation.first;
-      if (sourceEndpoint.cardinality != skir.EndpointCardinality.one ||
-          targetEndpoint.cardinality != skir.EndpointCardinality.many) {
-        continue;
-      }
-      final target = sourceIsFirst ? link.second : link.first;
+    for (final target in relations.ownedBy(source)) {
       final record = authored.resource(target);
       if (record == null ||
           !authored.catalog.isResourceDefinition(
@@ -879,6 +856,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
     skir.ResourceId resource,
     Set<skir.ResourceId> direct,
     Set<skir.ResourceId> visited,
+    AuthoringRelationIndex relations,
   ) {
     if (direct.contains(resource) || !visited.add(resource)) return null;
     final record = authored.resource(resource);
@@ -886,8 +864,8 @@ final class AuthoredPresentationHost extends ChangeNotifier
     final placement = _timelinePlacement(record);
     if (placement == null) return null;
     final children = <PortableTimelineCueProjection>[];
-    for (final target in _ownedTimelineTargets(resource)) {
-      final child = _timelineCue(target, direct, visited);
+    for (final target in _ownedTimelineTargets(resource, relations)) {
+      final child = _timelineCue(target, direct, visited, relations);
       if (child != null) children.add(child);
     }
     return PortableTimelineCueProjection(

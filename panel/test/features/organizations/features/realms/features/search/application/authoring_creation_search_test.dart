@@ -68,6 +68,21 @@ void main() {
     },
   );
 
+  test("creation search respects reversed ownership endpoints", () async {
+    final fixture = _fixture(reversedOwnership: true);
+    addTearDown(fixture.container.dispose);
+    addTearDown(fixture.subscription.close);
+    addTearDown(fixture.controller.dispose);
+    await pumpEventQueue();
+
+    final section =
+        fixture.controller.snapshot.nodes.single as SearchSectionNode;
+    final option =
+        (section.children.single as SearchResultNode).result.payload
+            as AuthoringCreationOption;
+    expect(option.definition, skir.ResourceDefinitionId(value: "test.book"));
+  });
+
   test("creation search filters by the resource label", () async {
     final fixture = _fixture();
     addTearDown(fixture.container.dispose);
@@ -87,7 +102,7 @@ void main() {
   ProviderSubscription<AsyncValue<AuthoringDocument>> subscription,
   SourceController controller,
 })
-_fixture() {
+_fixture({bool reversedOwnership = false}) {
   final organization = skir.RecordId(
     table: "organization",
     key: skir.RecordIdKey.wrapString("test"),
@@ -100,7 +115,9 @@ _fixture() {
     overrides: [
       organizationIdProvider.overrideWithValue(organization),
       realmIdProvider.overrideWithValue(realm),
-      ...authoringFixtureOverrides(catalog: _catalog()),
+      ...authoringFixtureOverrides(
+        catalog: _catalog(reversedOwnership: reversedOwnership),
+      ),
     ],
   );
   final subscription = container.listen(
@@ -118,9 +135,27 @@ _fixture() {
   );
 }
 
-CheckedEditorCatalog _catalog() {
+CheckedEditorCatalog _catalog({bool reversedOwnership = false}) {
   final book = _definition("Book");
   final entry = _definition("Entry");
+  final owner = skir.EndpointDefinition(
+    id: skir.EndpointId(value: "book.entries.book"),
+    slot: reversedOwnership
+        ? skir.EndpointSlot.second
+        : skir.EndpointSlot.first,
+    resource: skir.NamedTypeTemplate(definition: book, arguments: const []),
+    cardinality: skir.EndpointCardinality.one,
+    onDelete: skir.RelationDeletePolicy.clear,
+  );
+  final child = skir.EndpointDefinition(
+    id: skir.EndpointId(value: "book.entries.entry"),
+    slot: reversedOwnership
+        ? skir.EndpointSlot.first
+        : skir.EndpointSlot.second,
+    resource: skir.NamedTypeTemplate(definition: entry, arguments: const []),
+    cardinality: skir.EndpointCardinality.many,
+    onDelete: skir.RelationDeletePolicy.cascade,
+  );
   return CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
       generation: skir.CatalogGeneration(value: "catalog:test"),
@@ -139,26 +174,8 @@ CheckedEditorCatalog _catalog() {
       relations: [
         skir.RelationContract(
           id: skir.RelationId(value: "book.entries"),
-          first: skir.EndpointDefinition(
-            id: skir.EndpointId(value: "book.entries.book"),
-            slot: skir.EndpointSlot.first,
-            resource: skir.NamedTypeTemplate(
-              definition: book,
-              arguments: const [],
-            ),
-            cardinality: skir.EndpointCardinality.one,
-            onDelete: skir.RelationDeletePolicy.clear,
-          ),
-          second: skir.EndpointDefinition(
-            id: skir.EndpointId(value: "book.entries.entry"),
-            slot: skir.EndpointSlot.second,
-            resource: skir.NamedTypeTemplate(
-              definition: entry,
-              arguments: const [],
-            ),
-            cardinality: skir.EndpointCardinality.many,
-            onDelete: skir.RelationDeletePolicy.cascade,
-          ),
+          first: reversedOwnership ? child : owner,
+          second: reversedOwnership ? owner : child,
           families: [skir.RelationFamilyId(value: "resource.ownership")],
         ),
       ],

@@ -1,14 +1,12 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-String replacePageChapter(
-  String chapter,
-  String oldChapter,
-  String newChapter,
-) {
-  if (chapter != oldChapter && !chapter.startsWith("$oldChapter.")) {
-    throw ApiException.badRequest("The page is not in the selected chapter");
+extension ChapterPathOperations on String {
+  String replacingChapter({required String from, required String to}) {
+    if (this != from && !startsWith("$from.")) {
+      throw ApiException.badRequest("The page is not in the selected chapter");
+    }
+    final suffix = substring(from.length);
+    if (to.isEmpty && suffix.startsWith(".")) return suffix.substring(1);
+    return "$to$suffix";
   }
-  final suffix = chapter.substring(oldChapter.length);
-  if (newChapter.isEmpty && suffix.startsWith(".")) return suffix.substring(1);
-  return "$newChapter$suffix";
 }

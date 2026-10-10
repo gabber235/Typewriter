@@ -121,7 +121,6 @@ void main() {
         ),
       },
       budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-      setBinding: (_, value) => written = value,
       host: _TestHost(
         catalog: CheckedEditorCatalog(_emptyCatalog("catalog:static")),
         initial: skir.DataValue.wrapStringValue("Alpha"),
@@ -180,7 +179,6 @@ void main() {
               maxSteps: 100,
               maxCollectionItems: 100,
             ),
-            setBinding: (_, value) => written = value,
             host: _TestHost(
               catalog: CheckedEditorCatalog(_emptyCatalog("catalog:empty")),
               initial: skir.DataValue.wrapStringValue(""),
@@ -346,7 +344,6 @@ void main() {
         target: const PortableExpressionBinding(value: skir.DataValue.unfilled),
       },
       budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-      setBinding: (_, value) => written = value,
       catalog: CheckedEditorCatalog(catalogSnapshot),
       host: _TestHost(
         catalog: CheckedEditorCatalog(catalogSnapshot),
@@ -409,7 +406,6 @@ void main() {
         PortablePresentationScope(
           bindings: const {},
           budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-          setBinding: (_, _) {},
           catalog: catalog,
           host: host,
         );

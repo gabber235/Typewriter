@@ -60,6 +60,7 @@ class TagGraph extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tags = ref.watch(workingTagsProvider);
+    final scope = ref.watch(selectedAuthoringScopeProvider);
 
     return tags(
       name: "tags",
@@ -72,11 +73,11 @@ class TagGraph extends HookConsumerWidget {
                       ?.catalog)
                   .resourceCreationTemplate(coreTagResourceDefinition.value);
           return EmptyTagsPage(
-            onCreateTag: template == null
+            onCreateTag: template == null || scope == null
                 ? null
                 : () async {
                     final created = await ref
-                        .read(resourceCreationProvider)
+                        .read(resourceCreationProvider(scope))
                         .create(
                           context: context,
                           request: ResourceCreationRequest(
@@ -87,7 +88,12 @@ class TagGraph extends HookConsumerWidget {
                     if (created == null) return;
                     ref
                         .read(selectionProvider.notifier)
-                        .select(TagIdentifier(created.id));
+                        .select(
+                          AuthoringResourceIdentifier.inScope(
+                            created.scope,
+                            created.id,
+                          ),
+                        );
                   },
           );
         }

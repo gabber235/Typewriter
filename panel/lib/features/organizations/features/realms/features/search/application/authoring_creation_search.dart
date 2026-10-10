@@ -62,28 +62,20 @@ final class AuthoringCreationSearchSource implements SearchSource {
 
   void _publish() {
     if (_disposed) return;
-    final catalog = ref
-        .read(selectedWorkingAuthoringDocumentProvider)
-        .value
-        ?.catalog;
-    if (catalog == null) {
+    final document = ref.read(selectedWorkingAuthoringDocumentProvider).value;
+    if (document == null) {
       _snapshots.add(SearchSourceSnapshot.loading());
       return;
     }
-    final ownershipTargets = {
-      for (final relation in catalog.snapshot.relations)
-        if (relation.families.any(
-          (family) => family.value == "resource.ownership",
-        ))
-          relation.second.resource.definition,
-    };
+    final catalog = document.catalog;
+    final relations = document.relations;
     final term = _query.normalizedQuery.trim().toLowerCase();
     final options = <AuthoringCreationOption>[];
     for (final definition in catalog.snapshot.resourceDefinitions) {
       final configuration = catalog.beginSelection(definition.root);
       if (configuration == skir.TypeSelection.unknown) continue;
       final applications = catalog.nominalDefinitions(configuration);
-      if (applications.any(ownershipTargets.contains)) continue;
+      if (applications.any(relations.ownedDefinitions.contains)) continue;
       final label = catalog.typeSelectionName(configuration);
       if (term.isNotEmpty && !label.toLowerCase().contains(term)) continue;
       options.add(
@@ -136,50 +128,45 @@ final class AuthoringCreationSearchSource implements SearchSource {
   }
 }
 
-SearchCommand createAuthoringResourceCommand({required Ref ref}) =>
-    SearchCommand.single<AuthoringCreationOption>(
-      id: createAuthoringResourceCommandId,
-      presentation: const SearchCommandPresentation(label: "Create"),
-      matcher: const SearchResultMatcher(authoringCreationSearchResultType),
-      execute: (execution, option, target) async {
-        final created = await execution.prompts.show(
-          (context) => ref
-              .read(resourceCreationProvider)
-              .create(
-                context: context,
-                request: ResourceCreationRequest(
-                  definition: option.definition,
-                  configuration: option.configuration,
-                ),
-              ),
-        );
-        if (created == null) return const SearchCommandResult.cancelled();
-        final organizationId = ref.read(organizationIdProvider);
-        final realmId = ref.read(realmIdProvider);
-        if (organizationId == null || realmId == null) {
-          return const SearchCommandResult.failed(
-            message: "The selected Realm changed while creating the resource",
-          );
-        }
-        final catalog = ref
-            .read(selectedWorkingAuthoringDocumentProvider)
-            .value
-            ?.catalog;
-        final navigationHandler = catalog?.snapshot.resourceDefinitions
-            .where((definition) => definition.id == created.definition)
-            .map((definition) => definition.navigationHandler)
-            .firstOrNull;
-        return SearchCommandResult.completed(
-          hostEffects: [
-            OpenAuthoringResourceEffect(
-              organizationId: organizationId,
-              realmId: realmId,
-              resourceId: created.id,
-              definition: created.definition,
-              configuration: created.content.configuration,
-              navigationHandler: navigationHandler,
+SearchCommand createAuthoringResourceCommand({
+  required Ref ref,
+  required AuthoringScope scope,
+}) => SearchCommand.single<AuthoringCreationOption>(
+  id: createAuthoringResourceCommandId,
+  presentation: const SearchCommandPresentation(label: "Create"),
+  matcher: const SearchResultMatcher(authoringCreationSearchResultType),
+  execute: (execution, option, target) async {
+    final created = await execution.prompts.show(
+      (context) => ref
+          .read(resourceCreationProvider(scope))
+          .create(
+            context: context,
+            request: ResourceCreationRequest(
+              definition: option.definition,
+              configuration: option.configuration,
             ),
-          ],
-        );
-      },
+          ),
     );
+    if (created == null) return const SearchCommandResult.cancelled();
+    final catalog = ref
+        .read(workingAuthoringDocumentProvider(created.scope))
+        .value
+        ?.catalog;
+    final navigationHandler = catalog?.snapshot.resourceDefinitions
+        .where((definition) => definition.id == created.definition)
+        .map((definition) => definition.navigationHandler)
+        .firstOrNull;
+    return SearchCommandResult.completed(
+      hostEffects: [
+        OpenAuthoringResourceEffect(
+          organizationId: created.scope.organizationId,
+          realmId: created.scope.realmId,
+          resourceId: created.id,
+          definition: created.definition,
+          configuration: created.content.configuration,
+          navigationHandler: navigationHandler,
+        ),
+      ],
+    );
+  },
+);

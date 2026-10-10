@@ -20,13 +20,16 @@ void main() {
       skir.ValuePreparationRequest? preparedRequest;
       CreatedAuthoringResource? created;
       AuthoringWorkspace? workspace;
+      var ambientOrganization = fixture.organization;
+      var ambientRealm = fixture.realm;
+      final preparation = Completer<skir.PreparedValue>();
       final commands = AuthoredResourceCommands(
         previewTypeArguments: ({required resource, required requested}) async =>
             throw UnimplementedError(),
         prepareTypeArguments: (_) async => throw UnimplementedError(),
         prepareValue: (request) async {
           preparedRequest = request;
-          return fixture.prepared;
+          return preparation.future;
         },
         invokeCommand: ({required capabilityId, required payload}) async =>
             throw UnimplementedError(),
@@ -36,8 +39,8 @@ void main() {
       );
       await tester.pumpTestApp(
         overrides: [
-          organizationIdProvider.overrideWithValue(fixture.organization),
-          realmIdProvider.overrideWithValue(fixture.realm),
+          organizationIdProvider.overrideWith((ref) => ambientOrganization),
+          realmIdProvider.overrideWith((ref) => ambientRealm),
           ...authoringFixtureOverrides(
             document: document,
             transport: transport,
@@ -50,7 +53,14 @@ void main() {
               onPressed: () async {
                 workspace = ref.readAuthoringWorkspace();
                 created = await ref
-                    .read(resourceCreationProvider)
+                    .read(
+                      resourceCreationProvider(
+                        AuthoringScope(
+                          organizationId: fixture.organization,
+                          realmId: fixture.realm,
+                        ),
+                      ),
+                    )
                     .create(context: context, request: fixture.request);
               },
               child: const Text("Create"),
@@ -62,7 +72,22 @@ void main() {
       await tester.pump();
       expect(find.byType(Dialog), findsNothing);
       expect(preparedRequest?.recordSelection, fixture.pending);
+      ambientOrganization = skir.recordId("organization:other");
+      ambientRealm = skir.recordId("realm:other");
+      tester.container()
+        ..invalidate(organizationIdProvider)
+        ..invalidate(realmIdProvider);
+      await tester.pump();
+      preparation.complete(fixture.prepared);
+      await tester.pump();
       expect(created?.id, fixture.request.id);
+      expect(
+        created?.scope,
+        AuthoringScope(
+          organizationId: fixture.organization,
+          realmId: fixture.realm,
+        ),
+      );
       expect(created?.content.configuration, fixture.pending);
       expect(
         workspace!.document.entry(fixture.request.id)?.definition,

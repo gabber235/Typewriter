@@ -79,6 +79,28 @@ void main() {
       );
     });
 
+    testWidgets("rejects a parent dragged from another authoring scope", (
+      tester,
+    ) async {
+      final childId = skir.ResourceId(value: "child");
+      final parentId = skir.ResourceId(value: "parent");
+      await _pumpTagTarget(tester, [_tag(childId), _tag(parentId)], childId);
+      final otherScope = AuthoringScope(
+        organizationId: _scope.organizationId,
+        realmId: skir.recordId("realm:other"),
+      );
+
+      expect(
+        _target(tester).onWillAcceptWithDetails!(
+          DragTargetDetails(
+            data: AuthoringResourceIdentifier.inScope(otherScope, parentId),
+            offset: Offset.zero,
+          ),
+        ),
+        isFalse,
+      );
+    });
+
     testWidgets("rejects an indirect existing parent", (tester) async {
       final childId = skir.ResourceId(value: "child");
       final intermediateId = skir.ResourceId(value: "intermediate");
@@ -135,9 +157,9 @@ void main() {
       expect(target.onWillAcceptWithDetails!(_details(childId)), isFalse);
 
       final rejectedTarget = target.builder(
-        tester.element(find.byType(DragTarget<TagIdentifier>)),
+        tester.element(find.byType(DragTarget<AuthoringResourceIdentifier>)),
         const [],
-        [TagIdentifier(childId)],
+        [AuthoringResourceIdentifier.inScope(_scope, childId)],
       );
       await tester.pumpTestApp(
         overrides: [...authoringFixtureOverrides(tags: tags)],
@@ -158,11 +180,21 @@ void main() {
   });
 }
 
-DragTarget<TagIdentifier> _target(WidgetTester tester) => tester
-    .widget<DragTarget<TagIdentifier>>(find.byType(DragTarget<TagIdentifier>));
+DragTarget<AuthoringResourceIdentifier> _target(WidgetTester tester) =>
+    tester.widget<DragTarget<AuthoringResourceIdentifier>>(
+      find.byType(DragTarget<AuthoringResourceIdentifier>),
+    );
 
-DragTargetDetails<TagIdentifier> _details(skir.ResourceId id) =>
-    DragTargetDetails(data: TagIdentifier(id), offset: Offset.zero);
+DragTargetDetails<AuthoringResourceIdentifier> _details(skir.ResourceId id) =>
+    DragTargetDetails(
+      data: AuthoringResourceIdentifier.inScope(_scope, id),
+      offset: Offset.zero,
+    );
+
+final _scope = AuthoringScope(
+  organizationId: skir.recordId("organization:fixture"),
+  realmId: skir.recordId("realm:fixture"),
+);
 
 Tag _tag(skir.ResourceId id, {List<skir.ResourceId> parentIds = const []}) =>
     Tag(

@@ -30,18 +30,22 @@ class BookWidget extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final focusNode = useFocusNode();
-    final selectableId = BookIdentifier(id);
-    final organization = ref.watch(organizationIdProvider);
-    final realm = ref.watch(realmIdProvider);
+    final scope = ref.watch(selectedAuthoringScopeProvider);
+    if (scope == null) return const SizedBox.shrink();
+    final selectableId = AuthoringResourceIdentifier.inScope(scope, id);
 
     return Selector(
       selectableId: selectableId,
       focusNode: focusNode,
-      onDoubleTap: organization == null || realm == null
-          ? null
-          : () => ref
-                .read(appRouterProvider)
-                .navigate(selectableId.routeFor(organization, realm)),
+      onDoubleTap: () => ref
+          .read(appRouterProvider)
+          .navigate(
+            BookRoute(
+              organizationId: scope.organizationId.id,
+              realmId: scope.realmId.id,
+              bookId: id.id,
+            ),
+          ),
       builder: (isSelected, isFocused, isHovered) {
         final book = Surface(
           color: Theme.of(context).colorScheme.surface,
@@ -67,10 +71,14 @@ class BookWidget extends HookConsumerWidget {
                   .hoverScale(isHovered)
                   .hoverRotate(isHovered),
         );
-        return DragTarget<Object>(
-          onWillAcceptWithDetails: (details) => details.data is TagIdentifier,
+        return DragTarget<AuthoringResourceIdentifier>(
+          onWillAcceptWithDetails: (details) =>
+              details.data.scope == scope &&
+              (ref.read(workingTagsProvider).value ?? const <Tag>[]).any(
+                (tag) => tag.tagId == details.data.resourceId,
+              ),
           onAcceptWithDetails: (details) async {
-            final data = details.data as ReferenceResourceDragData;
+            final data = details.data;
             final current = ref.read(workingBookProvider(id)).value;
             if (current == null) return;
             final tags = [...current.tagIds];
@@ -80,7 +88,7 @@ class BookWidget extends HookConsumerWidget {
             } else {
               tags.removeAt(index);
             }
-            final workspace = ref.readAuthoringWorkspace();
+            final workspace = ref.read(authoringWorkspaceProvider(scope));
             workspace
                 .edit(
                   label: "Change book tags",
@@ -110,7 +118,7 @@ class BookWidget extends HookConsumerWidget {
                       width: 2,
                     ),
             ),
-            child: Draggable<BookIdentifier>(
+            child: Draggable<AuthoringResourceIdentifier>(
               data: selectableId,
               feedback: Material(
                 color: Colors.transparent,

@@ -52,7 +52,11 @@ Future<Page?> createPage({
   }
   final item = skir.ItemId(value: "panel:${uuid.v4()}");
   final created = await ref
-      .read(resourceCreationProvider)
+      .read(
+        resourceCreationProvider(
+          AuthoringScope(organizationId: organizationId, realmId: realmId),
+        ),
+      )
       .create(
         context: context,
         request: ResourceCreationRequest(

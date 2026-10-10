@@ -121,7 +121,6 @@ void main() {
                   required host,
                   required document,
                   required bindings,
-                  required setBinding,
                   required reportStatus,
                 }) {
                   observed =
@@ -130,7 +129,7 @@ void main() {
                   return PortablePresentationScope(
                     bindings: bindings,
                     budget: document.budget,
-                    setBinding: setBinding,
+                    host: host,
                   );
                 },
           ),
@@ -190,7 +189,6 @@ void main() {
         ),
       },
       budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-      setBinding: (_, _) {},
     );
     final resource = scope.withConfiguredValue(
       skir.BindingRef(
@@ -456,7 +454,6 @@ EditorSourcePresentationHost _host(
 PortablePresentationScope _scope() => PortablePresentationScope(
   bindings: const {},
   budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
-  setBinding: (_, _) {},
 );
 skir.ExpressionNode _number(double value) =>
     skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapFloat(value));

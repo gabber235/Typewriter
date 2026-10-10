@@ -80,15 +80,18 @@ void main() {
           ).overrideWithValue(repository),
         ],
       );
-      expect(repository.queriedRoots.single.map((root) => root.resource), [
-        _resource,
-        second,
-      ]);
-      await tester.tap(find.text("Saved Page publication status (2 Pages)"));
+      final selection = repository.queriedSelections.single;
+      expect(selection, skir.CompilationStatusSelection.allRoots);
+      await tester.tap(find.text("Saved compilation roots (2)"));
       await tester.pumpAndSettle();
-      expect(find.text("Original: Last published in selected"), findsOneWidget);
       expect(
-        find.text("Other saved Page: Not in the selected publication"),
+        find.text("Original (typewriter.page): Last published in selected"),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          "Other saved Page (typewriter.page): Not in the selected publication",
+        ),
         findsOneWidget,
       );
       expect(find.textContaining("Pending rename:"), findsNothing);
@@ -1079,7 +1082,7 @@ final class _WorkPublicationRepository implements RealmPublicationRepository {
   final skir.DataValue Function() saved;
   final publishedValues = <skir.DataValue>[];
   final reports = StreamController<skir.PublicationReport>.broadcast();
-  final queriedRoots = <List<skir.CompilationRoot>>[];
+  final queriedSelections = <skir.CompilationStatusSelection>[];
   List<skir.CompiledResourceStatus> statuses = [];
   bool uncertain = false;
   Completer<void>? sendGate;
@@ -1109,9 +1112,9 @@ final class _WorkPublicationRepository implements RealmPublicationRepository {
       );
   @override
   Future<List<skir.CompiledResourceStatus>> states(
-    List<skir.CompilationRoot> roots,
+    skir.CompilationStatusSelection selection,
   ) async {
-    queriedRoots.add(List.unmodifiable(roots));
+    queriedSelections.add(selection);
     return statuses;
   }
 

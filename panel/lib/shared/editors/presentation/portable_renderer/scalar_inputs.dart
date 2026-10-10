@@ -490,7 +490,9 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
     };
     final actual =
         current?.authoredActualType ??
-        switch (_unwrapNullable(childScope.expectedType(control.binding))) {
+        switch (childScope
+            .expectedType(control.binding)
+            .withoutNullableWrappers) {
           skir.TypeUse_namedWrapper(:final value) => value,
           _ => null,
         };

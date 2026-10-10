@@ -7,6 +7,19 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 import "../../../../../../../../../support/test_utils.dart";
 
 void main() {
+  test("page copying can clear its Book owner", () {
+    final page = Page(
+      pageId: _page,
+      bookId: _book,
+      name: "Page",
+      configuration: skir.TypeSelection.unknown,
+      chapter: "",
+      priority: 0,
+    );
+
+    expect(page.copyWith(bookId: null).bookId, isNull);
+  });
+
   testWidgets(
     "sidebar Edit keyboard action inspects the page without toggling it",
     (tester) async {

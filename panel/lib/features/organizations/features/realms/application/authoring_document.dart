@@ -34,6 +34,9 @@ abstract class AuthoringDocument
     );
   }
 
+  AuthoringRelationIndex get relations =>
+      AuthoringRelationIndex.fromDocument(this);
+
   @override
   skir.CatalogGeneration get generation => catalog.snapshot.generation;
   skir.AuthoringResource? entry(skir.ResourceId id) => entries[id];

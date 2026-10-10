@@ -14,6 +14,7 @@ class LibraryPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final scope = ref.watch(selectedAuthoringScopeProvider);
     final searchController = useTextEditingController();
     final searchQuery = useState("");
     final filteredBooks = ref.watch(filteredBooksProvider(searchQuery.value));
@@ -26,7 +27,9 @@ class LibraryPage extends HookConsumerWidget {
         ? null
         : document?.catalog.beginSelection(definition.root);
     final canCreate =
-        selection != null && selection != skir.TypeSelection.unknown;
+        scope != null &&
+        selection != null &&
+        selection != skir.TypeSelection.unknown;
 
     Future<void> handleCreateBook() async {
       final current = definition == null
@@ -40,7 +43,7 @@ class LibraryPage extends HookConsumerWidget {
         throw StateError("Book creation is unavailable");
       }
       final created = await ref
-          .read(resourceCreationProvider)
+          .read(resourceCreationProvider(scope!))
           .create(
             context: context,
             request: ResourceCreationRequest(
@@ -49,7 +52,11 @@ class LibraryPage extends HookConsumerWidget {
             ),
           );
       if (created == null) return;
-      ref.read(selectionProvider.notifier).select(BookIdentifier(created.id));
+      ref
+          .read(selectionProvider.notifier)
+          .select(
+            AuthoringResourceIdentifier.inScope(created.scope, created.id),
+          );
     }
 
     return Pane(

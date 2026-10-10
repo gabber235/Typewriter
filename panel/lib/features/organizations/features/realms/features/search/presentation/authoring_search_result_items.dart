@@ -94,7 +94,6 @@ final class _AuthoringResultPresentation extends StatelessWidget {
           resource: payload.id,
           role: material.role,
           activePresentations: {material.provider},
-          setBinding: (_, _) {},
         ),
       ),
     MissingEditorPresentation() => Text(payload.title),

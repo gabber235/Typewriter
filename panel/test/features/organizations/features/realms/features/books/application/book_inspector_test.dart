@@ -8,14 +8,6 @@ void main() {
   test(
     "Book selection opens and deletes through shared capabilities",
     () async {
-      final transport = ScriptedAuthoringTransport(
-        AsyncData(fixtureAuthoringDocument()),
-      );
-      final workspace = AuthoringWorkspace(
-        transport: transport,
-        initial: transport.observation.requireValue,
-      );
-      addTearDown(workspace.dispose);
       final book = Book(
         bookId: skir.ResourceId(value: "book:test"),
         title: "Test Book",
@@ -23,13 +15,22 @@ void main() {
         color: Colors.blue,
         tagIds: const [],
       );
+      final document = fixtureAuthoringDocument(books: [book]);
+      final transport = ScriptedAuthoringTransport(AsyncData(document));
+      final workspace = AuthoringWorkspace(
+        transport: transport,
+        initial: document,
+      );
+      addTearDown(workspace.dispose);
       var opened = false;
-      var deleted = false;
-      final selection = BookSelection(
+      final selection = AuthoringSelectableResource(
         onOpen: () => opened = true,
-        onDelete: () async => deleted = true,
-        id: BookIdentifier(book.bookId),
-        book: book,
+        id: AuthoringResourceIdentifier(
+          organizationId: skir.recordId("organization:test"),
+          realmId: skir.recordId("realm:test"),
+          resourceId: book.bookId,
+        ),
+        resource: document.entry(book.bookId)!,
         workspace: workspace,
         commands: fixtureAuthoringCommands(transport),
       );
@@ -48,7 +49,7 @@ void main() {
       await open.single.onOpen();
       await delete.single.onDelete();
       expect(opened, isTrue);
-      expect(deleted, isTrue);
+      expect(workspace.document.entry(book.bookId), isNull);
     },
   );
 }

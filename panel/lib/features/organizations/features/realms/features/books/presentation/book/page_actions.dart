@@ -32,7 +32,7 @@ Future<void> _changePagesChapter(
               resource: page.pageId,
               fields: ["chapter"],
               payload: skir.DataValue.wrapStringValue(
-                replacePageChapter(page.chapter, chapter, newChapter),
+                page.chapter.replacingChapter(from: chapter, to: newChapter),
               ),
             );
           }

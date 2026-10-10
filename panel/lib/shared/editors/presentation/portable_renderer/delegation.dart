@@ -236,7 +236,7 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
   ) {
     final actual = childScope.read(reference)?.authoredActualType;
     if (actual != null) return skir.TypeSelection.wrapComplete(actual);
-    final expected = _unwrapNullable(childScope.expectedType(reference));
+    final expected = childScope.expectedType(reference).withoutNullableWrappers;
     return switch (expected) {
       skir.TypeUse_namedWrapper(:final value) =>
         skir.TypeSelection.wrapComplete(value),
@@ -275,7 +275,7 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
     skir.BindingRef reference,
     PortablePresentationScope childScope,
   ) {
-    final type = _unwrapNullable(declared);
+    final type = declared.withoutNullableWrappers;
     if (declared is skir.TypeUse_nullableWrapper) {
       final nested = _defaultElement(
         declared.value.value,

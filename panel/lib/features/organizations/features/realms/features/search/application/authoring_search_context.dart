@@ -5,58 +5,54 @@ const authoringPageSelectorId = "page";
 const authoringTagSelectorId = "tag";
 const authoringTypeSelectorId = "type";
 
-Book? resolveSearchBook(SearchQueryContext query, List<Book> books) {
-  final value = _singleSelectorValue(query, authoringBookSelectorId);
-  if (value == null) return null;
-  return books
-      .where((book) => book.title.toLowerCase() == value.toLowerCase())
-      .singleOrNull;
-}
+extension AuthoringQueryOperations on SearchQueryContext {
+  bool hasSelector(String selectorId) =>
+      selectors.any((selector) => selector.selectorId == selectorId);
 
-bool hasSearchSelector(SearchQueryContext query, String selectorId) =>
-    query.selectors.any((value) => value.selectorId == selectorId);
-
-Page? resolveSearchPage(
-  SearchQueryContext query,
-  List<Book> books,
-  List<Page> pages,
-) {
-  final value = _singleSelectorValue(query, authoringPageSelectorId);
-  if (value == null) return null;
-  final book = resolveSearchBook(query, books);
-  return pages
-      .where(
-        (page) =>
-            page.name.toLowerCase() == value.toLowerCase() &&
-            (book == null || page.bookId == book.bookId),
-      )
-      .singleOrNull;
-}
-
-/// Prefers an explicit page selector over ambient route context.
-Page? resolveElementCreationPage({
-  required SearchQueryContext query,
-  required List<Book> books,
-  required List<Page> pages,
-  required Page? currentPage,
-}) {
-  if (hasSearchSelector(query, authoringPageSelectorId)) {
-    return resolveSearchPage(query, books, pages);
+  Book? resolveBook(List<Book> books) {
+    final value = _singleSelectorValue(authoringBookSelectorId);
+    if (value == null) return null;
+    return books
+        .where((book) => book.title.toLowerCase() == value.toLowerCase())
+        .singleOrNull;
   }
-  if (hasSearchSelector(query, authoringBookSelectorId)) {
-    final selectedBook = resolveSearchBook(query, books);
-    if (currentPage?.bookId != selectedBook?.bookId) return null;
-  }
-  return currentPage;
-}
 
-String? _singleSelectorValue(SearchQueryContext query, String selectorId) {
-  final values = query.selectors
+  Page? resolvePage(List<Book> books, List<Page> pages) {
+    final value = _singleSelectorValue(authoringPageSelectorId);
+    if (value == null) return null;
+    final book = resolveBook(books);
+    if (hasSelector(authoringBookSelectorId) && book == null) return null;
+    return pages
+        .where(
+          (page) =>
+              page.name.toLowerCase() == value.toLowerCase() &&
+              (book == null || page.bookId == book.bookId),
+        )
+        .singleOrNull;
+  }
+
+  /// Prefers an explicit page selector over ambient route context.
+  Page? resolveElementCreationPage({
+    required List<Book> books,
+    required List<Page> pages,
+    required Page? currentPage,
+  }) {
+    if (hasSelector(authoringPageSelectorId)) {
+      return resolvePage(books, pages);
+    }
+    if (hasSelector(authoringBookSelectorId)) {
+      final selectedBook = resolveBook(books);
+      if (currentPage?.bookId != selectedBook?.bookId) return null;
+    }
+    return currentPage;
+  }
+
+  String? _singleSelectorValue(String selectorId) => selectors
       .where((selector) => selector.selectorId == selectorId)
       .map((selector) => selector.value)
       .nonNulls
-      .toSet();
-  return values.singleOrNull;
+      .toSet()
+      .singleOrNull;
 }
 
 String authoringBookInitialQuery(

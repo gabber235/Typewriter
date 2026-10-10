@@ -309,7 +309,6 @@ Widget _linkControl(
             ),
           },
           budget: budget,
-          setBinding: (_, _) {},
           catalog: fixture.catalog,
           host: host,
         ),

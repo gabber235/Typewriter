@@ -4,7 +4,6 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "book_model.dart";
 part "book_queries.dart";
-part "book_selection.dart";
 part "books.freezed.dart";
 part "books.g.dart";
 
