@@ -98,6 +98,7 @@ Widget _dragHandleUseCase(BuildContext context, Axis axis) {
                           ),
                         ),
                         DragHandle(
+                          semanticLabel: "Preview dimension",
                           axis: axis,
                           enabled: enabled,
                           showOnHover: showOnHover,

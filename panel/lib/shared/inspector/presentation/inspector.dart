@@ -212,6 +212,7 @@ class DesktopInspector extends HookConsumerWidget {
             Expanded(child: child),
             if (hasSelection)
               DragHandle(
+                semanticLabel: "Inspector width",
                 axis: Axis.horizontal,
                 minSize: minSize,
                 maxSize: maxSize,

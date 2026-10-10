@@ -63,6 +63,7 @@ class _SidebarView extends StatelessWidget {
               ),
             ),
             DragHandle(
+              semanticLabel: "Sidebar width",
               axis: Axis.horizontal,
               minSize: kSidebarMinSize,
               maxSize: controller.maxSize,

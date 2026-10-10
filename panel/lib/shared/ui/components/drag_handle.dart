@@ -25,6 +25,8 @@ class DragHandle extends HookConsumerWidget {
     this.maxSize,
     this.sizeResolver,
     this.enabled = true,
+    this.keyboardStep = 8,
+    this.semanticLabel = "Resize dimension",
     this.hitThickness = 16,
     this.handleThickness = 3,
     this.handleRadius = 4,
@@ -62,6 +64,10 @@ class DragHandle extends HookConsumerWidget {
 
   /// Whether the handle is interactive and visible.
   final bool enabled;
+
+  final double keyboardStep;
+
+  final String semanticLabel;
 
   /// The interactive hit area thickness perpendicular to [axis].
   final double hitThickness;
@@ -104,12 +110,21 @@ class DragHandle extends HookConsumerWidget {
     if (!enabled) return const SizedBox.shrink();
 
     final hovering = useState(false);
+    final focused = useState(false);
+    final focusNode = useFocusNode();
     final startSize = useState(0.0);
     final startPosition = useState(Offset.zero);
     final isDragging = useState(false);
 
+    final resize = DimensionResizeOperation(
+      getSize: getSize,
+      onSizeChange: onSizeChange,
+      minSize: minSize,
+      maxSize: maxSize,
+      sizeResolver: sizeResolver,
+    );
     final showHandle =
-        (showOnHover && (hovering.value || isDragging.value)) || !showOnHover;
+        !showOnHover || hovering.value || focused.value || isDragging.value;
 
     final defaultCursor = axis == Axis.horizontal
         ? SystemMouseCursors.resizeColumn
@@ -131,17 +146,7 @@ class DragHandle extends HookConsumerWidget {
           ? position.dx - startPosition.value.dx
           : position.dy - startPosition.value.dy;
 
-      final resolve = sizeResolver ?? (double s, double d) => s + d;
-      var next = resolve(startSize.value, delta);
-
-      if (minSize != null && next < minSize!) {
-        next = minSize!;
-      }
-      if (maxSize != null && next > maxSize!) {
-        next = maxSize!;
-      }
-
-      onSizeChange(next);
+      resize.from(startSize.value, delta);
     }
 
     void onEnd() {
@@ -186,19 +191,105 @@ class DragHandle extends HookConsumerWidget {
       ),
     );
 
-    return MouseRegion(
-      cursor: cursor ?? defaultCursor,
-      onEnter: (_) => hovering.value = true,
-      onExit: (_) => hovering.value = false,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onHorizontalDragStart: axis == Axis.horizontal ? onStart : null,
-        onHorizontalDragUpdate: axis == Axis.horizontal ? onUpdate : null,
-        onHorizontalDragEnd: axis == Axis.horizontal ? (_) => onEnd() : null,
-        onVerticalDragStart: axis == Axis.vertical ? onStart : null,
-        onVerticalDragUpdate: axis == Axis.vertical ? onUpdate : null,
-        onVerticalDragEnd: axis == Axis.vertical ? (_) => onEnd() : null,
-        child: sizedBox,
+    return FocusableActionDetector(
+      focusNode: focusNode,
+      enabled: enabled,
+      onShowFocusHighlight: (value) => focused.value = value,
+      shortcuts: {
+        SingleActivator(
+          axis == Axis.horizontal
+              ? LogicalKeyboardKey.arrowLeft
+              : LogicalKeyboardKey.arrowUp,
+        ): ResizeDimensionIntent(
+          delta: -keyboardStep,
+        ),
+        SingleActivator(
+          axis == Axis.horizontal
+              ? LogicalKeyboardKey.arrowRight
+              : LogicalKeyboardKey.arrowDown,
+        ): ResizeDimensionIntent(
+          delta: keyboardStep,
+        ),
+        if (minSize != null)
+          const SingleActivator(LogicalKeyboardKey.home):
+              const ResizeDimensionToBoundIntent(DimensionResizeBound.minimum),
+        if (maxSize != null)
+          const SingleActivator(LogicalKeyboardKey.end):
+              const ResizeDimensionToBoundIntent(DimensionResizeBound.maximum),
+      },
+      actions: {
+        ResizeDimensionIntent: CallbackAction<ResizeDimensionIntent>(
+          onInvoke: (intent) {
+            if (enabled) resize.by(intent.delta);
+            return null;
+          },
+        ),
+        ResizeDimensionToBoundIntent:
+            CallbackAction<ResizeDimensionToBoundIntent>(
+              onInvoke: (intent) {
+                if (enabled) resize.toBound(intent.bound);
+                return null;
+              },
+            ),
+      },
+      child: Semantics(
+        label: semanticLabel,
+        value: getSize().round().toString(),
+        increasedValue: resize
+            .resolve(getSize(), keyboardStep)
+            .round()
+            .toString(),
+        decreasedValue: resize
+            .resolve(getSize(), -keyboardStep)
+            .round()
+            .toString(),
+        onIncrease: enabled ? () => resize.by(keyboardStep) : null,
+        onDecrease: enabled ? () => resize.by(-keyboardStep) : null,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: focused.value
+                  ? context.colors.focusRing
+                  : context.colors.focusRing.withValues(alpha: 0),
+              width: 2,
+            ),
+          ),
+          child: MouseRegion(
+            cursor: cursor ?? defaultCursor,
+            onEnter: (_) => hovering.value = true,
+            onExit: (_) => hovering.value = false,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              dragStartBehavior: DragStartBehavior.down,
+              onTap: enabled ? focusNode.requestFocus : null,
+              onHorizontalDragStart: enabled && axis == Axis.horizontal
+                  ? onStart
+                  : null,
+              onHorizontalDragUpdate: enabled && axis == Axis.horizontal
+                  ? onUpdate
+                  : null,
+              onHorizontalDragEnd: enabled && axis == Axis.horizontal
+                  ? (_) => onEnd()
+                  : null,
+              onHorizontalDragCancel: enabled && axis == Axis.horizontal
+                  ? onEnd
+                  : null,
+              onVerticalDragStart: enabled && axis == Axis.vertical
+                  ? onStart
+                  : null,
+              onVerticalDragUpdate: enabled && axis == Axis.vertical
+                  ? onUpdate
+                  : null,
+              onVerticalDragEnd: enabled && axis == Axis.vertical
+                  ? (_) => onEnd()
+                  : null,
+              onVerticalDragCancel: enabled && axis == Axis.vertical
+                  ? onEnd
+                  : null,
+              child: sizedBox,
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -353,6 +353,7 @@ class Timeline extends HookConsumerWidget {
                     width: handleWidth,
                     color: style.palette.headerBackground,
                     child: DragHandle(
+                      semanticLabel: "Timeline header width",
                       axis: Axis.horizontal,
                       getSize: () => controller.headerWidth,
                       onSizeChange: controller.setHeaderWidth,

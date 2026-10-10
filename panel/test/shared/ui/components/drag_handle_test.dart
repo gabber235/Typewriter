@@ -141,6 +141,48 @@ void main() {
       },
     );
 
+    testWidgets("keyboard and semantic resizing share bounded operation", (
+      tester,
+    ) async {
+      final harnessKey = GlobalKey<_DragHarnessState>();
+      await tester.pumpTestApp(
+        child: Center(
+          child: SizedBox(
+            width: 800,
+            height: 300,
+            child: DragHarness(
+              key: harnessKey,
+              axis: Axis.horizontal,
+              initialSize: 300,
+              minSize: 280,
+              maxSize: 312,
+              enabled: true,
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byKey(const Key("drag_handle")));
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      expect(harnessKey.currentState!.size, 308);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      expect(harnessKey.currentState!.size, 312);
+      await tester.sendKeyEvent(LogicalKeyboardKey.home);
+      expect(harnessKey.currentState!.size, 280);
+
+      final semantics = tester.widget<Semantics>(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Semantics &&
+              widget.properties.label == "Resize dimension",
+        ),
+      );
+      semantics.properties.onIncrease!();
+      await tester.pump();
+      expect(harnessKey.currentState!.size, 288);
+      expect(semantics.properties.label, "Resize dimension");
+    });
+
     testWidgets("disabled handle does not change size on drag", (tester) async {
       final harnessKey = GlobalKey<_DragHarnessState>();
 
