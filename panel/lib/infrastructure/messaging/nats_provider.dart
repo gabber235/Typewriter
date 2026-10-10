@@ -79,14 +79,6 @@ class Nats extends _$Nats {
   Set<skir.RecordId>? _acceptedRealmIds;
   Set<skir.RecordId>? _demandedRealmIds;
   var _demandedExact = false;
-  late StreamController<AsyncValue<Set<skir.RecordId>>> _authorizationChanges;
-  AsyncValue<Set<skir.RecordId>> _authorization = const AsyncLoading();
-
-  AsyncValue<Set<skir.RecordId>> get authorization => _authorization;
-
-  Stream<AsyncValue<Set<skir.RecordId>>> get authorizationChanges =>
-      _authorizationChanges.stream;
-
   @override
   NatsClient build() {
     final client = _connectCandidate(watch: true);
@@ -95,14 +87,9 @@ class Nats extends _$Nats {
     _acceptedRealmIds = null;
     _demandedRealmIds = null;
     _demandedExact = false;
-    _authorization = const AsyncLoading();
-    _authorizationChanges =
-        StreamController<AsyncValue<Set<skir.RecordId>>>.broadcast();
-    final changes = _authorizationChanges;
     ref.onDispose(() {
       _authorizationGeneration++;
       unawaited(_ownedClient?.close() ?? Future<void>.value());
-      unawaited(changes.close());
     });
     return client;
   }
@@ -153,11 +140,6 @@ class Nats extends _$Nats {
     return factory(configuration);
   }
 
-  void _publishAuthorization(AsyncValue<Set<skir.RecordId>> value) {
-    _authorization = value;
-    _authorizationChanges.add(value);
-  }
-
   Future<void> ensureRealmsAdmitted(Set<skir.RecordId> required) =>
       _admitRealms(required);
 
@@ -175,7 +157,6 @@ class Nats extends _$Nats {
         : admitted.containsAll(demanded);
     final operation = _authorizationTail.then((_) async {
       if (!ref.mounted || generation != _authorizationGeneration) return;
-      _publishAuthorization(const AsyncLoading());
       NatsClient? candidate;
       try {
         final previous = state;
@@ -186,7 +167,6 @@ class Nats extends _$Nats {
           if (!ref.mounted || generation != _authorizationGeneration) return;
           if (matches(current)) {
             _acceptedRealmIds = current;
-            _publishAuthorization(AsyncData(current));
             return;
           }
         }
@@ -205,7 +185,6 @@ class Nats extends _$Nats {
         _ownedClient = candidate;
         state = candidate;
         candidate = null;
-        _publishAuthorization(AsyncData(admitted));
         try {
           await previous.close();
         } on Object catch (error, stackTrace) {
@@ -218,11 +197,6 @@ class Nats extends _$Nats {
             ),
           );
         }
-      } on Object catch (error, stackTrace) {
-        if (ref.mounted && generation == _authorizationGeneration) {
-          _publishAuthorization(AsyncError(error, stackTrace));
-        }
-        rethrow;
       } finally {
         await candidate?.close();
       }
@@ -249,14 +223,6 @@ class Nats extends _$Nats {
       forceReplacement: true,
     );
   }
-}
-
-@riverpod
-Stream<AsyncValue<Set<skir.RecordId>>> natsAuthorization(Ref ref) async* {
-  ref.watch(natsProvider);
-  final owner = ref.read(natsProvider.notifier);
-  yield owner.authorization;
-  yield* owner.authorizationChanges;
 }
 
 /// Projects transport lifecycle into Riverpod for connection status UI.

@@ -48,8 +48,8 @@ class OrganizationTopologyController extends _$OrganizationTopologyController {
       try {
         await ref.read(natsProvider.notifier).refreshAuthorization(observed);
       } on Object {
-        // The connection owner exposes the authorization failure while this
-        // topology fact remains available to the organization UI.
+        // A failed grant refresh retains the current connection and does not
+        // invalidate this topology fact.
       }
       if (!ref.mounted) return;
       yield topology;

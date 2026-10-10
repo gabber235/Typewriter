@@ -257,7 +257,7 @@ final class NatsProvider extends $NotifierProvider<Nats, NatsClient> {
   }
 }
 
-String _$natsHash() => r'eeacfe753f507288fbd9b3e44fb0472e28785487';
+String _$natsHash() => r'5baf5bf9d3d92cddba7563fe8872083db12b0790';
 
 /// Owns the authenticated NATS client for the current user and organization.
 ///
@@ -282,47 +282,6 @@ abstract class _$Nats extends $Notifier<NatsClient> {
     return element.handleCreate(ref, build);
   }
 }
-
-@ProviderFor(natsAuthorization)
-final natsAuthorizationProvider = NatsAuthorizationProvider._();
-
-final class NatsAuthorizationProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<AsyncValue<Set<skir.RecordId>>>,
-          AsyncValue<Set<skir.RecordId>>,
-          Stream<AsyncValue<Set<skir.RecordId>>>
-        >
-    with
-        $FutureModifier<AsyncValue<Set<skir.RecordId>>>,
-        $StreamProvider<AsyncValue<Set<skir.RecordId>>> {
-  NatsAuthorizationProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'natsAuthorizationProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$natsAuthorizationHash();
-
-  @$internal
-  @override
-  $StreamProviderElement<AsyncValue<Set<skir.RecordId>>> $createElement(
-    $ProviderPointer pointer,
-  ) => $StreamProviderElement(pointer);
-
-  @override
-  Stream<AsyncValue<Set<skir.RecordId>>> create(Ref ref) {
-    return natsAuthorization(ref);
-  }
-}
-
-String _$natsAuthorizationHash() => r'66fc9f3b639ef2b030132c350081b516ec38a14c';
 
 /// Projects transport lifecycle into Riverpod for connection status UI.
 ///
