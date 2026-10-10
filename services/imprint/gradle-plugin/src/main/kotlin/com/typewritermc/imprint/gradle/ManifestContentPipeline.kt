@@ -52,7 +52,12 @@ internal class LocalGeneratedContentSource(
 ) : ManifestContentSource {
     override fun read(context: ManifestAssemblyContext): ManifestContent =
         ManifestContent(
-            contributions = contributionFiles.map { it.toGeneratedContribution(ContributionSourceId("artifact:${context.artifactId.value}")) },
+            contributions =
+                contributionFiles.map {
+                    it.toGeneratedContribution(
+                        ContributionSourceId("artifact:${context.artifactId.value}"),
+                    )
+                },
             runtimeEntrypoints = runtimeEntrypointFiles.flatMap(File::readRuntimeEntrypoints),
         )
 }
@@ -251,9 +256,7 @@ private fun File.readRuntimeEntrypoints(): List<String> =
         throw IllegalArgumentException("Cannot read runtime entrypoint metadata from $name.", failure)
     }
 
-private fun ZipFile.readContributions(
-    namespace: String,
-): List<GeneratedContribution> {
+private fun ZipFile.readContributions(namespace: String): List<GeneratedContribution> {
     require(namespace.isNotBlank() && '/' !in namespace) { "Contribution namespace must be one path segment." }
     val prefix = "$IMPRINT_CONTRIBUTIONS_PATH/"
     return entries()
