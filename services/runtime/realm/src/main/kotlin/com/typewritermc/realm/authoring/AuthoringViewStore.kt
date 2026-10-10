@@ -1,6 +1,5 @@
 package com.typewritermc.realm.authoring
 
-import com.typewritermc.authoring.ArgumentSelection
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.AuthoringResourceDefinition
 import com.typewritermc.authoring.InitializationDescriptor
@@ -16,6 +15,7 @@ import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.definitionFor
+import com.typewritermc.authoring.immutableAuthoringCopy
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.configuration.ConfigurationRecipe
@@ -23,15 +23,13 @@ import com.typewritermc.discovery.OwnedCheckRecipe
 import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointBindingTemplate
-import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ListItem
-import com.typewritermc.types.MapRow
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
-import java.util.Collections
+import com.typewritermc.types.immutableMapCopy
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -111,7 +109,7 @@ sealed interface AuthoredReadView {
     val links: Map<LinkOccurrenceId, LinkOccurrence>
     val readContext: ReadContext
 
-    data class Original internal constructor(
+    class Original internal constructor(
         override val original: AuthoringView,
     ) : AuthoredReadView {
         override val resources get() = original.resources
@@ -119,7 +117,7 @@ sealed interface AuthoredReadView {
         override val readContext get() = original.readContext
     }
 
-    data class Staged internal constructor(
+    class Staged internal constructor(
         override val original: AuthoringView,
         override val resources: Map<ResourceId, AuthoringRecord>,
         override val links: Map<LinkOccurrenceId, LinkOccurrence>,
@@ -204,15 +202,16 @@ class InMemoryAuthoringViewStore(
             prune(before)
         }
 
-    override fun close() =
+    override fun close() {
         synchronized(lock) {
-            if (closed) return
+            if (closed) return@synchronized
             closed = true
             roots.values.toList().forEach {
                 it.current = false
                 prune(it)
             }
         }
+    }
 
     override fun invalidate(reload: () -> AuthoringSeed) =
         synchronized(lock) {
@@ -239,7 +238,14 @@ class InMemoryAuthoringViewStore(
                 immutable.mapValues { (id, record) ->
                     definitions[id] ?: catalog.resources.definitionFor(record.configuration, catalog.checked).id
                 }
-            return RootRetention(AuthoringView(catalog, immutable, immutableMap(resolved), immutableMap(discoverLinks(immutable))))
+            return RootRetention(
+                AuthoringView(
+                    catalog,
+                    immutable,
+                    resolved.immutableMapCopy(),
+                    discoverLinks(immutable).immutableMapCopy(),
+                ),
+            )
         } catch (failure: Throwable) {
             try {
                 catalog.close()
@@ -291,7 +297,7 @@ private class DefaultAuthoringLease(
         check(!closed.get()) { "The original read view lease is closed." }
         require(upsertedResources.keys.intersect(removedResources).isEmpty())
         val resources = immutableResources(root.resources + upsertedResources - removedResources)
-        return AuthoredReadView.Staged(root, resources, immutableMap(discoverLinks(resources)))
+        return AuthoredReadView.Staged(root, resources, discoverLinks(resources).immutableMapCopy())
     }
 
     override fun close() {
@@ -353,137 +359,12 @@ private fun collectValueInputs(
 }
 
 private fun discoverLinks(resources: Map<ResourceId, AuthoringRecord>): Map<LinkOccurrenceId, LinkOccurrence> =
-    buildMap {
-        resources.forEach { (resource, record) ->
-            record.fields.forEach { (name, value) ->
-                discoverLinks(resource, value, ValueLocation(resource, ValuePath(listOf(PathSegment.Field(name)))), this)
-            }
-        }
-    }
-
-private fun discoverLinks(
-    source: ResourceId,
-    value: DataValue,
-    at: ValueLocation,
-    links: MutableMap<LinkOccurrenceId, LinkOccurrence>,
-) {
-    when (value) {
-        is DataValue.Link -> {
-            val id = LinkOccurrenceId(value.endpoint, at)
-            links[id] = LinkOccurrence(id, source, LinkTarget(value.target.resource, value.target.opposite))
-        }
-
-        is DataValue.Named -> {
-            discoverLinks(source, value.payload, at, links)
-        }
-
-        is DataValue.Record -> {
-            value.fields.forEach { (name, field) -> discoverLinks(source, field, at.field(name), links) }
-        }
-
-        is DataValue.ListValue -> {
-            value.items.forEach { discoverLinks(source, it.value, at.item(it.id), links) }
-        }
-
-        is DataValue.SetValue -> {
-            value.items.forEach { discoverLinks(source, it.value, at.item(it.id), links) }
-        }
-
-        is DataValue.MapValue -> {
-            value.rows.forEach { row ->
-                discoverLinks(source, row.key, at.item(row.id).mapKey(), links)
-                discoverLinks(source, row.value, at.item(row.id).mapValue(), links)
-            }
-        }
-
-        else -> {
-            Unit
-        }
-    }
-}
+    com.typewritermc.realm.repository.ResourceValueMapper
+        .discover(resources)
+        .associateBy(LinkOccurrence::id)
 
 private fun immutableResources(resources: Map<ResourceId, AuthoringRecord>): Map<ResourceId, AuthoringRecord> =
-    immutableMap(resources.mapValues { (_, record) -> immutableRecord(record) })
-
-private fun immutableRecord(record: AuthoringRecord): AuthoringRecord =
-    record.copy(
-        configuration = immutableSelection(record.configuration),
-        fields = immutableMap(record.fields.mapValues { (_, value) -> immutableValue(value) }),
-    )
-
-private fun immutableSelection(selection: TypeSelection): TypeSelection =
-    when (selection) {
-        is TypeSelection.Complete -> {
-            selection.copy(use = immutableNamedUse(selection.use))
-        }
-
-        is TypeSelection.Pending -> {
-            selection.copy(
-                arguments =
-                    immutableList(
-                        selection.arguments.map { argument ->
-                            when (argument) {
-                                is ArgumentSelection.Chosen -> argument.copy(type = immutableTypeUse(argument.type))
-                                ArgumentSelection.Unfilled -> argument
-                            }
-                        },
-                    ),
-            )
-        }
-    }
-
-private fun immutableNamedUse(use: com.typewritermc.types.TypeUse.Named): com.typewritermc.types.TypeUse.Named =
-    use.copy(arguments = immutableList(use.arguments.map(::immutableTypeUse)))
-
-private fun immutableTypeUse(use: com.typewritermc.types.TypeUse): com.typewritermc.types.TypeUse =
-    when (use) {
-        is com.typewritermc.types.TypeUse.Named -> immutableNamedUse(use)
-        is com.typewritermc.types.TypeUse.Nullable -> use.copy(value = immutableTypeUse(use.value))
-        is com.typewritermc.types.TypeUse.Scalar -> use
-    }
-
-private fun immutableValue(value: DataValue): DataValue =
-    when (value) {
-        is DataValue.Record -> {
-            value.copy(fields = immutableMap(value.fields.mapValues { (_, field) -> immutableValue(field) }))
-        }
-
-        is DataValue.Named -> {
-            value.copy(
-                actualType = immutableNamedUse(value.actualType),
-                payload = immutableValue(value.payload),
-            )
-        }
-
-        is DataValue.ListValue -> {
-            value.copy(items = immutableList(value.items.map { it.copy(value = immutableValue(it.value)) }))
-        }
-
-        is DataValue.SetValue -> {
-            value.copy(items = immutableList(value.items.map { it.copy(value = immutableValue(it.value)) }))
-        }
-
-        is DataValue.MapValue -> {
-            value.copy(rows = immutableList(value.rows.map { it.copy(key = immutableValue(it.key), value = immutableValue(it.value)) }))
-        }
-
-        is DataValue.Bytes -> {
-            value.copy(value = immutableList(value.value))
-        }
-
-        is DataValue.Link -> {
-            value.copy(
-                target =
-                    value.target.copy(
-                        opposite = value.target.opposite?.let { path -> ValuePath(immutableList(path.segments)) },
-                    ),
-            )
-        }
-
-        else -> {
-            value
-        }
-    }
+    resources.immutableAuthoringCopy()
 
 private fun TypeSelection.definition(): com.typewritermc.types.TypeDefinitionId =
     when (this) {
@@ -500,7 +381,3 @@ private fun ValueLocation.mapKey(): ValueLocation = copy(path = ValuePath(path.s
 private fun ValueLocation.mapValue(): ValueLocation = copy(path = ValuePath(path.segments + PathSegment.MapValue))
 
 internal val RESOURCE_SELECTION_INPUT: InputIdentity = InputIdentity.Selection(SelectionId("realm.resources"))
-
-private fun <K, V> immutableMap(values: Map<K, V>): Map<K, V> = Collections.unmodifiableMap(LinkedHashMap(values))
-
-private fun <T> immutableList(values: List<T>): List<T> = Collections.unmodifiableList(ArrayList(values))

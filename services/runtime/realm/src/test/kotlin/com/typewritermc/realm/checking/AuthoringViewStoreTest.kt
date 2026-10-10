@@ -132,6 +132,63 @@ val AuthoringViewStoreTest by testSuite {
         }
         store.close()
     }
+    test("root and staged views reject caller and exposed collection mutation") {
+        val id = ResourceId("page")
+        val rootArguments = mutableListOf<TypeUse>(INT_USE)
+        val rootItems = mutableListOf(ListItem(ItemId("root"), DataValue.Integer(BigInteger.ONE)))
+        val rootFields =
+            mutableMapOf<String, DataValue>(
+                "name" to DataValue.StringValue("Quest"),
+                "count" to DataValue.Integer(BigInteger.ONE),
+                "numbers" to DataValue.Named(TypeUse.Named(LIST_TYPE, rootArguments), DataValue.ListValue(rootItems)),
+            )
+        val seed = mutableMapOf(id to AuthoringRecord(TypeSelection.Complete(TypeUse.Named(TEST_TYPE)), rootFields))
+        val store = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(seed))
+
+        seed.clear()
+        rootFields["name"] = DataValue.StringValue("Changed")
+        rootArguments += TEXT_USE
+        rootItems += ListItem(ItemId("late"), DataValue.Integer(BigInteger.TWO))
+
+        store.capture().use { lease ->
+            val retained = lease.root.resources.getValue(id)
+            assertEquals(DataValue.StringValue("Quest"), retained.fields.getValue("name"))
+            val retainedNumbers = retained.fields.getValue("numbers") as DataValue.Named
+            assertEquals(listOf(INT_USE), retainedNumbers.actualType.arguments)
+            assertEquals(listOf(ItemId("root")), (retainedNumbers.payload as DataValue.ListValue).items.map(ListItem::id))
+            assertFailsWith<UnsupportedOperationException> {
+                @Suppress("UNCHECKED_CAST")
+                (lease.root.resources as MutableMap<ResourceId, AuthoringRecord>)[ResourceId("other")] = retained
+            }
+            assertFailsWith<UnsupportedOperationException> {
+                @Suppress("UNCHECKED_CAST")
+                (retainedNumbers.actualType.arguments as MutableList<TypeUse>) += TEXT_USE
+            }
+
+            val stagedItems = mutableListOf(ListItem(ItemId("staged"), DataValue.Integer(BigInteger.TWO)))
+            val stagedFields =
+                mutableMapOf<String, DataValue>(
+                    "name" to DataValue.StringValue("Story"),
+                    "count" to DataValue.Integer(BigInteger.TWO),
+                    "numbers" to DataValue.Named(LIST_USE, DataValue.ListValue(stagedItems)),
+                )
+            val upserts = mutableMapOf(id to AuthoringRecord(TypeSelection.Complete(TypeUse.Named(TEST_TYPE)), stagedFields))
+            val staged = lease.stagedView(upserts)
+            upserts.clear()
+            stagedFields["name"] = DataValue.StringValue("Changed")
+            stagedItems.clear()
+
+            val retainedStaged = staged.resources.getValue(id)
+            assertEquals(DataValue.StringValue("Story"), retainedStaged.fields.getValue("name"))
+            val stagedNumbers = retainedStaged.fields.getValue("numbers") as DataValue.Named
+            assertEquals(listOf(ItemId("staged")), (stagedNumbers.payload as DataValue.ListValue).items.map(ListItem::id))
+            assertFailsWith<UnsupportedOperationException> {
+                @Suppress("UNCHECKED_CAST")
+                ((stagedNumbers.payload as DataValue.ListValue).items as MutableList<ListItem>).clear()
+            }
+        }
+        store.close()
+    }
     test("installation and current reads share one lock") {
         val id = ResourceId("page")
         val store = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(mapOf(id to record(name = "Quest"))))

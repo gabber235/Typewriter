@@ -10,6 +10,7 @@ import com.typewritermc.authoring.LinkInspectionResult
 import com.typewritermc.authoring.LinkOccurrence
 import com.typewritermc.authoring.LinkOccurrenceId
 import com.typewritermc.authoring.LinkProjection
+import com.typewritermc.authoring.LocatedPortableValue
 import com.typewritermc.authoring.ReachabilityQuery
 import com.typewritermc.authoring.ReachabilityResult
 import com.typewritermc.authoring.RelationSelection
@@ -20,6 +21,7 @@ import com.typewritermc.authoring.TraversalDirection
 import com.typewritermc.authoring.UnresolvedLink
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.locate
 import com.typewritermc.checking.DraftType
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.checking.InspectionCompletion
@@ -450,66 +452,9 @@ private fun rawValue(
     record: com.typewritermc.authoring.AuthoringRecord?,
     path: ValuePath,
 ): DataValue? {
-    var cursor: RawCursor = RawCursor.Value(DataValue.Record(record?.fields ?: return null))
-    path.segments.forEach { segment ->
-        cursor =
-            when (segment) {
-                is com.typewritermc.authoring.PathSegment.Field -> {
-                    val current = cursor.valueOrNull()?.unwrapNamed() as? DataValue.Record ?: return null
-                    current.fields[segment.name]?.let(RawCursor::Value)
-                }
-
-                is com.typewritermc.authoring.PathSegment.Item -> {
-                    when (val current = cursor.valueOrNull()?.unwrapNamed()) {
-                        is DataValue.ListValue -> {
-                            current.items
-                                .singleOrNull { it.id == segment.id }
-                                ?.value
-                                ?.let(RawCursor::Value)
-                        }
-
-                        is DataValue.SetValue -> {
-                            current.items
-                                .singleOrNull { it.id == segment.id }
-                                ?.value
-                                ?.let(RawCursor::Value)
-                        }
-
-                        is DataValue.MapValue -> {
-                            current.rows.singleOrNull { it.id == segment.id }?.let(RawCursor::Row)
-                        }
-
-                        else -> {
-                            null
-                        }
-                    }
-                }
-
-                com.typewritermc.authoring.PathSegment.MapKey -> {
-                    (cursor as? RawCursor.Row)?.row?.key?.let(RawCursor::Value)
-                }
-
-                com.typewritermc.authoring.PathSegment.MapValue -> {
-                    (cursor as? RawCursor.Row)?.row?.value?.let(RawCursor::Value)
-                }
-            } ?: return null
-    }
-    return cursor.valueOrNull()
+    val fields = record?.fields ?: return null
+    return (DataValue.Record(fields).locate(path) as? LocatedPortableValue.Value)?.value
 }
-
-private sealed interface RawCursor {
-    data class Value(
-        val value: DataValue,
-    ) : RawCursor
-
-    data class Row(
-        val row: com.typewritermc.types.MapRow,
-    ) : RawCursor
-
-    fun valueOrNull(): DataValue? = (this as? Value)?.value
-}
-
-private fun DataValue.unwrapNamed(): DataValue = if (this is DataValue.Named) payload.unwrapNamed() else this
 
 private fun com.typewritermc.authoring.AuthoredReads.requireCapturedAuthoringReads(): CapturedAuthoringReads =
     (this as? SnapshotReadCapability)?.snapshotReads

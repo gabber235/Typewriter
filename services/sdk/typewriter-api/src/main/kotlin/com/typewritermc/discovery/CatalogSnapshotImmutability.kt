@@ -22,48 +22,53 @@ import com.typewritermc.types.catalog.EffectiveFieldTemplate
 import com.typewritermc.types.catalog.PublishedType
 import com.typewritermc.types.catalog.TypeRecommendation
 import com.typewritermc.types.immutableCopy
+import com.typewritermc.types.immutableListCopy
+import com.typewritermc.types.immutableSetCopy
 
 internal fun EditorCatalogSnapshot.immutableCopy(): EditorCatalogSnapshot =
     copy(
-        types = types.map(PublishedType::immutableCopy),
-        relations = relations.map(RelationContract::immutableCopy),
-        resourceDefinitions = resourceDefinitions.toList(),
-        presentations = presentations.map(PresentationDescriptor::immutableCopy),
-        presentationMaterials = presentationMaterials.map(PresentationMaterial::immutableCopy),
-        configuration = configuration.map(ConfigurationRecipe::immutableCopy),
-        diagnostics = diagnostics.map(DeclarationDiagnostic::immutableCopy),
-        initialization = initialization.map(InitializationDescriptor::immutableCopy),
-        endpointBindings = endpointBindings.map(EndpointBindingTemplate::immutableCopy),
-        capabilities = capabilities.map(RealmCapabilityDescriptor::immutableCopy),
-        recommendations = recommendations.map(TypeRecommendation::immutableCopy),
-        roleFallbacks = roleFallbacks.map { fallback -> fallback.copy(parents = fallback.parents.toList()) },
+        types = types.immutableListCopy(PublishedType::immutableCopy),
+        relations = relations.immutableListCopy(RelationContract::immutableCopy),
+        resourceDefinitions = resourceDefinitions.immutableListCopy(),
+        presentations = presentations.immutableListCopy(PresentationDescriptor::immutableCopy),
+        presentationMaterials = presentationMaterials.immutableListCopy(PresentationMaterial::immutableCopy),
+        configuration = configuration.immutableListCopy(ConfigurationRecipe::immutableCopy),
+        diagnostics = diagnostics.immutableListCopy(DeclarationDiagnostic::immutableCopy),
+        initialization = initialization.immutableListCopy(InitializationDescriptor::immutableCopy),
+        endpointBindings = endpointBindings.immutableListCopy(EndpointBindingTemplate::immutableCopy),
+        capabilities = capabilities.immutableListCopy(RealmCapabilityDescriptor::immutableCopy),
+        recommendations = recommendations.immutableListCopy(TypeRecommendation::immutableCopy),
+        roleFallbacks =
+            roleFallbacks.immutableListCopy { fallback ->
+                fallback.copy(parents = fallback.parents.immutableListCopy())
+            },
     )
 
 private fun PublishedType.immutableCopy(): PublishedType =
     copy(
         definition = definition.immutableCopy(),
         status = status.immutableCopy(),
-        effectiveFields = effectiveFields.map(EffectiveFieldTemplate::immutableCopy),
-        ancestorTemplates = ancestorTemplates.map { it.immutableCopy() as TypeTemplate.Named },
+        effectiveFields = effectiveFields.immutableListCopy(EffectiveFieldTemplate::immutableCopy),
+        ancestorTemplates = ancestorTemplates.immutableListCopy { it.immutableCopy() as TypeTemplate.Named },
     )
 
 private fun DeclarationStatus.immutableCopy(): DeclarationStatus =
     when (this) {
         DeclarationStatus.Ready -> this
-        is DeclarationStatus.Unavailable -> copy(reasons = reasons.map(DeclarationDiagnostic::immutableCopy))
+        is DeclarationStatus.Unavailable -> copy(reasons = reasons.immutableListCopy(DeclarationDiagnostic::immutableCopy))
     }
 
 private fun EffectiveFieldTemplate.immutableCopy(): EffectiveFieldTemplate =
     copy(
         type = type.immutableCopy(),
-        rules = rules.toList(),
+        rules = rules.immutableListCopy(),
     )
 
 private fun RelationContract.immutableCopy(): RelationContract =
     copy(
         first = first.immutableCopy(),
         second = second.immutableCopy(),
-        families = families.toSet(),
+        families = families.immutableSetCopy(),
     )
 
 private fun EndpointDefinition.immutableCopy(): EndpointDefinition = copy(resource = resource.immutableCopy() as TypeTemplate.Named)
@@ -71,7 +76,7 @@ private fun EndpointDefinition.immutableCopy(): EndpointDefinition = copy(resour
 private fun PresentationDescriptor.immutableCopy(): PresentationDescriptor =
     copy(
         target = target.immutableCopy(),
-        roles = roles.toSet(),
+        roles = roles.immutableSetCopy(),
     )
 
 private fun PresentationMaterial.immutableCopy(): PresentationMaterial = copy(target = target.immutableCopy())
@@ -85,7 +90,7 @@ private fun PresentationTarget.immutableCopy(): PresentationTarget =
 private fun ConfigurationRecipe.immutableCopy(): ConfigurationRecipe =
     copy(
         relativePath = relativePath.immutableCopy(),
-        rules = rules.map(OwnedRule::immutableCopy),
+        rules = rules.immutableListCopy(OwnedRule::immutableCopy),
     )
 
 private fun OwnedRule.immutableCopy(): OwnedRule =
@@ -94,7 +99,8 @@ private fun OwnedRule.immutableCopy(): OwnedRule =
         diagnostic = diagnostic.immutableCopy(),
     )
 
-private fun DiagnosticTemplate.immutableCopy(): DiagnosticTemplate = copy(targets = targets.map(RelativeFieldPattern::immutableCopy))
+private fun DiagnosticTemplate.immutableCopy(): DiagnosticTemplate =
+    copy(targets = targets.immutableListCopy(RelativeFieldPattern::immutableCopy))
 
 private fun ExpressionNode.immutableCopy(): ExpressionNode =
     when (this) {
@@ -103,11 +109,11 @@ private fun ExpressionNode.immutableCopy(): ExpressionNode =
         }
 
         is ExpressionNode.Read -> {
-            copy(path = path.copy(segments = path.segments.toList()))
+            copy(path = path.copy(segments = path.segments.immutableListCopy()))
         }
 
         is ExpressionNode.Call -> {
-            copy(arguments = arguments.map(ExpressionNode::immutableCopy))
+            copy(arguments = arguments.immutableListCopy(ExpressionNode::immutableCopy))
         }
 
         is ExpressionNode.And -> {
@@ -133,8 +139,8 @@ private fun ExpressionNode.immutableCopy(): ExpressionNode =
         is ExpressionNode.Collection -> {
             copy(
                 input = input.immutableCopy(),
-                bindings = bindings.toList(),
-                arguments = arguments.map(ExpressionNode::immutableCopy),
+                bindings = bindings.immutableListCopy(),
+                arguments = arguments.immutableListCopy(ExpressionNode::immutableCopy),
                 body = body?.immutableCopy(),
             )
         }
@@ -142,8 +148,8 @@ private fun ExpressionNode.immutableCopy(): ExpressionNode =
 
 private fun InitializationDescriptor.immutableCopy(): InitializationDescriptor =
     copy(
-        captured = captured.map { captured -> captured.copy(value = captured.value.immutableCopy()) },
-        diagnostics = diagnostics.toList(),
+        captured = captured.immutableListCopy { captured -> captured.copy(value = captured.value.immutableCopy()) },
+        diagnostics = diagnostics.immutableListCopy(),
     )
 
 private fun EndpointBindingTemplate.immutableCopy(): EndpointBindingTemplate =
@@ -178,8 +184,8 @@ private fun TypeRecommendation.immutableCopy(): TypeRecommendation = copy(type =
 
 private fun DeclarationDiagnostic.immutableCopy(): DeclarationDiagnostic =
     copy(
-        origins = origins.toList(),
+        origins = origins.immutableListCopy(),
         field = field?.immutableCopy(),
     )
 
-private fun RelativeFieldPattern.immutableCopy(): RelativeFieldPattern = copy(segments = segments.toList())
+private fun RelativeFieldPattern.immutableCopy(): RelativeFieldPattern = copy(segments = segments.immutableListCopy())

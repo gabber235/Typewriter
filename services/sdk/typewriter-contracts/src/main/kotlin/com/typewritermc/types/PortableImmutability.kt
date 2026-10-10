@@ -1,11 +1,27 @@
 package com.typewritermc.types
 
+import java.util.Collections
+
+inline fun <T, R> Iterable<T>.immutableListCopy(transform: (T) -> R): List<R> = Collections.unmodifiableList(mapTo(ArrayList(), transform))
+
+fun <T> Iterable<T>.immutableListCopy(): List<T> = immutableListCopy { it }
+
+inline fun <K, V, R> Map<K, V>.immutableMapCopy(transform: (V) -> R): Map<K, R> =
+    Collections.unmodifiableMap(entries.associateTo(LinkedHashMap()) { (key, value) -> key to transform(value) })
+
+fun <K, V> Map<K, V>.immutableMapCopy(): Map<K, V> = immutableMapCopy { it }
+
+fun <T> Iterable<T>.immutableSetCopy(): Set<T> = Collections.unmodifiableSet(toCollection(LinkedHashSet()))
+
 /** Creates a declaration graph that does not retain caller supplied collections. */
 fun TypeDefinition.immutableCopy(): TypeDefinition =
     copy(
-        parameters = parameters.map { parameter -> parameter.copy(bounds = parameter.bounds.map(TypeTemplate::immutableCopy)) },
+        parameters =
+            parameters.immutableListCopy { parameter ->
+                parameter.copy(bounds = parameter.bounds.immutableListCopy(TypeTemplate::immutableCopy))
+            },
         representation = representation.immutableCopy(),
-        parents = parents.map { parent -> parent.immutableCopy() as TypeTemplate.Named },
+        parents = parents.immutableListCopy { parent -> parent.immutableCopy() as TypeTemplate.Named },
     )
 
 /** Creates a type template that does not retain caller supplied argument collections. */
@@ -15,7 +31,7 @@ fun TypeTemplate.immutableCopy(): TypeTemplate =
         is TypeTemplate.Scalar,
         -> this
 
-        is TypeTemplate.Named -> copy(arguments = arguments.map(TypeTemplate::immutableCopy))
+        is TypeTemplate.Named -> copy(arguments = arguments.immutableListCopy(TypeTemplate::immutableCopy))
 
         is TypeTemplate.Nullable -> copy(value = value.immutableCopy())
     }
@@ -24,7 +40,7 @@ fun TypeTemplate.immutableCopy(): TypeTemplate =
 fun TypeUse.immutableCopy(): TypeUse =
     when (this) {
         is TypeUse.Scalar -> this
-        is TypeUse.Named -> copy(arguments = arguments.map(TypeUse::immutableCopy))
+        is TypeUse.Named -> copy(arguments = arguments.immutableListCopy(TypeUse::immutableCopy))
         is TypeUse.Nullable -> copy(value = value.immutableCopy())
     }
 
@@ -47,11 +63,11 @@ fun DataValue.immutableCopy(): DataValue =
         }
 
         is DataValue.Bytes -> {
-            copy(value = value.toList())
+            copy(value = value.immutableListCopy())
         }
 
         is DataValue.Record -> {
-            copy(fields = fields.mapValues { (_, value) -> value.immutableCopy() }.toMap())
+            copy(fields = fields.immutableMapCopy(DataValue::immutableCopy))
         }
 
         is DataValue.Named -> {
@@ -62,17 +78,17 @@ fun DataValue.immutableCopy(): DataValue =
         }
 
         is DataValue.ListValue -> {
-            copy(items = items.map { item -> item.copy(value = item.value.immutableCopy()) })
+            copy(items = items.immutableListCopy { item -> item.copy(value = item.value.immutableCopy()) })
         }
 
         is DataValue.SetValue -> {
-            copy(items = items.map { item -> item.copy(value = item.value.immutableCopy()) })
+            copy(items = items.immutableListCopy { item -> item.copy(value = item.value.immutableCopy()) })
         }
 
         is DataValue.MapValue -> {
             copy(
                 rows =
-                    rows.map { row ->
+                    rows.immutableListCopy { row ->
                         row.copy(
                             key = row.key.immutableCopy(),
                             value = row.value.immutableCopy(),
@@ -82,7 +98,7 @@ fun DataValue.immutableCopy(): DataValue =
         }
 
         is DataValue.Link -> {
-            copy(target = target.copy(opposite = target.opposite?.copy(segments = target.opposite.segments.toList())))
+            copy(target = target.copy(opposite = target.opposite?.copy(segments = target.opposite.segments.immutableListCopy())))
         }
     }
 
@@ -93,16 +109,16 @@ private fun RepresentationTemplate.immutableCopy(): RepresentationTemplate =
         }
 
         is RepresentationTemplate.Enumeration -> {
-            copy(cases = cases.toList())
+            copy(cases = cases.immutableListCopy())
         }
 
         is RepresentationTemplate.Record -> {
             copy(
                 fields =
-                    fields.map { field ->
+                    fields.immutableListCopy { field ->
                         field.copy(
                             type = field.type.immutableCopy(),
-                            overrides = field.overrides.toList(),
+                            overrides = field.overrides.immutableListCopy(),
                         )
                     },
             )

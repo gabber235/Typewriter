@@ -8,6 +8,7 @@ import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.ValueProblem
+import com.typewritermc.authoring.descendants
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.EndpointSlot
@@ -105,12 +106,19 @@ internal sealed interface CounterpartBinding {
 /** Derives exact authored occurrences and rebuildable declared graph projections. */
 internal object ResourceValueMapper {
     fun discover(resources: Map<ResourceId, AuthoringRecord>): List<LinkOccurrence> =
-        buildList {
-            resources.forEach { (resource, record) ->
-                record.fields.forEach { (name, value) ->
-                    collect(resource, value, ValueLocation(resource, ValuePath(listOf(PathSegment.Field(name)))), this)
-                }
-            }
+        resources.flatMap { (source, record) ->
+            DataValue
+                .Record(record.fields)
+                .descendants()
+                .mapNotNull { node ->
+                    val link = node.value as? DataValue.Link ?: return@mapNotNull null
+                    val location = ValueLocation(source, node.path)
+                    LinkOccurrence(
+                        LinkOccurrenceId(link.endpoint, location),
+                        source,
+                        LinkTarget(link.target.resource, link.target.opposite),
+                    )
+                }.toList()
         }
 
     fun project(
@@ -271,46 +279,6 @@ internal object ResourceValueMapper {
             .linkSlots(catalog)
             .singleOrNull { it.location == occurrence.id.location.path && it.endpoint == occurrence.id.endpoint }
             ?.target
-
-    private fun collect(
-        source: ResourceId,
-        value: DataValue,
-        location: ValueLocation,
-        target: MutableList<LinkOccurrence>,
-    ) {
-        when (value) {
-            is DataValue.Link -> {
-                val id = LinkOccurrenceId(value.endpoint, location)
-                target += LinkOccurrence(id, source, LinkTarget(value.target.resource, value.target.opposite))
-            }
-
-            is DataValue.Named -> {
-                collect(source, value.payload, location, target)
-            }
-
-            is DataValue.Record -> {
-                value.fields.forEach { (name, field) -> collect(source, field, location.field(name), target) }
-            }
-
-            is DataValue.ListValue -> {
-                value.items.forEach { collect(source, it.value, location.item(it.id), target) }
-            }
-
-            is DataValue.SetValue -> {
-                value.items.forEach { collect(source, it.value, location.item(it.id), target) }
-            }
-
-            is DataValue.MapValue -> {
-                value.rows.forEach { row ->
-                    collect(source, row.key, location.item(row.id).mapKey(), target)
-                    collect(source, row.value, location.item(row.id).mapValue(), target)
-                }
-            }
-
-            else -> {
-            }
-        }
-    }
 }
 
 private data class LinkSchemaSlot(

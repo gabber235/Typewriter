@@ -11,13 +11,16 @@ import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.DraftExpectation
 import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.ItemId
+import com.typewritermc.authoring.LocatedPortableValue
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ReadContext
+import com.typewritermc.authoring.StructuralStep
 import com.typewritermc.authoring.TraversalDirection
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.complete
+import com.typewritermc.authoring.locate
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.DraftType
 import com.typewritermc.checking.InputIdentity
@@ -707,58 +710,42 @@ class CapturedAuthoringReads(
     private fun valueAt(location: ValueLocation): LocatedValue {
         val record = view.resources[location.resource] ?: return LocatedValue.Missing(location)
         if (location.path.segments.isEmpty()) {
-            val complete = record.configuration as? TypeSelection.Complete ?: return LocatedValue.Missing(location)
-            return LocatedValue.Available(DataValue.Named(complete.use, DataValue.Record(record.fields)))
+            val selection = record.configuration as? TypeSelection.Complete ?: return LocatedValue.Missing(location)
+            return LocatedValue.Available(DataValue.Named(selection.use, DataValue.Record(record.fields)))
         }
-        var cursor: Cursor = Cursor.Value(DataValue.Record(record.fields))
-        var traversed = ValueLocation(location.resource, ValuePath())
-        for (segment in location.path.segments) {
-            observe(InputIdentity.Form(traversed))
-            cursor =
-                when (segment) {
-                    is PathSegment.Field -> {
-                        val next = traversed.field(segment.name)
-                        val current = cursor.valueOrNull()?.unwrapNamed()
-                        if (current == DataValue.Unfilled || current == DataValue.Null) return LocatedValue.Missing(next)
-                        val value =
-                            current as? DataValue.Record
-                                ?: return LocatedValue.Invalid(traversed, "expected_record", "A field was read from a nonrecord value.")
-                        val field = value.fields[segment.name] ?: return LocatedValue.Missing(next)
-                        traversed = next
-                        Cursor.Value(field)
-                    }
-
-                    is PathSegment.Item -> {
-                        observe(InputIdentity.Membership(traversed))
-                        val value = cursor.valueOrNull()?.unwrapNamed()
-                        traversed = traversed.item(segment.id)
-                        when (value) {
-                            is DataValue.ListValue -> value.items.singleOrNull { it.id == segment.id }?.let { Cursor.Value(it.value) }
-                            is DataValue.SetValue -> value.items.singleOrNull { it.id == segment.id }?.let { Cursor.Value(it.value) }
-                            is DataValue.MapValue -> value.rows.singleOrNull { it.id == segment.id }?.let(Cursor::Row)
-                            else -> null
-                        } ?: return LocatedValue.Missing(traversed)
-                    }
-
-                    PathSegment.MapKey -> {
-                        val row =
-                            cursor as? Cursor.Row
-                                ?: return LocatedValue.Invalid(traversed, "expected_map_row", "A map key was read outside a map row.")
-                        traversed = traversed.mapKey()
-                        Cursor.Value(row.row.key)
-                    }
-
-                    PathSegment.MapValue -> {
-                        val row =
-                            cursor as? Cursor.Row
-                                ?: return LocatedValue.Invalid(traversed, "expected_map_row", "A map value was read outside a map row.")
-                        traversed = traversed.mapValue()
-                        Cursor.Value(row.row.value)
-                    }
+        val result =
+            DataValue.Record(record.fields).locate(location.path) { step ->
+                val at = ValueLocation(location.resource, step.at)
+                when (step) {
+                    is StructuralStep.Form -> observe(InputIdentity.Form(at))
+                    is StructuralStep.Membership -> observe(InputIdentity.Membership(at))
                 }
+            }
+        return when (result) {
+            is LocatedPortableValue.Value -> {
+                LocatedValue.Available(result.value)
+            }
+
+            is LocatedPortableValue.Row -> {
+                LocatedValue.Invalid(location, "expected_value", "The path ends at a map row rather than a value.")
+            }
+
+            is LocatedPortableValue.Missing -> {
+                LocatedValue.Missing(location.copy(path = result.traversed))
+            }
+
+            is LocatedPortableValue.Invalid -> {
+                LocatedValue.Invalid(
+                    location.copy(path = result.traversed),
+                    result.code,
+                    when (result.code) {
+                        "expected_record" -> "A field was read from a nonrecord value."
+                        "expected_map_row" -> "A map branch was read outside a map row."
+                        else -> "The portable path is invalid."
+                    },
+                )
+            }
         }
-        return cursor.valueOrNull()?.let(LocatedValue::Available)
-            ?: LocatedValue.Invalid(traversed, "expected_value", "The path ends at a map row rather than a value.")
     }
 
     private fun collectionLocations(
@@ -1000,9 +987,7 @@ class CapturedAuthoringReads(
                 }
             }
 
-            is InputIdentity.Catalog -> {
-                Unit
-            }
+            is InputIdentity.Catalog -> {}
         }
     }
 
@@ -1045,18 +1030,6 @@ internal object MissingSelectionPredicateEvaluator : SelectionPredicateEvaluator
             ),
         )
 }
-
-private sealed interface Cursor {
-    data class Value(
-        val value: DataValue,
-    ) : Cursor
-
-    data class Row(
-        val row: MapRow,
-    ) : Cursor
-}
-
-private fun Cursor.valueOrNull(): DataValue? = (this as? Cursor.Value)?.value
 
 private sealed interface LocatedValue {
     data class Available(

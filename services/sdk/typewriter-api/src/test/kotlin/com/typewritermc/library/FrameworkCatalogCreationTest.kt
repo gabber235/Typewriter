@@ -12,7 +12,6 @@ import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.GeneratedProviderIndex
-import com.typewritermc.discovery.GeneratedProviderInstantiator
 import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.discovery.GeneratedTypeProvider
 import com.typewritermc.discovery.ProviderOrigin
@@ -52,6 +51,7 @@ import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationHeaderTitle
 import skirout.editor.v1.presentation.PresentationNode
+import java.lang.reflect.Modifier
 import java.util.Collections
 import skirout.editor.v1.expression.ExpressionNode as WireExpressionNode
 import skirout.editor.v1.type_catalog.ExpressionBindingId as WireExpressionBindingId
@@ -65,8 +65,7 @@ val FrameworkCatalogCreationTest by testSuite {
             entries
                 .filter { it.kind == GeneratedProviderKind.Type }
                 .map { entry ->
-                    GeneratedProviderInstantiator.PublicZeroArgument
-                        .instantiate(Class.forName(entry.providerClass)) as GeneratedTypeProvider
+                    instantiateGeneratedProvider(Class.forName(entry.providerClass)) as GeneratedTypeProvider
                 }.map(GeneratedTypeProvider::definition)
                 .distinctBy(TypeDefinition::id)
         val catalog = DefaultCheckedCatalog(generation, StandardTypes.definitions + definitions)
@@ -76,8 +75,7 @@ val FrameworkCatalogCreationTest by testSuite {
             entries
                 .filter { it.kind == GeneratedProviderKind.NativeBinding }
                 .map { entry ->
-                    GeneratedProviderInstantiator.PublicZeroArgument
-                        .instantiate(Class.forName(entry.providerClass)) as NativeBindingFactory
+                    instantiateGeneratedProvider(Class.forName(entry.providerClass)) as NativeBindingFactory
                 }.distinctBy(NativeBindingFactory::provider)
         val bindings = FactoryNativeBindingRegistry(catalog, factories)
         val checkedIconify = (catalog.resolve(IconIconifyDefinition.use) as Resolution.Ready).value
@@ -383,6 +381,13 @@ val FrameworkCatalogCreationTest by testSuite {
         placementLabels shouldBe listOf("X", "Y", "Width", "Height")
     }
 }
+
+private fun instantiateGeneratedProvider(type: Class<*>): Any =
+    type.fields
+        .singleOrNull { field ->
+            field.name == "INSTANCE" && Modifier.isStatic(field.modifiers) && field.type === type
+        }?.get(null)
+        ?: type.getConstructor().newInstance()
 
 private fun AxisChild.node(): PresentationNode = (this as AxisChild.FixedWrapper).value
 

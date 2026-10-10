@@ -68,6 +68,8 @@ interface CheckedCatalog {
 
     fun definition(id: TypeDefinitionId): DeclarationStatus
 
+    fun declaration(id: TypeDefinitionId): Resolution<TypeDefinition>
+
     fun resolve(candidate: TypeUse): Resolution<CheckedType>
 
     fun resolvePartial(selection: TypeSelection): Resolution<PartialSchema>
@@ -161,6 +163,12 @@ class DefaultCheckedCatalog(
             else -> DeclarationStatus.Ready
         }
     }
+
+    override fun declaration(id: TypeDefinitionId): Resolution<TypeDefinition> =
+        when (val status = definition(id)) {
+            DeclarationStatus.Ready -> Resolution.Ready(definitions.getValue(id).single())
+            is DeclarationStatus.Unavailable -> Resolution.Invalid(status.reasons)
+        }
 
     override fun resolve(candidate: TypeUse): Resolution<CheckedType> {
         candidate.typeDepthFailure()?.let { return invalid(it, "type_depth_limit") }

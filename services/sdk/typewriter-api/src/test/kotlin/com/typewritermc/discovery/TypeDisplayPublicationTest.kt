@@ -11,6 +11,7 @@ import com.typewritermc.types.TypeDisplay
 import com.typewritermc.types.catalog.toWire
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import java.lang.reflect.Modifier
 import java.util.Collections
 
 val TypeDisplayPublicationTest by testSuite {
@@ -59,10 +60,16 @@ private fun generatedTypeProviders(): List<GeneratedTypeProvider> {
             resource.openStream().bufferedReader().use { GeneratedProviderIndex.parse(it.readText()) }
         }.filter { entry -> entry.kind == GeneratedProviderKind.Type }
         .map { entry ->
-            GeneratedProviderInstantiator.PublicZeroArgument
-                .instantiate(Class.forName(entry.providerClass)) as GeneratedTypeProvider
+            instantiateGeneratedProvider(Class.forName(entry.providerClass)) as GeneratedTypeProvider
         }
 }
+
+private fun instantiateGeneratedProvider(type: Class<*>): Any =
+    type.fields
+        .singleOrNull { field ->
+            field.name == "INSTANCE" && Modifier.isStatic(field.modifiers) && field.type === type
+        }?.get(null)
+        ?: type.getConstructor().newInstance()
 
 private fun providerOrigin(): ProviderOrigin =
     ProviderOrigin(

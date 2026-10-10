@@ -7,6 +7,7 @@ import com.typewritermc.authoring.EditIntent
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.LinkOccurrence
 import com.typewritermc.authoring.LinkOccurrenceId
+import com.typewritermc.authoring.LocatedPortableValue
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.PreparedContent
 import com.typewritermc.authoring.PreparedEdit
@@ -16,7 +17,10 @@ import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.ValueProblem
+import com.typewritermc.authoring.ValueReplacement
+import com.typewritermc.authoring.locate
 import com.typewritermc.authoring.validateStructure
+import com.typewritermc.authoring.writeField
 import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
 import com.typewritermc.realm.authoring.authoredTypeAt
 import com.typewritermc.types.CollectionKind
@@ -835,127 +839,19 @@ private val TypeSelection.definition
             is TypeSelection.Pending -> definition
         }
 
-internal fun AuthoringRecord.valueAt(path: ValuePath): DataValue? = DataValue.Record(fields).valueAt(path.segments)
-
-private fun DataValue.valueAt(segments: List<PathSegment>): DataValue? {
-    if (segments.isEmpty()) return this
-    if (this is DataValue.Named) return payload.valueAt(segments)
-    val next =
-        when (val segment = segments.first()) {
-            is PathSegment.Field -> {
-                (this as? DataValue.Record)?.fields?.get(segment.name)
-            }
-
-            is PathSegment.Item -> {
-                when (this) {
-                    is DataValue.ListValue -> {
-                        items.singleOrNull { it.id == segment.id }?.value
-                    }
-
-                    is DataValue.SetValue -> {
-                        items.singleOrNull { it.id == segment.id }?.value
-                    }
-
-                    is DataValue.MapValue -> {
-                        rows.singleOrNull { it.id == segment.id }?.let {
-                            DataValue.Record(
-                                mapOf(
-                                    "key" to it.key,
-                                    "value" to it.value,
-                                ),
-                            )
-                        }
-                    }
-
-                    else -> {
-                        null
-                    }
-                }
-            }
-
-            PathSegment.MapKey -> {
-                (this as? DataValue.Record)?.fields?.get("key")
-            }
-
-            PathSegment.MapValue -> {
-                (this as? DataValue.Record)?.fields?.get("value")
-            }
-        } ?: return null
-    return next.valueAt(segments.drop(1))
-}
+internal fun AuthoringRecord.valueAt(path: ValuePath): DataValue? =
+    (DataValue.Record(fields).locate(path) as? LocatedPortableValue.Value)?.value
 
 private fun AuthoringRecord.set(
     path: ValuePath,
     value: DataValue,
 ): AuthoringRecord? {
     if (path.segments.isEmpty()) return (value as? DataValue.Record)?.let { copy(fields = it.fields) }
-    val updated = DataValue.Record(fields).set(path.segments, value) as? DataValue.Record ?: return null
+    val updated =
+        (DataValue.Record(fields).writeField(path, value) as? ValueReplacement.Replaced)
+            ?.value as? DataValue.Record
+            ?: return null
     return copy(fields = updated.fields)
-}
-
-private fun DataValue.set(
-    segments: List<PathSegment>,
-    replacement: DataValue,
-): DataValue? {
-    if (segments.isEmpty()) return replacement
-    if (this is DataValue.Named) return copy(payload = payload.set(segments, replacement) ?: return null)
-    val tail = segments.drop(1)
-    return when (val segment = segments.first()) {
-        is PathSegment.Field -> {
-            val record = this as? DataValue.Record ?: return null
-            val child = record.fields[segment.name]
-            if (child == null && tail.isEmpty()) {
-                return record.copy(fields = record.fields + (segment.name to replacement))
-            }
-            child ?: return null
-            val changed = child.set(tail, replacement) ?: return null
-            record.copy(fields = record.fields + (segment.name to changed))
-        }
-
-        is PathSegment.Item -> {
-            when (this) {
-                is DataValue.ListValue -> {
-                    copy(items = items.replace(segment.id, tail, replacement) ?: return null)
-                }
-
-                is DataValue.SetValue -> {
-                    copy(items = items.replace(segment.id, tail, replacement) ?: return null)
-                }
-
-                is DataValue.MapValue -> {
-                    val index = rows.indexOfFirst { it.id == segment.id }
-                    if (index < 0) return null
-                    val row = rows[index]
-                    val changed =
-                        when (tail.firstOrNull()) {
-                            PathSegment.MapKey -> row.copy(key = row.key.set(tail.drop(1), replacement) ?: return null)
-                            PathSegment.MapValue -> row.copy(value = row.value.set(tail.drop(1), replacement) ?: return null)
-                            else -> return null
-                        }
-                    copy(rows = rows.toMutableList().also { it[index] = changed })
-                }
-
-                else -> {
-                    null
-                }
-            }
-        }
-
-        PathSegment.MapKey, PathSegment.MapValue -> {
-            null
-        }
-    }
-}
-
-private fun List<ListItem>.replace(
-    id: ItemId,
-    tail: List<PathSegment>,
-    replacement: DataValue,
-): List<ListItem>? {
-    val index = indexOfFirst { it.id == id }
-    if (index < 0) return null
-    val next = this[index].value.set(tail, replacement) ?: return null
-    return toMutableList().also { it[index] = it[index].copy(value = next) }
 }
 
 private fun DataValue?.itemsOrNull(): List<ListItem>? =
