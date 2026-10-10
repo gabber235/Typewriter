@@ -97,33 +97,6 @@ class OrganizationMembersMock extends OrganizationMembers {
       () => generateRandomMember(availableRoles: availableRoles),
     );
   }
-
-  @override
-  Future<void> updateMemberRoles(
-    Iterable<skir.RecordId> memberIds,
-    List<OrganizationRole> requestedRoles,
-  ) async {
-    state.ensureReady();
-    final updates = {
-      for (final id in memberIds)
-        id: await ensureCorrectRoles(id, requestedRoles),
-    };
-    state = AsyncData([
-      for (final member in state.requireValue)
-        if (updates[member.userId] case final roles?)
-          member.copyWith(roles: roles)
-        else
-          member,
-    ]);
-  }
-
-  @override
-  Future<void> removeMember(skir.RecordId memberId) async {
-    state.ensureReady();
-    final members = state.requireValue;
-
-    state = AsyncData(members.where((m) => m.userId != memberId).toList());
-  }
 }
 
 // ============================================================================

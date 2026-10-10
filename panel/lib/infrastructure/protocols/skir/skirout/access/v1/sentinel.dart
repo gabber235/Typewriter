@@ -17,9 +17,7 @@ import "package:skir_client/skir_client.dart" as _skir;
 
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 
-// -----------------------------------------------------------------------------
 // struct GetSentinelCredentialsRequest
-// -----------------------------------------------------------------------------
 
 sealed class GetSentinelCredentialsRequest_orMutable {
   GetSentinelCredentialsRequest toFrozen();
@@ -42,7 +40,7 @@ final class GetSentinelCredentialsRequest
   static GetSentinelCredentialsRequest_mutable mutable() =>
       GetSentinelCredentialsRequest_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   GetSentinelCredentialsRequest toFrozen() => this;
@@ -105,9 +103,7 @@ final class GetSentinelCredentialsRequest_mutable
       GetSentinelCredentialsRequest().._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct GetSentinelCredentialsResponse.Success
-// -----------------------------------------------------------------------------
 
 sealed class GetSentinelCredentialsResponse_Success_orMutable {
   _core.String get jwt;
@@ -143,7 +139,7 @@ final class GetSentinelCredentialsResponse_Success
   static GetSentinelCredentialsResponse_Success_mutable mutable() =>
       GetSentinelCredentialsResponse_Success_mutable._("", "");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   GetSentinelCredentialsResponse_Success toFrozen() => this;
@@ -228,9 +224,7 @@ final class GetSentinelCredentialsResponse_Success_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum GetSentinelCredentialsResponse
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```

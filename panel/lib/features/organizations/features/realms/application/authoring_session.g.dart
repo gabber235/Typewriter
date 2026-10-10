@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 
 part of 'authoring_session.dart';
 
@@ -6,7 +6,7 @@ part of 'authoring_session.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(AuthoringSession)
@@ -58,7 +58,7 @@ final class AuthoringSessionProvider
   }
 }
 
-String _$authoringSessionHash() => r'3500d3e1458ce3b6e7b27ab4d25fa9a70ab1d5a4';
+String _$authoringSessionHash() => r'ec5a3e669973eaf600bbf302415e6bc9bcc7f04e';
 
 final class AuthoringSessionFamily extends $Family
     with

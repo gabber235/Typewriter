@@ -27,23 +27,25 @@ pub struct SetValueAction {
 
 impl SetValueAction {
     pub fn default_ref() -> &'static SetValueAction {
-        static D: std::sync::LazyLock<SetValueAction> = std::sync::LazyLock::new(SetValueAction::default);
+        static D: std::sync::LazyLock<SetValueAction> =
+            std::sync::LazyLock::new(SetValueAction::default);
         &D
     }
 }
 
 impl SetValueAction {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<SetValueAction> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<SetValueAction>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/action.skir",
-                    "SetValueAction",
-                    "",
-                    |x: &SetValueAction| &x._unrecognized,
-                    |x: &mut SetValueAction, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<SetValueAction>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/action.skir",
+                "SetValueAction",
+                "",
+                |x: &SetValueAction| &x._unrecognized,
+                |x: &mut SetValueAction, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<SetValueAction> {
@@ -67,23 +69,25 @@ pub struct InsertListItemAction {
 
 impl InsertListItemAction {
     pub fn default_ref() -> &'static InsertListItemAction {
-        static D: std::sync::LazyLock<InsertListItemAction> = std::sync::LazyLock::new(InsertListItemAction::default);
+        static D: std::sync::LazyLock<InsertListItemAction> =
+            std::sync::LazyLock::new(InsertListItemAction::default);
         &D
     }
 }
 
 impl InsertListItemAction {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<InsertListItemAction> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<InsertListItemAction>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/action.skir",
-                    "InsertListItemAction",
-                    "",
-                    |x: &InsertListItemAction| &x._unrecognized,
-                    |x: &mut InsertListItemAction, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<InsertListItemAction>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/action.skir",
+                "InsertListItemAction",
+                "",
+                |x: &InsertListItemAction| &x._unrecognized,
+                |x: &mut InsertListItemAction, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<InsertListItemAction> {
@@ -106,23 +110,25 @@ pub struct AppendListItemAction {
 
 impl AppendListItemAction {
     pub fn default_ref() -> &'static AppendListItemAction {
-        static D: std::sync::LazyLock<AppendListItemAction> = std::sync::LazyLock::new(AppendListItemAction::default);
+        static D: std::sync::LazyLock<AppendListItemAction> =
+            std::sync::LazyLock::new(AppendListItemAction::default);
         &D
     }
 }
 
 impl AppendListItemAction {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<AppendListItemAction> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<AppendListItemAction>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/action.skir",
-                    "AppendListItemAction",
-                    "",
-                    |x: &AppendListItemAction| &x._unrecognized,
-                    |x: &mut AppendListItemAction, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<AppendListItemAction>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/action.skir",
+                "AppendListItemAction",
+                "",
+                |x: &AppendListItemAction| &x._unrecognized,
+                |x: &mut AppendListItemAction, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<AppendListItemAction> {
@@ -145,23 +151,25 @@ pub struct RemoveListItemAction {
 
 impl RemoveListItemAction {
     pub fn default_ref() -> &'static RemoveListItemAction {
-        static D: std::sync::LazyLock<RemoveListItemAction> = std::sync::LazyLock::new(RemoveListItemAction::default);
+        static D: std::sync::LazyLock<RemoveListItemAction> =
+            std::sync::LazyLock::new(RemoveListItemAction::default);
         &D
     }
 }
 
 impl RemoveListItemAction {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RemoveListItemAction> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RemoveListItemAction>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/action.skir",
-                    "RemoveListItemAction",
-                    "",
-                    |x: &RemoveListItemAction| &x._unrecognized,
-                    |x: &mut RemoveListItemAction, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RemoveListItemAction>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/action.skir",
+                "RemoveListItemAction",
+                "",
+                |x: &RemoveListItemAction| &x._unrecognized,
+                |x: &mut RemoveListItemAction, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<RemoveListItemAction> {
@@ -184,28 +192,32 @@ pub struct DuplicateListItemAction {
 
 impl DuplicateListItemAction {
     pub fn default_ref() -> &'static DuplicateListItemAction {
-        static D: std::sync::LazyLock<DuplicateListItemAction> = std::sync::LazyLock::new(DuplicateListItemAction::default);
+        static D: std::sync::LazyLock<DuplicateListItemAction> =
+            std::sync::LazyLock::new(DuplicateListItemAction::default);
         &D
     }
 }
 
 impl DuplicateListItemAction {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<DuplicateListItemAction> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<DuplicateListItemAction>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/action.skir",
-                    "DuplicateListItemAction",
-                    "",
-                    |x: &DuplicateListItemAction| &x._unrecognized,
-                    |x: &mut DuplicateListItemAction, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<DuplicateListItemAction>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/action.skir",
+                "DuplicateListItemAction",
+                "",
+                |x: &DuplicateListItemAction| &x._unrecognized,
+                |x: &mut DuplicateListItemAction, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<DuplicateListItemAction> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(DuplicateListItemAction::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            DuplicateListItemAction::_adapter(),
+        )
     }
 }
 
@@ -224,23 +236,25 @@ pub struct MoveListItemAction {
 
 impl MoveListItemAction {
     pub fn default_ref() -> &'static MoveListItemAction {
-        static D: std::sync::LazyLock<MoveListItemAction> = std::sync::LazyLock::new(MoveListItemAction::default);
+        static D: std::sync::LazyLock<MoveListItemAction> =
+            std::sync::LazyLock::new(MoveListItemAction::default);
         &D
     }
 }
 
 impl MoveListItemAction {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<MoveListItemAction> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<MoveListItemAction>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/action.skir",
-                    "MoveListItemAction",
-                    "",
-                    |x: &MoveListItemAction| &x._unrecognized,
-                    |x: &mut MoveListItemAction, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<MoveListItemAction>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/action.skir",
+                "MoveListItemAction",
+                "",
+                |x: &MoveListItemAction| &x._unrecognized,
+                |x: &mut MoveListItemAction, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<MoveListItemAction> {
@@ -264,23 +278,25 @@ pub struct InsertMapRowAction {
 
 impl InsertMapRowAction {
     pub fn default_ref() -> &'static InsertMapRowAction {
-        static D: std::sync::LazyLock<InsertMapRowAction> = std::sync::LazyLock::new(InsertMapRowAction::default);
+        static D: std::sync::LazyLock<InsertMapRowAction> =
+            std::sync::LazyLock::new(InsertMapRowAction::default);
         &D
     }
 }
 
 impl InsertMapRowAction {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<InsertMapRowAction> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<InsertMapRowAction>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/action.skir",
-                    "InsertMapRowAction",
-                    "",
-                    |x: &InsertMapRowAction| &x._unrecognized,
-                    |x: &mut InsertMapRowAction, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<InsertMapRowAction>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/action.skir",
+                "InsertMapRowAction",
+                "",
+                |x: &InsertMapRowAction| &x._unrecognized,
+                |x: &mut InsertMapRowAction, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<InsertMapRowAction> {
@@ -305,23 +321,25 @@ pub struct UpdateMapRowAction {
 
 impl UpdateMapRowAction {
     pub fn default_ref() -> &'static UpdateMapRowAction {
-        static D: std::sync::LazyLock<UpdateMapRowAction> = std::sync::LazyLock::new(UpdateMapRowAction::default);
+        static D: std::sync::LazyLock<UpdateMapRowAction> =
+            std::sync::LazyLock::new(UpdateMapRowAction::default);
         &D
     }
 }
 
 impl UpdateMapRowAction {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<UpdateMapRowAction> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<UpdateMapRowAction>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/action.skir",
-                    "UpdateMapRowAction",
-                    "",
-                    |x: &UpdateMapRowAction| &x._unrecognized,
-                    |x: &mut UpdateMapRowAction, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<UpdateMapRowAction>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/action.skir",
+                "UpdateMapRowAction",
+                "",
+                |x: &UpdateMapRowAction| &x._unrecognized,
+                |x: &mut UpdateMapRowAction, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<UpdateMapRowAction> {
@@ -344,23 +362,25 @@ pub struct RemoveMapRowAction {
 
 impl RemoveMapRowAction {
     pub fn default_ref() -> &'static RemoveMapRowAction {
-        static D: std::sync::LazyLock<RemoveMapRowAction> = std::sync::LazyLock::new(RemoveMapRowAction::default);
+        static D: std::sync::LazyLock<RemoveMapRowAction> =
+            std::sync::LazyLock::new(RemoveMapRowAction::default);
         &D
     }
 }
 
 impl RemoveMapRowAction {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RemoveMapRowAction> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RemoveMapRowAction>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/action.skir",
-                    "RemoveMapRowAction",
-                    "",
-                    |x: &RemoveMapRowAction| &x._unrecognized,
-                    |x: &mut RemoveMapRowAction, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RemoveMapRowAction>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/action.skir",
+                "RemoveMapRowAction",
+                "",
+                |x: &RemoveMapRowAction| &x._unrecognized,
+                |x: &mut RemoveMapRowAction, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<RemoveMapRowAction> {
@@ -383,23 +403,25 @@ pub struct ChooseFormAction {
 
 impl ChooseFormAction {
     pub fn default_ref() -> &'static ChooseFormAction {
-        static D: std::sync::LazyLock<ChooseFormAction> = std::sync::LazyLock::new(ChooseFormAction::default);
+        static D: std::sync::LazyLock<ChooseFormAction> =
+            std::sync::LazyLock::new(ChooseFormAction::default);
         &D
     }
 }
 
 impl ChooseFormAction {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ChooseFormAction> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ChooseFormAction>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/action.skir",
-                    "ChooseFormAction",
-                    "",
-                    |x: &ChooseFormAction| &x._unrecognized,
-                    |x: &mut ChooseFormAction, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ChooseFormAction>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/action.skir",
+                "ChooseFormAction",
+                "",
+                |x: &ChooseFormAction| &x._unrecognized,
+                |x: &mut ChooseFormAction, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ChooseFormAction> {
@@ -435,29 +457,33 @@ impl Default for LocalEditorAction {
 
 impl LocalEditorAction {
     fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<LocalEditorAction> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<LocalEditorAction>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &LocalEditorAction| match x {
-                        LocalEditorAction::Unknown(_) => 0,
-                        LocalEditorAction::SetValue(_) => 1,
-                        LocalEditorAction::InsertListItem(_) => 2,
-                        LocalEditorAction::AppendListItem(_) => 3,
-                        LocalEditorAction::RemoveListItem(_) => 4,
-                        LocalEditorAction::DuplicateListItem(_) => 5,
-                        LocalEditorAction::MoveListItem(_) => 6,
-                        LocalEditorAction::InsertMapRow(_) => 7,
-                        LocalEditorAction::UpdateMapRow(_) => 8,
-                        LocalEditorAction::RemoveMapRow(_) => 9,
-                        LocalEditorAction::ChooseForm(_) => 10,
-                    },
-                    |u| LocalEditorAction::Unknown(Some(u)),
-                    |x: &LocalEditorAction| match x { LocalEditorAction::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "editor/v1/action.skir",
-                    "LocalEditorAction",
-                    "",
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<LocalEditorAction>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &LocalEditorAction| match x {
+                    LocalEditorAction::Unknown(_) => 0,
+                    LocalEditorAction::SetValue(_) => 1,
+                    LocalEditorAction::InsertListItem(_) => 2,
+                    LocalEditorAction::AppendListItem(_) => 3,
+                    LocalEditorAction::RemoveListItem(_) => 4,
+                    LocalEditorAction::DuplicateListItem(_) => 5,
+                    LocalEditorAction::MoveListItem(_) => 6,
+                    LocalEditorAction::InsertMapRow(_) => 7,
+                    LocalEditorAction::UpdateMapRow(_) => 8,
+                    LocalEditorAction::RemoveMapRow(_) => 9,
+                    LocalEditorAction::ChooseForm(_) => 10,
+                },
+                |u| LocalEditorAction::Unknown(Some(u)),
+                |x: &LocalEditorAction| match x {
+                    LocalEditorAction::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/action.skir",
+                "LocalEditorAction",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<LocalEditorAction> {
@@ -478,23 +504,25 @@ pub struct ReloadRealmAction {
 
 impl ReloadRealmAction {
     pub fn default_ref() -> &'static ReloadRealmAction {
-        static D: std::sync::LazyLock<ReloadRealmAction> = std::sync::LazyLock::new(ReloadRealmAction::default);
+        static D: std::sync::LazyLock<ReloadRealmAction> =
+            std::sync::LazyLock::new(ReloadRealmAction::default);
         &D
     }
 }
 
 impl ReloadRealmAction {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ReloadRealmAction> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ReloadRealmAction>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/action.skir",
-                    "ReloadRealmAction",
-                    "",
-                    |x: &ReloadRealmAction| &x._unrecognized,
-                    |x: &mut ReloadRealmAction, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ReloadRealmAction>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/action.skir",
+                "ReloadRealmAction",
+                "",
+                |x: &ReloadRealmAction| &x._unrecognized,
+                |x: &mut ReloadRealmAction, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ReloadRealmAction> {
@@ -517,28 +545,32 @@ pub struct CommandCapabilityAction {
 
 impl CommandCapabilityAction {
     pub fn default_ref() -> &'static CommandCapabilityAction {
-        static D: std::sync::LazyLock<CommandCapabilityAction> = std::sync::LazyLock::new(CommandCapabilityAction::default);
+        static D: std::sync::LazyLock<CommandCapabilityAction> =
+            std::sync::LazyLock::new(CommandCapabilityAction::default);
         &D
     }
 }
 
 impl CommandCapabilityAction {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CommandCapabilityAction> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<CommandCapabilityAction>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/action.skir",
-                    "CommandCapabilityAction",
-                    "",
-                    |x: &CommandCapabilityAction| &x._unrecognized,
-                    |x: &mut CommandCapabilityAction, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<CommandCapabilityAction>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/action.skir",
+                "CommandCapabilityAction",
+                "",
+                |x: &CommandCapabilityAction| &x._unrecognized,
+                |x: &mut CommandCapabilityAction, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<CommandCapabilityAction> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(CommandCapabilityAction::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            CommandCapabilityAction::_adapter(),
+        )
     }
 }
 
@@ -561,21 +593,25 @@ impl Default for RealmEditorAction {
 
 impl RealmEditorAction {
     fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<RealmEditorAction> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<RealmEditorAction>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &RealmEditorAction| match x {
-                        RealmEditorAction::Unknown(_) => 0,
-                        RealmEditorAction::Reload(_) => 1,
-                        RealmEditorAction::Command(_) => 2,
-                    },
-                    |u| RealmEditorAction::Unknown(Some(u)),
-                    |x: &RealmEditorAction| match x { RealmEditorAction::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "editor/v1/action.skir",
-                    "RealmEditorAction",
-                    "",
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<RealmEditorAction>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &RealmEditorAction| match x {
+                    RealmEditorAction::Unknown(_) => 0,
+                    RealmEditorAction::Reload(_) => 1,
+                    RealmEditorAction::Command(_) => 2,
+                },
+                |u| RealmEditorAction::Unknown(Some(u)),
+                |x: &RealmEditorAction| match x {
+                    RealmEditorAction::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/action.skir",
+                "RealmEditorAction",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<RealmEditorAction> {
@@ -603,21 +639,25 @@ impl Default for EditorAction {
 
 impl EditorAction {
     fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<EditorAction> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<EditorAction>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &EditorAction| match x {
-                        EditorAction::Unknown(_) => 0,
-                        EditorAction::Local(_) => 1,
-                        EditorAction::Realm(_) => 2,
-                    },
-                    |u| EditorAction::Unknown(Some(u)),
-                    |x: &EditorAction| match x { EditorAction::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "editor/v1/action.skir",
-                    "EditorAction",
-                    "",
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<EditorAction>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &EditorAction| match x {
+                    EditorAction::Unknown(_) => 0,
+                    EditorAction::Local(_) => 1,
+                    EditorAction::Realm(_) => 2,
+                },
+                |u| EditorAction::Unknown(Some(u)),
+                |x: &EditorAction| match x {
+                    EditorAction::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/action.skir",
+                "EditorAction",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<EditorAction> {
@@ -631,109 +671,498 @@ impl EditorAction {
 // ==============================================================================
 
 fn initialize_module_serializers() {
-    static INIT: std::sync::LazyLock<()> =
-        std::sync::LazyLock::new(|| {
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<SetValueAction> = SetValueAction::_adapter() as *const _ as *mut _;
-                (*a).add_field("target", 0, crate::skirout::base::editor::v1::binding::BindingRef::serializer(), "", |x: &SetValueAction| &x.target, |x: &mut SetValueAction, v| x.target = v);
-                (*a).add_field("value", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &SetValueAction| &x.value, |x: &mut SetValueAction, v| x.value = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<InsertListItemAction> = InsertListItemAction::_adapter() as *const _ as *mut _;
-                (*a).add_field("target", 0, crate::skirout::base::editor::v1::binding::BindingRef::serializer(), "", |x: &InsertListItemAction| &x.target, |x: &mut InsertListItemAction, v| x.target = v);
-                (*a).add_field("after", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::type_catalog::ItemId::serializer()), "", |x: &InsertListItemAction| &x.after, |x: &mut InsertListItemAction, v| x.after = v);
-                (*a).add_field("value", 2, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &InsertListItemAction| &x.value, |x: &mut InsertListItemAction, v| x.value = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<AppendListItemAction> = AppendListItemAction::_adapter() as *const _ as *mut _;
-                (*a).add_field("target", 0, crate::skirout::base::editor::v1::binding::BindingRef::serializer(), "", |x: &AppendListItemAction| &x.target, |x: &mut AppendListItemAction, v| x.target = v);
-                (*a).add_field("value", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &AppendListItemAction| &x.value, |x: &mut AppendListItemAction, v| x.value = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<RemoveListItemAction> = RemoveListItemAction::_adapter() as *const _ as *mut _;
-                (*a).add_field("target", 0, crate::skirout::base::editor::v1::binding::BindingRef::serializer(), "", |x: &RemoveListItemAction| &x.target, |x: &mut RemoveListItemAction, v| x.target = v);
-                (*a).add_field("item", 1, crate::skirout::base::editor::v1::type_catalog::ItemId::serializer(), "", |x: &RemoveListItemAction| &x.item, |x: &mut RemoveListItemAction, v| x.item = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<DuplicateListItemAction> = DuplicateListItemAction::_adapter() as *const _ as *mut _;
-                (*a).add_field("target", 0, crate::skirout::base::editor::v1::binding::BindingRef::serializer(), "", |x: &DuplicateListItemAction| &x.target, |x: &mut DuplicateListItemAction, v| x.target = v);
-                (*a).add_field("item", 1, crate::skirout::base::editor::v1::type_catalog::ItemId::serializer(), "", |x: &DuplicateListItemAction| &x.item, |x: &mut DuplicateListItemAction, v| x.item = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<MoveListItemAction> = MoveListItemAction::_adapter() as *const _ as *mut _;
-                (*a).add_field("target", 0, crate::skirout::base::editor::v1::binding::BindingRef::serializer(), "", |x: &MoveListItemAction| &x.target, |x: &mut MoveListItemAction, v| x.target = v);
-                (*a).add_field("item", 1, crate::skirout::base::editor::v1::type_catalog::ItemId::serializer(), "", |x: &MoveListItemAction| &x.item, |x: &mut MoveListItemAction, v| x.item = v);
-                (*a).add_field("after", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::type_catalog::ItemId::serializer()), "", |x: &MoveListItemAction| &x.after, |x: &mut MoveListItemAction, v| x.after = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<InsertMapRowAction> = InsertMapRowAction::_adapter() as *const _ as *mut _;
-                (*a).add_field("target", 0, crate::skirout::base::editor::v1::binding::BindingRef::serializer(), "", |x: &InsertMapRowAction| &x.target, |x: &mut InsertMapRowAction, v| x.target = v);
-                (*a).add_field("key", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &InsertMapRowAction| &x.key, |x: &mut InsertMapRowAction, v| x.key = v);
-                (*a).add_field("value", 2, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &InsertMapRowAction| &x.value, |x: &mut InsertMapRowAction, v| x.value = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<UpdateMapRowAction> = UpdateMapRowAction::_adapter() as *const _ as *mut _;
-                (*a).add_field("target", 0, crate::skirout::base::editor::v1::binding::BindingRef::serializer(), "", |x: &UpdateMapRowAction| &x.target, |x: &mut UpdateMapRowAction, v| x.target = v);
-                (*a).add_field("row", 1, crate::skirout::base::editor::v1::type_catalog::ItemId::serializer(), "", |x: &UpdateMapRowAction| &x.row, |x: &mut UpdateMapRowAction, v| x.row = v);
-                (*a).add_field("key", 2, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &UpdateMapRowAction| &x.key, |x: &mut UpdateMapRowAction, v| x.key = v);
-                (*a).add_field("value", 3, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &UpdateMapRowAction| &x.value, |x: &mut UpdateMapRowAction, v| x.value = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<RemoveMapRowAction> = RemoveMapRowAction::_adapter() as *const _ as *mut _;
-                (*a).add_field("target", 0, crate::skirout::base::editor::v1::binding::BindingRef::serializer(), "", |x: &RemoveMapRowAction| &x.target, |x: &mut RemoveMapRowAction, v| x.target = v);
-                (*a).add_field("row", 1, crate::skirout::base::editor::v1::type_catalog::ItemId::serializer(), "", |x: &RemoveMapRowAction| &x.row, |x: &mut RemoveMapRowAction, v| x.row = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ChooseFormAction> = ChooseFormAction::_adapter() as *const _ as *mut _;
-                (*a).add_field("target", 0, crate::skirout::base::editor::v1::binding::BindingRef::serializer(), "", |x: &ChooseFormAction| &x.target, |x: &mut ChooseFormAction, v| x.target = v);
-                (*a).add_field("type", 1, crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(), "", |x: &ChooseFormAction| &x.type_, |x: &mut ChooseFormAction, v| x.type_ = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<LocalEditorAction> = LocalEditorAction::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("set_value", 1, 1, crate::skir_client::internal::struct_serializer_from_static(SetValueAction::_adapter()), "", |v| LocalEditorAction::SetValue(Box::new(v)), |x| match x { LocalEditorAction::SetValue(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("insert_list_item", 2, 2, crate::skir_client::internal::struct_serializer_from_static(InsertListItemAction::_adapter()), "", |v| LocalEditorAction::InsertListItem(Box::new(v)), |x| match x { LocalEditorAction::InsertListItem(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("append_list_item", 3, 3, crate::skir_client::internal::struct_serializer_from_static(AppendListItemAction::_adapter()), "", |v| LocalEditorAction::AppendListItem(Box::new(v)), |x| match x { LocalEditorAction::AppendListItem(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("remove_list_item", 4, 4, crate::skir_client::internal::struct_serializer_from_static(RemoveListItemAction::_adapter()), "", |v| LocalEditorAction::RemoveListItem(Box::new(v)), |x| match x { LocalEditorAction::RemoveListItem(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("duplicate_list_item", 5, 5, crate::skir_client::internal::struct_serializer_from_static(DuplicateListItemAction::_adapter()), "", |v| LocalEditorAction::DuplicateListItem(Box::new(v)), |x| match x { LocalEditorAction::DuplicateListItem(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("move_list_item", 6, 6, crate::skir_client::internal::struct_serializer_from_static(MoveListItemAction::_adapter()), "", |v| LocalEditorAction::MoveListItem(Box::new(v)), |x| match x { LocalEditorAction::MoveListItem(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("insert_map_row", 7, 7, crate::skir_client::internal::struct_serializer_from_static(InsertMapRowAction::_adapter()), "", |v| LocalEditorAction::InsertMapRow(Box::new(v)), |x| match x { LocalEditorAction::InsertMapRow(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("update_map_row", 8, 8, crate::skir_client::internal::struct_serializer_from_static(UpdateMapRowAction::_adapter()), "", |v| LocalEditorAction::UpdateMapRow(Box::new(v)), |x| match x { LocalEditorAction::UpdateMapRow(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("remove_map_row", 9, 9, crate::skir_client::internal::struct_serializer_from_static(RemoveMapRowAction::_adapter()), "", |v| LocalEditorAction::RemoveMapRow(Box::new(v)), |x| match x { LocalEditorAction::RemoveMapRow(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("choose_form", 10, 10, crate::skir_client::internal::struct_serializer_from_static(ChooseFormAction::_adapter()), "", |v| LocalEditorAction::ChooseForm(Box::new(v)), |x| match x { LocalEditorAction::ChooseForm(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ReloadRealmAction> = ReloadRealmAction::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<CommandCapabilityAction> = CommandCapabilityAction::_adapter() as *const _ as *mut _;
-                (*a).add_field("capability_id", 0, crate::skirout::base::editor::v1::type_catalog::CapabilityId::serializer(), "", |x: &CommandCapabilityAction| &x.capability_id, |x: &mut CommandCapabilityAction, v| x.capability_id = v);
-                (*a).add_field("payload", 1, crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(), "", |x: &CommandCapabilityAction| &x.payload, |x: &mut CommandCapabilityAction, v| x.payload = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<RealmEditorAction> = RealmEditorAction::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("reload", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ReloadRealmAction::_adapter()), "", |v| RealmEditorAction::Reload(Box::new(v)), |x| match x { RealmEditorAction::Reload(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("command", 2, 2, crate::skir_client::internal::struct_serializer_from_static(CommandCapabilityAction::_adapter()), "", |v| RealmEditorAction::Command(Box::new(v)), |x| match x { RealmEditorAction::Command(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<EditorAction> = EditorAction::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("local", 1, 1, crate::skir_client::internal::enum_serializer_from_static(LocalEditorAction::_adapter()), "", |v| EditorAction::Local(Box::new(v)), |x| match x { EditorAction::Local(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("realm", 2, 2, crate::skir_client::internal::enum_serializer_from_static(RealmEditorAction::_adapter()), "", |v| EditorAction::Realm(Box::new(v)), |x| match x { EditorAction::Realm(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-        });
+    static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| {
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<SetValueAction> =
+                SetValueAction::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "target",
+                0,
+                crate::skirout::base::editor::v1::binding::BindingRef::serializer(),
+                "",
+                |x: &SetValueAction| &x.target,
+                |x: &mut SetValueAction, v| x.target = v,
+            );
+            (*a).add_field(
+                "value",
+                1,
+                crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                "",
+                |x: &SetValueAction| &x.value,
+                |x: &mut SetValueAction, v| x.value = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<InsertListItemAction> =
+                InsertListItemAction::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "target",
+                0,
+                crate::skirout::base::editor::v1::binding::BindingRef::serializer(),
+                "",
+                |x: &InsertListItemAction| &x.target,
+                |x: &mut InsertListItemAction, v| x.target = v,
+            );
+            (*a).add_field(
+                "after",
+                1,
+                crate::skir_client::Serializer::optional(
+                    crate::skirout::base::editor::v1::type_catalog::ItemId::serializer(),
+                ),
+                "",
+                |x: &InsertListItemAction| &x.after,
+                |x: &mut InsertListItemAction, v| x.after = v,
+            );
+            (*a).add_field(
+                "value",
+                2,
+                crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                "",
+                |x: &InsertListItemAction| &x.value,
+                |x: &mut InsertListItemAction, v| x.value = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<AppendListItemAction> =
+                AppendListItemAction::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "target",
+                0,
+                crate::skirout::base::editor::v1::binding::BindingRef::serializer(),
+                "",
+                |x: &AppendListItemAction| &x.target,
+                |x: &mut AppendListItemAction, v| x.target = v,
+            );
+            (*a).add_field(
+                "value",
+                1,
+                crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                "",
+                |x: &AppendListItemAction| &x.value,
+                |x: &mut AppendListItemAction, v| x.value = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<RemoveListItemAction> =
+                RemoveListItemAction::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "target",
+                0,
+                crate::skirout::base::editor::v1::binding::BindingRef::serializer(),
+                "",
+                |x: &RemoveListItemAction| &x.target,
+                |x: &mut RemoveListItemAction, v| x.target = v,
+            );
+            (*a).add_field(
+                "item",
+                1,
+                crate::skirout::base::editor::v1::type_catalog::ItemId::serializer(),
+                "",
+                |x: &RemoveListItemAction| &x.item,
+                |x: &mut RemoveListItemAction, v| x.item = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<DuplicateListItemAction> =
+                DuplicateListItemAction::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "target",
+                0,
+                crate::skirout::base::editor::v1::binding::BindingRef::serializer(),
+                "",
+                |x: &DuplicateListItemAction| &x.target,
+                |x: &mut DuplicateListItemAction, v| x.target = v,
+            );
+            (*a).add_field(
+                "item",
+                1,
+                crate::skirout::base::editor::v1::type_catalog::ItemId::serializer(),
+                "",
+                |x: &DuplicateListItemAction| &x.item,
+                |x: &mut DuplicateListItemAction, v| x.item = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<MoveListItemAction> =
+                MoveListItemAction::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "target",
+                0,
+                crate::skirout::base::editor::v1::binding::BindingRef::serializer(),
+                "",
+                |x: &MoveListItemAction| &x.target,
+                |x: &mut MoveListItemAction, v| x.target = v,
+            );
+            (*a).add_field(
+                "item",
+                1,
+                crate::skirout::base::editor::v1::type_catalog::ItemId::serializer(),
+                "",
+                |x: &MoveListItemAction| &x.item,
+                |x: &mut MoveListItemAction, v| x.item = v,
+            );
+            (*a).add_field(
+                "after",
+                2,
+                crate::skir_client::Serializer::optional(
+                    crate::skirout::base::editor::v1::type_catalog::ItemId::serializer(),
+                ),
+                "",
+                |x: &MoveListItemAction| &x.after,
+                |x: &mut MoveListItemAction, v| x.after = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<InsertMapRowAction> =
+                InsertMapRowAction::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "target",
+                0,
+                crate::skirout::base::editor::v1::binding::BindingRef::serializer(),
+                "",
+                |x: &InsertMapRowAction| &x.target,
+                |x: &mut InsertMapRowAction, v| x.target = v,
+            );
+            (*a).add_field(
+                "key",
+                1,
+                crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                "",
+                |x: &InsertMapRowAction| &x.key,
+                |x: &mut InsertMapRowAction, v| x.key = v,
+            );
+            (*a).add_field(
+                "value",
+                2,
+                crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                "",
+                |x: &InsertMapRowAction| &x.value,
+                |x: &mut InsertMapRowAction, v| x.value = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<UpdateMapRowAction> =
+                UpdateMapRowAction::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "target",
+                0,
+                crate::skirout::base::editor::v1::binding::BindingRef::serializer(),
+                "",
+                |x: &UpdateMapRowAction| &x.target,
+                |x: &mut UpdateMapRowAction, v| x.target = v,
+            );
+            (*a).add_field(
+                "row",
+                1,
+                crate::skirout::base::editor::v1::type_catalog::ItemId::serializer(),
+                "",
+                |x: &UpdateMapRowAction| &x.row,
+                |x: &mut UpdateMapRowAction, v| x.row = v,
+            );
+            (*a).add_field(
+                "key",
+                2,
+                crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                "",
+                |x: &UpdateMapRowAction| &x.key,
+                |x: &mut UpdateMapRowAction, v| x.key = v,
+            );
+            (*a).add_field(
+                "value",
+                3,
+                crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                "",
+                |x: &UpdateMapRowAction| &x.value,
+                |x: &mut UpdateMapRowAction, v| x.value = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<RemoveMapRowAction> =
+                RemoveMapRowAction::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "target",
+                0,
+                crate::skirout::base::editor::v1::binding::BindingRef::serializer(),
+                "",
+                |x: &RemoveMapRowAction| &x.target,
+                |x: &mut RemoveMapRowAction, v| x.target = v,
+            );
+            (*a).add_field(
+                "row",
+                1,
+                crate::skirout::base::editor::v1::type_catalog::ItemId::serializer(),
+                "",
+                |x: &RemoveMapRowAction| &x.row,
+                |x: &mut RemoveMapRowAction, v| x.row = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ChooseFormAction> =
+                ChooseFormAction::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "target",
+                0,
+                crate::skirout::base::editor::v1::binding::BindingRef::serializer(),
+                "",
+                |x: &ChooseFormAction| &x.target,
+                |x: &mut ChooseFormAction, v| x.target = v,
+            );
+            (*a).add_field(
+                "type",
+                1,
+                crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(),
+                "",
+                |x: &ChooseFormAction| &x.type_,
+                |x: &mut ChooseFormAction, v| x.type_ = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<LocalEditorAction> =
+                LocalEditorAction::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "set_value",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    SetValueAction::_adapter(),
+                ),
+                "",
+                |v| LocalEditorAction::SetValue(Box::new(v)),
+                |x| match x {
+                    LocalEditorAction::SetValue(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "insert_list_item",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    InsertListItemAction::_adapter(),
+                ),
+                "",
+                |v| LocalEditorAction::InsertListItem(Box::new(v)),
+                |x| match x {
+                    LocalEditorAction::InsertListItem(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "append_list_item",
+                3,
+                3,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    AppendListItemAction::_adapter(),
+                ),
+                "",
+                |v| LocalEditorAction::AppendListItem(Box::new(v)),
+                |x| match x {
+                    LocalEditorAction::AppendListItem(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "remove_list_item",
+                4,
+                4,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    RemoveListItemAction::_adapter(),
+                ),
+                "",
+                |v| LocalEditorAction::RemoveListItem(Box::new(v)),
+                |x| match x {
+                    LocalEditorAction::RemoveListItem(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "duplicate_list_item",
+                5,
+                5,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    DuplicateListItemAction::_adapter(),
+                ),
+                "",
+                |v| LocalEditorAction::DuplicateListItem(Box::new(v)),
+                |x| match x {
+                    LocalEditorAction::DuplicateListItem(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "move_list_item",
+                6,
+                6,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    MoveListItemAction::_adapter(),
+                ),
+                "",
+                |v| LocalEditorAction::MoveListItem(Box::new(v)),
+                |x| match x {
+                    LocalEditorAction::MoveListItem(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "insert_map_row",
+                7,
+                7,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    InsertMapRowAction::_adapter(),
+                ),
+                "",
+                |v| LocalEditorAction::InsertMapRow(Box::new(v)),
+                |x| match x {
+                    LocalEditorAction::InsertMapRow(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "update_map_row",
+                8,
+                8,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    UpdateMapRowAction::_adapter(),
+                ),
+                "",
+                |v| LocalEditorAction::UpdateMapRow(Box::new(v)),
+                |x| match x {
+                    LocalEditorAction::UpdateMapRow(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "remove_map_row",
+                9,
+                9,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    RemoveMapRowAction::_adapter(),
+                ),
+                "",
+                |v| LocalEditorAction::RemoveMapRow(Box::new(v)),
+                |x| match x {
+                    LocalEditorAction::RemoveMapRow(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "choose_form",
+                10,
+                10,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ChooseFormAction::_adapter(),
+                ),
+                "",
+                |v| LocalEditorAction::ChooseForm(Box::new(v)),
+                |x| match x {
+                    LocalEditorAction::ChooseForm(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ReloadRealmAction> =
+                ReloadRealmAction::_adapter() as *const _ as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<CommandCapabilityAction> =
+                CommandCapabilityAction::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "capability_id",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::CapabilityId::serializer(),
+                "",
+                |x: &CommandCapabilityAction| &x.capability_id,
+                |x: &mut CommandCapabilityAction, v| x.capability_id = v,
+            );
+            (*a).add_field(
+                "payload",
+                1,
+                crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                "",
+                |x: &CommandCapabilityAction| &x.payload,
+                |x: &mut CommandCapabilityAction, v| x.payload = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<RealmEditorAction> =
+                RealmEditorAction::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "reload",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ReloadRealmAction::_adapter(),
+                ),
+                "",
+                |v| RealmEditorAction::Reload(Box::new(v)),
+                |x| match x {
+                    RealmEditorAction::Reload(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "command",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    CommandCapabilityAction::_adapter(),
+                ),
+                "",
+                |v| RealmEditorAction::Command(Box::new(v)),
+                |x| match x {
+                    RealmEditorAction::Command(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<EditorAction> =
+                EditorAction::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "local",
+                1,
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    LocalEditorAction::_adapter(),
+                ),
+                "",
+                |v| EditorAction::Local(Box::new(v)),
+                |x| match x {
+                    EditorAction::Local(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "realm",
+                2,
+                2,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    RealmEditorAction::_adapter(),
+                ),
+                "",
+                |v| EditorAction::Realm(Box::new(v)),
+                |x| match x {
+                    EditorAction::Realm(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+    });
     let _ = *INIT;
 }

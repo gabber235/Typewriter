@@ -184,7 +184,7 @@ class UndecidedCandidate private constructor(
         );
 
         /**
-         * If the value of [resource] is already mutable, returns it as-is.
+         * If the value of [resource] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
          */
         val mutableResource: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
@@ -200,7 +200,7 @@ class UndecidedCandidate private constructor(
         }
 
         /**
-         * If the value of [inputs] is already mutable, returns it as-is.
+         * If the value of [inputs] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [inputs] and returns it.
          */
         val mutableInputs: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ValueLocation_OrMutable> get() {
@@ -528,7 +528,7 @@ class CheckInstanceId private constructor(
         );
 
         /**
-         * If the value of [rule] is already mutable, returns it as-is.
+         * If the value of [rule] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [rule] and returns it.
          */
         val mutableRule: skirout.editor.v1.type_catalog.RuleId.Mutable get() {
@@ -544,7 +544,7 @@ class CheckInstanceId private constructor(
         }
 
         /**
-         * If the value of [location] is already mutable, returns it as-is.
+         * If the value of [location] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [location] and returns it.
          */
         val mutableLocation: skirout.editor.v1.type_catalog.ValueLocation.Mutable get() {
@@ -706,7 +706,7 @@ class CheckTicket private constructor(
         );
 
         /**
-         * If the value of [instance] is already mutable, returns it as-is.
+         * If the value of [instance] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [instance] and returns it.
          */
         val mutableInstance: skirout.editor.v1.checking.CheckInstanceId.Mutable get() {
@@ -722,7 +722,7 @@ class CheckTicket private constructor(
         }
 
         /**
-         * If the value of [execution] is already mutable, returns it as-is.
+         * If the value of [execution] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [execution] and returns it.
          */
         val mutableExecution: skirout.editor.v1.type_catalog.CheckExecutionId.Mutable get() {
@@ -738,7 +738,7 @@ class CheckTicket private constructor(
         }
 
         /**
-         * If the value of [catalog] is already mutable, returns it as-is.
+         * If the value of [catalog] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [catalog] and returns it.
          */
         val mutableCatalog: skirout.editor.v1.type_catalog.CatalogGeneration.Mutable get() {
@@ -919,7 +919,7 @@ class FindingSet private constructor(
         );
 
         /**
-         * If the value of [ticket] is already mutable, returns it as-is.
+         * If the value of [ticket] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [ticket] and returns it.
          */
         val mutableTicket: skirout.editor.v1.checking.CheckTicket.Mutable get() {
@@ -935,7 +935,7 @@ class FindingSet private constructor(
         }
 
         /**
-         * If the value of [expectations] is already mutable, returns it as-is.
+         * If the value of [expectations] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [expectations] and returns it.
          */
         val mutableExpectations: kotlin.collections.MutableList<skirout.editor.v1.authoring_facts.EditExpectation> get() {
@@ -951,7 +951,7 @@ class FindingSet private constructor(
         }
 
         /**
-         * If the value of [findings] is already mutable, returns it as-is.
+         * If the value of [findings] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [findings] and returns it.
          */
         val mutableFindings: kotlin.collections.MutableList<skirout.editor.v1.diagnostic.Diagnostic_OrMutable> get() {
@@ -1125,7 +1125,7 @@ class CheckResult private constructor(
         );
 
         /**
-         * If the value of [ticket] is already mutable, returns it as-is.
+         * If the value of [ticket] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [ticket] and returns it.
          */
         val mutableTicket: skirout.editor.v1.checking.CheckTicket.Mutable get() {
@@ -1141,7 +1141,7 @@ class CheckResult private constructor(
         }
 
         /**
-         * If the value of [expectations] is already mutable, returns it as-is.
+         * If the value of [expectations] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [expectations] and returns it.
          */
         val mutableExpectations: kotlin.collections.MutableList<skirout.editor.v1.authoring_facts.EditExpectation> get() {
@@ -1157,7 +1157,7 @@ class CheckResult private constructor(
         }
 
         /**
-         * If the value of [findings] is already mutable, returns it as-is.
+         * If the value of [findings] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [findings] and returns it.
          */
         val mutableFindings: kotlin.collections.MutableList<skirout.editor.v1.diagnostic.Diagnostic_OrMutable> get() {
@@ -1327,7 +1327,7 @@ class SelectionInspection private constructor(
         );
 
         /**
-         * If the value of [knownMatches] is already mutable, returns it as-is.
+         * If the value of [knownMatches] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [knownMatches] and returns it.
          */
         val mutableKnownMatches: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ResourceId_OrMutable> get() {
@@ -1343,7 +1343,7 @@ class SelectionInspection private constructor(
         }
 
         /**
-         * If the value of [undecided] is already mutable, returns it as-is.
+         * If the value of [undecided] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [undecided] and returns it.
          */
         val mutableUndecided: kotlin.collections.MutableList<skirout.editor.v1.checking.UndecidedCandidate_OrMutable> get() {
@@ -1359,7 +1359,7 @@ class SelectionInspection private constructor(
         }
 
         /**
-         * If the value of [failures] is already mutable, returns it as-is.
+         * If the value of [failures] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [failures] and returns it.
          */
         val mutableFailures: kotlin.collections.MutableList<skirout.editor.v1.expression.EvaluationDiagnostic_OrMutable> get() {

@@ -21,32 +21,77 @@ final class AuthoringResourceRepository {
   var _started = false;
   var _isDisposed = false;
   var _reconnectNeedsRefresh = false;
-
-  RealmServiceAddress get address =>
-      RealmServiceAddress(organizationId: organization, realmId: realm);
+  NatsClient? _boundTransport;
+  var _transportGeneration = 0;
+  Future<void>? _binding;
 
   bool isScopedTo(skir.RecordId organizationId, skir.RecordId realmId) =>
       organization == organizationId && realm == realmId;
 
   Future<void> start() async {
-    if (_started) return;
-    _started = true;
-    final client = session.transport.client;
-    _lifecycle = client.connectionStateChanges.listen(_onLifecycle);
-    _onLifecycle(client.connectionState);
-    final subscription = await client.subscribe(
-      address.event("editor.authoring.changed"),
-    );
-    if (_isDisposed) {
-      await subscription.unsubscribe();
+    if (_started) {
+      await _binding;
       return;
     }
-    _authoringSubscription = subscription;
-    _authoringMessages = subscription.messages.listen(
-      _acceptAuthoringMessage,
-      onError: (Object _, StackTrace _) => _invalidations.add(null),
-    );
+    _started = true;
+    await rebindTransport(session.transport.client);
   }
+
+  Future<void> rebindTransport(NatsClient client) {
+    if (!_started || _isDisposed) return Future<void>.value();
+    if (identical(_boundTransport, client)) {
+      return _binding ?? Future<void>.value();
+    }
+    _boundTransport = client;
+    final generation = ++_transportGeneration;
+    final previous = _binding;
+    final binding = () async {
+      if (previous != null) {
+        try {
+          await previous;
+        } on Object {
+          // A failed binding does not own the replacement connection.
+        }
+      }
+      if (!_acceptsTransport(generation)) return;
+      await _authoringMessages?.cancel();
+      await _lifecycle?.cancel();
+      await _authoringSubscription?.unsubscribe();
+      _authoringMessages = null;
+      _lifecycle = null;
+      _authoringSubscription = null;
+      if (!_acceptsTransport(generation)) return;
+      _lifecycle = client.connectionStateChanges.listen((value) {
+        if (_acceptsTransport(generation)) _onLifecycle(value);
+      });
+      _onLifecycle(client.connectionState);
+      final subscription = await client.subscribe(
+        AuthoringChangedRouteEvent.subject(
+          organizationId: organization,
+          realmId: realm,
+        ),
+      );
+      if (!_acceptsTransport(generation)) {
+        await subscription.unsubscribe();
+        return;
+      }
+      _authoringSubscription = subscription;
+      _authoringMessages = subscription.messages.listen(
+        (message) {
+          if (_acceptsTransport(generation)) _acceptAuthoringMessage(message);
+        },
+        onError: (Object _, StackTrace _) {
+          if (_acceptsTransport(generation)) _invalidations.add(null);
+        },
+      );
+      _invalidations.add(null);
+    }();
+    _binding = binding;
+    return binding;
+  }
+
+  bool _acceptsTransport(int generation) =>
+      !_isDisposed && _transportGeneration == generation;
 
   Future<skir.AuthoringState> fetch({
     required skir.CatalogGeneration generation,
@@ -57,14 +102,10 @@ final class AuthoringResourceRepository {
       generation: generation,
       transferId: transferId,
     );
-    final responses = session.transport.watchRequest(
-      address.request("editor.authoring.state.query"),
-      boundedTransferUpdateSubject(
-        address.event("editor.authoring.state.query"),
-        transferId,
-      ),
-      skir.QueryAuthoringStateRequest.serializer.toBytes(request),
-      skir.QueryAuthoringStateResponse.serializer,
+    final responses = request.watch(
+      session.transport,
+      organizationId: organization,
+      realmId: realm,
     );
     final assembler = AuthoringStateTransferAssembler();
     final result = await assembler.assemble(
@@ -90,10 +131,14 @@ final class AuthoringResourceRepository {
     skir.SearchAuthoringRequest request,
   ) async {
     session.checkActive();
+    final operation = request.operation(
+      organizationId: organization,
+      realmId: realm,
+    );
     final response = await session.transport.request(
-      address.request("editor.authoring.search"),
-      skir.SearchAuthoringRequest.serializer.toBytes(request),
-      skir.SearchAuthoringResponse.serializer,
+      operation.subject,
+      operation.requestBytes,
+      operation.responseSerializer,
     );
     session.checkActive();
     return response;
@@ -103,10 +148,14 @@ final class AuthoringResourceRepository {
     skir.PreviewTypeArgumentChangeRequest request,
   ) async {
     session.checkActive();
+    final operation = request.operation(
+      organizationId: organization,
+      realmId: realm,
+    );
     final response = await session.transport.request(
-      address.request("editor.authoring.type.preview"),
-      skir.PreviewTypeArgumentChangeRequest.serializer.toBytes(request),
-      skir.PreviewTypeArgumentChangeResponse.serializer,
+      operation.subject,
+      operation.requestBytes,
+      operation.responseSerializer,
     );
     session.checkActive();
     return switch (response) {
@@ -119,14 +168,12 @@ final class AuthoringResourceRepository {
   PreparedCommit<skir.CommitPreparedEditResponse> prepareCommit(
     skir.PreparedEdit edit,
   ) => session.transport.prepare(
-    address.request("editor.authoring.edit.commit"),
-    skir.PreparedEdit.serializer.toBytes(edit),
-    skir.CommitPreparedEditResponse.serializer,
+    edit.operation(organizationId: organization, realmId: realm),
     submissionId: uuid.v4(),
     replay: SubmissionReplay.unsupported,
     label: "Save Realm changes",
     resources: {
-      for (final resource in _editedResources(edit))
+      for (final resource in edit.editedResources)
         (organization, realm, resource),
     },
     classify: (response) => switch (response) {
@@ -146,10 +193,14 @@ final class AuthoringResourceRepository {
     skir.TypeArgumentChangePreview preview,
   ) async {
     session.checkActive();
+    final operation = preview.operation(
+      organizationId: organization,
+      realmId: realm,
+    );
     final response = await session.transport.request(
-      address.request("editor.authoring.type.commit"),
-      skir.TypeArgumentChangePreview.serializer.toBytes(preview),
-      skir.PrepareTypeArgumentChangeResponse.serializer,
+      operation.subject,
+      operation.requestBytes,
+      operation.responseSerializer,
     );
     session.checkActive();
     return switch (response) {
@@ -183,6 +234,7 @@ final class AuthoringResourceRepository {
   void dispose() {
     if (_isDisposed) return;
     _isDisposed = true;
+    _transportGeneration++;
     _disposed.complete();
     unawaited(_authoringMessages?.cancel());
     unawaited(_lifecycle?.cancel());
@@ -247,31 +299,33 @@ extension ValueProblemMessaging on skir.ValueProblem {
   }
 }
 
-Iterable<skir.ResourceId> _editedResources(skir.PreparedEdit edit) sync* {
-  for (final intent in edit.intents) {
-    switch (intent) {
-      case skir.EditIntent_createResourceWrapper(:final value):
-        yield value.id;
-      case skir.EditIntent_deleteResourceWrapper(:final value):
-        yield value.id;
-      case skir.EditIntent_setValueWrapper(:final value):
-        yield value.at.resource;
-      case skir.EditIntent_insertWrapper(:final value):
-        yield value.at.resource;
-      case skir.EditIntent_removeWrapper(:final value):
-        yield value.at.resource;
-      case skir.EditIntent_moveWrapper(:final value):
-        yield value.at.resource;
-      case skir.EditIntent_connectRelationWrapper(:final value):
-        yield value.source.source;
-        yield value.target;
-      case skir.EditIntent_disconnectRelationWrapper(:final value):
-        yield value.location.resource;
-      case skir.EditIntent_retagWrapper(:final value):
-        yield value.at.resource;
-      case skir.EditIntent_configureResourceWrapper(:final value):
-        yield value.resource;
-      case skir.EditIntent_unknown():
+extension PreparedEditResources on skir.PreparedEdit {
+  Iterable<skir.ResourceId> get editedResources sync* {
+    for (final intent in intents) {
+      switch (intent) {
+        case skir.EditIntent_createResourceWrapper(:final value):
+          yield value.id;
+        case skir.EditIntent_deleteResourceWrapper(:final value):
+          yield value.id;
+        case skir.EditIntent_setValueWrapper(:final value):
+          yield value.at.resource;
+        case skir.EditIntent_insertWrapper(:final value):
+          yield value.at.resource;
+        case skir.EditIntent_removeWrapper(:final value):
+          yield value.at.resource;
+        case skir.EditIntent_moveWrapper(:final value):
+          yield value.at.resource;
+        case skir.EditIntent_connectRelationWrapper(:final value):
+          yield value.source.source;
+          yield value.target;
+        case skir.EditIntent_disconnectRelationWrapper(:final value):
+          yield value.location.resource;
+        case skir.EditIntent_retagWrapper(:final value):
+          yield value.at.resource;
+        case skir.EditIntent_configureResourceWrapper(:final value):
+          yield value.resource;
+        case skir.EditIntent_unknown():
+      }
     }
   }
 }

@@ -274,9 +274,6 @@ class JoinCodesTable extends HookConsumerWidget {
                   selectedCodes.value = selectedCodes.value
                       .where((selected) => selected != code.code)
                       .toSet();
-                  ref
-                      .read(organizationJoinCodesProvider.notifier)
-                      .cleanupExpiredCodes();
                 },
               ),
             ),

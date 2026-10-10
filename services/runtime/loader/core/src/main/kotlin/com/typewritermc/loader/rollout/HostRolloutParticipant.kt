@@ -63,7 +63,7 @@ interface ProjectionSource {
  * The file must remain available during loading; the caller does not own deletion of shared cache content.
  */
 interface VerifiedArtifactSource {
-    suspend fun fetch(digest: com.typewritermc.loader.api.artifact.ArtifactDigest): Path
+    suspend fun fetch(digest: com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest): Path
 }
 
 /**

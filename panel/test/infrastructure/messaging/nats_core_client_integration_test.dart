@@ -47,6 +47,9 @@ void main() {
           url: serverUrl,
           seed: _seed,
           requestInboxPrefix: "_INBOX.integration",
+          actorId: "integration-user",
+          organizationId: "integration-organization",
+          connectionSession: "0123456789abcdef0123456789abcdef",
         ),
       );
       addTearDown(client.close);
@@ -99,6 +102,9 @@ void main() {
           url: serverUrl!,
           seed: _rejectedSeed,
           requestInboxPrefix: "_INBOX.integration.rejected",
+          actorId: "rejected-user",
+          organizationId: null,
+          connectionSession: "fedcba9876543210fedcba9876543210",
         ),
       );
       addTearDown(client.close);

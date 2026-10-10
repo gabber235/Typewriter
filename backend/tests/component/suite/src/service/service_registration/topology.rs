@@ -8,10 +8,9 @@ use wasmcloud_utils::skir::base::service::v1::topology::{
     ConfigureServiceHostResponse, EngineRealmSelection, EngineRealmSelection_ExistingRealm,
     EngineTarget, GetServiceMessagingScopeRequest, GetServiceMessagingScopeResponse,
     HostExecutionConfiguration, HostedEngineConfiguration, HostedRealmConfiguration,
-    OrganizationTopologyChanged,
-    RegisterServiceHostRequest, RegisterServiceHostResponse, ReportHostExecutionRequest,
-    ReportHostExecutionResponse, SupportedEngine, WatchHostExecutionRequest,
-    WatchHostExecutionResponse, WatchOrganizationTopologyRequest,
+    OrganizationTopologyChanged, RegisterServiceHostRequest, RegisterServiceHostResponse,
+    ReportHostExecutionRequest, ReportHostExecutionResponse, SupportedEngine,
+    WatchHostExecutionRequest, WatchHostExecutionResponse, WatchOrganizationTopologyRequest,
     WatchOrganizationTopologyResponse,
 };
 
@@ -527,7 +526,7 @@ async fn host_watch_and_report_apply_only_current_topology_revision(
         ReportHostExecutionResponse::StaleRevisionError(_)
     ));
 
-    expect_publications(context, 2, 0, 0)?;
+    expect_publications(context, 1, 0, 0)?;
     let applied = report(context, 4, active_state()).await?;
     assert!(matches!(applied, ReportHostExecutionResponse::Success(_)));
     assert_jm!(

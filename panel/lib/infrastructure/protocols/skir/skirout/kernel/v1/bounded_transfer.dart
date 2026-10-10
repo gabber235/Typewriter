@@ -15,9 +15,7 @@ import "dart:core" as _core;
 
 import "package:skir_client/skir_client.dart" as _skir;
 
-// -----------------------------------------------------------------------------
 // struct BoundedTransferChunk
-// -----------------------------------------------------------------------------
 
 sealed class BoundedTransferChunk_orMutable {
   _core.String get transferId;
@@ -86,7 +84,7 @@ final class BoundedTransferChunk implements BoundedTransferChunk_orMutable {
   static BoundedTransferChunk_mutable mutable() =>
       BoundedTransferChunk_mutable._("", 0, 0, 0, "", _skir.ByteString.empty);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   BoundedTransferChunk toFrozen() => this;

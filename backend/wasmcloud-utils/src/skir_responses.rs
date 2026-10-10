@@ -43,8 +43,17 @@ wasmcloud_utils_macros::skir_response! {
 }
 
 wasmcloud_utils_macros::skir_response! {
-    GetServiceStatusResponse {
-        success: Status,
+    QueryServiceBindingResponse {
+        success: Binding,
+        errors {
+            ServiceNotFoundError => "Service not found",
+        }
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
+    EnsureRegistrationLeaseResponse {
+        success: [Issued, AlreadyBound],
         errors {
             ServiceNotFoundError => "Service not found",
         }

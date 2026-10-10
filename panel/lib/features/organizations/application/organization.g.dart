@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 
 part of 'organization.dart';
 
@@ -6,7 +6,7 @@ part of 'organization.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 /// Owns the current user's organization list projection.
 ///
@@ -54,7 +54,7 @@ final class OrganizationsProvider
   Organizations create() => Organizations();
 }
 
-String _$organizationsHash() => r'03367bf3e9afc29e98632e958216fdbc985df475';
+String _$organizationsHash() => r'68f90990541b0a7f1c6a0a11deb550043b3cdf68';
 
 /// Owns the current user's organization list projection.
 ///

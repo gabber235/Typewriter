@@ -6,7 +6,7 @@ abstract interface class RealmPublicationRepository {
   PreparedCommit<skir.PublishAuthoringResponse> preparePublish();
 
   Future<List<skir.CompiledResourceStatus>> states(
-    List<skir.CompilationRoot> roots,
+    skir.CompilationStatusSelection selection,
   );
 
   Stream<skir.PublicationReport> watch();
@@ -16,31 +16,28 @@ final class NatsRealmPublicationRepository
     implements RealmPublicationRepository {
   NatsRealmPublicationRepository({
     required this.ref,
-    required skir.RecordId organizationId,
-    required skir.RecordId realmId,
-  }) : _address = RealmServiceAddress(
-         organizationId: organizationId,
-         realmId: realmId,
-       );
+    required this.organizationId,
+    required this.realmId,
+  });
 
   final Ref ref;
-  final RealmServiceAddress _address;
+  final skir.RecordId organizationId;
+  final skir.RecordId realmId;
 
   @override
   PreparedCommit<skir.PublishAuthoringResponse> preparePublish() =>
       ref.prepareSkir(
-        _address.request("editor.authoring.publish"),
-        skir.PublishAuthoringRequest.serializer.toBytes(
-          skir.PublishAuthoringRequest(),
+        skir.PublishAuthoringRequest().operation(
+          organizationId: organizationId,
+          realmId: realmId,
         ),
-        skir.PublishAuthoringResponse.serializer,
         label: "Publish saved content",
         resources: {
           WorkDriverId(
             domain: "publication",
             scope: AuthoringScope(
-              organizationId: _address.organizationId,
-              realmId: _address.realmId,
+              organizationId: organizationId,
+              realmId: realmId,
             ),
           ),
         },
@@ -50,14 +47,11 @@ final class NatsRealmPublicationRepository
 
   @override
   Future<List<skir.CompiledResourceStatus>> states(
-    List<skir.CompilationRoot> roots,
+    skir.CompilationStatusSelection selection,
   ) async {
     final response = await ref.requestSkir(
-      _address.request("editor.authoring.compiled.status.query"),
-      skir.QueryCompiledResourceStatusRequest.serializer.toBytes(
-        skir.QueryCompiledResourceStatusRequest(roots: roots),
-      ),
-      skir.QueryCompiledResourceStatusResponse.serializer,
+      skir.QueryCompiledResourceStatusRequest(selection: selection)
+          .operation(organizationId: organizationId, realmId: realmId),
     );
     return switch (response) {
       skir.QueryCompiledResourceStatusResponse_successWrapper(:final value) =>
@@ -68,21 +62,12 @@ final class NatsRealmPublicationRepository
 
   @override
   Stream<skir.PublicationReport> watch() =>
-      ref.watchProjection<
-        skir.PublicationReport,
-        skir.PublicationReport,
-        skir.PublicationReport
-      >(
-        subject: _address.request("editor.authoring.publication.watch"),
-        eventSubject: _address.event("editor.authoring.publication.watch"),
-        requestBytes: skir.WatchPublicationRequest.serializer.toBytes(
-          skir.WatchPublicationRequest(),
-        ),
-        responseSerializer: skir.PublicationReport.serializer,
-        eventSerializer: skir.PublicationReport.serializer,
+      skir.WatchPublicationRequest().watch(
+        ref,
+        organizationId: organizationId,
+        realmId: realmId,
         snapshot: (response) => response,
         reduce: (_, event) => event,
-        delivery: const ProjectionDelivery.ephemeral(),
         reconciliation: const ProjectionReconciliation.latest(),
       );
 }

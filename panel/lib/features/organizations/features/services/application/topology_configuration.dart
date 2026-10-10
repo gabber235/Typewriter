@@ -49,15 +49,14 @@ extension OrganizationTopologyConfiguration on OrganizationTopology {
       return this;
     }
     return copyWith(
-      hosts: _upsertById(
-        hosts,
+      hosts: hosts.upsertByKey(
+        (host) => host.hostId,
         previous.copyWith(
           state: incoming.state,
           topologyRevision: previous.topologyRevision.copyWith(
             applied: incoming.topologyRevision.applied,
           ),
         ),
-        (host) => host.hostId,
       ),
     );
   }
@@ -72,10 +71,9 @@ extension OrganizationTopologyConfiguration on OrganizationTopology {
       return this;
     }
     return copyWith(
-      realmInstances: _upsertById(
-        realmInstances,
-        previous.copyWith(state: incoming.state),
+      realmInstances: realmInstances.upsertByKey(
         (realm) => realm.realmId,
+        previous.copyWith(state: incoming.state),
       ),
     );
   }
@@ -90,10 +88,9 @@ extension OrganizationTopologyConfiguration on OrganizationTopology {
       return this;
     }
     return copyWith(
-      engineInstances: _upsertById(
-        engineInstances,
-        previous.copyWith(state: incoming.state),
+      engineInstances: engineInstances.upsertByKey(
         (engine) => engine.engineId,
+        previous.copyWith(state: incoming.state),
       ),
     );
   }
@@ -148,7 +145,7 @@ extension OrganizationTopologyConfiguration on OrganizationTopology {
           previous.state.updatedAt.isAfter(realm.state.updatedAt)) {
         realm = realm.copyWith(state: previous.state);
       }
-      realms = _upsertById(realms, realm, (item) => item.realmId);
+      realms = realms.upsertByKey((item) => item.realmId, realm);
     }
     if (change.engine case final value?) {
       var engine = TopologyEngine.fromSkir(value);
@@ -159,13 +156,55 @@ extension OrganizationTopologyConfiguration on OrganizationTopology {
           previous.state.updatedAt.isAfter(engine.state.updatedAt)) {
         engine = engine.copyWith(state: previous.state);
       }
-      engines = _upsertById(engines, engine, (item) => item.engineId);
+      engines = engines.upsertByKey((item) => item.engineId, engine);
     }
     return copyWith(
-      hosts: _upsertById(hosts, host, (item) => item.hostId),
+      hosts: hosts.upsertByKey((item) => item.hostId, host),
       realmInstances: realms,
       engineInstances: engines,
     );
+  }
+
+  /// Applies one compound runtime report as one immutable projection update.
+  OrganizationTopology applyRuntimeObservation(
+    skir.HostExecutionObservation observation,
+  ) {
+    var next = applyHostObservation(TopologyHost.fromSkir(observation.host));
+    if (observation.realm case final observed?) {
+      final previous = next.realmInstances.firstWhereOrNull(
+        (realm) => realm.realmId == observed.realmId,
+      );
+      if (previous != null) {
+        next = next.applyRealmObservation(
+          previous.copyWith(
+            state: TopologyRuntimeState.fromSkir(observed.state),
+          ),
+        );
+      }
+    }
+    if (observation.engine case final observed?) {
+      final previous = next.engineInstances.firstWhereOrNull(
+        (engine) => engine.engineId == observed.engineId,
+      );
+      if (previous != null) {
+        next = next.applyEngineObservation(
+          previous.copyWith(
+            state: TopologyRuntimeState.fromSkir(observed.state),
+          ),
+        );
+      }
+    }
+    return next;
+  }
+
+  /// Accepts host discovery without treating it as child membership authority.
+  OrganizationTopology applyAdvertisement(skir.ServiceHost advertisement) {
+    final incoming = TopologyHost.fromSkir(advertisement);
+    final previous = hosts.firstWhereOrNull(
+      (host) => host.hostId == incoming.hostId,
+    );
+    final accepted = incoming.reconcileSnapshot(previous);
+    return copyWith(hosts: hosts.upsertByKey((host) => host.hostId, accepted));
   }
 }
 

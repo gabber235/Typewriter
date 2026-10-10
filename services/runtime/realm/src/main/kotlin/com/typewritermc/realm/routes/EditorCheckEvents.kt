@@ -1,6 +1,7 @@
 package com.typewritermc.realm.routes
 
 import com.typewritermc.checking.FindingStatus
+import com.typewritermc.protocol.transport.generated.RealmRouteScope
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.checking.CheckTicket
@@ -53,7 +54,7 @@ internal class EditorCheckEvents(
 
     fun configure(
         contracts: EditorContracts,
-        address: RealmAddress,
+        address: RealmRouteScope,
         communicator: Communicator,
     ) {
         publisher.value = Publisher(communicator, contracts, address)
@@ -83,7 +84,7 @@ internal class EditorCheckEvents(
     private data class Publisher(
         val communicator: Communicator,
         val contracts: EditorContracts,
-        val address: RealmAddress,
+        val address: RealmRouteScope,
     )
 }
 

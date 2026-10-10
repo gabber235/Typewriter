@@ -1,9 +1,5 @@
 package com.typewritermc.loader.artifact
 
-import com.typewritermc.loader.api.artifact.ArtifactDigest
-import com.typewritermc.loader.api.artifact.BlobMetadata
-import com.typewritermc.loader.api.artifact.BlobResult
-import com.typewritermc.loader.api.artifact.DigestAlgorithm
 import com.typewritermc.loader.api.artifact.ProducerMetadata
 import com.typewritermc.loader.api.artifact.PublishResult
 import com.typewritermc.loader.api.artifact.PublishSharedArtifact
@@ -12,8 +8,13 @@ import com.typewritermc.loader.api.artifact.SharedArtifactDescriptor
 import com.typewritermc.loader.api.artifact.SharedArtifactId
 import com.typewritermc.loader.api.artifact.SharedArtifactProvenance
 import com.typewritermc.loader.api.artifact.SharedArtifactRevision
-import com.typewritermc.loader.api.artifact.TransferId
+import com.typewritermc.protocol.transport.generated.RealmRouteScope
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
+import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
+import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
+import com.typewritermc.services.libs.filetransfer.blob.BlobResult
+import com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm
+import com.typewritermc.services.libs.filetransfer.blob.TransferId
 import okio.ByteString.Companion.toByteString
 import skirout.service.v1.artifact.BeginArtifactBlobWriteResponse
 import skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse
@@ -42,17 +43,17 @@ class StableRealmArtifactRoutes(
 ) {
     fun register(
         builder: CommunicatorRoutesBuilder,
-        address: RealmArtifactAddress,
+        address: RealmRouteScope,
     ) = with(builder) {
-        unaryAt(sharedContracts.catalog, address) {
+        unaryAt(sharedContracts.catalog(address), address) {
             val catalog = artifacts.catalog()
             FetchSharedArtifactCatalogResponse.createSuccess(
                 revision = catalog.revision.value,
                 artifacts = catalog.artifacts.map(SharedArtifactDescriptor::toSkir),
             )
         }
-        unaryAt(sharedContracts.publish, address) { call -> publish(call.request) }
-        unaryAt(blobContracts.metadata, address) { call ->
+        unaryAt(sharedContracts.publish(address), address) { call -> publish(call.request) }
+        unaryAt(blobContracts.metadata(address), address) { call ->
             when (val result = artifacts.metadata(call.request.digest.toApi())) {
                 is BlobResult.Success -> FetchArtifactBlobMetadataResponse.SuccessWrapper(result.value.toSkir())
                 BlobResult.NotFound -> FetchArtifactBlobMetadataResponse.createNotFound()
@@ -60,7 +61,7 @@ class StableRealmArtifactRoutes(
                 is BlobResult.Conflict -> FetchArtifactBlobMetadataResponse.createInvalid(reason = result.reason)
             }
         }
-        unaryAt(blobContracts.read, address) { call ->
+        unaryAt(blobContracts.read(address), address) { call ->
             when (val result = artifacts.read(call.request.digest.toApi(), call.request.offset, call.request.maximumBytes)) {
                 is BlobResult.Success -> {
                     ReadArtifactBlobResponse.createSuccess(
@@ -83,7 +84,7 @@ class StableRealmArtifactRoutes(
                 }
             }
         }
-        unaryAt(blobContracts.begin, address) { call ->
+        unaryAt(blobContracts.begin(address), address) { call ->
             when (val result = artifacts.beginWrite(TransferId(call.request.transferId), call.request.expected.toApi())) {
                 is BlobResult.Success -> BeginArtifactBlobWriteResponse.createAccepted(offset = result.value.offset)
                 BlobResult.NotFound -> BeginArtifactBlobWriteResponse.createInvalid(reason = "Transfer was not found.")
@@ -91,7 +92,7 @@ class StableRealmArtifactRoutes(
                 is BlobResult.Conflict -> BeginArtifactBlobWriteResponse.createConflict(reason = result.reason)
             }
         }
-        unaryAt(blobContracts.write, address) { call ->
+        unaryAt(blobContracts.write(address), address) { call ->
             when (
                 val result =
                     artifacts.write(
@@ -106,7 +107,7 @@ class StableRealmArtifactRoutes(
                 is BlobResult.Conflict -> WriteArtifactBlobChunkResponse.createConflict(reason = result.reason)
             }
         }
-        unaryAt(blobContracts.complete, address) { call ->
+        unaryAt(blobContracts.complete(address), address) { call ->
             when (val result = artifacts.complete(TransferId(call.request.transferId))) {
                 is BlobResult.Success -> CompleteArtifactBlobWriteResponse.SuccessWrapper(result.value.toSkir())
                 BlobResult.NotFound -> CompleteArtifactBlobWriteResponse.createNotFound()

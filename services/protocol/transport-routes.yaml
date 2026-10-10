@@ -1,0 +1,772 @@
+routes:
+  - name: user_organization_create
+    scope: user
+    grants:
+      - { role: authenticated_user, side: panel, direction: publish, channel: request }
+    flow:
+      kind: unary
+      method: "organization/v1/organization.skir:CreateOrganization"
+      operation: user.organization.create
+      failure_slug: user-organization-create-failed
+      requests:
+        panel: "cloud.to.user.{user}.organization.create"
+        backend: "typewriter.from.user.{user}.organization.create"
+
+  - name: user_organizations_watch
+    scope: user
+    grants:
+      - { role: authenticated_user, side: panel, direction: publish, channel: request }
+      - { role: authenticated_user, side: panel, direction: subscribe, channel: updates }
+    flow:
+      kind: watch
+      method: "organization/v1/user.skir:WatchUserOrganizations"
+      operation: user.organization.watch
+      failure_slug: user-organizations-watch-failed
+      requests:
+        panel: "cloud.to.user.{user}.organization.watch"
+        backend: "typewriter.from.user.{user}.organization.watch"
+      updates:
+        payload: "organization/v1/organization.skir:UserOrganizationsChanged"
+        addresses:
+          panel: "cloud.from.user.{user}.organizations.changed"
+          backend: "typewriter.to.user.{user}.organizations.changed"
+        delivery: { kind: persistent, stream: TYPEWRITER_MEMBERSHIP, projection: user_organizations_changed, consumer: connection_projection }
+
+  - name: user_join_requests_watch
+    scope: user
+    grants:
+      - { role: authenticated_user, side: panel, direction: publish, channel: request }
+      - { role: authenticated_user, side: panel, direction: subscribe, channel: updates }
+    flow:
+      kind: watch
+      method: "organization/v1/user.skir:WatchUserJoinRequests"
+      operation: user.organization.join_requests.watch
+      failure_slug: user-join-requests-watch-failed
+      requests:
+        panel: "cloud.to.user.{user}.organization.join_requests.watch"
+        backend: "typewriter.from.user.{user}.organization.join_requests.watch"
+      updates:
+        payload: "organization/v1/join_request.skir:UserJoinRequestsChanged"
+        addresses:
+          panel: "cloud.from.user.{user}.join_requests.changed"
+          backend: "typewriter.to.user.{user}.join_requests.changed"
+        delivery: { kind: persistent, stream: TYPEWRITER_MEMBERSHIP, projection: user_join_requests_changed, consumer: connection_projection }
+
+  - name: user_join_request_submit
+    scope: user
+    grants:
+      - { role: authenticated_user, side: panel, direction: publish, channel: request }
+    flow:
+      kind: unary
+      method: "organization/v1/user.skir:SubmitUserJoinRequest"
+      operation: user.organization.join_requests.request
+      failure_slug: user-join-request-submit-failed
+      requests:
+        panel: "cloud.to.user.{user}.organization.join_requests.request"
+        backend: "typewriter.from.user.{user}.organization.join_requests.request"
+
+  - name: user_join_request_cancel
+    scope: user
+    grants:
+      - { role: authenticated_user, side: panel, direction: publish, channel: request }
+    flow:
+      kind: unary
+      method: "organization/v1/user.skir:CancelUserJoinRequest"
+      operation: user.organization.join_requests.cancel
+      failure_slug: user-join-request-cancel-failed
+      requests:
+        panel: "cloud.to.user.{user}.organization.join_requests.cancel"
+        backend: "typewriter.from.user.{user}.organization.join_requests.cancel"
+
+  - name: organization_members_watch
+    scope: organization_actor
+    grants:
+      - { role: organization_member, side: panel, direction: publish, channel: request }
+      - { role: organization_member, side: panel, direction: subscribe, channel: updates }
+    flow:
+      kind: watch
+      method: "organization/v1/member.skir:WatchOrganizationMembers"
+      operation: organization.members.watch
+      failure_slug: organization-members-watch-failed
+      requests:
+        panel: "cloud.to.user.{user}.organization.{organization}.members.watch"
+        backend: "typewriter.from.user.{user}.organization.{organization}.members.watch"
+      updates:
+        payload: "organization/v1/member.skir:OrganizationMembersChanged"
+        addresses:
+          panel: "cloud.from.organization.{organization}.members.changed"
+          backend: "typewriter.to.organization.{organization}.members.changed"
+        delivery: { kind: persistent, stream: TYPEWRITER_MEMBERSHIP, projection: organization_members_changed, consumer: connection_projection }
+
+  - name: organization_members_update
+    scope: organization_actor
+    grants:
+      - { role: organization_member, side: panel, direction: publish, channel: request }
+    flow:
+      kind: unary
+      method: "organization/v1/member.skir:UpdateOrganizationMemberRoles"
+      operation: organization.members.update
+      failure_slug: organization-members-update-failed
+      requests:
+        panel: "cloud.to.user.{user}.organization.{organization}.members.update"
+        backend: "typewriter.from.user.{user}.organization.{organization}.members.update"
+
+  - name: organization_member_remove
+    scope: organization_actor
+    grants:
+      - { role: organization_member, side: panel, direction: publish, channel: request }
+    flow:
+      kind: unary
+      method: "organization/v1/member.skir:RemoveOrganizationMember"
+      operation: organization.members.remove
+      failure_slug: organization-member-remove-failed
+      requests:
+        panel: "cloud.to.user.{user}.organization.{organization}.members.remove"
+        backend: "typewriter.from.user.{user}.organization.{organization}.members.remove"
+
+  - name: organization_join_requests_watch
+    scope: organization_actor
+    grants:
+      - { role: organization_member, side: panel, direction: publish, channel: request }
+      - { role: organization_member, side: panel, direction: subscribe, channel: updates }
+    flow:
+      kind: watch
+      method: "organization/v1/join_request.skir:WatchOrganizationJoinRequests"
+      operation: organization.members.join_requests.watch
+      failure_slug: organization-join-requests-watch-failed
+      requests:
+        panel: "cloud.to.user.{user}.organization.{organization}.members.join_requests.watch"
+        backend: "typewriter.from.user.{user}.organization.{organization}.members.join_requests.watch"
+      updates:
+        payload: "organization/v1/join_request.skir:OrganizationJoinRequestsChanged"
+        addresses:
+          panel: "cloud.from.organization.{organization}.join_requests.changed"
+          backend: "typewriter.to.organization.{organization}.join_requests.changed"
+        delivery: { kind: persistent, stream: TYPEWRITER_MEMBERSHIP, projection: organization_join_requests_changed, consumer: connection_projection }
+
+  - name: organization_join_requests_approve
+    scope: organization_actor
+    grants:
+      - { role: organization_member, side: panel, direction: publish, channel: request }
+    flow:
+      kind: unary
+      method: "organization/v1/join_request.skir:ApproveOrganizationJoinRequests"
+      operation: organization.members.join_requests.approve
+      failure_slug: organization-join-requests-approve-failed
+      requests:
+        panel: "cloud.to.user.{user}.organization.{organization}.members.join_requests.approve"
+        backend: "typewriter.from.user.{user}.organization.{organization}.members.join_requests.approve"
+
+  - name: organization_join_request_decline
+    scope: organization_actor
+    grants:
+      - { role: organization_member, side: panel, direction: publish, channel: request }
+    flow:
+      kind: unary
+      method: "organization/v1/join_request.skir:DeclineOrganizationJoinRequest"
+      operation: organization.members.join_requests.decline
+      failure_slug: organization-join-request-decline-failed
+      requests:
+        panel: "cloud.to.user.{user}.organization.{organization}.members.join_requests.decline"
+        backend: "typewriter.from.user.{user}.organization.{organization}.members.join_requests.decline"
+
+  - name: organization_join_codes_watch
+    scope: organization_actor
+    grants:
+      - { role: organization_member, side: panel, direction: publish, channel: request }
+      - { role: organization_member, side: panel, direction: subscribe, channel: updates }
+    flow:
+      kind: watch
+      method: "organization/v1/join_codes.skir:WatchOrganizationJoinCodes"
+      operation: organization.members.join_codes.watch
+      failure_slug: organization-join-codes-watch-failed
+      requests:
+        panel: "cloud.to.user.{user}.organization.{organization}.members.join_codes.watch"
+        backend: "typewriter.from.user.{user}.organization.{organization}.members.join_codes.watch"
+      updates:
+        payload: "organization/v1/join_codes.skir:OrganizationJoinCodesChanged"
+        addresses:
+          panel: "cloud.from.organization.{organization}.join_codes.changed"
+          backend: "typewriter.to.organization.{organization}.join_codes.changed"
+        delivery: { kind: persistent, stream: TYPEWRITER_MEMBERSHIP, projection: organization_join_codes_changed, consumer: connection_projection }
+
+  - name: organization_join_code_generate
+    scope: organization_actor
+    grants:
+      - { role: organization_member, side: panel, direction: publish, channel: request }
+    flow:
+      kind: unary
+      method: "organization/v1/join_codes.skir:GenerateOrganizationJoinCode"
+      operation: organization.members.join_codes.generate
+      failure_slug: organization-join-code-generate-failed
+      requests:
+        panel: "cloud.to.user.{user}.organization.{organization}.members.join_codes.generate"
+        backend: "typewriter.from.user.{user}.organization.{organization}.members.join_codes.generate"
+
+  - name: organization_join_code_revoke
+    scope: organization_actor
+    grants:
+      - { role: organization_member, side: panel, direction: publish, channel: request }
+    flow:
+      kind: unary
+      method: "organization/v1/join_codes.skir:RevokeOrganizationJoinCode"
+      operation: organization.members.join_codes.revoke
+      failure_slug: organization-join-code-revoke-failed
+      requests:
+        panel: "cloud.to.user.{user}.organization.{organization}.members.join_codes.revoke"
+        backend: "typewriter.from.user.{user}.organization.{organization}.members.join_codes.revoke"
+
+  - name: organization_roles_watch
+    scope: organization_actor
+    grants:
+      - { role: organization_member, side: panel, direction: publish, channel: request }
+    flow:
+      kind: unary
+      method: "organization/v1/role.skir:WatchOrganizationRoles"
+      operation: organization.roles.watch
+      failure_slug: organization-roles-watch-failed
+      requests:
+        panel: "cloud.to.user.{user}.organization.{organization}.roles.watch"
+        backend: "typewriter.from.user.{user}.organization.{organization}.roles.watch"
+
+  - name: service_binding_query
+    scope: service
+    grants:
+      - { role: registered_service, side: service, direction: publish, channel: request }
+      - { role: registered_service, side: service, direction: subscribe, channel: updates }
+    flow:
+      kind: watch
+      method: "service/v1/status.skir:QueryServiceBinding"
+      operation: registrar.binding
+      failure_slug: registrar-binding-failed
+      requests:
+        service: "cloud.to.service.{service}.binding.query"
+        backend: "typewriter.from.service.{service}.binding.query"
+        backend_internal: "service.{service}.binding.query"
+      updates:
+        payload: "service/v1/registration.skir:ServiceBoundNotification"
+        addresses:
+          service: "cloud.from.service.{service}.registration.bound"
+          backend: "typewriter.to.service.{service}.registration.bound"
+        delivery: { kind: transient }
+
+  - name: registration_lease_ensure
+    scope: service
+    grants:
+      - { role: registered_service, side: service, direction: publish, channel: request }
+    flow:
+      kind: unary
+      method: "service/v1/status.skir:EnsureRegistrationLease"
+      operation: registrar.registration.ensure
+      failure_slug: registrar-registration-ensure-failed
+      requests:
+        service: "cloud.to.service.{service}.registration.ensure"
+        backend: "typewriter.from.service.{service}.registration.ensure"
+        backend_internal: "service.{service}.registration.ensure"
+
+  - name: service_messaging_scope
+    scope: service
+    grants:
+      - { role: registered_service, side: service, direction: publish, channel: request }
+    flow:
+      kind: unary
+      method: "service/v1/topology.skir:GetServiceMessagingScope"
+      operation: registrar.messaging.scope
+      failure_slug: registrar-messaging-scope-failed
+      requests:
+        service: "cloud.to.service.{service}.messaging.scope"
+        backend: "typewriter.from.service.{service}.messaging.scope"
+        backend_internal: "service.{service}.messaging.scope"
+
+  - name: service_bind
+    scope: organization_actor
+    grants:
+      - { role: organization_member, side: panel, direction: publish, channel: request }
+    flow:
+      kind: unary
+      method: "service/v1/registration.skir:BindService"
+      operation: organization.services.bind
+      failure_slug: organization-service-bind-failed
+      requests:
+        panel: "cloud.to.user.{user}.organization.{organization}.services.bind"
+        backend: "typewriter.from.user.{user}.organization.{organization}.services.bind"
+
+  - name: organization_services_watch
+    scope: organization_actor
+    grants:
+      - { role: organization_member, side: panel, direction: publish, channel: request }
+      - { role: organization_member, side: panel, direction: subscribe, channel: updates }
+    flow:
+      kind: watch
+      method: "service/v1/organization.skir:WatchOrganizationServices"
+      operation: organization.services.watch
+      failure_slug: organization-services-watch-failed
+      requests:
+        panel: "cloud.to.user.{user}.organization.{organization}.services.watch"
+        backend: "typewriter.from.user.{user}.organization.{organization}.services.watch"
+      updates:
+        payload: "service/v1/organization.skir:OrganizationServicesChanged"
+        addresses:
+          panel: "cloud.from.organization.{organization}.services.watch"
+          backend: "typewriter.to.organization.{organization}.services.watch"
+        delivery: { kind: transient }
+
+  - name: organization_service_update
+    scope: organization_actor
+    grants:
+      - { role: organization_member, side: panel, direction: publish, channel: request }
+    flow:
+      kind: unary
+      method: "service/v1/organization.skir:UpdateOrganizationService"
+      operation: organization.services.update
+      failure_slug: organization-service-update-failed
+      requests:
+        panel: "cloud.to.user.{user}.organization.{organization}.services.update"
+        backend: "typewriter.from.user.{user}.organization.{organization}.services.update"
+
+  - name: service_unbind
+    scope: organization_actor
+    grants:
+      - { role: organization_member, side: panel, direction: publish, channel: request }
+    flow:
+      kind: unary
+      method: "service/v1/registration.skir:UnbindService"
+      operation: organization.services.unbind
+      failure_slug: organization-service-unbind-failed
+      requests:
+        panel: "cloud.to.user.{user}.organization.{organization}.services.unbind"
+        backend: "typewriter.from.user.{user}.organization.{organization}.services.unbind"
+
+  - name: service_topology_configure
+    scope: organization_actor
+    grants:
+      - { role: organization_member, side: panel, direction: publish, channel: request }
+    flow:
+      kind: unary
+      method: "service/v1/topology.skir:ConfigureServiceHost"
+      operation: organization.topology.configure
+      failure_slug: organization-topology-configure-failed
+      requests:
+        panel: "cloud.to.user.{user}.organization.{organization}.topology.configure"
+        backend: "typewriter.from.user.{user}.organization.{organization}.topology.configure"
+
+  - name: organization_topology_watch
+    scope: organization_actor
+    grants:
+      - { role: organization_member, side: panel, direction: publish, channel: request }
+      - { role: organization_member, side: panel, direction: subscribe, channel: updates }
+    flow:
+      kind: watch
+      method: "service/v1/topology.skir:WatchOrganizationTopology"
+      operation: organization.topology.watch
+      failure_slug: organization-topology-watch-failed
+      requests:
+        panel: "cloud.to.user.{user}.organization.{organization}.topology.watch"
+        backend: "typewriter.from.user.{user}.organization.{organization}.topology.watch"
+      updates:
+        payload: "service/v1/topology.skir:OrganizationTopologyChanged"
+        addresses:
+          panel: "cloud.from.organization.{organization}.topology.watch"
+          backend: "typewriter.to.organization.{organization}.topology.watch"
+        delivery: { kind: transient }
+
+  - name: service_host_register
+    scope: service
+    grants:
+      - { role: registered_service, side: service, direction: publish, channel: request }
+    flow:
+      kind: unary
+      method: "service/v1/topology.skir:RegisterServiceHost"
+      operation: registrar.execution.register
+      failure_slug: registrar-execution-register-failed
+      requests:
+        service: "cloud.to.service.{service}.execution.register"
+        backend: "typewriter.from.service.{service}.execution.register"
+        backend_internal: "service.{service}.execution.register"
+
+  - name: host_execution_watch
+    scope: service
+    grants:
+      - { role: registered_service, side: service, direction: publish, channel: request }
+      - { role: registered_service, side: service, direction: subscribe, channel: updates }
+    flow:
+      kind: watch
+      method: "service/v1/topology.skir:WatchHostExecution"
+      operation: registrar.execution.watch
+      failure_slug: registrar-execution-watch-failed
+      requests:
+        service: "cloud.to.service.{service}.execution.watch"
+        backend: "typewriter.from.service.{service}.execution.watch"
+        backend_internal: "service.{service}.execution.watch"
+      updates:
+        payload: "service/v1/topology.skir:WatchHostExecutionResponse"
+        addresses:
+          service: "cloud.from.service.{service}.execution.watch"
+          backend: "typewriter.to.service.{service}.execution.watch"
+        delivery: { kind: transient }
+
+  - name: host_execution_report
+    scope: service
+    grants:
+      - { role: registered_service, side: service, direction: publish, channel: request }
+    flow:
+      kind: unary
+      method: "service/v1/topology.skir:ReportHostExecution"
+      operation: registrar.execution.report
+      failure_slug: registrar-execution-report-failed
+      requests:
+        service: "cloud.to.service.{service}.execution.report"
+        backend: "typewriter.from.service.{service}.execution.report"
+        backend_internal: "service.{service}.execution.report"
+
+  - name: service_heartbeat
+    scope: service
+    grants:
+      - { role: registered_service, side: service, direction: publish, channel: event }
+    flow:
+      kind: event
+      binding: { kind: skir, payload: "service/v1/lifecycle.skir:ServiceHeartbeatNotification" }
+      operation: registrar.heartbeat
+      failure_slug: registrar-heartbeat-failed
+      addresses:
+        service: "cloud.to.service.{service}.heartbeat"
+        backend: "typewriter.from.service.{service}.heartbeat"
+        backend_internal: "service.{service}.heartbeat"
+      delivery: { kind: transient }
+
+  - name: service_shutdown
+    scope: service
+    grants:
+      - { role: registered_service, side: service, direction: publish, channel: event }
+    flow:
+      kind: event
+      binding: { kind: skir, payload: "service/v1/lifecycle.skir:ServiceShutdownNotification" }
+      operation: registrar.shutdown
+      failure_slug: registrar-shutdown-failed
+      addresses:
+        service: "cloud.to.service.{service}.shutdown"
+        backend: "typewriter.from.service.{service}.shutdown"
+        backend_internal: "service.{service}.shutdown"
+      delivery: { kind: transient }
+
+  - name: editor_catalog_fetch
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: organization_member, side: panel, direction: subscribe, channel: updates }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }, { role: realm_coordinator, side: service, direction: publish, channel: updates }]
+    flow:
+      kind: bounded_watch
+      method: "editor/v1/catalog.skir:FetchEditorCatalog"
+      transfer_field: transfer_id
+      operation: editor.catalog.fetch
+      failure_slug: editor-catalog-fetch-failed
+      requests: { panel: "service.to.{realm}.organization.{organization}.realm.editor.catalog.fetch", service: "service.to.{realm}.organization.{organization}.realm.editor.catalog.fetch" }
+      updates: { panel: "service.from.{realm}.organization.{organization}.realm.editor.catalog.fetch.{transfer_id}", service: "service.from.{realm}.organization.{organization}.realm.editor.catalog.fetch.{transfer_id}" }
+
+  - name: editor_catalog_watch
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: organization_member, side: panel, direction: subscribe, channel: updates }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }, { role: realm_coordinator, side: service, direction: publish, channel: updates }]
+    flow:
+      kind: watch
+      method: "editor/v1/catalog.skir:WatchEditorCatalog"
+      operation: editor.catalog.invalidate
+      failure_slug: editor-catalog-invalidate-failed
+      requests: { panel: "service.to.{realm}.organization.{organization}.realm.editor.catalog.invalidate", service: "service.to.{realm}.organization.{organization}.realm.editor.catalog.invalidate" }
+      updates:
+        payload: "editor/v1/catalog.skir:CatalogInvalidated"
+        addresses: { panel: "service.from.{realm}.organization.{organization}.realm.editor.catalog.invalidate", service: "service.from.{realm}.organization.{organization}.realm.editor.catalog.invalidate" }
+        delivery: { kind: transient }
+
+  - name: editor_value_prepare
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }]
+    flow:
+      kind: unary
+      method: "editor/v1/catalog.skir:PrepareValue"
+      operation: editor.creation.prepare
+      failure_slug: editor-creation-prepare-failed
+      requests: { panel: "service.to.{realm}.organization.{organization}.realm.editor.creation.prepare", service: "service.to.{realm}.organization.{organization}.realm.editor.creation.prepare" }
+
+  - name: editor_presentation_search
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: organization_member, side: panel, direction: subscribe, channel: updates }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }, { role: realm_coordinator, side: service, direction: publish, channel: updates }]
+    flow:
+      kind: watch
+      method: "editor/v1/search.skir:WatchRealmPresentationSearch"
+      operation: editor.presentation.search
+      failure_slug: editor-presentation-search-failed
+      requests: { panel: "service.to.{realm}.organization.{organization}.realm.editor.presentation.search", service: "service.to.{realm}.organization.{organization}.realm.editor.presentation.search" }
+      updates:
+        payload: "editor/v1/search.skir:RealmPresentationSearchUpdate"
+        addresses: { panel: "service.from.{realm}.organization.{organization}.realm.editor.presentation.search", service: "service.from.{realm}.organization.{organization}.realm.editor.presentation.search" }
+        delivery: { kind: transient }
+
+  - name: editor_presentation_search_cancel
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }]
+    flow:
+      kind: unary
+      method: "editor/v1/search.skir:CancelRealmPresentationSearch"
+      operation: editor.presentation.search.cancel
+      failure_slug: editor-presentation-search-cancel-failed
+      requests: { panel: "service.to.{realm}.organization.{organization}.realm.editor.presentation.search.cancel", service: "service.to.{realm}.organization.{organization}.realm.editor.presentation.search.cancel" }
+
+  - name: editor_capability_computation_invoke
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }]
+    flow:
+      kind: unary
+      method: "editor/v1/capability.skir:InvokeRealmComputation"
+      operation: editor.capability.computation.invoke
+      failure_slug: editor-capability-computation-invoke-failed
+      requests: { panel: "service.to.{realm}.organization.{organization}.realm.editor.capability.computation.invoke", service: "service.to.{realm}.organization.{organization}.realm.editor.capability.computation.invoke" }
+
+  - name: editor_capability_command_invoke
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }]
+    flow:
+      kind: unary
+      method: "editor/v1/capability.skir:InvokeRealmCommand"
+      operation: editor.capability.command.invoke
+      failure_slug: editor-capability-command-invoke-failed
+      requests: { panel: "service.to.{realm}.organization.{organization}.realm.editor.capability.command.invoke", service: "service.to.{realm}.organization.{organization}.realm.editor.capability.command.invoke" }
+
+  - name: authoring_state_query
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: organization_member, side: panel, direction: subscribe, channel: updates }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }, { role: realm_coordinator, side: service, direction: publish, channel: updates }]
+    flow:
+      kind: bounded_watch
+      method: "editor/v1/authoring.skir:QueryAuthoringState"
+      transfer_field: transfer_id
+      operation: editor.authoring.state.query
+      failure_slug: editor-authoring-state-query-failed
+      requests: { panel: "service.to.{realm}.organization.{organization}.realm.editor.authoring.state.query", service: "service.to.{realm}.organization.{organization}.realm.editor.authoring.state.query" }
+      updates: { panel: "service.from.{realm}.organization.{organization}.realm.editor.authoring.state.query.{transfer_id}", service: "service.from.{realm}.organization.{organization}.realm.editor.authoring.state.query.{transfer_id}" }
+
+  - name: authoring_edit_commit
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }]
+    flow:
+      kind: unary
+      method: "editor/v1/authoring.skir:CommitPreparedEdit"
+      operation: editor.authoring.edit.commit
+      failure_slug: editor-authoring-edit-commit-failed
+      requests: { panel: "service.to.{realm}.organization.{organization}.realm.editor.authoring.edit.commit", service: "service.to.{realm}.organization.{organization}.realm.editor.authoring.edit.commit" }
+
+  - name: authoring_type_preview
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }]
+    flow:
+      kind: unary
+      method: "editor/v1/authoring.skir:PreviewTypeArgumentChange"
+      operation: editor.authoring.type.preview
+      failure_slug: editor-authoring-type-preview-failed
+      requests: { panel: "service.to.{realm}.organization.{organization}.realm.editor.authoring.type.preview", service: "service.to.{realm}.organization.{organization}.realm.editor.authoring.type.preview" }
+
+  - name: authoring_type_commit
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }]
+    flow:
+      kind: unary
+      method: "editor/v1/authoring.skir:PrepareTypeArgumentChange"
+      operation: editor.authoring.type.commit
+      failure_slug: editor-authoring-type-commit-failed
+      requests: { panel: "service.to.{realm}.organization.{organization}.realm.editor.authoring.type.commit", service: "service.to.{realm}.organization.{organization}.realm.editor.authoring.type.commit" }
+
+  - name: authoring_search
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }]
+    flow:
+      kind: unary
+      method: "editor/v1/authoring.skir:SearchAuthoring"
+      operation: editor.authoring.search
+      failure_slug: editor-authoring-search-failed
+      requests: { panel: "service.to.{realm}.organization.{organization}.realm.editor.authoring.search", service: "service.to.{realm}.organization.{organization}.realm.editor.authoring.search" }
+
+  - name: authoring_changed
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: subscribe, channel: event }, { role: realm_coordinator, side: service, direction: publish, channel: event }]
+    flow:
+      kind: event
+      binding: { kind: skir, payload: "editor/v1/authoring.skir:AuthoringChanged" }
+      operation: editor.authoring.changed
+      failure_slug: editor-authoring-changed-failed
+      addresses: { panel: "service.from.{realm}.organization.{organization}.realm.editor.authoring.changed", service: "service.from.{realm}.organization.{organization}.realm.editor.authoring.changed" }
+      delivery: { kind: transient }
+
+  - name: authoring_compiled_query
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: organization_member, side: panel, direction: subscribe, channel: updates }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }, { role: realm_coordinator, side: service, direction: publish, channel: updates }, { role: realm_participant, side: service, direction: publish, channel: request }, { role: realm_participant, side: service, direction: subscribe, channel: updates }]
+    flow:
+      kind: bounded_watch
+      method: "editor/v1/compiled_content.skir:QueryPublishedContent"
+      transfer_field: transfer_id
+      operation: editor.authoring.compiled.query
+      failure_slug: editor-authoring-compiled-query-failed
+      requests: { panel: "service.to.{realm}.organization.{organization}.realm.editor.authoring.compiled.query", service: "service.to.{realm}.organization.{organization}.realm.editor.authoring.compiled.query" }
+      updates: { panel: "service.from.{realm}.organization.{organization}.realm.editor.authoring.compiled.query.{transfer_id}", service: "service.from.{realm}.organization.{organization}.realm.editor.authoring.compiled.query.{transfer_id}" }
+
+  - name: authoring_compiled_changed
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: subscribe, channel: event }, { role: realm_coordinator, side: service, direction: publish, channel: event }, { role: realm_participant, side: service, direction: subscribe, channel: event }]
+    flow:
+      kind: event
+      binding: { kind: skir, payload: "editor/v1/compiled_content.skir:CompiledContentChanged" }
+      operation: editor.authoring.compiled.changed
+      failure_slug: editor-authoring-compiled-changed-failed
+      addresses: { panel: "service.from.{realm}.organization.{organization}.realm.editor.authoring.compiled.changed", service: "service.from.{realm}.organization.{organization}.realm.editor.authoring.compiled.changed" }
+      delivery: { kind: transient }
+
+  - name: authoring_compiled_status_query
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }]
+    flow:
+      kind: unary
+      method: "editor/v1/compiled_content.skir:QueryCompiledResourceStatus"
+      operation: editor.authoring.compiled.status.query
+      failure_slug: editor-authoring-compiled-status-query-failed
+      requests: { panel: "service.to.{realm}.organization.{organization}.realm.editor.authoring.compiled.status.query", service: "service.to.{realm}.organization.{organization}.realm.editor.authoring.compiled.status.query" }
+
+  - name: authoring_publish
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }]
+    flow:
+      kind: unary
+      method: "editor/v1/publication.skir:PublishAuthoring"
+      operation: editor.authoring.publish
+      failure_slug: editor-authoring-publish-failed
+      requests: { panel: "service.to.{realm}.organization.{organization}.realm.editor.authoring.publish", service: "service.to.{realm}.organization.{organization}.realm.editor.authoring.publish" }
+
+  - name: authoring_publication_watch
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: organization_member, side: panel, direction: subscribe, channel: updates }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }, { role: realm_coordinator, side: service, direction: publish, channel: updates }]
+    flow:
+      kind: watch
+      method: "editor/v1/publication.skir:WatchPublication"
+      operation: editor.authoring.publication.watch
+      failure_slug: editor-authoring-publication-watch-failed
+      requests: { panel: "service.to.{realm}.organization.{organization}.realm.editor.authoring.publication.watch", service: "service.to.{realm}.organization.{organization}.realm.editor.authoring.publication.watch" }
+      updates:
+        payload: "editor/v1/publication.skir:PublicationReport"
+        addresses: { panel: "service.from.{realm}.organization.{organization}.realm.editor.authoring.publication.watch", service: "service.from.{realm}.organization.{organization}.realm.editor.authoring.publication.watch" }
+        delivery: { kind: transient }
+
+  - name: shared_catalog_fetch
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }, { role: realm_participant, side: service, direction: publish, channel: request }]
+    flow: { kind: unary, method: "service/v1/artifact.skir:FetchSharedArtifactCatalog", operation: shared.catalog.fetch, failure_slug: shared-catalog-fetch-failed, requests: { panel: "service.to.{realm}.organization.{organization}.realm.shared.catalog.fetch", service: "service.to.{realm}.organization.{organization}.realm.shared.catalog.fetch" } }
+
+  - name: shared_publish
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }, { role: realm_participant, side: service, direction: publish, channel: request }]
+    flow: { kind: unary, method: "service/v1/artifact.skir:PublishSharedArtifact", operation: shared.publish, failure_slug: shared-publish-failed, requests: { panel: "service.to.{realm}.organization.{organization}.realm.shared.publish", service: "service.to.{realm}.organization.{organization}.realm.shared.publish" } }
+
+  - name: shared_blob_metadata
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }, { role: realm_participant, side: service, direction: publish, channel: request }]
+    flow: { kind: unary, method: "service/v1/artifact.skir:FetchArtifactBlobMetadata", operation: shared.blob.metadata, failure_slug: shared-blob-metadata-failed, requests: { panel: "service.to.{realm}.organization.{organization}.realm.shared.blob.metadata", service: "service.to.{realm}.organization.{organization}.realm.shared.blob.metadata" } }
+
+  - name: shared_blob_read
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }, { role: realm_participant, side: service, direction: publish, channel: request }]
+    flow: { kind: unary, method: "service/v1/artifact.skir:ReadArtifactBlob", operation: shared.blob.read, failure_slug: shared-blob-read-failed, requests: { panel: "service.to.{realm}.organization.{organization}.realm.shared.blob.read", service: "service.to.{realm}.organization.{organization}.realm.shared.blob.read" } }
+
+  - name: shared_blob_begin
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }, { role: realm_participant, side: service, direction: publish, channel: request }]
+    flow: { kind: unary, method: "service/v1/artifact.skir:BeginArtifactBlobWrite", operation: shared.blob.begin, failure_slug: shared-blob-begin-failed, requests: { panel: "service.to.{realm}.organization.{organization}.realm.shared.blob.begin", service: "service.to.{realm}.organization.{organization}.realm.shared.blob.begin" } }
+
+  - name: shared_blob_write
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }, { role: realm_participant, side: service, direction: publish, channel: request }]
+    flow: { kind: unary, method: "service/v1/artifact.skir:WriteArtifactBlobChunk", operation: shared.blob.write, failure_slug: shared-blob-write-failed, requests: { panel: "service.to.{realm}.organization.{organization}.realm.shared.blob.write", service: "service.to.{realm}.organization.{organization}.realm.shared.blob.write" } }
+
+  - name: shared_blob_complete
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }, { role: realm_participant, side: service, direction: publish, channel: request }]
+    flow: { kind: unary, method: "service/v1/artifact.skir:CompleteArtifactBlobWrite", operation: shared.blob.complete, failure_slug: shared-blob-complete-failed, requests: { panel: "service.to.{realm}.organization.{organization}.realm.shared.blob.complete", service: "service.to.{realm}.organization.{organization}.realm.shared.blob.complete" } }
+
+  - name: realm_hosts_probe
+    scope: realm
+    grants:
+      - { role: realm_coordinator, side: service, direction: publish, channel: request }
+      - { role: realm_participant, side: service, direction: subscribe, channel: request }
+    flow:
+      kind: scatter
+      binding: { kind: native_kotlin, format: kotlin_serialization_cbor, target: loader_core, request_type: com.typewritermc.loader.rollout.ProbeRealmHosts, response_type: com.typewritermc.loader.rollout.PresenceReply, request_codec: com.typewritermc.loader.rollout.RolloutCodecs.probeRequest, response_codec: com.typewritermc.loader.rollout.RolloutCodecs.presenceReply }
+      operation: realm.hosts.probe
+      failure_slug: realm-host-probe-failed
+      requests: { service: "typewriter.organization.{organization}.realm.{realm}.hosts.probe" }
+
+  - name: realm_rollout_command
+    scope: realm
+    grants:
+      - { role: realm_coordinator, side: service, direction: publish, channel: request }
+      - { role: realm_participant, side: service, direction: subscribe, channel: request }
+    flow:
+      kind: scatter
+      binding: { kind: native_kotlin, format: kotlin_serialization_cbor, target: loader_core, request_type: com.typewritermc.loader.rollout.RolloutEnvelope, response_type: com.typewritermc.loader.rollout.CommandAcceptance, request_codec: com.typewritermc.loader.rollout.RolloutCodecs.commandRequest, response_codec: com.typewritermc.loader.rollout.RolloutCodecs.commandResponse }
+      operation: realm.rollout.command
+      failure_slug: realm-rollout-command-failed
+      requests: { service: "typewriter.organization.{organization}.realm.{realm}.hosts.command" }
+
+  - name: realm_hosts_status
+    scope: realm
+    grants:
+      - { role: realm_coordinator, side: service, direction: publish, channel: request }
+      - { role: realm_participant, side: service, direction: subscribe, channel: request }
+    flow:
+      kind: scatter
+      binding: { kind: native_kotlin, format: kotlin_serialization_cbor, target: loader_core, request_type: com.typewritermc.loader.rollout.ProbeParticipantStatus, response_type: com.typewritermc.loader.rollout.ParticipantStatusReply, request_codec: com.typewritermc.loader.rollout.RolloutCodecs.statusRequest, response_codec: com.typewritermc.loader.rollout.RolloutCodecs.statusReply }
+      operation: realm.hosts.status
+      failure_slug: realm-host-status-failed
+      requests: { service: "typewriter.organization.{organization}.realm.{realm}.hosts.status" }
+
+  - name: realm_rollout_state
+    scope: realm
+    grants:
+      - { role: realm_participant, side: service, direction: publish, channel: event }
+      - { role: realm_coordinator, side: service, direction: subscribe, channel: event }
+    flow:
+      kind: event
+      binding: { kind: native_kotlin, format: kotlin_serialization_cbor, target: loader_core, event_type: com.typewritermc.loader.rollout.ParticipantStateChanged, event_codec: com.typewritermc.loader.rollout.RolloutCodecs.participantState }
+      operation: realm.rollout.state
+      failure_slug: realm-rollout-state-failed
+      addresses: { service: "typewriter.organization.{organization}.realm.{realm}.hosts.state" }
+      delivery: { kind: transient }
+
+  - name: organization_presence
+    scope: organization_actor
+    grants:
+      - { role: organization_member, side: panel, direction: publish, channel: event }
+      - { role: organization_member, side: panel, direction: subscribe, channel: event }
+    flow:
+      kind: event
+      binding: { kind: skir, payload: "organization/v1/presence.skir:PresenceEvent" }
+      operation: organization.presence
+      failure_slug: organization-presence-failed
+      addresses:
+        panel:
+          subject: "typewriter.presence.organization.{organization}.user.{user}"
+          subscription: { wildcard: [user] }
+      delivery: { kind: transient }
+
+  - name: panel_permission_resolve
+    scope: internal_component
+    grants: []
+    subscription: { component: auth-typewriter-permissions, group: typewriter.auth-auth-typewriter-permissions }
+    flow:
+      kind: unary
+      method: "access/v1/permission.skir:GetEntityPermission"
+      operation: auth.permissions.panel
+      failure_slug: auth-panel-permissions-failed
+      requests: { backend_internal: "auth.permissions.typewriter-panel" }
+
+  - name: services_permission_resolve
+    scope: internal_component
+    grants: []
+    subscription: { component: auth-typewriter-permissions, group: typewriter.auth-auth-typewriter-permissions }
+    flow:
+      kind: unary
+      method: "access/v1/permission.skir:GetEntityPermission"
+      operation: auth.permissions.services
+      failure_slug: auth-services-permissions-failed
+      requests: { backend_internal: "auth.permissions.typewriter-services" }

@@ -7,12 +7,9 @@ import com.typewritermc.imprint.EngineManifest
 import com.typewritermc.imprint.ExtensionManifest
 import com.typewritermc.imprint.HostedArtifactManifest
 import com.typewritermc.imprint.ImprintManifest
-import com.typewritermc.loader.api.artifact.ArtifactDigest
 import com.typewritermc.loader.api.artifact.SharedArtifactAccess
-import com.typewritermc.services.libs.communicator.address.AddressTemplate
-import com.typewritermc.services.libs.communicator.address.addressTemplate
-import com.typewritermc.services.libs.communicator.address.addressValuesOf
 import com.typewritermc.services.libs.communicator.client.Communicator
+import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
@@ -31,43 +28,6 @@ enum class RuntimePlacement {
     PANEL_ENGINE,
     PRIMARY_ENGINE,
 }
-
-/**
- * Addresses a logical Realm within an organization, independently of the hosting service id.
- *
- * Request and event subjects use opposite service directions. Operation suffixes are validated as lowercase
- * segments separated by dots or underscores; host migration must not change the Realm identity.
- */
-data class RealmServiceAddress(
-    val realmId: String,
-    val organizationId: String,
-)
-
-/** Builds a Realm request template after checking its operation suffix once. */
-fun String.realmRequestAddress(): AddressTemplate<RealmServiceAddress> =
-    "service.to.{realm}.organization.{organization}.realm.${validRealmOperation()}".realmAddress()
-
-/** Builds a Realm event template with the same suffix rule and outbound direction. */
-fun String.realmEventAddress(): AddressTemplate<RealmServiceAddress> =
-    "service.from.{realm}.organization.{organization}.realm.${validRealmOperation()}".realmAddress()
-
-private fun String.realmAddress(): AddressTemplate<RealmServiceAddress> =
-    addressTemplate(
-        { address ->
-            addressValuesOf(
-                "realm" to address.realmId,
-                "organization" to address.organizationId,
-            )
-        },
-        { values -> RealmServiceAddress(values.require("realm"), values.require("organization")) },
-    )
-
-private fun String.validRealmOperation(): String =
-    also {
-        require(it.matches(Regex("[a-z0-9]+(?:[._][a-z0-9]+)*"))) {
-            "Realm operation suffix must contain only lowercase names separated by dots or underscores."
-        }
-    }
 
 /**
  * Supplies one staged runtime with its identity, storage locations, artifact package, and host capabilities.

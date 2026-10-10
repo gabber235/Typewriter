@@ -545,7 +545,7 @@ class RecordProjectionField private constructor(
         );
 
         /**
-         * If the value of [source] is already mutable, returns it as-is.
+         * If the value of [source] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
          */
         val mutableSource: skirout.editor.v1.type_catalog.ValuePath.Mutable get() {
@@ -561,7 +561,7 @@ class RecordProjectionField private constructor(
         }
 
         /**
-         * If the value of [target] is already mutable, returns it as-is.
+         * If the value of [target] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
          */
         val mutableTarget: skirout.editor.v1.type_catalog.ValuePath.Mutable get() {
@@ -694,7 +694,7 @@ class RecordProjectionRule private constructor(
         );
 
         /**
-         * If the value of [fields] is already mutable, returns it as-is.
+         * If the value of [fields] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [fields] and returns it.
          */
         val mutableFields: kotlin.collections.MutableList<skirout.editor.v1.conversion.RecordProjectionField_OrMutable> get() {
@@ -841,7 +841,7 @@ class RecordConstructionField private constructor(
         );
 
         /**
-         * If the value of [source] is already mutable, returns it as-is.
+         * If the value of [source] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
          */
         val mutableSource: skirout.editor.v1.type_catalog.ValuePath.Mutable get() {
@@ -974,7 +974,7 @@ class RecordConstructionRule private constructor(
         );
 
         /**
-         * If the value of [fields] is already mutable, returns it as-is.
+         * If the value of [fields] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [fields] and returns it.
          */
         val mutableFields: kotlin.collections.MutableList<skirout.editor.v1.conversion.RecordConstructionField_OrMutable> get() {
@@ -1099,7 +1099,7 @@ class CollectionMappingRule private constructor(
         );
 
         /**
-         * If the value of [elementConversionId] is already mutable, returns it as-is.
+         * If the value of [elementConversionId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [elementConversionId] and returns it.
          */
         val mutableElementConversionId: skirout.editor.v1.type_catalog.ConversionId.Mutable get() {
@@ -1224,7 +1224,7 @@ class ConversionCompositionRule private constructor(
         );
 
         /**
-         * If the value of [steps] is already mutable, returns it as-is.
+         * If the value of [steps] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [steps] and returns it.
          */
         val mutableSteps: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ConversionId_OrMutable> get() {
@@ -1760,7 +1760,7 @@ class ConversionDefinition private constructor(
         );
 
         /**
-         * If the value of [conversionId] is already mutable, returns it as-is.
+         * If the value of [conversionId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [conversionId] and returns it.
          */
         val mutableConversionId: skirout.editor.v1.type_catalog.ConversionId.Mutable get() {

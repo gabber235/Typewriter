@@ -1,12 +1,11 @@
-use std::collections::HashMap;
-
 use otel_wasi::ResultWithSlug;
 use serde::Deserialize;
 use wasmcloud_utils::{
     database::{RecordId as DatabaseRecordId, transaction_query, transaction_query_file},
-    decode_skir, extract_param,
     skir::base::organization::v1::{join_request::*, role::OrganizationRole, user::*},
-    skir_domain_result, skir_variant,
+    skir_domain_result,
+    skir_utils::RecordIdKeyIdentity,
+    skir_variant,
     wasmcloud::messaging::types::NatsMessage,
 };
 
@@ -62,15 +61,14 @@ struct CancelledJoinRequest {
 ///
 /// The snapshot carries the sequence owned by the user request projection. Request creation and
 /// cancellation publish later changes on that same user stream.
-#[tracing::instrument(skip(msg, params))]
+#[tracing::instrument(skip_all)]
 pub async fn handle_watch(
-    msg: NatsMessage,
-    params: HashMap<String, String>,
+    _msg: NatsMessage,
+    scope: wasmcloud_utils::transport_routes::UserScope,
+    _request: WatchUserJoinRequestsRequest,
 ) -> Result<WatchUserJoinRequestsResponse, otel_wasi::Error> {
-    let user_id = extract_param!(params, user_id)?;
+    let user_id = scope.user.as_str();
     otel_wasi::main_attribute!("user.id" = user_id.to_string());
-    let _request = decode_skir!(WatchUserJoinRequestsRequest, &msg.body)?;
-
     wasmcloud_utils::database::organization::snapshots::user_join_requests(DatabaseRecordId::new(
         "user", user_id,
     ))
@@ -83,26 +81,27 @@ pub async fn handle_watch(
 /// request or creates membership with the code's assignable roles. It also advances every affected
 /// projection sequence and atomically consumes a single use code. Successful outcomes publish the
 /// resulting user and organization changes after commit and return the user scoped event.
-#[tracing::instrument(skip(msg, params))]
+#[tracing::instrument(skip_all)]
 pub async fn handle_request(
     msg: NatsMessage,
-    params: HashMap<String, String>,
+    scope: wasmcloud_utils::transport_routes::UserScope,
+    request: SubmitUserJoinRequestRequest,
 ) -> Result<SubmitUserJoinRequestResponse, otel_wasi::Error> {
-    let user_id = extract_param!(params, user_id)?;
+    let user_id = scope.user.as_str();
     otel_wasi::main_attribute!("user.id" = user_id.to_string());
     let user_key = user_id;
     let user_id = DatabaseRecordId::new("user", user_key);
-    let request = decode_skir!(SubmitUserJoinRequestRequest, &msg.body)?;
     if request.operation_id.is_empty() {
         return Ok(wasmcloud_utils::skir_variant!(
             SubmitUserJoinRequestResponse::InvalidOperationIdError
         ));
     }
-    let receipt = wasmcloud_utils::database::mutation::receipt_id(
+    let receipt = wasmcloud_utils::database::mutation::MutationReceipt::new(
         user_key,
         "join_requests",
         "SubmitUserJoinRequest",
         &request.operation_id,
+        msg.body,
     );
     let operation_id = request.operation_id.clone();
     wasmcloud_utils::validate_record_ids!(
@@ -112,19 +111,20 @@ pub async fn handle_request(
     );
 
     let code = request.code;
-    let result = transaction_query_file!(
-        JoinSubmissionOutcome,
-        "src/join_submission_transaction.surql",
-    )
-    .bind("user", user_id)
-    .bind("code", DatabaseRecordId::from(&code))
-    .bind("receipt", receipt)
-    .bind("request_bytes", msg.body.clone())
-    .execute()
-    .await
-    .error_with_slug("join-request-query-failed")?
-    .decode()
-    .error_with_slug("join-request-result-parse-failed")?;
+    let result = receipt
+        .bind(
+            transaction_query_file!(
+                JoinSubmissionOutcome,
+                "src/join_submission_transaction.surql",
+            )
+            .bind("user", user_id)
+            .bind("code", DatabaseRecordId::from(&code)),
+        )
+        .execute()
+        .await
+        .error_with_slug("join-request-query-failed")?
+        .decode()
+        .error_with_slug("join-request-result-parse-failed")?;
 
     let outcome = skir_domain_result!(SubmitUserJoinRequestResponse, result,
         "operation-identity-reused-error" => {});
@@ -167,7 +167,7 @@ pub async fn handle_request(
             organization_sequence,
             join_codes_sequence,
         } => {
-            let organization_id = request.organization.id.key.to_string();
+            let organization_id = request.organization.id.key.raw_identity()?;
             let user_request: UserJoinRequest = request.clone().into();
             let user_event = UserJoinRequestsChanged {
                 sequence: user_sequence,
@@ -175,9 +175,11 @@ pub async fn handle_request(
                 changes: vec![UserJoinRequestsChange::Add(Box::new(user_request.clone()))],
                 ..Default::default()
             };
-            wasmcloud_utils::skir_subjects::user_join_requests_changed(user_key)
-                .persist(user_event.clone())
-                .await?;
+            wasmcloud_utils::transport_routes::UserJoinRequestsWatchRoute::delivery(
+                &wasmcloud_utils::transport_routes::UserScope::try_from(user_key)?,
+            )
+            .persist(user_event.clone())
+            .await?;
             let organization_event = OrganizationJoinRequestsChanged {
                 sequence: organization_sequence,
                 operation_id: operation_id.clone(),
@@ -186,11 +188,13 @@ pub async fn handle_request(
                 ))],
                 ..Default::default()
             };
-            wasmcloud_utils::skir_subjects::organization_join_requests_changed(&organization_id)
-                .persist(organization_event)
-                .await?;
+            wasmcloud_utils::transport_routes::OrganizationJoinRequestsWatchRoute::delivery(
+                &wasmcloud_utils::transport_routes::OrganizationScope::try_from(organization_id)?,
+            )
+            .persist(organization_event)
+            .await?;
             publish_consumed_code(
-                &organization_id,
+                organization_id,
                 single_use,
                 code_id,
                 join_codes_sequence,
@@ -213,7 +217,7 @@ pub async fn handle_request(
             organization_sequence,
             join_codes_sequence,
         } => {
-            let organization_id = organization.id.key.to_string();
+            let organization_id = organization.id.key.raw_identity()?;
             let roles = member
                 .roles
                 .iter()
@@ -228,9 +232,11 @@ pub async fn handle_request(
                 changes: vec![wasmcloud_utils::skir::base::organization::v1::organization::UserOrganizationsChange::Add(Box::new(organization_value))],
                 ..Default::default()
             };
-            wasmcloud_utils::skir_subjects::user_organizations_changed(user_key)
-                .persist(user_event.clone())
-                .await?;
+            wasmcloud_utils::transport_routes::UserOrganizationsWatchRoute::delivery(
+                &wasmcloud_utils::transport_routes::UserScope::try_from(user_key)?,
+            )
+            .persist(user_event.clone())
+            .await?;
             let member_value: wasmcloud_utils::skir::base::organization::v1::member::OrganizationMember =
                 member.clone().into();
             let member_event = wasmcloud_utils::skir::base::organization::v1::member::OrganizationMembersChanged {
@@ -239,11 +245,13 @@ pub async fn handle_request(
                 changes: vec![wasmcloud_utils::skir::base::organization::v1::member::OrganizationMembersChange::Add(Box::new(member_value))],
                 ..Default::default()
             };
-            wasmcloud_utils::skir_subjects::organization_members_changed(&organization_id)
-                .persist(member_event)
-                .await?;
+            wasmcloud_utils::transport_routes::OrganizationMembersWatchRoute::delivery(
+                &wasmcloud_utils::transport_routes::OrganizationScope::try_from(organization_id)?,
+            )
+            .persist(member_event)
+            .await?;
             publish_consumed_code(
-                &organization_id,
+                organization_id,
                 single_use,
                 code_id,
                 join_codes_sequence,
@@ -288,9 +296,11 @@ async fn publish_consumed_code(
             changes: vec![wasmcloud_utils::skir::base::organization::v1::join_codes::OrganizationJoinCodesChange::Remove(Box::new(code_id.into()))],
             ..Default::default()
         };
-        wasmcloud_utils::skir_subjects::organization_join_codes_changed(organization_id)
-            .persist(event)
-            .await?;
+        wasmcloud_utils::transport_routes::OrganizationJoinCodesWatchRoute::delivery(
+            &wasmcloud_utils::transport_routes::OrganizationScope::try_from(organization_id)?,
+        )
+        .persist(event)
+        .await?;
     }
     Ok(())
 }
@@ -300,26 +310,27 @@ async fn publish_consumed_code(
 /// The transaction deletes the request and advances both the user and organization request
 /// sequences. The handler then persists removal changes to both projections. A missing request is
 /// returned as a domain result and produces no change event.
-#[tracing::instrument(skip(msg, params))]
+#[tracing::instrument(skip_all)]
 pub async fn handle_cancel(
     msg: NatsMessage,
-    params: HashMap<String, String>,
+    scope: wasmcloud_utils::transport_routes::UserScope,
+    request: CancelUserJoinRequestRequest,
 ) -> Result<CancelUserJoinRequestResponse, otel_wasi::Error> {
-    let user_id = extract_param!(params, user_id)?;
+    let user_id = scope.user.as_str();
     otel_wasi::main_attribute!("user.id" = user_id.to_string());
     let user_key = user_id;
     let user_id = DatabaseRecordId::new("user", user_id);
-    let request = decode_skir!(CancelUserJoinRequestRequest, &msg.body)?;
     if request.operation_id.is_empty() {
         return Ok(wasmcloud_utils::skir_variant!(
             CancelUserJoinRequestResponse::InvalidOperationIdError
         ));
     }
-    let receipt = wasmcloud_utils::database::mutation::receipt_id(
+    let receipt = wasmcloud_utils::database::mutation::MutationReceipt::new(
         user_key,
         "join_requests",
         "CancelUserJoinRequest",
         &request.operation_id,
+        msg.body,
     );
     wasmcloud_utils::validate_record_ids!(
         CancelUserJoinRequestResponse,
@@ -329,7 +340,8 @@ pub async fn handle_cancel(
 
     let request_id = request.request_id;
 
-    let join_request = transaction_query!(
+    let join_request = receipt
+        .bind(transaction_query!(
         Option<CancelledJoinRequest>,
         r#"
             BEGIN TRANSACTION;
@@ -361,14 +373,12 @@ LET $request = SELECT id, in.* as user, out.* as organization, requested_at, exp
         };
         COMMIT TRANSACTION;
             "#,
-    )
-    .bind(
-        "request",
-        DatabaseRecordId::from(&request_id),
-    )
-    .bind("user_id", user_id)
-    .bind("receipt", receipt)
-    .bind("request_bytes", msg.body.clone())
+        )
+        .bind(
+            "request",
+            DatabaseRecordId::from(&request_id),
+        )
+    .bind("user_id", user_id))
     .execute()
     .await
     .error_with_slug("join-request-cancel-query-failed")?
@@ -390,9 +400,11 @@ LET $request = SELECT id, in.* as user, out.* as organization, requested_at, exp
         changes: vec![UserJoinRequestsChange::Remove(Box::new(request_id.clone()))],
         ..Default::default()
     };
-    wasmcloud_utils::skir_subjects::user_join_requests_changed(user_key)
-        .persist(event.clone())
-        .await?;
+    wasmcloud_utils::transport_routes::UserJoinRequestsWatchRoute::delivery(
+        &wasmcloud_utils::transport_routes::UserScope::try_from(user_key)?,
+    )
+    .persist(event.clone())
+    .await?;
 
     let organization_event = OrganizationJoinRequestsChanged {
         sequence: join_request.organization_sequence,
@@ -400,8 +412,9 @@ LET $request = SELECT id, in.* as user, out.* as organization, requested_at, exp
         changes: vec![OrganizationJoinRequestsChange::Remove(Box::new(request_id))],
         ..Default::default()
     };
-    wasmcloud_utils::skir_subjects::organization_join_requests_changed(
-        join_request.request.organization.id.key.to_string(),
+    let organization_id = join_request.request.organization.id.key.raw_identity()?;
+    wasmcloud_utils::transport_routes::OrganizationJoinRequestsWatchRoute::delivery(
+        &wasmcloud_utils::transport_routes::OrganizationScope::try_from(organization_id)?,
     )
     .persist(organization_event)
     .await?;

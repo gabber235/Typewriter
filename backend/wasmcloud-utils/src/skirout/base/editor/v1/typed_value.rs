@@ -27,23 +27,25 @@ pub struct PortableValue {
 
 impl PortableValue {
     pub fn default_ref() -> &'static PortableValue {
-        static D: std::sync::LazyLock<PortableValue> = std::sync::LazyLock::new(PortableValue::default);
+        static D: std::sync::LazyLock<PortableValue> =
+            std::sync::LazyLock::new(PortableValue::default);
         &D
     }
 }
 
 impl PortableValue {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PortableValue> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<PortableValue>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/typed_value.skir",
-                    "PortableValue",
-                    "",
-                    |x: &PortableValue| &x._unrecognized,
-                    |x: &mut PortableValue, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<PortableValue>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/typed_value.skir",
+                "PortableValue",
+                "",
+                |x: &PortableValue| &x._unrecognized,
+                |x: &mut PortableValue, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<PortableValue> {
@@ -57,14 +59,26 @@ impl PortableValue {
 // ==============================================================================
 
 fn initialize_module_serializers() {
-    static INIT: std::sync::LazyLock<()> =
-        std::sync::LazyLock::new(|| {
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<PortableValue> = PortableValue::_adapter() as *const _ as *mut _;
-                (*a).add_field("actual_type", 0, crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(), "", |x: &PortableValue| &x.actual_type, |x: &mut PortableValue, v| x.actual_type = v);
-                (*a).add_field("payload", 1, crate::skirout::base::editor::v1::type_catalog::DataValue::serializer(), "", |x: &PortableValue| &x.payload, |x: &mut PortableValue, v| x.payload = v);
-                (*a).finalize();
-            }
-        });
+    static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| unsafe {
+        let a: *mut crate::skir_client::internal::StructAdapter<PortableValue> =
+            PortableValue::_adapter() as *const _ as *mut _;
+        (*a).add_field(
+            "actual_type",
+            0,
+            crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(),
+            "",
+            |x: &PortableValue| &x.actual_type,
+            |x: &mut PortableValue, v| x.actual_type = v,
+        );
+        (*a).add_field(
+            "payload",
+            1,
+            crate::skirout::base::editor::v1::type_catalog::DataValue::serializer(),
+            "",
+            |x: &PortableValue| &x.payload,
+            |x: &mut PortableValue, v| x.payload = v,
+        );
+        (*a).finalize();
+    });
     let _ = *INIT;
 }

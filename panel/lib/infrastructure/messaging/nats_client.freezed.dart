@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'nats_client.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -42,7 +42,7 @@ $NatsConnectionStateCopyWith(NatsConnectionState _, $Res Function(NatsConnection
 }
 
 
-/// Adds pattern-matching-related methods to [NatsConnectionState].
+/// Adds pattern matching related methods to [NatsConnectionState].
 extension NatsConnectionStatePatterns on NatsConnectionState {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -69,7 +69,7 @@ return closed(_that);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -141,7 +141,7 @@ return closed();case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -264,7 +264,7 @@ class NatsReconnecting implements NatsConnectionState {
  final  NatsClientException failure;
 
 /// Create a copy of NatsConnectionState
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $NatsReconnectingCopyWith<NatsReconnecting> get copyWith => _$NatsReconnectingCopyWithImpl<NatsReconnecting>(this, _$identity);
@@ -311,7 +311,7 @@ class _$NatsReconnectingCopyWithImpl<$Res>
   final $Res Function(NatsReconnecting) _then;
 
 /// Create a copy of NatsConnectionState
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? failure = null,}) {
   return _then(NatsReconnecting(
 null == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
@@ -332,7 +332,7 @@ class NatsFailed implements NatsConnectionState {
  final  NatsClientException failure;
 
 /// Create a copy of NatsConnectionState
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $NatsFailedCopyWith<NatsFailed> get copyWith => _$NatsFailedCopyWithImpl<NatsFailed>(this, _$identity);
@@ -379,7 +379,7 @@ class _$NatsFailedCopyWithImpl<$Res>
   final $Res Function(NatsFailed) _then;
 
 /// Create a copy of NatsConnectionState
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? failure = null,}) {
   return _then(NatsFailed(
 null == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable

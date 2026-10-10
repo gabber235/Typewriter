@@ -61,12 +61,17 @@ func (m *Typewriter) backendContainer(source *dagger.Workspace, cacheScope strin
 
 func (m *Typewriter) backendTestContainer(source *dagger.Workspace) *dagger.Container {
 	return m.backendContainer(source, "component-test").
-		WithFile("/usr/local/bin/nats-server", dag.Container().From("nats:2.15.0-alpine").File("/usr/local/bin/nats-server"))
+		WithFile("/usr/local/bin/nats-server", backendNatsServer())
+}
+
+func backendNatsServer() *dagger.File {
+	return dag.Container().From("nats:2.15.0-alpine").File("/usr/local/bin/nats-server")
 }
 
 // +check
 func (m *Typewriter) BackendUnitTest(source *dagger.Workspace) *dagger.Container {
 	return m.backendContainer(source, "unit-test").
+		WithFile("/usr/local/bin/nats-server", backendNatsServer()).
 		WithExec(withBackendTargetCleanup(
 			"cargo", "test", "--manifest-path", "backend/Cargo.toml",
 			"--workspace", "--no-fail-fast", "--jobs", "2",
@@ -83,9 +88,14 @@ func (m *Typewriter) BackendSupportTest(source *dagger.Workspace) *dagger.Contai
 }
 
 // BackendTest runs the full embedded component test suite.
-func (m *Typewriter) BackendTest(source *dagger.Workspace) *dagger.Container {
+func (m *Typewriter) BackendTest(
+	source *dagger.Workspace,
+	// +optional
+	// +default="2"
+	jobs int,
+) *dagger.Container {
 	return m.backendTestContainer(source).
-		WithExec(backendTestCommand("component-test", "--all", "--jobs", "2"))
+		WithExec(backendTestCommand("component-test", "--all", "--jobs", strconv.Itoa(jobs)))
 }
 
 // BackendTestFixture runs every case for one fixture.

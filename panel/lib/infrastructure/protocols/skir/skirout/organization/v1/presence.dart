@@ -17,9 +17,7 @@ import "package:skir_client/skir_client.dart" as _skir;
 
 import "../../kernel/v1/record_id.dart" as _lib_kernel_v1_record_id;
 
-// -----------------------------------------------------------------------------
 // struct OrganizationPresence
-// -----------------------------------------------------------------------------
 
 sealed class OrganizationPresence_orMutable {
   OrganizationPresence toFrozen();
@@ -41,7 +39,7 @@ final class OrganizationPresence implements OrganizationPresence_orMutable {
   static OrganizationPresence_mutable mutable() =>
       OrganizationPresence_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   OrganizationPresence toFrozen() => this;
@@ -102,9 +100,7 @@ final class OrganizationPresence_mutable
   OrganizationPresence toFrozen() => OrganizationPresence().._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct MembersPresence
-// -----------------------------------------------------------------------------
 
 sealed class MembersPresence_orMutable {
   MembersPresence toFrozen();
@@ -125,7 +121,7 @@ final class MembersPresence implements MembersPresence_orMutable {
   /// Fields are initialized to their default values.
   static MembersPresence_mutable mutable() => MembersPresence_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   MembersPresence toFrozen() => this;
@@ -182,9 +178,7 @@ final class MembersPresence_mutable implements MembersPresence_orMutable {
   MembersPresence toFrozen() => MembersPresence().._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ServicesPresence
-// -----------------------------------------------------------------------------
 
 sealed class ServicesPresence_orMutable {
   ServicesPresence toFrozen();
@@ -205,7 +199,7 @@ final class ServicesPresence implements ServicesPresence_orMutable {
   /// Fields are initialized to their default values.
   static ServicesPresence_mutable mutable() => ServicesPresence_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ServicesPresence toFrozen() => this;
@@ -262,9 +256,7 @@ final class ServicesPresence_mutable implements ServicesPresence_orMutable {
   ServicesPresence toFrozen() => ServicesPresence().._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ServicePresence
-// -----------------------------------------------------------------------------
 
 sealed class ServicePresence_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get serviceId;
@@ -295,7 +287,7 @@ final class ServicePresence implements ServicePresence_orMutable {
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ServicePresence toFrozen() => this;
@@ -358,7 +350,7 @@ final class ServicePresence_mutable implements ServicePresence_orMutable {
 
   ServicePresence_mutable._(this.serviceId);
 
-  /// If the value of [serviceId] is already mutable, returns it as-is.
+  /// If the value of [serviceId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [serviceId] and returns it.
   _lib_kernel_v1_record_id.RecordId_mutable get mutableServiceId {
     final value = this.serviceId;
@@ -376,9 +368,7 @@ final class ServicePresence_mutable implements ServicePresence_orMutable {
       ServicePresence(serviceId: this.serviceId).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct RealmsPresence
-// -----------------------------------------------------------------------------
 
 sealed class RealmsPresence_orMutable {
   RealmsPresence toFrozen();
@@ -399,7 +389,7 @@ final class RealmsPresence implements RealmsPresence_orMutable {
   /// Fields are initialized to their default values.
   static RealmsPresence_mutable mutable() => RealmsPresence_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RealmsPresence toFrozen() => this;
@@ -456,9 +446,7 @@ final class RealmsPresence_mutable implements RealmsPresence_orMutable {
   RealmsPresence toFrozen() => RealmsPresence().._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct RealmPresence
-// -----------------------------------------------------------------------------
 
 sealed class RealmPresence_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get realmId;
@@ -489,7 +477,7 @@ final class RealmPresence implements RealmPresence_orMutable {
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RealmPresence toFrozen() => this;
@@ -551,7 +539,7 @@ final class RealmPresence_mutable implements RealmPresence_orMutable {
 
   RealmPresence_mutable._(this.realmId);
 
-  /// If the value of [realmId] is already mutable, returns it as-is.
+  /// If the value of [realmId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
   _lib_kernel_v1_record_id.RecordId_mutable get mutableRealmId {
     final value = this.realmId;
@@ -569,9 +557,7 @@ final class RealmPresence_mutable implements RealmPresence_orMutable {
       RealmPresence(realmId: this.realmId).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct RealmLibraryPresence
-// -----------------------------------------------------------------------------
 
 sealed class RealmLibraryPresence_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get realmId;
@@ -603,7 +589,7 @@ final class RealmLibraryPresence implements RealmLibraryPresence_orMutable {
         _lib_kernel_v1_record_id.RecordId.defaultInstance,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RealmLibraryPresence toFrozen() => this;
@@ -670,7 +656,7 @@ final class RealmLibraryPresence_mutable
 
   RealmLibraryPresence_mutable._(this.realmId);
 
-  /// If the value of [realmId] is already mutable, returns it as-is.
+  /// If the value of [realmId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
   _lib_kernel_v1_record_id.RecordId_mutable get mutableRealmId {
     final value = this.realmId;
@@ -688,9 +674,7 @@ final class RealmLibraryPresence_mutable
       RealmLibraryPresence(realmId: this.realmId).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct RealmTagsPresence
-// -----------------------------------------------------------------------------
 
 sealed class RealmTagsPresence_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get realmId;
@@ -721,7 +705,7 @@ final class RealmTagsPresence implements RealmTagsPresence_orMutable {
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RealmTagsPresence toFrozen() => this;
@@ -784,7 +768,7 @@ final class RealmTagsPresence_mutable implements RealmTagsPresence_orMutable {
 
   RealmTagsPresence_mutable._(this.realmId);
 
-  /// If the value of [realmId] is already mutable, returns it as-is.
+  /// If the value of [realmId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
   _lib_kernel_v1_record_id.RecordId_mutable get mutableRealmId {
     final value = this.realmId;
@@ -802,9 +786,7 @@ final class RealmTagsPresence_mutable implements RealmTagsPresence_orMutable {
       RealmTagsPresence(realmId: this.realmId).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct BookPresence
-// -----------------------------------------------------------------------------
 
 sealed class BookPresence_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get realmId;
@@ -841,7 +823,7 @@ final class BookPresence implements BookPresence_orMutable {
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   BookPresence toFrozen() => this;
@@ -914,7 +896,7 @@ final class BookPresence_mutable implements BookPresence_orMutable {
 
   BookPresence_mutable._(this.realmId, this.bookId);
 
-  /// If the value of [realmId] is already mutable, returns it as-is.
+  /// If the value of [realmId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
   _lib_kernel_v1_record_id.RecordId_mutable get mutableRealmId {
     final value = this.realmId;
@@ -926,7 +908,7 @@ final class BookPresence_mutable implements BookPresence_orMutable {
     }
   }
 
-  /// If the value of [bookId] is already mutable, returns it as-is.
+  /// If the value of [bookId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [bookId] and returns it.
   _lib_kernel_v1_record_id.RecordId_mutable get mutableBookId {
     final value = this.bookId;
@@ -944,9 +926,7 @@ final class BookPresence_mutable implements BookPresence_orMutable {
       BookPresence(realmId: this.realmId, bookId: this.bookId).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum PageActivity
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -1063,9 +1043,7 @@ enum _PageActivity_consts implements PageActivity {
       _skir.internal__stringify(this, PageActivity.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // struct PagePresence
-// -----------------------------------------------------------------------------
 
 sealed class PagePresence_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get realmId;
@@ -1119,7 +1097,7 @@ final class PagePresence implements PagePresence_orMutable {
     PageActivity.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PagePresence toFrozen() => this;
@@ -1221,7 +1199,7 @@ final class PagePresence_mutable implements PagePresence_orMutable {
 
   PagePresence_mutable._(this.realmId, this.bookId, this.pageId, this.activity);
 
-  /// If the value of [realmId] is already mutable, returns it as-is.
+  /// If the value of [realmId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
   _lib_kernel_v1_record_id.RecordId_mutable get mutableRealmId {
     final value = this.realmId;
@@ -1233,7 +1211,7 @@ final class PagePresence_mutable implements PagePresence_orMutable {
     }
   }
 
-  /// If the value of [bookId] is already mutable, returns it as-is.
+  /// If the value of [bookId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [bookId] and returns it.
   _lib_kernel_v1_record_id.RecordId_mutable get mutableBookId {
     final value = this.bookId;
@@ -1245,7 +1223,7 @@ final class PagePresence_mutable implements PagePresence_orMutable {
     }
   }
 
-  /// If the value of [pageId] is already mutable, returns it as-is.
+  /// If the value of [pageId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [pageId] and returns it.
   _lib_kernel_v1_record_id.RecordId_mutable get mutablePageId {
     final value = this.pageId;
@@ -1267,9 +1245,7 @@ final class PagePresence_mutable implements PagePresence_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum PresenceLocation
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -1664,9 +1640,7 @@ final class PresenceLocation_pageWrapper extends _PresenceLocation_wrapper {
   PresenceLocation_kind get kind => PresenceLocation_kind.pageWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct PanelPresence
-// -----------------------------------------------------------------------------
 
 sealed class PanelPresence_orMutable {
   _core.String get sessionId;
@@ -1706,7 +1680,7 @@ final class PanelPresence implements PanelPresence_orMutable {
   static PanelPresence_mutable mutable() =>
       PanelPresence_mutable._("", 0, PresenceLocation.unknown);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PanelPresence toFrozen() => this;
@@ -1802,9 +1776,7 @@ final class PanelPresence_mutable implements PanelPresence_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct PresenceLeft
-// -----------------------------------------------------------------------------
 
 sealed class PresenceLeft_orMutable {
   _core.String get sessionId;
@@ -1830,7 +1802,7 @@ final class PresenceLeft implements PresenceLeft_orMutable {
   /// Fields are initialized to their default values.
   static PresenceLeft_mutable mutable() => PresenceLeft_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresenceLeft toFrozen() => this;
@@ -1898,9 +1870,7 @@ final class PresenceLeft_mutable implements PresenceLeft_orMutable {
       PresenceLeft(sessionId: this.sessionId).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum PresenceEvent
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```

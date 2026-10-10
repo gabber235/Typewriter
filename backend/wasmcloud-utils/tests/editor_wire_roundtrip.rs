@@ -12,8 +12,8 @@ use wasmcloud_utils::skir::base::editor::v1::{
         ArgumentSelection, AuthoringRecord, DataValue, DeclaredTypeId, EndpointId,
         ExpressionBindingId, FieldPathSegment, FieldValue, ItemId, LinkTarget, LinkValue, ListItem,
         ListPayload, MapPayload, MapRow, NamedTypeUse, NamedValue, OperationId, PathSegment,
-        PendingTypeSelection, QualifiedTypeId, ResourceId, ScalarKind, TypeDefinitionId, TypeId,
-        TypeSelection, TypeTemplate, TypeUse, ValuePath,
+        PendingTypeSelection, QualifiedTypeId, RecordPayload, ResourceId, ScalarKind,
+        TypeDefinitionId, TypeId, TypeSelection, TypeTemplate, TypeUse, ValuePath,
     },
 };
 use wasmcloud_utils::skir_client::{KeyedVec, UnrecognizedValues};
@@ -428,24 +428,29 @@ fn current_state_lifecycle_contracts_round_trip_with_expected_values() {
         .expect("prepared expected value edit must decode");
     assert_eq!(decoded, prepared);
 
-    let initialization = catalog::InitializationRequest {
+    let initialization = catalog::ValuePreparationRequest {
         id: wasmcloud_utils::skir::base::editor::v1::type_catalog::InitializationRequestId {
             value: "initialization:one".to_owned(),
             _unrecognized: None,
         },
         catalog: prepared.catalog.clone(),
-        type_: TypeSelection::Complete(Box::new(named(declared(RESOURCE_ID), vec![]))),
-        supplied: KeyedVec::new(vec![FieldValue {
-            name: "name".to_owned(),
-            value: DataValue::StringValue("created".to_owned()),
+        target: catalog::PreparationTarget::Record(Box::new(TypeSelection::Complete(Box::new(
+            named(declared(RESOURCE_ID), vec![]),
+        )))),
+        supplied_value: Some(DataValue::Record(Box::new(RecordPayload {
+            fields: KeyedVec::new(vec![FieldValue {
+                name: "name".to_owned(),
+                value: DataValue::StringValue("created".to_owned()),
+                _unrecognized: None,
+            }]),
             _unrecognized: None,
-        }]),
+        }))),
         intent_hash: "intent:create".to_owned(),
         _unrecognized: None,
     };
     let initialization_bytes =
-        catalog::InitializationRequest::serializer().to_bytes(&initialization);
-    let initialization_decoded = catalog::InitializationRequest::serializer()
+        catalog::ValuePreparationRequest::serializer().to_bytes(&initialization);
+    let initialization_decoded = catalog::ValuePreparationRequest::serializer()
         .from_bytes(&initialization_bytes, UnrecognizedValues::Drop)
         .expect("initialization request must decode");
     assert_eq!(initialization_decoded, initialization);
@@ -462,20 +467,20 @@ fn current_state_lifecycle_contracts_round_trip_with_expected_values() {
         _unrecognized: None,
     }));
     let repair = authoring::TypeArgumentChangePreview {
-        catalog: prepared.catalog.clone(),
         resource: location.resource.clone(),
         next: pending.clone(),
-        expectations: vec![expectation],
-        intents: vec![
-            authoring::TypeRepairIntent::ConfigureResource(Box::new(
+        edit: authoring::PreparedEdit {
+            catalog: prepared.catalog.clone(),
+            expectations: vec![expectation],
+            intents: vec![authoring::EditIntent::ConfigureResource(Box::new(
                 authoring::ResourceConfigurationIntent {
                     resource: location.resource.clone(),
                     configuration: pending.clone(),
                     _unrecognized: None,
                 },
-            )),
-            authoring::TypeRepairIntent::Clear(Box::new(location.clone())),
-        ],
+            ))],
+            _unrecognized: None,
+        },
         link_repairs: vec![],
         cleared_locations: vec![location],
         _unrecognized: None,
@@ -593,8 +598,8 @@ fn complete_authoring_intent_vocabulary_and_preview_identity_round_trip() {
             counterpart: Some(authoring::CounterpartChoice::New(Box::new(
                 authoring::NewCounterpartChoice {
                     containing: location.clone(),
-                    prepared: catalog::PreparedCreation {
-                        record: record.clone(),
+                    prepared: catalog::PreparedValue {
+                        content: catalog::PreparedContent::Record(Box::new(record.clone())),
                         findings: vec![],
                         _unrecognized: None,
                     },
@@ -633,14 +638,17 @@ fn complete_authoring_intent_vocabulary_and_preview_identity_round_trip() {
     }
 
     let preview = authoring::TypeArgumentChangePreview {
-        catalog: wasmcloud_utils::skir::base::editor::v1::type_catalog::CatalogGeneration {
-            value: "catalog:wire".to_owned(),
-            _unrecognized: None,
-        },
         resource,
         next: TypeSelection::Complete(Box::new(named(declared(RESOURCE_ID), vec![]))),
-        expectations: vec![],
-        intents: vec![],
+        edit: authoring::PreparedEdit {
+            catalog: wasmcloud_utils::skir::base::editor::v1::type_catalog::CatalogGeneration {
+                value: "catalog:wire".to_owned(),
+                _unrecognized: None,
+            },
+            expectations: vec![],
+            intents: vec![],
+            _unrecognized: None,
+        },
         link_repairs: vec![],
         cleared_locations: vec![location],
         _unrecognized: None,

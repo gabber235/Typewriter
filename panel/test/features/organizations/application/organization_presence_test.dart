@@ -11,6 +11,52 @@ const _ownSubject =
 const _wildcardSubject = "typewriter.presence.organization.org1.user.*";
 
 void main() {
+  test("generated route owns presence subjects and actor capture", () {
+    final organizationId = skir.recordId("organization:org1");
+
+    expect(
+      OrganizationPresenceRouteEvent.subject(
+        userId: "authenticated-user",
+        organizationId: organizationId,
+      ),
+      _ownSubject,
+    );
+    expect(
+      OrganizationPresenceRouteEvent.subscriptionPattern(
+        organizationId: organizationId,
+      ),
+      _wildcardSubject,
+    );
+    expect(
+      OrganizationPresenceRouteEvent.userIdFromSubject(
+        "typewriter.presence.organization.org1.user.remote-user",
+        organizationId: organizationId,
+      ),
+      "remote-user",
+    );
+    expect(
+      OrganizationPresenceRouteEvent.userIdFromSubject(
+        "typewriter.presence.organization.org2.user.remote-user",
+        organizationId: organizationId,
+      ),
+      isNull,
+    );
+    expect(
+      OrganizationPresenceRouteEvent.userIdFromSubject(
+        "typewriter.presence.organization.org1.user.bad user",
+        organizationId: organizationId,
+      ),
+      isNull,
+    );
+    expect(
+      OrganizationPresenceRouteEvent.userIdFromSubject(
+        "typewriter.presence.organization.org1.remote-user",
+        organizationId: organizationId,
+      ),
+      isNull,
+    );
+  });
+
   test("publishes route presence on the authenticated user subject", () async {
     final harness = _Harness(
       route: "/organization/org1/realm/realm1/book/book1/page/page1",
@@ -25,7 +71,7 @@ void main() {
     expect(harness.nats.subscriptionSubjects, [_wildcardSubject]);
     expect(harness.nats.publications, hasLength(1));
     expect(harness.nats.publications.single.subject, _ownSubject);
-    final event = skir.PresenceEvent.serializer.fromBytes(
+    final event = OrganizationPresenceRouteEvent.serializer.fromBytes(
       harness.nats.publications.single.payload,
     );
     final active = switch (event) {
@@ -46,7 +92,7 @@ void main() {
     subscription.close();
     harness.container.dispose();
     await Future<void>.delayed(Duration.zero);
-    final left = skir.PresenceEvent.serializer.fromBytes(
+    final left = OrganizationPresenceRouteEvent.serializer.fromBytes(
       harness.nats.publications.last.payload,
     );
     expect(left, isA<skir.PresenceEvent_leftWrapper>());
@@ -138,8 +184,11 @@ final class _Harness {
 
   void emit(String userId, skir.PresenceEvent event) {
     nats.emitMessageOnSubject(
-      "typewriter.presence.organization.org1.user.$userId",
-      skir.PresenceEvent.serializer.toBytes(event),
+      OrganizationPresenceRouteEvent.subject(
+        userId: userId,
+        organizationId: skir.recordId("organization:org1"),
+      ),
+      OrganizationPresenceRouteEvent.serializer.toBytes(event),
     );
   }
 }

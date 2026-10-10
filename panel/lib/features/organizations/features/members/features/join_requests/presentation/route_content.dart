@@ -10,7 +10,7 @@ class JoinRequestsTab extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final requestsAsync = ref.watch(organizationJoinRequestsProvider);
+    final requestsAsync = ref.watch(visibleOrganizationJoinRequestsProvider);
 
     return requestsAsync(
       name: "Join Requests",

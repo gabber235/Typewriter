@@ -1,8 +1,5 @@
-use std::collections::HashMap;
-
 use wasmcloud_utils::{
     database::RecordId,
-    decode_skir, extract_param,
     skir::base::organization::v1::user::{
         WatchUserOrganizationsRequest, WatchUserOrganizationsResponse,
     },
@@ -14,15 +11,14 @@ use wasmcloud_utils::{
 /// The snapshot helper reads memberships and the user's organization sequence. Later membership
 /// changes are delivered on the user's organization change stream, so callers can apply deltas or
 /// request a fresh snapshot after a sequence gap.
-#[tracing::instrument(skip(msg, params))]
+#[tracing::instrument(skip_all)]
 pub async fn handle_watch(
-    msg: NatsMessage,
-    params: HashMap<String, String>,
+    _msg: NatsMessage,
+    scope: wasmcloud_utils::transport_routes::UserScope,
+    _request: WatchUserOrganizationsRequest,
 ) -> Result<WatchUserOrganizationsResponse, otel_wasi::Error> {
-    let user_id = extract_param!(params, user_id)?;
+    let user_id = scope.user.as_str();
     otel_wasi::main_attribute!("user.id" = user_id.to_string());
-    let _request = decode_skir!(WatchUserOrganizationsRequest, &msg.body)?;
-
     wasmcloud_utils::database::organization::snapshots::organizations(RecordId::new(
         "user", user_id,
     ))

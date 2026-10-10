@@ -36,32 +36,19 @@ final class ServiceResourceRepository {
   /// value by service identity and revision.
   Stream<skir.OrganizationServicesChanged> get identities => _identities.stream;
 
-  /// Builds the authenticated subject for an organization operation.
-  Future<String> subject(String operation) {
-    final result = _resolveSubject(operation);
-    unawaited(result.then<void>((_) {}, onError: (Object _, StackTrace _) {}));
-    return result;
-  }
-
-  Future<String> _resolveSubject(String operation) async {
-    session.checkActive();
-    final user = await session.userId;
-    session.checkActive();
-    if (user == null) throw ApiException.notAuthenticated();
-    return "cloud.to.user.$user.organization.${organization.id}.$operation";
-  }
-
   /// Fetches the current topology snapshot for refresh or initial state.
   ///
   /// Topology watches are owned by the provider layer. This request is scoped
   /// to the repository session and does not create a watch lifetime.
   Future<OrganizationTopology> topology() async {
+    final operation = skir.WatchOrganizationTopologyRequest().operation(
+      userId: session.requireUserId(),
+      organizationId: organization,
+    );
     final response = await session.transport.request(
-      subject("topology.watch"),
-      skir.WatchOrganizationTopologyRequest.serializer.toBytes(
-        skir.WatchOrganizationTopologyRequest(),
-      ),
-      skir.WatchOrganizationTopologyResponse.serializer,
+      operation.subject,
+      operation.requestBytes,
+      operation.responseSerializer,
     );
     session.checkActive();
     if (response is! skir.WatchOrganizationTopologyResponse_listWrapper) {
@@ -73,12 +60,14 @@ final class ServiceResourceRepository {
   /// Fetches the current service identity snapshot for refresh or initial
   /// state.
   Future<List<Service>> services() async {
+    final operation = skir.WatchOrganizationServicesRequest().operation(
+      userId: session.requireUserId(),
+      organizationId: organization,
+    );
     final response = await session.transport.request(
-      subject("services.watch"),
-      skir.WatchOrganizationServicesRequest.serializer.toBytes(
-        skir.WatchOrganizationServicesRequest(),
-      ),
-      skir.WatchOrganizationServicesResponse.serializer,
+      operation.subject,
+      operation.requestBytes,
+      operation.responseSerializer,
     );
     session.checkActive();
     return switch (response) {
@@ -117,9 +106,10 @@ final class ServiceResourceRepository {
       registrationToken: token,
     );
     return session.transport.prepare(
-      subject("services.bind"),
-      skir.BindServiceRequest.serializer.toBytes(request),
-      skir.BindServiceResponse.serializer,
+      request.operation(
+        userId: session.requireUserId(),
+        organizationId: organization,
+      ),
       submissionId: request.operationId,
       replay: SubmissionReplay.identicalRequest,
       label: "Bind service",
@@ -162,9 +152,10 @@ final class ServiceResourceRepository {
       serviceId: service.id,
     );
     return session.transport.prepare(
-      subject("services.unbind"),
-      skir.UnbindServiceRequest.serializer.toBytes(request),
-      skir.UnbindServiceResponse.serializer,
+      request.operation(
+        userId: session.requireUserId(),
+        organizationId: organization,
+      ),
       submissionId: request.operationId,
       replay: SubmissionReplay.identicalRequest,
       resources: {(organization, service)},
@@ -214,9 +205,10 @@ final class ServiceResourceRepository {
       execution: execution,
     );
     return session.transport.prepare(
-      subject("topology.configure"),
-      skir.ConfigureServiceHostRequest.serializer.toBytes(request),
-      skir.ConfigureServiceHostResponse.serializer,
+      request.operation(
+        userId: session.requireUserId(),
+        organizationId: organization,
+      ),
       submissionId: request.operationId,
       replay: SubmissionReplay.identicalRequest,
       resources: {(organization, host)},
@@ -269,9 +261,10 @@ final class ServiceResourceRepository {
       name: name,
     );
     return session.transport.prepare(
-      subject("services.update"),
-      skir.UpdateOrganizationServiceRequest.serializer.toBytes(request),
-      skir.UpdateOrganizationServiceResponse.serializer,
+      request.operation(
+        userId: session.requireUserId(),
+        organizationId: organization,
+      ),
       submissionId: request.operationId,
       replay: SubmissionReplay.identicalRequest,
       resources: {(organization, service)},

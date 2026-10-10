@@ -19,9 +19,7 @@ import "../../kernel/v1/color.dart" as _lib_kernel_v1_color;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 import "../../kernel/v1/record_id.dart" as _lib_kernel_v1_record_id;
 
-// -----------------------------------------------------------------------------
 // struct OrganizationRole
-// -----------------------------------------------------------------------------
 
 sealed class OrganizationRole_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get roleId;
@@ -96,7 +94,7 @@ final class OrganizationRole implements OrganizationRole_orMutable {
     false,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   OrganizationRole toFrozen() => this;
@@ -229,7 +227,7 @@ final class OrganizationRole_mutable implements OrganizationRole_orMutable {
     this.deletable,
   );
 
-  /// If the value of [roleId] is already mutable, returns it as-is.
+  /// If the value of [roleId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [roleId] and returns it.
   _lib_kernel_v1_record_id.RecordId_mutable get mutableRoleId {
     final value = this.roleId;
@@ -241,7 +239,7 @@ final class OrganizationRole_mutable implements OrganizationRole_orMutable {
     }
   }
 
-  /// If the value of [color] is already mutable, returns it as-is.
+  /// If the value of [color] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [color] and returns it.
   _lib_kernel_v1_color.Color_mutable get mutableColor {
     final value = this.color;
@@ -264,9 +262,7 @@ final class OrganizationRole_mutable implements OrganizationRole_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct WatchOrganizationRolesRequest
-// -----------------------------------------------------------------------------
 
 sealed class WatchOrganizationRolesRequest_orMutable {
   WatchOrganizationRolesRequest toFrozen();
@@ -289,7 +285,7 @@ final class WatchOrganizationRolesRequest
   static WatchOrganizationRolesRequest_mutable mutable() =>
       WatchOrganizationRolesRequest_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   WatchOrganizationRolesRequest toFrozen() => this;
@@ -352,9 +348,7 @@ final class WatchOrganizationRolesRequest_mutable
       WatchOrganizationRolesRequest().._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum WatchOrganizationRolesResponse
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```

@@ -1,260 +1,113 @@
 package com.typewritermc.realm.routes
 
-import build.skir.Serializer
-import build.skir.service.Method
-import com.typewritermc.loader.api.RealmServiceAddress
-import com.typewritermc.loader.api.realmEventAddress
-import com.typewritermc.loader.api.realmRequestAddress
-import com.typewritermc.services.libs.communicator.address.AddressTemplate
-import com.typewritermc.services.libs.communicator.address.MessageAddress
-import com.typewritermc.services.libs.communicator.client.EncodedPublication
-import com.typewritermc.services.libs.communicator.contract.EventContract
-import com.typewritermc.services.libs.communicator.contract.OperationName
+import com.typewritermc.protocol.transport.generated.RealmRouteScope
+import com.typewritermc.protocol.transport.generated.authoringChanged
+import com.typewritermc.protocol.transport.generated.authoringCompiledChanged
+import com.typewritermc.protocol.transport.generated.authoringCompiledQuery
+import com.typewritermc.protocol.transport.generated.authoringCompiledStatusQuery
+import com.typewritermc.protocol.transport.generated.authoringEditCommit
+import com.typewritermc.protocol.transport.generated.authoringPublicationWatch
+import com.typewritermc.protocol.transport.generated.authoringPublish
+import com.typewritermc.protocol.transport.generated.authoringSearch
+import com.typewritermc.protocol.transport.generated.authoringStateQuery
+import com.typewritermc.protocol.transport.generated.authoringTypeCommit
+import com.typewritermc.protocol.transport.generated.authoringTypePreview
+import com.typewritermc.protocol.transport.generated.editorCapabilityCommandInvoke
+import com.typewritermc.protocol.transport.generated.editorCapabilityComputationInvoke
+import com.typewritermc.protocol.transport.generated.editorCatalogFetch
+import com.typewritermc.protocol.transport.generated.editorCatalogWatch
+import com.typewritermc.protocol.transport.generated.editorPresentationSearch
+import com.typewritermc.protocol.transport.generated.editorPresentationSearchCancel
+import com.typewritermc.protocol.transport.generated.editorValuePrepare
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponseClassifier
 import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
 import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
 import com.typewritermc.services.libs.communicator.contract.ResponseVariant
-import com.typewritermc.services.libs.communicator.contract.UnaryContract
-import com.typewritermc.services.libs.communicator.contract.WatchContract
-import com.typewritermc.services.libs.communicator.skir.asPayloadCodec
-import com.typewritermc.services.libs.communicator.skir.skirUnaryContract
-import com.typewritermc.services.libs.communicator.skir.skirWatchContract
-import com.typewritermc.services.libs.telemetry.ErrorSlug
-import skirout.editor.v1.authoring.AuthoringChanged
-import skirout.editor.v1.authoring.CommitPreparedEdit
 import skirout.editor.v1.authoring.CommitPreparedEditResponse
-import skirout.editor.v1.authoring.PrepareTypeArgumentChange
 import skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse
-import skirout.editor.v1.authoring.PreviewTypeArgumentChange
 import skirout.editor.v1.authoring.PreviewTypeArgumentChangeResponse
-import skirout.editor.v1.authoring.QueryAuthoringState
 import skirout.editor.v1.authoring.QueryAuthoringStateResponse
-import skirout.editor.v1.authoring.SearchAuthoring
 import skirout.editor.v1.authoring.SearchAuthoringResponse
 import skirout.editor.v1.capability.CommandResult
 import skirout.editor.v1.capability.ComputationResult
-import skirout.editor.v1.capability.InvokeRealmCommand
-import skirout.editor.v1.capability.InvokeRealmComputation
 import skirout.editor.v1.catalog.CatalogFetchResult
 import skirout.editor.v1.catalog.CatalogInvalidated
-import skirout.editor.v1.catalog.FetchEditorCatalog
-import skirout.editor.v1.catalog.PrepareValue
 import skirout.editor.v1.catalog.PrepareValueResult
-import skirout.editor.v1.catalog.WatchEditorCatalog
-import skirout.editor.v1.compiled_content.CompiledContentChanged
-import skirout.editor.v1.compiled_content.QueryCompiledResourceStatus
 import skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse
-import skirout.editor.v1.compiled_content.QueryPublishedContent
 import skirout.editor.v1.compiled_content.QueryPublishedContentResponse
 import skirout.editor.v1.publication.PublicationReport
-import skirout.editor.v1.publication.PublishAuthoring
 import skirout.editor.v1.publication.PublishAuthoringResponse
-import skirout.editor.v1.publication.WatchPublication
-import skirout.editor.v1.search.CancelRealmPresentationSearch
 import skirout.editor.v1.search.CancelRealmPresentationSearchResult
+import skirout.editor.v1.search.RealmPresentationSearchStatus
+import skirout.editor.v1.search.RealmPresentationSearchUpdate
 
-typealias RealmAddress = RealmServiceAddress
-
-/**
- * Centralizes typed Realm request, event, and watch contracts for authoring and editor operations.
- *
- * Addresses use logical Realm identity. Shared codecs, failure responses, and response classifiers keep client and
- * router semantics aligned without creating subscriptions at construction.
- */
+/** Binds generated Realm route metadata to local response policy. */
 internal class EditorContracts(
-    private val address: RealmAddress,
+    private val address: RealmRouteScope,
 ) {
     val fetchEditorCatalog =
-        watch(
-            FetchEditorCatalog,
-            CatalogFetchResult.serializer,
-            "editor.catalog.fetch",
-            CatalogFetchResult.createInternalError(),
+        address.editorCatalogFetch(
+            policy(CatalogFetchResult.createInternalError(), catalogFetchResponseClassifier()),
             catalogFetchResponseClassifier(),
-            catalogFetchResponseClassifier(),
-            updateAddressResolver = { realm, request ->
-                scopedUpdateAddress("editor.catalog.fetch", realm, request.transferId)
-            },
         )
     val watchEditorCatalog =
-        watch(
-            WatchEditorCatalog,
-            CatalogInvalidated.serializer,
-            "editor.catalog.invalidate",
-            CatalogInvalidated.partial(),
-            responseClassifier(ResponseOutcome.INTERNAL_ERROR),
+        address.editorCatalogWatch(
+            policy(CatalogInvalidated.partial(), responseClassifier(ResponseOutcome.INTERNAL_ERROR)),
             responseClassifier(ResponseOutcome.SUCCESS),
         )
-    val prepareValue =
-        unary(
-            PrepareValue,
-            "editor.creation.prepare",
-            PrepareValueResult.createInternalError(),
+    val prepareValue = address.editorValuePrepare(policy(PrepareValueResult.createInternalError()))
+    val watchRealmPresentationSearch =
+        address.editorPresentationSearch(
+            policy(
+                unavailableRealmPresentationSearchUpdate("", "Realm presentation search failed"),
+                realmPresentationSearchResponseClassifier(),
+            ),
+            realmPresentationSearchResponseClassifier(),
         )
-    val watchRealmPresentationSearch = realmPresentationSearchContract(address)
     val cancelRealmPresentationSearch =
-        unary(
-            CancelRealmPresentationSearch,
-            "editor.presentation.search.cancel",
-            CancelRealmPresentationSearchResult.UNAVAILABLE,
-        )
+        address.editorPresentationSearchCancel(policy(CancelRealmPresentationSearchResult.UNAVAILABLE))
     val invokeRealmComputation =
-        unary(
-            InvokeRealmComputation,
-            "editor.capability.computation.invoke",
-            ComputationResult.createUnavailable(
-                invocationId =
-                    skirout.editor.v1.capability
-                        .InvocationId(value = ""),
-                diagnostics = emptyList(),
+        address.editorCapabilityComputationInvoke(
+            policy(
+                ComputationResult.createUnavailable(
+                    invocationId =
+                        skirout.editor.v1.capability
+                            .InvocationId(value = ""),
+                    diagnostics = emptyList(),
+                ),
             ),
         )
     val invokeRealmCommand =
-        unary(
-            InvokeRealmCommand,
-            "editor.capability.command.invoke",
-            CommandResult.createUnavailable(
-                invocationId =
-                    skirout.editor.v1.capability
-                        .InvocationId(value = ""),
-                diagnostics = emptyList(),
+        address.editorCapabilityCommandInvoke(
+            policy(
+                CommandResult.createUnavailable(
+                    invocationId =
+                        skirout.editor.v1.capability
+                            .InvocationId(value = ""),
+                    diagnostics = emptyList(),
+                ),
             ),
         )
     val queryAuthoringState =
-        watch(
-            QueryAuthoringState,
-            QueryAuthoringStateResponse.serializer,
-            "editor.authoring.state.query",
-            QueryAuthoringStateResponse.createInternalError(),
-            updateAddressResolver = { realm, request ->
-                scopedUpdateAddress("editor.authoring.state.query", realm, request.transferId)
-            },
-        )
-    val commitPreparedEdit =
-        unary(
-            CommitPreparedEdit,
-            "editor.authoring.edit.commit",
-            CommitPreparedEditResponse.createInternalError(),
-        )
-    val previewTypeArgumentChange =
-        unary(
-            PreviewTypeArgumentChange,
-            "editor.authoring.type.preview",
-            PreviewTypeArgumentChangeResponse.createInternalError(),
-        )
-    val prepareTypeArgumentChange =
-        unary(
-            PrepareTypeArgumentChange,
-            "editor.authoring.type.commit",
-            PrepareTypeArgumentChangeResponse.createInternalError(),
-        )
-    val searchAuthoring =
-        unary(
-            SearchAuthoring,
-            "editor.authoring.search",
-            SearchAuthoringResponse.createInternalError(),
-        )
-    val authoringChanged =
-        EventContract(
-            OperationName.of("editor.authoring.changed"),
-            "editor.authoring.changed".realmEventAddress(),
-            AuthoringChanged.serializer.asPayloadCodec(),
-            ErrorSlug.of("editor-authoring-changed-failed"),
-        )
+        address.authoringStateQuery(policy(QueryAuthoringStateResponse.createInternalError()), responseClassifier())
+    val commitPreparedEdit = address.authoringEditCommit(policy(CommitPreparedEditResponse.createInternalError()))
+    val previewTypeArgumentChange = address.authoringTypePreview(policy(PreviewTypeArgumentChangeResponse.createInternalError()))
+    val prepareTypeArgumentChange = address.authoringTypeCommit(policy(PrepareTypeArgumentChangeResponse.createInternalError()))
+    val searchAuthoring = address.authoringSearch(policy(SearchAuthoringResponse.createInternalError()))
+    val authoringChanged = address.authoringChanged
     val queryPublishedContent =
-        watch(
-            QueryPublishedContent,
-            QueryPublishedContentResponse.serializer,
-            "editor.authoring.compiled.query",
-            QueryPublishedContentResponse.createInternalError(),
-            responseClassifier(),
-            updateAddressResolver = { realm, request -> scopedUpdateAddress("editor.authoring.compiled.query", realm, request.transferId) },
-        )
-    val compiledContentChanged =
-        EventContract(
-            OperationName.of("editor.authoring.compiled.changed"),
-            "editor.authoring.compiled.changed".realmEventAddress(),
-            CompiledContentChanged.serializer.asPayloadCodec(),
-            ErrorSlug.of("editor-authoring-compiled-changed-failed"),
-        )
+        address.authoringCompiledQuery(policy(QueryPublishedContentResponse.createInternalError()), responseClassifier())
+    val compiledContentChanged = address.authoringCompiledChanged
     val queryCompiledResourceStatus =
-        unary(
-            QueryCompiledResourceStatus,
-            "editor.authoring.compiled.status.query",
-            QueryCompiledResourceStatusResponse.createInternalError(),
-        )
-    val publishAuthoring =
-        unary(
-            PublishAuthoring,
-            "editor.authoring.publish",
-            PublishAuthoringResponse.createInternalError(),
-        )
+        address.authoringCompiledStatusQuery(policy(QueryCompiledResourceStatusResponse.createInternalError()))
+    val publishAuthoring = address.authoringPublish(policy(PublishAuthoringResponse.createInternalError()))
     val watchPublication =
-        watch(
-            WatchPublication,
-            PublicationReport.serializer,
-            "editor.authoring.publication.watch",
-            PublicationReport
-                .partial(),
-            responseClassifier(ResponseOutcome.INTERNAL_ERROR),
+        address.authoringPublicationWatch(
+            policy(PublicationReport.partial(), responseClassifier(ResponseOutcome.INTERNAL_ERROR)),
             responseClassifier(ResponseOutcome.SUCCESS),
         )
-
-    private fun <Request : Any, Response : Any> unary(
-        method: Method<Request, Response>,
-        suffix: String,
-        internalFailureResponse: Response,
-        classifier: ResponseClassifier<Response> = responseClassifier(),
-    ): UnaryContract<RealmAddress, Request, Response> =
-        skirUnaryContract(
-            method = method,
-            name = OperationName.of(suffix),
-            address = suffix.realmRequestAddress().subscribedAt(address),
-            responsePolicy = ResponsePolicy(internalFailureResponse, classifier),
-            failureSlug = ErrorSlug.of(suffix.replace('.', '-') + "-failed"),
-        )
-
-    private fun <Request : Any, Response : Any> watch(
-        method: Method<Request, Response>,
-        updateSerializer: Serializer<Response>,
-        suffix: String,
-        internalFailureResponse: Response,
-        initialClassifier: ResponseClassifier<Response> = responseClassifier(),
-        updateClassifier: ResponseClassifier<Response> = initialClassifier,
-        updateFilter: (Request, Response) -> Boolean = { _, _ -> true },
-        updateAddressResolver: ((RealmAddress, Request) -> MessageAddress)? = null,
-    ): WatchContract<RealmAddress, Request, Response, Response> =
-        skirWatchContract(
-            method = method,
-            updateSerializer = updateSerializer,
-            name = OperationName.of(suffix),
-            requestAddress = suffix.realmRequestAddress().subscribedAt(address),
-            updateAddress = suffix.realmEventAddress(),
-            initialPolicy = ResponsePolicy(internalFailureResponse, initialClassifier),
-            updateClassifier = updateClassifier,
-            failureSlug = ErrorSlug.of(suffix.replace('.', '-') + "-failed"),
-            updateFilter = updateFilter,
-            updateAddressResolver = updateAddressResolver,
-        )
 }
-
-private fun scopedUpdateAddress(
-    suffix: String,
-    address: RealmAddress,
-    token: String,
-): MessageAddress {
-    require(token.matches(Regex("[A-Za-z0-9_-]{1,64}"))) {
-        "Transfer token must be one safe subject segment"
-    }
-    return MessageAddress.of("${suffix.realmEventAddress().render(address).value}.$token")
-}
-
-/** Encodes a watch update for direct publication outside the request handler. */
-internal fun <Request : Any, Initial : Any, Update : Any> WatchContract<RealmAddress, Request, Initial, Update>.encodeUpdate(
-    address: RealmAddress,
-    update: Update,
-): EncodedPublication = EncodedPublication(updateAddress.render(address), updateCodec.encode(update))
 
 private fun catalogFetchResponseClassifier(): ResponseClassifier<CatalogFetchResult> =
     ResponseClassifier { response ->
@@ -267,14 +120,52 @@ private fun catalogFetchResponseClassifier(): ResponseClassifier<CatalogFetchRes
         ResponseClassification(outcome, response.variant())
     }
 
+private fun realmPresentationSearchResponseClassifier(): ResponseClassifier<RealmPresentationSearchUpdate> =
+    ResponseClassifier { response ->
+        val outcome =
+            when (response) {
+                is RealmPresentationSearchUpdate.SnapshotWrapper -> {
+                    when (response.value.status) {
+                        RealmPresentationSearchStatus.LOADING,
+                        RealmPresentationSearchStatus.READY,
+                        -> ResponseOutcome.SUCCESS
+
+                        else -> ResponseOutcome.DOMAIN_ERROR
+                    }
+                }
+
+                is RealmPresentationSearchUpdate.UnavailableWrapper -> {
+                    ResponseOutcome.INTERNAL_ERROR
+                }
+
+                else -> {
+                    ResponseOutcome.DOMAIN_ERROR
+                }
+            }
+        ResponseClassification(outcome, response.variant())
+    }
+
+private fun <Response : Any> policy(
+    internalFailureResponse: Response,
+    classifier: ResponseClassifier<Response> = responseClassifier(),
+) = ResponsePolicy(internalFailureResponse, classifier)
+
 private fun <Response : Any> responseClassifier(): ResponseClassifier<Response> =
     ResponseClassifier { response ->
         val variant = response.variant()
         val outcome =
             when (variant.value) {
-                "internal-error", "unavailable" -> ResponseOutcome.INTERNAL_ERROR
-                "success", "prepared", "committed", "result", "applied", "initial", "activated", "canceled" -> ResponseOutcome.SUCCESS
-                else -> ResponseOutcome.DOMAIN_ERROR
+                "internal-error", "unavailable" -> {
+                    ResponseOutcome.INTERNAL_ERROR
+                }
+
+                "success", "prepared", "committed", "result", "applied", "initial", "activated", "canceled" -> {
+                    ResponseOutcome.SUCCESS
+                }
+
+                else -> {
+                    ResponseOutcome.DOMAIN_ERROR
+                }
             }
         ResponseClassification(outcome, variant)
     }

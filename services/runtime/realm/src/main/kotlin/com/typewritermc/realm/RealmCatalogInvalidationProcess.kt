@@ -1,8 +1,8 @@
 package com.typewritermc.realm
 
+import com.typewritermc.protocol.transport.generated.RealmRouteScope
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.routes.EditorContracts
-import com.typewritermc.realm.routes.RealmAddress
 import com.typewritermc.realm.routes.requirePublished
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.telemetry.ErrorSlug
@@ -44,7 +44,7 @@ class RealmCatalogInvalidationProcess internal constructor(
      */
     internal suspend fun replaceCommunicator(
         communicator: Communicator,
-        address: RealmAddress,
+        address: RealmRouteScope,
     ) {
         stop()
         val contract = EditorContracts(address).watchEditorCatalog

@@ -18,9 +18,7 @@ import "package:skir_client/skir_client.dart" as _skir;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 import "./typed_value.dart" as _lib_editor_v1_typed_value;
 
-// -----------------------------------------------------------------------------
 // struct CatalogPresentationSubject
-// -----------------------------------------------------------------------------
 
 sealed class CatalogPresentationSubject_orMutable {
   _lib_editor_v1_type_catalog.TypeUse get target;
@@ -59,7 +57,7 @@ final class CatalogPresentationSubject
         _lib_editor_v1_typed_value.PortableValue.defaultInstance,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CatalogPresentationSubject toFrozen() => this;
@@ -136,7 +134,7 @@ final class CatalogPresentationSubject_mutable
 
   CatalogPresentationSubject_mutable._(this.target, this.descriptor);
 
-  /// If the value of [descriptor] is already mutable, returns it as-is.
+  /// If the value of [descriptor] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [descriptor] and returns it.
   _lib_editor_v1_typed_value.PortableValue_mutable get mutableDescriptor {
     final value = this.descriptor;

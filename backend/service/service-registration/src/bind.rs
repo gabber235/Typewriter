@@ -1,6 +1,6 @@
 //! Completes the operator mediated half of service registration.
 //!
-//! A service first receives a temporary registration lease through `handle_status`. Binding is
+//! A service first receives a temporary registration lease through `handle_lease`. Binding is
 //! separate because it is an organization scoped operator action: the caller presents that lease,
 //! the transaction verifies its expiry and organization ownership, then atomically replaces the
 //! lease with the durable organization binding. Metadata updates and unbinding have different
@@ -12,24 +12,22 @@
 //! the organization service view and notify the registrar, but they do not become part of the
 //! database transaction.
 
-use std::collections::HashMap;
-
 use otel_wasi::ResultWithSlug;
 use serde::Deserialize;
 use wasmcloud_utils::{
-    database::{RecordId, read_query, transaction_query},
-    decode_skir, extract_params,
-    skir::base::service::v1::organization::OrganizationServicesChanged,
+    database::{RecordId, transaction_query},
+    publication::{CommittedChange, ProjectionRefresh, PublicationEffect, PublicationExecutor},
     skir::base::service::v1::registration::{
         BindServiceRequest, BindServiceResponse, BindServiceResponse_InvalidOperationIdError,
         BindServiceResponse_OperationIdentityReusedError, BindServiceResponse_Success,
-        ServiceBoundNotification,
     },
-    skir_domain_result, skir_variant,
+    skir_domain_result,
+    skir_utils::RecordIdKeyIdentity,
+    skir_variant,
     wasmcloud::messaging::types::NatsMessage,
 };
 
-use wasmcloud_utils::database::{organization::OrganizationRecord, service::ServiceRecord};
+use wasmcloud_utils::database::service::ServiceRecord;
 
 #[derive(Debug, Deserialize)]
 struct BindResult {
@@ -43,33 +41,37 @@ struct BindResult {
 /// handler publishes the organization snapshot and a service bound notification. Those effects
 /// are deliberately outside the transaction, so a publication failure can report an error after
 /// the binding itself is durable and a later snapshot can converge the view.
-#[tracing::instrument(skip(msg, params))]
+#[tracing::instrument(skip(msg, request))]
 pub async fn handle_bind(
     msg: NatsMessage,
-    params: HashMap<String, String>,
+    scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
+    request: BindServiceRequest,
 ) -> Result<BindServiceResponse, otel_wasi::Error> {
-    let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
+    let actor_id = scope.user.as_str();
+    let org_id = scope.organization.as_str();
     otel_wasi::main_attribute!(
         "actor.id" = actor_id.to_string(),
         "organization.id" = org_id.to_string()
     );
-    let request = decode_skir!(BindServiceRequest, &msg.body)?;
     if request.operation_id.is_empty() {
         return Ok(wasmcloud_utils::skir_variant!(
             BindServiceResponse::InvalidOperationIdError
         ));
     }
-    let receipt = wasmcloud_utils::database::mutation::receipt_id(
+    let receipt = wasmcloud_utils::database::mutation::MutationReceipt::new(
         actor_id,
         org_id,
         "BindService",
         &request.operation_id,
+        msg.body,
     );
     let organization_id = RecordId::new("organization", org_id);
 
-    let response = transaction_query!(
-        BindResult,
-        r#"
+    let response = receipt
+        .bind(
+            transaction_query!(
+                BindResult,
+                r#"
         BEGIN TRANSACTION;
         RETURN {
             LET $previous = fn::mutation::recall($receipt, $request_bytes);
@@ -106,14 +108,13 @@ LET $services = SELECT * FROM service
         };
         COMMIT TRANSACTION;
         "#,
-    )
-    .bind("registration_token", request.registration_token)
-    .bind("organization_id", organization_id)
-    .bind("receipt", receipt)
-    .bind("request_bytes", msg.body.clone())
-    .execute()
-    .await
-    .error_with_slug("service-bind-query-failed")?;
+            )
+            .bind("registration_token", request.registration_token)
+            .bind("organization_id", organization_id),
+        )
+        .execute()
+        .await
+        .error_with_slug("service-bind-query-failed")?;
     otel_wasi::main_attribute!(
         "db.query.attempts" = response.attempts().get() as i64,
         "db.query.retries" = response.attempts().get().saturating_sub(1) as i64,
@@ -124,42 +125,31 @@ LET $services = SELECT * FROM service
     let result = skir_domain_result!(BindServiceResponse, result,
         "operation-identity-reused-error" => {});
 
-    let service_id = result.service.id.key.to_string();
+    let service_id = result.service.id.key.raw_identity()?.to_owned();
     let service_name = result.service.name.clone();
     let role = result.service.role.clone().try_into()?;
-
-    // The database commit is authoritative. Publications are recovery friendly projections and
-    // must not be performed inside the transaction because messaging cannot roll back the bind.
-    wasmcloud_utils::skir_subjects::organization_services_changed(org_id)
-        .publish(OrganizationServicesChanged::Replace(
-            crate::watch::snapshot(org_id).await?,
-        ))
-        .await?;
-
-    let organization = read_query!("SELECT VALUE organization.* FROM ONLY $service")
-        .bind("service", result.service.id)
-        .execute()
-        .await
-        .error_with_slug("service-binding-snapshot-query-failed")?
-        .parse::<Option<OrganizationRecord>>()
-        .error_with_slug("service-binding-snapshot-parse-failed")?;
-    if let Some(organization) = organization {
-        wasmcloud_utils::skir_subjects::service_bound(&service_id)
-            .publish(ServiceBoundNotification {
-                organization_id: organization.id.key.to_string(),
-                organization_name: Some(organization.name),
-                _unrecognized: None,
-            })
-            .await?;
-    }
 
     otel_wasi::main_attribute!(
         "service.id" = service_id.clone(),
         "service.outcome" = "bound"
     );
-    Ok(skir_variant!(BindServiceResponse::Success {
-        service_id,
-        service_name: Some(service_name),
-        service_role: role,
-    }))
+    CommittedChange::new(
+        skir_variant!(BindServiceResponse::Success {
+            service_id,
+            service_name: Some(service_name),
+            service_role: role,
+        }),
+        [
+            PublicationEffect::Refresh(ProjectionRefresh::Services {
+                organization: org_id.to_owned(),
+            }),
+            PublicationEffect::Refresh(ProjectionRefresh::ServiceBinding {
+                service: result.service.id,
+            }),
+        ],
+    )
+    .publish_with(&PublicationExecutor {
+        refresher: crate::publication::ServiceProjectionRefresher,
+    })
+    .await
 }

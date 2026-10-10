@@ -23,14 +23,14 @@ import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.yield
 import kotlin.time.Duration
@@ -174,10 +174,11 @@ val NatsAdapterTest by testSuite {
                             client.onConnect = {
                                 coroutineScope {
                                     val entered = CompletableDeferred<Unit>()
-                                    val callback = launch {
-                                        entered.complete(Unit)
-                                        authentication(true) { "signed" }
-                                    }
+                                    val callback =
+                                        launch {
+                                            entered.complete(Unit)
+                                            authentication(true) { "signed" }
+                                        }
                                     entered.await()
                                     callback.cancelAndJoin()
                                 }

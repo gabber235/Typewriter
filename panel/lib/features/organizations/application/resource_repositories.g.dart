@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 
 part of 'resource_repositories.dart';
 
@@ -6,20 +6,20 @@ part of 'resource_repositories.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 /// Provides one resource repository owner for the active local work scope.
 ///
-/// Rebuilding the scope creates fresh transport and catalog dependencies; disposal
-/// cascades to all repositories cached by that owner.
+/// The owner retains its repositories across authenticated transport replacement
+/// and rebinds their active watches. Scope disposal cascades to every cached child.
 
 @ProviderFor(resourceRepositories)
 final resourceRepositoriesProvider = ResourceRepositoriesProvider._();
 
 /// Provides one resource repository owner for the active local work scope.
 ///
-/// Rebuilding the scope creates fresh transport and catalog dependencies; disposal
-/// cascades to all repositories cached by that owner.
+/// The owner retains its repositories across authenticated transport replacement
+/// and rebinds their active watches. Scope disposal cascades to every cached child.
 
 final class ResourceRepositoriesProvider
     extends
@@ -31,8 +31,8 @@ final class ResourceRepositoriesProvider
     with $Provider<ResourceRepositories> {
   /// Provides one resource repository owner for the active local work scope.
   ///
-  /// Rebuilding the scope creates fresh transport and catalog dependencies; disposal
-  /// cascades to all repositories cached by that owner.
+  /// The owner retains its repositories across authenticated transport replacement
+  /// and rebinds their active watches. Scope disposal cascades to every cached child.
   ResourceRepositoriesProvider._()
     : super(
         from: null,
@@ -68,4 +68,4 @@ final class ResourceRepositoriesProvider
 }
 
 String _$resourceRepositoriesHash() =>
-    r'2de3113cee315021c00a791a53bc97d05b0272b8';
+    r'831f0647c21866d44c7728ec51afa7ebfda2f24b';

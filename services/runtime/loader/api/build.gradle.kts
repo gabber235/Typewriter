@@ -17,6 +17,7 @@ buildConfig {
 version = "1.0.0"
 
 dependencies {
+    api(project(":file-transfer"))
     api(libs.kotlin.coroutines.core)
     api(libs.kotlin.serialize.core)
     api("com.typewritermc:imprint-model")

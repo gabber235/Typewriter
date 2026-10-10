@@ -4,6 +4,24 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 const _requestTimeout = Duration(seconds: 10);
 
+/// One fully resolved Skir request at the messaging boundary.
+///
+/// Generated route adapters own subject construction and serialization. This
+/// value snapshots their result so deferred submissions cannot observe later
+/// request mutation while application owners retain classification, replay,
+/// reservation, and integration policy.
+final class SkirRouteOperation<TResponse> {
+  SkirRouteOperation({
+    required this.subject,
+    required Uint8List requestBytes,
+    required this.responseSerializer,
+  }) : requestBytes = Uint8List.fromList(requestBytes).asUnmodifiableView();
+
+  final String subject;
+  final Uint8List requestBytes;
+  final skir.Serializer<TResponse> responseSerializer;
+}
+
 /// A value paired with the server sequence that produced it.
 ///
 /// Sequencing is application consistency state, not transport state. The
@@ -75,6 +93,67 @@ final class CollectionSequenceGap implements Exception {
   final int received;
 }
 
+/// Serializes sequenced broker and confirmed facts behind one snapshot gate.
+final class _SequencedAdmissionQueue<Value> {
+  _SequencedAdmissionQueue(this.apply);
+
+  final Future<void> Function(Value, int) apply;
+  Future<void> _tail = Future<void>.value();
+  Completer<void> _ready = Completer<void>();
+  var _generation = 0;
+  var _installed = false;
+  var _closed = false;
+  Object? _failure;
+  StackTrace? _failureStack;
+
+  void beginGeneration(int generation) {
+    if (_closed) return;
+    if (!_ready.isCompleted) _ready.complete();
+    _generation = generation;
+    _installed = false;
+    _failure = null;
+    _failureStack = null;
+    _ready = Completer<void>();
+  }
+
+  void snapshotInstalled(int generation) {
+    if (_closed || generation != _generation) return;
+    _installed = true;
+    if (!_ready.isCompleted) _ready.complete();
+  }
+
+  void snapshotFailed(int generation, Object error, StackTrace stackTrace) {
+    if (_closed || generation != _generation) return;
+    _failure = error;
+    _failureStack = stackTrace;
+    if (!_ready.isCompleted) _ready.complete();
+  }
+
+  Future<void> enqueue(Value event, {int? brokerGeneration}) {
+    final job = _tail.then((_) async {
+      while (!_closed && !_installed && _failure == null) {
+        await _ready.future;
+      }
+      if (_closed) return;
+      final failure = _failure;
+      if (failure != null) {
+        Error.throwWithStackTrace(failure, _failureStack!);
+      }
+      final generation = _generation;
+      if (brokerGeneration != null && brokerGeneration != generation) return;
+      await apply(event, generation);
+    });
+    _tail = job.catchError((Object _, StackTrace _) {});
+    return job;
+  }
+
+  void close() {
+    if (_closed) return;
+    _closed = true;
+    if (!_ready.isCompleted) _ready.complete();
+  }
+}
+
 /// Provides typed Skir request and watch adapters for a Riverpod scope.
 ///
 /// This is the protocol boundary above [NatsClient]. It performs serialization,
@@ -86,24 +165,22 @@ extension RefNatsExtension on Ref {
   /// typed response. Request adaptation stays here so callers never couple
   /// feature code to payload bytes or NATS package types.
   Future<TResponse> requestSkir<TResponse>(
-    String subject,
-    Uint8List requestBytes,
-    skir.Serializer<TResponse> serializer,
+    SkirRouteOperation<TResponse> operation,
   ) async {
     final telemetry = await read(panelTelemetryProvider.future);
     final client = read(natsProvider);
     final response = await telemetry.traceNats(
-      subject: subject,
-      payloadSize: requestBytes.length,
+      subject: operation.subject,
+      payloadSize: operation.requestBytes.length,
       operationName: "request",
       operation: (headers) => client.request(
-        subject,
-        requestBytes,
+        operation.subject,
+        operation.requestBytes,
         headers: headers,
         timeout: _requestTimeout,
       ),
     );
-    return serializer.fromBytes(response.payload);
+    return operation.responseSerializer.fromBytes(response.payload);
   }
 
   /// Watches one typed snapshot and event projection through a shared lifetime.
@@ -206,6 +283,13 @@ final class ProjectionWatcher<TData, TResponse, TEvent> {
             var connected = false;
             var generation = 0;
             var cleanup = Future<void>.value();
+            var replacement = Future<void>.value();
+            final sequencedPolicy = switch (reconciliation) {
+              final ProjectionSequenced<TData, TResponse, TEvent> policy =>
+                policy,
+              ProjectionLatest() => null,
+            };
+            late final _SequencedAdmissionQueue<TEvent>? admissions;
 
             Future<void> closeSubscription() {
               final currentMessages = messages;
@@ -222,10 +306,16 @@ final class ProjectionWatcher<TData, TResponse, TEvent> {
               if (!active) return;
               controller.addError(error, stackTrace);
               active = false;
+              admissions?.close();
               generation++;
               unawaited(() async {
                 await lifecycle?.cancel();
                 await confirmations?.cancel();
+                try {
+                  await replacement;
+                } on Object {
+                  // The delivery failure remains the primary terminal error.
+                }
                 try {
                   await closeSubscription();
                 } on Object {
@@ -235,10 +325,17 @@ final class ProjectionWatcher<TData, TResponse, TEvent> {
               }());
             }
 
+            late void Function(
+              Object error,
+              StackTrace stackTrace,
+              int failedGeneration,
+            )
+            recoverDelivery;
+
             Future<NatsSubscription> subscribe() => switch (delivery) {
               ProjectionDeliveryEphemeral() => client.subscribe(eventSubject),
-              ProjectionDeliveryOrdered(:final stream) =>
-                client.subscribeOrdered(stream, eventSubject),
+              ProjectionDeliveryPersistent(:final stream, :final consumer) =>
+                client.subscribePersistent(stream, consumer, eventSubject),
             };
 
             Future<void> installSnapshot(int expectedGeneration) async {
@@ -265,6 +362,7 @@ final class ProjectionWatcher<TData, TResponse, TEvent> {
                   });
                 case final ProjectionSequenced<TData, TResponse, TEvent> policy:
                   policy.installSnapshot(response, value);
+                  admissions?.snapshotInstalled(expectedGeneration);
                   final installed = policy.current;
                   controller.add(
                     () => active && generation == expectedGeneration
@@ -303,23 +401,70 @@ final class ProjectionWatcher<TData, TResponse, TEvent> {
               );
             }
 
-            Future<void> replaceSubscription(int expectedGeneration) async {
+            Future<NatsSubscription?> acquireSubscription(
+              int expectedGeneration,
+            ) async {
               await closeSubscription();
               if (!active || !connected || generation != expectedGeneration) {
-                return;
+                return null;
               }
 
               final next = await subscribe();
               if (!active || !connected || generation != expectedGeneration) {
                 await next.unsubscribe();
-                return;
+                return null;
               }
+              return next;
+            }
+
+            admissions = sequencedPolicy == null
+                ? null
+                : _SequencedAdmissionQueue<TEvent>(
+                    (event, epoch) =>
+                        applySequencedEvent(sequencedPolicy, event, epoch),
+                  );
+
+            Future<NatsSubscription?> scheduleAcquisition(
+              int expectedGeneration,
+            ) {
+              final operation = replacement.then(
+                (_) => acquireSubscription(expectedGeneration),
+              );
+              replacement = operation.then<void>(
+                (_) {},
+                onError: (Object _, StackTrace _) {},
+              );
+              return operation;
+            }
+
+            Future<void> replaceSubscription(int expectedGeneration) async {
+              final next = await scheduleAcquisition(expectedGeneration);
+              if (next == null) return;
               subscription = next;
               var events = Future<void>.value();
               final snapshotReady = Completer<void>();
               final nextMessages = next.messages.listen(
                 (message) {
                   if (!active || generation != expectedGeneration) return;
+                  if (admissions != null) {
+                    final TEvent event;
+                    try {
+                      event = eventSerializer.fromBytes(message.payload);
+                    } on Object catch (error, stackTrace) {
+                      controller.addError(error, stackTrace);
+                      return;
+                    }
+                    unawaited(
+                      admissions
+                          .enqueue(event, brokerGeneration: expectedGeneration)
+                          .catchError((Object error, StackTrace stackTrace) {
+                            if (active && generation == expectedGeneration) {
+                              controller.addError(error, stackTrace);
+                            }
+                          }),
+                    );
+                    return;
+                  }
                   events = events
                       .then((_) async {
                         await snapshotReady.future;
@@ -364,7 +509,7 @@ final class ProjectionWatcher<TData, TResponse, TEvent> {
                 },
                 onError: (Object error, StackTrace stackTrace) {
                   if (active && generation == expectedGeneration) {
-                    terminate(error, stackTrace);
+                    recoverDelivery(error, stackTrace, expectedGeneration);
                   }
                 },
               );
@@ -383,36 +528,76 @@ final class ProjectionWatcher<TData, TResponse, TEvent> {
               }
             }
 
+            recoverDelivery = (error, stackTrace, failedGeneration) {
+              if (!active || generation != failedGeneration) return;
+              if (error case NatsClientException(
+                kind: NatsFailureKind.timeout || NatsFailureKind.unavailable,
+              )) {
+                final recoveryGeneration = ++generation;
+                admissions?.beginGeneration(recoveryGeneration);
+                unawaited(
+                  Future<void>.delayed(const Duration(milliseconds: 250))
+                      .then((_) => replaceSubscription(recoveryGeneration))
+                      .catchError((Object next, StackTrace nextStackTrace) {
+                        admissions?.snapshotFailed(
+                          recoveryGeneration,
+                          next,
+                          nextStackTrace,
+                        );
+                        recoverDelivery(
+                          next,
+                          nextStackTrace,
+                          recoveryGeneration,
+                        );
+                      }),
+                );
+                return;
+              }
+              terminate(error, stackTrace);
+            };
+
             void observeLifecycle(NatsConnectionState state) {
               final nextConnected = state is NatsConnected;
               if (connected == nextConnected) return;
               connected = nextConnected;
               final nextGeneration = ++generation;
+              admissions?.beginGeneration(nextGeneration);
               unawaited(
-                replaceSubscription(nextGeneration)
-                    .catchError((Object error, StackTrace stackTrace) {
-                      if (active && generation == nextGeneration) {
-                        controller.addError(error, stackTrace);
-                      }
-                    }),
+                replaceSubscription(nextGeneration).catchError((
+                  Object error,
+                  StackTrace stackTrace,
+                ) {
+                  admissions?.snapshotFailed(nextGeneration, error, stackTrace);
+                  recoverDelivery(error, stackTrace, nextGeneration);
+                }),
               );
             }
 
             confirmations = confirmedEvents?.listen(
-              (event) => controller.add(() {
-                if (!active) return _ProjectionEmission.discarded();
-                if (reconciliation is! ProjectionLatest) {
-                  throw StateError(
-                    "Confirmed facts require latest reconciliation",
+              (event) {
+                if (admissions != null) {
+                  unawaited(
+                    admissions.enqueue(event).catchError((
+                      Object error,
+                      StackTrace stackTrace,
+                    ) {
+                      if (active) controller.addError(error, stackTrace);
+                    }),
                   );
+                  return;
                 }
-                final current = latest;
-                if (current == null) {
-                  throw StateError("Confirmed facts require an initial value");
-                }
-                latest = (reduceConfirmed ?? reduce)(current, event);
-                return _ProjectionEmission.delivered(latest);
-              }),
+                controller.add(() {
+                  if (!active) return _ProjectionEmission.discarded();
+                  final current = latest;
+                  if (current == null) {
+                    throw StateError(
+                      "Confirmed facts require an initial value",
+                    );
+                  }
+                  latest = (reduceConfirmed ?? reduce)(current, event);
+                  return _ProjectionEmission.delivered(latest);
+                });
+              },
               onError: (Object error, StackTrace stackTrace) {
                 if (active) controller.addError(error, stackTrace);
               },
@@ -429,9 +614,15 @@ final class ProjectionWatcher<TData, TResponse, TEvent> {
             Future<void> cancel() async {
               if (!active) return;
               active = false;
+              admissions?.close();
               generation++;
               await lifecycle?.cancel();
               await confirmations?.cancel();
+              try {
+                await replacement;
+              } on Object {
+                // Cancellation has no listener that can receive replacement errors.
+              }
               try {
                 await closeSubscription();
               } on Object {

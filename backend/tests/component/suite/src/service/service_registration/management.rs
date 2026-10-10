@@ -4,9 +4,9 @@ use typewriter_component_test::prelude::skir_record_id;
 use wasmcloud_utils::skir::base::{
     kernel::v1::record_id::RecordId,
     service::v1::organization::{
-        OrganizationServicesChanged, ServiceUpdateValidationError, UpdateOrganizationServiceRequest,
-        UpdateOrganizationServiceResponse, WatchOrganizationServicesRequest,
-        WatchOrganizationServicesResponse,
+        OrganizationServicesChanged, ServiceUpdateValidationError,
+        UpdateOrganizationServiceRequest, UpdateOrganizationServiceResponse,
+        WatchOrganizationServicesRequest, WatchOrganizationServicesResponse,
     },
 };
 

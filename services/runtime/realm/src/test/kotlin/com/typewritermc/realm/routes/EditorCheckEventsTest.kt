@@ -9,6 +9,7 @@ import com.typewritermc.checking.CheckOutcome
 import com.typewritermc.checking.FindingStatus
 import com.typewritermc.configuration.RuleId
 import com.typewritermc.configuration.RuleOrigin
+import com.typewritermc.protocol.transport.generated.RealmRouteScope
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
@@ -143,7 +144,7 @@ val EditorCheckEventsTest by testSuite {
 }
 
 private class HintConnection : AutoCloseable {
-    val address = RealmAddress("realm", "organization")
+    val address = RealmRouteScope(organizationId = "organization", realmId = "realm")
     val contracts = EditorContracts(address)
     val transport = FakeMessageTransport()
     private val telemetry = TelemetryTestHarness.create()

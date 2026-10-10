@@ -25,23 +25,25 @@ pub struct OrganizationPresence {
 
 impl OrganizationPresence {
     pub fn default_ref() -> &'static OrganizationPresence {
-        static D: std::sync::LazyLock<OrganizationPresence> = std::sync::LazyLock::new(OrganizationPresence::default);
+        static D: std::sync::LazyLock<OrganizationPresence> =
+            std::sync::LazyLock::new(OrganizationPresence::default);
         &D
     }
 }
 
 impl OrganizationPresence {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<OrganizationPresence> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<OrganizationPresence>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "organization/v1/presence.skir",
-                    "OrganizationPresence",
-                    "",
-                    |x: &OrganizationPresence| &x._unrecognized,
-                    |x: &mut OrganizationPresence, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<OrganizationPresence>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "organization/v1/presence.skir",
+                "OrganizationPresence",
+                "",
+                |x: &OrganizationPresence| &x._unrecognized,
+                |x: &mut OrganizationPresence, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<OrganizationPresence> {
@@ -62,23 +64,25 @@ pub struct MembersPresence {
 
 impl MembersPresence {
     pub fn default_ref() -> &'static MembersPresence {
-        static D: std::sync::LazyLock<MembersPresence> = std::sync::LazyLock::new(MembersPresence::default);
+        static D: std::sync::LazyLock<MembersPresence> =
+            std::sync::LazyLock::new(MembersPresence::default);
         &D
     }
 }
 
 impl MembersPresence {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<MembersPresence> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<MembersPresence>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "organization/v1/presence.skir",
-                    "MembersPresence",
-                    "",
-                    |x: &MembersPresence| &x._unrecognized,
-                    |x: &mut MembersPresence, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<MembersPresence>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "organization/v1/presence.skir",
+                "MembersPresence",
+                "",
+                |x: &MembersPresence| &x._unrecognized,
+                |x: &mut MembersPresence, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<MembersPresence> {
@@ -99,23 +103,25 @@ pub struct ServicesPresence {
 
 impl ServicesPresence {
     pub fn default_ref() -> &'static ServicesPresence {
-        static D: std::sync::LazyLock<ServicesPresence> = std::sync::LazyLock::new(ServicesPresence::default);
+        static D: std::sync::LazyLock<ServicesPresence> =
+            std::sync::LazyLock::new(ServicesPresence::default);
         &D
     }
 }
 
 impl ServicesPresence {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ServicesPresence> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ServicesPresence>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "organization/v1/presence.skir",
-                    "ServicesPresence",
-                    "",
-                    |x: &ServicesPresence| &x._unrecognized,
-                    |x: &mut ServicesPresence, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ServicesPresence>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "organization/v1/presence.skir",
+                "ServicesPresence",
+                "",
+                |x: &ServicesPresence| &x._unrecognized,
+                |x: &mut ServicesPresence, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ServicesPresence> {
@@ -137,23 +143,25 @@ pub struct ServicePresence {
 
 impl ServicePresence {
     pub fn default_ref() -> &'static ServicePresence {
-        static D: std::sync::LazyLock<ServicePresence> = std::sync::LazyLock::new(ServicePresence::default);
+        static D: std::sync::LazyLock<ServicePresence> =
+            std::sync::LazyLock::new(ServicePresence::default);
         &D
     }
 }
 
 impl ServicePresence {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ServicePresence> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ServicePresence>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "organization/v1/presence.skir",
-                    "ServicePresence",
-                    "",
-                    |x: &ServicePresence| &x._unrecognized,
-                    |x: &mut ServicePresence, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ServicePresence>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "organization/v1/presence.skir",
+                "ServicePresence",
+                "",
+                |x: &ServicePresence| &x._unrecognized,
+                |x: &mut ServicePresence, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ServicePresence> {
@@ -174,23 +182,25 @@ pub struct RealmsPresence {
 
 impl RealmsPresence {
     pub fn default_ref() -> &'static RealmsPresence {
-        static D: std::sync::LazyLock<RealmsPresence> = std::sync::LazyLock::new(RealmsPresence::default);
+        static D: std::sync::LazyLock<RealmsPresence> =
+            std::sync::LazyLock::new(RealmsPresence::default);
         &D
     }
 }
 
 impl RealmsPresence {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RealmsPresence> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RealmsPresence>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "organization/v1/presence.skir",
-                    "RealmsPresence",
-                    "",
-                    |x: &RealmsPresence| &x._unrecognized,
-                    |x: &mut RealmsPresence, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RealmsPresence>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "organization/v1/presence.skir",
+                "RealmsPresence",
+                "",
+                |x: &RealmsPresence| &x._unrecognized,
+                |x: &mut RealmsPresence, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<RealmsPresence> {
@@ -212,23 +222,25 @@ pub struct RealmPresence {
 
 impl RealmPresence {
     pub fn default_ref() -> &'static RealmPresence {
-        static D: std::sync::LazyLock<RealmPresence> = std::sync::LazyLock::new(RealmPresence::default);
+        static D: std::sync::LazyLock<RealmPresence> =
+            std::sync::LazyLock::new(RealmPresence::default);
         &D
     }
 }
 
 impl RealmPresence {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RealmPresence> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RealmPresence>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "organization/v1/presence.skir",
-                    "RealmPresence",
-                    "",
-                    |x: &RealmPresence| &x._unrecognized,
-                    |x: &mut RealmPresence, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RealmPresence>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "organization/v1/presence.skir",
+                "RealmPresence",
+                "",
+                |x: &RealmPresence| &x._unrecognized,
+                |x: &mut RealmPresence, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<RealmPresence> {
@@ -250,23 +262,25 @@ pub struct RealmLibraryPresence {
 
 impl RealmLibraryPresence {
     pub fn default_ref() -> &'static RealmLibraryPresence {
-        static D: std::sync::LazyLock<RealmLibraryPresence> = std::sync::LazyLock::new(RealmLibraryPresence::default);
+        static D: std::sync::LazyLock<RealmLibraryPresence> =
+            std::sync::LazyLock::new(RealmLibraryPresence::default);
         &D
     }
 }
 
 impl RealmLibraryPresence {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RealmLibraryPresence> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RealmLibraryPresence>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "organization/v1/presence.skir",
-                    "RealmLibraryPresence",
-                    "",
-                    |x: &RealmLibraryPresence| &x._unrecognized,
-                    |x: &mut RealmLibraryPresence, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RealmLibraryPresence>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "organization/v1/presence.skir",
+                "RealmLibraryPresence",
+                "",
+                |x: &RealmLibraryPresence| &x._unrecognized,
+                |x: &mut RealmLibraryPresence, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<RealmLibraryPresence> {
@@ -288,23 +302,25 @@ pub struct RealmTagsPresence {
 
 impl RealmTagsPresence {
     pub fn default_ref() -> &'static RealmTagsPresence {
-        static D: std::sync::LazyLock<RealmTagsPresence> = std::sync::LazyLock::new(RealmTagsPresence::default);
+        static D: std::sync::LazyLock<RealmTagsPresence> =
+            std::sync::LazyLock::new(RealmTagsPresence::default);
         &D
     }
 }
 
 impl RealmTagsPresence {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RealmTagsPresence> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RealmTagsPresence>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "organization/v1/presence.skir",
-                    "RealmTagsPresence",
-                    "",
-                    |x: &RealmTagsPresence| &x._unrecognized,
-                    |x: &mut RealmTagsPresence, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RealmTagsPresence>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "organization/v1/presence.skir",
+                "RealmTagsPresence",
+                "",
+                |x: &RealmTagsPresence| &x._unrecognized,
+                |x: &mut RealmTagsPresence, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<RealmTagsPresence> {
@@ -327,23 +343,25 @@ pub struct BookPresence {
 
 impl BookPresence {
     pub fn default_ref() -> &'static BookPresence {
-        static D: std::sync::LazyLock<BookPresence> = std::sync::LazyLock::new(BookPresence::default);
+        static D: std::sync::LazyLock<BookPresence> =
+            std::sync::LazyLock::new(BookPresence::default);
         &D
     }
 }
 
 impl BookPresence {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<BookPresence> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<BookPresence>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "organization/v1/presence.skir",
-                    "BookPresence",
-                    "",
-                    |x: &BookPresence| &x._unrecognized,
-                    |x: &mut BookPresence, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<BookPresence>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "organization/v1/presence.skir",
+                "BookPresence",
+                "",
+                |x: &BookPresence| &x._unrecognized,
+                |x: &mut BookPresence, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<BookPresence> {
@@ -373,23 +391,27 @@ impl Default for PageActivity {
 
 impl PageActivity {
     fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PageActivity> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<PageActivity>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &PageActivity| match x {
-                        PageActivity::Unknown(_) => 0,
-                        PageActivity::Overview => 1,
-                        PageActivity::Graph => 2,
-                        PageActivity::Timeline => 3,
-                        PageActivity::Inspector => 4,
-                    },
-                    |u| PageActivity::Unknown(Some(u)),
-                    |x: &PageActivity| match x { PageActivity::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "organization/v1/presence.skir",
-                    "PageActivity",
-                    "",
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<PageActivity>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &PageActivity| match x {
+                    PageActivity::Unknown(_) => 0,
+                    PageActivity::Overview => 1,
+                    PageActivity::Graph => 2,
+                    PageActivity::Timeline => 3,
+                    PageActivity::Inspector => 4,
+                },
+                |u| PageActivity::Unknown(Some(u)),
+                |x: &PageActivity| match x {
+                    PageActivity::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "organization/v1/presence.skir",
+                "PageActivity",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<PageActivity> {
@@ -414,23 +436,25 @@ pub struct PagePresence {
 
 impl PagePresence {
     pub fn default_ref() -> &'static PagePresence {
-        static D: std::sync::LazyLock<PagePresence> = std::sync::LazyLock::new(PagePresence::default);
+        static D: std::sync::LazyLock<PagePresence> =
+            std::sync::LazyLock::new(PagePresence::default);
         &D
     }
 }
 
 impl PagePresence {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PagePresence> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<PagePresence>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "organization/v1/presence.skir",
-                    "PagePresence",
-                    "",
-                    |x: &PagePresence| &x._unrecognized,
-                    |x: &mut PagePresence, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<PagePresence>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "organization/v1/presence.skir",
+                "PagePresence",
+                "",
+                |x: &PagePresence| &x._unrecognized,
+                |x: &mut PagePresence, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<PagePresence> {
@@ -466,29 +490,33 @@ impl Default for PresenceLocation {
 
 impl PresenceLocation {
     fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PresenceLocation> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<PresenceLocation>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &PresenceLocation| match x {
-                        PresenceLocation::Unknown(_) => 0,
-                        PresenceLocation::Organization(_) => 1,
-                        PresenceLocation::Members(_) => 2,
-                        PresenceLocation::Services(_) => 3,
-                        PresenceLocation::Service(_) => 4,
-                        PresenceLocation::Realms(_) => 5,
-                        PresenceLocation::Realm(_) => 6,
-                        PresenceLocation::RealmLibrary(_) => 7,
-                        PresenceLocation::RealmTags(_) => 8,
-                        PresenceLocation::Book(_) => 9,
-                        PresenceLocation::Page(_) => 10,
-                    },
-                    |u| PresenceLocation::Unknown(Some(u)),
-                    |x: &PresenceLocation| match x { PresenceLocation::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "organization/v1/presence.skir",
-                    "PresenceLocation",
-                    "",
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<PresenceLocation>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &PresenceLocation| match x {
+                    PresenceLocation::Unknown(_) => 0,
+                    PresenceLocation::Organization(_) => 1,
+                    PresenceLocation::Members(_) => 2,
+                    PresenceLocation::Services(_) => 3,
+                    PresenceLocation::Service(_) => 4,
+                    PresenceLocation::Realms(_) => 5,
+                    PresenceLocation::Realm(_) => 6,
+                    PresenceLocation::RealmLibrary(_) => 7,
+                    PresenceLocation::RealmTags(_) => 8,
+                    PresenceLocation::Book(_) => 9,
+                    PresenceLocation::Page(_) => 10,
+                },
+                |u| PresenceLocation::Unknown(Some(u)),
+                |x: &PresenceLocation| match x {
+                    PresenceLocation::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "organization/v1/presence.skir",
+                "PresenceLocation",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<PresenceLocation> {
@@ -512,23 +540,25 @@ pub struct PanelPresence {
 
 impl PanelPresence {
     pub fn default_ref() -> &'static PanelPresence {
-        static D: std::sync::LazyLock<PanelPresence> = std::sync::LazyLock::new(PanelPresence::default);
+        static D: std::sync::LazyLock<PanelPresence> =
+            std::sync::LazyLock::new(PanelPresence::default);
         &D
     }
 }
 
 impl PanelPresence {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PanelPresence> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<PanelPresence>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "organization/v1/presence.skir",
-                    "PanelPresence",
-                    "",
-                    |x: &PanelPresence| &x._unrecognized,
-                    |x: &mut PanelPresence, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<PanelPresence>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "organization/v1/presence.skir",
+                "PanelPresence",
+                "",
+                |x: &PanelPresence| &x._unrecognized,
+                |x: &mut PanelPresence, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<PanelPresence> {
@@ -550,23 +580,25 @@ pub struct PresenceLeft {
 
 impl PresenceLeft {
     pub fn default_ref() -> &'static PresenceLeft {
-        static D: std::sync::LazyLock<PresenceLeft> = std::sync::LazyLock::new(PresenceLeft::default);
+        static D: std::sync::LazyLock<PresenceLeft> =
+            std::sync::LazyLock::new(PresenceLeft::default);
         &D
     }
 }
 
 impl PresenceLeft {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PresenceLeft> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<PresenceLeft>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "organization/v1/presence.skir",
-                    "PresenceLeft",
-                    "",
-                    |x: &PresenceLeft| &x._unrecognized,
-                    |x: &mut PresenceLeft, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<PresenceLeft>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "organization/v1/presence.skir",
+                "PresenceLeft",
+                "",
+                |x: &PresenceLeft| &x._unrecognized,
+                |x: &mut PresenceLeft, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<PresenceLeft> {
@@ -594,21 +626,25 @@ impl Default for PresenceEvent {
 
 impl PresenceEvent {
     fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PresenceEvent> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<PresenceEvent>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &PresenceEvent| match x {
-                        PresenceEvent::Unknown(_) => 0,
-                        PresenceEvent::Active(_) => 1,
-                        PresenceEvent::Left(_) => 2,
-                    },
-                    |u| PresenceEvent::Unknown(Some(u)),
-                    |x: &PresenceEvent| match x { PresenceEvent::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "organization/v1/presence.skir",
-                    "PresenceEvent",
-                    "",
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<PresenceEvent>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &PresenceEvent| match x {
+                    PresenceEvent::Unknown(_) => 0,
+                    PresenceEvent::Active(_) => 1,
+                    PresenceEvent::Left(_) => 2,
+                },
+                |u| PresenceEvent::Unknown(Some(u)),
+                |x: &PresenceEvent| match x {
+                    PresenceEvent::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "organization/v1/presence.skir",
+                "PresenceEvent",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<PresenceEvent> {
@@ -622,98 +658,368 @@ impl PresenceEvent {
 // ==============================================================================
 
 fn initialize_module_serializers() {
-    static INIT: std::sync::LazyLock<()> =
-        std::sync::LazyLock::new(|| {
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<OrganizationPresence> = OrganizationPresence::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<MembersPresence> = MembersPresence::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ServicesPresence> = ServicesPresence::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ServicePresence> = ServicePresence::_adapter() as *const _ as *mut _;
-                (*a).add_field("service_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &ServicePresence| &x.service_id, |x: &mut ServicePresence, v| x.service_id = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<RealmsPresence> = RealmsPresence::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<RealmPresence> = RealmPresence::_adapter() as *const _ as *mut _;
-                (*a).add_field("realm_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &RealmPresence| &x.realm_id, |x: &mut RealmPresence, v| x.realm_id = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<RealmLibraryPresence> = RealmLibraryPresence::_adapter() as *const _ as *mut _;
-                (*a).add_field("realm_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &RealmLibraryPresence| &x.realm_id, |x: &mut RealmLibraryPresence, v| x.realm_id = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<RealmTagsPresence> = RealmTagsPresence::_adapter() as *const _ as *mut _;
-                (*a).add_field("realm_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &RealmTagsPresence| &x.realm_id, |x: &mut RealmTagsPresence, v| x.realm_id = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<BookPresence> = BookPresence::_adapter() as *const _ as *mut _;
-                (*a).add_field("realm_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &BookPresence| &x.realm_id, |x: &mut BookPresence, v| x.realm_id = v);
-                (*a).add_field("book_id", 1, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &BookPresence| &x.book_id, |x: &mut BookPresence, v| x.book_id = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<PageActivity> = PageActivity::_adapter() as *const _ as *mut _;
-                (*a).add_constant_variant("overview", 1, 1, "", PageActivity::Overview);
-                (*a).add_constant_variant("graph", 2, 2, "", PageActivity::Graph);
-                (*a).add_constant_variant("timeline", 3, 3, "", PageActivity::Timeline);
-                (*a).add_constant_variant("inspector", 4, 4, "", PageActivity::Inspector);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<PagePresence> = PagePresence::_adapter() as *const _ as *mut _;
-                (*a).add_field("realm_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &PagePresence| &x.realm_id, |x: &mut PagePresence, v| x.realm_id = v);
-                (*a).add_field("book_id", 1, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &PagePresence| &x.book_id, |x: &mut PagePresence, v| x.book_id = v);
-                (*a).add_field("page_id", 2, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &PagePresence| &x.page_id, |x: &mut PagePresence, v| x.page_id = v);
-                (*a).add_field("activity", 3, crate::skir_client::internal::enum_serializer_from_static(PageActivity::_adapter()), "", |x: &PagePresence| &x.activity, |x: &mut PagePresence, v| x.activity = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<PresenceLocation> = PresenceLocation::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("organization", 1, 1, crate::skir_client::internal::struct_serializer_from_static(OrganizationPresence::_adapter()), "", |v| PresenceLocation::Organization(Box::new(v)), |x| match x { PresenceLocation::Organization(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("members", 2, 2, crate::skir_client::internal::struct_serializer_from_static(MembersPresence::_adapter()), "", |v| PresenceLocation::Members(Box::new(v)), |x| match x { PresenceLocation::Members(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("services", 3, 3, crate::skir_client::internal::struct_serializer_from_static(ServicesPresence::_adapter()), "", |v| PresenceLocation::Services(Box::new(v)), |x| match x { PresenceLocation::Services(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("service", 4, 4, crate::skir_client::internal::struct_serializer_from_static(ServicePresence::_adapter()), "", |v| PresenceLocation::Service(Box::new(v)), |x| match x { PresenceLocation::Service(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("realms", 5, 5, crate::skir_client::internal::struct_serializer_from_static(RealmsPresence::_adapter()), "", |v| PresenceLocation::Realms(Box::new(v)), |x| match x { PresenceLocation::Realms(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("realm", 6, 6, crate::skir_client::internal::struct_serializer_from_static(RealmPresence::_adapter()), "", |v| PresenceLocation::Realm(Box::new(v)), |x| match x { PresenceLocation::Realm(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("realm_library", 7, 7, crate::skir_client::internal::struct_serializer_from_static(RealmLibraryPresence::_adapter()), "", |v| PresenceLocation::RealmLibrary(Box::new(v)), |x| match x { PresenceLocation::RealmLibrary(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("realm_tags", 8, 8, crate::skir_client::internal::struct_serializer_from_static(RealmTagsPresence::_adapter()), "", |v| PresenceLocation::RealmTags(Box::new(v)), |x| match x { PresenceLocation::RealmTags(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("book", 9, 9, crate::skir_client::internal::struct_serializer_from_static(BookPresence::_adapter()), "", |v| PresenceLocation::Book(Box::new(v)), |x| match x { PresenceLocation::Book(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("page", 10, 10, crate::skir_client::internal::struct_serializer_from_static(PagePresence::_adapter()), "", |v| PresenceLocation::Page(Box::new(v)), |x| match x { PresenceLocation::Page(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<PanelPresence> = PanelPresence::_adapter() as *const _ as *mut _;
-                (*a).add_field("session_id", 0, crate::skir_client::Serializer::string(), "", |x: &PanelPresence| &x.session_id, |x: &mut PanelPresence, v| x.session_id = v);
-                (*a).add_field("sequence", 1, crate::skir_client::Serializer::int64(), "", |x: &PanelPresence| &x.sequence, |x: &mut PanelPresence, v| x.sequence = v);
-                (*a).add_field("location", 2, crate::skir_client::internal::enum_serializer_from_static(PresenceLocation::_adapter()), "", |x: &PanelPresence| &x.location, |x: &mut PanelPresence, v| x.location = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<PresenceLeft> = PresenceLeft::_adapter() as *const _ as *mut _;
-                (*a).add_field("session_id", 0, crate::skir_client::Serializer::string(), "", |x: &PresenceLeft| &x.session_id, |x: &mut PresenceLeft, v| x.session_id = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<PresenceEvent> = PresenceEvent::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("active", 1, 1, crate::skir_client::internal::struct_serializer_from_static(PanelPresence::_adapter()), "", |v| PresenceEvent::Active(Box::new(v)), |x| match x { PresenceEvent::Active(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("left", 2, 2, crate::skir_client::internal::struct_serializer_from_static(PresenceLeft::_adapter()), "", |v| PresenceEvent::Left(Box::new(v)), |x| match x { PresenceEvent::Left(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-        });
+    static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| {
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<OrganizationPresence> =
+                OrganizationPresence::_adapter() as *const _ as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<MembersPresence> =
+                MembersPresence::_adapter() as *const _ as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ServicesPresence> =
+                ServicesPresence::_adapter() as *const _ as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ServicePresence> =
+                ServicePresence::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "service_id",
+                0,
+                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                "",
+                |x: &ServicePresence| &x.service_id,
+                |x: &mut ServicePresence, v| x.service_id = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<RealmsPresence> =
+                RealmsPresence::_adapter() as *const _ as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<RealmPresence> =
+                RealmPresence::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "realm_id",
+                0,
+                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                "",
+                |x: &RealmPresence| &x.realm_id,
+                |x: &mut RealmPresence, v| x.realm_id = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<RealmLibraryPresence> =
+                RealmLibraryPresence::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "realm_id",
+                0,
+                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                "",
+                |x: &RealmLibraryPresence| &x.realm_id,
+                |x: &mut RealmLibraryPresence, v| x.realm_id = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<RealmTagsPresence> =
+                RealmTagsPresence::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "realm_id",
+                0,
+                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                "",
+                |x: &RealmTagsPresence| &x.realm_id,
+                |x: &mut RealmTagsPresence, v| x.realm_id = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<BookPresence> =
+                BookPresence::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "realm_id",
+                0,
+                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                "",
+                |x: &BookPresence| &x.realm_id,
+                |x: &mut BookPresence, v| x.realm_id = v,
+            );
+            (*a).add_field(
+                "book_id",
+                1,
+                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                "",
+                |x: &BookPresence| &x.book_id,
+                |x: &mut BookPresence, v| x.book_id = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<PageActivity> =
+                PageActivity::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("overview", 1, 1, "", PageActivity::Overview);
+            (*a).add_constant_variant("graph", 2, 2, "", PageActivity::Graph);
+            (*a).add_constant_variant("timeline", 3, 3, "", PageActivity::Timeline);
+            (*a).add_constant_variant("inspector", 4, 4, "", PageActivity::Inspector);
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<PagePresence> =
+                PagePresence::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "realm_id",
+                0,
+                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                "",
+                |x: &PagePresence| &x.realm_id,
+                |x: &mut PagePresence, v| x.realm_id = v,
+            );
+            (*a).add_field(
+                "book_id",
+                1,
+                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                "",
+                |x: &PagePresence| &x.book_id,
+                |x: &mut PagePresence, v| x.book_id = v,
+            );
+            (*a).add_field(
+                "page_id",
+                2,
+                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                "",
+                |x: &PagePresence| &x.page_id,
+                |x: &mut PagePresence, v| x.page_id = v,
+            );
+            (*a).add_field(
+                "activity",
+                3,
+                crate::skir_client::internal::enum_serializer_from_static(PageActivity::_adapter()),
+                "",
+                |x: &PagePresence| &x.activity,
+                |x: &mut PagePresence, v| x.activity = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<PresenceLocation> =
+                PresenceLocation::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "organization",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    OrganizationPresence::_adapter(),
+                ),
+                "",
+                |v| PresenceLocation::Organization(Box::new(v)),
+                |x| match x {
+                    PresenceLocation::Organization(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "members",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    MembersPresence::_adapter(),
+                ),
+                "",
+                |v| PresenceLocation::Members(Box::new(v)),
+                |x| match x {
+                    PresenceLocation::Members(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "services",
+                3,
+                3,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ServicesPresence::_adapter(),
+                ),
+                "",
+                |v| PresenceLocation::Services(Box::new(v)),
+                |x| match x {
+                    PresenceLocation::Services(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "service",
+                4,
+                4,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ServicePresence::_adapter(),
+                ),
+                "",
+                |v| PresenceLocation::Service(Box::new(v)),
+                |x| match x {
+                    PresenceLocation::Service(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "realms",
+                5,
+                5,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    RealmsPresence::_adapter(),
+                ),
+                "",
+                |v| PresenceLocation::Realms(Box::new(v)),
+                |x| match x {
+                    PresenceLocation::Realms(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "realm",
+                6,
+                6,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    RealmPresence::_adapter(),
+                ),
+                "",
+                |v| PresenceLocation::Realm(Box::new(v)),
+                |x| match x {
+                    PresenceLocation::Realm(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "realm_library",
+                7,
+                7,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    RealmLibraryPresence::_adapter(),
+                ),
+                "",
+                |v| PresenceLocation::RealmLibrary(Box::new(v)),
+                |x| match x {
+                    PresenceLocation::RealmLibrary(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "realm_tags",
+                8,
+                8,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    RealmTagsPresence::_adapter(),
+                ),
+                "",
+                |v| PresenceLocation::RealmTags(Box::new(v)),
+                |x| match x {
+                    PresenceLocation::RealmTags(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "book",
+                9,
+                9,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    BookPresence::_adapter(),
+                ),
+                "",
+                |v| PresenceLocation::Book(Box::new(v)),
+                |x| match x {
+                    PresenceLocation::Book(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "page",
+                10,
+                10,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    PagePresence::_adapter(),
+                ),
+                "",
+                |v| PresenceLocation::Page(Box::new(v)),
+                |x| match x {
+                    PresenceLocation::Page(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<PanelPresence> =
+                PanelPresence::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "session_id",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &PanelPresence| &x.session_id,
+                |x: &mut PanelPresence, v| x.session_id = v,
+            );
+            (*a).add_field(
+                "sequence",
+                1,
+                crate::skir_client::Serializer::int64(),
+                "",
+                |x: &PanelPresence| &x.sequence,
+                |x: &mut PanelPresence, v| x.sequence = v,
+            );
+            (*a).add_field(
+                "location",
+                2,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    PresenceLocation::_adapter(),
+                ),
+                "",
+                |x: &PanelPresence| &x.location,
+                |x: &mut PanelPresence, v| x.location = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<PresenceLeft> =
+                PresenceLeft::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "session_id",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &PresenceLeft| &x.session_id,
+                |x: &mut PresenceLeft, v| x.session_id = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<PresenceEvent> =
+                PresenceEvent::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "active",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    PanelPresence::_adapter(),
+                ),
+                "",
+                |v| PresenceEvent::Active(Box::new(v)),
+                |x| match x {
+                    PresenceEvent::Active(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "left",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    PresenceLeft::_adapter(),
+                ),
+                "",
+                |v| PresenceEvent::Left(Box::new(v)),
+                |x| match x {
+                    PresenceEvent::Left(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+    });
     let _ = *INIT;
 }

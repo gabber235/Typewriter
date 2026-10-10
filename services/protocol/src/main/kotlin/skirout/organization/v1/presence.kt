@@ -337,7 +337,7 @@ class ServicePresence private constructor(
         );
 
         /**
-         * If the value of [serviceId] is already mutable, returns it as-is.
+         * If the value of [serviceId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [serviceId] and returns it.
          */
         val mutableServiceId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -542,7 +542,7 @@ class RealmPresence private constructor(
         );
 
         /**
-         * If the value of [realmId] is already mutable, returns it as-is.
+         * If the value of [realmId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
          */
         val mutableRealmId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -667,7 +667,7 @@ class RealmLibraryPresence private constructor(
         );
 
         /**
-         * If the value of [realmId] is already mutable, returns it as-is.
+         * If the value of [realmId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
          */
         val mutableRealmId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -792,7 +792,7 @@ class RealmTagsPresence private constructor(
         );
 
         /**
-         * If the value of [realmId] is already mutable, returns it as-is.
+         * If the value of [realmId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
          */
         val mutableRealmId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -928,7 +928,7 @@ class BookPresence private constructor(
         );
 
         /**
-         * If the value of [realmId] is already mutable, returns it as-is.
+         * If the value of [realmId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
          */
         val mutableRealmId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -944,7 +944,7 @@ class BookPresence private constructor(
         }
 
         /**
-         * If the value of [bookId] is already mutable, returns it as-is.
+         * If the value of [bookId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [bookId] and returns it.
          */
         val mutableBookId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -1206,7 +1206,7 @@ class PagePresence private constructor(
         );
 
         /**
-         * If the value of [realmId] is already mutable, returns it as-is.
+         * If the value of [realmId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
          */
         val mutableRealmId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -1222,7 +1222,7 @@ class PagePresence private constructor(
         }
 
         /**
-         * If the value of [bookId] is already mutable, returns it as-is.
+         * If the value of [bookId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [bookId] and returns it.
          */
         val mutableBookId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -1238,7 +1238,7 @@ class PagePresence private constructor(
         }
 
         /**
-         * If the value of [pageId] is already mutable, returns it as-is.
+         * If the value of [pageId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [pageId] and returns it.
          */
         val mutablePageId: skirout.kernel.v1.record_id.RecordId.Mutable get() {

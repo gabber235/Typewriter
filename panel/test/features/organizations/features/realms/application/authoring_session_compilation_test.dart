@@ -24,7 +24,12 @@ void main() {
     await _waitUntil(() => container.read(provider).hasValue);
 
     final notifier = container.read(provider.notifier);
-    expect(await notifier.states([]), isEmpty);
+    expect(
+      await notifier.states(
+        skir.CompilationStatusSelection.wrapSuppliedRoots(const []),
+      ),
+      isEmpty,
+    );
     final first = await notifier.publish();
     source.emit(_attempt(skir.PublicationState.checking));
     await _waitUntil(
@@ -200,7 +205,7 @@ final class _PublicationSource implements RealmPublicationRepository {
       );
   @override
   Future<List<skir.CompiledResourceStatus>> states(
-    List<skir.CompilationRoot> roots,
+    skir.CompilationStatusSelection selection,
   ) async => [];
 
   @override

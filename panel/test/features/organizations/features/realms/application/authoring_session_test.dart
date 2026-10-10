@@ -316,9 +316,14 @@ skir.BoundedTransferChunk _transfer(String id, Uint8List encoded) =>
 
 final class _Harness {
   _Harness() {
+    repositories = ResourceRepositories(
+      SkirMutationClient(() => nats, () async => const NoopPanelTelemetry()),
+      null,
+    );
     container = ProviderContainer.test(
       overrides: [
         natsProvider.overrideWithValue(nats),
+        resourceRepositoriesProvider.overrideWithValue(repositories),
         organizationIdProvider.overrideWithValue(_organization),
         realmIdProvider.overrideWithValue(_realm),
         panelTelemetryProvider.overrideWithValue(
@@ -329,6 +334,7 @@ final class _Harness {
   }
 
   final FakeNatsClient nats = FakeNatsClient();
+  late final ResourceRepositories repositories;
   late final ProviderContainer container;
 
   void emit() => nats.emitMessageOnSubject(
@@ -339,6 +345,7 @@ final class _Harness {
   );
   Future<void> dispose() async {
     container.dispose();
+    repositories.dispose();
     await nats.dispose();
   }
 }

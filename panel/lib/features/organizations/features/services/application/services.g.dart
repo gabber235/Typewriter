@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 
 part of 'services.dart';
 
@@ -6,7 +6,7 @@ part of 'services.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 /// Owns the organization scoped canonical service identity projection.
 ///
@@ -78,7 +78,7 @@ final class CanonicalOrganizationServicesProvider
 }
 
 String _$canonicalOrganizationServicesHash() =>
-    r'dcbce148312a9415b321bf71448befda9ee40775';
+    r'9ee87b480965dfb7610a7ed66a24ac966a42038f';
 
 /// Owns the organization scoped canonical service identity projection.
 ///
@@ -536,9 +536,10 @@ String _$organizationTopologyStreamHash() =>
 ///
 /// The projection combines the topology watch with committed configuration
 /// changes from [ServiceResourceRepository]. [TopologyHost] contains desired
-/// and applied configuration revisions alongside host runtime observations;
-/// child realm and engine entries describe the resources currently reported by
-/// that host. A topology entry is therefore not another service identity.
+/// and applied configuration revisions alongside host runtime observations.
+/// Snapshots and configuration changes own child membership. Runtime reports
+/// update observed state only and cannot create or revive child resources. A
+/// topology entry is therefore not another service identity.
 ///
 /// Consumers may use the projection to display current backend knowledge and
 /// to choose configuration targets. They must not treat desired configuration
@@ -553,9 +554,10 @@ final organizationTopologyControllerProvider =
 ///
 /// The projection combines the topology watch with committed configuration
 /// changes from [ServiceResourceRepository]. [TopologyHost] contains desired
-/// and applied configuration revisions alongside host runtime observations;
-/// child realm and engine entries describe the resources currently reported by
-/// that host. A topology entry is therefore not another service identity.
+/// and applied configuration revisions alongside host runtime observations.
+/// Snapshots and configuration changes own child membership. Runtime reports
+/// update observed state only and cannot create or revive child resources. A
+/// topology entry is therefore not another service identity.
 ///
 /// Consumers may use the projection to display current backend knowledge and
 /// to choose configuration targets. They must not treat desired configuration
@@ -571,9 +573,10 @@ final class OrganizationTopologyControllerProvider
   ///
   /// The projection combines the topology watch with committed configuration
   /// changes from [ServiceResourceRepository]. [TopologyHost] contains desired
-  /// and applied configuration revisions alongside host runtime observations;
-  /// child realm and engine entries describe the resources currently reported by
-  /// that host. A topology entry is therefore not another service identity.
+  /// and applied configuration revisions alongside host runtime observations.
+  /// Snapshots and configuration changes own child membership. Runtime reports
+  /// update observed state only and cannot create or revive child resources. A
+  /// topology entry is therefore not another service identity.
   ///
   /// Consumers may use the projection to display current backend knowledge and
   /// to choose configuration targets. They must not treat desired configuration
@@ -617,15 +620,16 @@ final class OrganizationTopologyControllerProvider
 }
 
 String _$organizationTopologyControllerHash() =>
-    r'8e7e2d452d38427bae587168778f7b1009fd8a9d';
+    r'5ff1199cfb0ee77c8ddf1312d8a03ddadff26153';
 
 /// Owns the live organization topology projection.
 ///
 /// The projection combines the topology watch with committed configuration
 /// changes from [ServiceResourceRepository]. [TopologyHost] contains desired
-/// and applied configuration revisions alongside host runtime observations;
-/// child realm and engine entries describe the resources currently reported by
-/// that host. A topology entry is therefore not another service identity.
+/// and applied configuration revisions alongside host runtime observations.
+/// Snapshots and configuration changes own child membership. Runtime reports
+/// update observed state only and cannot create or revive child resources. A
+/// topology entry is therefore not another service identity.
 ///
 /// Consumers may use the projection to display current backend knowledge and
 /// to choose configuration targets. They must not treat desired configuration
@@ -654,9 +658,10 @@ final class OrganizationTopologyControllerFamily extends $Family
   ///
   /// The projection combines the topology watch with committed configuration
   /// changes from [ServiceResourceRepository]. [TopologyHost] contains desired
-  /// and applied configuration revisions alongside host runtime observations;
-  /// child realm and engine entries describe the resources currently reported by
-  /// that host. A topology entry is therefore not another service identity.
+  /// and applied configuration revisions alongside host runtime observations.
+  /// Snapshots and configuration changes own child membership. Runtime reports
+  /// update observed state only and cannot create or revive child resources. A
+  /// topology entry is therefore not another service identity.
   ///
   /// Consumers may use the projection to display current backend knowledge and
   /// to choose configuration targets. They must not treat desired configuration
@@ -677,9 +682,10 @@ final class OrganizationTopologyControllerFamily extends $Family
 ///
 /// The projection combines the topology watch with committed configuration
 /// changes from [ServiceResourceRepository]. [TopologyHost] contains desired
-/// and applied configuration revisions alongside host runtime observations;
-/// child realm and engine entries describe the resources currently reported by
-/// that host. A topology entry is therefore not another service identity.
+/// and applied configuration revisions alongside host runtime observations.
+/// Snapshots and configuration changes own child membership. Runtime reports
+/// update observed state only and cannot create or revive child resources. A
+/// topology entry is therefore not another service identity.
 ///
 /// Consumers may use the projection to display current backend knowledge and
 /// to choose configuration targets. They must not treat desired configuration

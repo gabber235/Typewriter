@@ -17,9 +17,7 @@ import "package:skir_client/skir_client.dart" as _skir;
 
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 
-// -----------------------------------------------------------------------------
 // enum DiagnosticSeverity
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -126,9 +124,7 @@ enum _DiagnosticSeverity_consts implements DiagnosticSeverity {
       _skir.internal__stringify(this, DiagnosticSeverity.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // struct DeclarationOrigin
-// -----------------------------------------------------------------------------
 
 sealed class DeclarationOrigin_orMutable {
   _lib_editor_v1_type_catalog.DeclarationOwner_orMutable get owner;
@@ -159,7 +155,7 @@ final class DeclarationOrigin implements DeclarationOrigin_orMutable {
     _lib_editor_v1_type_catalog.DeclarationOwner.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   DeclarationOrigin toFrozen() => this;
@@ -222,7 +218,7 @@ final class DeclarationOrigin_mutable implements DeclarationOrigin_orMutable {
 
   DeclarationOrigin_mutable._(this.owner);
 
-  /// If the value of [owner] is already mutable, returns it as-is.
+  /// If the value of [owner] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [owner] and returns it.
   _lib_editor_v1_type_catalog.DeclarationOwner_mutable get mutableOwner {
     final value = this.owner;
@@ -240,9 +236,7 @@ final class DeclarationOrigin_mutable implements DeclarationOrigin_orMutable {
       DeclarationOrigin(owner: this.owner).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct DeclarationDiagnostic
-// -----------------------------------------------------------------------------
 
 sealed class DeclarationDiagnostic_orMutable {
   _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable get affected;
@@ -297,7 +291,7 @@ final class DeclarationDiagnostic implements DeclarationDiagnostic_orMutable {
         null,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   DeclarationDiagnostic toFrozen() => this;
@@ -410,7 +404,7 @@ final class DeclarationDiagnostic_mutable
     this.field,
   );
 
-  /// If the value of [affected] is already mutable, returns it as-is.
+  /// If the value of [affected] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [affected] and returns it.
   _lib_editor_v1_type_catalog.TypeDefinitionId_mutable get mutableAffected {
     final value = this.affected;
@@ -422,7 +416,7 @@ final class DeclarationDiagnostic_mutable
     }
   }
 
-  /// If the value of [origins] is already mutable, returns it as-is.
+  /// If the value of [origins] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [origins] and returns it.
   _core.List<DeclarationOrigin_orMutable> get mutableOrigins {
     final value = this.origins;
@@ -443,9 +437,7 @@ final class DeclarationDiagnostic_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct DiagnosticTemplate
-// -----------------------------------------------------------------------------
 
 sealed class DiagnosticTemplate_orMutable {
   _core.String get code;
@@ -504,7 +496,7 @@ final class DiagnosticTemplate implements DiagnosticTemplate_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   DiagnosticTemplate toFrozen() => this;
@@ -614,7 +606,7 @@ final class DiagnosticTemplate_mutable implements DiagnosticTemplate_orMutable {
     this.targets,
   );
 
-  /// If the value of [targets] is already mutable, returns it as-is.
+  /// If the value of [targets] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [targets] and returns it.
   _core.List<_lib_editor_v1_type_catalog.RelativeFieldPattern_orMutable>
   get mutableTargets {
@@ -639,9 +631,7 @@ final class DiagnosticTemplate_mutable implements DiagnosticTemplate_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct Diagnostic
-// -----------------------------------------------------------------------------
 
 sealed class Diagnostic_orMutable {
   _lib_editor_v1_type_catalog.DiagnosticId_orMutable get id;
@@ -726,7 +716,7 @@ final class Diagnostic implements Diagnostic_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   Diagnostic toFrozen() => this;
@@ -875,7 +865,7 @@ final class Diagnostic_mutable implements Diagnostic_orMutable {
     this.related,
   );
 
-  /// If the value of [id] is already mutable, returns it as-is.
+  /// If the value of [id] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
   _lib_editor_v1_type_catalog.DiagnosticId_mutable get mutableId {
     final value = this.id;
@@ -887,7 +877,7 @@ final class Diagnostic_mutable implements Diagnostic_orMutable {
     }
   }
 
-  /// If the value of [origin] is already mutable, returns it as-is.
+  /// If the value of [origin] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [origin] and returns it.
   _lib_editor_v1_type_catalog.RuleOrigin_mutable get mutableOrigin {
     final value = this.origin;
@@ -899,7 +889,7 @@ final class Diagnostic_mutable implements Diagnostic_orMutable {
     }
   }
 
-  /// If the value of [related] is already mutable, returns it as-is.
+  /// If the value of [related] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [related] and returns it.
   _core.List<_lib_editor_v1_type_catalog.ValueLocation_orMutable>
   get mutableRelated {
@@ -927,9 +917,7 @@ final class Diagnostic_mutable implements Diagnostic_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ValueProblem
-// -----------------------------------------------------------------------------
 
 sealed class ValueProblem_orMutable {
   _lib_editor_v1_type_catalog.ValueLocation_orMutable get location;
@@ -966,7 +954,7 @@ final class ValueProblem implements ValueProblem_orMutable {
     "",
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ValueProblem toFrozen() => this;
@@ -1039,7 +1027,7 @@ final class ValueProblem_mutable implements ValueProblem_orMutable {
 
   ValueProblem_mutable._(this.location, this.code);
 
-  /// If the value of [location] is already mutable, returns it as-is.
+  /// If the value of [location] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [location] and returns it.
   _lib_editor_v1_type_catalog.ValueLocation_mutable get mutableLocation {
     final value = this.location;
@@ -1057,9 +1045,7 @@ final class ValueProblem_mutable implements ValueProblem_orMutable {
       ValueProblem(location: this.location, code: this.code).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct InitializationDiagnostic
-// -----------------------------------------------------------------------------
 
 sealed class InitializationDiagnostic_orMutable {
   _lib_editor_v1_type_catalog.FieldOwner_orMutable? get field;
@@ -1110,7 +1096,7 @@ final class InitializationDiagnostic
   static InitializationDiagnostic_mutable mutable() =>
       InitializationDiagnostic_mutable._(null, "", "", null);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   InitializationDiagnostic toFrozen() => this;
@@ -1236,9 +1222,7 @@ final class InitializationDiagnostic_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CompleteValue
-// -----------------------------------------------------------------------------
 
 sealed class CompleteValue_orMutable {
   _lib_editor_v1_type_catalog.CheckedType_orMutable get schema;
@@ -1275,7 +1259,7 @@ final class CompleteValue implements CompleteValue_orMutable {
     _lib_editor_v1_type_catalog.DataValue.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CompleteValue toFrozen() => this;
@@ -1348,7 +1332,7 @@ final class CompleteValue_mutable implements CompleteValue_orMutable {
 
   CompleteValue_mutable._(this.schema, this.value);
 
-  /// If the value of [schema] is already mutable, returns it as-is.
+  /// If the value of [schema] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [schema] and returns it.
   _lib_editor_v1_type_catalog.CheckedType_mutable get mutableSchema {
     final value = this.schema;
@@ -1366,9 +1350,7 @@ final class CompleteValue_mutable implements CompleteValue_orMutable {
       CompleteValue(schema: this.schema, value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum StructuralResult
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -1494,9 +1476,7 @@ final class StructuralResult_invalidWrapper extends _StructuralResult_wrapper {
   StructuralResult_kind get kind => StructuralResult_kind.invalidWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // enum CompletenessResult
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```

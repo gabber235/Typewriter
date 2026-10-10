@@ -5,8 +5,6 @@
 //! topology update. It does not change the desired execution topology, which is owned by
 //! `configure_topology`.
 
-use std::collections::HashMap;
-
 use otel_wasi::ResultWithSlug;
 use serde::Deserialize;
 use wasmcloud_utils::{
@@ -15,10 +13,11 @@ use wasmcloud_utils::{
         topology::{ServiceHostRecord, SupportedEngineRecord},
         transaction_query,
     },
-    decode_skir, extract_params,
     skir::base::service::v1::topology::{
         OrganizationTopologyChanged, RegisterServiceHostRequest, RegisterServiceHostResponse,
     },
+    skir_utils::RecordIdKeyIdentity,
+    transport_routes::ServiceScope,
     wasmcloud::messaging::types::NatsMessage,
 };
 
@@ -29,18 +28,18 @@ struct RegisterHostResult {
     changed: bool,
 }
 
-#[tracing::instrument(skip(msg, params))]
+#[tracing::instrument(skip_all)]
 /// Creates or refreshes the host record advertised by a running service.
 ///
 /// The host record stores the entrypoint, Realm capability, and supported engine identifiers.
 /// Repeated equal advertisements return the existing revision and publish nothing. Changed
 /// advertisements are committed before the organization topology update is published.
 pub async fn handle(
-    msg: NatsMessage,
-    params: HashMap<String, String>,
+    _msg: NatsMessage,
+    scope: ServiceScope,
+    request: RegisterServiceHostRequest,
 ) -> Result<RegisterServiceHostResponse, otel_wasi::Error> {
-    let service_id = extract_params!(params, service_id)?;
-    let request = decode_skir!(RegisterServiceHostRequest, &msg.body)?;
+    let service_id = scope.service;
     otel_wasi::main_attribute!(
         "service.id" = service_id.to_string(),
         "host.entrypoint" = request.entrypoint.clone(),
@@ -48,8 +47,8 @@ pub async fn handle(
         "host.supported_engine_count" = request.supported_engines.len() as i64,
     );
 
-    let service_id = RecordId::new("service", service_id);
-    let host_id = RecordId::new("service_host", service_id.key.to_string());
+    let service_id = RecordId::new("service", service_id.as_str());
+    let host_id = RecordId::new("service_host", service_id.key.raw_identity()?);
     let supported_engines = request
         .supported_engines
         .iter()
@@ -125,11 +124,14 @@ pub async fn handle(
     };
     let host = wasmcloud_utils::skir::base::service::v1::topology::ServiceHost::from(result.host);
     if result.changed {
-        wasmcloud_utils::skir_subjects::organization_topology_changed(&result.organization_id.key)
-            .publish(OrganizationTopologyChanged::HostUpdated(Box::new(
-                host.clone(),
-            )))
-            .await?;
+        let organization_id = result.organization_id.key.raw_identity()?;
+        wasmcloud_utils::transport_routes::OrganizationTopologyWatchRoute::delivery(
+            &wasmcloud_utils::transport_routes::OrganizationScope::try_from(organization_id)?,
+        )
+        .publish(OrganizationTopologyChanged::HostAdvertised(Box::new(
+            host.clone(),
+        )))
+        .await?;
     }
 
     Ok(RegisterServiceHostResponse::Success(Box::new(host)))

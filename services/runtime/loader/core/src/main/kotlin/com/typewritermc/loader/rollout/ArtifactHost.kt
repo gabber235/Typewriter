@@ -11,7 +11,6 @@ import com.typewritermc.loader.artifact.ArtifactInboxReconciler
 import com.typewritermc.loader.artifact.DigestProtectionState
 import com.typewritermc.loader.artifact.FileCandidateRepository
 import com.typewritermc.loader.artifact.FileDigestBlobStore
-import com.typewritermc.loader.artifact.RealmArtifactAddress
 import com.typewritermc.loader.artifact.ReconnectingSharedArtifactAccess
 import com.typewritermc.loader.artifact.StableRealmArtifactRoutes
 import com.typewritermc.loader.artifact.VerifiedArtifactCache
@@ -25,6 +24,7 @@ import com.typewritermc.loader.deployment.RealmDeploymentSelection
 import com.typewritermc.loader.deployment.RealmLoaderIntent
 import com.typewritermc.loader.deployment.ResolutionResult
 import com.typewritermc.loader.deployment.resolveDeployment
+import com.typewritermc.protocol.transport.generated.RealmRouteScope
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
 import com.typewritermc.services.libs.communicator.router.RouterResult
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
@@ -319,8 +319,11 @@ internal class AssignmentRuntime(
     }
 
     private fun createRouter(session: HostedMessagingSession): CommunicatorRouter {
-        val broadcastAddress = RealmBroadcastAddress(session.organizationId, assignment.realmId)
-        val artifactAddress = RealmArtifactAddress(assignment.realmId.value, session.organizationId)
+        val artifactAddress =
+            RealmRouteScope(
+                organizationId = session.organizationId,
+                realmId = assignment.realmId.value,
+            )
         val routes =
             communicatorRoutes {
                 RolloutHostRoutes(
@@ -338,8 +341,8 @@ internal class AssignmentRuntime(
                         }
                     },
                     participant = participant,
-                ).register(this, broadcastAddress)
-                rolloutState?.let { RolloutCoordinatorRoutes(it).register(this, broadcastAddress) }
+                ).register(this, artifactAddress)
+                rolloutState?.let { RolloutCoordinatorRoutes(it).register(this, artifactAddress) }
                 if (RuntimePlacement.REALM in assignment.roles) {
                     StableRealmArtifactRoutes(sharedArtifacts).register(this, artifactAddress)
                 }

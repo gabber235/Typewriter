@@ -19,9 +19,7 @@ import "../../kernel/v1/duration.dart" as _lib_kernel_v1_duration;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 import "../../kernel/v1/record_id.dart" as _lib_kernel_v1_record_id;
 
-// -----------------------------------------------------------------------------
 // struct JoinCode.AutoAccept
-// -----------------------------------------------------------------------------
 
 sealed class JoinCode_AutoAccept_orMutable {
   _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> get roleIds;
@@ -54,7 +52,7 @@ final class JoinCode_AutoAccept implements JoinCode_AutoAccept_orMutable {
   static JoinCode_AutoAccept_mutable mutable() =>
       JoinCode_AutoAccept_mutable._(_skir.KeyedIterable.empty);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   JoinCode_AutoAccept toFrozen() => this;
@@ -123,7 +121,7 @@ final class JoinCode_AutoAccept_mutable
 
   JoinCode_AutoAccept_mutable._(this.roleIds);
 
-  /// If the value of [roleIds] is already mutable, returns it as-is.
+  /// If the value of [roleIds] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [roleIds] and returns it.
   _core.List<_lib_kernel_v1_record_id.RecordId_orMutable> get mutableRoleIds {
     final value = this.roleIds;
@@ -143,9 +141,7 @@ final class JoinCode_AutoAccept_mutable
       JoinCode_AutoAccept(roleIds: this.roleIds).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct JoinCode
-// -----------------------------------------------------------------------------
 
 sealed class JoinCode_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get code;
@@ -212,7 +208,7 @@ final class JoinCode implements JoinCode_orMutable {
     JoinCode_AutoAccept.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   JoinCode toFrozen() => this;
@@ -331,7 +327,7 @@ final class JoinCode_mutable implements JoinCode_orMutable {
     this.autoAccept,
   );
 
-  /// If the value of [code] is already mutable, returns it as-is.
+  /// If the value of [code] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [code] and returns it.
   _lib_kernel_v1_record_id.RecordId_mutable get mutableCode {
     final value = this.code;
@@ -343,7 +339,7 @@ final class JoinCode_mutable implements JoinCode_orMutable {
     }
   }
 
-  /// If the value of [autoAccept] is already mutable, returns it as-is.
+  /// If the value of [autoAccept] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [autoAccept] and returns it.
   JoinCode_AutoAccept_mutable get mutableAutoAccept {
     final value = this.autoAccept;
@@ -365,9 +361,7 @@ final class JoinCode_mutable implements JoinCode_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct OrganizationJoinCodesSnapshot
-// -----------------------------------------------------------------------------
 
 sealed class OrganizationJoinCodesSnapshot_orMutable {
   _core.int get sequence;
@@ -406,7 +400,7 @@ final class OrganizationJoinCodesSnapshot
   static OrganizationJoinCodesSnapshot_mutable mutable() =>
       OrganizationJoinCodesSnapshot_mutable._(0, _skir.KeyedIterable.empty);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   OrganizationJoinCodesSnapshot toFrozen() => this;
@@ -483,7 +477,7 @@ final class OrganizationJoinCodesSnapshot_mutable
 
   OrganizationJoinCodesSnapshot_mutable._(this.sequence, this.values);
 
-  /// If the value of [values] is already mutable, returns it as-is.
+  /// If the value of [values] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [values] and returns it.
   _core.List<JoinCode_orMutable> get mutableValues {
     final value = this.values;
@@ -502,9 +496,7 @@ final class OrganizationJoinCodesSnapshot_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum OrganizationJoinCodesChange
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -671,9 +663,7 @@ final class OrganizationJoinCodesChange_removeWrapper
       OrganizationJoinCodesChange_kind.removeWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct OrganizationJoinCodesChanged
-// -----------------------------------------------------------------------------
 
 sealed class OrganizationJoinCodesChanged_orMutable {
   _core.int get sequence;
@@ -718,7 +708,7 @@ final class OrganizationJoinCodesChanged
   static OrganizationJoinCodesChanged_mutable mutable() =>
       OrganizationJoinCodesChanged_mutable._(0, "", _skir.KeyedIterable.empty);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   OrganizationJoinCodesChanged toFrozen() => this;
@@ -817,7 +807,7 @@ final class OrganizationJoinCodesChanged_mutable
     this.changes,
   );
 
-  /// If the value of [changes] is already mutable, returns it as-is.
+  /// If the value of [changes] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [changes] and returns it.
   _core.List<OrganizationJoinCodesChange> get mutableChanges {
     final value = this.changes;
@@ -837,9 +827,7 @@ final class OrganizationJoinCodesChanged_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct WatchOrganizationJoinCodesRequest
-// -----------------------------------------------------------------------------
 
 sealed class WatchOrganizationJoinCodesRequest_orMutable {
   WatchOrganizationJoinCodesRequest toFrozen();
@@ -863,7 +851,7 @@ final class WatchOrganizationJoinCodesRequest
   static WatchOrganizationJoinCodesRequest_mutable mutable() =>
       WatchOrganizationJoinCodesRequest_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   WatchOrganizationJoinCodesRequest toFrozen() => this;
@@ -927,9 +915,7 @@ final class WatchOrganizationJoinCodesRequest_mutable
       WatchOrganizationJoinCodesRequest().._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum WatchOrganizationJoinCodesResponse
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -1137,9 +1123,7 @@ final class WatchOrganizationJoinCodesResponse_changedWrapper
       WatchOrganizationJoinCodesResponse_kind.changedWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // enum GenerateOrganizationJoinCodeRequest.Expiration
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -1295,9 +1279,7 @@ final class GenerateOrganizationJoinCodeRequest_Expiration_durationWrapper
       GenerateOrganizationJoinCodeRequest_Expiration_kind.durationWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct GenerateOrganizationJoinCodeRequest.AutoAccept
-// -----------------------------------------------------------------------------
 
 sealed class GenerateOrganizationJoinCodeRequest_AutoAccept_orMutable {
   _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> get roleIds;
@@ -1334,7 +1316,7 @@ final class GenerateOrganizationJoinCodeRequest_AutoAccept
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   GenerateOrganizationJoinCodeRequest_AutoAccept toFrozen() => this;
@@ -1404,7 +1386,7 @@ final class GenerateOrganizationJoinCodeRequest_AutoAccept_mutable
 
   GenerateOrganizationJoinCodeRequest_AutoAccept_mutable._(this.roleIds);
 
-  /// If the value of [roleIds] is already mutable, returns it as-is.
+  /// If the value of [roleIds] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [roleIds] and returns it.
   _core.List<_lib_kernel_v1_record_id.RecordId_orMutable> get mutableRoleIds {
     final value = this.roleIds;
@@ -1425,9 +1407,7 @@ final class GenerateOrganizationJoinCodeRequest_AutoAccept_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct GenerateOrganizationJoinCodeRequest
-// -----------------------------------------------------------------------------
 
 sealed class GenerateOrganizationJoinCodeRequest_orMutable {
   _core.String get operationId;
@@ -1489,7 +1469,7 @@ final class GenerateOrganizationJoinCodeRequest
         GenerateOrganizationJoinCodeRequest_AutoAccept.defaultInstance,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   GenerateOrganizationJoinCodeRequest toFrozen() => this;
@@ -1602,7 +1582,7 @@ final class GenerateOrganizationJoinCodeRequest_mutable
     this.autoAccept,
   );
 
-  /// If the value of [autoAccept] is already mutable, returns it as-is.
+  /// If the value of [autoAccept] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [autoAccept] and returns it.
   GenerateOrganizationJoinCodeRequest_AutoAccept_mutable get mutableAutoAccept {
     final value = this.autoAccept;
@@ -1625,9 +1605,7 @@ final class GenerateOrganizationJoinCodeRequest_mutable
       ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct GenerateOrganizationJoinCodeResponse.InvalidOperationIdError
-// -----------------------------------------------------------------------------
 
 sealed class GenerateOrganizationJoinCodeResponse_InvalidOperationIdError_orMutable {
   GenerateOrganizationJoinCodeResponse_InvalidOperationIdError toFrozen();
@@ -1654,7 +1632,7 @@ final class GenerateOrganizationJoinCodeResponse_InvalidOperationIdError
   mutable() =>
       GenerateOrganizationJoinCodeResponse_InvalidOperationIdError_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   GenerateOrganizationJoinCodeResponse_InvalidOperationIdError toFrozen() =>
@@ -1724,9 +1702,7 @@ final class GenerateOrganizationJoinCodeResponse_InvalidOperationIdError_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct GenerateOrganizationJoinCodeResponse.OperationIdentityReusedError
-// -----------------------------------------------------------------------------
 
 sealed class GenerateOrganizationJoinCodeResponse_OperationIdentityReusedError_orMutable {
   GenerateOrganizationJoinCodeResponse_OperationIdentityReusedError toFrozen();
@@ -1753,7 +1729,7 @@ final class GenerateOrganizationJoinCodeResponse_OperationIdentityReusedError
   mutable() =>
       GenerateOrganizationJoinCodeResponse_OperationIdentityReusedError_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   GenerateOrganizationJoinCodeResponse_OperationIdentityReusedError
@@ -1826,9 +1802,7 @@ final class GenerateOrganizationJoinCodeResponse_OperationIdentityReusedError_mu
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct GenerateOrganizationJoinCodeResponse.Success
-// -----------------------------------------------------------------------------
 
 sealed class GenerateOrganizationJoinCodeResponse_Success_orMutable {
   JoinCode_orMutable get code;
@@ -1870,7 +1844,7 @@ final class GenerateOrganizationJoinCodeResponse_Success
         OrganizationJoinCodesChanged.defaultInstance,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   GenerateOrganizationJoinCodeResponse_Success toFrozen() => this;
@@ -1951,7 +1925,7 @@ final class GenerateOrganizationJoinCodeResponse_Success_mutable
 
   GenerateOrganizationJoinCodeResponse_Success_mutable._(this.code, this.event);
 
-  /// If the value of [code] is already mutable, returns it as-is.
+  /// If the value of [code] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [code] and returns it.
   JoinCode_mutable get mutableCode {
     final value = this.code;
@@ -1962,7 +1936,7 @@ final class GenerateOrganizationJoinCodeResponse_Success_mutable
     }
   }
 
-  /// If the value of [event] is already mutable, returns it as-is.
+  /// If the value of [event] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [event] and returns it.
   OrganizationJoinCodesChanged_mutable get mutableEvent {
     final value = this.event;
@@ -1982,9 +1956,7 @@ final class GenerateOrganizationJoinCodeResponse_Success_mutable
       ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct GenerateOrganizationJoinCodeResponse.RolesNotFoundError
-// -----------------------------------------------------------------------------
 
 sealed class GenerateOrganizationJoinCodeResponse_RolesNotFoundError_orMutable {
   _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> get roleIds;
@@ -2023,7 +1995,7 @@ final class GenerateOrganizationJoinCodeResponse_RolesNotFoundError
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   GenerateOrganizationJoinCodeResponse_RolesNotFoundError toFrozen() => this;
@@ -2100,7 +2072,7 @@ final class GenerateOrganizationJoinCodeResponse_RolesNotFoundError_mutable
     this.roleIds,
   );
 
-  /// If the value of [roleIds] is already mutable, returns it as-is.
+  /// If the value of [roleIds] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [roleIds] and returns it.
   _core.List<_lib_kernel_v1_record_id.RecordId_orMutable> get mutableRoleIds {
     final value = this.roleIds;
@@ -2122,9 +2094,7 @@ final class GenerateOrganizationJoinCodeResponse_RolesNotFoundError_mutable
       ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct GenerateOrganizationJoinCodeResponse.RolesNotAssignableError
-// -----------------------------------------------------------------------------
 
 sealed class GenerateOrganizationJoinCodeResponse_RolesNotAssignableError_orMutable {
   _core.Iterable<_lib_kernel_v1_record_id.RecordId_orMutable> get roleIds;
@@ -2163,7 +2133,7 @@ final class GenerateOrganizationJoinCodeResponse_RolesNotAssignableError
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   GenerateOrganizationJoinCodeResponse_RolesNotAssignableError toFrozen() =>
@@ -2242,7 +2212,7 @@ final class GenerateOrganizationJoinCodeResponse_RolesNotAssignableError_mutable
     this.roleIds,
   );
 
-  /// If the value of [roleIds] is already mutable, returns it as-is.
+  /// If the value of [roleIds] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [roleIds] and returns it.
   _core.List<_lib_kernel_v1_record_id.RecordId_orMutable> get mutableRoleIds {
     final value = this.roleIds;
@@ -2264,9 +2234,7 @@ final class GenerateOrganizationJoinCodeResponse_RolesNotAssignableError_mutable
       ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct GenerateOrganizationJoinCodeResponse.InvalidExpirationError
-// -----------------------------------------------------------------------------
 
 sealed class GenerateOrganizationJoinCodeResponse_InvalidExpirationError_orMutable {
   _lib_kernel_v1_duration.Duration_orMutable get duration;
@@ -2304,7 +2272,7 @@ final class GenerateOrganizationJoinCodeResponse_InvalidExpirationError
         _lib_kernel_v1_duration.Duration.defaultInstance,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   GenerateOrganizationJoinCodeResponse_InvalidExpirationError toFrozen() =>
@@ -2381,7 +2349,7 @@ final class GenerateOrganizationJoinCodeResponse_InvalidExpirationError_mutable
     this.duration,
   );
 
-  /// If the value of [duration] is already mutable, returns it as-is.
+  /// If the value of [duration] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [duration] and returns it.
   _lib_kernel_v1_duration.Duration_mutable get mutableDuration {
     final value = this.duration;
@@ -2401,9 +2369,7 @@ final class GenerateOrganizationJoinCodeResponse_InvalidExpirationError_mutable
       ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum GenerateOrganizationJoinCodeResponse
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -2823,9 +2789,7 @@ final class GenerateOrganizationJoinCodeResponse_invalidRecordIdErrorWrapper
       GenerateOrganizationJoinCodeResponse_kind.invalidRecordIdErrorWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct RevokeOrganizationJoinCodeRequest
-// -----------------------------------------------------------------------------
 
 sealed class RevokeOrganizationJoinCodeRequest_orMutable {
   _core.String get operationId;
@@ -2864,7 +2828,7 @@ final class RevokeOrganizationJoinCodeRequest
         _lib_kernel_v1_record_id.RecordId.defaultInstance,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RevokeOrganizationJoinCodeRequest toFrozen() => this;
@@ -2945,7 +2909,7 @@ final class RevokeOrganizationJoinCodeRequest_mutable
 
   RevokeOrganizationJoinCodeRequest_mutable._(this.operationId, this.codeId);
 
-  /// If the value of [codeId] is already mutable, returns it as-is.
+  /// If the value of [codeId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [codeId] and returns it.
   _lib_kernel_v1_record_id.RecordId_mutable get mutableCodeId {
     final value = this.codeId;
@@ -2966,9 +2930,7 @@ final class RevokeOrganizationJoinCodeRequest_mutable
       ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct RevokeOrganizationJoinCodeResponse.InvalidOperationIdError
-// -----------------------------------------------------------------------------
 
 sealed class RevokeOrganizationJoinCodeResponse_InvalidOperationIdError_orMutable {
   RevokeOrganizationJoinCodeResponse_InvalidOperationIdError toFrozen();
@@ -2995,7 +2957,7 @@ final class RevokeOrganizationJoinCodeResponse_InvalidOperationIdError
   mutable() =>
       RevokeOrganizationJoinCodeResponse_InvalidOperationIdError_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RevokeOrganizationJoinCodeResponse_InvalidOperationIdError toFrozen() => this;
@@ -3064,9 +3026,7 @@ final class RevokeOrganizationJoinCodeResponse_InvalidOperationIdError_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct RevokeOrganizationJoinCodeResponse.OperationIdentityReusedError
-// -----------------------------------------------------------------------------
 
 sealed class RevokeOrganizationJoinCodeResponse_OperationIdentityReusedError_orMutable {
   RevokeOrganizationJoinCodeResponse_OperationIdentityReusedError toFrozen();
@@ -3093,7 +3053,7 @@ final class RevokeOrganizationJoinCodeResponse_OperationIdentityReusedError
   mutable() =>
       RevokeOrganizationJoinCodeResponse_OperationIdentityReusedError_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RevokeOrganizationJoinCodeResponse_OperationIdentityReusedError toFrozen() =>
@@ -3165,9 +3125,7 @@ final class RevokeOrganizationJoinCodeResponse_OperationIdentityReusedError_muta
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct RevokeOrganizationJoinCodeResponse.Success
-// -----------------------------------------------------------------------------
 
 sealed class RevokeOrganizationJoinCodeResponse_Success_orMutable {
   OrganizationJoinCodesChanged_orMutable get event;
@@ -3200,7 +3158,7 @@ final class RevokeOrganizationJoinCodeResponse_Success
         OrganizationJoinCodesChanged.defaultInstance,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RevokeOrganizationJoinCodeResponse_Success toFrozen() => this;
@@ -3268,7 +3226,7 @@ final class RevokeOrganizationJoinCodeResponse_Success_mutable
 
   RevokeOrganizationJoinCodeResponse_Success_mutable._(this.event);
 
-  /// If the value of [event] is already mutable, returns it as-is.
+  /// If the value of [event] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [event] and returns it.
   OrganizationJoinCodesChanged_mutable get mutableEvent {
     final value = this.event;
@@ -3286,9 +3244,7 @@ final class RevokeOrganizationJoinCodeResponse_Success_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct RevokeOrganizationJoinCodeResponse.CodeNotFoundError
-// -----------------------------------------------------------------------------
 
 sealed class RevokeOrganizationJoinCodeResponse_CodeNotFoundError_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get codeId;
@@ -3323,7 +3279,7 @@ final class RevokeOrganizationJoinCodeResponse_CodeNotFoundError
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RevokeOrganizationJoinCodeResponse_CodeNotFoundError toFrozen() => this;
@@ -3395,7 +3351,7 @@ final class RevokeOrganizationJoinCodeResponse_CodeNotFoundError_mutable
 
   RevokeOrganizationJoinCodeResponse_CodeNotFoundError_mutable._(this.codeId);
 
-  /// If the value of [codeId] is already mutable, returns it as-is.
+  /// If the value of [codeId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [codeId] and returns it.
   _lib_kernel_v1_record_id.RecordId_mutable get mutableCodeId {
     final value = this.codeId;
@@ -3414,9 +3370,7 @@ final class RevokeOrganizationJoinCodeResponse_CodeNotFoundError_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum RevokeOrganizationJoinCodeResponse
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```

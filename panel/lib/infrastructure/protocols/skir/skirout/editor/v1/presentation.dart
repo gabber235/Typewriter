@@ -20,9 +20,7 @@ import "./binding.dart" as _lib_editor_v1_binding;
 import "./expression.dart" as _lib_editor_v1_expression;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 
-// -----------------------------------------------------------------------------
 // enum MainAxisAlignment
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -149,9 +147,7 @@ enum _MainAxisAlignment_consts implements MainAxisAlignment {
       _skir.internal__stringify(this, MainAxisAlignment.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // enum CrossAxisAlignment
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -257,9 +253,7 @@ enum _CrossAxisAlignment_consts implements CrossAxisAlignment {
       _skir.internal__stringify(this, CrossAxisAlignment.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // struct PresentationProperties
-// -----------------------------------------------------------------------------
 
 sealed class PresentationProperties_orMutable {
   _lib_editor_v1_expression.ExpressionNode? get enabledIf;
@@ -291,7 +285,7 @@ final class PresentationProperties implements PresentationProperties_orMutable {
   static PresentationProperties_mutable mutable() =>
       PresentationProperties_mutable._(null, false);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresentationProperties toFrozen() => this;
@@ -377,9 +371,7 @@ final class PresentationProperties_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct HeaderItemId
-// -----------------------------------------------------------------------------
 
 sealed class HeaderItemId_orMutable {
   _core.String get namespace;
@@ -410,7 +402,7 @@ final class HeaderItemId implements HeaderItemId_orMutable {
   /// Fields are initialized to their default values.
   static HeaderItemId_mutable mutable() => HeaderItemId_mutable._("", "");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   HeaderItemId toFrozen() => this;
@@ -489,9 +481,7 @@ final class HeaderItemId_mutable implements HeaderItemId_orMutable {
       HeaderItemId(namespace: this.namespace, name: this.name).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum HeaderActionTone
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -592,9 +582,7 @@ enum _HeaderActionTone_consts implements HeaderActionTone {
       _skir.internal__stringify(this, HeaderActionTone.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // enum HeaderActionPlacement
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -701,9 +689,7 @@ enum _HeaderActionPlacement_consts implements HeaderActionPlacement {
       _skir.internal__stringify(this, HeaderActionPlacement.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // struct HeaderActionConfirmation
-// -----------------------------------------------------------------------------
 
 sealed class HeaderActionConfirmation_orMutable {
   _lib_editor_v1_expression.ExpressionNode get title;
@@ -748,7 +734,7 @@ final class HeaderActionConfirmation
         _lib_editor_v1_expression.ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   HeaderActionConfirmation toFrozen() => this;
@@ -856,9 +842,7 @@ final class HeaderActionConfirmation_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct HeaderButtonItem
-// -----------------------------------------------------------------------------
 
 sealed class HeaderButtonItem_orMutable {
   HeaderItemId_orMutable get itemId;
@@ -973,7 +957,7 @@ final class HeaderButtonItem implements HeaderButtonItem_orMutable {
     HeaderActionPlacement.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   HeaderButtonItem toFrozen() => this;
@@ -1179,7 +1163,7 @@ final class HeaderButtonItem_mutable implements HeaderButtonItem_orMutable {
     this.placement,
   );
 
-  /// If the value of [itemId] is already mutable, returns it as-is.
+  /// If the value of [itemId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [itemId] and returns it.
   HeaderItemId_mutable get mutableItemId {
     final value = this.itemId;
@@ -1207,9 +1191,7 @@ final class HeaderButtonItem_mutable implements HeaderButtonItem_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct HeaderBooleanToggleItem
-// -----------------------------------------------------------------------------
 
 sealed class HeaderBooleanToggleItem_orMutable {
   HeaderItemId_orMutable get itemId;
@@ -1318,7 +1300,7 @@ final class HeaderBooleanToggleItem
         HeaderActionPlacement.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   HeaderBooleanToggleItem toFrozen() => this;
@@ -1516,7 +1498,7 @@ final class HeaderBooleanToggleItem_mutable
     this.placement,
   );
 
-  /// If the value of [itemId] is already mutable, returns it as-is.
+  /// If the value of [itemId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [itemId] and returns it.
   HeaderItemId_mutable get mutableItemId {
     final value = this.itemId;
@@ -1543,9 +1525,7 @@ final class HeaderBooleanToggleItem_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct HeaderReorderHandleItem
-// -----------------------------------------------------------------------------
 
 sealed class HeaderReorderHandleItem_orMutable {
   HeaderItemId_orMutable get itemId;
@@ -1622,7 +1602,7 @@ final class HeaderReorderHandleItem
         null,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   HeaderReorderHandleItem toFrozen() => this;
@@ -1766,7 +1746,7 @@ final class HeaderReorderHandleItem_mutable
     this.enabledIf,
   );
 
-  /// If the value of [itemId] is already mutable, returns it as-is.
+  /// If the value of [itemId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [itemId] and returns it.
   HeaderItemId_mutable get mutableItemId {
     final value = this.itemId;
@@ -1777,7 +1757,7 @@ final class HeaderReorderHandleItem_mutable
     }
   }
 
-  /// If the value of [source] is already mutable, returns it as-is.
+  /// If the value of [source] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
   _lib_editor_v1_binding.BindingRef_mutable get mutableSource {
     final value = this.source;
@@ -1801,9 +1781,7 @@ final class HeaderReorderHandleItem_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum HeaderItem
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -2036,9 +2014,7 @@ final class HeaderItem_reorderHandleWrapper extends _HeaderItem_wrapper {
   HeaderItem_kind get kind => HeaderItem_kind.reorderHandleWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // enum PresentationHeaderTitle
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -2193,9 +2169,7 @@ final class PresentationHeaderTitle_presentationWrapper
       PresentationHeaderTitle_kind.presentationWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct SymmetricPresentationInsets
-// -----------------------------------------------------------------------------
 
 sealed class SymmetricPresentationInsets_orMutable {
   _core.double get horizontal;
@@ -2228,7 +2202,7 @@ final class SymmetricPresentationInsets
   static SymmetricPresentationInsets_mutable mutable() =>
       SymmetricPresentationInsets_mutable._(0.0, 0.0);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SymmetricPresentationInsets toFrozen() => this;
@@ -2313,9 +2287,7 @@ final class SymmetricPresentationInsets_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct OnlyPresentationInsets
-// -----------------------------------------------------------------------------
 
 sealed class OnlyPresentationInsets_orMutable {
   _core.double get top;
@@ -2355,7 +2327,7 @@ final class OnlyPresentationInsets implements OnlyPresentationInsets_orMutable {
   static OnlyPresentationInsets_mutable mutable() =>
       OnlyPresentationInsets_mutable._(0.0, 0.0, 0.0, 0.0);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   OnlyPresentationInsets toFrozen() => this;
@@ -2477,9 +2449,7 @@ final class OnlyPresentationInsets_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum PresentationInsets
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -2657,9 +2627,7 @@ final class PresentationInsets_onlyWrapper extends _PresentationInsets_wrapper {
   PresentationInsets_kind get kind => PresentationInsets_kind.onlyWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct PresentationHeader
-// -----------------------------------------------------------------------------
 
 sealed class PresentationHeader_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable? get binding;
@@ -2742,7 +2710,7 @@ final class PresentationHeader implements PresentationHeader_orMutable {
     null,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresentationHeader toFrozen() => this;
@@ -2892,7 +2860,7 @@ final class PresentationHeader_mutable implements PresentationHeader_orMutable {
     this.contentPadding,
   );
 
-  /// If the value of [items] is already mutable, returns it as-is.
+  /// If the value of [items] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [items] and returns it.
   _core.List<HeaderItem> get mutableItems {
     final value = this.items;
@@ -2916,9 +2884,7 @@ final class PresentationHeader_mutable implements PresentationHeader_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct PresentationNode
-// -----------------------------------------------------------------------------
 
 sealed class PresentationNode_orMutable {
   _core.String get nodeId;
@@ -2972,7 +2938,7 @@ final class PresentationNode implements PresentationNode_orMutable {
     null,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresentationNode toFrozen() => this;
@@ -3079,7 +3045,7 @@ final class PresentationNode_mutable implements PresentationNode_orMutable {
     this.header,
   );
 
-  /// If the value of [properties] is already mutable, returns it as-is.
+  /// If the value of [properties] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [properties] and returns it.
   PresentationProperties_mutable get mutableProperties {
     final value = this.properties;
@@ -3100,9 +3066,7 @@ final class PresentationNode_mutable implements PresentationNode_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct AxisChildrenLayout
-// -----------------------------------------------------------------------------
 
 sealed class AxisChildrenLayout_orMutable {
   _core.double get spacing;
@@ -3149,7 +3113,7 @@ final class AxisChildrenLayout implements AxisChildrenLayout_orMutable {
     CrossAxisAlignment.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   AxisChildrenLayout toFrozen() => this;
@@ -3252,9 +3216,7 @@ final class AxisChildrenLayout_mutable implements AxisChildrenLayout_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum FlexFit
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -3343,9 +3305,7 @@ enum _FlexFit_consts implements FlexFit {
       _skir.internal__stringify(this, FlexFit.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // struct FlexibleAxisChild
-// -----------------------------------------------------------------------------
 
 sealed class FlexibleAxisChild_orMutable {
   PresentationNode_orMutable get child;
@@ -3388,7 +3348,7 @@ final class FlexibleAxisChild implements FlexibleAxisChild_orMutable {
     FlexFit.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   FlexibleAxisChild toFrozen() => this;
@@ -3478,9 +3438,7 @@ final class FlexibleAxisChild_mutable implements FlexibleAxisChild_orMutable {
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum AxisChild
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -3637,9 +3595,7 @@ final class AxisChild_flexibleWrapper extends _AxisChild_wrapper {
   AxisChild_kind get kind => AxisChild_kind.flexibleWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct WrapChildrenLayout
-// -----------------------------------------------------------------------------
 
 sealed class WrapChildrenLayout_orMutable {
   _core.double get spacing;
@@ -3698,7 +3654,7 @@ final class WrapChildrenLayout implements WrapChildrenLayout_orMutable {
     CrossAxisAlignment.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   WrapChildrenLayout toFrozen() => this;
@@ -3815,9 +3771,7 @@ final class WrapChildrenLayout_mutable implements WrapChildrenLayout_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct GridChildrenLayout
-// -----------------------------------------------------------------------------
 
 sealed class GridChildrenLayout_orMutable {
   _core.int get columns;
@@ -3857,7 +3811,7 @@ final class GridChildrenLayout implements GridChildrenLayout_orMutable {
   static GridChildrenLayout_mutable mutable() =>
       GridChildrenLayout_mutable._(0, 0.0, 0.0);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   GridChildrenLayout toFrozen() => this;
@@ -3960,9 +3914,7 @@ final class GridChildrenLayout_mutable implements GridChildrenLayout_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum ChildrenLayout
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -4217,9 +4169,7 @@ final class ChildrenLayout_gridWrapper extends _ChildrenLayout_wrapper {
   ChildrenLayout_kind get kind => ChildrenLayout_kind.gridWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct AxisChildrenElement
-// -----------------------------------------------------------------------------
 
 sealed class AxisChildrenElement_orMutable {
   _core.Iterable<AxisChild> get children;
@@ -4259,7 +4209,7 @@ final class AxisChildrenElement implements AxisChildrenElement_orMutable {
     AxisChildrenLayout.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   AxisChildrenElement toFrozen() => this;
@@ -4336,7 +4286,7 @@ final class AxisChildrenElement_mutable
 
   AxisChildrenElement_mutable._(this.children, this.layout);
 
-  /// If the value of [layout] is already mutable, returns it as-is.
+  /// If the value of [layout] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [layout] and returns it.
   AxisChildrenLayout_mutable get mutableLayout {
     final value = this.layout;
@@ -4354,9 +4304,7 @@ final class AxisChildrenElement_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct WrapChildrenElement
-// -----------------------------------------------------------------------------
 
 sealed class WrapChildrenElement_orMutable {
   _core.Iterable<PresentationNode_orMutable> get children;
@@ -4396,7 +4344,7 @@ final class WrapChildrenElement implements WrapChildrenElement_orMutable {
     WrapChildrenLayout.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   WrapChildrenElement toFrozen() => this;
@@ -4473,7 +4421,7 @@ final class WrapChildrenElement_mutable
 
   WrapChildrenElement_mutable._(this.children, this.layout);
 
-  /// If the value of [layout] is already mutable, returns it as-is.
+  /// If the value of [layout] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [layout] and returns it.
   WrapChildrenLayout_mutable get mutableLayout {
     final value = this.layout;
@@ -4491,9 +4439,7 @@ final class WrapChildrenElement_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct GridChildrenElement
-// -----------------------------------------------------------------------------
 
 sealed class GridChildrenElement_orMutable {
   _core.Iterable<PresentationNode_orMutable> get children;
@@ -4533,7 +4479,7 @@ final class GridChildrenElement implements GridChildrenElement_orMutable {
     GridChildrenLayout.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   GridChildrenElement toFrozen() => this;
@@ -4610,7 +4556,7 @@ final class GridChildrenElement_mutable
 
   GridChildrenElement_mutable._(this.children, this.layout);
 
-  /// If the value of [layout] is already mutable, returns it as-is.
+  /// If the value of [layout] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [layout] and returns it.
   GridChildrenLayout_mutable get mutableLayout {
     final value = this.layout;
@@ -4628,9 +4574,7 @@ final class GridChildrenElement_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct StackChildrenElement
-// -----------------------------------------------------------------------------
 
 sealed class StackChildrenElement_orMutable {
   _core.Iterable<PresentationNode_orMutable> get children;
@@ -4662,7 +4606,7 @@ final class StackChildrenElement implements StackChildrenElement_orMutable {
   static StackChildrenElement_mutable mutable() =>
       StackChildrenElement_mutable._(_skir.KeyedIterable.empty);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   StackChildrenElement toFrozen() => this;
@@ -4735,9 +4679,7 @@ final class StackChildrenElement_mutable
       StackChildrenElement(children: this.children).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum ChildrenElement
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -4982,9 +4924,7 @@ final class ChildrenElement_stackWrapper extends _ChildrenElement_wrapper {
   ChildrenElement_kind get kind => ChildrenElement_kind.stackWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct PresentationBorderSide
-// -----------------------------------------------------------------------------
 
 sealed class PresentationBorderSide_orMutable {
   PresentationColor? get color;
@@ -5016,7 +4956,7 @@ final class PresentationBorderSide implements PresentationBorderSide_orMutable {
   static PresentationBorderSide_mutable mutable() =>
       PresentationBorderSide_mutable._(null, 0.0);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresentationBorderSide toFrozen() => this;
@@ -5100,9 +5040,7 @@ final class PresentationBorderSide_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct DirectionalPresentationBorder
-// -----------------------------------------------------------------------------
 
 sealed class DirectionalPresentationBorder_orMutable {
   PresentationBorderSide_orMutable? get top;
@@ -5153,7 +5091,7 @@ final class DirectionalPresentationBorder
   static DirectionalPresentationBorder_mutable mutable() =>
       DirectionalPresentationBorder_mutable._(null, null, null, null);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   DirectionalPresentationBorder toFrozen() => this;
@@ -5275,9 +5213,7 @@ final class DirectionalPresentationBorder_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum PresentationBorder
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -5435,9 +5371,7 @@ final class PresentationBorder_sidesWrapper
   PresentationBorder_kind get kind => PresentationBorder_kind.sidesWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct SectionLayout
-// -----------------------------------------------------------------------------
 
 sealed class SectionLayout_orMutable {
   PresentationNode_orMutable get child;
@@ -5472,7 +5406,7 @@ final class SectionLayout implements SectionLayout_orMutable {
   static SectionLayout_mutable mutable() =>
       SectionLayout_mutable._(PresentationNode.defaultInstance, null);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SectionLayout toFrozen() => this;
@@ -5551,9 +5485,7 @@ final class SectionLayout_mutable implements SectionLayout_orMutable {
       SectionLayout(child: this.child, border: this.border).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct PaddingLayout
-// -----------------------------------------------------------------------------
 
 sealed class PaddingLayout_orMutable {
   PresentationNode_orMutable get child;
@@ -5608,7 +5540,7 @@ final class PaddingLayout implements PaddingLayout_orMutable {
     0.0,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PaddingLayout toFrozen() => this;
@@ -5739,9 +5671,7 @@ final class PaddingLayout_mutable implements PaddingLayout_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct PresentationSlotElement
-// -----------------------------------------------------------------------------
 
 sealed class PresentationSlotElement_orMutable {
   _core.String get slotId;
@@ -5769,7 +5699,7 @@ final class PresentationSlotElement
   static PresentationSlotElement_mutable mutable() =>
       PresentationSlotElement_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresentationSlotElement toFrozen() => this;
@@ -5842,9 +5772,7 @@ final class PresentationSlotElement_mutable
       PresentationSlotElement(slotId: this.slotId).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct TabItem
-// -----------------------------------------------------------------------------
 
 sealed class TabItem_orMutable {
   _core.String get tabId;
@@ -5887,7 +5815,7 @@ final class TabItem implements TabItem_orMutable {
     PresentationNode.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   TabItem toFrozen() => this;
@@ -5976,9 +5904,7 @@ final class TabItem_mutable implements TabItem_orMutable {
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct TabsLayout
-// -----------------------------------------------------------------------------
 
 sealed class TabsLayout_orMutable {
   _core.Iterable<TabItem_orMutable> get tabs;
@@ -6018,7 +5944,7 @@ final class TabsLayout implements TabsLayout_orMutable {
   static TabsLayout_mutable mutable() =>
       TabsLayout_mutable._(_skir.KeyedIterable.empty, null);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   TabsLayout toFrozen() => this;
@@ -6102,9 +6028,7 @@ final class TabsLayout_mutable implements TabsLayout_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct SpacerLayout
-// -----------------------------------------------------------------------------
 
 sealed class SpacerLayout_orMutable {
   _lib_editor_v1_expression.ExpressionNode? get width;
@@ -6135,7 +6059,7 @@ final class SpacerLayout implements SpacerLayout_orMutable {
   /// Fields are initialized to their default values.
   static SpacerLayout_mutable mutable() => SpacerLayout_mutable._(null, null);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SpacerLayout toFrozen() => this;
@@ -6218,9 +6142,7 @@ final class SpacerLayout_mutable implements SpacerLayout_orMutable {
       SpacerLayout(width: this.width, height: this.height).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct TextContent
-// -----------------------------------------------------------------------------
 
 sealed class TextContent_orMutable {
   _lib_editor_v1_expression.ExpressionNode get value;
@@ -6359,7 +6281,7 @@ final class TextContent implements TextContent_orMutable {
     TextParagraph.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   TextContent toFrozen() => this;
@@ -6616,7 +6538,7 @@ final class TextContent_mutable implements TextContent_orMutable {
     this.paragraph,
   );
 
-  /// If the value of [paragraph] is already mutable, returns it as-is.
+  /// If the value of [paragraph] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [paragraph] and returns it.
   TextParagraph_mutable get mutableParagraph {
     final value = this.paragraph;
@@ -6647,9 +6569,7 @@ final class TextContent_mutable implements TextContent_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum PresentationTextOverflow
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -6747,9 +6667,7 @@ enum _PresentationTextOverflow_consts implements PresentationTextOverflow {
       _skir.internal__stringify(this, PresentationTextOverflow.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // enum PresentationTextTone
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -6851,9 +6769,7 @@ enum _PresentationTextTone_consts implements PresentationTextTone {
       _skir.internal__stringify(this, PresentationTextTone.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // struct TextParagraph
-// -----------------------------------------------------------------------------
 
 sealed class TextParagraph_orMutable {
   _core.int? get maxLines;
@@ -6914,7 +6830,7 @@ final class TextParagraph implements TextParagraph_orMutable {
     PresentationTextTone.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   TextParagraph toFrozen() => this;
@@ -7045,9 +6961,7 @@ final class TextParagraph_mutable implements TextParagraph_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct TextStyleOverride
-// -----------------------------------------------------------------------------
 
 sealed class TextStyleOverride_orMutable {
   PresentationColor? get color;
@@ -7092,7 +7006,7 @@ final class TextStyleOverride implements TextStyleOverride_orMutable {
   static TextStyleOverride_mutable mutable() =>
       TextStyleOverride_mutable._(null, null, null, null);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   TextStyleOverride toFrozen() => this;
@@ -7215,9 +7129,7 @@ final class TextStyleOverride_mutable implements TextStyleOverride_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct TextRun
-// -----------------------------------------------------------------------------
 
 sealed class TextRun_orMutable {
   _lib_editor_v1_expression.ExpressionNode get text;
@@ -7252,7 +7164,7 @@ final class TextRun implements TextRun_orMutable {
   static TextRun_mutable mutable() =>
       TextRun_mutable._(_lib_editor_v1_expression.ExpressionNode.unknown, null);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   TextRun toFrozen() => this;
@@ -7329,9 +7241,7 @@ final class TextRun_mutable implements TextRun_orMutable {
       TextRun(text: this.text, style: this.style).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct RichTextContent
-// -----------------------------------------------------------------------------
 
 sealed class RichTextContent_orMutable {
   _core.Iterable<TextRun_orMutable> get runs;
@@ -7385,7 +7295,7 @@ final class RichTextContent implements RichTextContent_orMutable {
     null,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RichTextContent toFrozen() => this;
@@ -7487,7 +7397,7 @@ final class RichTextContent_mutable implements RichTextContent_orMutable {
 
   RichTextContent_mutable._(this.runs, this.style, this.paragraph, this.sizing);
 
-  /// If the value of [runs] is already mutable, returns it as-is.
+  /// If the value of [runs] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [runs] and returns it.
   _core.List<TextRun_orMutable> get mutableRuns {
     final value = this.runs;
@@ -7498,7 +7408,7 @@ final class RichTextContent_mutable implements RichTextContent_orMutable {
     }
   }
 
-  /// If the value of [paragraph] is already mutable, returns it as-is.
+  /// If the value of [paragraph] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [paragraph] and returns it.
   TextParagraph_mutable get mutableParagraph {
     final value = this.paragraph;
@@ -7519,9 +7429,7 @@ final class RichTextContent_mutable implements RichTextContent_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct AdaptiveLeadingElement
-// -----------------------------------------------------------------------------
 
 sealed class AdaptiveLeadingElement_orMutable {
   PresentationNode_orMutable get leading;
@@ -7605,7 +7513,7 @@ final class AdaptiveLeadingElement implements AdaptiveLeadingElement_orMutable {
         0.0,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   AdaptiveLeadingElement toFrozen() => this;
@@ -7769,9 +7677,7 @@ final class AdaptiveLeadingElement_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct IconContent
-// -----------------------------------------------------------------------------
 
 sealed class IconContent_orMutable {
   _lib_editor_v1_expression.ExpressionNode get name;
@@ -7820,7 +7726,7 @@ final class IconContent implements IconContent_orMutable {
     null,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   IconContent toFrozen() => this;
@@ -7936,9 +7842,7 @@ final class IconContent_mutable implements IconContent_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ImageContent
-// -----------------------------------------------------------------------------
 
 sealed class ImageContent_orMutable {
   _lib_editor_v1_expression.ExpressionNode get source;
@@ -7975,7 +7879,7 @@ final class ImageContent implements ImageContent_orMutable {
     null,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ImageContent toFrozen() => this;
@@ -8057,9 +7961,7 @@ final class ImageContent_mutable implements ImageContent_orMutable {
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct BadgeContent
-// -----------------------------------------------------------------------------
 
 sealed class BadgeContent_orMutable {
   _lib_editor_v1_expression.ExpressionNode get label;
@@ -8096,7 +7998,7 @@ final class BadgeContent implements BadgeContent_orMutable {
     "",
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   BadgeContent toFrozen() => this;
@@ -8175,9 +8077,7 @@ final class BadgeContent_mutable implements BadgeContent_orMutable {
       BadgeContent(label: this.label, tone: this.tone).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ChipContent
-// -----------------------------------------------------------------------------
 
 sealed class ChipContent_orMutable {
   _lib_editor_v1_expression.ExpressionNode get label;
@@ -8214,7 +8114,7 @@ final class ChipContent implements ChipContent_orMutable {
     null,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ChipContent toFrozen() => this;
@@ -8293,9 +8193,7 @@ final class ChipContent_mutable implements ChipContent_orMutable {
       ChipContent(label: this.label, color: this.color).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ProgressContent
-// -----------------------------------------------------------------------------
 
 sealed class ProgressContent_orMutable {
   _lib_editor_v1_expression.ExpressionNode get value;
@@ -8338,7 +8236,7 @@ final class ProgressContent implements ProgressContent_orMutable {
     null,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ProgressContent toFrozen() => this;
@@ -8432,9 +8330,7 @@ final class ProgressContent_mutable implements ProgressContent_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum StatusTone
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -8632,9 +8528,7 @@ enum _StatusTone_consts implements StatusTone {
       _skir.internal__stringify(this, StatusTone.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // struct StatusAppearance
-// -----------------------------------------------------------------------------
 
 sealed class StatusAppearance_orMutable {
   StatusTone get tone;
@@ -8666,7 +8560,7 @@ final class StatusAppearance implements StatusAppearance_orMutable {
   static StatusAppearance_mutable mutable() =>
       StatusAppearance_mutable._(StatusTone.unknown, null);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   StatusAppearance toFrozen() => this;
@@ -8747,9 +8641,7 @@ final class StatusAppearance_mutable implements StatusAppearance_orMutable {
       StatusAppearance(tone: this.tone, label: this.label).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct StatusCase
-// -----------------------------------------------------------------------------
 
 sealed class StatusCase_orMutable {
   _lib_editor_v1_type_catalog.DataValue get match;
@@ -8786,7 +8678,7 @@ final class StatusCase implements StatusCase_orMutable {
     StatusAppearance.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   StatusCase toFrozen() => this;
@@ -8858,7 +8750,7 @@ final class StatusCase_mutable implements StatusCase_orMutable {
 
   StatusCase_mutable._(this.match, this.appearance);
 
-  /// If the value of [appearance] is already mutable, returns it as-is.
+  /// If the value of [appearance] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [appearance] and returns it.
   StatusAppearance_mutable get mutableAppearance {
     final value = this.appearance;
@@ -8875,9 +8767,7 @@ final class StatusCase_mutable implements StatusCase_orMutable {
       StatusCase(match: this.match, appearance: this.appearance).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct StatusContent
-// -----------------------------------------------------------------------------
 
 sealed class StatusContent_orMutable {
   _lib_editor_v1_expression.ExpressionNode get value;
@@ -8924,7 +8814,7 @@ final class StatusContent implements StatusContent_orMutable {
     null,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   StatusContent toFrozen() => this;
@@ -9007,7 +8897,7 @@ final class StatusContent_mutable implements StatusContent_orMutable {
 
   StatusContent_mutable._(this.value, this.cases, this.fallback);
 
-  /// If the value of [cases] is already mutable, returns it as-is.
+  /// If the value of [cases] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [cases] and returns it.
   _core.List<StatusCase_orMutable> get mutableCases {
     final value = this.cases;
@@ -9027,9 +8917,7 @@ final class StatusContent_mutable implements StatusContent_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum DateTimeZone
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -9118,9 +9006,7 @@ enum _DateTimeZone_consts implements DateTimeZone {
       _skir.internal__stringify(this, DateTimeZone.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // struct DateTimeContent
-// -----------------------------------------------------------------------------
 
 sealed class DateTimeContent_orMutable {
   _lib_editor_v1_expression.ExpressionNode get value;
@@ -9163,7 +9049,7 @@ final class DateTimeContent implements DateTimeContent_orMutable {
     DateTimeZone.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   DateTimeContent toFrozen() => this;
@@ -9255,9 +9141,7 @@ final class DateTimeContent_mutable implements DateTimeContent_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum RelativeTimeStyle
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -9358,9 +9242,7 @@ enum _RelativeTimeStyle_consts implements RelativeTimeStyle {
       _skir.internal__stringify(this, RelativeTimeStyle.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // struct RelativeTimeContent
-// -----------------------------------------------------------------------------
 
 sealed class RelativeTimeContent_orMutable {
   _lib_editor_v1_expression.ExpressionNode get value;
@@ -9403,7 +9285,7 @@ final class RelativeTimeContent implements RelativeTimeContent_orMutable {
     DateTimeZone.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RelativeTimeContent toFrozen() => this;
@@ -9499,9 +9381,7 @@ final class RelativeTimeContent_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct TypedFieldElement
-// -----------------------------------------------------------------------------
 
 sealed class TypedFieldElement_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable get binding;
@@ -9548,7 +9428,7 @@ final class TypedFieldElement implements TypedFieldElement_orMutable {
     null,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   TypedFieldElement toFrozen() => this;
@@ -9642,7 +9522,7 @@ final class TypedFieldElement_mutable implements TypedFieldElement_orMutable {
     this.presentation,
   );
 
-  /// If the value of [binding] is already mutable, returns it as-is.
+  /// If the value of [binding] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [binding] and returns it.
   _lib_editor_v1_binding.BindingRef_mutable get mutableBinding {
     final value = this.binding;
@@ -9663,9 +9543,7 @@ final class TypedFieldElement_mutable implements TypedFieldElement_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ConditionalElement
-// -----------------------------------------------------------------------------
 
 sealed class ConditionalElement_orMutable {
   _lib_editor_v1_expression.ExpressionNode get condition;
@@ -9712,7 +9590,7 @@ final class ConditionalElement implements ConditionalElement_orMutable {
     null,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ConditionalElement toFrozen() => this;
@@ -9811,9 +9689,7 @@ final class ConditionalElement_mutable implements ConditionalElement_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct SequencePresentation
-// -----------------------------------------------------------------------------
 
 sealed class SequencePresentation_orMutable {
   PresentationNode_orMutable get item;
@@ -9868,7 +9744,7 @@ final class SequencePresentation implements SequencePresentation_orMutable {
         SequenceLayout.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SequencePresentation toFrozen() => this;
@@ -9989,9 +9865,7 @@ final class SequencePresentation_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct RepeatedElement
-// -----------------------------------------------------------------------------
 
 sealed class RepeatedElement_orMutable {
   _lib_editor_v1_expression.ExpressionNode get source;
@@ -10039,7 +9913,7 @@ final class RepeatedElement implements RepeatedElement_orMutable {
     SequencePresentation.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RepeatedElement toFrozen() => this;
@@ -10129,7 +10003,7 @@ final class RepeatedElement_mutable implements RepeatedElement_orMutable {
 
   RepeatedElement_mutable._(this.source, this.itemBindingId, this.presentation);
 
-  /// If the value of [itemBindingId] is already mutable, returns it as-is.
+  /// If the value of [itemBindingId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [itemBindingId] and returns it.
   _lib_editor_v1_type_catalog.ExpressionBindingId_mutable
   get mutableItemBindingId {
@@ -10152,9 +10026,7 @@ final class RepeatedElement_mutable implements RepeatedElement_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ScopedBindingElement
-// -----------------------------------------------------------------------------
 
 sealed class ScopedBindingElement_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable get binding;
@@ -10203,7 +10075,7 @@ final class ScopedBindingElement implements ScopedBindingElement_orMutable {
         PresentationNode.defaultInstance,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ScopedBindingElement toFrozen() => this;
@@ -10297,7 +10169,7 @@ final class ScopedBindingElement_mutable
 
   ScopedBindingElement_mutable._(this.binding, this.scopeBindingId, this.child);
 
-  /// If the value of [binding] is already mutable, returns it as-is.
+  /// If the value of [binding] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [binding] and returns it.
   _lib_editor_v1_binding.BindingRef_mutable get mutableBinding {
     final value = this.binding;
@@ -10309,7 +10181,7 @@ final class ScopedBindingElement_mutable
     }
   }
 
-  /// If the value of [scopeBindingId] is already mutable, returns it as-is.
+  /// If the value of [scopeBindingId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [scopeBindingId] and returns it.
   _lib_editor_v1_type_catalog.ExpressionBindingId_mutable
   get mutableScopeBindingId {
@@ -10332,9 +10204,7 @@ final class ScopedBindingElement_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum CollectionGraphDirection
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -10438,9 +10308,7 @@ enum _CollectionGraphDirection_consts implements CollectionGraphDirection {
       _skir.internal__stringify(this, CollectionGraphDirection.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // struct CollectionLookupElement
-// -----------------------------------------------------------------------------
 
 sealed class CollectionLookupElement_orMutable {
   _core.String get sourceId;
@@ -10509,7 +10377,7 @@ final class CollectionLookupElement
         null,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CollectionLookupElement toFrozen() => this;
@@ -10634,7 +10502,7 @@ final class CollectionLookupElement_mutable
     this.loading,
   );
 
-  /// If the value of [key] is already mutable, returns it as-is.
+  /// If the value of [key] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [key] and returns it.
   _lib_editor_v1_binding.BindingRef_mutable get mutableKey {
     final value = this.key;
@@ -10657,9 +10525,7 @@ final class CollectionLookupElement_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CollectionGraphElement
-// -----------------------------------------------------------------------------
 
 sealed class CollectionGraphElement_orMutable {
   _core.String get sourceId;
@@ -10770,7 +10636,7 @@ final class CollectionGraphElement implements CollectionGraphElement_orMutable {
         SequencePresentation.defaultInstance,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CollectionGraphElement toFrozen() => this;
@@ -10960,7 +10826,7 @@ final class CollectionGraphElement_mutable
     this.children,
   );
 
-  /// If the value of [childrenBindingId] is already mutable, returns it as-is.
+  /// If the value of [childrenBindingId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [childrenBindingId] and returns it.
   _lib_editor_v1_type_catalog.ExpressionBindingId_mutable
   get mutableChildrenBindingId {
@@ -10974,7 +10840,7 @@ final class CollectionGraphElement_mutable
     }
   }
 
-  /// If the value of [childBindingId] is already mutable, returns it as-is.
+  /// If the value of [childBindingId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [childBindingId] and returns it.
   _lib_editor_v1_type_catalog.ExpressionBindingId_mutable
   get mutableChildBindingId {
@@ -11004,9 +10870,7 @@ final class CollectionGraphElement_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum PresentationRadius
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -11150,9 +11014,7 @@ final class PresentationRadius_customWrapper
   PresentationRadius_kind get kind => PresentationRadius_kind.customWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct ContainerLayout
-// -----------------------------------------------------------------------------
 
 sealed class ContainerLayout_orMutable {
   PresentationNode_orMutable get child;
@@ -11227,7 +11089,7 @@ final class ContainerLayout implements ContainerLayout_orMutable {
     0,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ContainerLayout toFrozen() => this;
@@ -11372,9 +11234,7 @@ final class ContainerLayout_mutable implements ContainerLayout_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum PresentationAlignment
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -11541,9 +11401,7 @@ enum _PresentationAlignment_consts implements PresentationAlignment {
       _skir.internal__stringify(this, PresentationAlignment.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // struct PresentationOffset
-// -----------------------------------------------------------------------------
 
 sealed class PresentationOffset_orMutable {
   _lib_editor_v1_expression.ExpressionNode get x;
@@ -11580,7 +11438,7 @@ final class PresentationOffset implements PresentationOffset_orMutable {
     _lib_editor_v1_expression.ExpressionNode.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresentationOffset toFrozen() => this;
@@ -11659,9 +11517,7 @@ final class PresentationOffset_mutable implements PresentationOffset_orMutable {
       PresentationOffset(x: this.x, y: this.y).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct PresentationAnchorPoint
-// -----------------------------------------------------------------------------
 
 sealed class PresentationAnchorPoint_orMutable {
   _core.String get anchorId;
@@ -11738,7 +11594,7 @@ final class PresentationAnchorPoint
         false,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresentationAnchorPoint toFrozen() => this;
@@ -11878,7 +11734,7 @@ final class PresentationAnchorPoint_mutable
     this.exportToParent,
   );
 
-  /// If the value of [groupIds] is already mutable, returns it as-is.
+  /// If the value of [groupIds] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [groupIds] and returns it.
   _core.List<_core.String> get mutableGroupIds {
     final value = this.groupIds;
@@ -11901,9 +11757,7 @@ final class PresentationAnchorPoint_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct PresentationAnchorLayout
-// -----------------------------------------------------------------------------
 
 sealed class PresentationAnchorLayout_orMutable {
   PresentationNode_orMutable get child;
@@ -11950,7 +11804,7 @@ final class PresentationAnchorLayout
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresentationAnchorLayout toFrozen() => this;
@@ -12031,7 +11885,7 @@ final class PresentationAnchorLayout_mutable
 
   PresentationAnchorLayout_mutable._(this.child, this.anchors);
 
-  /// If the value of [anchors] is already mutable, returns it as-is.
+  /// If the value of [anchors] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [anchors] and returns it.
   _core.List<PresentationAnchorPoint_orMutable> get mutableAnchors {
     final value = this.anchors;
@@ -12050,9 +11904,7 @@ final class PresentationAnchorLayout_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum PresentationAnchorSelector
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -12193,9 +12045,7 @@ final class PresentationAnchorSelector_exportedGroupWrapper
       PresentationAnchorSelector_kind.exportedGroupWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // enum ConnectionExpressionScope
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -12292,9 +12142,7 @@ enum _ConnectionExpressionScope_consts implements ConnectionExpressionScope {
       _skir.internal__stringify(this, ConnectionExpressionScope.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // struct ConnectorStroke
-// -----------------------------------------------------------------------------
 
 sealed class ConnectorStroke_orMutable {
   PresentationColor get color;
@@ -12331,7 +12179,7 @@ final class ConnectorStroke implements ConnectorStroke_orMutable {
     _lib_editor_v1_expression.ExpressionNode.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ConnectorStroke toFrozen() => this;
@@ -12410,9 +12258,7 @@ final class ConnectorStroke_mutable implements ConnectorStroke_orMutable {
       ConnectorStroke(color: this.color, width: this.width).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ConnectionMarker
-// -----------------------------------------------------------------------------
 
 sealed class ConnectionMarker_orMutable {
   PresentationNode_orMutable get node;
@@ -12461,7 +12307,7 @@ final class ConnectionMarker implements ConnectionMarker_orMutable {
     ConnectionExpressionScope.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ConnectionMarker toFrozen() => this;
@@ -12578,9 +12424,7 @@ final class ConnectionMarker_mutable implements ConnectionMarker_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct OrthogonalConnectionPath
-// -----------------------------------------------------------------------------
 
 sealed class OrthogonalConnectionPath_orMutable {
   _lib_editor_v1_expression.ExpressionNode get bendPosition;
@@ -12613,7 +12457,7 @@ final class OrthogonalConnectionPath
         _lib_editor_v1_expression.ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   OrthogonalConnectionPath toFrozen() => this;
@@ -12686,9 +12530,7 @@ final class OrthogonalConnectionPath_mutable
       OrthogonalConnectionPath(bendPosition: this.bendPosition).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CurvedConnectionPath
-// -----------------------------------------------------------------------------
 
 sealed class CurvedConnectionPath_orMutable {
   PresentationOffset_orMutable get sourceControlOffset;
@@ -12729,7 +12571,7 @@ final class CurvedConnectionPath implements CurvedConnectionPath_orMutable {
         PresentationOffset.defaultInstance,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CurvedConnectionPath toFrozen() => this;
@@ -12814,7 +12656,7 @@ final class CurvedConnectionPath_mutable
     this.targetControlOffset,
   );
 
-  /// If the value of [sourceControlOffset] is already mutable, returns it as-is.
+  /// If the value of [sourceControlOffset] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [sourceControlOffset] and returns it.
   PresentationOffset_mutable get mutableSourceControlOffset {
     final value = this.sourceControlOffset;
@@ -12826,7 +12668,7 @@ final class CurvedConnectionPath_mutable
     }
   }
 
-  /// If the value of [targetControlOffset] is already mutable, returns it as-is.
+  /// If the value of [targetControlOffset] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [targetControlOffset] and returns it.
   PresentationOffset_mutable get mutableTargetControlOffset {
     final value = this.targetControlOffset;
@@ -12846,9 +12688,7 @@ final class CurvedConnectionPath_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum ConnectionPath
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -13023,9 +12863,7 @@ final class ConnectionPath_curvedWrapper extends _ConnectionPath_wrapper {
   ConnectionPath_kind get kind => ConnectionPath_kind.curvedWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // enum ConnectionAxis
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -13126,9 +12964,7 @@ enum _ConnectionAxis_consts implements ConnectionAxis {
       _skir.internal__stringify(this, ConnectionAxis.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // struct OrthogonalConnectionBundlePath
-// -----------------------------------------------------------------------------
 
 sealed class OrthogonalConnectionBundlePath_orMutable {
   ConnectionAxis get axis;
@@ -13167,7 +13003,7 @@ final class OrthogonalConnectionBundlePath
         _lib_editor_v1_expression.ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   OrthogonalConnectionBundlePath toFrozen() => this;
@@ -13252,9 +13088,7 @@ final class OrthogonalConnectionBundlePath_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum ConnectionBundlePath
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -13392,9 +13226,7 @@ final class ConnectionBundlePath_orthogonalWrapper
       ConnectionBundlePath_kind.orthogonalWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct AnchoredConnection
-// -----------------------------------------------------------------------------
 
 sealed class AnchoredConnection_orMutable {
   PresentationAnchorSelector get source;
@@ -13469,7 +13301,7 @@ final class AnchoredConnection implements AnchoredConnection_orMutable {
     null,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   AnchoredConnection toFrozen() => this;
@@ -13604,7 +13436,7 @@ final class AnchoredConnection_mutable implements AnchoredConnection_orMutable {
     this.visibleIf,
   );
 
-  /// If the value of [style] is already mutable, returns it as-is.
+  /// If the value of [style] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [style] and returns it.
   ConnectorStyle_mutable get mutableStyle {
     final value = this.style;
@@ -13627,9 +13459,7 @@ final class AnchoredConnection_mutable implements AnchoredConnection_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct AnchoredConnectionBundle
-// -----------------------------------------------------------------------------
 
 sealed class AnchoredConnectionBundle_orMutable {
   PresentationAnchorSelector get source;
@@ -13722,7 +13552,7 @@ final class AnchoredConnectionBundle
         null,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   AnchoredConnectionBundle toFrozen() => this;
@@ -13888,7 +13718,7 @@ final class AnchoredConnectionBundle_mutable
     this.visibleIf,
   );
 
-  /// If the value of [trunkStyle] is already mutable, returns it as-is.
+  /// If the value of [trunkStyle] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [trunkStyle] and returns it.
   ConnectorStyle_mutable get mutableTrunkStyle {
     final value = this.trunkStyle;
@@ -13899,7 +13729,7 @@ final class AnchoredConnectionBundle_mutable
     }
   }
 
-  /// If the value of [branchStyle] is already mutable, returns it as-is.
+  /// If the value of [branchStyle] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [branchStyle] and returns it.
   ConnectorStyle_mutable get mutableBranchStyle {
     final value = this.branchStyle;
@@ -13924,9 +13754,7 @@ final class AnchoredConnectionBundle_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum PresentationConnection
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -14106,9 +13934,7 @@ final class PresentationConnection_bundleWrapper
       PresentationConnection_kind.bundleWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct ConnectionLayerLayout
-// -----------------------------------------------------------------------------
 
 sealed class ConnectionLayerLayout_orMutable {
   PresentationNode_orMutable get child;
@@ -14149,7 +13975,7 @@ final class ConnectionLayerLayout implements ConnectionLayerLayout_orMutable {
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ConnectionLayerLayout toFrozen() => this;
@@ -14233,9 +14059,7 @@ final class ConnectionLayerLayout_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ArrowConnectorMarker
-// -----------------------------------------------------------------------------
 
 sealed class ArrowConnectorMarker_orMutable {
   _lib_editor_v1_expression.ExpressionNode get size;
@@ -14267,7 +14091,7 @@ final class ArrowConnectorMarker implements ArrowConnectorMarker_orMutable {
         _lib_editor_v1_expression.ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ArrowConnectorMarker toFrozen() => this;
@@ -14340,9 +14164,7 @@ final class ArrowConnectorMarker_mutable
       ArrowConnectorMarker(size: this.size).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CircleConnectorMarker
-// -----------------------------------------------------------------------------
 
 sealed class CircleConnectorMarker_orMutable {
   _lib_editor_v1_expression.ExpressionNode get diameter;
@@ -14374,7 +14196,7 @@ final class CircleConnectorMarker implements CircleConnectorMarker_orMutable {
         _lib_editor_v1_expression.ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CircleConnectorMarker toFrozen() => this;
@@ -14447,9 +14269,7 @@ final class CircleConnectorMarker_mutable
       CircleConnectorMarker(diameter: this.diameter).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum ConnectorEndpointMarker
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -14600,9 +14420,7 @@ final class ConnectorEndpointMarker_circleWrapper
       ConnectorEndpointMarker_kind.circleWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct ConnectorStyle
-// -----------------------------------------------------------------------------
 
 sealed class ConnectorStyle_orMutable {
   ConnectorStroke_orMutable get stroke;
@@ -14657,7 +14475,7 @@ final class ConnectorStyle implements ConnectorStyle_orMutable {
     null,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ConnectorStyle toFrozen() => this;
@@ -14764,7 +14582,7 @@ final class ConnectorStyle_mutable implements ConnectorStyle_orMutable {
     this.endMarker,
   );
 
-  /// If the value of [stroke] is already mutable, returns it as-is.
+  /// If the value of [stroke] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [stroke] and returns it.
   ConnectorStroke_mutable get mutableStroke {
     final value = this.stroke;
@@ -14785,9 +14603,7 @@ final class ConnectorStyle_mutable implements ConnectorStyle_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum ConnectorAnchor
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -14919,9 +14735,7 @@ final class ConnectorAnchor_offsetWrapper extends _ConnectorAnchor_wrapper {
   ConnectorAnchor_kind get kind => ConnectorAnchor_kind.offsetWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct HierarchySequenceLayout
-// -----------------------------------------------------------------------------
 
 sealed class HierarchySequenceLayout_orMutable {
   ConnectorStyle_orMutable get unaryConnector;
@@ -15022,7 +14836,7 @@ final class HierarchySequenceLayout
         CrossAxisAlignment.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   HierarchySequenceLayout toFrozen() => this;
@@ -15199,7 +15013,7 @@ final class HierarchySequenceLayout_mutable
     this.crossAxisAlignment,
   );
 
-  /// If the value of [unaryConnector] is already mutable, returns it as-is.
+  /// If the value of [unaryConnector] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [unaryConnector] and returns it.
   ConnectorStyle_mutable get mutableUnaryConnector {
     final value = this.unaryConnector;
@@ -15210,7 +15024,7 @@ final class HierarchySequenceLayout_mutable
     }
   }
 
-  /// If the value of [trunkConnector] is already mutable, returns it as-is.
+  /// If the value of [trunkConnector] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [trunkConnector] and returns it.
   ConnectorStyle_mutable get mutableTrunkConnector {
     final value = this.trunkConnector;
@@ -15221,7 +15035,7 @@ final class HierarchySequenceLayout_mutable
     }
   }
 
-  /// If the value of [branchConnector] is already mutable, returns it as-is.
+  /// If the value of [branchConnector] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [branchConnector] and returns it.
   ConnectorStyle_mutable get mutableBranchConnector {
     final value = this.branchConnector;
@@ -15247,9 +15061,7 @@ final class HierarchySequenceLayout_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum SequenceLayout
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -15407,9 +15219,7 @@ final class SequenceLayout_hierarchyWrapper extends _SequenceLayout_wrapper {
   SequenceLayout_kind get kind => SequenceLayout_kind.hierarchyWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct BoundControl
-// -----------------------------------------------------------------------------
 
 sealed class BoundControl_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable get binding;
@@ -15476,7 +15286,7 @@ final class BoundControl implements BoundControl_orMutable {
     null,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   BoundControl toFrozen() => this;
@@ -15602,7 +15412,7 @@ final class BoundControl_mutable implements BoundControl_orMutable {
     this.semanticLabel,
   );
 
-  /// If the value of [binding] is already mutable, returns it as-is.
+  /// If the value of [binding] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [binding] and returns it.
   _lib_editor_v1_binding.BindingRef_mutable get mutableBinding {
     final value = this.binding;
@@ -15625,9 +15435,7 @@ final class BoundControl_mutable implements BoundControl_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct TextInputReplacement
-// -----------------------------------------------------------------------------
 
 sealed class TextInputReplacement_orMutable {
   _core.String get pattern;
@@ -15659,7 +15467,7 @@ final class TextInputReplacement implements TextInputReplacement_orMutable {
   static TextInputReplacement_mutable mutable() =>
       TextInputReplacement_mutable._("", "");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   TextInputReplacement toFrozen() => this;
@@ -15743,9 +15551,7 @@ final class TextInputReplacement_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum TextInputFormat
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -15946,9 +15752,7 @@ final class TextInputFormat_denyWrapper extends _TextInputFormat_wrapper {
   TextInputFormat_kind get kind => TextInputFormat_kind.denyWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct TextControl
-// -----------------------------------------------------------------------------
 
 sealed class TextControl_orMutable {
   BoundControl_orMutable get control;
@@ -16007,7 +15811,7 @@ final class TextControl implements TextControl_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   TextControl toFrozen() => this;
@@ -16116,7 +15920,7 @@ final class TextControl_mutable implements TextControl_orMutable {
     this.inputFormatters,
   );
 
-  /// If the value of [inputFormatters] is already mutable, returns it as-is.
+  /// If the value of [inputFormatters] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [inputFormatters] and returns it.
   _core.List<TextInputFormat> get mutableInputFormatters {
     final value = this.inputFormatters;
@@ -16137,9 +15941,7 @@ final class TextControl_mutable implements TextControl_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ColorControl
-// -----------------------------------------------------------------------------
 
 sealed class ColorControl_orMutable {
   BoundControl_orMutable get control;
@@ -16174,7 +15976,7 @@ final class ColorControl implements ColorControl_orMutable {
   static ColorControl_mutable mutable() =>
       ColorControl_mutable._(BoundControl.defaultInstance, false);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ColorControl toFrozen() => this;
@@ -16254,9 +16056,7 @@ final class ColorControl_mutable implements ColorControl_orMutable {
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct DateTimeControl
-// -----------------------------------------------------------------------------
 
 sealed class DateTimeControl_orMutable {
   BoundControl_orMutable get control;
@@ -16296,7 +16096,7 @@ final class DateTimeControl implements DateTimeControl_orMutable {
   static DateTimeControl_mutable mutable() =>
       DateTimeControl_mutable._(BoundControl.defaultInstance, null, null);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   DateTimeControl toFrozen() => this;
@@ -16395,9 +16195,7 @@ final class DateTimeControl_mutable implements DateTimeControl_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct SelectOption
-// -----------------------------------------------------------------------------
 
 sealed class SelectOption_orMutable {
   _core.String get optionId;
@@ -16440,7 +16238,7 @@ final class SelectOption implements SelectOption_orMutable {
     _lib_editor_v1_expression.ExpressionNode.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SelectOption toFrozen() => this;
@@ -16532,9 +16330,7 @@ final class SelectOption_mutable implements SelectOption_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct SelectControl
-// -----------------------------------------------------------------------------
 
 sealed class SelectControl_orMutable {
   BoundControl_orMutable get control;
@@ -16586,7 +16382,7 @@ final class SelectControl implements SelectControl_orMutable {
     false,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SelectControl toFrozen() => this;
@@ -16680,7 +16476,7 @@ final class SelectControl_mutable implements SelectControl_orMutable {
 
   SelectControl_mutable._(this.control, this.options, this.allowCustomValue);
 
-  /// If the value of [options] is already mutable, returns it as-is.
+  /// If the value of [options] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [options] and returns it.
   _core.List<SelectOption_orMutable> get mutableOptions {
     final value = this.options;
@@ -16700,9 +16496,7 @@ final class SelectControl_mutable implements SelectControl_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct SliderControl
-// -----------------------------------------------------------------------------
 
 sealed class SliderControl_orMutable {
   BoundControl_orMutable get control;
@@ -16751,7 +16545,7 @@ final class SliderControl implements SliderControl_orMutable {
     null,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SliderControl toFrozen() => this;
@@ -16870,9 +16664,7 @@ final class SliderControl_mutable implements SliderControl_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ListControl
-// -----------------------------------------------------------------------------
 
 sealed class ListControl_orMutable {
   BoundControl_orMutable get control;
@@ -16957,7 +16749,7 @@ final class ListControl implements ListControl_orMutable {
     _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ListControl toFrozen() => this;
@@ -17103,7 +16895,7 @@ final class ListControl_mutable implements ListControl_orMutable {
     this.indexBindingId,
   );
 
-  /// If the value of [itemBindingId] is already mutable, returns it as-is.
+  /// If the value of [itemBindingId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [itemBindingId] and returns it.
   _lib_editor_v1_type_catalog.ExpressionBindingId_mutable
   get mutableItemBindingId {
@@ -17117,7 +16909,7 @@ final class ListControl_mutable implements ListControl_orMutable {
     }
   }
 
-  /// If the value of [indexBindingId] is already mutable, returns it as-is.
+  /// If the value of [indexBindingId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [indexBindingId] and returns it.
   _lib_editor_v1_type_catalog.ExpressionBindingId_mutable
   get mutableIndexBindingId {
@@ -17144,9 +16936,7 @@ final class ListControl_mutable implements ListControl_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct MapControl
-// -----------------------------------------------------------------------------
 
 sealed class MapControl_orMutable {
   BoundControl_orMutable get control;
@@ -17231,7 +17021,7 @@ final class MapControl implements MapControl_orMutable {
     _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   MapControl toFrozen() => this;
@@ -17376,7 +17166,7 @@ final class MapControl_mutable implements MapControl_orMutable {
     this.valueBindingId,
   );
 
-  /// If the value of [keyBindingId] is already mutable, returns it as-is.
+  /// If the value of [keyBindingId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [keyBindingId] and returns it.
   _lib_editor_v1_type_catalog.ExpressionBindingId_mutable
   get mutableKeyBindingId {
@@ -17390,7 +17180,7 @@ final class MapControl_mutable implements MapControl_orMutable {
     }
   }
 
-  /// If the value of [valueBindingId] is already mutable, returns it as-is.
+  /// If the value of [valueBindingId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [valueBindingId] and returns it.
   _lib_editor_v1_type_catalog.ExpressionBindingId_mutable
   get mutableValueBindingId {
@@ -17417,9 +17207,7 @@ final class MapControl_mutable implements MapControl_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct RecordControl
-// -----------------------------------------------------------------------------
 
 sealed class RecordControl_orMutable {
   BoundControl_orMutable get control;
@@ -17457,7 +17245,7 @@ final class RecordControl implements RecordControl_orMutable {
   static RecordControl_mutable mutable() =>
       RecordControl_mutable._(BoundControl.defaultInstance, null);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RecordControl toFrozen() => this;
@@ -17538,9 +17326,7 @@ final class RecordControl_mutable implements RecordControl_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ConcreteTypePresentation
-// -----------------------------------------------------------------------------
 
 sealed class ConcreteTypePresentation_orMutable {
   _lib_editor_v1_type_catalog.TypeUse get concreteType;
@@ -17589,7 +17375,7 @@ final class ConcreteTypePresentation
         null,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ConcreteTypePresentation toFrozen() => this;
@@ -17697,9 +17483,7 @@ final class ConcreteTypePresentation_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct PolymorphicControl
-// -----------------------------------------------------------------------------
 
 sealed class PolymorphicControl_orMutable {
   BoundControl_orMutable get control;
@@ -17739,7 +17523,7 @@ final class PolymorphicControl implements PolymorphicControl_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PolymorphicControl toFrozen() => this;
@@ -17820,9 +17604,7 @@ final class PolymorphicControl_mutable implements PolymorphicControl_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct NamedControl
-// -----------------------------------------------------------------------------
 
 sealed class NamedControl_orMutable {
   BoundControl_orMutable get control;
@@ -17860,7 +17642,7 @@ final class NamedControl implements NamedControl_orMutable {
   static NamedControl_mutable mutable() =>
       NamedControl_mutable._(BoundControl.defaultInstance, null);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   NamedControl toFrozen() => this;
@@ -17941,9 +17723,7 @@ final class NamedControl_mutable implements NamedControl_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct PolymorphicMatchCase
-// -----------------------------------------------------------------------------
 
 sealed class PolymorphicMatchCase_orMutable {
   _lib_editor_v1_type_catalog.TypeUse get concreteType;
@@ -17981,7 +17761,7 @@ final class PolymorphicMatchCase implements PolymorphicMatchCase_orMutable {
         PresentationNode.defaultInstance,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PolymorphicMatchCase toFrozen() => this;
@@ -18065,9 +17845,7 @@ final class PolymorphicMatchCase_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct PolymorphicMatchElement
-// -----------------------------------------------------------------------------
 
 sealed class PolymorphicMatchElement_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable get binding;
@@ -18129,7 +17907,7 @@ final class PolymorphicMatchElement
         null,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PolymorphicMatchElement toFrozen() => this;
@@ -18241,7 +18019,7 @@ final class PolymorphicMatchElement_mutable
     this.fallback,
   );
 
-  /// If the value of [binding] is already mutable, returns it as-is.
+  /// If the value of [binding] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [binding] and returns it.
   _lib_editor_v1_binding.BindingRef_mutable get mutableBinding {
     final value = this.binding;
@@ -18253,7 +18031,7 @@ final class PolymorphicMatchElement_mutable
     }
   }
 
-  /// If the value of [scopeBindingId] is already mutable, returns it as-is.
+  /// If the value of [scopeBindingId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [scopeBindingId] and returns it.
   _lib_editor_v1_type_catalog.ExpressionBindingId_mutable
   get mutableScopeBindingId {
@@ -18277,9 +18055,7 @@ final class PolymorphicMatchElement_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum SearchSelectionMode
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -18375,9 +18151,7 @@ enum _SearchSelectionMode_consts implements SearchSelectionMode {
       _skir.internal__stringify(this, SearchSelectionMode.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // enum SearchSelectorMultiplicity
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -18475,9 +18249,7 @@ enum _SearchSelectorMultiplicity_consts implements SearchSelectorMultiplicity {
       _skir.internal__stringify(this, SearchSelectorMultiplicity.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // struct SearchSelectorEnumValues
-// -----------------------------------------------------------------------------
 
 sealed class SearchSelectorEnumValues_orMutable {
   _core.Iterable<_core.String> get values;
@@ -18508,7 +18280,7 @@ final class SearchSelectorEnumValues
   static SearchSelectorEnumValues_mutable mutable() =>
       SearchSelectorEnumValues_mutable._(_skir.KeyedIterable.empty);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SearchSelectorEnumValues toFrozen() => this;
@@ -18575,7 +18347,7 @@ final class SearchSelectorEnumValues_mutable
 
   SearchSelectorEnumValues_mutable._(this.values);
 
-  /// If the value of [values] is already mutable, returns it as-is.
+  /// If the value of [values] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [values] and returns it.
   _core.List<_core.String> get mutableValues {
     final value = this.values;
@@ -18592,9 +18364,7 @@ final class SearchSelectorEnumValues_mutable
       SearchSelectorEnumValues(values: this.values).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum SearchSelectorValues
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -18737,9 +18507,7 @@ final class SearchSelectorValues_enumerationWrapper
       SearchSelectorValues_kind.enumerationWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct SearchSelectorDefinition
-// -----------------------------------------------------------------------------
 
 sealed class SearchSelectorDefinition_orMutable {
   _core.String get selectorId;
@@ -18825,7 +18593,7 @@ final class SearchSelectorDefinition
         null,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SearchSelectorDefinition toFrozen() => this;
@@ -18976,7 +18744,7 @@ final class SearchSelectorDefinition_mutable
     this.color,
   );
 
-  /// If the value of [valueBindingId] is already mutable, returns it as-is.
+  /// If the value of [valueBindingId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [valueBindingId] and returns it.
   _lib_editor_v1_type_catalog.ExpressionBindingId_mutable
   get mutableValueBindingId {
@@ -19003,9 +18771,7 @@ final class SearchSelectorDefinition_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct SearchResultMapping
-// -----------------------------------------------------------------------------
 
 sealed class SearchResultMapping_orMutable {
   _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get bindingId;
@@ -19073,7 +18839,7 @@ final class SearchResultMapping implements SearchResultMapping_orMutable {
     null,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SearchResultMapping toFrozen() => this;
@@ -19199,7 +18965,7 @@ final class SearchResultMapping_mutable
     this.label,
   );
 
-  /// If the value of [bindingId] is already mutable, returns it as-is.
+  /// If the value of [bindingId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [bindingId] and returns it.
   _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableBindingId {
     final value = this.bindingId;
@@ -19223,9 +18989,7 @@ final class SearchResultMapping_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct HttpQueryParameter
-// -----------------------------------------------------------------------------
 
 sealed class HttpQueryParameter_orMutable {
   _core.String get name;
@@ -19268,7 +19032,7 @@ final class HttpQueryParameter implements HttpQueryParameter_orMutable {
     false,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   HttpQueryParameter toFrozen() => this;
@@ -19360,9 +19124,7 @@ final class HttpQueryParameter_mutable implements HttpQueryParameter_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct HttpJsonContextBinding
-// -----------------------------------------------------------------------------
 
 sealed class HttpJsonContextBinding_orMutable {
   _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get bindingId;
@@ -19407,7 +19169,7 @@ final class HttpJsonContextBinding implements HttpJsonContextBinding_orMutable {
         _lib_editor_v1_type_catalog.TypeTemplate.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   HttpJsonContextBinding toFrozen() => this;
@@ -19498,7 +19260,7 @@ final class HttpJsonContextBinding_mutable
 
   HttpJsonContextBinding_mutable._(this.bindingId, this.path, this.valueType);
 
-  /// If the value of [bindingId] is already mutable, returns it as-is.
+  /// If the value of [bindingId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [bindingId] and returns it.
   _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableBindingId {
     final value = this.bindingId;
@@ -19520,9 +19282,7 @@ final class HttpJsonContextBinding_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct StaticSearchProvider
-// -----------------------------------------------------------------------------
 
 sealed class StaticSearchProvider_orMutable {
   _lib_editor_v1_expression.ExpressionNode get values;
@@ -19575,7 +19335,7 @@ final class StaticSearchProvider implements StaticSearchProvider_orMutable {
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   StaticSearchProvider toFrozen() => this;
@@ -19666,7 +19426,7 @@ final class StaticSearchProvider_mutable
 
   StaticSearchProvider_mutable._(this.values, this.result, this.selectors);
 
-  /// If the value of [selectors] is already mutable, returns it as-is.
+  /// If the value of [selectors] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [selectors] and returns it.
   _core.List<SearchSelectorDefinition_orMutable> get mutableSelectors {
     final value = this.selectors;
@@ -19687,9 +19447,7 @@ final class StaticSearchProvider_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CollectionSearchProvider
-// -----------------------------------------------------------------------------
 
 sealed class CollectionSearchProvider_orMutable {
   _core.String get sourceId;
@@ -19755,7 +19513,7 @@ final class CollectionSearchProvider
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CollectionSearchProvider toFrozen() => this;
@@ -19873,7 +19631,7 @@ final class CollectionSearchProvider_mutable
     this.selectors,
   );
 
-  /// If the value of [selectors] is already mutable, returns it as-is.
+  /// If the value of [selectors] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [selectors] and returns it.
   _core.List<SearchSelectorDefinition_orMutable> get mutableSelectors {
     final value = this.selectors;
@@ -19895,9 +19653,7 @@ final class CollectionSearchProvider_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct HttpJsonSearchProvider
-// -----------------------------------------------------------------------------
 
 sealed class HttpJsonSearchProvider_orMutable {
   _lib_editor_v1_expression.ExpressionNode get uri;
@@ -19999,7 +19755,7 @@ final class HttpJsonSearchProvider implements HttpJsonSearchProvider_orMutable {
         0,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   HttpJsonSearchProvider toFrozen() => this;
@@ -20171,7 +19927,7 @@ final class HttpJsonSearchProvider_mutable
     this.timeoutMilliseconds,
   );
 
-  /// If the value of [parameters] is already mutable, returns it as-is.
+  /// If the value of [parameters] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [parameters] and returns it.
   _core.List<HttpQueryParameter_orMutable> get mutableParameters {
     final value = this.parameters;
@@ -20182,7 +19938,7 @@ final class HttpJsonSearchProvider_mutable
     }
   }
 
-  /// If the value of [contextBindings] is already mutable, returns it as-is.
+  /// If the value of [contextBindings] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [contextBindings] and returns it.
   _core.List<HttpJsonContextBinding_orMutable> get mutableContextBindings {
     final value = this.contextBindings;
@@ -20194,7 +19950,7 @@ final class HttpJsonSearchProvider_mutable
     }
   }
 
-  /// If the value of [selectors] is already mutable, returns it as-is.
+  /// If the value of [selectors] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [selectors] and returns it.
   _core.List<SearchSelectorDefinition_orMutable> get mutableSelectors {
     final value = this.selectors;
@@ -20220,9 +19976,7 @@ final class HttpJsonSearchProvider_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct RealmCallbackSearchProvider
-// -----------------------------------------------------------------------------
 
 sealed class RealmCallbackSearchProvider_orMutable {
   _lib_editor_v1_type_catalog.CapabilityId_orMutable get capabilityId;
@@ -20288,7 +20042,7 @@ final class RealmCallbackSearchProvider
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RealmCallbackSearchProvider toFrozen() => this;
@@ -20404,7 +20158,7 @@ final class RealmCallbackSearchProvider_mutable
     this.selectors,
   );
 
-  /// If the value of [capabilityId] is already mutable, returns it as-is.
+  /// If the value of [capabilityId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
   _lib_editor_v1_type_catalog.CapabilityId_mutable get mutableCapabilityId {
     final value = this.capabilityId;
@@ -20416,7 +20170,7 @@ final class RealmCallbackSearchProvider_mutable
     }
   }
 
-  /// If the value of [selectors] is already mutable, returns it as-is.
+  /// If the value of [selectors] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [selectors] and returns it.
   _core.List<SearchSelectorDefinition_orMutable> get mutableSelectors {
     final value = this.selectors;
@@ -20438,9 +20192,7 @@ final class RealmCallbackSearchProvider_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct GatedSearchProvider
-// -----------------------------------------------------------------------------
 
 sealed class GatedSearchProvider_orMutable {
   _lib_editor_v1_expression.ExpressionNode get condition;
@@ -20483,7 +20235,7 @@ final class GatedSearchProvider implements GatedSearchProvider_orMutable {
     SearchProvider.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   GatedSearchProvider toFrozen() => this;
@@ -20581,9 +20333,7 @@ final class GatedSearchProvider_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct DebouncedSearchProvider
-// -----------------------------------------------------------------------------
 
 sealed class DebouncedSearchProvider_orMutable {
   _core.int get durationMilliseconds;
@@ -20619,7 +20369,7 @@ final class DebouncedSearchProvider
   static DebouncedSearchProvider_mutable mutable() =>
       DebouncedSearchProvider_mutable._(0, SearchProvider.unknown);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   DebouncedSearchProvider toFrozen() => this;
@@ -20704,9 +20454,7 @@ final class DebouncedSearchProvider_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CachedSearchProvider
-// -----------------------------------------------------------------------------
 
 sealed class CachedSearchProvider_orMutable {
   _core.int get capacity;
@@ -20746,7 +20494,7 @@ final class CachedSearchProvider implements CachedSearchProvider_orMutable {
   static CachedSearchProvider_mutable mutable() =>
       CachedSearchProvider_mutable._(0, false, SearchProvider.unknown);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CachedSearchProvider toFrozen() => this;
@@ -20853,9 +20601,7 @@ final class CachedSearchProvider_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct SearchRankingField
-// -----------------------------------------------------------------------------
 
 sealed class SearchRankingField_orMutable {
   _lib_editor_v1_expression.ExpressionNode get expression;
@@ -20892,7 +20638,7 @@ final class SearchRankingField implements SearchRankingField_orMutable {
     0,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SearchRankingField toFrozen() => this;
@@ -20972,9 +20718,7 @@ final class SearchRankingField_mutable implements SearchRankingField_orMutable {
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct RankedSearchProvider
-// -----------------------------------------------------------------------------
 
 sealed class RankedSearchProvider_orMutable {
   _core.Iterable<SearchRankingField_orMutable> get fields;
@@ -21015,7 +20759,7 @@ final class RankedSearchProvider implements RankedSearchProvider_orMutable {
         SearchProvider.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RankedSearchProvider toFrozen() => this;
@@ -21092,7 +20836,7 @@ final class RankedSearchProvider_mutable
 
   RankedSearchProvider_mutable._(this.fields, this.child);
 
-  /// If the value of [fields] is already mutable, returns it as-is.
+  /// If the value of [fields] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [fields] and returns it.
   _core.List<SearchRankingField_orMutable> get mutableFields {
     final value = this.fields;
@@ -21110,9 +20854,7 @@ final class RankedSearchProvider_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct LimitedSearchProvider
-// -----------------------------------------------------------------------------
 
 sealed class LimitedSearchProvider_orMutable {
   _lib_editor_v1_expression.ExpressionNode get maximum;
@@ -21150,7 +20892,7 @@ final class LimitedSearchProvider implements LimitedSearchProvider_orMutable {
         SearchProvider.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   LimitedSearchProvider toFrozen() => this;
@@ -21234,9 +20976,7 @@ final class LimitedSearchProvider_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct DistinctSearchProvider
-// -----------------------------------------------------------------------------
 
 sealed class DistinctSearchProvider_orMutable {
   SearchProvider get child;
@@ -21265,7 +21005,7 @@ final class DistinctSearchProvider implements DistinctSearchProvider_orMutable {
   static DistinctSearchProvider_mutable mutable() =>
       DistinctSearchProvider_mutable._(SearchProvider.unknown);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   DistinctSearchProvider toFrozen() => this;
@@ -21338,9 +21078,7 @@ final class DistinctSearchProvider_mutable
       DistinctSearchProvider(child: this.child).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct HistoricalSearchProvider
-// -----------------------------------------------------------------------------
 
 sealed class HistoricalSearchProvider_orMutable {
   _core.String get historyKey;
@@ -21396,7 +21134,7 @@ final class HistoricalSearchProvider
         SearchProvider.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   HistoricalSearchProvider toFrozen() => this;
@@ -21518,9 +21256,7 @@ final class HistoricalSearchProvider_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct SectionSearchProvider
-// -----------------------------------------------------------------------------
 
 sealed class SectionSearchProvider_orMutable {
   _core.String get sectionId;
@@ -21564,7 +21300,7 @@ final class SectionSearchProvider implements SectionSearchProvider_orMutable {
         SearchProvider.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SectionSearchProvider toFrozen() => this;
@@ -21660,9 +21396,7 @@ final class SectionSearchProvider_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct MergedSearchProvider
-// -----------------------------------------------------------------------------
 
 sealed class MergedSearchProvider_orMutable {
   _core.Iterable<SearchProvider> get children;
@@ -21692,7 +21426,7 @@ final class MergedSearchProvider implements MergedSearchProvider_orMutable {
   static MergedSearchProvider_mutable mutable() =>
       MergedSearchProvider_mutable._(_skir.KeyedIterable.empty);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   MergedSearchProvider toFrozen() => this;
@@ -21765,9 +21499,7 @@ final class MergedSearchProvider_mutable
       MergedSearchProvider(children: this.children).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum SearchProvider
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -22320,9 +22052,7 @@ final class SearchProvider_collectionWrapper extends _SearchProvider_wrapper {
   SearchProvider_kind get kind => SearchProvider_kind.collectionWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct SearchControl
-// -----------------------------------------------------------------------------
 
 sealed class SearchControl_orMutable {
   BoundControl_orMutable get control;
@@ -22432,7 +22162,7 @@ final class SearchControl implements SearchControl_orMutable {
     null,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SearchControl toFrozen() => this;
@@ -22623,7 +22353,7 @@ final class SearchControl_mutable implements SearchControl_orMutable {
     this.initialQuery,
   );
 
-  /// If the value of [queryBindingId] is already mutable, returns it as-is.
+  /// If the value of [queryBindingId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [queryBindingId] and returns it.
   _lib_editor_v1_type_catalog.ExpressionBindingId_mutable
   get mutableQueryBindingId {
@@ -22637,7 +22367,7 @@ final class SearchControl_mutable implements SearchControl_orMutable {
     }
   }
 
-  /// If the value of [summaryBindingId] is already mutable, returns it as-is.
+  /// If the value of [summaryBindingId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [summaryBindingId] and returns it.
   _lib_editor_v1_type_catalog.ExpressionBindingId_mutable
   get mutableSummaryBindingId {
@@ -22667,9 +22397,7 @@ final class SearchControl_mutable implements SearchControl_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct DefaultPresentationElement
-// -----------------------------------------------------------------------------
 
 sealed class DefaultPresentationElement_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable get binding;
@@ -22712,7 +22440,7 @@ final class DefaultPresentationElement
         null,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   DefaultPresentationElement toFrozen() => this;
@@ -22791,7 +22519,7 @@ final class DefaultPresentationElement_mutable
 
   DefaultPresentationElement_mutable._(this.binding, this.presentationId);
 
-  /// If the value of [binding] is already mutable, returns it as-is.
+  /// If the value of [binding] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [binding] and returns it.
   _lib_editor_v1_binding.BindingRef_mutable get mutableBinding {
     final value = this.binding;
@@ -22811,9 +22539,7 @@ final class DefaultPresentationElement_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CommitControlsElement
-// -----------------------------------------------------------------------------
 
 sealed class CommitControlsElement_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable get binding;
@@ -22845,7 +22571,7 @@ final class CommitControlsElement implements CommitControlsElement_orMutable {
         _lib_editor_v1_binding.BindingRef.defaultInstance,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CommitControlsElement toFrozen() => this;
@@ -22912,7 +22638,7 @@ final class CommitControlsElement_mutable
 
   CommitControlsElement_mutable._(this.binding);
 
-  /// If the value of [binding] is already mutable, returns it as-is.
+  /// If the value of [binding] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [binding] and returns it.
   _lib_editor_v1_binding.BindingRef_mutable get mutableBinding {
     final value = this.binding;
@@ -22930,9 +22656,7 @@ final class CommitControlsElement_mutable
       CommitControlsElement(binding: this.binding).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ButtonElement
-// -----------------------------------------------------------------------------
 
 sealed class ButtonElement_orMutable {
   _lib_editor_v1_expression.ExpressionNode get label;
@@ -22969,7 +22693,7 @@ final class ButtonElement implements ButtonElement_orMutable {
     _lib_editor_v1_action.EditorAction.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ButtonElement toFrozen() => this;
@@ -23048,9 +22772,7 @@ final class ButtonElement_mutable implements ButtonElement_orMutable {
       ButtonElement(label: this.label, action: this.action).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct IconButtonElement
-// -----------------------------------------------------------------------------
 
 sealed class IconButtonElement_orMutable {
   _lib_editor_v1_expression.ExpressionNode get icon;
@@ -23093,7 +22815,7 @@ final class IconButtonElement implements IconButtonElement_orMutable {
     _lib_editor_v1_action.EditorAction.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   IconButtonElement toFrozen() => this;
@@ -23189,9 +22911,7 @@ final class IconButtonElement_mutable implements IconButtonElement_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct MenuItem
-// -----------------------------------------------------------------------------
 
 sealed class MenuItem_orMutable {
   _core.String get itemId;
@@ -23234,7 +22954,7 @@ final class MenuItem implements MenuItem_orMutable {
     _lib_editor_v1_action.EditorAction.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   MenuItem toFrozen() => this;
@@ -23323,9 +23043,7 @@ final class MenuItem_mutable implements MenuItem_orMutable {
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct MenuElement
-// -----------------------------------------------------------------------------
 
 sealed class MenuElement_orMutable {
   _lib_editor_v1_expression.ExpressionNode? get label;
@@ -23365,7 +23083,7 @@ final class MenuElement implements MenuElement_orMutable {
   static MenuElement_mutable mutable() =>
       MenuElement_mutable._(null, _skir.KeyedIterable.empty);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   MenuElement toFrozen() => this;
@@ -23444,7 +23162,7 @@ final class MenuElement_mutable implements MenuElement_orMutable {
 
   MenuElement_mutable._(this.label, this.items);
 
-  /// If the value of [items] is already mutable, returns it as-is.
+  /// If the value of [items] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [items] and returns it.
   _core.List<MenuItem_orMutable> get mutableItems {
     final value = this.items;
@@ -23461,9 +23179,7 @@ final class MenuElement_mutable implements MenuElement_orMutable {
       MenuElement(label: this.label, items: this.items).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct TooltipElement
-// -----------------------------------------------------------------------------
 
 sealed class TooltipElement_orMutable {
   _lib_editor_v1_expression.ExpressionNode get message;
@@ -23500,7 +23216,7 @@ final class TooltipElement implements TooltipElement_orMutable {
     PresentationNode.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   TooltipElement toFrozen() => this;
@@ -23579,9 +23295,7 @@ final class TooltipElement_mutable implements TooltipElement_orMutable {
       TooltipElement(message: this.message, child: this.child).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum PresentationElement
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -25997,9 +25711,7 @@ final class PresentationElement_alignWrapper
   PresentationElement_kind get kind => PresentationElement_kind.alignWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct PresentationDefinition
-// -----------------------------------------------------------------------------
 
 sealed class PresentationDefinition_orMutable {
   _lib_editor_v1_type_catalog.PresentationId_orMutable get presentationId;
@@ -26069,7 +25781,7 @@ final class PresentationDefinition implements PresentationDefinition_orMutable {
         null,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresentationDefinition toFrozen() => this;
@@ -26196,7 +25908,7 @@ final class PresentationDefinition_mutable
     this.primaryInput,
   );
 
-  /// If the value of [presentationId] is already mutable, returns it as-is.
+  /// If the value of [presentationId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [presentationId] and returns it.
   _lib_editor_v1_type_catalog.PresentationId_mutable get mutablePresentationId {
     final value = this.presentationId;
@@ -26208,7 +25920,7 @@ final class PresentationDefinition_mutable
     }
   }
 
-  /// If the value of [inputs] is already mutable, returns it as-is.
+  /// If the value of [inputs] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [inputs] and returns it.
   _core.List<PresentationInput_orMutable> get mutableInputs {
     final value = this.inputs;
@@ -26219,7 +25931,7 @@ final class PresentationDefinition_mutable
     }
   }
 
-  /// If the value of [root] is already mutable, returns it as-is.
+  /// If the value of [root] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [root] and returns it.
   PresentationNode_mutable get mutableRoot {
     final value = this.root;
@@ -26230,7 +25942,7 @@ final class PresentationDefinition_mutable
     }
   }
 
-  /// If the value of [dependencies] is already mutable, returns it as-is.
+  /// If the value of [dependencies] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [dependencies] and returns it.
   PresentationDependencies_mutable get mutableDependencies {
     final value = this.dependencies;
@@ -26253,9 +25965,7 @@ final class PresentationDefinition_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct PresentationDependencies
-// -----------------------------------------------------------------------------
 
 sealed class PresentationDependencies_orMutable {
   _core.Iterable<_lib_editor_v1_type_catalog.TypeUse> get types;
@@ -26340,7 +26050,7 @@ final class PresentationDependencies
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresentationDependencies toFrozen() => this;
@@ -26480,7 +26190,7 @@ final class PresentationDependencies_mutable
     this.collections,
   );
 
-  /// If the value of [types] is already mutable, returns it as-is.
+  /// If the value of [types] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [types] and returns it.
   _core.List<_lib_editor_v1_type_catalog.TypeUse> get mutableTypes {
     final value = this.types;
@@ -26492,7 +26202,7 @@ final class PresentationDependencies_mutable
     }
   }
 
-  /// If the value of [presentations] is already mutable, returns it as-is.
+  /// If the value of [presentations] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [presentations] and returns it.
   _core.List<_lib_editor_v1_type_catalog.PresentationId_orMutable>
   get mutablePresentations {
@@ -26507,7 +26217,7 @@ final class PresentationDependencies_mutable
     }
   }
 
-  /// If the value of [conversions] is already mutable, returns it as-is.
+  /// If the value of [conversions] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [conversions] and returns it.
   _core.List<_lib_editor_v1_type_catalog.ConversionId_orMutable>
   get mutableConversions {
@@ -26522,7 +26232,7 @@ final class PresentationDependencies_mutable
     }
   }
 
-  /// If the value of [capabilities] is already mutable, returns it as-is.
+  /// If the value of [capabilities] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [capabilities] and returns it.
   _core.List<_lib_editor_v1_type_catalog.CapabilityId_orMutable>
   get mutableCapabilities {
@@ -26537,7 +26247,7 @@ final class PresentationDependencies_mutable
     }
   }
 
-  /// If the value of [collections] is already mutable, returns it as-is.
+  /// If the value of [collections] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [collections] and returns it.
   _core.List<PresentationCollectionDefinition_orMutable>
   get mutableCollections {
@@ -26563,9 +26273,7 @@ final class PresentationDependencies_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct PresentationCollectionRelationDefinition
-// -----------------------------------------------------------------------------
 
 sealed class PresentationCollectionRelationDefinition_orMutable {
   _core.String get relationId;
@@ -26604,7 +26312,7 @@ final class PresentationCollectionRelationDefinition
         _lib_editor_v1_expression.ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresentationCollectionRelationDefinition toFrozen() => this;
@@ -26698,9 +26406,7 @@ final class PresentationCollectionRelationDefinition_mutable
       ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct PresentationCollectionDefinition
-// -----------------------------------------------------------------------------
 
 sealed class PresentationCollectionDefinition_orMutable {
   _core.String get sourceId;
@@ -26808,7 +26514,7 @@ final class PresentationCollectionDefinition
         null,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresentationCollectionDefinition toFrozen() => this;
@@ -26976,7 +26682,7 @@ final class PresentationCollectionDefinition_mutable
     this.resources,
   );
 
-  /// If the value of [rowBindingId] is already mutable, returns it as-is.
+  /// If the value of [rowBindingId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [rowBindingId] and returns it.
   _lib_editor_v1_type_catalog.ExpressionBindingId_mutable
   get mutableRowBindingId {
@@ -26990,7 +26696,7 @@ final class PresentationCollectionDefinition_mutable
     }
   }
 
-  /// If the value of [relations] is already mutable, returns it as-is.
+  /// If the value of [relations] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [relations] and returns it.
   _core.List<PresentationCollectionRelationDefinition_orMutable>
   get mutableRelations {
@@ -27020,9 +26726,7 @@ final class PresentationCollectionDefinition_mutable
       ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum PresentationCollectionProjectionValue
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -27183,9 +26887,7 @@ final class PresentationCollectionProjectionValue_literalWrapper
       PresentationCollectionProjectionValue_kind.literalWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct PresentationCollectionProjectionField
-// -----------------------------------------------------------------------------
 
 sealed class PresentationCollectionProjectionField_orMutable {
   _lib_editor_v1_type_catalog.ValuePath_orMutable get target;
@@ -27224,7 +26926,7 @@ final class PresentationCollectionProjectionField
         PresentationCollectionProjectionValue.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresentationCollectionProjectionField toFrozen() => this;
@@ -27303,7 +27005,7 @@ final class PresentationCollectionProjectionField_mutable
 
   PresentationCollectionProjectionField_mutable._(this.target, this.source);
 
-  /// If the value of [target] is already mutable, returns it as-is.
+  /// If the value of [target] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
   _lib_editor_v1_type_catalog.ValuePath_mutable get mutableTarget {
     final value = this.target;
@@ -27324,9 +27026,7 @@ final class PresentationCollectionProjectionField_mutable
       ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct PresentationCollectionProjection
-// -----------------------------------------------------------------------------
 
 sealed class PresentationCollectionProjection_orMutable {
   _lib_editor_v1_type_catalog.NamedTypeTemplate_orMutable get root;
@@ -27382,7 +27082,7 @@ final class PresentationCollectionProjection
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresentationCollectionProjection toFrozen() => this;
@@ -27483,7 +27183,7 @@ final class PresentationCollectionProjection_mutable
     this.fields,
   );
 
-  /// If the value of [root] is already mutable, returns it as-is.
+  /// If the value of [root] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [root] and returns it.
   _lib_editor_v1_type_catalog.NamedTypeTemplate_mutable get mutableRoot {
     final value = this.root;
@@ -27495,7 +27195,7 @@ final class PresentationCollectionProjection_mutable
     }
   }
 
-  /// If the value of [resourceBindingId] is already mutable, returns it as-is.
+  /// If the value of [resourceBindingId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [resourceBindingId] and returns it.
   _lib_editor_v1_type_catalog.ExpressionBindingId_mutable
   get mutableResourceBindingId {
@@ -27509,7 +27209,7 @@ final class PresentationCollectionProjection_mutable
     }
   }
 
-  /// If the value of [fields] is already mutable, returns it as-is.
+  /// If the value of [fields] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [fields] and returns it.
   _core.List<PresentationCollectionProjectionField_orMutable>
   get mutableFields {
@@ -27534,9 +27234,7 @@ final class PresentationCollectionProjection_mutable
       ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct PresentationResourceCollection
-// -----------------------------------------------------------------------------
 
 sealed class PresentationResourceCollection_orMutable {
   _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable get root;
@@ -27591,7 +27289,7 @@ final class PresentationResourceCollection
         null,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresentationResourceCollection toFrozen() => this;
@@ -27692,7 +27390,7 @@ final class PresentationResourceCollection_mutable
     this.appearance,
   );
 
-  /// If the value of [root] is already mutable, returns it as-is.
+  /// If the value of [root] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [root] and returns it.
   _lib_editor_v1_type_catalog.TypeDefinitionId_mutable get mutableRoot {
     final value = this.root;
@@ -27704,7 +27402,7 @@ final class PresentationResourceCollection_mutable
     }
   }
 
-  /// If the value of [resourceBindingId] is already mutable, returns it as-is.
+  /// If the value of [resourceBindingId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [resourceBindingId] and returns it.
   _lib_editor_v1_type_catalog.ExpressionBindingId_mutable
   get mutableResourceBindingId {
@@ -27727,9 +27425,7 @@ final class PresentationResourceCollection_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum PresentationInputAccess
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -27819,9 +27515,7 @@ enum _PresentationInputAccess_consts implements PresentationInputAccess {
       _skir.internal__stringify(this, PresentationInputAccess.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // struct PresentationInput
-// -----------------------------------------------------------------------------
 
 sealed class PresentationInput_orMutable {
   _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get bindingId;
@@ -27871,7 +27565,7 @@ final class PresentationInput implements PresentationInput_orMutable {
     PresentationInputAccess.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresentationInput toFrozen() => this;
@@ -27978,7 +27672,7 @@ final class PresentationInput_mutable implements PresentationInput_orMutable {
     this.access,
   );
 
-  /// If the value of [bindingId] is already mutable, returns it as-is.
+  /// If the value of [bindingId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [bindingId] and returns it.
   _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableBindingId {
     final value = this.bindingId;
@@ -28001,9 +27695,7 @@ final class PresentationInput_mutable implements PresentationInput_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct PresentationArgument
-// -----------------------------------------------------------------------------
 
 sealed class PresentationArgument_orMutable {
   _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get input;
@@ -28041,7 +27733,7 @@ final class PresentationArgument implements PresentationArgument_orMutable {
         _lib_editor_v1_binding.BindingRef.defaultInstance,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresentationArgument toFrozen() => this;
@@ -28118,7 +27810,7 @@ final class PresentationArgument_mutable
 
   PresentationArgument_mutable._(this.input, this.binding);
 
-  /// If the value of [input] is already mutable, returns it as-is.
+  /// If the value of [input] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [input] and returns it.
   _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableInput {
     final value = this.input;
@@ -28131,7 +27823,7 @@ final class PresentationArgument_mutable
     }
   }
 
-  /// If the value of [binding] is already mutable, returns it as-is.
+  /// If the value of [binding] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [binding] and returns it.
   _lib_editor_v1_binding.BindingRef_mutable get mutableBinding {
     final value = this.binding;
@@ -28150,9 +27842,7 @@ final class PresentationArgument_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct PresentationInvocation
-// -----------------------------------------------------------------------------
 
 sealed class PresentationInvocation_orMutable {
   _lib_editor_v1_type_catalog.PresentationId_orMutable get presentationId;
@@ -28194,7 +27884,7 @@ final class PresentationInvocation implements PresentationInvocation_orMutable {
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresentationInvocation toFrozen() => this;
@@ -28271,7 +27961,7 @@ final class PresentationInvocation_mutable
 
   PresentationInvocation_mutable._(this.presentationId, this.arguments);
 
-  /// If the value of [presentationId] is already mutable, returns it as-is.
+  /// If the value of [presentationId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [presentationId] and returns it.
   _lib_editor_v1_type_catalog.PresentationId_mutable get mutablePresentationId {
     final value = this.presentationId;
@@ -28283,7 +27973,7 @@ final class PresentationInvocation_mutable
     }
   }
 
-  /// If the value of [arguments] is already mutable, returns it as-is.
+  /// If the value of [arguments] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [arguments] and returns it.
   _core.List<PresentationArgument_orMutable> get mutableArguments {
     final value = this.arguments;
@@ -28302,9 +27992,7 @@ final class PresentationInvocation_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct LinkControl
-// -----------------------------------------------------------------------------
 
 sealed class LinkControl_orMutable {
   BoundControl_orMutable get control;
@@ -28371,7 +28059,7 @@ final class LinkControl implements LinkControl_orMutable {
     null,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   LinkControl toFrozen() => this;
@@ -28502,9 +28190,7 @@ final class LinkControl_mutable implements LinkControl_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct LinkCandidatePolicyId
-// -----------------------------------------------------------------------------
 
 sealed class LinkCandidatePolicyId_orMutable {
   _core.String get value;
@@ -28531,7 +28217,7 @@ final class LinkCandidatePolicyId implements LinkCandidatePolicyId_orMutable {
   static LinkCandidatePolicyId_mutable mutable() =>
       LinkCandidatePolicyId_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   LinkCandidatePolicyId toFrozen() => this;
@@ -28604,9 +28290,7 @@ final class LinkCandidatePolicyId_mutable
       LinkCandidatePolicyId(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum LinkRejectionDisplay
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -28702,9 +28386,7 @@ enum _LinkRejectionDisplay_consts implements LinkRejectionDisplay {
       _skir.internal__stringify(this, LinkRejectionDisplay.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // struct RemainingFieldsElement
-// -----------------------------------------------------------------------------
 
 sealed class RemainingFieldsElement_orMutable {
   _core.Iterable<_lib_editor_v1_type_catalog.RelativeFieldPattern_orMutable>
@@ -28741,7 +28423,7 @@ final class RemainingFieldsElement implements RemainingFieldsElement_orMutable {
   static RemainingFieldsElement_mutable mutable() =>
       RemainingFieldsElement_mutable._(_skir.KeyedIterable.empty);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RemainingFieldsElement toFrozen() => this;
@@ -28811,7 +28493,7 @@ final class RemainingFieldsElement_mutable
 
   RemainingFieldsElement_mutable._(this.excluded);
 
-  /// If the value of [excluded] is already mutable, returns it as-is.
+  /// If the value of [excluded] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [excluded] and returns it.
   _core.List<_lib_editor_v1_type_catalog.RelativeFieldPattern_orMutable>
   get mutableExcluded {
@@ -28832,9 +28514,7 @@ final class RemainingFieldsElement_mutable
       RemainingFieldsElement(excluded: this.excluded).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct NullableControl
-// -----------------------------------------------------------------------------
 
 sealed class NullableControl_orMutable {
   BoundControl_orMutable get control;
@@ -28872,7 +28552,7 @@ final class NullableControl implements NullableControl_orMutable {
   static NullableControl_mutable mutable() =>
       NullableControl_mutable._(BoundControl.defaultInstance, null);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   NullableControl toFrozen() => this;
@@ -28953,9 +28633,7 @@ final class NullableControl_mutable implements NullableControl_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct SetControl
-// -----------------------------------------------------------------------------
 
 sealed class SetControl_orMutable {
   BoundControl_orMutable get control;
@@ -29023,7 +28701,7 @@ final class SetControl implements SetControl_orMutable {
     _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SetControl toFrozen() => this;
@@ -29142,7 +28820,7 @@ final class SetControl_mutable implements SetControl_orMutable {
     this.itemBindingId,
   );
 
-  /// If the value of [itemBindingId] is already mutable, returns it as-is.
+  /// If the value of [itemBindingId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [itemBindingId] and returns it.
   _lib_editor_v1_type_catalog.ExpressionBindingId_mutable
   get mutableItemBindingId {
@@ -29167,9 +28845,7 @@ final class SetControl_mutable implements SetControl_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum PageGraphDirection
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -29293,9 +28969,7 @@ enum _PageGraphDirection_consts implements PageGraphDirection {
       _skir.internal__stringify(this, PageGraphDirection.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // struct PageGraphElement
-// -----------------------------------------------------------------------------
 
 sealed class PageGraphElement_orMutable {
   BoundControl_orMutable get control;
@@ -29332,7 +29006,7 @@ final class PageGraphElement implements PageGraphElement_orMutable {
     PageGraphDirection.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PageGraphElement toFrozen() => this;
@@ -29412,9 +29086,7 @@ final class PageGraphElement_mutable implements PageGraphElement_orMutable {
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct PageTimelineElement
-// -----------------------------------------------------------------------------
 
 sealed class PageTimelineElement_orMutable {
   BoundControl_orMutable get control;
@@ -29443,7 +29115,7 @@ final class PageTimelineElement implements PageTimelineElement_orMutable {
   static PageTimelineElement_mutable mutable() =>
       PageTimelineElement_mutable._(BoundControl.defaultInstance);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PageTimelineElement toFrozen() => this;
@@ -29516,9 +29188,7 @@ final class PageTimelineElement_mutable
       PageTimelineElement(control: this.control).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct TextFit
-// -----------------------------------------------------------------------------
 
 sealed class TextFit_orMutable {
   _lib_editor_v1_expression.ExpressionNode get minimum;
@@ -29555,7 +29225,7 @@ final class TextFit implements TextFit_orMutable {
     _lib_editor_v1_expression.ExpressionNode.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   TextFit toFrozen() => this;
@@ -29632,9 +29302,7 @@ final class TextFit_mutable implements TextFit_orMutable {
       TextFit(minimum: this.minimum, maximum: this.maximum).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum TextSizing
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -29773,9 +29441,7 @@ final class TextSizing_fitWrapper extends _TextSizing_wrapper {
   TextSizing_kind get kind => TextSizing_kind.fitWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // enum PresentationInteractionState
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -29914,9 +29580,7 @@ enum _PresentationInteractionState_consts
       _skir.internal__stringify(this, PresentationInteractionState.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // struct PresentationStateMatch
-// -----------------------------------------------------------------------------
 
 sealed class PresentationStateMatch_orMutable {
   _core.Iterable<PresentationInteractionState> get required_;
@@ -29957,7 +29621,7 @@ final class PresentationStateMatch implements PresentationStateMatch_orMutable {
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresentationStateMatch toFrozen() => this;
@@ -30034,7 +29698,7 @@ final class PresentationStateMatch_mutable
 
   PresentationStateMatch_mutable._(this.required_, this.excluded);
 
-  /// If the value of [required_] is already mutable, returns it as-is.
+  /// If the value of [required_] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [required_] and returns it.
   _core.List<PresentationInteractionState> get mutableRequired {
     final value = this.required_;
@@ -30045,7 +29709,7 @@ final class PresentationStateMatch_mutable
     }
   }
 
-  /// If the value of [excluded] is already mutable, returns it as-is.
+  /// If the value of [excluded] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [excluded] and returns it.
   _core.List<PresentationInteractionState> get mutableExcluded {
     final value = this.excluded;
@@ -30063,9 +29727,7 @@ final class PresentationStateMatch_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum PresentationThemeColor
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -30212,9 +29874,7 @@ enum _PresentationThemeColor_consts implements PresentationThemeColor {
       _skir.internal__stringify(this, PresentationThemeColor.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // enum PresentationAmbientColor
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -30332,9 +29992,7 @@ enum _PresentationAmbientColor_consts implements PresentationAmbientColor {
       _skir.internal__stringify(this, PresentationAmbientColor.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // enum PresentationContrastMode
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -30432,9 +30090,7 @@ enum _PresentationContrastMode_consts implements PresentationContrastMode {
       _skir.internal__stringify(this, PresentationContrastMode.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // struct PresentationContrastColor
-// -----------------------------------------------------------------------------
 
 sealed class PresentationContrastColor_orMutable {
   PresentationColor get source;
@@ -30473,7 +30129,7 @@ final class PresentationContrastColor
         PresentationContrastMode.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresentationContrastColor toFrozen() => this;
@@ -30557,9 +30213,7 @@ final class PresentationContrastColor_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct PresentationAlphaColor
-// -----------------------------------------------------------------------------
 
 sealed class PresentationAlphaColor_orMutable {
   PresentationColor get source;
@@ -30594,7 +30248,7 @@ final class PresentationAlphaColor implements PresentationAlphaColor_orMutable {
   static PresentationAlphaColor_mutable mutable() =>
       PresentationAlphaColor_mutable._(PresentationColor.unknown, 0.0);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresentationAlphaColor toFrozen() => this;
@@ -30678,9 +30332,7 @@ final class PresentationAlphaColor_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct PresentationBlendColor
-// -----------------------------------------------------------------------------
 
 sealed class PresentationBlendColor_orMutable {
   PresentationColor get foreground;
@@ -30718,7 +30370,7 @@ final class PresentationBlendColor implements PresentationBlendColor_orMutable {
         PresentationColor.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresentationBlendColor toFrozen() => this;
@@ -30803,9 +30455,7 @@ final class PresentationBlendColor_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct PresentationStateColorRule
-// -----------------------------------------------------------------------------
 
 sealed class PresentationStateColorRule_orMutable {
   PresentationStateMatch_orMutable get match;
@@ -30844,7 +30494,7 @@ final class PresentationStateColorRule
         PresentationColor.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresentationStateColorRule toFrozen() => this;
@@ -30921,7 +30571,7 @@ final class PresentationStateColorRule_mutable
 
   PresentationStateColorRule_mutable._(this.match, this.color);
 
-  /// If the value of [match] is already mutable, returns it as-is.
+  /// If the value of [match] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [match] and returns it.
   PresentationStateMatch_mutable get mutableMatch {
     final value = this.match;
@@ -30939,9 +30589,7 @@ final class PresentationStateColorRule_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct PresentationStateColor
-// -----------------------------------------------------------------------------
 
 sealed class PresentationStateColor_orMutable {
   _core.Iterable<PresentationStateColorRule_orMutable> get rules;
@@ -30982,7 +30630,7 @@ final class PresentationStateColor implements PresentationStateColor_orMutable {
         PresentationColor.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresentationStateColor toFrozen() => this;
@@ -31066,9 +30714,7 @@ final class PresentationStateColor_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum PresentationColor
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -31361,9 +31007,7 @@ final class PresentationColor_statesWrapper extends _PresentationColor_wrapper {
   PresentationColor_kind get kind => PresentationColor_kind.statesWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct AlignmentLayout
-// -----------------------------------------------------------------------------
 
 sealed class AlignmentLayout_orMutable {
   PresentationNode_orMutable get child;
@@ -31400,7 +31044,7 @@ final class AlignmentLayout implements AlignmentLayout_orMutable {
     PresentationAlignment.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   AlignmentLayout toFrozen() => this;

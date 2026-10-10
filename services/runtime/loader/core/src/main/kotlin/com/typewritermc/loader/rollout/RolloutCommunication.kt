@@ -1,45 +1,22 @@
-@file:OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
-
 package com.typewritermc.loader.rollout
 
-import com.typewritermc.services.libs.communicator.address.AddressTemplate
-import com.typewritermc.services.libs.communicator.address.addressTemplate
-import com.typewritermc.services.libs.communicator.address.addressValuesOf
+import com.typewritermc.protocol.transport.generated.RealmRouteScope
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.client.ScatterPolicy
-import com.typewritermc.services.libs.communicator.contract.EventContract
-import com.typewritermc.services.libs.communicator.contract.OperationName
-import com.typewritermc.services.libs.communicator.contract.PayloadCodec
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
 import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
 import com.typewritermc.services.libs.communicator.contract.ResponseVariant
-import com.typewritermc.services.libs.communicator.contract.ScatterContract
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
-import com.typewritermc.services.libs.communicator.transport.Payload
 import com.typewritermc.services.libs.registrar.ServiceId
-import com.typewritermc.services.libs.telemetry.ErrorSlug
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.cbor.Cbor
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
-/** Names the organization and Realm scope used by rollout scatter and event routes. */
-data class RealmBroadcastAddress(
-    val organizationId: String,
-    val realmId: RealmId,
-)
-
-private val presenceAddress = realmBroadcastAddress("probe")
-private val commandAddress = realmBroadcastAddress("command")
-private val participantStateAddress = realmBroadcastAddress("state")
-private val participantStatusAddress = realmBroadcastAddress("status")
-
-private val presencePolicy =
+internal val presenceResponsePolicy =
     ResponsePolicy<PresenceReply>(PresenceReply.Failed("Internal host presence failure")) { response ->
         when (response) {
             is PresenceReply.Present -> success("present")
@@ -47,7 +24,7 @@ private val presencePolicy =
         }
     }
 
-private val commandPolicy =
+internal val commandResponsePolicy =
     ResponsePolicy(CommandAcceptance(ServiceId("unknown"), false, "Internal rollout command failure", true)) { response ->
         when {
             response.internalFailure -> internal("failed")
@@ -56,57 +33,18 @@ private val commandPolicy =
         }
     }
 
-/** Scatter contract used to discover hosts currently answering for a Realm. */
-val ProbeRealmHostsContract =
-    ScatterContract(
-        OperationName.of("realm.hosts.probe"),
-        presenceAddress,
-        cborCodec(ProbeRealmHosts.serializer()),
-        cborCodec(PresenceReply.serializer()),
-        presencePolicy,
-        ErrorSlug.of("realm-host-probe-failed"),
-    )
-
-/** Scatter contract used to deliver stage, commit, abort, and rollback commands. */
-val RolloutCommandContract =
-    ScatterContract(
-        OperationName.of("realm.rollout.command"),
-        commandAddress,
-        cborCodec(RolloutEnvelope.serializer()),
-        cborCodec(CommandAcceptance.serializer()),
-        commandPolicy,
-        ErrorSlug.of("realm-rollout-command-failed"),
-    )
-
-/** Event contract used for durable participant observations, separate from status probes. */
-val ParticipantStateChangedContract =
-    EventContract(
-        OperationName.of("realm.rollout.state"),
-        participantStateAddress,
-        cborCodec(ParticipantStateChanged.serializer()),
-        ErrorSlug.of("realm-rollout-state-failed"),
-    )
-
-/** Scatter contract used to read current participant state for one attempt. */
-val ParticipantStatusContract =
-    ScatterContract(
-        OperationName.of("realm.hosts.status"),
-        participantStatusAddress,
-        cborCodec(ProbeParticipantStatus.serializer()),
-        cborCodec(ParticipantStatusReply.serializer()),
-        ResponsePolicy(
-            ParticipantStatusReply.InternalFailure(
-                ServiceId("unknown"),
-                "Internal participant status failure",
-            ),
-        ) { response ->
-            when (response) {
-                is ParticipantStatusReply.Status -> success("status")
-                is ParticipantStatusReply.InternalFailure -> internal("failed")
-            }
-        },
-        ErrorSlug.of("realm-host-status-failed"),
-    )
+internal val participantStatusResponsePolicy =
+    ResponsePolicy<ParticipantStatusReply>(
+        ParticipantStatusReply.InternalFailure(
+            ServiceId("unknown"),
+            "Internal participant status failure",
+        ),
+    ) { response ->
+        when (response) {
+            is ParticipantStatusReply.Status -> success("status")
+            is ParticipantStatusReply.InternalFailure -> internal("failed")
+        }
+    }
 
 /**
  * Implements rollout probes and commands through typed messaging contracts.
@@ -122,11 +60,12 @@ class CommunicatorRolloutMessenger(
         probe: ProbeRealmHosts,
         expected: Set<ServiceId>,
         timeout: Duration,
-    ): List<RealmHostPresence> =
-        communicator
+    ): List<RealmHostPresence> {
+        val scope = routeScope(probe.realmId)
+        return communicator
             .scatter(
-                ProbeRealmHostsContract,
-                RealmBroadcastAddress(organizationId, probe.realmId),
+                scope.realmHostsProbe(presenceResponsePolicy),
+                scope,
                 probe,
                 ScatterPolicy(
                     timeout = timeout,
@@ -142,34 +81,45 @@ class CommunicatorRolloutMessenger(
             ).successfulValues()
             .filterIsInstance<PresenceReply.Present>()
             .map { it.presence }
+    }
 
     override suspend fun command(
         envelope: RolloutEnvelope,
         timeout: Duration,
-    ): List<CommandAcceptance> =
-        communicator
+    ): List<CommandAcceptance> {
+        val scope = routeScope(envelope.realmId)
+        return communicator
             .scatter(
-                RolloutCommandContract,
-                RealmBroadcastAddress(organizationId, envelope.realmId),
+                scope.realmRolloutCommand(commandResponsePolicy),
+                scope,
                 envelope,
                 ScatterPolicy(timeout) { replies ->
                     replies.map(CommandAcceptance::serviceId).containsAll(envelope.participants)
                 },
             ).successfulValues()
+    }
 
     override suspend fun statuses(
         probe: ProbeParticipantStatus,
         expected: Set<ServiceId>,
         timeout: Duration,
-    ): Map<ServiceId, ParticipantStatus> =
-        communicator
+    ): Map<ServiceId, ParticipantStatus> {
+        val scope = routeScope(probe.realmId)
+        return communicator
             .scatter(
-                ParticipantStatusContract,
-                RealmBroadcastAddress(organizationId, probe.realmId),
+                scope.realmHostsStatus(participantStatusResponsePolicy),
+                scope,
                 probe,
                 ScatterPolicy(timeout) { replies -> replies.map(ParticipantStatusReply::serviceId).containsAll(expected) },
             ).successfulValues()
             .associate { it.serviceId to it.requireStatus() }
+    }
+
+    private fun routeScope(realmId: RealmId) =
+        RealmRouteScope(
+            organizationId = organizationId,
+            realmId = realmId.value,
+        )
 }
 
 /**
@@ -184,15 +134,15 @@ class RolloutHostRoutes(
 ) {
     fun register(
         builder: CommunicatorRoutesBuilder,
-        address: RealmBroadcastAddress,
+        scope: RealmRouteScope,
     ) {
-        builder.scatterAt(ProbeRealmHostsContract, address) { call ->
+        builder.scatterAt(scope.realmHostsProbe(presenceResponsePolicy), scope) { call ->
             presence(call.request)?.let(PresenceReply::Present)
         }
-        builder.scatterAt(RolloutCommandContract, address) { call ->
+        builder.scatterAt(scope.realmRolloutCommand(commandResponsePolicy), scope) { call ->
             if (participant.accepts(call.request)) participant.handle(call.request) else null
         }
-        builder.scatterAt(ParticipantStatusContract, address) { call ->
+        builder.scatterAt(scope.realmHostsStatus(participantStatusResponsePolicy), scope) { call ->
             if (call.request.realmId == participant.realmId) {
                 ParticipantStatusReply.Status(participant.serviceId, participant.currentStatus(call.request.attempt))
             } else {
@@ -212,9 +162,9 @@ class RolloutCoordinatorRoutes(
 ) {
     fun register(
         builder: CommunicatorRoutesBuilder,
-        address: RealmBroadcastAddress,
+        scope: RealmRouteScope,
     ) {
-        builder.eventAt(ParticipantStateChangedContract, address) { call ->
+        builder.eventAt(scope.realmRolloutState, scope) { call ->
             state.record(call.event)
         }
     }
@@ -230,10 +180,15 @@ class CommunicatorParticipantStatePublisher(
     private val communicator: Communicator,
 ) : ParticipantStatePublisher {
     override suspend fun publish(event: ParticipantStateChanged) {
+        val scope =
+            RealmRouteScope(
+                organizationId = organizationId,
+                realmId = event.realmId.value,
+            )
         val result =
             communicator.publish(
-                ParticipantStateChangedContract,
-                RealmBroadcastAddress(organizationId, event.realmId),
+                scope.realmRolloutState,
+                scope,
                 event,
             )
         if (result is CommunicationResult.Failure) error("Participant state publication failed: ${result.error}")
@@ -249,29 +204,6 @@ private fun ParticipantStatusReply.requireStatus(): ParticipantStatus =
     when (this) {
         is ParticipantStatusReply.Status -> status
         is ParticipantStatusReply.InternalFailure -> error("Internal failure reached successful participant statuses: $reason")
-    }
-
-private fun realmBroadcastAddress(suffix: String): AddressTemplate<RealmBroadcastAddress> =
-    "typewriter.organization.{organization}.realm.{realm}.hosts.$suffix".addressTemplate(
-        { address ->
-            addressValuesOf(
-                "organization" to address.organizationId,
-                "realm" to address.realmId.value,
-            )
-        },
-        { values ->
-            RealmBroadcastAddress(
-                values.require("organization"),
-                RealmId(values.require("realm")),
-            )
-        },
-    )
-
-private fun <Value : Any> cborCodec(serializer: KSerializer<Value>): PayloadCodec<Value> =
-    object : PayloadCodec<Value> {
-        override fun encode(value: Value): Payload = Payload.copyOf(rolloutCbor.encodeToByteArray(serializer, value))
-
-        override fun decode(payload: Payload): Value = rolloutCbor.decodeFromByteArray(serializer, payload.toByteArray())
     }
 
 private fun success(variant: String) = ResponseClassification(ResponseOutcome.SUCCESS, ResponseVariant.of(variant))

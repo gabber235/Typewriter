@@ -254,6 +254,6 @@ class RealmPublication extends _$RealmPublication {
   Future<skir.PublicationResult> publish() => _driver.publish();
 
   Future<List<skir.CompiledResourceStatus>> states(
-    List<skir.CompilationRoot> roots,
-  ) => _driver.repository.states(roots);
+    skir.CompilationStatusSelection selection,
+  ) => _driver.repository.states(selection);
 }

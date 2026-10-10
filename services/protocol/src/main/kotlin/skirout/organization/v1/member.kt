@@ -152,7 +152,7 @@ class OrganizationMember private constructor(
         );
 
         /**
-         * If the value of [userId] is already mutable, returns it as-is.
+         * If the value of [userId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [userId] and returns it.
          */
         val mutableUserId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -168,7 +168,7 @@ class OrganizationMember private constructor(
         }
 
         /**
-         * If the value of [roles] is already mutable, returns it as-is.
+         * If the value of [roles] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [roles] and returns it.
          */
         val mutableRoles: kotlin.collections.MutableList<skirout.organization.v1.role.OrganizationRole_OrMutable> get() {
@@ -324,7 +324,7 @@ class OrganizationMembersSnapshot private constructor(
         );
 
         /**
-         * If the value of [values] is already mutable, returns it as-is.
+         * If the value of [values] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [values] and returns it.
          */
         val mutableValues: kotlin.collections.MutableList<skirout.organization.v1.member.OrganizationMember_OrMutable> get() {
@@ -638,7 +638,7 @@ class OrganizationMembersChanged private constructor(
         );
 
         /**
-         * If the value of [changes] is already mutable, returns it as-is.
+         * If the value of [changes] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [changes] and returns it.
          */
         val mutableChanges: kotlin.collections.MutableList<skirout.organization.v1.member.OrganizationMembersChange> get() {
@@ -982,7 +982,7 @@ class UpdateOrganizationMemberRolesRequest private constructor(
         );
 
         /**
-         * If the value of [userIds] is already mutable, returns it as-is.
+         * If the value of [userIds] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [userIds] and returns it.
          */
         val mutableUserIds: kotlin.collections.MutableList<skirout.kernel.v1.record_id.RecordId_OrMutable> get() {
@@ -998,7 +998,7 @@ class UpdateOrganizationMemberRolesRequest private constructor(
         }
 
         /**
-         * If the value of [roleIds] is already mutable, returns it as-is.
+         * If the value of [roleIds] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [roleIds] and returns it.
          */
         val mutableRoleIds: kotlin.collections.MutableList<skirout.kernel.v1.record_id.RecordId_OrMutable> get() {
@@ -1493,7 +1493,7 @@ sealed class UpdateOrganizationMemberRolesResponse private constructor() {
             );
 
             /**
-             * If the value of [members] is already mutable, returns it as-is.
+             * If the value of [members] is already mutable, returns it as is.
              * Otherwise, makes a mutable copy, assigns it back to [members] and returns it.
              */
             val mutableMembers: kotlin.collections.MutableList<skirout.organization.v1.member.OrganizationMember_OrMutable> get() {
@@ -1509,7 +1509,7 @@ sealed class UpdateOrganizationMemberRolesResponse private constructor() {
             }
 
             /**
-             * If the value of [event] is already mutable, returns it as-is.
+             * If the value of [event] is already mutable, returns it as is.
              * Otherwise, makes a mutable copy, assigns it back to [event] and returns it.
              */
             val mutableEvent: skirout.organization.v1.member.OrganizationMembersChanged.Mutable get() {
@@ -1638,7 +1638,7 @@ sealed class UpdateOrganizationMemberRolesResponse private constructor() {
             );
 
             /**
-             * If the value of [userIds] is already mutable, returns it as-is.
+             * If the value of [userIds] is already mutable, returns it as is.
              * Otherwise, makes a mutable copy, assigns it back to [userIds] and returns it.
              */
             val mutableUserIds: kotlin.collections.MutableList<skirout.kernel.v1.record_id.RecordId_OrMutable> get() {
@@ -1763,7 +1763,7 @@ sealed class UpdateOrganizationMemberRolesResponse private constructor() {
             );
 
             /**
-             * If the value of [roleIds] is already mutable, returns it as-is.
+             * If the value of [roleIds] is already mutable, returns it as is.
              * Otherwise, makes a mutable copy, assigns it back to [roleIds] and returns it.
              */
             val mutableRoleIds: kotlin.collections.MutableList<skirout.kernel.v1.record_id.RecordId_OrMutable> get() {
@@ -1899,7 +1899,7 @@ sealed class UpdateOrganizationMemberRolesResponse private constructor() {
             );
 
             /**
-             * If the value of [userIds] is already mutable, returns it as-is.
+             * If the value of [userIds] is already mutable, returns it as is.
              * Otherwise, makes a mutable copy, assigns it back to [userIds] and returns it.
              */
             val mutableUserIds: kotlin.collections.MutableList<skirout.kernel.v1.record_id.RecordId_OrMutable> get() {
@@ -1915,7 +1915,7 @@ sealed class UpdateOrganizationMemberRolesResponse private constructor() {
             }
 
             /**
-             * If the value of [roleIds] is already mutable, returns it as-is.
+             * If the value of [roleIds] is already mutable, returns it as is.
              * Otherwise, makes a mutable copy, assigns it back to [roleIds] and returns it.
              */
             val mutableRoleIds: kotlin.collections.MutableList<skirout.kernel.v1.record_id.RecordId_OrMutable> get() {
@@ -2044,7 +2044,7 @@ sealed class UpdateOrganizationMemberRolesResponse private constructor() {
             );
 
             /**
-             * If the value of [userIds] is already mutable, returns it as-is.
+             * If the value of [userIds] is already mutable, returns it as is.
              * Otherwise, makes a mutable copy, assigns it back to [userIds] and returns it.
              */
             val mutableUserIds: kotlin.collections.MutableList<skirout.kernel.v1.record_id.RecordId_OrMutable> get() {
@@ -2421,7 +2421,7 @@ class RemoveOrganizationMemberRequest private constructor(
         );
 
         /**
-         * If the value of [userId] is already mutable, returns it as-is.
+         * If the value of [userId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [userId] and returns it.
          */
         val mutableUserId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -2967,7 +2967,7 @@ sealed class RemoveOrganizationMemberResponse private constructor() {
             );
 
             /**
-             * If the value of [event] is already mutable, returns it as-is.
+             * If the value of [event] is already mutable, returns it as is.
              * Otherwise, makes a mutable copy, assigns it back to [event] and returns it.
              */
             val mutableEvent: skirout.organization.v1.member.OrganizationMembersChanged.Mutable get() {
@@ -3092,7 +3092,7 @@ sealed class RemoveOrganizationMemberResponse private constructor() {
             );
 
             /**
-             * If the value of [userId] is already mutable, returns it as-is.
+             * If the value of [userId] is already mutable, returns it as is.
              * Otherwise, makes a mutable copy, assigns it back to [userId] and returns it.
              */
             val mutableUserId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -3217,7 +3217,7 @@ sealed class RemoveOrganizationMemberResponse private constructor() {
             );
 
             /**
-             * If the value of [userId] is already mutable, returns it as-is.
+             * If the value of [userId] is already mutable, returns it as is.
              * Otherwise, makes a mutable copy, assigns it back to [userId] and returns it.
              */
             val mutableUserId: skirout.kernel.v1.record_id.RecordId.Mutable get() {

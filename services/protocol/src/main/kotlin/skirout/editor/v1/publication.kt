@@ -108,7 +108,7 @@ class OwnedPortableTypes private constructor(
         );
 
         /**
-         * If the value of [owner] is already mutable, returns it as-is.
+         * If the value of [owner] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [owner] and returns it.
          */
         val mutableOwner: skirout.editor.v1.type_catalog.DeclarationOwner.Mutable get() {
@@ -124,7 +124,7 @@ class OwnedPortableTypes private constructor(
         }
 
         /**
-         * If the value of [definitions] is already mutable, returns it as-is.
+         * If the value of [definitions] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [definitions] and returns it.
          */
         val mutableDefinitions: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.TypeDefinition_OrMutable> get() {
@@ -297,7 +297,7 @@ class RuntimeMemberTemplate private constructor(
         );
 
         /**
-         * If the value of [id] is already mutable, returns it as-is.
+         * If the value of [id] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
          */
         val mutableId: skirout.editor.v1.type_catalog.RuntimeMemberId.Mutable get() {
@@ -313,7 +313,7 @@ class RuntimeMemberTemplate private constructor(
         }
 
         /**
-         * If the value of [arguments] is already mutable, returns it as-is.
+         * If the value of [arguments] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [arguments] and returns it.
          */
         val mutableArguments: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.TypeTemplate> get() {
@@ -329,7 +329,7 @@ class RuntimeMemberTemplate private constructor(
         }
 
         /**
-         * If the value of [requiredCapabilities] is already mutable, returns it as-is.
+         * If the value of [requiredCapabilities] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [requiredCapabilities] and returns it.
          */
         val mutableRequiredCapabilities: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ScriptCapabilityId_OrMutable> get() {
@@ -514,7 +514,7 @@ class RuntimeMemberSignature private constructor(
         );
 
         /**
-         * If the value of [id] is already mutable, returns it as-is.
+         * If the value of [id] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
          */
         val mutableId: skirout.editor.v1.type_catalog.RuntimeMemberId.Mutable get() {
@@ -530,7 +530,7 @@ class RuntimeMemberSignature private constructor(
         }
 
         /**
-         * If the value of [parameters] is already mutable, returns it as-is.
+         * If the value of [parameters] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [parameters] and returns it.
          */
         val mutableParameters: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.TypeUse> get() {
@@ -546,7 +546,7 @@ class RuntimeMemberSignature private constructor(
         }
 
         /**
-         * If the value of [requiredCapabilities] is already mutable, returns it as-is.
+         * If the value of [requiredCapabilities] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [requiredCapabilities] and returns it.
          */
         val mutableRequiredCapabilities: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ScriptCapabilityId_OrMutable> get() {
@@ -709,7 +709,7 @@ class ScriptContextDescriptor private constructor(
         );
 
         /**
-         * If the value of [types] is already mutable, returns it as-is.
+         * If the value of [types] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [types] and returns it.
          */
         val mutableTypes: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable> get() {
@@ -725,7 +725,7 @@ class ScriptContextDescriptor private constructor(
         }
 
         /**
-         * If the value of [members] is already mutable, returns it as-is.
+         * If the value of [members] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [members] and returns it.
          */
         val mutableMembers: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.RuntimeMemberId_OrMutable> get() {
@@ -741,7 +741,7 @@ class ScriptContextDescriptor private constructor(
         }
 
         /**
-         * If the value of [capabilities] is already mutable, returns it as-is.
+         * If the value of [capabilities] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [capabilities] and returns it.
          */
         val mutableCapabilities: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ScriptCapabilityId_OrMutable> get() {
@@ -896,7 +896,7 @@ class NativeBindingRequirement private constructor(
         );
 
         /**
-         * If the value of [actual] is already mutable, returns it as-is.
+         * If the value of [actual] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [actual] and returns it.
          */
         val mutableActual: skirout.editor.v1.type_catalog.NamedTypeUse.Mutable get() {
@@ -912,7 +912,7 @@ class NativeBindingRequirement private constructor(
         }
 
         /**
-         * If the value of [provider] is already mutable, returns it as-is.
+         * If the value of [provider] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [provider] and returns it.
          */
         val mutableProvider: skirout.editor.v1.type_catalog.NativeBindingId.Mutable get() {
@@ -1056,7 +1056,7 @@ class EngineImplementationInputs private constructor(
         );
 
         /**
-         * If the value of [signatures] is already mutable, returns it as-is.
+         * If the value of [signatures] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [signatures] and returns it.
          */
         val mutableSignatures: kotlin.collections.MutableList<skirout.editor.v1.publication.RuntimeMemberSignature_OrMutable> get() {
@@ -1072,7 +1072,7 @@ class EngineImplementationInputs private constructor(
         }
 
         /**
-         * If the value of [token] is already mutable, returns it as-is.
+         * If the value of [token] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [token] and returns it.
          */
         val mutableToken: skirout.editor.v1.type_catalog.InputToken.Mutable get() {
@@ -1366,7 +1366,7 @@ class PublicationAttempt private constructor(
         );
 
         /**
-         * If the value of [id] is already mutable, returns it as-is.
+         * If the value of [id] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
          */
         val mutableId: skirout.editor.v1.type_catalog.PublicationId.Mutable get() {
@@ -1382,7 +1382,7 @@ class PublicationAttempt private constructor(
         }
 
         /**
-         * If the value of [catalog] is already mutable, returns it as-is.
+         * If the value of [catalog] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [catalog] and returns it.
          */
         val mutableCatalog: skirout.editor.v1.type_catalog.CatalogGeneration.Mutable get() {
@@ -1398,7 +1398,7 @@ class PublicationAttempt private constructor(
         }
 
         /**
-         * If the value of [engineInputs] is already mutable, returns it as-is.
+         * If the value of [engineInputs] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [engineInputs] and returns it.
          */
         val mutableEngineInputs: skirout.editor.v1.publication.EngineImplementationInputs.Mutable get() {
@@ -1546,7 +1546,7 @@ class CheckCoverage private constructor(
         );
 
         /**
-         * If the value of [required] is already mutable, returns it as-is.
+         * If the value of [required] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [required] and returns it.
          */
         val mutableRequired: kotlin.collections.MutableList<skirout.editor.v1.checking.CheckInstanceId_OrMutable> get() {
@@ -1562,7 +1562,7 @@ class CheckCoverage private constructor(
         }
 
         /**
-         * If the value of [completed] is already mutable, returns it as-is.
+         * If the value of [completed] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [completed] and returns it.
          */
         val mutableCompleted: kotlin.collections.MutableList<skirout.editor.v1.checking.CheckInstanceId_OrMutable> get() {
@@ -1724,7 +1724,7 @@ class AcceptedAuthoring private constructor(
         );
 
         /**
-         * If the value of [catalog] is already mutable, returns it as-is.
+         * If the value of [catalog] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [catalog] and returns it.
          */
         val mutableCatalog: skirout.editor.v1.type_catalog.CatalogGeneration.Mutable get() {
@@ -1740,7 +1740,7 @@ class AcceptedAuthoring private constructor(
         }
 
         /**
-         * If the value of [requiredCoverage] is already mutable, returns it as-is.
+         * If the value of [requiredCoverage] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [requiredCoverage] and returns it.
          */
         val mutableRequiredCoverage: skirout.editor.v1.publication.CheckCoverage.Mutable get() {
@@ -1756,7 +1756,7 @@ class AcceptedAuthoring private constructor(
         }
 
         /**
-         * If the value of [evidence] is already mutable, returns it as-is.
+         * If the value of [evidence] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [evidence] and returns it.
          */
         val mutableEvidence: kotlin.collections.MutableList<skirout.editor.v1.authoring_facts.EditExpectation> get() {
@@ -1772,7 +1772,7 @@ class AcceptedAuthoring private constructor(
         }
 
         /**
-         * If the value of [bindingRequirements] is already mutable, returns it as-is.
+         * If the value of [bindingRequirements] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [bindingRequirements] and returns it.
          */
         val mutableBindingRequirements: kotlin.collections.MutableList<skirout.editor.v1.publication.NativeBindingRequirement_OrMutable> get() {
@@ -2050,7 +2050,7 @@ sealed class PublicationResult private constructor() {
             );
 
             /**
-             * If the value of [publication] is already mutable, returns it as-is.
+             * If the value of [publication] is already mutable, returns it as is.
              * Otherwise, makes a mutable copy, assigns it back to [publication] and returns it.
              */
             val mutablePublication: skirout.editor.v1.type_catalog.PublicationId.Mutable get() {
@@ -2369,7 +2369,7 @@ class PublicationReport private constructor(
         );
 
         /**
-         * If the value of [id] is already mutable, returns it as-is.
+         * If the value of [id] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
          */
         val mutableId: skirout.editor.v1.type_catalog.PublicationId.Mutable get() {
@@ -2385,7 +2385,7 @@ class PublicationReport private constructor(
         }
 
         /**
-         * If the value of [findings] is already mutable, returns it as-is.
+         * If the value of [findings] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [findings] and returns it.
          */
         val mutableFindings: kotlin.collections.MutableList<skirout.editor.v1.diagnostic.Diagnostic_OrMutable> get() {

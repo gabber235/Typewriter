@@ -171,12 +171,28 @@ struct OrganizationTopologySnapshot {
   engines: [EngineInstance];
 }
 
+struct RealmRuntimeObservation {
+  realm_id: RecordId;
+  state: ChildRuntimeState;
+}
+
+struct EngineRuntimeObservation {
+  engine_id: RecordId;
+  state: ChildRuntimeState;
+}
+
+// A runtime report carries the host read model and only the child states observed in that report.
+struct HostExecutionObservation {
+  host: ServiceHost;
+  realm: RealmRuntimeObservation?;
+  engine: EngineRuntimeObservation?;
+}
+
 enum OrganizationTopologyChanged {
   replace: OrganizationTopologySnapshot;
   configuration_changed: HostConfigurationChange;
-  host_updated: ServiceHost;
-  realm_updated: RealmInstance;
-  engine_updated: EngineInstance;
+  observations_reported: HostExecutionObservation;
+  host_advertised: ServiceHost;
 }
 
 // Reads the current organization topology snapshot. Later events use OrganizationTopologyChanged.

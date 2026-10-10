@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 
 part of 'nats_provider.dart';
 
@@ -6,7 +6,7 @@ part of 'nats_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 /// Provides the concrete NATS owner factory used after authentication.
 
@@ -59,6 +59,55 @@ final class NatsClientFactoryProvider
 }
 
 String _$natsClientFactoryHash() => r'1c0582e7a874e091f3f55ad289b386b471ca7651';
+
+@ProviderFor(natsConnectionSessionFactory)
+final natsConnectionSessionFactoryProvider =
+    NatsConnectionSessionFactoryProvider._();
+
+final class NatsConnectionSessionFactoryProvider
+    extends
+        $FunctionalProvider<
+          NatsConnectionSessionFactory,
+          NatsConnectionSessionFactory,
+          NatsConnectionSessionFactory
+        >
+    with $Provider<NatsConnectionSessionFactory> {
+  NatsConnectionSessionFactoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'natsConnectionSessionFactoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$natsConnectionSessionFactoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<NatsConnectionSessionFactory> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  NatsConnectionSessionFactory create(Ref ref) {
+    return natsConnectionSessionFactory(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(NatsConnectionSessionFactory value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<NatsConnectionSessionFactory>(value),
+    );
+  }
+}
+
+String _$natsConnectionSessionFactoryHash() =>
+    r'efc56a1ff506ce661dee48cb9753c38de71ef235';
 
 /// Owns the HTTP client used by panel infrastructure requests.
 
@@ -164,9 +213,8 @@ String _$sentinelCredentialsHash() =>
 /// Owns the authenticated NATS client for the current user and organization.
 ///
 /// Credential providers and the organization qualifier are read when this
-/// owner is built. Invalidating it closes the old client before a fresh
-/// connection is created, which makes retry an ownership operation rather than
-/// a second connection layered over the first.
+/// owner is built. Authorization refresh admits a connected candidate before
+/// replacing the current client and closing its transport resources.
 
 @ProviderFor(Nats)
 final natsProvider = NatsProvider._();
@@ -174,16 +222,14 @@ final natsProvider = NatsProvider._();
 /// Owns the authenticated NATS client for the current user and organization.
 ///
 /// Credential providers and the organization qualifier are read when this
-/// owner is built. Invalidating it closes the old client before a fresh
-/// connection is created, which makes retry an ownership operation rather than
-/// a second connection layered over the first.
+/// owner is built. Authorization refresh admits a connected candidate before
+/// replacing the current client and closing its transport resources.
 final class NatsProvider extends $NotifierProvider<Nats, NatsClient> {
   /// Owns the authenticated NATS client for the current user and organization.
   ///
   /// Credential providers and the organization qualifier are read when this
-  /// owner is built. Invalidating it closes the old client before a fresh
-  /// connection is created, which makes retry an ownership operation rather than
-  /// a second connection layered over the first.
+  /// owner is built. Authorization refresh admits a connected candidate before
+  /// replacing the current client and closing its transport resources.
   NatsProvider._()
     : super(
         from: null,
@@ -211,14 +257,13 @@ final class NatsProvider extends $NotifierProvider<Nats, NatsClient> {
   }
 }
 
-String _$natsHash() => r'4ba08fe612ce973633013ce67e9af3211661997e';
+String _$natsHash() => r'eeacfe753f507288fbd9b3e44fb0472e28785487';
 
 /// Owns the authenticated NATS client for the current user and organization.
 ///
 /// Credential providers and the organization qualifier are read when this
-/// owner is built. Invalidating it closes the old client before a fresh
-/// connection is created, which makes retry an ownership operation rather than
-/// a second connection layered over the first.
+/// owner is built. Authorization refresh admits a connected candidate before
+/// replacing the current client and closing its transport resources.
 
 abstract class _$Nats extends $Notifier<NatsClient> {
   NatsClient build();
@@ -237,6 +282,47 @@ abstract class _$Nats extends $Notifier<NatsClient> {
     return element.handleCreate(ref, build);
   }
 }
+
+@ProviderFor(natsAuthorization)
+final natsAuthorizationProvider = NatsAuthorizationProvider._();
+
+final class NatsAuthorizationProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<AsyncValue<Set<skir.RecordId>>>,
+          AsyncValue<Set<skir.RecordId>>,
+          Stream<AsyncValue<Set<skir.RecordId>>>
+        >
+    with
+        $FutureModifier<AsyncValue<Set<skir.RecordId>>>,
+        $StreamProvider<AsyncValue<Set<skir.RecordId>>> {
+  NatsAuthorizationProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'natsAuthorizationProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$natsAuthorizationHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<AsyncValue<Set<skir.RecordId>>> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<AsyncValue<Set<skir.RecordId>>> create(Ref ref) {
+    return natsAuthorization(ref);
+  }
+}
+
+String _$natsAuthorizationHash() => r'66fc9f3b639ef2b030132c350081b516ec38a14c';
 
 /// Projects transport lifecycle into Riverpod for connection status UI.
 ///

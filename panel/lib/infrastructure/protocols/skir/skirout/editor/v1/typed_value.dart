@@ -17,9 +17,7 @@ import "package:skir_client/skir_client.dart" as _skir;
 
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 
-// -----------------------------------------------------------------------------
 // struct PortableValue
-// -----------------------------------------------------------------------------
 
 sealed class PortableValue_orMutable {
   _lib_editor_v1_type_catalog.TypeUse get actualType;
@@ -56,7 +54,7 @@ final class PortableValue implements PortableValue_orMutable {
     _lib_editor_v1_type_catalog.DataValue.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PortableValue toFrozen() => this;

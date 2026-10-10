@@ -22,7 +22,6 @@ import com.typewritermc.loader.api.RuntimeHealth
 import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.api.SourcePartDisposition
 import com.typewritermc.loader.api.StagedHostedRuntime
-import com.typewritermc.loader.api.artifact.ArtifactDigest
 import com.typewritermc.loader.artifact.ArtifactCoordinate
 import com.typewritermc.loader.artifact.DeploymentArtifact
 import com.typewritermc.loader.artifact.FileDigestBlobStore
@@ -34,27 +33,30 @@ import com.typewritermc.loader.deployment.ProjectedSourcePart
 import com.typewritermc.loader.rollout.HostRolloutParticipant
 import com.typewritermc.loader.rollout.ParticipantStateChanged
 import com.typewritermc.loader.rollout.ParticipantStatus
-import com.typewritermc.loader.rollout.ParticipantStatusContract
 import com.typewritermc.loader.rollout.ParticipantStatusReply
 import com.typewritermc.loader.rollout.PresenceReply
 import com.typewritermc.loader.rollout.ProbeParticipantStatus
 import com.typewritermc.loader.rollout.ProbeRealmHosts
-import com.typewritermc.loader.rollout.ProbeRealmHostsContract
 import com.typewritermc.loader.rollout.ProjectionReference
 import com.typewritermc.loader.rollout.ProjectionSource
-import com.typewritermc.loader.rollout.RealmBroadcastAddress
 import com.typewritermc.loader.rollout.RealmId
 import com.typewritermc.loader.rollout.RollbackTarget
 import com.typewritermc.loader.rollout.RolloutAttempt
 import com.typewritermc.loader.rollout.RolloutCommand
-import com.typewritermc.loader.rollout.RolloutCommandContract
 import com.typewritermc.loader.rollout.RolloutEnvelope
 import com.typewritermc.loader.rollout.VerifiedArtifactSource
+import com.typewritermc.loader.rollout.commandResponsePolicy
+import com.typewritermc.loader.rollout.participantStatusResponsePolicy
+import com.typewritermc.loader.rollout.presenceResponsePolicy
+import com.typewritermc.loader.rollout.realmHostsProbe
+import com.typewritermc.loader.rollout.realmHostsStatus
+import com.typewritermc.loader.rollout.realmRolloutCommand
 import com.typewritermc.loader.runtime.HostedRuntimeLoader
 import com.typewritermc.loader.runtime.HostedRuntimeStager
 import com.typewritermc.loader.runtime.LoadedHostedRuntime
 import com.typewritermc.loader.shared.FileSharedArtifactRepository
 import com.typewritermc.loader.shared.SharedArtifactService
+import com.typewritermc.protocol.transport.generated.RealmRouteScope
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
@@ -64,6 +66,7 @@ import com.typewritermc.services.libs.communicator.router.communicatorRoutes
 import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
 import com.typewritermc.services.libs.communicator.transport.InboundMessage
 import com.typewritermc.services.libs.communicator.transport.TransportDelivery
+import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.registrar.ServiceId
 import com.typewritermc.services.libs.telemetry.serviceTelemetry
 import com.typewritermc.services.libs.utils.findExceptional
@@ -169,7 +172,7 @@ val HostRolloutParticipantTest by testSuite {
     }
 
     test("participant status contract classifies its typed internal failure") {
-        val policy = ParticipantStatusContract.responsePolicy
+        val policy = participantStatusResponsePolicy
         policy.classify(policy.internalFailureResponse).outcome shouldBe ResponseOutcome.INTERNAL_ERROR
         policy
             .classify(
@@ -348,14 +351,17 @@ val HostRolloutParticipantTest by testSuite {
             val fake = FakeMessageTransport()
             val telemetry = OpenTelemetry.noop().serviceTelemetry("participant deadline test")
             val communicator = Communicator(fake, telemetry, ContextPropagators.noop())
-            val address = RealmBroadcastAddress("organization", fixture.realmId)
+            val address = RealmRouteScope(organizationId = "organization", realmId = fixture.realmId.value)
+            val commandContract = address.realmRolloutCommand(commandResponsePolicy)
+            val statusContract = address.realmHostsStatus(participantStatusResponsePolicy)
+            val probeContract = address.realmHostsProbe(presenceResponsePolicy)
             val routes =
                 communicatorRoutes {
-                    scatterAt(RolloutCommandContract, address) { fixture.participant.handle(it.request) }
-                    scatterAt(ParticipantStatusContract, address) {
+                    scatterAt(commandContract, address) { fixture.participant.handle(it.request) }
+                    scatterAt(statusContract, address) {
                         ParticipantStatusReply.Status(fixture.serviceId, fixture.participant.currentStatus(it.request.attempt))
                     }
-                    scatterAt(ProbeRealmHostsContract, address) { PresenceReply.Failed("presence route responded") }
+                    scatterAt(probeContract, address) { PresenceReply.Failed("presence route responded") }
                 }
             val router = communicator.createRouter(routes, backgroundScope)
             router.start() shouldBe RouterResult.Success
@@ -364,8 +370,8 @@ val HostRolloutParticipantTest by testSuite {
                 fake.deliver(
                     TransportDelivery.Message(
                         InboundMessage(
-                            RolloutCommandContract.requestAddress.render(address),
-                            RolloutCommandContract.requestCodec.encode(command).toByteArray(),
+                            commandContract.requestAddress.render(address),
+                            commandContract.requestCodec.encode(command).toByteArray(),
                             MessageAddress.of("reply.command"),
                         ),
                     ),
@@ -378,8 +384,8 @@ val HostRolloutParticipantTest by testSuite {
                 fake.deliver(
                     TransportDelivery.Message(
                         InboundMessage(
-                            ParticipantStatusContract.requestAddress.render(address),
-                            ParticipantStatusContract.requestCodec.encode(ProbeParticipantStatus(fixture.realmId, attempt)).toByteArray(),
+                            statusContract.requestAddress.render(address),
+                            statusContract.requestCodec.encode(ProbeParticipantStatus(fixture.realmId, attempt)).toByteArray(),
                             MessageAddress.of("reply.status"),
                         ),
                     ),
@@ -387,8 +393,8 @@ val HostRolloutParticipantTest by testSuite {
                 fake.deliver(
                     TransportDelivery.Message(
                         InboundMessage(
-                            ProbeRealmHostsContract.requestAddress.render(address),
-                            ProbeRealmHostsContract.requestCodec.encode(ProbeRealmHosts(fixture.realmId)).toByteArray(),
+                            probeContract.requestAddress.render(address),
+                            probeContract.requestCodec.encode(ProbeRealmHosts(fixture.realmId)).toByteArray(),
                             MessageAddress.of("reply.presence"),
                         ),
                     ),

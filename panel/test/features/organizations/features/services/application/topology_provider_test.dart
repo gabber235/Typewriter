@@ -198,14 +198,18 @@ void main() {
     expect(listed.engineInstances.single.realm.ownerHost.name, "host_1");
 
     final updated = await emit(
-      skir.OrganizationTopologyChanged.wrapHostUpdated(
-        _host(
-          revision: 2,
-          state: skir.HostRuntimeState(
-            status: skir.HostRuntimeStatus.active,
-            message: null,
-            updatedAt: DateTime.utc(2026),
+      skir.OrganizationTopologyChanged.wrapObservationsReported(
+        skir.HostExecutionObservation(
+          host: _host(
+            revision: 2,
+            state: skir.HostRuntimeState(
+              status: skir.HostRuntimeStatus.active,
+              message: null,
+              updatedAt: DateTime.utc(2026),
+            ),
           ),
+          realm: null,
+          engine: null,
         ),
       ),
     );
@@ -325,13 +329,17 @@ void main() {
     nats.emitMessageOnSubject(
       _listenSubject,
       skir.OrganizationTopologyChanged.serializer.toBytes(
-        skir.OrganizationTopologyChanged.wrapHostUpdated(
-          _host(
-            state: skir.HostRuntimeState(
-              status: skir.HostRuntimeStatus.active,
-              message: null,
-              updatedAt: DateTime.utc(2027),
+        skir.OrganizationTopologyChanged.wrapObservationsReported(
+          skir.HostExecutionObservation(
+            host: _host(
+              state: skir.HostRuntimeState(
+                status: skir.HostRuntimeStatus.active,
+                message: null,
+                updatedAt: DateTime.utc(2027),
+              ),
             ),
+            realm: null,
+            engine: null,
           ),
         ),
       ),

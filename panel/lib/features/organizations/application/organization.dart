@@ -61,26 +61,14 @@ class Organizations extends _$Organizations {
       return;
     }
 
-    yield* ref.watchProjection<
-      List<OrganizationData>,
-      skir.WatchUserOrganizationsResponse,
-      skir.UserOrganizationsChanged
-    >(
-      subject: "cloud.to.user.$userId.organization.watch",
-      eventSubject: "cloud.from.user.$userId.organizations.changed",
-      requestBytes: skir.WatchUserOrganizationsRequest.serializer.toBytes(
-        skir.WatchUserOrganizationsRequest(),
-      ),
-      responseSerializer: skir.WatchUserOrganizationsResponse.serializer,
-      eventSerializer: skir.UserOrganizationsChanged.serializer,
+    yield* skir.WatchUserOrganizationsRequest().watch<List<OrganizationData>>(
+      ref,
+      userId: userId,
       snapshot: (response) =>
           _organizationSnapshot(response).values
               .map(OrganizationData.fromSkir)
               .toList(),
       reduce: _reduceOrganizations,
-      delivery: const ProjectionDelivery.ordered(
-        stream: "TYPEWRITER_MEMBERSHIP",
-      ),
       reconciliation: ProjectionReconciliation.sequenced(
         snapshotSequence: (response) =>
             _organizationSnapshot(response).sequence,
@@ -119,9 +107,7 @@ class Organizations extends _$Organizations {
     );
 
     final response = await ref.mutateSkir(
-      "cloud.to.user.$userId.organization.create",
-      skir.CreateOrganizationRequest.serializer.toBytes(request),
-      skir.CreateOrganizationResponse.serializer,
+      request.operation(userId: userId),
       submissionId: request.operationId,
       replay: SubmissionReplay.identicalRequest,
       label: "Create organization",

@@ -217,7 +217,7 @@ class CompilationRoot private constructor(
         );
 
         /**
-         * If the value of [projection] is already mutable, returns it as-is.
+         * If the value of [projection] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [projection] and returns it.
          */
         val mutableProjection: skirout.editor.v1.compiled_content.CompilationProjectionId.Mutable get() {
@@ -233,7 +233,7 @@ class CompilationRoot private constructor(
         }
 
         /**
-         * If the value of [resource] is already mutable, returns it as-is.
+         * If the value of [resource] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
          */
         val mutableResource: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
@@ -519,7 +519,7 @@ class CompiledArtifactReference private constructor(
         );
 
         /**
-         * If the value of [root] is already mutable, returns it as-is.
+         * If the value of [root] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [root] and returns it.
          */
         val mutableRoot: skirout.editor.v1.compiled_content.CompilationRoot.Mutable get() {
@@ -667,7 +667,7 @@ class PublishedOutput private constructor(
         );
 
         /**
-         * If the value of [reference] is already mutable, returns it as-is.
+         * If the value of [reference] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [reference] and returns it.
          */
         val mutableReference: skirout.editor.v1.compiled_content.CompiledArtifactReference.Mutable get() {
@@ -683,7 +683,7 @@ class PublishedOutput private constructor(
         }
 
         /**
-         * If the value of [blob] is already mutable, returns it as-is.
+         * If the value of [blob] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [blob] and returns it.
          */
         val mutableBlob: skirout.editor.v1.compiled_content.CompiledBlobPointer.Mutable get() {
@@ -867,7 +867,7 @@ class PublishedContent private constructor(
         );
 
         /**
-         * If the value of [publication] is already mutable, returns it as-is.
+         * If the value of [publication] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [publication] and returns it.
          */
         val mutablePublication: skirout.editor.v1.type_catalog.PublicationId.Mutable get() {
@@ -883,7 +883,7 @@ class PublishedContent private constructor(
         }
 
         /**
-         * If the value of [catalog] is already mutable, returns it as-is.
+         * If the value of [catalog] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [catalog] and returns it.
          */
         val mutableCatalog: skirout.editor.v1.type_catalog.CatalogGeneration.Mutable get() {
@@ -899,7 +899,7 @@ class PublishedContent private constructor(
         }
 
         /**
-         * If the value of [runtimeSignatures] is already mutable, returns it as-is.
+         * If the value of [runtimeSignatures] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [runtimeSignatures] and returns it.
          */
         val mutableRuntimeSignatures: kotlin.collections.MutableList<skirout.editor.v1.publication.RuntimeMemberSignature_OrMutable> get() {
@@ -915,7 +915,7 @@ class PublishedContent private constructor(
         }
 
         /**
-         * If the value of [outputs] is already mutable, returns it as-is.
+         * If the value of [outputs] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [outputs] and returns it.
          */
         val mutableOutputs: kotlin.collections.MutableList<skirout.editor.v1.compiled_content.PublishedOutput_OrMutable> get() {
@@ -1060,7 +1060,7 @@ class PublishedContentChunk private constructor(
         );
 
         /**
-         * If the value of [transfer] is already mutable, returns it as-is.
+         * If the value of [transfer] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [transfer] and returns it.
          */
         val mutableTransfer: skirout.kernel.v1.bounded_transfer.BoundedTransferChunk.Mutable get() {
@@ -1288,7 +1288,7 @@ class CompiledResourceStatus private constructor(
         );
 
         /**
-         * If the value of [root] is already mutable, returns it as-is.
+         * If the value of [root] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [root] and returns it.
          */
         val mutableRoot: skirout.editor.v1.compiled_content.CompilationRoot.Mutable get() {
@@ -1417,7 +1417,7 @@ class CompiledContentChanged private constructor(
         );
 
         /**
-         * If the value of [generation] is already mutable, returns it as-is.
+         * If the value of [generation] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
          */
         val mutableGeneration: skirout.editor.v1.type_catalog.CatalogGeneration.Mutable get() {
@@ -1462,6 +1462,86 @@ class CompiledContentChanged private constructor(
 
         /** Describes the [CompiledContentChanged] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = _SerializerRegistry.CompiledContentChangedSerializerImpl.typeDescriptor;
+    }
+}
+
+/** Deeply immutable. */
+sealed class CompilationStatusSelection private constructor() {
+    /** The kind of variant held by a `CompilationStatusSelection`. */
+    enum class Kind {
+        UNKNOWN,
+        ALL_ROOTS_CONST,
+        SUPPLIED_ROOTS_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.compiled_content.CompilationStatusSelection.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.compiled_content.CompilationStatusSelection>?,
+    ) : skirout.editor.v1.compiled_content.CompilationStatusSelection() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.compiled_content.CompilationStatusSelection && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    object ALL_ROOTS : skirout.editor.v1.compiled_content.CompilationStatusSelection() {
+        override val kind get() = Kind.ALL_ROOTS_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.compiled_content.CompilationStatusSelection && other.kind == Kind.ALL_ROOTS_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.ALL_ROOTS_CONST.ordinal;
+        }
+    }
+
+    class SuppliedRootsWrapper private constructor (
+        val value: kotlin.collections.List<skirout.editor.v1.compiled_content.CompilationRoot>,
+    ) : skirout.editor.v1.compiled_content.CompilationStatusSelection() {
+        constructor(
+            value: kotlin.collections.Iterable<skirout.editor.v1.compiled_content.CompilationRoot_OrMutable>,
+        ): this(build.skir.internal.toFrozenList(value, { it.toFrozen() })) {}
+
+        override val kind get() = Kind.SUPPLIED_ROOTS_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.compiled_content.CompilationStatusSelection.SuppliedRootsWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 666120720;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.compiled_content.CompilationStatusSelection>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.CompilationStatusSelectionSerializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [CompilationStatusSelection].
+         * Default value for fields of type [CompilationStatusSelection].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Serializer for [CompilationStatusSelection] instances. */
+        val serializer get() = _SerializerRegistry.CompilationStatusSelectionSerializer;
+
+        /** Describes the [CompilationStatusSelection] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.CompilationStatusSelectionSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1898,7 +1978,7 @@ sealed class QueryPublishedContentResponse private constructor() {
 }
 
 sealed interface QueryCompiledResourceStatusRequest_OrMutable {
-    val roots: kotlin.collections.List<skirout.editor.v1.compiled_content.CompilationRoot_OrMutable>;
+    val selection: skirout.editor.v1.compiled_content.CompilationStatusSelection;
 
     fun toFrozen(): skirout.editor.v1.compiled_content.QueryCompiledResourceStatusRequest;
 }
@@ -1906,18 +1986,18 @@ sealed interface QueryCompiledResourceStatusRequest_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class QueryCompiledResourceStatusRequest private constructor(
-    override val roots: kotlin.collections.List<skirout.editor.v1.compiled_content.CompilationRoot>,
+    override val selection: skirout.editor.v1.compiled_content.CompilationStatusSelection,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.QueryCompiledResourceStatusRequest>? =
         null,
 ): skirout.editor.v1.compiled_content.QueryCompiledResourceStatusRequest_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        roots: kotlin.collections.Iterable<skirout.editor.v1.compiled_content.CompilationRoot_OrMutable>,
+        selection: skirout.editor.v1.compiled_content.CompilationStatusSelection,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.QueryCompiledResourceStatusRequest>? =
             null,
     ): this(
-        build.skir.internal.toFrozenList(roots, { it.toFrozen() }),
+        selection,
         _unrecognizedFields,
     ) {}
 
@@ -1926,17 +2006,17 @@ class QueryCompiledResourceStatusRequest private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        roots = this.roots,
+        selection = this.selection,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        roots: kotlin.collections.Iterable<skirout.editor.v1.compiled_content.CompilationRoot_OrMutable> =
-            this.roots,
+        selection: skirout.editor.v1.compiled_content.CompilationStatusSelection =
+            this.selection,
     ) = skirout.editor.v1.compiled_content.QueryCompiledResourceStatusRequest(
-        build.skir.internal.toFrozenList(roots, { it.toFrozen() }),
+        selection,
         this._unrecognizedFields,
     );
 
@@ -1944,11 +2024,11 @@ class QueryCompiledResourceStatusRequest private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.compiled_content.QueryCompiledResourceStatusRequest && this.roots == other.roots);
+        return this === other || (other is skirout.editor.v1.compiled_content.QueryCompiledResourceStatusRequest && this.selection == other.selection);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.roots).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.selection).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -1962,38 +2042,22 @@ class QueryCompiledResourceStatusRequest private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var roots: kotlin.collections.List<skirout.editor.v1.compiled_content.CompilationRoot_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.compiled_content.CompilationRoot>(),
+        override var selection: skirout.editor.v1.compiled_content.CompilationStatusSelection =
+            skirout.editor.v1.compiled_content.CompilationStatusSelection.UNKNOWN,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.QueryCompiledResourceStatusRequest>? =
             null,
     ): skirout.editor.v1.compiled_content.QueryCompiledResourceStatusRequest_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.compiled_content.QueryCompiledResourceStatusRequest(
-            roots = this.roots,
+            selection = this.selection,
             _unrecognizedFields = this._unrecognizedFields,
         );
-
-        /**
-         * If the value of [roots] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [roots] and returns it.
-         */
-        val mutableRoots: kotlin.collections.MutableList<skirout.editor.v1.compiled_content.CompilationRoot_OrMutable> get() {
-            var value = this.roots;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.roots = value;
-                    value;
-                }
-            }
-        }
     }
 
     companion object {
         private val default =
             skirout.editor.v1.compiled_content.QueryCompiledResourceStatusRequest(
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.compiled_content.CompilationRoot>(),
+                skirout.editor.v1.compiled_content.CompilationStatusSelection.UNKNOWN,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -2007,10 +2071,10 @@ class QueryCompiledResourceStatusRequest private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            roots: kotlin.collections.Iterable<skirout.editor.v1.compiled_content.CompilationRoot_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.compiled_content.CompilationRoot>(),
+            selection: skirout.editor.v1.compiled_content.CompilationStatusSelection =
+                skirout.editor.v1.compiled_content.CompilationStatusSelection.UNKNOWN,
         ) = skirout.editor.v1.compiled_content.QueryCompiledResourceStatusRequest(
-            roots = roots,
+            selection = selection,
             _unrecognizedFields = null,
         );
 
@@ -2205,7 +2269,7 @@ sealed class QueryCompiledResourceStatusResponse private constructor() {
             );
 
             /**
-             * If the value of [statuses] is already mutable, returns it as-is.
+             * If the value of [statuses] is already mutable, returns it as is.
              * Otherwise, makes a mutable copy, assigns it back to [statuses] and returns it.
              */
             val mutableStatuses: kotlin.collections.MutableList<skirout.editor.v1.compiled_content.CompiledResourceStatus_OrMutable> get() {
@@ -2304,6 +2368,19 @@ private object _SerializerRegistry {
     );
 
     val CompilationRootSerializer = build.skir.internal.makeSerializer(CompilationRootSerializerImpl);
+
+    val CompilationStatusSelectionSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.compiled_content.CompilationStatusSelection, skirout.editor.v1.compiled_content.CompilationStatusSelection.Unknown>(
+            recordId = "editor/v1/compiled_content.skir:CompilationStatusSelection",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.compiled_content.CompilationStatusSelection.Kind.values().size,
+            unknownInstance = skirout.editor.v1.compiled_content.CompilationStatusSelection.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.compiled_content.CompilationStatusSelection.Unknown(skirout.editor.v1.compiled_content.CompilationStatusSelection.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val CompilationStatusSelectionSerializer = build.skir.internal.makeSerializer(CompilationStatusSelectionSerializerImpl);
 
     val CompiledArtifactReferenceSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/compiled_content.skir:CompiledArtifactReference",
@@ -2520,6 +2597,26 @@ private object _SerializerRegistry {
         );
         CompilationRootSerializerImpl.finalizeStruct();
 
+        CompilationStatusSelectionSerializerImpl.addConstantVariant(
+            1,
+            "all_roots",
+            skirout.editor.v1.compiled_content.CompilationStatusSelection.Kind.ALL_ROOTS_CONST.ordinal,
+            "",
+            skirout.editor.v1.compiled_content.CompilationStatusSelection.ALL_ROOTS,
+        );
+        CompilationStatusSelectionSerializerImpl.addWrapperVariant(
+            2,
+            "supplied_roots",
+            skirout.editor.v1.compiled_content.CompilationStatusSelection.Kind.SUPPLIED_ROOTS_WRAPPER.ordinal,
+            build.skir.Serializers.list(
+                _SerializerRegistry.CompilationRootSerializer,
+            ),
+            "",
+            { skirout.editor.v1.compiled_content.CompilationStatusSelection.SuppliedRootsWrapper(it) },
+            { it.value },
+        );
+        CompilationStatusSelectionSerializerImpl.finalizeEnum();
+
         CompiledArtifactReferenceSerializerImpl.addField(
             "root",
             "root",
@@ -2719,15 +2816,13 @@ private object _SerializerRegistry {
         PublishedOutputSerializerImpl.finalizeStruct();
 
         QueryCompiledResourceStatusRequestSerializerImpl.addField(
-            "roots",
-            "roots",
+            "selection",
+            "selection",
             0,
-            build.skir.Serializers.list(
-                _SerializerRegistry.CompilationRootSerializer,
-            ),
+            _SerializerRegistry.CompilationStatusSelectionSerializer,
             "",
-            { it.roots },
-            { mut, v -> mut.roots = v },
+            { it.selection },
+            { mut, v -> mut.selection = v },
         );
         QueryCompiledResourceStatusRequestSerializerImpl.finalizeStruct();
 

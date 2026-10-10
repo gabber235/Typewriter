@@ -18,9 +18,7 @@ import "package:skir_client/skir_client.dart" as _skir;
 import "./diagnostic.dart" as _lib_editor_v1_diagnostic;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 
-// -----------------------------------------------------------------------------
 // struct InvocationId
-// -----------------------------------------------------------------------------
 
 sealed class InvocationId_orMutable {
   _core.String get value;
@@ -45,7 +43,7 @@ final class InvocationId implements InvocationId_orMutable {
   /// Fields are initialized to their default values.
   static InvocationId_mutable mutable() => InvocationId_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   InvocationId toFrozen() => this;
@@ -112,9 +110,7 @@ final class InvocationId_mutable implements InvocationId_orMutable {
   InvocationId toFrozen() => InvocationId(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct SearchCapabilityDefinition
-// -----------------------------------------------------------------------------
 
 sealed class SearchCapabilityDefinition_orMutable {
   _lib_editor_v1_type_catalog.CapabilityId_orMutable get capabilityId;
@@ -167,7 +163,7 @@ final class SearchCapabilityDefinition
         _lib_editor_v1_type_catalog.TypeUse.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SearchCapabilityDefinition toFrozen() => this;
@@ -266,7 +262,7 @@ final class SearchCapabilityDefinition_mutable
     this.resultType,
   );
 
-  /// If the value of [capabilityId] is already mutable, returns it as-is.
+  /// If the value of [capabilityId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
   _lib_editor_v1_type_catalog.CapabilityId_mutable get mutableCapabilityId {
     final value = this.capabilityId;
@@ -287,9 +283,7 @@ final class SearchCapabilityDefinition_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ComputationCapabilityDefinition
-// -----------------------------------------------------------------------------
 
 sealed class ComputationCapabilityDefinition_orMutable {
   _lib_editor_v1_type_catalog.CapabilityId_orMutable get capabilityId;
@@ -342,7 +336,7 @@ final class ComputationCapabilityDefinition
         _lib_editor_v1_type_catalog.TypeUse.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ComputationCapabilityDefinition toFrozen() => this;
@@ -441,7 +435,7 @@ final class ComputationCapabilityDefinition_mutable
     this.resultType,
   );
 
-  /// If the value of [capabilityId] is already mutable, returns it as-is.
+  /// If the value of [capabilityId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
   _lib_editor_v1_type_catalog.CapabilityId_mutable get mutableCapabilityId {
     final value = this.capabilityId;
@@ -462,9 +456,7 @@ final class ComputationCapabilityDefinition_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CommandCapabilityDefinition
-// -----------------------------------------------------------------------------
 
 sealed class CommandCapabilityDefinition_orMutable {
   _lib_editor_v1_type_catalog.CapabilityId_orMutable get capabilityId;
@@ -503,7 +495,7 @@ final class CommandCapabilityDefinition
         _lib_editor_v1_type_catalog.TypeUse.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CommandCapabilityDefinition toFrozen() => this;
@@ -583,7 +575,7 @@ final class CommandCapabilityDefinition_mutable
 
   CommandCapabilityDefinition_mutable._(this.capabilityId, this.requestType);
 
-  /// If the value of [capabilityId] is already mutable, returns it as-is.
+  /// If the value of [capabilityId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
   _lib_editor_v1_type_catalog.CapabilityId_mutable get mutableCapabilityId {
     final value = this.capabilityId;
@@ -603,9 +595,7 @@ final class CommandCapabilityDefinition_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum CapabilityDefinition
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -807,9 +797,7 @@ final class CapabilityDefinition_commandWrapper
       CapabilityDefinition_kind.commandWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct ResourceAddress
-// -----------------------------------------------------------------------------
 
 sealed class ResourceAddress_orMutable {
   _lib_editor_v1_type_catalog.TypeUse get resourceType;
@@ -846,7 +834,7 @@ final class ResourceAddress implements ResourceAddress_orMutable {
     _lib_editor_v1_type_catalog.DataValue.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ResourceAddress toFrozen() => this;
@@ -926,9 +914,7 @@ final class ResourceAddress_mutable implements ResourceAddress_orMutable {
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct InvalidateResourceInstruction
-// -----------------------------------------------------------------------------
 
 sealed class InvalidateResourceInstruction_orMutable {
   ResourceAddress_orMutable get resource;
@@ -959,7 +945,7 @@ final class InvalidateResourceInstruction
   static InvalidateResourceInstruction_mutable mutable() =>
       InvalidateResourceInstruction_mutable._(ResourceAddress.defaultInstance);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   InvalidateResourceInstruction toFrozen() => this;
@@ -1026,7 +1012,7 @@ final class InvalidateResourceInstruction_mutable
 
   InvalidateResourceInstruction_mutable._(this.resource);
 
-  /// If the value of [resource] is already mutable, returns it as-is.
+  /// If the value of [resource] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
   ResourceAddress_mutable get mutableResource {
     final value = this.resource;
@@ -1043,9 +1029,7 @@ final class InvalidateResourceInstruction_mutable
       InvalidateResourceInstruction(resource: this.resource).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct OpenResourceInstruction
-// -----------------------------------------------------------------------------
 
 sealed class OpenResourceInstruction_orMutable {
   ResourceAddress_orMutable get resource;
@@ -1076,7 +1060,7 @@ final class OpenResourceInstruction
   static OpenResourceInstruction_mutable mutable() =>
       OpenResourceInstruction_mutable._(ResourceAddress.defaultInstance);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   OpenResourceInstruction toFrozen() => this;
@@ -1143,7 +1127,7 @@ final class OpenResourceInstruction_mutable
 
   OpenResourceInstruction_mutable._(this.resource);
 
-  /// If the value of [resource] is already mutable, returns it as-is.
+  /// If the value of [resource] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
   ResourceAddress_mutable get mutableResource {
     final value = this.resource;
@@ -1160,9 +1144,7 @@ final class OpenResourceInstruction_mutable
       OpenResourceInstruction(resource: this.resource).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum NotificationSeverity
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -1274,9 +1256,7 @@ enum _NotificationSeverity_consts implements NotificationSeverity {
       _skir.internal__stringify(this, NotificationSeverity.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // struct NotifyInstruction
-// -----------------------------------------------------------------------------
 
 sealed class NotifyInstruction_orMutable {
   NotificationSeverity get severity;
@@ -1311,7 +1291,7 @@ final class NotifyInstruction implements NotifyInstruction_orMutable {
   static NotifyInstruction_mutable mutable() =>
       NotifyInstruction_mutable._(NotificationSeverity.unknown, "");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   NotifyInstruction toFrozen() => this;
@@ -1391,9 +1371,7 @@ final class NotifyInstruction_mutable implements NotifyInstruction_orMutable {
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum PanelInstruction
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -1577,9 +1555,7 @@ final class PanelInstruction_notifyWrapper extends _PanelInstruction_wrapper {
   PanelInstruction_kind get kind => PanelInstruction_kind.notifyWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct CapabilityInvocationRequest
-// -----------------------------------------------------------------------------
 
 sealed class CapabilityInvocationRequest_orMutable {
   InvocationId_orMutable get invocationId;
@@ -1648,7 +1624,7 @@ final class CapabilityInvocationRequest
         null,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CapabilityInvocationRequest toFrozen() => this;
@@ -1775,7 +1751,7 @@ final class CapabilityInvocationRequest_mutable
     this.expectedResultType,
   );
 
-  /// If the value of [invocationId] is already mutable, returns it as-is.
+  /// If the value of [invocationId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
   InvocationId_mutable get mutableInvocationId {
     final value = this.invocationId;
@@ -1786,7 +1762,7 @@ final class CapabilityInvocationRequest_mutable
     }
   }
 
-  /// If the value of [generation] is already mutable, returns it as-is.
+  /// If the value of [generation] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
   _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableGeneration {
     final value = this.generation;
@@ -1798,7 +1774,7 @@ final class CapabilityInvocationRequest_mutable
     }
   }
 
-  /// If the value of [capabilityId] is already mutable, returns it as-is.
+  /// If the value of [capabilityId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
   _lib_editor_v1_type_catalog.CapabilityId_mutable get mutableCapabilityId {
     final value = this.capabilityId;
@@ -1821,9 +1797,7 @@ final class CapabilityInvocationRequest_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ComputationSuccess
-// -----------------------------------------------------------------------------
 
 sealed class ComputationSuccess_orMutable {
   InvocationId_orMutable get invocationId;
@@ -1860,7 +1834,7 @@ final class ComputationSuccess implements ComputationSuccess_orMutable {
     _lib_editor_v1_type_catalog.DataValue.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ComputationSuccess toFrozen() => this;
@@ -1933,7 +1907,7 @@ final class ComputationSuccess_mutable implements ComputationSuccess_orMutable {
 
   ComputationSuccess_mutable._(this.invocationId, this.value);
 
-  /// If the value of [invocationId] is already mutable, returns it as-is.
+  /// If the value of [invocationId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
   InvocationId_mutable get mutableInvocationId {
     final value = this.invocationId;
@@ -1951,9 +1925,7 @@ final class ComputationSuccess_mutable implements ComputationSuccess_orMutable {
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CommandSuccess
-// -----------------------------------------------------------------------------
 
 sealed class CommandSuccess_orMutable {
   InvocationId_orMutable get invocationId;
@@ -1993,7 +1965,7 @@ final class CommandSuccess implements CommandSuccess_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CommandSuccess toFrozen() => this;
@@ -2066,7 +2038,7 @@ final class CommandSuccess_mutable implements CommandSuccess_orMutable {
 
   CommandSuccess_mutable._(this.invocationId, this.instructions);
 
-  /// If the value of [invocationId] is already mutable, returns it as-is.
+  /// If the value of [invocationId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
   InvocationId_mutable get mutableInvocationId {
     final value = this.invocationId;
@@ -2077,7 +2049,7 @@ final class CommandSuccess_mutable implements CommandSuccess_orMutable {
     }
   }
 
-  /// If the value of [instructions] is already mutable, returns it as-is.
+  /// If the value of [instructions] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [instructions] and returns it.
   _core.List<PanelInstruction> get mutableInstructions {
     final value = this.instructions;
@@ -2096,9 +2068,7 @@ final class CommandSuccess_mutable implements CommandSuccess_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CapabilityPermissionDenied
-// -----------------------------------------------------------------------------
 
 sealed class CapabilityPermissionDenied_orMutable {
   InvocationId_orMutable get invocationId;
@@ -2134,7 +2104,7 @@ final class CapabilityPermissionDenied
   static CapabilityPermissionDenied_mutable mutable() =>
       CapabilityPermissionDenied_mutable._(InvocationId.defaultInstance, "");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CapabilityPermissionDenied toFrozen() => this;
@@ -2211,7 +2181,7 @@ final class CapabilityPermissionDenied_mutable
 
   CapabilityPermissionDenied_mutable._(this.invocationId, this.message);
 
-  /// If the value of [invocationId] is already mutable, returns it as-is.
+  /// If the value of [invocationId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
   InvocationId_mutable get mutableInvocationId {
     final value = this.invocationId;
@@ -2230,9 +2200,7 @@ final class CapabilityPermissionDenied_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct StaleCatalogGeneration
-// -----------------------------------------------------------------------------
 
 sealed class StaleCatalogGeneration_orMutable {
   InvocationId_orMutable get invocationId;
@@ -2274,7 +2242,7 @@ final class StaleCatalogGeneration implements StaleCatalogGeneration_orMutable {
         _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   StaleCatalogGeneration toFrozen() => this;
@@ -2354,7 +2322,7 @@ final class StaleCatalogGeneration_mutable
 
   StaleCatalogGeneration_mutable._(this.invocationId, this.actualGeneration);
 
-  /// If the value of [invocationId] is already mutable, returns it as-is.
+  /// If the value of [invocationId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
   InvocationId_mutable get mutableInvocationId {
     final value = this.invocationId;
@@ -2365,7 +2333,7 @@ final class StaleCatalogGeneration_mutable
     }
   }
 
-  /// If the value of [actualGeneration] is already mutable, returns it as-is.
+  /// If the value of [actualGeneration] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [actualGeneration] and returns it.
   _lib_editor_v1_type_catalog.CatalogGeneration_mutable
   get mutableActualGeneration {
@@ -2386,9 +2354,7 @@ final class StaleCatalogGeneration_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CapabilityFailure
-// -----------------------------------------------------------------------------
 
 sealed class CapabilityFailure_orMutable {
   InvocationId_orMutable get invocationId;
@@ -2430,7 +2396,7 @@ final class CapabilityFailure implements CapabilityFailure_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CapabilityFailure toFrozen() => this;
@@ -2505,7 +2471,7 @@ final class CapabilityFailure_mutable implements CapabilityFailure_orMutable {
 
   CapabilityFailure_mutable._(this.invocationId, this.diagnostics);
 
-  /// If the value of [invocationId] is already mutable, returns it as-is.
+  /// If the value of [invocationId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
   InvocationId_mutable get mutableInvocationId {
     final value = this.invocationId;
@@ -2516,7 +2482,7 @@ final class CapabilityFailure_mutable implements CapabilityFailure_orMutable {
     }
   }
 
-  /// If the value of [diagnostics] is already mutable, returns it as-is.
+  /// If the value of [diagnostics] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [diagnostics] and returns it.
   _core.List<_lib_editor_v1_diagnostic.Diagnostic_orMutable>
   get mutableDiagnostics {
@@ -2539,9 +2505,7 @@ final class CapabilityFailure_mutable implements CapabilityFailure_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum ComputationResult
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -2803,9 +2767,7 @@ final class ComputationResult_staleGenerationWrapper
       ComputationResult_kind.staleGenerationWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // enum CommandResult
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```

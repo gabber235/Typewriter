@@ -36,12 +36,15 @@ use nkeys::KeyPair;
 use otel_wasi::{ResultWithSlug, WithSlug, attribute, main_attribute, wasi_error};
 use serde::{Deserialize, Serialize};
 use wasmcloud_utils::{
-    decode_skir,
     skir::base::access::v1::permission::{
         EntityPermissionQualifier, GetEntityPermissionRequest, GetEntityPermissionResponse,
         Permissions,
     },
     skir_client::UnrecognizedValues::Drop,
+    transport_routes::{
+        InternalComponentScope, PanelPermissionResolveRoute, ServicesPermissionResolveRoute,
+        request_route,
+    },
     wasmcloud::messaging::{core_handler::Guest, reply, types},
 };
 
@@ -380,8 +383,6 @@ async fn request_permissions(
     issuer_id: &str,
     qualifier: EntityPermissionQualifier,
 ) -> Result<GetEntityPermissionResponse, otel_wasi::Error> {
-    let subject = format!("auth.permissions.{}", issuer_id);
-
     let jwt_bytes =
         serde_json::to_vec(jwt).error_with_slug("auth-callout-permissions-request-failed")?;
     attribute!("auth.permissions.request.jwt_claims.size" = jwt_bytes.len() as i64);
@@ -392,12 +393,21 @@ async fn request_permissions(
         ..Default::default()
     };
 
-    let body = GetEntityPermissionRequest::serializer().to_bytes(&request);
-    main_attribute!("auth.permissions.subject" = subject.clone(),);
-
-    let response = wasmcloud_utils::wasmcloud::messaging::request(subject, body).await?;
-
-    let permission_response = decode_skir!(GetEntityPermissionResponse, &response.body)?;
+    let scope = InternalComponentScope;
+    let permission_response = match issuer_id {
+        "typewriter-panel" => {
+            request_route::<PanelPermissionResolveRoute>(&scope, &request).await?
+        }
+        "typewriter-services" => {
+            request_route::<ServicesPermissionResolveRoute>(&scope, &request).await?
+        }
+        _ => {
+            return Err(wasi_error!(
+                "auth-callout-permissions-issuer-unsupported",
+                "Issuer has no permission route"
+            ));
+        }
+    };
     main_attribute!("auth.permissions.response.decode.success" = true);
 
     Ok(permission_response)

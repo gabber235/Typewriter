@@ -32,7 +32,7 @@ detekt {
 ktlint {
     version.set(libs.findVersion("ktlint").get().requiredVersion)
     filter {
-        exclude("**/skirout/**")
+        exclude { it.file.invariantSeparatorsPath.contains("/skirout/") }
         exclude { it.file.invariantSeparatorsPath.contains("/generated/ksp/") }
     }
 }

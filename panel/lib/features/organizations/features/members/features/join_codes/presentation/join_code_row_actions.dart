@@ -40,9 +40,10 @@ class JoinCodeRowActions extends HookConsumerWidget {
       confirmIcon: Fa6Solid.link_slash,
       onConfirm: () async {
         isRevoking.value = true;
-        await ref
-            .read(organizationJoinCodesProvider.notifier)
-            .revokeCode(code.code);
+        await ref.executeMembership(
+          ref.membershipCommands.revoke(code.code),
+          (response) => response.requireAccepted(),
+        );
       },
     );
   }

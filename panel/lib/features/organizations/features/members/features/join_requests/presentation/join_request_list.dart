@@ -43,9 +43,10 @@ class JoinRequestsList extends HookConsumerWidget {
           confirmIcon: Fa6Solid.xmark,
           onConfirm: () async {
             for (final id in idsToDecline) {
-              await ref
-                  .read(organizationJoinRequestsProvider.notifier)
-                  .declineRequest(id);
+              await ref.executeMembership(
+                ref.membershipCommands.decline(id),
+                (response) => response.requireAccepted(),
+              );
             }
             selectedIds.value = {};
           },

@@ -38,11 +38,13 @@ class BulkMemberActions extends HookConsumerWidget {
     Future<void> applyRoles() async {
       if (isApplying.value) return;
       isApplying.value = true;
-      final members = ref.read(organizationMembersProvider.notifier);
       final roles = List<OrganizationRole>.unmodifiable(bulkRoles.value);
       final ids = Set<skir.RecordId>.unmodifiable(selectedIds);
       try {
-        await members.updateMemberRoles(ids, roles);
+        await ref.executeMembership(
+          ref.membershipCommands.updateRoles(ids, roles),
+          (response) => response.requireAccepted(),
+        );
         if (context.mounted) {
           if (listEquals(bulkRoles.value, roles)) bulkRoles.value = [];
           onUnselect(ids);

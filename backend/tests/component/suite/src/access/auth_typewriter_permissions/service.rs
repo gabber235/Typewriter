@@ -6,8 +6,8 @@ use wasmcloud_utils::{
             EntityPermissionQualifier, GetEntityPermissionRequest, Permission, Permissions,
         },
         service::v1::status::{
-            GetServiceStatusRequest, GetServiceStatusResponse, GetServiceStatusResponse_Status,
-            ServiceBinding, ServiceBinding_Bound, ServiceBinding_Unbound,
+            QueryServiceBindingRequest, QueryServiceBindingResponse,
+            QueryServiceBindingResponse_Binding, ServiceBinding, ServiceBinding_Bound,
         },
         service::v1::topology::{
             GetServiceMessagingScopeRequest, GetServiceMessagingScopeResponse,
@@ -97,11 +97,56 @@ fn assert_published_content_access(permissions: &Permissions, organization: &str
     }
 }
 
+fn assert_rollout_participant_access(permissions: &Permissions, organization: &str, realm: &str) {
+    let prefix = format!("typewriter.organization.{organization}.realm.{realm}.hosts");
+    for suffix in ["probe", "command", "status"] {
+        assert!(permits(
+            &permissions.subscribe,
+            &format!("{prefix}.{suffix}")
+        ));
+    }
+    assert!(permits(&permissions.publish, &format!("{prefix}.state")));
+
+    for foreign_prefix in [
+        format!("typewriter.organization.{organization}.realm.foreign_realm.hosts"),
+        format!("typewriter.organization.foreign_organization.realm.{realm}.hosts"),
+    ] {
+        for suffix in ["probe", "command", "status", "state"] {
+            let subject = format!("{foreign_prefix}.{suffix}");
+            assert!(!permits(&permissions.publish, &subject));
+            assert!(!permits(&permissions.subscribe, &subject));
+        }
+    }
+}
+
+fn assert_rollout_participant_only_denials(
+    permissions: &Permissions,
+    organization: &str,
+    realm: &str,
+) {
+    let prefix = format!("typewriter.organization.{organization}.realm.{realm}.hosts");
+    for suffix in ["probe", "command", "status"] {
+        assert!(!permits(
+            &permissions.publish,
+            &format!("{prefix}.{suffix}")
+        ));
+    }
+    assert!(!permits(&permissions.subscribe, &format!("{prefix}.state")));
+}
+
+fn assert_rollout_coordinator_access(permissions: &Permissions, organization: &str, realm: &str) {
+    let prefix = format!("typewriter.organization.{organization}.realm.{realm}.hosts");
+    for suffix in ["probe", "command", "status"] {
+        assert!(permits(&permissions.publish, &format!("{prefix}.{suffix}")));
+    }
+    assert!(permits(&permissions.subscribe, &format!("{prefix}.state")));
+}
+
 #[component_test(AuthTypewriterPermissions)]
 async fn attached_service_receives_only_its_realm_permissions(
     context: &mut TestContext<AuthTypewriterPermissions>,
 ) -> TestResult {
-    let status = skir_variant!(GetServiceStatusResponse::Status {
+    let status = skir_variant!(QueryServiceBindingResponse::Binding {
         binding: ServiceBinding::Bound(Box::new(ServiceBinding_Bound {
             organization_id: "writers".into(),
             organization_name: Some("Writers".into()),
@@ -110,12 +155,12 @@ async fn attached_service_receives_only_its_realm_permissions(
     });
     context
         .messaging_mock()?
-        .expect_request("service.engine_one.status")
+        .expect_request("service.engine_one.binding.query")
         .body_skir(
-            &GetServiceStatusRequest::default(),
-            GetServiceStatusRequest::serializer(),
+            &QueryServiceBindingRequest::default(),
+            QueryServiceBindingRequest::serializer(),
         )
-        .reply_skir(&status, GetServiceStatusResponse::serializer());
+        .reply_skir(&status, QueryServiceBindingResponse::serializer());
     let scope = GetServiceMessagingScopeResponse::Found(Box::new(ServiceMessagingScope {
         organization_id: "writers".into(),
         owned_realm: None,
@@ -141,11 +186,27 @@ async fn attached_service_receives_only_its_realm_permissions(
     )
     .await?;
 
+    let response_permission = response
+        .permissions
+        .response
+        .as_ref()
+        .ok_or_else(|| anyhow::anyhow!("service response permission missing"))?;
+    assert_eq!(response_permission.max_messages, Some(1));
+    assert_eq!(
+        response_permission
+            .ttl
+            .as_ref()
+            .map(|duration| duration.milliseconds),
+        Some(300_000)
+    );
+
     assert_eq!(
         response.tags,
         ["service:engine_one", "organization:writers"]
     );
     assert_published_content_access(&response.permissions, "writers", "quests");
+    assert_rollout_participant_access(&response.permissions, "writers", "quests");
+    assert_rollout_participant_only_denials(&response.permissions, "writers", "quests");
     for suffix in [
         "editor.authoring.edit.commit",
         "editor.authoring.type.commit",
@@ -170,7 +231,6 @@ async fn attached_service_receives_only_its_realm_permissions(
     assert!(publish.contains(&"cloud.to.service.engine_one.execution.watch".into()));
     assert!(publish.contains(&"cloud.to.service.engine_one.execution.register".into()));
     assert!(publish.contains(&"cloud.to.service.engine_one.execution.report".into()));
-    assert!(publish.contains(&"typewriter.organization.writers.realm.quests.hosts.state".into()));
     for suffix in [
         "shared.catalog.fetch",
         "shared.publish",
@@ -184,27 +244,11 @@ async fn attached_service_receives_only_its_realm_permissions(
             "service.to.quests.organization.writers.realm.{suffix}"
         )));
     }
-    for suffix in ["status", "heartbeat", "shutdown"] {
-        assert!(publish.contains(&format!(
-            "cloud.to.service.engine_one.organization.writers.{suffix}"
-        )));
-    }
+    assert!(publish.contains(&"cloud.to.service.engine_one.heartbeat".into()));
+    assert!(publish.contains(&"cloud.to.service.engine_one.shutdown".into()));
     let subscribe = &response.permissions.subscribe.allow;
     assert!(subscribe.contains(&"cloud.from.service.engine_one.execution.watch".into()));
-    for suffix in ["probe", "command", "status"] {
-        assert!(subscribe.contains(&format!(
-            "typewriter.organization.writers.realm.quests.hosts.{suffix}"
-        )));
-    }
-    assert!(
-        subscribe.contains(&"typewriter.organization.writers.realm.quests.shared.changed".into())
-    );
     assert!(subscribe.contains(&"cloud.from.service.engine_one.registration.bound".into()));
-    for suffix in ["configuration", "command"] {
-        assert!(subscribe.contains(&format!(
-            "cloud.from.service.engine_one.organization.writers.{suffix}"
-        )));
-    }
     assert!(publish.iter().all(|subject| !subject.contains("realm.*")));
     assert!(subscribe.iter().all(|subject| !subject.contains("realm.*")));
     assert!(
@@ -219,7 +263,7 @@ async fn attached_service_receives_only_its_realm_permissions(
 async fn realm_service_executes_realm_routes_and_coordinates_hosts(
     context: &mut TestContext<AuthTypewriterPermissions>,
 ) -> TestResult {
-    let status = skir_variant!(GetServiceStatusResponse::Status {
+    let status = skir_variant!(QueryServiceBindingResponse::Binding {
         binding: ServiceBinding::Bound(Box::new(ServiceBinding_Bound {
             organization_id: "writers".into(),
             organization_name: Some("Writers".into()),
@@ -228,12 +272,12 @@ async fn realm_service_executes_realm_routes_and_coordinates_hosts(
     });
     context
         .messaging_mock()?
-        .expect_request("service.realm_host.status")
+        .expect_request("service.realm_host.binding.query")
         .body_skir(
-            &GetServiceStatusRequest::default(),
-            GetServiceStatusRequest::serializer(),
+            &QueryServiceBindingRequest::default(),
+            QueryServiceBindingRequest::serializer(),
         )
-        .reply_skir(&status, GetServiceStatusResponse::serializer());
+        .reply_skir(&status, QueryServiceBindingResponse::serializer());
     let scope = GetServiceMessagingScopeResponse::Found(Box::new(ServiceMessagingScope {
         organization_id: "writers".into(),
         owned_realm: Some(skir_record_id("realm_instance", "quests")),
@@ -262,6 +306,8 @@ async fn realm_service_executes_realm_routes_and_coordinates_hosts(
     let publish = &response.permissions.publish.allow;
     let subscribe = &response.permissions.subscribe.allow;
     assert_published_content_access(&response.permissions, "writers", "quests");
+    assert_rollout_participant_access(&response.permissions, "writers", "quests");
+    assert_rollout_coordinator_access(&response.permissions, "writers", "quests");
     for suffix in [
         "editor.authoring.compiled.query",
         "editor.capability.command.invoke",
@@ -291,7 +337,6 @@ async fn realm_service_executes_realm_routes_and_coordinates_hosts(
             "service.to.quests.organization.writers.realm.{suffix}"
         )));
     }
-    assert!(subscribe.contains(&"typewriter.organization.writers.realm.quests.hosts.state".into()));
     for suffix in [
         "editor.catalog.fetch.*",
         "editor.catalog.invalidate",
@@ -306,21 +351,6 @@ async fn realm_service_executes_realm_routes_and_coordinates_hosts(
             "service.from.quests.organization.writers.realm.{suffix}"
         )));
     }
-    for suffix in ["probe", "command", "status"] {
-        assert!(subscribe.contains(&format!(
-            "typewriter.organization.writers.realm.quests.hosts.{suffix}"
-        )));
-        assert!(publish.contains(&format!(
-            "typewriter.organization.writers.realm.quests.hosts.{suffix}"
-        )));
-    }
-    assert!(publish.contains(&"typewriter.organization.writers.realm.quests.hosts.state".into()));
-    assert!(
-        subscribe.contains(&"typewriter.organization.writers.realm.quests.shared.changed".into())
-    );
-    assert!(
-        publish.contains(&"typewriter.organization.writers.realm.quests.shared.changed".into())
-    );
     for suffix in [
         "shared.catalog.fetch",
         "shared.publish",
@@ -349,7 +379,7 @@ async fn realm_service_executes_realm_routes_and_coordinates_hosts(
 async fn unassigned_bound_service_receives_no_realm_permissions(
     context: &mut TestContext<AuthTypewriterPermissions>,
 ) -> TestResult {
-    let status = skir_variant!(GetServiceStatusResponse::Status {
+    let status = skir_variant!(QueryServiceBindingResponse::Binding {
         binding: ServiceBinding::Bound(Box::new(ServiceBinding_Bound {
             organization_id: "writers".into(),
             organization_name: Some("Writers".into()),
@@ -358,12 +388,12 @@ async fn unassigned_bound_service_receives_no_realm_permissions(
     });
     context
         .messaging_mock()?
-        .expect_request("service.idle_host.status")
+        .expect_request("service.idle_host.binding.query")
         .body_skir(
-            &GetServiceStatusRequest::default(),
-            GetServiceStatusRequest::serializer(),
+            &QueryServiceBindingRequest::default(),
+            QueryServiceBindingRequest::serializer(),
         )
-        .reply_skir(&status, GetServiceStatusResponse::serializer());
+        .reply_skir(&status, QueryServiceBindingResponse::serializer());
     let scope = GetServiceMessagingScopeResponse::Found(Box::new(ServiceMessagingScope {
         organization_id: "writers".into(),
         owned_realm: None,
@@ -402,20 +432,17 @@ async fn unassigned_bound_service_receives_no_realm_permissions(
 async fn unbound_service_receives_registration_notification_permission(
     context: &mut TestContext<AuthTypewriterPermissions>,
 ) -> TestResult {
-    let status = skir_variant!(GetServiceStatusResponse::Status {
-        binding: ServiceBinding::Unbound(Box::new(ServiceBinding_Unbound {
-            registration_token: Some("fixture-token".into()),
-            _unrecognized: None,
-        })),
+    let status = skir_variant!(QueryServiceBindingResponse::Binding {
+        binding: ServiceBinding::Unbound,
     });
     context
         .messaging_mock()?
-        .expect_request("service.engine_one.status")
+        .expect_request("service.engine_one.binding.query")
         .body_skir(
-            &GetServiceStatusRequest::default(),
-            GetServiceStatusRequest::serializer(),
+            &QueryServiceBindingRequest::default(),
+            QueryServiceBindingRequest::serializer(),
         )
-        .reply_skir(&status, GetServiceStatusResponse::serializer());
+        .reply_skir(&status, QueryServiceBindingResponse::serializer());
 
     let response = request_permissions(
         context,

@@ -27,28 +27,33 @@ pub struct CatalogPresentationSubject {
 
 impl CatalogPresentationSubject {
     pub fn default_ref() -> &'static CatalogPresentationSubject {
-        static D: std::sync::LazyLock<CatalogPresentationSubject> = std::sync::LazyLock::new(CatalogPresentationSubject::default);
+        static D: std::sync::LazyLock<CatalogPresentationSubject> =
+            std::sync::LazyLock::new(CatalogPresentationSubject::default);
         &D
     }
 }
 
 impl CatalogPresentationSubject {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CatalogPresentationSubject> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<CatalogPresentationSubject>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/catalog_presentation.skir",
-                    "CatalogPresentationSubject",
-                    "",
-                    |x: &CatalogPresentationSubject| &x._unrecognized,
-                    |x: &mut CatalogPresentationSubject, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CatalogPresentationSubject>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<CatalogPresentationSubject>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/catalog_presentation.skir",
+                "CatalogPresentationSubject",
+                "",
+                |x: &CatalogPresentationSubject| &x._unrecognized,
+                |x: &mut CatalogPresentationSubject, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<CatalogPresentationSubject> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(CatalogPresentationSubject::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            CatalogPresentationSubject::_adapter(),
+        )
     }
 }
 
@@ -57,14 +62,26 @@ impl CatalogPresentationSubject {
 // ==============================================================================
 
 fn initialize_module_serializers() {
-    static INIT: std::sync::LazyLock<()> =
-        std::sync::LazyLock::new(|| {
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<CatalogPresentationSubject> = CatalogPresentationSubject::_adapter() as *const _ as *mut _;
-                (*a).add_field("target", 0, crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(), "", |x: &CatalogPresentationSubject| &x.target, |x: &mut CatalogPresentationSubject, v| x.target = v);
-                (*a).add_field("descriptor", 1, crate::skirout::base::editor::v1::typed_value::PortableValue::serializer(), "", |x: &CatalogPresentationSubject| &x.descriptor, |x: &mut CatalogPresentationSubject, v| x.descriptor = v);
-                (*a).finalize();
-            }
-        });
+    static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| unsafe {
+        let a: *mut crate::skir_client::internal::StructAdapter<CatalogPresentationSubject> =
+            CatalogPresentationSubject::_adapter() as *const _ as *mut _;
+        (*a).add_field(
+            "target",
+            0,
+            crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(),
+            "",
+            |x: &CatalogPresentationSubject| &x.target,
+            |x: &mut CatalogPresentationSubject, v| x.target = v,
+        );
+        (*a).add_field(
+            "descriptor",
+            1,
+            crate::skirout::base::editor::v1::typed_value::PortableValue::serializer(),
+            "",
+            |x: &CatalogPresentationSubject| &x.descriptor,
+            |x: &mut CatalogPresentationSubject, v| x.descriptor = v,
+        );
+        (*a).finalize();
+    });
     let _ = *INIT;
 }

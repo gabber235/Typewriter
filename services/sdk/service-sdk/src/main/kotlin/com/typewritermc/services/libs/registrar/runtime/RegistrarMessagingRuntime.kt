@@ -1,25 +1,24 @@
 package com.typewritermc.services.libs.registrar.runtime
 
-import com.typewritermc.services.libs.communicator.address.AddressTemplate
-import com.typewritermc.services.libs.communicator.address.addressTemplate
-import com.typewritermc.services.libs.communicator.address.addressValuesOf
+import com.typewritermc.protocol.transport.generated.ServiceRouteScope
+import com.typewritermc.protocol.transport.generated.registrationLeaseEnsure
+import com.typewritermc.protocol.transport.generated.serviceBindingQuery
+import com.typewritermc.protocol.transport.generated.serviceHeartbeat
+import com.typewritermc.protocol.transport.generated.serviceShutdown
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.contract.EventContract
-import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponseClassifier
 import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
 import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
 import com.typewritermc.services.libs.communicator.contract.ResponseVariant
 import com.typewritermc.services.libs.communicator.contract.WatchMessage
+import com.typewritermc.services.libs.communicator.contract.initialRequest
 import com.typewritermc.services.libs.communicator.nats.NatsConnection
 import com.typewritermc.services.libs.communicator.nats.NatsConnectionState
 import com.typewritermc.services.libs.communicator.nats.NatsLifecycleResult
 import com.typewritermc.services.libs.communicator.nats.NatsMessageTransport
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
-import com.typewritermc.services.libs.communicator.skir.asPayloadCodec
-import com.typewritermc.services.libs.communicator.skir.skirUnaryContract
-import com.typewritermc.services.libs.communicator.skir.skirWatchContract
 import com.typewritermc.services.libs.http.core.ServiceHttpClient
 import com.typewritermc.services.libs.registrar.BindingObservation
 import com.typewritermc.services.libs.registrar.BindingStatus
@@ -32,6 +31,7 @@ import com.typewritermc.services.libs.registrar.RegistrarFailure
 import com.typewritermc.services.libs.registrar.RegistrarRuntime
 import com.typewritermc.services.libs.registrar.RegistrarRuntimeFactory
 import com.typewritermc.services.libs.registrar.RegistrarStopFailure
+import com.typewritermc.services.libs.registrar.RegistrationLeaseResult
 import com.typewritermc.services.libs.registrar.RegistrationToken
 import com.typewritermc.services.libs.registrar.RuntimeCloseResult
 import com.typewritermc.services.libs.registrar.RuntimeConnectivity
@@ -40,7 +40,6 @@ import com.typewritermc.services.libs.registrar.RuntimeResult
 import com.typewritermc.services.libs.registrar.RuntimeSetupProgress
 import com.typewritermc.services.libs.registrar.RuntimeSetupProgressSink
 import com.typewritermc.services.libs.registrar.RuntimeStopOperation
-import com.typewritermc.services.libs.registrar.ServiceId
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import io.opentelemetry.context.propagation.ContextPropagators
@@ -51,57 +50,61 @@ import kotlinx.coroutines.flow.map
 import skirout.service.v1.lifecycle.ServiceHeartbeatNotification
 import skirout.service.v1.lifecycle.ServiceShutdownNotification
 import skirout.service.v1.registration.ServiceBoundNotification
-import skirout.service.v1.status.GetServiceStatus
-import skirout.service.v1.status.GetServiceStatusRequest
-import skirout.service.v1.status.GetServiceStatusResponse
+import skirout.service.v1.status.EnsureRegistrationLeaseRequest
+import skirout.service.v1.status.EnsureRegistrationLeaseResponse
+import skirout.service.v1.status.QueryServiceBindingRequest
+import skirout.service.v1.status.QueryServiceBindingResponse
 import skirout.service.v1.status.ServiceBinding
 import kotlin.time.TimeSource
 
-/** Address identity used to route messaging operations for one registered service. */
-@JvmInline
-value class ServiceAddress(
-    val serviceId: ServiceId,
-)
-
-private fun serviceAddress(pattern: String): AddressTemplate<ServiceAddress> =
-    pattern.addressTemplate(
-        { addressValuesOf("id" to it.serviceId.value) },
-        { ServiceAddress(ServiceId(it.require("id"))) },
-    )
-
-/** Service status requests. */
-val serviceStatusAddress = serviceAddress("cloud.to.service.{id}.status")
-
-/** Panel to service binding notifications. */
-val serviceBoundAddress = serviceAddress("cloud.from.service.{id}.registration.bound")
-
-/** Service heartbeat notifications. */
-val serviceHeartbeatAddress = serviceAddress("cloud.to.service.{id}.heartbeat")
-
-/** Service shutdown notifications. */
-val serviceShutdownAddress = serviceAddress("cloud.to.service.{id}.shutdown")
-
-private val statusPolicy =
-    ResponsePolicy<GetServiceStatusResponse>(
-        GetServiceStatusResponse.createInternalError(),
+private val queryPolicy =
+    ResponsePolicy<QueryServiceBindingResponse>(
+        QueryServiceBindingResponse.createInternalError(),
         ResponseClassifier { response ->
             when (response.kind) {
-                GetServiceStatusResponse.Kind.STATUS_WRAPPER -> {
-                    classification(ResponseOutcome.SUCCESS, "status")
+                QueryServiceBindingResponse.Kind.BINDING_WRAPPER -> {
+                    classification(ResponseOutcome.SUCCESS, "binding")
                 }
 
-                GetServiceStatusResponse.Kind.SERVICE_NOT_FOUND_ERROR_WRAPPER -> {
+                QueryServiceBindingResponse.Kind.SERVICE_NOT_FOUND_ERROR_WRAPPER -> {
                     classification(
                         ResponseOutcome.DOMAIN_ERROR,
                         "service-not-found",
                     )
                 }
 
-                GetServiceStatusResponse.Kind.INTERNAL_ERROR_WRAPPER -> {
+                QueryServiceBindingResponse.Kind.INTERNAL_ERROR_WRAPPER -> {
                     classification(ResponseOutcome.INTERNAL_ERROR, "internal-error")
                 }
 
-                GetServiceStatusResponse.Kind.UNKNOWN -> {
+                QueryServiceBindingResponse.Kind.UNKNOWN -> {
+                    classification(ResponseOutcome.DOMAIN_ERROR, "unknown")
+                }
+            }
+        },
+    )
+private val leasePolicy =
+    ResponsePolicy<EnsureRegistrationLeaseResponse>(
+        EnsureRegistrationLeaseResponse.createInternalError(),
+        ResponseClassifier { response ->
+            when (response.kind) {
+                EnsureRegistrationLeaseResponse.Kind.ISSUED_WRAPPER -> {
+                    classification(ResponseOutcome.SUCCESS, "issued")
+                }
+
+                EnsureRegistrationLeaseResponse.Kind.ALREADY_BOUND_WRAPPER -> {
+                    classification(ResponseOutcome.SUCCESS, "already-bound")
+                }
+
+                EnsureRegistrationLeaseResponse.Kind.SERVICE_NOT_FOUND_ERROR_WRAPPER -> {
+                    classification(ResponseOutcome.DOMAIN_ERROR, "service-not-found")
+                }
+
+                EnsureRegistrationLeaseResponse.Kind.INTERNAL_ERROR_WRAPPER -> {
+                    classification(ResponseOutcome.INTERNAL_ERROR, "internal-error")
+                }
+
+                EnsureRegistrationLeaseResponse.Kind.UNKNOWN -> {
                     classification(ResponseOutcome.DOMAIN_ERROR, "unknown")
                 }
             }
@@ -113,40 +116,6 @@ private fun classification(
     outcome: ResponseOutcome,
     variant: String,
 ) = ResponseClassification(outcome, ResponseVariant.of(variant))
-
-private val statusContract =
-    skirUnaryContract(
-        GetServiceStatus,
-        OperationName.of("registrar.status"),
-        serviceStatusAddress,
-        statusPolicy,
-        ErrorSlug.of("registrar-status-failed"),
-    )
-private val bindingContract =
-    skirWatchContract(
-        GetServiceStatus,
-        ServiceBoundNotification.serializer,
-        OperationName.of("registrar.binding"),
-        serviceStatusAddress,
-        serviceBoundAddress,
-        statusPolicy,
-        boundClassifier,
-        ErrorSlug.of("registrar-binding-failed"),
-    )
-private val heartbeatContract =
-    EventContract(
-        OperationName.of("registrar.heartbeat"),
-        serviceHeartbeatAddress,
-        ServiceHeartbeatNotification.serializer.asPayloadCodec(),
-        ErrorSlug.of("registrar-heartbeat-failed"),
-    )
-private val shutdownContract =
-    EventContract(
-        OperationName.of("registrar.shutdown"),
-        serviceShutdownAddress,
-        ServiceShutdownNotification.serializer.asPayloadCodec(),
-        ErrorSlug.of("registrar-shutdown-failed"),
-    )
 
 internal interface NatsLifecycle {
     val state: StateFlow<NatsConnectionState>
@@ -185,11 +154,16 @@ private fun NatsConnectionState.toRuntimeConnectivity(): RuntimeConnectivity =
  */
 internal class TypewriterRegistrarRuntime(
     override val communicator: Communicator,
-    private val service: ServiceAddress,
+    private val service: ServiceRouteScope,
     private val nats: NatsLifecycle,
     private val accessTokens: AccessTokenCache,
     private val sentinel: SentinelCache,
 ) : RegistrarRuntime {
+    private val queryBindingContract = service.serviceBindingQuery(queryPolicy, boundClassifier)
+    private val ensureLeaseContract = service.registrationLeaseEnsure(leasePolicy)
+    private val heartbeatContract = service.serviceHeartbeat
+    private val shutdownContract = service.serviceShutdown
+
     override val connectivity: Flow<RuntimeConnectivity> = nats.state.map(NatsConnectionState::toRuntimeConnectivity)
     override val currentConnectivity: RuntimeConnectivity
         get() = nats.state.value.toRuntimeConnectivity()
@@ -199,14 +173,20 @@ internal class TypewriterRegistrarRuntime(
     override suspend fun reconnectForBoundPermissions() = lifecycle(MessagingOperation.REAUTHORIZE) { nats.reconnect() }
 
     override suspend fun queryBinding(): RuntimeResult<BindingStatus> =
-        when (val result = communicator.request(statusContract, service, GetServiceStatusRequest())) {
+        when (val result = communicator.request(queryBindingContract.initialRequest(), service, QueryServiceBindingRequest())) {
             is CommunicationResult.Failure -> messaging(MessagingOperation.BINDING_QUERY, result.error.cause)
-            is CommunicationResult.Success -> mapStatus(result.value, MessagingOperation.BINDING_QUERY)
+            is CommunicationResult.Success -> mapQueryBinding(result.value)
+        }
+
+    override suspend fun ensureRegistrationLease(): RuntimeResult<RegistrationLeaseResult> =
+        when (val result = communicator.request(ensureLeaseContract, service, EnsureRegistrationLeaseRequest())) {
+            is CommunicationResult.Failure -> messaging(MessagingOperation.REGISTRATION_LEASE, result.error.cause)
+            is CommunicationResult.Success -> mapRegistrationLease(result.value)
         }
 
     override fun watchBinding(): Flow<RuntimeResult<BindingObservation>> =
         communicator
-            .watch(bindingContract, service, GetServiceStatusRequest())
+            .watch(queryBindingContract, service, QueryServiceBindingRequest())
             .map { result ->
                 when (result) {
                     is CommunicationResult.Failure -> {
@@ -216,7 +196,7 @@ internal class TypewriterRegistrarRuntime(
                     is CommunicationResult.Success -> {
                         when (val message = result.value) {
                             is WatchMessage.Initial -> {
-                                mapStatus(message.value, MessagingOperation.BINDING_WATCH)
+                                mapQueryBinding(message.value, MessagingOperation.BINDING_WATCH)
                                     .map { BindingObservation.Initial(it) }
                             }
 
@@ -263,7 +243,7 @@ internal class TypewriterRegistrarRuntime(
     }
 
     private suspend fun <E : Any> publish(
-        contract: EventContract<ServiceAddress, E>,
+        contract: EventContract<ServiceRouteScope, E>,
         event: E,
         operation: MessagingOperation,
     ) = when (val result = communicator.publish(contract, service, event)) {
@@ -272,25 +252,54 @@ internal class TypewriterRegistrarRuntime(
     }
 }
 
-internal fun mapStatus(
-    response: GetServiceStatusResponse,
-    operation: MessagingOperation,
+internal fun mapQueryBinding(
+    response: QueryServiceBindingResponse,
+    operation: MessagingOperation = MessagingOperation.BINDING_QUERY,
 ): RuntimeResult<BindingStatus> =
     when (response.kind) {
-        GetServiceStatusResponse.Kind.SERVICE_NOT_FOUND_ERROR_WRAPPER -> {
+        QueryServiceBindingResponse.Kind.SERVICE_NOT_FOUND_ERROR_WRAPPER -> {
             RuntimeResult.Failure(RegistrarFailure.ServiceNotFound)
         }
 
-        GetServiceStatusResponse.Kind.INTERNAL_ERROR_WRAPPER -> {
+        QueryServiceBindingResponse.Kind.INTERNAL_ERROR_WRAPPER -> {
             messaging(operation)
         }
 
-        GetServiceStatusResponse.Kind.UNKNOWN -> {
+        QueryServiceBindingResponse.Kind.UNKNOWN -> {
             RuntimeResult.Failure(RegistrarFailure.ProtocolIncompatible("service-status", "unknown"))
         }
 
-        GetServiceStatusResponse.Kind.STATUS_WRAPPER -> {
-            mapBinding((response as GetServiceStatusResponse.StatusWrapper).value.binding)
+        QueryServiceBindingResponse.Kind.BINDING_WRAPPER -> {
+            mapBinding((response as QueryServiceBindingResponse.BindingWrapper).value.binding)
+        }
+    }
+
+internal fun mapRegistrationLease(response: EnsureRegistrationLeaseResponse): RuntimeResult<RegistrationLeaseResult> =
+    when (response.kind) {
+        EnsureRegistrationLeaseResponse.Kind.SERVICE_NOT_FOUND_ERROR_WRAPPER -> {
+            RuntimeResult.Failure(RegistrarFailure.ServiceNotFound)
+        }
+
+        EnsureRegistrationLeaseResponse.Kind.INTERNAL_ERROR_WRAPPER -> {
+            messaging(MessagingOperation.REGISTRATION_LEASE)
+        }
+
+        EnsureRegistrationLeaseResponse.Kind.UNKNOWN -> {
+            RuntimeResult.Failure(RegistrarFailure.ProtocolIncompatible("registration-lease", "unknown"))
+        }
+
+        EnsureRegistrationLeaseResponse.Kind.ALREADY_BOUND_WRAPPER -> {
+            val bound = response as EnsureRegistrationLeaseResponse.AlreadyBoundWrapper
+            mapBound(bound.value.organizationId, bound.value.organizationName).map(RegistrationLeaseResult::AlreadyBound)
+        }
+
+        EnsureRegistrationLeaseResponse.Kind.ISSUED_WRAPPER -> {
+            val token = (response as EnsureRegistrationLeaseResponse.IssuedWrapper).value.token
+            if (token.isBlank()) {
+                RuntimeResult.Failure(RegistrarFailure.ProtocolIncompatible("registration-lease", "blank-token"))
+            } else {
+                RuntimeResult.Success(RegistrationLeaseResult.Issued(RegistrationToken(token)))
+            }
         }
     }
 
@@ -305,23 +314,8 @@ internal fun mapBinding(binding: ServiceBinding): RuntimeResult<BindingStatus> =
             mapBound(value.organizationId, value.organizationName).map { BindingStatus.Bound(it) }
         }
 
-        ServiceBinding.Kind.UNBOUND_WRAPPER -> {
-            val token = (binding as ServiceBinding.UnboundWrapper).value.registrationToken
-            when {
-                token == null -> {
-                    RuntimeResult.Success(BindingStatus.Unbound(null))
-                }
-
-                token.isBlank() -> {
-                    RuntimeResult.Failure(
-                        RegistrarFailure.ProtocolIncompatible("service-binding", "blank-registration-token"),
-                    )
-                }
-
-                else -> {
-                    RuntimeResult.Success(BindingStatus.Unbound(RegistrationToken(token)))
-                }
-            }
+        ServiceBinding.Kind.UNBOUND_CONST -> {
+            RuntimeResult.Success(BindingStatus.Unbound)
         }
     }
 
@@ -401,7 +395,7 @@ class TypewriterRegistrarRuntimeFactory(
         return RuntimeCreateResult.Success(
             TypewriterRegistrarRuntime(
                 communicator,
-                ServiceAddress(credentials.identity.serviceId),
+                ServiceRouteScope(credentials.identity.serviceId.value),
                 ProductionNatsLifecycle(connection),
                 access,
                 sentinel,

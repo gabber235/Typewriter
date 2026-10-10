@@ -20,7 +20,14 @@ mod join_requests;
 mod members;
 
 use wasmcloud_utils::{
-    dispatch_actions,
+    dispatch_route,
+    transport_routes::{
+        OrganizationJoinCodeGenerateRoute, OrganizationJoinCodeRevokeRoute,
+        OrganizationJoinCodesWatchRoute, OrganizationJoinRequestDeclineRoute,
+        OrganizationJoinRequestsApproveRoute, OrganizationJoinRequestsWatchRoute,
+        OrganizationMemberRemoveRoute, OrganizationMembersUpdateRoute,
+        OrganizationMembersWatchRoute, unmatched_route,
+    },
     wasmcloud::messaging::{core_handler::Guest, types},
 };
 
@@ -35,15 +42,38 @@ impl Guest for Component {
 }
 
 async fn handle_message_async(msg: types::NatsMessage) -> Result<(), otel_wasi::Error> {
-    dispatch_actions!(msg, "typewriter.from.user.<user_id>.organization.<org_id>.members.<action>",
-        "watch" => async members::handle_watch,
-        "update" => async members::handle_update,
-        "remove" => async members::handle_remove,
-        "join_requests.watch" => async join_requests::handle_watch,
-        "join_requests.approve" => async join_requests::handle_approve,
-        "join_requests.decline" => async join_requests::handle_decline,
-        "join_codes.watch" => async join_codes::handle_watch,
-        "join_codes.generate" => async join_codes::handle_generate,
-        "join_codes.revoke" => async join_codes::handle_revoke,
-    )
+    dispatch_route!(msg, OrganizationMembersWatchRoute, members::handle_watch);
+    dispatch_route!(msg, OrganizationMembersUpdateRoute, members::handle_update);
+    dispatch_route!(msg, OrganizationMemberRemoveRoute, members::handle_remove);
+    dispatch_route!(
+        msg,
+        OrganizationJoinRequestsWatchRoute,
+        join_requests::handle_watch
+    );
+    dispatch_route!(
+        msg,
+        OrganizationJoinRequestsApproveRoute,
+        join_requests::handle_approve
+    );
+    dispatch_route!(
+        msg,
+        OrganizationJoinRequestDeclineRoute,
+        join_requests::handle_decline
+    );
+    dispatch_route!(
+        msg,
+        OrganizationJoinCodesWatchRoute,
+        join_codes::handle_watch
+    );
+    dispatch_route!(
+        msg,
+        OrganizationJoinCodeGenerateRoute,
+        join_codes::handle_generate
+    );
+    dispatch_route!(
+        msg,
+        OrganizationJoinCodeRevokeRoute,
+        join_codes::handle_revoke
+    );
+    Err(unmatched_route(&msg, "dispatch-action-unknown"))
 }

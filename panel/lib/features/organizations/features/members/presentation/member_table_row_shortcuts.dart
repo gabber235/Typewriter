@@ -87,9 +87,10 @@ class MemberTableRowShortcuts extends ConsumerWidget {
       confirmIcon: Fa6Solid.user_minus,
       onConfirm: () {
         onRemoveFromSelection();
-        return ref
-            .read(organizationMembersProvider.notifier)
-            .removeMember(member.userId);
+        return ref.executeMembership(
+          ref.membershipCommands.remove(member.userId),
+          (response) => response.requireAccepted(),
+        );
       },
     );
   }

@@ -1,6 +1,7 @@
 package com.typewritermc.realm.routes
 
 import build.skir.Serializer
+import com.typewritermc.protocol.transport.generated.RealmRouteScope
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
@@ -22,13 +23,13 @@ import kotlinx.coroutines.yield
 import kotlin.time.Duration.Companion.seconds
 
 internal class RouteFixture(
-    routes: (EditorContracts, RealmAddress, Communicator) -> CommunicatorRoutes,
+    routes: (EditorContracts, RealmRouteScope, Communicator) -> CommunicatorRoutes,
 ) : AutoCloseable {
     val transport = FakeMessageTransport()
     private val telemetry = TelemetryTestHarness.create()
     private val communicator = Communicator(transport, telemetry.telemetry, ContextPropagators.noop())
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    private val address = RealmAddress("realm", "organization")
+    private val address = RealmRouteScope(organizationId = "organization", realmId = "realm")
     private val router: CommunicatorRouter = communicator.createRouter(routes(EditorContracts(address), address, communicator), scope)
     private var replySequence = 0
 

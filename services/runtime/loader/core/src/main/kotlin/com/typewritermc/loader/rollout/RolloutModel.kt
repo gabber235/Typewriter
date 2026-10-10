@@ -2,9 +2,9 @@ package com.typewritermc.loader.rollout
 
 import com.typewritermc.imprint.ArtifactVersion
 import com.typewritermc.loader.api.RuntimePlacement
-import com.typewritermc.loader.api.artifact.ArtifactDigest
 import com.typewritermc.loader.deployment.DeploymentGeneration
 import com.typewritermc.loader.deployment.HostDeploymentProjection
+import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.registrar.ServiceId
 import kotlinx.serialization.Serializable
 import java.util.UUID

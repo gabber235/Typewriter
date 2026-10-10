@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 
 part of 'join_requests.dart';
 
@@ -6,45 +6,36 @@ part of 'join_requests.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Owns the current organization moderation projection and its mutations.
+/// Owns the current organization moderation projection.
 ///
 /// The authenticated user and selected organization determine the stream
-/// subjects. Approval is one server transaction for all selected requests and
-/// roles, while decline removes one request optimistically. Both mutations use
-/// operation identities and classify uncertain delivery through the shared
-/// mutation layer. Failed mutations invalidate the provider so the next
-/// snapshot resolves concurrent server decisions; decline also restores its
-/// prior local projection before that refresh.
+/// subjects. Sequenced broker events and confirmed command facts share one
+/// admission path. Expired and pending rows are filtered by the derived
+/// visibility providers while this owner retains the complete server snapshot.
 
 @ProviderFor(OrganizationJoinRequests)
 final organizationJoinRequestsProvider = OrganizationJoinRequestsProvider._();
 
-/// Owns the current organization moderation projection and its mutations.
+/// Owns the current organization moderation projection.
 ///
 /// The authenticated user and selected organization determine the stream
-/// subjects. Approval is one server transaction for all selected requests and
-/// roles, while decline removes one request optimistically. Both mutations use
-/// operation identities and classify uncertain delivery through the shared
-/// mutation layer. Failed mutations invalidate the provider so the next
-/// snapshot resolves concurrent server decisions; decline also restores its
-/// prior local projection before that refresh.
+/// subjects. Sequenced broker events and confirmed command facts share one
+/// admission path. Expired and pending rows are filtered by the derived
+/// visibility providers while this owner retains the complete server snapshot.
 final class OrganizationJoinRequestsProvider
     extends
         $StreamNotifierProvider<
           OrganizationJoinRequests,
           List<OrganizationJoinRequest>
         > {
-  /// Owns the current organization moderation projection and its mutations.
+  /// Owns the current organization moderation projection.
   ///
   /// The authenticated user and selected organization determine the stream
-  /// subjects. Approval is one server transaction for all selected requests and
-  /// roles, while decline removes one request optimistically. Both mutations use
-  /// operation identities and classify uncertain delivery through the shared
-  /// mutation layer. Failed mutations invalidate the provider so the next
-  /// snapshot resolves concurrent server decisions; decline also restores its
-  /// prior local projection before that refresh.
+  /// subjects. Sequenced broker events and confirmed command facts share one
+  /// admission path. Expired and pending rows are filtered by the derived
+  /// visibility providers while this owner retains the complete server snapshot.
   OrganizationJoinRequestsProvider._()
     : super(
         from: null,
@@ -65,17 +56,14 @@ final class OrganizationJoinRequestsProvider
 }
 
 String _$organizationJoinRequestsHash() =>
-    r'2e458df6f4af9f8b5a9f6ab9dbb84994f3139fd9';
+    r'2f2e17bfe3cdb98d119d573cfb83494df30d8135';
 
-/// Owns the current organization moderation projection and its mutations.
+/// Owns the current organization moderation projection.
 ///
 /// The authenticated user and selected organization determine the stream
-/// subjects. Approval is one server transaction for all selected requests and
-/// roles, while decline removes one request optimistically. Both mutations use
-/// operation identities and classify uncertain delivery through the shared
-/// mutation layer. Failed mutations invalidate the provider so the next
-/// snapshot resolves concurrent server decisions; decline also restores its
-/// prior local projection before that refresh.
+/// subjects. Sequenced broker events and confirmed command facts share one
+/// admission path. Expired and pending rows are filtered by the derived
+/// visibility providers while this owner retains the complete server snapshot.
 
 abstract class _$OrganizationJoinRequests
     extends $StreamNotifier<List<OrganizationJoinRequest>> {
@@ -156,4 +144,4 @@ final class JoinRequestCountProvider extends $FunctionalProvider<int, int, int>
   }
 }
 
-String _$joinRequestCountHash() => r'297dcfa4f5bd0b642bcc4f3b163ee3ac79fac7bd';
+String _$joinRequestCountHash() => r'2517beb398fc05db3005e89d5a1a069bcb99e34c';

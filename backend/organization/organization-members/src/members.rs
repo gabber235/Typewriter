@@ -3,18 +3,23 @@
 //! Membership state is owned by the organization database projection. Role updates replace the
 //! assignable role selection for every selected member while preserving protected roles. Removal
 //! enforces the founder invariant. Successful mutations increment the organization member
-//! sequence and publish one organization event after the database transaction succeeds.
+//! sequence and publish the affected organization and user facts after the database transaction
+//! succeeds.
 
 use otel_wasi::ResultWithSlug;
 use serde::Deserialize;
-use std::collections::HashMap;
 use wasmcloud_utils::database::organization::projections::OrganizationMemberProjection;
 use wasmcloud_utils::{
     database::{RecordId, TransactionOutcome, transaction_query},
-    decode_skir, extract_params,
+    publication::{
+        CapturedOnly, CommittedChange, MembershipFact, PublicationEffect, PublicationExecutor,
+    },
     skir::base::organization::v1::member::*,
+    skir::base::organization::v1::organization::{
+        UserOrganizationsChange, UserOrganizationsChanged,
+    },
     skir_transaction_outcome,
-    skir_utils::{IntoSkirRecordIds, IntoSurrealRecordIds},
+    skir_utils::{IntoSkirRecordIds, IntoSurrealRecordIds, RecordIdKeyIdentity},
     skir_variant,
     wasmcloud::messaging::types::NatsMessage,
 };
@@ -23,6 +28,45 @@ use wasmcloud_utils::{
 struct RemovedMemberRecord {
     members_sequence: i64,
     organizations_sequence: i64,
+}
+
+impl RemovedMemberRecord {
+    fn into_committed_change(
+        self,
+        organization: RecordId,
+        user: RecordId,
+        operation_id: String,
+    ) -> Result<CommittedChange<RemoveOrganizationMemberResponse>, otel_wasi::Error> {
+        let user_id = user.clone().into();
+        let member_event = OrganizationMembersChanged {
+            sequence: self.members_sequence,
+            operation_id: operation_id.clone(),
+            changes: vec![OrganizationMembersChange::Remove(Box::new(user_id))],
+            ..Default::default()
+        };
+        let organization_id = organization.clone().into();
+        let organization_event = UserOrganizationsChanged {
+            sequence: self.organizations_sequence,
+            operation_id,
+            changes: vec![UserOrganizationsChange::Remove(Box::new(organization_id))],
+            ..Default::default()
+        };
+        Ok(CommittedChange::new(
+            skir_variant!(RemoveOrganizationMemberResponse::Success {
+                event: member_event.clone(),
+            }),
+            [
+                PublicationEffect::CapturedMembership(MembershipFact::Members {
+                    organization: organization.key.raw_identity()?.to_owned(),
+                    event: member_event,
+                }),
+                PublicationEffect::CapturedMembership(MembershipFact::UserOrganizations {
+                    user: user.key.raw_identity()?.to_owned(),
+                    event: organization_event,
+                }),
+            ],
+        ))
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -68,17 +112,18 @@ impl MemberUpdateOutcome {
 /// The snapshot sequence is read with the member values, so a consumer can use it as its recovery
 /// point for the organization member change stream. The request body is decoded to reject malformed
 /// watch requests before the database read.
-#[tracing::instrument(skip(msg, params))]
+#[tracing::instrument(skip_all)]
 pub async fn handle_watch(
-    msg: NatsMessage,
-    params: HashMap<String, String>,
+    _msg: NatsMessage,
+    scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
+    _request: WatchOrganizationMembersRequest,
 ) -> Result<WatchOrganizationMembersResponse, otel_wasi::Error> {
-    let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
+    let actor_id = scope.user.as_str();
+    let org_id = scope.organization.as_str();
     otel_wasi::main_attribute!(
         "actor.id" = actor_id.to_string(),
         "organization.id" = org_id.to_string()
     );
-    let _ = decode_skir!(WatchOrganizationMembersRequest, &msg.body)?;
     wasmcloud_utils::database::organization::snapshots::members(RecordId::new(
         "organization",
         org_id,
@@ -92,13 +137,14 @@ pub async fn handle_watch(
 /// protected roles, roleless results, and a result that would leave the organization without a
 /// founder. It also preserves the complete committed response for a repeated operation identity.
 /// The returned event describes the full updated member values and is published after commit.
-#[tracing::instrument(skip(msg, params))]
+#[tracing::instrument(skip_all)]
 pub async fn handle_update(
     msg: NatsMessage,
-    params: HashMap<String, String>,
+    scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
+    request: UpdateOrganizationMemberRolesRequest,
 ) -> Result<UpdateOrganizationMemberRolesResponse, otel_wasi::Error> {
-    let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
-    let request = decode_skir!(UpdateOrganizationMemberRolesRequest, &msg.body)?;
+    let actor_id = scope.user.as_str();
+    let org_id = scope.organization.as_str();
     wasmcloud_utils::validate_record_ids!(
         UpdateOrganizationMemberRolesResponse,
         request.user_ids,
@@ -119,11 +165,12 @@ pub async fn handle_update(
     );
     let user_record_ids = user_ids.as_slice().into_surreal_record_ids();
     let organization_id = RecordId::new("organization", org_id);
-    let receipt = wasmcloud_utils::database::mutation::receipt_id(
+    let receipt = wasmcloud_utils::database::mutation::MutationReceipt::new(
         actor_id,
         org_id,
         "members.update",
         &request.operation_id,
+        msg.body,
     );
     if request.operation_id.is_empty() {
         return Ok(skir_variant!(
@@ -132,7 +179,8 @@ pub async fn handle_update(
     }
     let role_record_ids = role_ids.as_slice().into_surreal_record_ids();
 
-    let result = transaction_query!(
+    let result = receipt
+        .bind(transaction_query!(
         MemberUpdateOutcome,
         r#"
         BEGIN TRANSACTION;
@@ -144,9 +192,7 @@ pub async fn handle_update(
     )
     .bind("users", user_record_ids)
     .bind("org", organization_id)
-    .bind("roles", role_record_ids)
-    .bind("receipt", receipt)
-    .bind("request_bytes", msg.body.clone())
+    .bind("roles", role_record_ids))
     .execute()
     .await
     .error_with_slug("member-update-query-failed")?
@@ -190,13 +236,23 @@ pub async fn handle_update(
             .collect(),
         ..Default::default()
     };
-    wasmcloud_utils::skir_subjects::organization_members_changed(org_id)
-        .persist(event.clone())
-        .await?;
     otel_wasi::main_attribute!("member.outcome" = "updated");
-    Ok(skir_variant!(
-        UpdateOrganizationMemberRolesResponse::Success { members, event }
-    ))
+    CommittedChange::new(
+        skir_variant!(UpdateOrganizationMemberRolesResponse::Success {
+            members,
+            event: event.clone(),
+        }),
+        [PublicationEffect::CapturedMembership(
+            MembershipFact::Members {
+                organization: org_id.to_owned(),
+                event,
+            },
+        )],
+    )
+    .publish_with(&PublicationExecutor {
+        refresher: CapturedOnly,
+    })
+    .await
 }
 
 /// Removes one member when doing so preserves the organization founder invariant.
@@ -204,23 +260,25 @@ pub async fn handle_update(
 /// The database transaction is idempotent by operation identity and returns a domain error when the
 /// user is not a member or is the protected founder. A successful removal advances both the
 /// organization member sequence and the user's organization sequence, then publishes both changes.
-#[tracing::instrument(skip(msg, params))]
+#[tracing::instrument(skip_all)]
 pub async fn handle_remove(
     msg: NatsMessage,
-    params: HashMap<String, String>,
+    scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
+    request: RemoveOrganizationMemberRequest,
 ) -> Result<RemoveOrganizationMemberResponse, otel_wasi::Error> {
-    let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
-    let request = decode_skir!(RemoveOrganizationMemberRequest, &msg.body)?;
+    let actor_id = scope.user.as_str();
+    let org_id = scope.organization.as_str();
     if request.operation_id.is_empty() {
         return Ok(wasmcloud_utils::skir_variant!(
             RemoveOrganizationMemberResponse::InvalidOperationIdError
         ));
     }
-    let receipt = wasmcloud_utils::database::mutation::receipt_id(
+    let receipt = wasmcloud_utils::database::mutation::MutationReceipt::new(
         actor_id,
         org_id,
         "RemoveOrganizationMember",
         &request.operation_id,
+        msg.body,
     );
     wasmcloud_utils::validate_record_ids!(
         RemoveOrganizationMemberResponse,
@@ -236,7 +294,8 @@ pub async fn handle_remove(
     let user_record_id = RecordId::from(&user_id);
     let organization_id = RecordId::new("organization", org_id);
 
-    let result = transaction_query!(
+    let result = receipt
+        .bind(transaction_query!(
         RemovedMemberRecord,
         r#"
         BEGIN TRANSACTION;
@@ -283,10 +342,8 @@ LET $founder = $org.founder;
         COMMIT TRANSACTION;
         "#,
     )
-    .bind("user", user_record_id)
-    .bind("org", organization_id)
-    .bind("receipt", receipt)
-    .bind("request_bytes", msg.body.clone())
+    .bind("user", user_record_id.clone())
+    .bind("org", organization_id.clone()))
     .execute()
     .await
     .error_with_slug("member-remove-query-failed")?
@@ -302,27 +359,11 @@ LET $founder = $org.founder;
         "founder-cannot-be-removed-error" => { user_id: user_id.clone() }
     );
 
-    let member_event = OrganizationMembersChanged {
-        sequence: deleted.members_sequence,
-        operation_id: request.operation_id.clone(),
-        changes: vec![OrganizationMembersChange::Remove(Box::new(user_id.clone()))],
-        ..Default::default()
-    };
-    wasmcloud_utils::skir_subjects::organization_members_changed(org_id)
-        .persist(member_event.clone())
-        .await?;
-    let organizations_event = wasmcloud_utils::skir::base::organization::v1::organization::UserOrganizationsChanged {
-        sequence: deleted.organizations_sequence,
-        operation_id: request.operation_id,
-        changes: vec![wasmcloud_utils::skir::base::organization::v1::organization::UserOrganizationsChange::Remove(Box::new(user_id.clone()))],
-        ..Default::default()
-    };
-    wasmcloud_utils::skir_subjects::user_organizations_changed(user_id.key.to_string())
-        .persist(organizations_event)
-        .await?;
-
     otel_wasi::main_attribute!("member.outcome" = "removed");
-    Ok(skir_variant!(RemoveOrganizationMemberResponse::Success {
-        event: member_event
-    }))
+    deleted
+        .into_committed_change(organization_id, user_record_id, request.operation_id)?
+        .publish_with(&PublicationExecutor {
+            refresher: CapturedOnly,
+        })
+        .await
 }

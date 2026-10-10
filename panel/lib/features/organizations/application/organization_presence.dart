@@ -49,6 +49,7 @@ class OrganizationPresence extends _$OrganizationPresence {
   StreamSubscription<NatsMessage>? _messages;
 
   late String _userId;
+  late skir.RecordId _organizationId;
   late String _subject;
   late NatsClient _client;
 
@@ -59,11 +60,16 @@ class OrganizationPresence extends _$OrganizationPresence {
     if (organizationId == null || userId == null) return const {};
 
     _userId = userId;
-    _subject =
-        "typewriter.presence.organization.${organizationId.id}.user.$userId";
+    _organizationId = organizationId;
+    _subject = OrganizationPresenceRouteEvent.subject(
+      userId: userId,
+      organizationId: organizationId,
+    );
     _client = ref.watch(natsProvider);
     _subscription = await _client.subscribe(
-      "typewriter.presence.organization.${organizationId.id}.user.*",
+      OrganizationPresenceRouteEvent.subscriptionPattern(
+        organizationId: organizationId,
+      ),
     );
     _messages = _subscription!.messages.listen(_onMessage);
 
@@ -116,7 +122,7 @@ class OrganizationPresence extends _$OrganizationPresence {
     try {
       await _client.publish(
         _subject,
-        skir.PresenceEvent.serializer.toBytes(event),
+        OrganizationPresenceRouteEvent.serializer.toBytes(event),
       );
     } on Object {
       // Presence is deliberately best effort.
@@ -125,9 +131,14 @@ class OrganizationPresence extends _$OrganizationPresence {
 
   void _onMessage(NatsMessage message) {
     if (!state.hasValue) return;
-    final userId = _trustedUserId(message.subject);
+    final userId = OrganizationPresenceRouteEvent.userIdFromSubject(
+      message.subject,
+      organizationId: _organizationId,
+    );
     if (userId == null) return;
-    final event = skir.PresenceEvent.serializer.fromBytes(message.payload);
+    final event = OrganizationPresenceRouteEvent.serializer.fromBytes(
+      message.payload,
+    );
     switch (event) {
       case skir.PresenceEvent_activeWrapper(:final value):
         if (userId == _userId && value.sessionId == _sessionId) return;
@@ -158,18 +169,6 @@ class OrganizationPresence extends _$OrganizationPresence {
       for (final entry in state.requireValue.entries)
         if (entry.value.observedAt.isAfter(oldest)) entry.key: entry.value,
     });
-  }
-
-  String? _trustedUserId(String subject) {
-    final tokens = subject.split(".");
-    if (tokens.length != 6 ||
-        tokens[0] != "typewriter" ||
-        tokens[1] != "presence" ||
-        tokens[2] != "organization" ||
-        tokens[4] != "user") {
-      return null;
-    }
-    return tokens[5];
   }
 
   skir.PresenceLocation _location(String path) {

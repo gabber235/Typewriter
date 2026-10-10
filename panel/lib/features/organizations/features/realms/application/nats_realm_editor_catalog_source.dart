@@ -2,13 +2,33 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "nats_realm_editor_catalog_source.g.dart";
+
+@riverpod
+Stream<skir.CatalogInvalidated> realmCatalogInvalidations(
+  Ref ref,
+  skir.RecordId organizationId,
+  skir.RecordId realmId,
+) =>
+    NatsRealmEditorCatalogSource(ref)
+        .watchInvalidations(organizationId, realmId);
+
+@riverpod
+Future<skir.EditorCatalogWireSnapshot> realmCatalogTransfer(
+  Ref ref,
+  skir.RecordId organizationId,
+  skir.RecordId realmId,
+  String fetchId,
+) => NatsRealmEditorCatalogSource(ref).fetch(organizationId, realmId);
+
 final class NatsRealmEditorCatalogSource {
   const NatsRealmEditorCatalogSource(this.ref);
 
   final Ref ref;
 
   Future<skir.EditorCatalogWireSnapshot> fetch(
-    RealmEditorCatalogRoute route, {
+    skir.RecordId organizationId,
+    skir.RecordId realmId, {
     skir.CatalogGeneration? expectedGeneration,
   }) async {
     final transferId = uuid.v4();
@@ -21,22 +41,15 @@ final class NatsRealmEditorCatalogSource {
     ref.onDispose(() {
       if (!disposed.isCompleted) disposed.complete();
     });
-    final responses = ref
-        .watchProjection<
-          skir.CatalogFetchResult,
-          skir.CatalogFetchResult,
-          skir.CatalogFetchResult
-        >(
-          subject: route.fetchSubject,
-          eventSubject: route.fetchUpdateSubject(transferId),
-          requestBytes: skir.CatalogFetchRequest.serializer.toBytes(request),
-          responseSerializer: skir.CatalogFetchResult.serializer,
-          eventSerializer: skir.CatalogFetchResult.serializer,
-          snapshot: (response) => response,
-          reduce: (_, event) => event,
-          delivery: const ProjectionDelivery.ephemeral(),
-          reconciliation: const ProjectionReconciliation.latest(),
-        );
+    final transport = SkirMutationClient(
+      () => ref.read(natsProvider),
+      () => ref.read(panelTelemetryProvider.future),
+    );
+    final responses = request.watch(
+      transport,
+      organizationId: organizationId,
+      realmId: realmId,
+    );
     return assembler.assemble(
       responses.map(
         (response) => switch (response) {
@@ -53,29 +66,24 @@ final class NatsRealmEditorCatalogSource {
   }
 
   Stream<skir.CatalogInvalidated> watchInvalidations(
-    RealmEditorCatalogRoute route,
-  ) => ref.watchProjection(
-    subject: route.invalidationRequestSubject,
-    eventSubject: route.invalidationSubject,
-    requestBytes: skir.WatchEditorCatalogRequest.serializer.toBytes(
-      skir.WatchEditorCatalogRequest(),
-    ),
-    responseSerializer: skir.CatalogInvalidated.serializer,
-    eventSerializer: skir.CatalogInvalidated.serializer,
+    skir.RecordId organizationId,
+    skir.RecordId realmId,
+  ) => skir.WatchEditorCatalogRequest().watch(
+    ref,
+    organizationId: organizationId,
+    realmId: realmId,
     snapshot: (response) => response,
     reduce: (_, event) => event,
-    delivery: const ProjectionDelivery.ephemeral(),
     reconciliation: const ProjectionReconciliation.latest(),
   );
 
   Future<skir.PreparedValue> prepareValue(
-    RealmEditorCatalogRoute route,
+    skir.RecordId organizationId,
+    skir.RecordId realmId,
     skir.ValuePreparationRequest request,
   ) async {
     final response = await ref.requestSkir(
-      route.address.request("editor.creation.prepare"),
-      skir.ValuePreparationRequest.serializer.toBytes(request),
-      skir.PrepareValueResult.serializer,
+      request.operation(organizationId: organizationId, realmId: realmId),
     );
     return switch (response) {
       skir.PrepareValueResult_preparedWrapper(:final value) => value,

@@ -76,8 +76,12 @@ class JoinRequestCard extends HookConsumerWidget {
                 onConfirm: () {
                   onSelectionChanged(false);
                   return ref
-                      .read(organizationJoinRequestsProvider.notifier)
-                      .approveRequests([request.requestId], selectedRoles.value)
+                      .executeMembership(
+                        ref.membershipCommands.approve([
+                          request.requestId,
+                        ], selectedRoles.value),
+                        (response) => response.requireAccepted(),
+                      )
                       .catchApiExceptionsAndDisplay(context);
                 },
               ),
@@ -159,9 +163,6 @@ class JoinRequestCard extends HookConsumerWidget {
                   isExpanded: expansibleController.isExpanded,
                   onExpired: () {
                     onSelectionChanged(false);
-                    ref
-                        .read(organizationJoinRequestsProvider.notifier)
-                        .cleanupExpiredRequests();
                   },
                   onDecline: () => _confirmDeclineRequest(context, ref),
                   onToggle: () => expansibleController.toggle(),
@@ -213,9 +214,6 @@ class JoinRequestCard extends HookConsumerWidget {
           endDate: request.expiresAt,
           onExpired: () {
             onSelectionChanged(false);
-            ref
-                .read(organizationJoinRequestsProvider.notifier)
-                .cleanupExpiredRequests();
           },
         ),
         SizedBox(width: context.spacing.space4),
@@ -260,9 +258,10 @@ class JoinRequestCard extends HookConsumerWidget {
       confirmIcon: Fa6Solid.xmark,
       onConfirm: () async {
         onSelectionChanged(false);
-        await ref
-            .read(organizationJoinRequestsProvider.notifier)
-            .declineRequest(request.requestId);
+        await ref.executeMembership(
+          ref.membershipCommands.decline(request.requestId),
+          (response) => response.requireAccepted(),
+        );
       },
     );
   }

@@ -8,6 +8,7 @@ import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.RuntimeScope
 import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.loader.api.HostedRuntimeHost
+import com.typewritermc.protocol.transport.generated.RealmRouteScope
 import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
@@ -17,6 +18,7 @@ import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.checking.RealmCheckRuntime
 import com.typewritermc.realm.compiler.AuthoringAcceptance
 import com.typewritermc.realm.compiler.CompiledArtifactProducerRegistry
+import com.typewritermc.realm.compiler.CompiledRootStatuses
 import com.typewritermc.realm.compiler.EngineImplementationSource
 import com.typewritermc.realm.compiler.PageCompiledArtifactProducer
 import com.typewritermc.realm.compiler.RealmPublicationCoordinator
@@ -28,7 +30,6 @@ import com.typewritermc.realm.repository.RealmAuthoringOwner
 import com.typewritermc.realm.repository.SurrealAuthoringStorage
 import com.typewritermc.realm.routes.CapabilityRealmPresentationSearchSource
 import com.typewritermc.realm.routes.EditorCheckEvents
-import com.typewritermc.realm.routes.RealmAddress
 import com.typewritermc.realm.routes.RealmCapabilityInvocationSource
 import com.typewritermc.realm.routes.RealmRouteFactory
 import com.typewritermc.realm.routes.SnapshotRealmEditorCatalogSource
@@ -106,13 +107,14 @@ internal class Realm(
             checkRuntime.reloadCatalog()
             val routedAuthoring = CheckingAuthoringRepository(authoring, checkRuntime, checkEvents)
             val compiledContent = SurrealRegisteredCompiledContentRepository(connected)
+            val compilation = CompiledArtifactProducerRegistry(listOf(PageCompiledArtifactProducer()))
             val publisher =
                 RealmPublicationCoordinator(
                     acceptance = AuthoringAcceptance(snapshotStore, checkRuntime),
                     attempts = SurrealPublicationAttemptStore(connected),
                     artifacts = RegisteredCompiledArtifactStore(host.sharedArtifacts),
                     engine = engine,
-                    compilation = CompiledArtifactProducerRegistry(listOf(PageCompiledArtifactProducer())),
+                    compilation = compilation,
                 )
             publisher.recoverInterrupted()
             val preparation =
@@ -132,6 +134,7 @@ internal class Realm(
                     snapshots = snapshotStore,
                     checks = checkRuntime,
                     compiledContent = compiledContent,
+                    compiledRootStatuses = CompiledRootStatuses(compilation, compiledContent),
                     publisher = publisher,
                     editorCatalog = SnapshotRealmEditorCatalogSource(catalogs),
                     preparation = preparation,
@@ -220,7 +223,7 @@ internal class Realm(
                 catalogInvalidations.stop()
                 return@withLock null
             }
-            val address = RealmAddress(realmId = realmId, organizationId = session.organizationId)
+            val address = RealmRouteScope(realmId = realmId, organizationId = session.organizationId)
             val routes = checkNotNull(routeFactory) { "Realm routes are not initialized" }
             val replacement = session.communicator.createRouter(routes.create(address, session.communicator), scope)
             try {

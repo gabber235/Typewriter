@@ -740,7 +740,7 @@ class RealmSearchQuery private constructor(
         );
 
         /**
-         * If the value of [selectors] is already mutable, returns it as-is.
+         * If the value of [selectors] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [selectors] and returns it.
          */
         val mutableSelectors: kotlin.collections.MutableList<skirout.editor.v1.search.RealmSearchSelector_OrMutable> get() {
@@ -756,7 +756,7 @@ class RealmSearchQuery private constructor(
         }
 
         /**
-         * If the value of [terms] is already mutable, returns it as-is.
+         * If the value of [terms] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [terms] and returns it.
          */
         val mutableTerms: kotlin.collections.MutableList<kotlin.String> get() {
@@ -948,7 +948,7 @@ class RealmPresentationSearchRequest private constructor(
         );
 
         /**
-         * If the value of [generation] is already mutable, returns it as-is.
+         * If the value of [generation] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
          */
         val mutableGeneration: skirout.editor.v1.type_catalog.CatalogGeneration.Mutable get() {
@@ -964,7 +964,7 @@ class RealmPresentationSearchRequest private constructor(
         }
 
         /**
-         * If the value of [capabilityId] is already mutable, returns it as-is.
+         * If the value of [capabilityId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
          */
         val mutableCapabilityId: skirout.editor.v1.type_catalog.CapabilityId.Mutable get() {
@@ -980,7 +980,7 @@ class RealmPresentationSearchRequest private constructor(
         }
 
         /**
-         * If the value of [query] is already mutable, returns it as-is.
+         * If the value of [query] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [query] and returns it.
          */
         val mutableQuery: skirout.editor.v1.search.RealmSearchQuery.Mutable get() {
@@ -1256,7 +1256,7 @@ class RealmPresentationSearchSnapshot private constructor(
         );
 
         /**
-         * If the value of [values] is already mutable, returns it as-is.
+         * If the value of [values] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [values] and returns it.
          */
         val mutableValues: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.DataValue> get() {
@@ -1272,7 +1272,7 @@ class RealmPresentationSearchSnapshot private constructor(
         }
 
         /**
-         * If the value of [guidance] is already mutable, returns it as-is.
+         * If the value of [guidance] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [guidance] and returns it.
          */
         val mutableGuidance: kotlin.collections.MutableList<kotlin.String> get() {
@@ -1288,7 +1288,7 @@ class RealmPresentationSearchSnapshot private constructor(
         }
 
         /**
-         * If the value of [diagnostics] is already mutable, returns it as-is.
+         * If the value of [diagnostics] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [diagnostics] and returns it.
          */
         val mutableDiagnostics: kotlin.collections.MutableList<skirout.editor.v1.diagnostic.Diagnostic_OrMutable> get() {
@@ -1440,7 +1440,7 @@ class RealmPresentationSearchUnavailable private constructor(
         );
 
         /**
-         * If the value of [diagnostics] is already mutable, returns it as-is.
+         * If the value of [diagnostics] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [diagnostics] and returns it.
          */
         val mutableDiagnostics: kotlin.collections.MutableList<skirout.editor.v1.diagnostic.Diagnostic_OrMutable> get() {

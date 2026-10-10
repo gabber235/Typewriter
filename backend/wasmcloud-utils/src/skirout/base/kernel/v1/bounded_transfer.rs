@@ -31,23 +31,25 @@ pub struct BoundedTransferChunk {
 
 impl BoundedTransferChunk {
     pub fn default_ref() -> &'static BoundedTransferChunk {
-        static D: std::sync::LazyLock<BoundedTransferChunk> = std::sync::LazyLock::new(BoundedTransferChunk::default);
+        static D: std::sync::LazyLock<BoundedTransferChunk> =
+            std::sync::LazyLock::new(BoundedTransferChunk::default);
         &D
     }
 }
 
 impl BoundedTransferChunk {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<BoundedTransferChunk> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<BoundedTransferChunk>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "kernel/v1/bounded_transfer.skir",
-                    "BoundedTransferChunk",
-                    "",
-                    |x: &BoundedTransferChunk| &x._unrecognized,
-                    |x: &mut BoundedTransferChunk, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<BoundedTransferChunk>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "kernel/v1/bounded_transfer.skir",
+                "BoundedTransferChunk",
+                "",
+                |x: &BoundedTransferChunk| &x._unrecognized,
+                |x: &mut BoundedTransferChunk, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<BoundedTransferChunk> {
@@ -61,18 +63,58 @@ impl BoundedTransferChunk {
 // ==============================================================================
 
 fn initialize_module_serializers() {
-    static INIT: std::sync::LazyLock<()> =
-        std::sync::LazyLock::new(|| {
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<BoundedTransferChunk> = BoundedTransferChunk::_adapter() as *const _ as *mut _;
-                (*a).add_field("transfer_id", 0, crate::skir_client::Serializer::string(), "", |x: &BoundedTransferChunk| &x.transfer_id, |x: &mut BoundedTransferChunk, v| x.transfer_id = v);
-                (*a).add_field("index", 1, crate::skir_client::Serializer::int32(), "", |x: &BoundedTransferChunk| &x.index, |x: &mut BoundedTransferChunk, v| x.index = v);
-                (*a).add_field("chunk_count", 2, crate::skir_client::Serializer::int32(), "", |x: &BoundedTransferChunk| &x.chunk_count, |x: &mut BoundedTransferChunk, v| x.chunk_count = v);
-                (*a).add_field("encoded_size", 3, crate::skir_client::Serializer::int64(), "", |x: &BoundedTransferChunk| &x.encoded_size, |x: &mut BoundedTransferChunk, v| x.encoded_size = v);
-                (*a).add_field("sha256", 4, crate::skir_client::Serializer::string(), "", |x: &BoundedTransferChunk| &x.sha256, |x: &mut BoundedTransferChunk, v| x.sha256 = v);
-                (*a).add_field("payload", 5, crate::skir_client::Serializer::bytes(), "", |x: &BoundedTransferChunk| &x.payload, |x: &mut BoundedTransferChunk, v| x.payload = v);
-                (*a).finalize();
-            }
-        });
+    static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| unsafe {
+        let a: *mut crate::skir_client::internal::StructAdapter<BoundedTransferChunk> =
+            BoundedTransferChunk::_adapter() as *const _ as *mut _;
+        (*a).add_field(
+            "transfer_id",
+            0,
+            crate::skir_client::Serializer::string(),
+            "",
+            |x: &BoundedTransferChunk| &x.transfer_id,
+            |x: &mut BoundedTransferChunk, v| x.transfer_id = v,
+        );
+        (*a).add_field(
+            "index",
+            1,
+            crate::skir_client::Serializer::int32(),
+            "",
+            |x: &BoundedTransferChunk| &x.index,
+            |x: &mut BoundedTransferChunk, v| x.index = v,
+        );
+        (*a).add_field(
+            "chunk_count",
+            2,
+            crate::skir_client::Serializer::int32(),
+            "",
+            |x: &BoundedTransferChunk| &x.chunk_count,
+            |x: &mut BoundedTransferChunk, v| x.chunk_count = v,
+        );
+        (*a).add_field(
+            "encoded_size",
+            3,
+            crate::skir_client::Serializer::int64(),
+            "",
+            |x: &BoundedTransferChunk| &x.encoded_size,
+            |x: &mut BoundedTransferChunk, v| x.encoded_size = v,
+        );
+        (*a).add_field(
+            "sha256",
+            4,
+            crate::skir_client::Serializer::string(),
+            "",
+            |x: &BoundedTransferChunk| &x.sha256,
+            |x: &mut BoundedTransferChunk, v| x.sha256 = v,
+        );
+        (*a).add_field(
+            "payload",
+            5,
+            crate::skir_client::Serializer::bytes(),
+            "",
+            |x: &BoundedTransferChunk| &x.payload,
+            |x: &mut BoundedTransferChunk, v| x.payload = v,
+        );
+        (*a).finalize();
+    });
     let _ = *INIT;
 }

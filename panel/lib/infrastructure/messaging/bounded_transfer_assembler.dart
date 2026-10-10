@@ -1,5 +1,7 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "bounded_transfer_assembler.freezed.dart";
+
 final RegExp _boundedTransferIdPattern = RegExp(r"^[A-Za-z0-9_-]{1,64}$");
 
 String boundedTransferUpdateSubject(String base, String transferId) {
@@ -31,18 +33,11 @@ final class BoundedTransferPart {
   final Uint8List payload;
 }
 
-sealed class BoundedTransferState {
-  const BoundedTransferState();
-}
-
-final class BoundedTransferPending extends BoundedTransferState {
-  const BoundedTransferPending();
-}
-
-final class BoundedTransferComplete extends BoundedTransferState {
-  const BoundedTransferComplete(this.bytes);
-
-  final Uint8List bytes;
+@freezed
+sealed class BoundedTransferState with _$BoundedTransferState {
+  const factory BoundedTransferState.pending() = BoundedTransferPending;
+  const factory BoundedTransferState.complete(Uint8List bytes) =
+      BoundedTransferComplete;
 }
 
 final class BoundedTransferAssembler {

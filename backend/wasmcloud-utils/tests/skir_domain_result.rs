@@ -14,12 +14,12 @@ fn maps_default_domain_error_slug() {
     let parsed: Result<(), String> = Err("service-not-found-error".to_string());
 
     let response = parsed
-        .into_skir_domain_result::<GetServiceStatusResponse>()
+        .into_skir_domain_result::<QueryServiceBindingResponse>()
         .expect("known slug should map");
 
     assert!(matches!(
         response,
-        SkirDomainResult::Response(GetServiceStatusResponse::ServiceNotFoundError(_))
+        SkirDomainResult::Response(QueryServiceBindingResponse::ServiceNotFoundError(_))
     ));
 }
 
@@ -28,7 +28,7 @@ fn unknown_domain_error_slug_is_internal_error() {
     let parsed: Result<(), String> = Err("typo-error".to_string());
 
     let error = parsed
-        .into_skir_domain_result::<GetServiceStatusResponse>()
+        .into_skir_domain_result::<QueryServiceBindingResponse>()
         .expect_err("unknown slug should fail");
 
     assert_eq!(error.slug(), "skir-domain-error-unknown");

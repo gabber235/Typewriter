@@ -1,8 +1,8 @@
 package com.typewritermc.realm
 
+import com.typewritermc.protocol.transport.generated.RealmRouteScope
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.catalog.installTestCatalog
-import com.typewritermc.realm.routes.RealmAddress
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
@@ -35,7 +35,10 @@ val RealmCatalogInvalidationProcessTest by testSuite {
             val process = RealmCatalogInvalidationProcess(catalogs, scope, telemetry.telemetry)
             try {
                 transport.failNextPublish(TransportError.Unavailable())
-                process.replaceCommunicator(communicator, RealmAddress("realm", "organization"))
+                process.replaceCommunicator(
+                    communicator,
+                    RealmRouteScope(organizationId = "organization", realmId = "realm"),
+                )
 
                 val publication =
                     withTimeout(2.seconds) {
@@ -79,11 +82,17 @@ val RealmCatalogInvalidationProcessTest by testSuite {
             catalogs.installTestCatalog("a")
             val process = RealmCatalogInvalidationProcess(catalogs, scope, telemetry.telemetry)
             try {
-                process.replaceCommunicator(communicator, RealmAddress("realm", "organization"))
+                process.replaceCommunicator(
+                    communicator,
+                    RealmRouteScope(organizationId = "organization", realmId = "realm"),
+                )
                 val first = awaitPublicationCount(transport, 1)
                 val firstUpdate = CatalogInvalidated.serializer.fromBytes(first.message.payload.toByteArray())
 
-                process.replaceCommunicator(replacementCommunicator, RealmAddress("realm", "organization"))
+                process.replaceCommunicator(
+                    replacementCommunicator,
+                    RealmRouteScope(organizationId = "organization", realmId = "realm"),
+                )
                 val publication = awaitPublicationCount(replacementTransport, 1)
                 val update = CatalogInvalidated.serializer.fromBytes(publication.message.payload.toByteArray())
 

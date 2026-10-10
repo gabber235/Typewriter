@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 
 part of 'join_codes.dart';
 
@@ -6,7 +6,7 @@ part of 'join_codes.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 /// Owns the panel's live read model of invitation codes for the selected organization.
 ///
@@ -14,8 +14,9 @@ part of 'join_codes.dart';
 /// watches the service for one snapshot followed by sequenced add and remove
 /// changes. Duplicate changes are ignored. A sequence gap invalidates the
 /// provider so the next subscription can recover from a fresh snapshot.
-/// Mutations use this same owner to reconcile successful events and to roll
-/// back an optimistic revoke when the request fails.
+/// [MembershipResourceRepository] owns commands and supplies confirmed facts.
+/// Derived visibility hides expired and pending rows without changing this
+/// authoritative snapshot.
 
 @ProviderFor(OrganizationJoinCodes)
 final organizationJoinCodesProvider = OrganizationJoinCodesProvider._();
@@ -26,8 +27,9 @@ final organizationJoinCodesProvider = OrganizationJoinCodesProvider._();
 /// watches the service for one snapshot followed by sequenced add and remove
 /// changes. Duplicate changes are ignored. A sequence gap invalidates the
 /// provider so the next subscription can recover from a fresh snapshot.
-/// Mutations use this same owner to reconcile successful events and to roll
-/// back an optimistic revoke when the request fails.
+/// [MembershipResourceRepository] owns commands and supplies confirmed facts.
+/// Derived visibility hides expired and pending rows without changing this
+/// authoritative snapshot.
 final class OrganizationJoinCodesProvider
     extends
         $StreamNotifierProvider<
@@ -40,8 +42,9 @@ final class OrganizationJoinCodesProvider
   /// watches the service for one snapshot followed by sequenced add and remove
   /// changes. Duplicate changes are ignored. A sequence gap invalidates the
   /// provider so the next subscription can recover from a fresh snapshot.
-  /// Mutations use this same owner to reconcile successful events and to roll
-  /// back an optimistic revoke when the request fails.
+  /// [MembershipResourceRepository] owns commands and supplies confirmed facts.
+  /// Derived visibility hides expired and pending rows without changing this
+  /// authoritative snapshot.
   OrganizationJoinCodesProvider._()
     : super(
         from: null,
@@ -62,7 +65,7 @@ final class OrganizationJoinCodesProvider
 }
 
 String _$organizationJoinCodesHash() =>
-    r'f2c1933fae226b508fa0146636f7ee8fb7cb2a48';
+    r'06e5e60c9c523bc535d11e502c2a301f2d86b601';
 
 /// Owns the panel's live read model of invitation codes for the selected organization.
 ///
@@ -70,8 +73,9 @@ String _$organizationJoinCodesHash() =>
 /// watches the service for one snapshot followed by sequenced add and remove
 /// changes. Duplicate changes are ignored. A sequence gap invalidates the
 /// provider so the next subscription can recover from a fresh snapshot.
-/// Mutations use this same owner to reconcile successful events and to roll
-/// back an optimistic revoke when the request fails.
+/// [MembershipResourceRepository] owns commands and supplies confirmed facts.
+/// Derived visibility hides expired and pending rows without changing this
+/// authoritative snapshot.
 
 abstract class _$OrganizationJoinCodes
     extends $StreamNotifier<List<OrganizationJoinCode>> {
@@ -104,8 +108,8 @@ abstract class _$OrganizationJoinCodes
 ///
 /// Loading and error states intentionally report zero because this value is a
 /// navigation badge, not an authority for whether generation or revocation is
-/// allowed. Expired codes remain in the projection until the visible countdown
-/// removes them locally or a service change replaces the snapshot.
+/// allowed. Display time filters the authoritative projection without writing
+/// to its sequence state.
 
 @ProviderFor(joinCodeCount)
 final joinCodeCountProvider = JoinCodeCountProvider._();
@@ -114,8 +118,8 @@ final joinCodeCountProvider = JoinCodeCountProvider._();
 ///
 /// Loading and error states intentionally report zero because this value is a
 /// navigation badge, not an authority for whether generation or revocation is
-/// allowed. Expired codes remain in the projection until the visible countdown
-/// removes them locally or a service change replaces the snapshot.
+/// allowed. Display time filters the authoritative projection without writing
+/// to its sequence state.
 
 final class JoinCodeCountProvider extends $FunctionalProvider<int, int, int>
     with $Provider<int> {
@@ -123,8 +127,8 @@ final class JoinCodeCountProvider extends $FunctionalProvider<int, int, int>
   ///
   /// Loading and error states intentionally report zero because this value is a
   /// navigation badge, not an authority for whether generation or revocation is
-  /// allowed. Expired codes remain in the projection until the visible countdown
-  /// removes them locally or a service change replaces the snapshot.
+  /// allowed. Display time filters the authoritative projection without writing
+  /// to its sequence state.
   JoinCodeCountProvider._()
     : super(
         from: null,
@@ -158,4 +162,4 @@ final class JoinCodeCountProvider extends $FunctionalProvider<int, int, int>
   }
 }
 
-String _$joinCodeCountHash() => r'422bf73b9b48b40efcf2dc1e9e2cf897eddbbfbc';
+String _$joinCodeCountHash() => r'3a7646c360801cb33cdf610bf7b7b6e66e50daf0';

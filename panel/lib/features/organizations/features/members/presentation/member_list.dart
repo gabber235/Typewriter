@@ -49,11 +49,13 @@ class MembersTab extends HookConsumerWidget {
           confirmText: "Remove",
           confirmIcon: Fa6Solid.user_minus,
           onConfirm: () async {
-            final members = ref.read(organizationMembersProvider.notifier);
             final succeeded = <skir.RecordId>{};
             for (final id in idsToRemove) {
               try {
-                await members.removeMember(id);
+                await ref.executeMembership(
+                  ref.membershipCommands.remove(id),
+                  (response) => response.requireAccepted(),
+                );
                 succeeded.add(id);
               } on ApiException catch (error) {
                 if (context.mounted) showErrorSnackBar(context, error.message);

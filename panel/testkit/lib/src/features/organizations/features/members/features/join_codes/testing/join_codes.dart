@@ -57,32 +57,6 @@ class OrganizationJoinCodesMock extends OrganizationJoinCodes {
       () => generateRandomJoinCode(availableRoles: availableRoles),
     );
   }
-
-  @override
-  Future<SecretFieldRevealed> generateCode({
-    JoinCodeOptions options = const JoinCodeOptions(),
-  }) async {
-    await Future<void>.delayed(2500.ms);
-    final expiresAt = switch (options.expiration) {
-      JoinCodeExpirationNever() => null,
-      JoinCodeExpirationDuration(:final duration) => DateTime.now().add(
-        duration,
-      ),
-    };
-    return SecretFieldRevealed(
-      value: "Roft9n2cgVEypNBanD23",
-      expiresAt: expiresAt,
-    );
-  }
-
-  @override
-  Future<void> revokeCode(skir.RecordId codeId) async {
-    await Future.delayed(300.ms);
-    final codes = await future;
-
-    final updated = codes.where((c) => c.code != codeId).toList();
-    state = AsyncData(updated);
-  }
 }
 
 List<Override> organizationJoinCodesProviderOverrides({

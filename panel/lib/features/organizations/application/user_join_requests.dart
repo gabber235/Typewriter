@@ -77,26 +77,14 @@ class UserJoinRequests extends _$UserJoinRequests {
     }
 
     final request = skir.WatchUserJoinRequestsRequest();
-    yield* ref.watchProjection<
-      List<UserJoinRequest>,
-      skir.WatchUserJoinRequestsResponse,
-      skir.UserJoinRequestsChanged
-    >(
-      subject: "cloud.to.user.$userId.organization.join_requests.watch",
-      eventSubject: "cloud.from.user.$userId.join_requests.changed",
-      requestBytes: skir.WatchUserJoinRequestsRequest.serializer.toBytes(
-        request,
-      ),
-      responseSerializer: skir.WatchUserJoinRequestsResponse.serializer,
-      eventSerializer: skir.UserJoinRequestsChanged.serializer,
+    yield* request.watch<List<UserJoinRequest>>(
+      ref,
+      userId: userId,
       snapshot: (response) =>
           _userJoinRequestSnapshot(response).values
               .map(UserJoinRequest.fromSkir)
               .toList(),
       reduce: _reduceUserJoinRequests,
-      delivery: const ProjectionDelivery.ordered(
-        stream: "TYPEWRITER_MEMBERSHIP",
-      ),
       reconciliation: ProjectionReconciliation.sequenced(
         snapshotSequence: (response) =>
             _userJoinRequestSnapshot(response).sequence,
@@ -128,9 +116,7 @@ class UserJoinRequests extends _$UserJoinRequests {
     );
 
     final response = await ref.mutateSkir(
-      "cloud.to.user.$userId.organization.join_requests.request",
-      skir.SubmitUserJoinRequestRequest.serializer.toBytes(request),
-      skir.SubmitUserJoinRequestResponse.serializer,
+      request.operation(userId: userId),
       submissionId: request.operationId,
       replay: SubmissionReplay.identicalRequest,
       label: "Request membership",
@@ -207,9 +193,7 @@ class UserJoinRequests extends _$UserJoinRequests {
       );
 
       final response = await ref.mutateSkir(
-        "cloud.to.user.$userId.organization.join_requests.cancel",
-        skir.CancelUserJoinRequestRequest.serializer.toBytes(request),
-        skir.CancelUserJoinRequestResponse.serializer,
+        request.operation(userId: userId),
         submissionId: request.operationId,
         replay: SubmissionReplay.identicalRequest,
         label: "Cancel membership request",

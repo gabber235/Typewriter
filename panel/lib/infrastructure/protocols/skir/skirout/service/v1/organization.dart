@@ -19,9 +19,7 @@ import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 import "../../kernel/v1/record_id.dart" as _lib_kernel_v1_record_id;
 import "./service.dart" as _lib_service_v1_service;
 
-// -----------------------------------------------------------------------------
 // enum ServiceUpdateValidationError
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -117,9 +115,7 @@ enum _ServiceUpdateValidationError_consts
       _skir.internal__stringify(this, ServiceUpdateValidationError.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // enum OrganizationServicesChanged
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -322,9 +318,7 @@ final class OrganizationServicesChanged_removeWrapper
       OrganizationServicesChanged_kind.removeWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct WatchOrganizationServicesRequest
-// -----------------------------------------------------------------------------
 
 sealed class WatchOrganizationServicesRequest_orMutable {
   WatchOrganizationServicesRequest toFrozen();
@@ -348,7 +342,7 @@ final class WatchOrganizationServicesRequest
   static WatchOrganizationServicesRequest_mutable mutable() =>
       WatchOrganizationServicesRequest_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   WatchOrganizationServicesRequest toFrozen() => this;
@@ -411,9 +405,7 @@ final class WatchOrganizationServicesRequest_mutable
       WatchOrganizationServicesRequest().._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum WatchOrganizationServicesResponse
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -572,9 +564,7 @@ final class WatchOrganizationServicesResponse_listWrapper
       WatchOrganizationServicesResponse_kind.listWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct UpdateOrganizationServiceRequest
-// -----------------------------------------------------------------------------
 
 sealed class UpdateOrganizationServiceRequest_orMutable {
   _core.String get operationId;
@@ -635,7 +625,7 @@ final class UpdateOrganizationServiceRequest
         "",
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   UpdateOrganizationServiceRequest toFrozen() => this;
@@ -747,7 +737,7 @@ final class UpdateOrganizationServiceRequest_mutable
     this.name,
   );
 
-  /// If the value of [serviceId] is already mutable, returns it as-is.
+  /// If the value of [serviceId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [serviceId] and returns it.
   _lib_kernel_v1_record_id.RecordId_mutable get mutableServiceId {
     final value = this.serviceId;
@@ -770,9 +760,7 @@ final class UpdateOrganizationServiceRequest_mutable
       ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct UpdateOrganizationServiceResponse.ConflictError
-// -----------------------------------------------------------------------------
 
 sealed class UpdateOrganizationServiceResponse_ConflictError_orMutable {
   _core.int get expectedRevision;
@@ -818,7 +806,7 @@ final class UpdateOrganizationServiceResponse_ConflictError
         _lib_service_v1_service.Service.defaultInstance,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   UpdateOrganizationServiceResponse_ConflictError toFrozen() => this;
@@ -902,7 +890,7 @@ final class UpdateOrganizationServiceResponse_ConflictError_mutable
     this.actual,
   );
 
-  /// If the value of [actual] is already mutable, returns it as-is.
+  /// If the value of [actual] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [actual] and returns it.
   _lib_service_v1_service.Service_mutable get mutableActual {
     final value = this.actual;
@@ -923,9 +911,7 @@ final class UpdateOrganizationServiceResponse_ConflictError_mutable
       ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct UpdateOrganizationServiceResponse.ServiceNotFoundError
-// -----------------------------------------------------------------------------
 
 sealed class UpdateOrganizationServiceResponse_ServiceNotFoundError_orMutable {
   UpdateOrganizationServiceResponse_ServiceNotFoundError toFrozen();
@@ -952,7 +938,7 @@ final class UpdateOrganizationServiceResponse_ServiceNotFoundError
   mutable() =>
       UpdateOrganizationServiceResponse_ServiceNotFoundError_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   UpdateOrganizationServiceResponse_ServiceNotFoundError toFrozen() => this;
@@ -1019,9 +1005,7 @@ final class UpdateOrganizationServiceResponse_ServiceNotFoundError_mutable
       UpdateOrganizationServiceResponse_ServiceNotFoundError().._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct UpdateOrganizationServiceResponse.InvalidOperationIdError
-// -----------------------------------------------------------------------------
 
 sealed class UpdateOrganizationServiceResponse_InvalidOperationIdError_orMutable {
   UpdateOrganizationServiceResponse_InvalidOperationIdError toFrozen();
@@ -1048,7 +1032,7 @@ final class UpdateOrganizationServiceResponse_InvalidOperationIdError
   mutable() =>
       UpdateOrganizationServiceResponse_InvalidOperationIdError_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   UpdateOrganizationServiceResponse_InvalidOperationIdError toFrozen() => this;
@@ -1116,9 +1100,7 @@ final class UpdateOrganizationServiceResponse_InvalidOperationIdError_mutable
       UpdateOrganizationServiceResponse_InvalidOperationIdError().._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct UpdateOrganizationServiceResponse.OperationIdentityReusedError
-// -----------------------------------------------------------------------------
 
 sealed class UpdateOrganizationServiceResponse_OperationIdentityReusedError_orMutable {
   UpdateOrganizationServiceResponse_OperationIdentityReusedError toFrozen();
@@ -1145,7 +1127,7 @@ final class UpdateOrganizationServiceResponse_OperationIdentityReusedError
   mutable() =>
       UpdateOrganizationServiceResponse_OperationIdentityReusedError_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   UpdateOrganizationServiceResponse_OperationIdentityReusedError toFrozen() =>
@@ -1216,9 +1198,7 @@ final class UpdateOrganizationServiceResponse_OperationIdentityReusedError_mutab
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum UpdateOrganizationServiceResponse
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```

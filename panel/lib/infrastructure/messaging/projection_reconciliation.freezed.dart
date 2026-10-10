@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'projection_reconciliation.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -42,7 +42,7 @@ $ProjectionDeliveryCopyWith(ProjectionDelivery _, $Res Function(ProjectionDelive
 }
 
 
-/// Adds pattern-matching-related methods to [ProjectionDelivery].
+/// Adds pattern matching related methods to [ProjectionDelivery].
 extension ProjectionDeliveryPatterns on ProjectionDelivery {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -56,17 +56,17 @@ extension ProjectionDeliveryPatterns on ProjectionDelivery {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( ProjectionDeliveryEphemeral value)?  ephemeral,TResult Function( ProjectionDeliveryOrdered value)?  ordered,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( ProjectionDeliveryEphemeral value)?  ephemeral,TResult Function( ProjectionDeliveryPersistent value)?  persistent,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case ProjectionDeliveryEphemeral() when ephemeral != null:
-return ephemeral(_that);case ProjectionDeliveryOrdered() when ordered != null:
-return ordered(_that);case _:
+return ephemeral(_that);case ProjectionDeliveryPersistent() when persistent != null:
+return persistent(_that);case _:
   return orElse();
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -79,12 +79,12 @@ return ordered(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( ProjectionDeliveryEphemeral value)  ephemeral,required TResult Function( ProjectionDeliveryOrdered value)  ordered,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( ProjectionDeliveryEphemeral value)  ephemeral,required TResult Function( ProjectionDeliveryPersistent value)  persistent,}){
 final _that = this;
 switch (_that) {
 case ProjectionDeliveryEphemeral():
-return ephemeral(_that);case ProjectionDeliveryOrdered():
-return ordered(_that);}
+return ephemeral(_that);case ProjectionDeliveryPersistent():
+return persistent(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -98,12 +98,12 @@ return ordered(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( ProjectionDeliveryEphemeral value)?  ephemeral,TResult? Function( ProjectionDeliveryOrdered value)?  ordered,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( ProjectionDeliveryEphemeral value)?  ephemeral,TResult? Function( ProjectionDeliveryPersistent value)?  persistent,}){
 final _that = this;
 switch (_that) {
 case ProjectionDeliveryEphemeral() when ephemeral != null:
-return ephemeral(_that);case ProjectionDeliveryOrdered() when ordered != null:
-return ordered(_that);case _:
+return ephemeral(_that);case ProjectionDeliveryPersistent() when persistent != null:
+return persistent(_that);case _:
   return null;
 
 }
@@ -120,16 +120,16 @@ return ordered(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  ephemeral,TResult Function( String stream)?  ordered,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  ephemeral,TResult Function( String stream,  String consumer)?  persistent,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case ProjectionDeliveryEphemeral() when ephemeral != null:
-return ephemeral();case ProjectionDeliveryOrdered() when ordered != null:
-return ordered(_that.stream);case _:
+return ephemeral();case ProjectionDeliveryPersistent() when persistent != null:
+return persistent(_that.stream,_that.consumer);case _:
   return orElse();
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -142,11 +142,11 @@ return ordered(_that.stream);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  ephemeral,required TResult Function( String stream)  ordered,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  ephemeral,required TResult Function( String stream,  String consumer)  persistent,}) {final _that = this;
 switch (_that) {
 case ProjectionDeliveryEphemeral():
-return ephemeral();case ProjectionDeliveryOrdered():
-return ordered(_that.stream);}
+return ephemeral();case ProjectionDeliveryPersistent():
+return persistent(_that.stream,_that.consumer);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -160,11 +160,11 @@ return ordered(_that.stream);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  ephemeral,TResult? Function( String stream)?  ordered,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  ephemeral,TResult? Function( String stream,  String consumer)?  persistent,}) {final _that = this;
 switch (_that) {
 case ProjectionDeliveryEphemeral() when ephemeral != null:
-return ephemeral();case ProjectionDeliveryOrdered() when ordered != null:
-return ordered(_that.stream);case _:
+return ephemeral();case ProjectionDeliveryPersistent() when persistent != null:
+return persistent(_that.stream,_that.consumer);case _:
   return null;
 
 }
@@ -207,45 +207,46 @@ String toString() {
 /// @nodoc
 
 
-class ProjectionDeliveryOrdered implements ProjectionDelivery {
-  const ProjectionDeliveryOrdered({required this.stream});
+class ProjectionDeliveryPersistent implements ProjectionDelivery {
+  const ProjectionDeliveryPersistent({required this.stream, required this.consumer});
 
 
  final  String stream;
+ final  String consumer;
 
 /// Create a copy of ProjectionDelivery
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-$ProjectionDeliveryOrderedCopyWith<ProjectionDeliveryOrdered> get copyWith => _$ProjectionDeliveryOrderedCopyWithImpl<ProjectionDeliveryOrdered>(this, _$identity);
+$ProjectionDeliveryPersistentCopyWith<ProjectionDeliveryPersistent> get copyWith => _$ProjectionDeliveryPersistentCopyWithImpl<ProjectionDeliveryPersistent>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is ProjectionDeliveryOrdered&&(identical(other.stream, stream) || other.stream == stream));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is ProjectionDeliveryPersistent&&(identical(other.stream, stream) || other.stream == stream)&&(identical(other.consumer, consumer) || other.consumer == consumer));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,stream);
+    return Object.hash(runtimeType,stream,consumer);
 }
 
 @override
 String toString() {
-    return 'ProjectionDelivery.ordered(stream: $stream)';
+    return 'ProjectionDelivery.persistent(stream: $stream, consumer: $consumer)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class $ProjectionDeliveryOrderedCopyWith<$Res> implements $ProjectionDeliveryCopyWith<$Res> {
-  factory $ProjectionDeliveryOrderedCopyWith(ProjectionDeliveryOrdered value, $Res Function(ProjectionDeliveryOrdered) _then) = _$ProjectionDeliveryOrderedCopyWithImpl;
+abstract mixin class $ProjectionDeliveryPersistentCopyWith<$Res> implements $ProjectionDeliveryCopyWith<$Res> {
+  factory $ProjectionDeliveryPersistentCopyWith(ProjectionDeliveryPersistent value, $Res Function(ProjectionDeliveryPersistent) _then) = _$ProjectionDeliveryPersistentCopyWithImpl;
 @useResult
 $Res call({
- String stream
+ String stream, String consumer
 });
 
 
@@ -253,18 +254,19 @@ $Res call({
 
 }
 /// @nodoc
-class _$ProjectionDeliveryOrderedCopyWithImpl<$Res>
-    implements $ProjectionDeliveryOrderedCopyWith<$Res> {
-  _$ProjectionDeliveryOrderedCopyWithImpl(this._self, this._then);
+class _$ProjectionDeliveryPersistentCopyWithImpl<$Res>
+    implements $ProjectionDeliveryPersistentCopyWith<$Res> {
+  _$ProjectionDeliveryPersistentCopyWithImpl(this._self, this._then);
 
-  final ProjectionDeliveryOrdered _self;
-  final $Res Function(ProjectionDeliveryOrdered) _then;
+  final ProjectionDeliveryPersistent _self;
+  final $Res Function(ProjectionDeliveryPersistent) _then;
 
 /// Create a copy of ProjectionDelivery
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? stream = null,}) {
-  return _then(ProjectionDeliveryOrdered(
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? stream = null,Object? consumer = null,}) {
+  return _then(ProjectionDeliveryPersistent(
 stream: null == stream ? _self.stream : stream // ignore: cast_nullable_to_non_nullable
+as String,consumer: null == consumer ? _self.consumer : consumer // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }
@@ -302,7 +304,7 @@ $ProjectionReconciliationCopyWith(ProjectionReconciliation<TData, TResponse, TEv
 }
 
 
-/// Adds pattern-matching-related methods to [ProjectionReconciliation].
+/// Adds pattern matching related methods to [ProjectionReconciliation].
 extension ProjectionReconciliationPatterns<TData,TResponse,TEvent> on ProjectionReconciliation<TData, TResponse, TEvent> {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -326,7 +328,7 @@ return sequenced(_that);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -389,7 +391,7 @@ return sequenced(_that.snapshotSequence,_that.eventSequence,_that.sequenceState)
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -476,7 +478,7 @@ class ProjectionSequenced<TData,TResponse,TEvent> implements ProjectionReconcili
  final  SequencedCollection<TData> sequenceState;
 
 /// Create a copy of ProjectionReconciliation
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ProjectionSequencedCopyWith<TData, TResponse, TEvent, ProjectionSequenced<TData, TResponse, TEvent>> get copyWith => _$ProjectionSequencedCopyWithImpl<TData, TResponse, TEvent, ProjectionSequenced<TData, TResponse, TEvent>>(this, _$identity);
@@ -523,7 +525,7 @@ class _$ProjectionSequencedCopyWithImpl<TData,TResponse,TEvent,$Res>
   final $Res Function(ProjectionSequenced<TData, TResponse, TEvent>) _then;
 
 /// Create a copy of ProjectionReconciliation
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? snapshotSequence = null,Object? eventSequence = null,Object? sequenceState = null,}) {
   return _then(ProjectionSequenced<TData, TResponse, TEvent>(
 snapshotSequence: null == snapshotSequence ? _self.snapshotSequence : snapshotSequence // ignore: cast_nullable_to_non_nullable

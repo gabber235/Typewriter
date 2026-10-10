@@ -26,23 +26,25 @@ pub struct InvocationId {
 
 impl InvocationId {
     pub fn default_ref() -> &'static InvocationId {
-        static D: std::sync::LazyLock<InvocationId> = std::sync::LazyLock::new(InvocationId::default);
+        static D: std::sync::LazyLock<InvocationId> =
+            std::sync::LazyLock::new(InvocationId::default);
         &D
     }
 }
 
 impl InvocationId {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<InvocationId> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<InvocationId>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/capability.skir",
-                    "InvocationId",
-                    "",
-                    |x: &InvocationId| &x._unrecognized,
-                    |x: &mut InvocationId, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<InvocationId>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/capability.skir",
+                "InvocationId",
+                "",
+                |x: &InvocationId| &x._unrecognized,
+                |x: &mut InvocationId, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<InvocationId> {
@@ -66,28 +68,33 @@ pub struct SearchCapabilityDefinition {
 
 impl SearchCapabilityDefinition {
     pub fn default_ref() -> &'static SearchCapabilityDefinition {
-        static D: std::sync::LazyLock<SearchCapabilityDefinition> = std::sync::LazyLock::new(SearchCapabilityDefinition::default);
+        static D: std::sync::LazyLock<SearchCapabilityDefinition> =
+            std::sync::LazyLock::new(SearchCapabilityDefinition::default);
         &D
     }
 }
 
 impl SearchCapabilityDefinition {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<SearchCapabilityDefinition> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<SearchCapabilityDefinition>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/capability.skir",
-                    "SearchCapabilityDefinition",
-                    "",
-                    |x: &SearchCapabilityDefinition| &x._unrecognized,
-                    |x: &mut SearchCapabilityDefinition, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<SearchCapabilityDefinition>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<SearchCapabilityDefinition>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/capability.skir",
+                "SearchCapabilityDefinition",
+                "",
+                |x: &SearchCapabilityDefinition| &x._unrecognized,
+                |x: &mut SearchCapabilityDefinition, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<SearchCapabilityDefinition> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(SearchCapabilityDefinition::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            SearchCapabilityDefinition::_adapter(),
+        )
     }
 }
 
@@ -101,33 +108,39 @@ pub struct ComputationCapabilityDefinition {
     pub request_type: crate::skirout::base::editor::v1::type_catalog::TypeUse,
     pub result_type: crate::skirout::base::editor::v1::type_catalog::TypeUse,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ComputationCapabilityDefinition>>,
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<ComputationCapabilityDefinition>>,
 }
 
 impl ComputationCapabilityDefinition {
     pub fn default_ref() -> &'static ComputationCapabilityDefinition {
-        static D: std::sync::LazyLock<ComputationCapabilityDefinition> = std::sync::LazyLock::new(ComputationCapabilityDefinition::default);
+        static D: std::sync::LazyLock<ComputationCapabilityDefinition> =
+            std::sync::LazyLock::new(ComputationCapabilityDefinition::default);
         &D
     }
 }
 
 impl ComputationCapabilityDefinition {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ComputationCapabilityDefinition> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ComputationCapabilityDefinition>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/capability.skir",
-                    "ComputationCapabilityDefinition",
-                    "",
-                    |x: &ComputationCapabilityDefinition| &x._unrecognized,
-                    |x: &mut ComputationCapabilityDefinition, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<ComputationCapabilityDefinition> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ComputationCapabilityDefinition>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/capability.skir",
+                "ComputationCapabilityDefinition",
+                "",
+                |x: &ComputationCapabilityDefinition| &x._unrecognized,
+                |x: &mut ComputationCapabilityDefinition, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ComputationCapabilityDefinition> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ComputationCapabilityDefinition::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            ComputationCapabilityDefinition::_adapter(),
+        )
     }
 }
 
@@ -145,28 +158,33 @@ pub struct CommandCapabilityDefinition {
 
 impl CommandCapabilityDefinition {
     pub fn default_ref() -> &'static CommandCapabilityDefinition {
-        static D: std::sync::LazyLock<CommandCapabilityDefinition> = std::sync::LazyLock::new(CommandCapabilityDefinition::default);
+        static D: std::sync::LazyLock<CommandCapabilityDefinition> =
+            std::sync::LazyLock::new(CommandCapabilityDefinition::default);
         &D
     }
 }
 
 impl CommandCapabilityDefinition {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CommandCapabilityDefinition> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<CommandCapabilityDefinition>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/capability.skir",
-                    "CommandCapabilityDefinition",
-                    "",
-                    |x: &CommandCapabilityDefinition| &x._unrecognized,
-                    |x: &mut CommandCapabilityDefinition, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<CommandCapabilityDefinition> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<CommandCapabilityDefinition>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/capability.skir",
+                "CommandCapabilityDefinition",
+                "",
+                |x: &CommandCapabilityDefinition| &x._unrecognized,
+                |x: &mut CommandCapabilityDefinition, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<CommandCapabilityDefinition> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(CommandCapabilityDefinition::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            CommandCapabilityDefinition::_adapter(),
+        )
     }
 }
 
@@ -190,22 +208,26 @@ impl Default for CapabilityDefinition {
 
 impl CapabilityDefinition {
     fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<CapabilityDefinition> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<CapabilityDefinition>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &CapabilityDefinition| match x {
-                        CapabilityDefinition::Unknown(_) => 0,
-                        CapabilityDefinition::Search(_) => 1,
-                        CapabilityDefinition::Computation(_) => 2,
-                        CapabilityDefinition::Command(_) => 3,
-                    },
-                    |u| CapabilityDefinition::Unknown(Some(u)),
-                    |x: &CapabilityDefinition| match x { CapabilityDefinition::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "editor/v1/capability.skir",
-                    "CapabilityDefinition",
-                    "",
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<CapabilityDefinition>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &CapabilityDefinition| match x {
+                    CapabilityDefinition::Unknown(_) => 0,
+                    CapabilityDefinition::Search(_) => 1,
+                    CapabilityDefinition::Computation(_) => 2,
+                    CapabilityDefinition::Command(_) => 3,
+                },
+                |u| CapabilityDefinition::Unknown(Some(u)),
+                |x: &CapabilityDefinition| match x {
+                    CapabilityDefinition::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/capability.skir",
+                "CapabilityDefinition",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<CapabilityDefinition> {
@@ -228,23 +250,25 @@ pub struct ResourceAddress {
 
 impl ResourceAddress {
     pub fn default_ref() -> &'static ResourceAddress {
-        static D: std::sync::LazyLock<ResourceAddress> = std::sync::LazyLock::new(ResourceAddress::default);
+        static D: std::sync::LazyLock<ResourceAddress> =
+            std::sync::LazyLock::new(ResourceAddress::default);
         &D
     }
 }
 
 impl ResourceAddress {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ResourceAddress> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ResourceAddress>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/capability.skir",
-                    "ResourceAddress",
-                    "",
-                    |x: &ResourceAddress| &x._unrecognized,
-                    |x: &mut ResourceAddress, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ResourceAddress>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/capability.skir",
+                "ResourceAddress",
+                "",
+                |x: &ResourceAddress| &x._unrecognized,
+                |x: &mut ResourceAddress, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ResourceAddress> {
@@ -261,33 +285,39 @@ impl ResourceAddress {
 pub struct InvalidateResourceInstruction {
     pub resource: ResourceAddress,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<InvalidateResourceInstruction>>,
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<InvalidateResourceInstruction>>,
 }
 
 impl InvalidateResourceInstruction {
     pub fn default_ref() -> &'static InvalidateResourceInstruction {
-        static D: std::sync::LazyLock<InvalidateResourceInstruction> = std::sync::LazyLock::new(InvalidateResourceInstruction::default);
+        static D: std::sync::LazyLock<InvalidateResourceInstruction> =
+            std::sync::LazyLock::new(InvalidateResourceInstruction::default);
         &D
     }
 }
 
 impl InvalidateResourceInstruction {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<InvalidateResourceInstruction> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<InvalidateResourceInstruction>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/capability.skir",
-                    "InvalidateResourceInstruction",
-                    "",
-                    |x: &InvalidateResourceInstruction| &x._unrecognized,
-                    |x: &mut InvalidateResourceInstruction, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<InvalidateResourceInstruction> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<InvalidateResourceInstruction>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/capability.skir",
+                "InvalidateResourceInstruction",
+                "",
+                |x: &InvalidateResourceInstruction| &x._unrecognized,
+                |x: &mut InvalidateResourceInstruction, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<InvalidateResourceInstruction> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(InvalidateResourceInstruction::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            InvalidateResourceInstruction::_adapter(),
+        )
     }
 }
 
@@ -304,28 +334,32 @@ pub struct OpenResourceInstruction {
 
 impl OpenResourceInstruction {
     pub fn default_ref() -> &'static OpenResourceInstruction {
-        static D: std::sync::LazyLock<OpenResourceInstruction> = std::sync::LazyLock::new(OpenResourceInstruction::default);
+        static D: std::sync::LazyLock<OpenResourceInstruction> =
+            std::sync::LazyLock::new(OpenResourceInstruction::default);
         &D
     }
 }
 
 impl OpenResourceInstruction {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<OpenResourceInstruction> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<OpenResourceInstruction>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/capability.skir",
-                    "OpenResourceInstruction",
-                    "",
-                    |x: &OpenResourceInstruction| &x._unrecognized,
-                    |x: &mut OpenResourceInstruction, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<OpenResourceInstruction>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/capability.skir",
+                "OpenResourceInstruction",
+                "",
+                |x: &OpenResourceInstruction| &x._unrecognized,
+                |x: &mut OpenResourceInstruction, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<OpenResourceInstruction> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(OpenResourceInstruction::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            OpenResourceInstruction::_adapter(),
+        )
     }
 }
 
@@ -350,23 +384,27 @@ impl Default for NotificationSeverity {
 
 impl NotificationSeverity {
     fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<NotificationSeverity> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<NotificationSeverity>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &NotificationSeverity| match x {
-                        NotificationSeverity::Unknown(_) => 0,
-                        NotificationSeverity::Info => 1,
-                        NotificationSeverity::Success => 2,
-                        NotificationSeverity::Warning => 3,
-                        NotificationSeverity::Error => 4,
-                    },
-                    |u| NotificationSeverity::Unknown(Some(u)),
-                    |x: &NotificationSeverity| match x { NotificationSeverity::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "editor/v1/capability.skir",
-                    "NotificationSeverity",
-                    "",
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<NotificationSeverity>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &NotificationSeverity| match x {
+                    NotificationSeverity::Unknown(_) => 0,
+                    NotificationSeverity::Info => 1,
+                    NotificationSeverity::Success => 2,
+                    NotificationSeverity::Warning => 3,
+                    NotificationSeverity::Error => 4,
+                },
+                |u| NotificationSeverity::Unknown(Some(u)),
+                |x: &NotificationSeverity| match x {
+                    NotificationSeverity::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/capability.skir",
+                "NotificationSeverity",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<NotificationSeverity> {
@@ -389,23 +427,25 @@ pub struct NotifyInstruction {
 
 impl NotifyInstruction {
     pub fn default_ref() -> &'static NotifyInstruction {
-        static D: std::sync::LazyLock<NotifyInstruction> = std::sync::LazyLock::new(NotifyInstruction::default);
+        static D: std::sync::LazyLock<NotifyInstruction> =
+            std::sync::LazyLock::new(NotifyInstruction::default);
         &D
     }
 }
 
 impl NotifyInstruction {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<NotifyInstruction> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<NotifyInstruction>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/capability.skir",
-                    "NotifyInstruction",
-                    "",
-                    |x: &NotifyInstruction| &x._unrecognized,
-                    |x: &mut NotifyInstruction, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<NotifyInstruction>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/capability.skir",
+                "NotifyInstruction",
+                "",
+                |x: &NotifyInstruction| &x._unrecognized,
+                |x: &mut NotifyInstruction, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<NotifyInstruction> {
@@ -434,22 +474,26 @@ impl Default for PanelInstruction {
 
 impl PanelInstruction {
     fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PanelInstruction> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<PanelInstruction>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &PanelInstruction| match x {
-                        PanelInstruction::Unknown(_) => 0,
-                        PanelInstruction::InvalidateResource(_) => 1,
-                        PanelInstruction::OpenResource(_) => 2,
-                        PanelInstruction::Notify(_) => 3,
-                    },
-                    |u| PanelInstruction::Unknown(Some(u)),
-                    |x: &PanelInstruction| match x { PanelInstruction::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "editor/v1/capability.skir",
-                    "PanelInstruction",
-                    "",
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<PanelInstruction>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &PanelInstruction| match x {
+                    PanelInstruction::Unknown(_) => 0,
+                    PanelInstruction::InvalidateResource(_) => 1,
+                    PanelInstruction::OpenResource(_) => 2,
+                    PanelInstruction::Notify(_) => 3,
+                },
+                |u| PanelInstruction::Unknown(Some(u)),
+                |x: &PanelInstruction| match x {
+                    PanelInstruction::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/capability.skir",
+                "PanelInstruction",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<PanelInstruction> {
@@ -475,28 +519,33 @@ pub struct CapabilityInvocationRequest {
 
 impl CapabilityInvocationRequest {
     pub fn default_ref() -> &'static CapabilityInvocationRequest {
-        static D: std::sync::LazyLock<CapabilityInvocationRequest> = std::sync::LazyLock::new(CapabilityInvocationRequest::default);
+        static D: std::sync::LazyLock<CapabilityInvocationRequest> =
+            std::sync::LazyLock::new(CapabilityInvocationRequest::default);
         &D
     }
 }
 
 impl CapabilityInvocationRequest {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CapabilityInvocationRequest> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<CapabilityInvocationRequest>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/capability.skir",
-                    "CapabilityInvocationRequest",
-                    "",
-                    |x: &CapabilityInvocationRequest| &x._unrecognized,
-                    |x: &mut CapabilityInvocationRequest, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<CapabilityInvocationRequest> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<CapabilityInvocationRequest>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/capability.skir",
+                "CapabilityInvocationRequest",
+                "",
+                |x: &CapabilityInvocationRequest| &x._unrecognized,
+                |x: &mut CapabilityInvocationRequest, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<CapabilityInvocationRequest> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(CapabilityInvocationRequest::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            CapabilityInvocationRequest::_adapter(),
+        )
     }
 }
 
@@ -514,23 +563,25 @@ pub struct ComputationSuccess {
 
 impl ComputationSuccess {
     pub fn default_ref() -> &'static ComputationSuccess {
-        static D: std::sync::LazyLock<ComputationSuccess> = std::sync::LazyLock::new(ComputationSuccess::default);
+        static D: std::sync::LazyLock<ComputationSuccess> =
+            std::sync::LazyLock::new(ComputationSuccess::default);
         &D
     }
 }
 
 impl ComputationSuccess {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ComputationSuccess> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ComputationSuccess>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/capability.skir",
-                    "ComputationSuccess",
-                    "",
-                    |x: &ComputationSuccess| &x._unrecognized,
-                    |x: &mut ComputationSuccess, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ComputationSuccess>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/capability.skir",
+                "ComputationSuccess",
+                "",
+                |x: &ComputationSuccess| &x._unrecognized,
+                |x: &mut ComputationSuccess, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ComputationSuccess> {
@@ -553,23 +604,25 @@ pub struct CommandSuccess {
 
 impl CommandSuccess {
     pub fn default_ref() -> &'static CommandSuccess {
-        static D: std::sync::LazyLock<CommandSuccess> = std::sync::LazyLock::new(CommandSuccess::default);
+        static D: std::sync::LazyLock<CommandSuccess> =
+            std::sync::LazyLock::new(CommandSuccess::default);
         &D
     }
 }
 
 impl CommandSuccess {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CommandSuccess> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<CommandSuccess>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/capability.skir",
-                    "CommandSuccess",
-                    "",
-                    |x: &CommandSuccess| &x._unrecognized,
-                    |x: &mut CommandSuccess, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<CommandSuccess>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/capability.skir",
+                "CommandSuccess",
+                "",
+                |x: &CommandSuccess| &x._unrecognized,
+                |x: &mut CommandSuccess, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<CommandSuccess> {
@@ -592,28 +645,33 @@ pub struct CapabilityPermissionDenied {
 
 impl CapabilityPermissionDenied {
     pub fn default_ref() -> &'static CapabilityPermissionDenied {
-        static D: std::sync::LazyLock<CapabilityPermissionDenied> = std::sync::LazyLock::new(CapabilityPermissionDenied::default);
+        static D: std::sync::LazyLock<CapabilityPermissionDenied> =
+            std::sync::LazyLock::new(CapabilityPermissionDenied::default);
         &D
     }
 }
 
 impl CapabilityPermissionDenied {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CapabilityPermissionDenied> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<CapabilityPermissionDenied>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/capability.skir",
-                    "CapabilityPermissionDenied",
-                    "",
-                    |x: &CapabilityPermissionDenied| &x._unrecognized,
-                    |x: &mut CapabilityPermissionDenied, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CapabilityPermissionDenied>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<CapabilityPermissionDenied>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/capability.skir",
+                "CapabilityPermissionDenied",
+                "",
+                |x: &CapabilityPermissionDenied| &x._unrecognized,
+                |x: &mut CapabilityPermissionDenied, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<CapabilityPermissionDenied> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(CapabilityPermissionDenied::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            CapabilityPermissionDenied::_adapter(),
+        )
     }
 }
 
@@ -631,28 +689,32 @@ pub struct StaleCatalogGeneration {
 
 impl StaleCatalogGeneration {
     pub fn default_ref() -> &'static StaleCatalogGeneration {
-        static D: std::sync::LazyLock<StaleCatalogGeneration> = std::sync::LazyLock::new(StaleCatalogGeneration::default);
+        static D: std::sync::LazyLock<StaleCatalogGeneration> =
+            std::sync::LazyLock::new(StaleCatalogGeneration::default);
         &D
     }
 }
 
 impl StaleCatalogGeneration {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<StaleCatalogGeneration> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<StaleCatalogGeneration>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/capability.skir",
-                    "StaleCatalogGeneration",
-                    "",
-                    |x: &StaleCatalogGeneration| &x._unrecognized,
-                    |x: &mut StaleCatalogGeneration, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<StaleCatalogGeneration>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/capability.skir",
+                "StaleCatalogGeneration",
+                "",
+                |x: &StaleCatalogGeneration| &x._unrecognized,
+                |x: &mut StaleCatalogGeneration, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<StaleCatalogGeneration> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(StaleCatalogGeneration::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            StaleCatalogGeneration::_adapter(),
+        )
     }
 }
 
@@ -670,23 +732,25 @@ pub struct CapabilityFailure {
 
 impl CapabilityFailure {
     pub fn default_ref() -> &'static CapabilityFailure {
-        static D: std::sync::LazyLock<CapabilityFailure> = std::sync::LazyLock::new(CapabilityFailure::default);
+        static D: std::sync::LazyLock<CapabilityFailure> =
+            std::sync::LazyLock::new(CapabilityFailure::default);
         &D
     }
 }
 
 impl CapabilityFailure {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CapabilityFailure> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<CapabilityFailure>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/capability.skir",
-                    "CapabilityFailure",
-                    "",
-                    |x: &CapabilityFailure| &x._unrecognized,
-                    |x: &mut CapabilityFailure, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<CapabilityFailure>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/capability.skir",
+                "CapabilityFailure",
+                "",
+                |x: &CapabilityFailure| &x._unrecognized,
+                |x: &mut CapabilityFailure, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<CapabilityFailure> {
@@ -717,24 +781,28 @@ impl Default for ComputationResult {
 
 impl ComputationResult {
     fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ComputationResult> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<ComputationResult>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &ComputationResult| match x {
-                        ComputationResult::Unknown(_) => 0,
-                        ComputationResult::Success(_) => 1,
-                        ComputationResult::Invalid(_) => 2,
-                        ComputationResult::Unavailable(_) => 3,
-                        ComputationResult::PermissionDenied(_) => 4,
-                        ComputationResult::StaleGeneration(_) => 5,
-                    },
-                    |u| ComputationResult::Unknown(Some(u)),
-                    |x: &ComputationResult| match x { ComputationResult::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "editor/v1/capability.skir",
-                    "ComputationResult",
-                    "",
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<ComputationResult>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &ComputationResult| match x {
+                    ComputationResult::Unknown(_) => 0,
+                    ComputationResult::Success(_) => 1,
+                    ComputationResult::Invalid(_) => 2,
+                    ComputationResult::Unavailable(_) => 3,
+                    ComputationResult::PermissionDenied(_) => 4,
+                    ComputationResult::StaleGeneration(_) => 5,
+                },
+                |u| ComputationResult::Unknown(Some(u)),
+                |x: &ComputationResult| match x {
+                    ComputationResult::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/capability.skir",
+                "ComputationResult",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ComputationResult> {
@@ -765,24 +833,28 @@ impl Default for CommandResult {
 
 impl CommandResult {
     fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<CommandResult> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<CommandResult>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &CommandResult| match x {
-                        CommandResult::Unknown(_) => 0,
-                        CommandResult::Success(_) => 1,
-                        CommandResult::Invalid(_) => 2,
-                        CommandResult::Unavailable(_) => 3,
-                        CommandResult::PermissionDenied(_) => 4,
-                        CommandResult::StaleGeneration(_) => 5,
-                    },
-                    |u| CommandResult::Unknown(Some(u)),
-                    |x: &CommandResult| match x { CommandResult::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "editor/v1/capability.skir",
-                    "CommandResult",
-                    "",
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<CommandResult>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &CommandResult| match x {
+                    CommandResult::Unknown(_) => 0,
+                    CommandResult::Success(_) => 1,
+                    CommandResult::Invalid(_) => 2,
+                    CommandResult::Unavailable(_) => 3,
+                    CommandResult::PermissionDenied(_) => 4,
+                    CommandResult::StaleGeneration(_) => 5,
+                },
+                |u| CommandResult::Unknown(Some(u)),
+                |x: &CommandResult| match x {
+                    CommandResult::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/capability.skir",
+                "CommandResult",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<CommandResult> {
@@ -796,135 +868,598 @@ impl CommandResult {
 // ==============================================================================
 
 fn initialize_module_serializers() {
-    static INIT: std::sync::LazyLock<()> =
-        std::sync::LazyLock::new(|| {
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<InvocationId> = InvocationId::_adapter() as *const _ as *mut _;
-                (*a).add_field("value", 0, crate::skir_client::Serializer::string(), "", |x: &InvocationId| &x.value, |x: &mut InvocationId, v| x.value = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<SearchCapabilityDefinition> = SearchCapabilityDefinition::_adapter() as *const _ as *mut _;
-                (*a).add_field("capability_id", 0, crate::skirout::base::editor::v1::type_catalog::CapabilityId::serializer(), "", |x: &SearchCapabilityDefinition| &x.capability_id, |x: &mut SearchCapabilityDefinition, v| x.capability_id = v);
-                (*a).add_field("request_type", 1, crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(), "", |x: &SearchCapabilityDefinition| &x.request_type, |x: &mut SearchCapabilityDefinition, v| x.request_type = v);
-                (*a).add_field("result_type", 2, crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(), "", |x: &SearchCapabilityDefinition| &x.result_type, |x: &mut SearchCapabilityDefinition, v| x.result_type = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ComputationCapabilityDefinition> = ComputationCapabilityDefinition::_adapter() as *const _ as *mut _;
-                (*a).add_field("capability_id", 0, crate::skirout::base::editor::v1::type_catalog::CapabilityId::serializer(), "", |x: &ComputationCapabilityDefinition| &x.capability_id, |x: &mut ComputationCapabilityDefinition, v| x.capability_id = v);
-                (*a).add_field("request_type", 1, crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(), "", |x: &ComputationCapabilityDefinition| &x.request_type, |x: &mut ComputationCapabilityDefinition, v| x.request_type = v);
-                (*a).add_field("result_type", 2, crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(), "", |x: &ComputationCapabilityDefinition| &x.result_type, |x: &mut ComputationCapabilityDefinition, v| x.result_type = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<CommandCapabilityDefinition> = CommandCapabilityDefinition::_adapter() as *const _ as *mut _;
-                (*a).add_field("capability_id", 0, crate::skirout::base::editor::v1::type_catalog::CapabilityId::serializer(), "", |x: &CommandCapabilityDefinition| &x.capability_id, |x: &mut CommandCapabilityDefinition, v| x.capability_id = v);
-                (*a).add_field("request_type", 1, crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(), "", |x: &CommandCapabilityDefinition| &x.request_type, |x: &mut CommandCapabilityDefinition, v| x.request_type = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<CapabilityDefinition> = CapabilityDefinition::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("search", 1, 1, crate::skir_client::internal::struct_serializer_from_static(SearchCapabilityDefinition::_adapter()), "", |v| CapabilityDefinition::Search(Box::new(v)), |x| match x { CapabilityDefinition::Search(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("computation", 2, 2, crate::skir_client::internal::struct_serializer_from_static(ComputationCapabilityDefinition::_adapter()), "", |v| CapabilityDefinition::Computation(Box::new(v)), |x| match x { CapabilityDefinition::Computation(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("command", 3, 3, crate::skir_client::internal::struct_serializer_from_static(CommandCapabilityDefinition::_adapter()), "", |v| CapabilityDefinition::Command(Box::new(v)), |x| match x { CapabilityDefinition::Command(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ResourceAddress> = ResourceAddress::_adapter() as *const _ as *mut _;
-                (*a).add_field("resource_type", 0, crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(), "", |x: &ResourceAddress| &x.resource_type, |x: &mut ResourceAddress, v| x.resource_type = v);
-                (*a).add_field("identity", 1, crate::skirout::base::editor::v1::type_catalog::DataValue::serializer(), "", |x: &ResourceAddress| &x.identity, |x: &mut ResourceAddress, v| x.identity = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<InvalidateResourceInstruction> = InvalidateResourceInstruction::_adapter() as *const _ as *mut _;
-                (*a).add_field("resource", 0, crate::skir_client::internal::struct_serializer_from_static(ResourceAddress::_adapter()), "", |x: &InvalidateResourceInstruction| &x.resource, |x: &mut InvalidateResourceInstruction, v| x.resource = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<OpenResourceInstruction> = OpenResourceInstruction::_adapter() as *const _ as *mut _;
-                (*a).add_field("resource", 0, crate::skir_client::internal::struct_serializer_from_static(ResourceAddress::_adapter()), "", |x: &OpenResourceInstruction| &x.resource, |x: &mut OpenResourceInstruction, v| x.resource = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<NotificationSeverity> = NotificationSeverity::_adapter() as *const _ as *mut _;
-                (*a).add_constant_variant("info", 1, 1, "", NotificationSeverity::Info);
-                (*a).add_constant_variant("success", 2, 2, "", NotificationSeverity::Success);
-                (*a).add_constant_variant("warning", 3, 3, "", NotificationSeverity::Warning);
-                (*a).add_constant_variant("error", 4, 4, "", NotificationSeverity::Error);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<NotifyInstruction> = NotifyInstruction::_adapter() as *const _ as *mut _;
-                (*a).add_field("severity", 0, crate::skir_client::internal::enum_serializer_from_static(NotificationSeverity::_adapter()), "", |x: &NotifyInstruction| &x.severity, |x: &mut NotifyInstruction, v| x.severity = v);
-                (*a).add_field("message", 1, crate::skir_client::Serializer::string(), "", |x: &NotifyInstruction| &x.message, |x: &mut NotifyInstruction, v| x.message = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<PanelInstruction> = PanelInstruction::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("invalidate_resource", 1, 1, crate::skir_client::internal::struct_serializer_from_static(InvalidateResourceInstruction::_adapter()), "", |v| PanelInstruction::InvalidateResource(Box::new(v)), |x| match x { PanelInstruction::InvalidateResource(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("open_resource", 2, 2, crate::skir_client::internal::struct_serializer_from_static(OpenResourceInstruction::_adapter()), "", |v| PanelInstruction::OpenResource(Box::new(v)), |x| match x { PanelInstruction::OpenResource(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("notify", 3, 3, crate::skir_client::internal::struct_serializer_from_static(NotifyInstruction::_adapter()), "", |v| PanelInstruction::Notify(Box::new(v)), |x| match x { PanelInstruction::Notify(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<CapabilityInvocationRequest> = CapabilityInvocationRequest::_adapter() as *const _ as *mut _;
-                (*a).add_field("invocation_id", 0, crate::skir_client::internal::struct_serializer_from_static(InvocationId::_adapter()), "", |x: &CapabilityInvocationRequest| &x.invocation_id, |x: &mut CapabilityInvocationRequest, v| x.invocation_id = v);
-                (*a).add_field("generation", 1, crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(), "", |x: &CapabilityInvocationRequest| &x.generation, |x: &mut CapabilityInvocationRequest, v| x.generation = v);
-                (*a).add_field("capability_id", 2, crate::skirout::base::editor::v1::type_catalog::CapabilityId::serializer(), "", |x: &CapabilityInvocationRequest| &x.capability_id, |x: &mut CapabilityInvocationRequest, v| x.capability_id = v);
-                (*a).add_field("payload", 3, crate::skirout::base::editor::v1::type_catalog::DataValue::serializer(), "", |x: &CapabilityInvocationRequest| &x.payload, |x: &mut CapabilityInvocationRequest, v| x.payload = v);
-                (*a).add_field("expected_result_type", 4, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::type_catalog::TypeTemplate::serializer()), "", |x: &CapabilityInvocationRequest| &x.expected_result_type, |x: &mut CapabilityInvocationRequest, v| x.expected_result_type = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ComputationSuccess> = ComputationSuccess::_adapter() as *const _ as *mut _;
-                (*a).add_field("invocation_id", 0, crate::skir_client::internal::struct_serializer_from_static(InvocationId::_adapter()), "", |x: &ComputationSuccess| &x.invocation_id, |x: &mut ComputationSuccess, v| x.invocation_id = v);
-                (*a).add_field("value", 1, crate::skirout::base::editor::v1::type_catalog::DataValue::serializer(), "", |x: &ComputationSuccess| &x.value, |x: &mut ComputationSuccess, v| x.value = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<CommandSuccess> = CommandSuccess::_adapter() as *const _ as *mut _;
-                (*a).add_field("invocation_id", 0, crate::skir_client::internal::struct_serializer_from_static(InvocationId::_adapter()), "", |x: &CommandSuccess| &x.invocation_id, |x: &mut CommandSuccess, v| x.invocation_id = v);
-                (*a).add_field("instructions", 1, crate::skir_client::Serializer::array(crate::skir_client::internal::enum_serializer_from_static(PanelInstruction::_adapter())), "", |x: &CommandSuccess| &x.instructions, |x: &mut CommandSuccess, v| x.instructions = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<CapabilityPermissionDenied> = CapabilityPermissionDenied::_adapter() as *const _ as *mut _;
-                (*a).add_field("invocation_id", 0, crate::skir_client::internal::struct_serializer_from_static(InvocationId::_adapter()), "", |x: &CapabilityPermissionDenied| &x.invocation_id, |x: &mut CapabilityPermissionDenied, v| x.invocation_id = v);
-                (*a).add_field("message", 1, crate::skir_client::Serializer::string(), "", |x: &CapabilityPermissionDenied| &x.message, |x: &mut CapabilityPermissionDenied, v| x.message = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<StaleCatalogGeneration> = StaleCatalogGeneration::_adapter() as *const _ as *mut _;
-                (*a).add_field("invocation_id", 0, crate::skir_client::internal::struct_serializer_from_static(InvocationId::_adapter()), "", |x: &StaleCatalogGeneration| &x.invocation_id, |x: &mut StaleCatalogGeneration, v| x.invocation_id = v);
-                (*a).add_field("actual_generation", 1, crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(), "", |x: &StaleCatalogGeneration| &x.actual_generation, |x: &mut StaleCatalogGeneration, v| x.actual_generation = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<CapabilityFailure> = CapabilityFailure::_adapter() as *const _ as *mut _;
-                (*a).add_field("invocation_id", 0, crate::skir_client::internal::struct_serializer_from_static(InvocationId::_adapter()), "", |x: &CapabilityFailure| &x.invocation_id, |x: &mut CapabilityFailure, v| x.invocation_id = v);
-                (*a).add_field("diagnostics", 1, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::diagnostic::Diagnostic::serializer()), "", |x: &CapabilityFailure| &x.diagnostics, |x: &mut CapabilityFailure, v| x.diagnostics = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<ComputationResult> = ComputationResult::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("success", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ComputationSuccess::_adapter()), "", |v| ComputationResult::Success(Box::new(v)), |x| match x { ComputationResult::Success(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("invalid", 2, 2, crate::skir_client::internal::struct_serializer_from_static(CapabilityFailure::_adapter()), "", |v| ComputationResult::Invalid(Box::new(v)), |x| match x { ComputationResult::Invalid(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("unavailable", 3, 3, crate::skir_client::internal::struct_serializer_from_static(CapabilityFailure::_adapter()), "", |v| ComputationResult::Unavailable(Box::new(v)), |x| match x { ComputationResult::Unavailable(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("permission_denied", 4, 4, crate::skir_client::internal::struct_serializer_from_static(CapabilityPermissionDenied::_adapter()), "", |v| ComputationResult::PermissionDenied(Box::new(v)), |x| match x { ComputationResult::PermissionDenied(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("stale_generation", 5, 5, crate::skir_client::internal::struct_serializer_from_static(StaleCatalogGeneration::_adapter()), "", |v| ComputationResult::StaleGeneration(Box::new(v)), |x| match x { ComputationResult::StaleGeneration(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<CommandResult> = CommandResult::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("success", 1, 1, crate::skir_client::internal::struct_serializer_from_static(CommandSuccess::_adapter()), "", |v| CommandResult::Success(Box::new(v)), |x| match x { CommandResult::Success(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("invalid", 2, 2, crate::skir_client::internal::struct_serializer_from_static(CapabilityFailure::_adapter()), "", |v| CommandResult::Invalid(Box::new(v)), |x| match x { CommandResult::Invalid(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("unavailable", 3, 3, crate::skir_client::internal::struct_serializer_from_static(CapabilityFailure::_adapter()), "", |v| CommandResult::Unavailable(Box::new(v)), |x| match x { CommandResult::Unavailable(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("permission_denied", 4, 4, crate::skir_client::internal::struct_serializer_from_static(CapabilityPermissionDenied::_adapter()), "", |v| CommandResult::PermissionDenied(Box::new(v)), |x| match x { CommandResult::PermissionDenied(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("stale_generation", 5, 5, crate::skir_client::internal::struct_serializer_from_static(StaleCatalogGeneration::_adapter()), "", |v| CommandResult::StaleGeneration(Box::new(v)), |x| match x { CommandResult::StaleGeneration(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-        });
+    static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| {
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<InvocationId> =
+                InvocationId::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "value",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &InvocationId| &x.value,
+                |x: &mut InvocationId, v| x.value = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<SearchCapabilityDefinition> =
+                SearchCapabilityDefinition::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "capability_id",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::CapabilityId::serializer(),
+                "",
+                |x: &SearchCapabilityDefinition| &x.capability_id,
+                |x: &mut SearchCapabilityDefinition, v| x.capability_id = v,
+            );
+            (*a).add_field(
+                "request_type",
+                1,
+                crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(),
+                "",
+                |x: &SearchCapabilityDefinition| &x.request_type,
+                |x: &mut SearchCapabilityDefinition, v| x.request_type = v,
+            );
+            (*a).add_field(
+                "result_type",
+                2,
+                crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(),
+                "",
+                |x: &SearchCapabilityDefinition| &x.result_type,
+                |x: &mut SearchCapabilityDefinition, v| x.result_type = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                ComputationCapabilityDefinition,
+            > = ComputationCapabilityDefinition::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "capability_id",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::CapabilityId::serializer(),
+                "",
+                |x: &ComputationCapabilityDefinition| &x.capability_id,
+                |x: &mut ComputationCapabilityDefinition, v| x.capability_id = v,
+            );
+            (*a).add_field(
+                "request_type",
+                1,
+                crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(),
+                "",
+                |x: &ComputationCapabilityDefinition| &x.request_type,
+                |x: &mut ComputationCapabilityDefinition, v| x.request_type = v,
+            );
+            (*a).add_field(
+                "result_type",
+                2,
+                crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(),
+                "",
+                |x: &ComputationCapabilityDefinition| &x.result_type,
+                |x: &mut ComputationCapabilityDefinition, v| x.result_type = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<CommandCapabilityDefinition> =
+                CommandCapabilityDefinition::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "capability_id",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::CapabilityId::serializer(),
+                "",
+                |x: &CommandCapabilityDefinition| &x.capability_id,
+                |x: &mut CommandCapabilityDefinition, v| x.capability_id = v,
+            );
+            (*a).add_field(
+                "request_type",
+                1,
+                crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(),
+                "",
+                |x: &CommandCapabilityDefinition| &x.request_type,
+                |x: &mut CommandCapabilityDefinition, v| x.request_type = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<CapabilityDefinition> =
+                CapabilityDefinition::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "search",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    SearchCapabilityDefinition::_adapter(),
+                ),
+                "",
+                |v| CapabilityDefinition::Search(Box::new(v)),
+                |x| match x {
+                    CapabilityDefinition::Search(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "computation",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ComputationCapabilityDefinition::_adapter(),
+                ),
+                "",
+                |v| CapabilityDefinition::Computation(Box::new(v)),
+                |x| match x {
+                    CapabilityDefinition::Computation(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "command",
+                3,
+                3,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    CommandCapabilityDefinition::_adapter(),
+                ),
+                "",
+                |v| CapabilityDefinition::Command(Box::new(v)),
+                |x| match x {
+                    CapabilityDefinition::Command(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ResourceAddress> =
+                ResourceAddress::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "resource_type",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(),
+                "",
+                |x: &ResourceAddress| &x.resource_type,
+                |x: &mut ResourceAddress, v| x.resource_type = v,
+            );
+            (*a).add_field(
+                "identity",
+                1,
+                crate::skirout::base::editor::v1::type_catalog::DataValue::serializer(),
+                "",
+                |x: &ResourceAddress| &x.identity,
+                |x: &mut ResourceAddress, v| x.identity = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<InvalidateResourceInstruction> =
+                InvalidateResourceInstruction::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "resource",
+                0,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ResourceAddress::_adapter(),
+                ),
+                "",
+                |x: &InvalidateResourceInstruction| &x.resource,
+                |x: &mut InvalidateResourceInstruction, v| x.resource = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<OpenResourceInstruction> =
+                OpenResourceInstruction::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "resource",
+                0,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ResourceAddress::_adapter(),
+                ),
+                "",
+                |x: &OpenResourceInstruction| &x.resource,
+                |x: &mut OpenResourceInstruction, v| x.resource = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<NotificationSeverity> =
+                NotificationSeverity::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("info", 1, 1, "", NotificationSeverity::Info);
+            (*a).add_constant_variant("success", 2, 2, "", NotificationSeverity::Success);
+            (*a).add_constant_variant("warning", 3, 3, "", NotificationSeverity::Warning);
+            (*a).add_constant_variant("error", 4, 4, "", NotificationSeverity::Error);
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<NotifyInstruction> =
+                NotifyInstruction::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "severity",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    NotificationSeverity::_adapter(),
+                ),
+                "",
+                |x: &NotifyInstruction| &x.severity,
+                |x: &mut NotifyInstruction, v| x.severity = v,
+            );
+            (*a).add_field(
+                "message",
+                1,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &NotifyInstruction| &x.message,
+                |x: &mut NotifyInstruction, v| x.message = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<PanelInstruction> =
+                PanelInstruction::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "invalidate_resource",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    InvalidateResourceInstruction::_adapter(),
+                ),
+                "",
+                |v| PanelInstruction::InvalidateResource(Box::new(v)),
+                |x| match x {
+                    PanelInstruction::InvalidateResource(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "open_resource",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    OpenResourceInstruction::_adapter(),
+                ),
+                "",
+                |v| PanelInstruction::OpenResource(Box::new(v)),
+                |x| match x {
+                    PanelInstruction::OpenResource(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "notify",
+                3,
+                3,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    NotifyInstruction::_adapter(),
+                ),
+                "",
+                |v| PanelInstruction::Notify(Box::new(v)),
+                |x| match x {
+                    PanelInstruction::Notify(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<CapabilityInvocationRequest> =
+                CapabilityInvocationRequest::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "invocation_id",
+                0,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    InvocationId::_adapter(),
+                ),
+                "",
+                |x: &CapabilityInvocationRequest| &x.invocation_id,
+                |x: &mut CapabilityInvocationRequest, v| x.invocation_id = v,
+            );
+            (*a).add_field(
+                "generation",
+                1,
+                crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(),
+                "",
+                |x: &CapabilityInvocationRequest| &x.generation,
+                |x: &mut CapabilityInvocationRequest, v| x.generation = v,
+            );
+            (*a).add_field(
+                "capability_id",
+                2,
+                crate::skirout::base::editor::v1::type_catalog::CapabilityId::serializer(),
+                "",
+                |x: &CapabilityInvocationRequest| &x.capability_id,
+                |x: &mut CapabilityInvocationRequest, v| x.capability_id = v,
+            );
+            (*a).add_field(
+                "payload",
+                3,
+                crate::skirout::base::editor::v1::type_catalog::DataValue::serializer(),
+                "",
+                |x: &CapabilityInvocationRequest| &x.payload,
+                |x: &mut CapabilityInvocationRequest, v| x.payload = v,
+            );
+            (*a).add_field(
+                "expected_result_type",
+                4,
+                crate::skir_client::Serializer::optional(
+                    crate::skirout::base::editor::v1::type_catalog::TypeTemplate::serializer(),
+                ),
+                "",
+                |x: &CapabilityInvocationRequest| &x.expected_result_type,
+                |x: &mut CapabilityInvocationRequest, v| x.expected_result_type = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ComputationSuccess> =
+                ComputationSuccess::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "invocation_id",
+                0,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    InvocationId::_adapter(),
+                ),
+                "",
+                |x: &ComputationSuccess| &x.invocation_id,
+                |x: &mut ComputationSuccess, v| x.invocation_id = v,
+            );
+            (*a).add_field(
+                "value",
+                1,
+                crate::skirout::base::editor::v1::type_catalog::DataValue::serializer(),
+                "",
+                |x: &ComputationSuccess| &x.value,
+                |x: &mut ComputationSuccess, v| x.value = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<CommandSuccess> =
+                CommandSuccess::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "invocation_id",
+                0,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    InvocationId::_adapter(),
+                ),
+                "",
+                |x: &CommandSuccess| &x.invocation_id,
+                |x: &mut CommandSuccess, v| x.invocation_id = v,
+            );
+            (*a).add_field(
+                "instructions",
+                1,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::enum_serializer_from_static(
+                        PanelInstruction::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &CommandSuccess| &x.instructions,
+                |x: &mut CommandSuccess, v| x.instructions = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<CapabilityPermissionDenied> =
+                CapabilityPermissionDenied::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "invocation_id",
+                0,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    InvocationId::_adapter(),
+                ),
+                "",
+                |x: &CapabilityPermissionDenied| &x.invocation_id,
+                |x: &mut CapabilityPermissionDenied, v| x.invocation_id = v,
+            );
+            (*a).add_field(
+                "message",
+                1,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &CapabilityPermissionDenied| &x.message,
+                |x: &mut CapabilityPermissionDenied, v| x.message = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<StaleCatalogGeneration> =
+                StaleCatalogGeneration::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "invocation_id",
+                0,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    InvocationId::_adapter(),
+                ),
+                "",
+                |x: &StaleCatalogGeneration| &x.invocation_id,
+                |x: &mut StaleCatalogGeneration, v| x.invocation_id = v,
+            );
+            (*a).add_field(
+                "actual_generation",
+                1,
+                crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(),
+                "",
+                |x: &StaleCatalogGeneration| &x.actual_generation,
+                |x: &mut StaleCatalogGeneration, v| x.actual_generation = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<CapabilityFailure> =
+                CapabilityFailure::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "invocation_id",
+                0,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    InvocationId::_adapter(),
+                ),
+                "",
+                |x: &CapabilityFailure| &x.invocation_id,
+                |x: &mut CapabilityFailure, v| x.invocation_id = v,
+            );
+            (*a).add_field(
+                "diagnostics",
+                1,
+                crate::skir_client::Serializer::array(
+                    crate::skirout::base::editor::v1::diagnostic::Diagnostic::serializer(),
+                ),
+                "",
+                |x: &CapabilityFailure| &x.diagnostics,
+                |x: &mut CapabilityFailure, v| x.diagnostics = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<ComputationResult> =
+                ComputationResult::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "success",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ComputationSuccess::_adapter(),
+                ),
+                "",
+                |v| ComputationResult::Success(Box::new(v)),
+                |x| match x {
+                    ComputationResult::Success(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "invalid",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    CapabilityFailure::_adapter(),
+                ),
+                "",
+                |v| ComputationResult::Invalid(Box::new(v)),
+                |x| match x {
+                    ComputationResult::Invalid(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "unavailable",
+                3,
+                3,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    CapabilityFailure::_adapter(),
+                ),
+                "",
+                |v| ComputationResult::Unavailable(Box::new(v)),
+                |x| match x {
+                    ComputationResult::Unavailable(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "permission_denied",
+                4,
+                4,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    CapabilityPermissionDenied::_adapter(),
+                ),
+                "",
+                |v| ComputationResult::PermissionDenied(Box::new(v)),
+                |x| match x {
+                    ComputationResult::PermissionDenied(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "stale_generation",
+                5,
+                5,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    StaleCatalogGeneration::_adapter(),
+                ),
+                "",
+                |v| ComputationResult::StaleGeneration(Box::new(v)),
+                |x| match x {
+                    ComputationResult::StaleGeneration(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<CommandResult> =
+                CommandResult::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "success",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    CommandSuccess::_adapter(),
+                ),
+                "",
+                |v| CommandResult::Success(Box::new(v)),
+                |x| match x {
+                    CommandResult::Success(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "invalid",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    CapabilityFailure::_adapter(),
+                ),
+                "",
+                |v| CommandResult::Invalid(Box::new(v)),
+                |x| match x {
+                    CommandResult::Invalid(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "unavailable",
+                3,
+                3,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    CapabilityFailure::_adapter(),
+                ),
+                "",
+                |v| CommandResult::Unavailable(Box::new(v)),
+                |x| match x {
+                    CommandResult::Unavailable(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "permission_denied",
+                4,
+                4,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    CapabilityPermissionDenied::_adapter(),
+                ),
+                "",
+                |v| CommandResult::PermissionDenied(Box::new(v)),
+                |x| match x {
+                    CommandResult::PermissionDenied(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "stale_generation",
+                5,
+                5,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    StaleCatalogGeneration::_adapter(),
+                ),
+                "",
+                |v| CommandResult::StaleGeneration(Box::new(v)),
+                |x| match x {
+                    CommandResult::StaleGeneration(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+    });
     let _ = *INIT;
 }
 
@@ -932,28 +1467,30 @@ fn initialize_module_serializers() {
 // Methods
 // ==============================================================================
 
-pub fn invoke_realm_computation_method() -> &'static crate::skir_client::Method<CapabilityInvocationRequest, ComputationResult> {
-    static METHOD: std::sync::LazyLock<crate::skir_client::Method<CapabilityInvocationRequest, ComputationResult>> = std::sync::LazyLock::new(|| {
-        crate::skir_client::Method {
-            name: "InvokeRealmComputation".to_string(),
-            number: 919101_i64,
-            request_serializer: CapabilityInvocationRequest::serializer(),
-            response_serializer: ComputationResult::serializer(),
-            doc: "".to_string(),
-        }
+pub fn invoke_realm_computation_method()
+-> &'static crate::skir_client::Method<CapabilityInvocationRequest, ComputationResult> {
+    static METHOD: std::sync::LazyLock<
+        crate::skir_client::Method<CapabilityInvocationRequest, ComputationResult>,
+    > = std::sync::LazyLock::new(|| crate::skir_client::Method {
+        name: "InvokeRealmComputation".to_string(),
+        number: 919101_i64,
+        request_serializer: CapabilityInvocationRequest::serializer(),
+        response_serializer: ComputationResult::serializer(),
+        doc: "".to_string(),
     });
     &*METHOD
 }
 
-pub fn invoke_realm_command_method() -> &'static crate::skir_client::Method<CapabilityInvocationRequest, CommandResult> {
-    static METHOD: std::sync::LazyLock<crate::skir_client::Method<CapabilityInvocationRequest, CommandResult>> = std::sync::LazyLock::new(|| {
-        crate::skir_client::Method {
-            name: "InvokeRealmCommand".to_string(),
-            number: 919102_i64,
-            request_serializer: CapabilityInvocationRequest::serializer(),
-            response_serializer: CommandResult::serializer(),
-            doc: "".to_string(),
-        }
+pub fn invoke_realm_command_method()
+-> &'static crate::skir_client::Method<CapabilityInvocationRequest, CommandResult> {
+    static METHOD: std::sync::LazyLock<
+        crate::skir_client::Method<CapabilityInvocationRequest, CommandResult>,
+    > = std::sync::LazyLock::new(|| crate::skir_client::Method {
+        name: "InvokeRealmCommand".to_string(),
+        number: 919102_i64,
+        request_serializer: CapabilityInvocationRequest::serializer(),
+        response_serializer: CommandResult::serializer(),
+        doc: "".to_string(),
     });
     &*METHOD
 }

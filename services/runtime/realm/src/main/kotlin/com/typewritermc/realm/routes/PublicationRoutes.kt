@@ -1,5 +1,6 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.protocol.transport.generated.RealmRouteScope
 import com.typewritermc.realm.compiler.PublicationAttempt
 import com.typewritermc.realm.compiler.PublicationReport
 import com.typewritermc.realm.compiler.PublicationResult
@@ -18,7 +19,7 @@ internal class PublicationRoutes(
     private val publisher: RealmPublicationCoordinator,
     private val results: PublicationResults,
     private val contracts: EditorContracts,
-    private val address: RealmAddress,
+    private val address: RealmRouteScope,
 ) {
     fun register(builder: CommunicatorRoutesBuilder) =
         with(builder) {

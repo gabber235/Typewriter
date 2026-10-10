@@ -316,7 +316,7 @@ class TopologyStatusIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final foreground = highlighted ? color.on(context) : null;
-    final toneColor = topologyStatusToneColor(context, tone);
+    final toneColor = tone.color(context);
     return Row(
       children: [
         Container(
@@ -409,13 +409,14 @@ TopologyStatusTone topologyChildRuntimeStatusTone(
   TopologyRuntimeStatus.unknown => TopologyStatusTone.offline,
 };
 
-Color topologyStatusToneColor(BuildContext context, TopologyStatusTone tone) =>
-    switch (tone) {
-      TopologyStatusTone.active => context.colors.online,
-      TopologyStatusTone.warning => context.colors.warning,
-      TopologyStatusTone.error => Theme.of(context).colorScheme.error,
-      TopologyStatusTone.offline => context.colors.offline,
-    };
+extension TopologyToneOperations on TopologyStatusTone {
+  Color color(BuildContext context) => switch (this) {
+    TopologyStatusTone.active => context.colors.online,
+    TopologyStatusTone.warning => context.colors.warning,
+    TopologyStatusTone.error => Theme.of(context).colorScheme.error,
+    TopologyStatusTone.offline => context.colors.offline,
+  };
+}
 
 String _recordLabel(skir.RecordId id) {
   final value = id.id.split(":").last.replaceAll("`", "");

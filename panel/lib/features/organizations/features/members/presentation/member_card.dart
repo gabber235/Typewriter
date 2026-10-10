@@ -197,12 +197,13 @@ class MemberTabletCard extends HookConsumerWidget {
                                 selectedRoles: member.roles,
                                 onRolesChanged: (newRoles) {
                                   ref
-                                      .read(
-                                        organizationMembersProvider.notifier,
+                                      .executeMembership(
+                                        ref.membershipCommands.updateRoles([
+                                          member.userId,
+                                        ], newRoles),
+                                        (response) =>
+                                            response.requireAccepted(),
                                       )
-                                      .updateMemberRoles([
-                                        member.userId,
-                                      ], newRoles)
                                       .catchApiExceptionsAndDisplay(context);
                                 },
                               ),
@@ -251,9 +252,10 @@ class MemberTabletCard extends HookConsumerWidget {
       confirmIcon: Fa6Solid.user_minus,
       onConfirm: () async {
         onSelectionChanged(false);
-        await ref
-            .read(organizationMembersProvider.notifier)
-            .removeMember(member.userId);
+        await ref.executeMembership(
+          ref.membershipCommands.remove(member.userId),
+          (response) => response.requireAccepted(),
+        );
       },
     );
   }

@@ -14,6 +14,38 @@ use crate::skirout::base::kernel::v1::record_id::{
 use std::collections::{BTreeSet, HashMap};
 use std::fmt;
 
+/// Extracts the raw string identity stored by a record key.
+///
+/// This receiver does not render SurrealQL syntax or validate a target grammar. Callers remain
+/// responsible for applying the grammar of the transport or wire boundary that receives it.
+pub trait RecordIdKeyIdentity {
+    fn raw_identity(&self) -> Result<&str, crate::otel_wasi::Error>;
+}
+
+impl RecordIdKeyIdentity for surrealdb_component_sdk::RecordIdKey {
+    fn raw_identity(&self) -> Result<&str, crate::otel_wasi::Error> {
+        let Self::String(value) = self else {
+            return Err(crate::otel_wasi::Error::new(
+                "record-id-key-identity-required",
+                "string record identity required",
+            ));
+        };
+        Ok(value)
+    }
+}
+
+impl RecordIdKeyIdentity for RecordIdKey {
+    fn raw_identity(&self) -> Result<&str, crate::otel_wasi::Error> {
+        let Self::String(value) = self else {
+            return Err(crate::otel_wasi::Error::new(
+                "record-id-key-identity-required",
+                "string record identity required",
+            ));
+        };
+        Ok(value)
+    }
+}
+
 // =============================================================================
 // Display helpers
 // =============================================================================
@@ -523,6 +555,26 @@ mod tests {
             key: RecordIdKey::String("id".to_owned()),
             _unrecognized: None,
         }
+    }
+
+    #[test]
+    fn string_record_keys_preserve_raw_business_identity() {
+        for identity in ["quest-world", "123", "550e8400-e29b-41d4-a716-446655440000"] {
+            let skir = RecordIdKey::String(identity.to_owned());
+            let database = surrealdb_component_sdk::RecordIdKey::String(identity.to_owned());
+            assert_eq!(skir.raw_identity().unwrap(), identity);
+            assert_eq!(database.raw_identity().unwrap(), identity);
+        }
+    }
+
+    #[test]
+    fn structured_record_keys_are_not_business_identities() {
+        assert!(RecordIdKey::Number(123).raw_identity().is_err());
+        assert!(
+            surrealdb_component_sdk::RecordIdKey::Number(123)
+                .raw_identity()
+                .is_err()
+        );
     }
 
     #[test]

@@ -15,9 +15,7 @@ import "dart:core" as _core;
 
 import "package:skir_client/skir_client.dart" as _skir;
 
-// -----------------------------------------------------------------------------
 // struct Color
-// -----------------------------------------------------------------------------
 
 sealed class Color_orMutable {
   _core.int get argb;
@@ -42,7 +40,7 @@ final class Color implements Color_orMutable {
   /// Fields are initialized to their default values.
   static Color_mutable mutable() => Color_mutable._(0);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   Color toFrozen() => this;

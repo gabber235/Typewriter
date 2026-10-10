@@ -23,6 +23,7 @@ macro_rules! export {
 
 pub mod database;
 pub mod http;
+pub mod publication;
 pub mod wasmcloud;
 
 #[rustfmt::skip]
@@ -34,8 +35,8 @@ pub use skir_client;
 
 // Proc macros are re exported here so component crates use one public contract surface.
 pub use wasmcloud_utils_macros::{
-    dispatch_actions, read_query, skir_domain_result, skir_response, skir_transaction_outcome,
-    skir_variant, transaction_outcome_index, transaction_outcome_index_file, transaction_query,
+    read_query, skir_domain_result, skir_response, skir_transaction_outcome, skir_variant,
+    transaction_outcome_index, transaction_outcome_index_file, transaction_query,
     transaction_query_file,
 };
 
@@ -48,78 +49,10 @@ pub use skir_response_trait::{
 // Response enums registered for dispatch and typed messaging replies.
 mod skir_responses;
 
-mod skir_subject;
-pub use skir_subject::SkirSubject;
-pub mod skir_subjects;
-
 pub mod skir_utils;
 
-/// Extract one named parameter from the map produced by subject parsing.
-///
-/// Missing parameters are reported as `param-extract-failed`, which lets dispatch
-/// handlers return the same typed transport error as other malformed subjects.
-///
-/// Returns a `Result<&str, otel_wasi::Error>`.
-///
-/// # Example
-/// ```rust,no_run
-/// use wasmcloud_utils::extract_param;
-/// use std::collections::HashMap;
-///
-/// # fn main() -> Result<(), otel_wasi::Error> {
-/// let mut params = HashMap::new();
-/// params.insert("user_id".to_string(), "123".to_string());
-///
-/// let user_id = extract_param!(params, user_id)?;
-/// # Ok(())
-/// # }
-/// ```
-#[macro_export]
-macro_rules! extract_param {
-    ($params:expr, $param_name:ident) => {
-        $params
-            .get(stringify!($param_name))
-            .map(|s| s.as_str())
-            .ok_or_else(|| {
-                $crate::otel_wasi::Error::new(
-                    "param-extract-failed",
-                    format!("failed to parse {} from subject", stringify!($param_name)),
-                )
-            })
-    };
-}
-
-/// Extract several named parameters from a parsed subject in one operation.
-///
-/// Extraction is left to right and stops at the first missing parameter, returning
-/// `param-extract-failed`.
-///
-/// Returns a `Result<(&str, ...), otel_wasi::Error>`.
-///
-/// # Example
-/// ```rust,no_run
-/// use wasmcloud_utils::extract_params;
-/// use std::collections::HashMap;
-///
-/// # fn main() -> Result<(), otel_wasi::Error> {
-/// let mut params = HashMap::new();
-/// params.insert("user_id".to_string(), "123".to_string());
-/// params.insert("org_id".to_string(), "456".to_string());
-///
-/// let (user_id, org_id) = extract_params!(params, user_id, org_id)?;
-/// # Ok(())
-/// # }
-/// ```
-#[macro_export]
-macro_rules! extract_params {
-    ($params:expr, $($param_name:ident),+ $(,)?) => {
-        (|| -> Result<_, $crate::otel_wasi::Error> {
-            Ok(($(
-                $crate::extract_param!($params, $param_name)?
-            ),+))
-        })()
-    };
-}
+#[path = "transport_routes/skirout/mod.rs"]
+pub mod transport_routes;
 
 /// Validate that SKIR record IDs belong to the expected database table.
 ///

@@ -306,7 +306,7 @@ void main() {
         _ => harness.container.deleteService(_service().serviceId),
       };
 
-      await expectLater(operation, throwsA(isA<SubmissionException>()));
+      await expectLater(operation, throwsA(_apiException(401)));
       expect(
         harness.nats.requests.where(
           (request) => request.subject != _watchSubject,

@@ -8,12 +8,13 @@ use otel_wasi::ResultWithSlug;
 use serde::Deserialize;
 use wasmcloud_utils::{
     database::{RecordId, read_query},
-    decode_skir,
     skir::base::service::v1::topology::{
         GetServiceMessagingScopeRequest, GetServiceMessagingScopeResponse,
         GetServiceMessagingScopeResponse_NotFound, ServiceMessagingScope,
     },
+    skir_utils::RecordIdKeyIdentity,
     skir_variant,
+    transport_routes::ServiceScope,
     wasmcloud::messaging::types::NatsMessage,
 };
 
@@ -24,18 +25,18 @@ struct MessagingScopeRecord {
     attached_realm: Option<RecordId>,
 }
 
-#[tracing::instrument(skip(msg))]
+#[tracing::instrument(skip_all)]
 /// Returns the service organization, host owned Realm, and engine attached Realm.
 ///
 /// This is a read only lookup keyed by the service identifier in the request. `NotFound` means
 /// the service record does not exist. A found service with no registered host is still returned,
 /// with both Realm relationships absent.
 pub async fn handle(
-    msg: NatsMessage,
-    _params: HashMap<String, String>,
+    _msg: NatsMessage,
+    scope: ServiceScope,
+    _request: GetServiceMessagingScopeRequest,
 ) -> Result<GetServiceMessagingScopeResponse, otel_wasi::Error> {
-    let request = decode_skir!(GetServiceMessagingScopeRequest, &msg.body)?;
-    let service_id: RecordId = request.service_id.into();
+    let service_id = RecordId::new("service", scope.service.as_str());
     let result = read_query!(
         r#"
         LET $service = array::first(SELECT organization FROM $service_id);
@@ -67,7 +68,7 @@ pub async fn handle(
 
     Ok(match scope {
         Some(scope) => GetServiceMessagingScopeResponse::Found(Box::new(ServiceMessagingScope {
-            organization_id: scope.organization_id.key.to_string(),
+            organization_id: scope.organization_id.key.raw_identity()?.to_owned(),
             owned_realm: scope.owned_realm.map(Into::into),
             attached_realm: scope.attached_realm.map(Into::into),
             _unrecognized: None,
@@ -75,4 +76,3 @@ pub async fn handle(
         None => skir_variant!(GetServiceMessagingScopeResponse::NotFound {}),
     })
 }
-use std::collections::HashMap;

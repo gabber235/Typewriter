@@ -194,6 +194,18 @@ class WatchContract<Address : Any, Request : Any, Initial : Any, Update : Any>(
     }
 }
 
+/** Uses the initial request portion of this watch without opening an update subscription. */
+fun <Address : Any, Request : Any, Initial : Any, Update : Any> WatchContract<Address, Request, Initial, Update>.initialRequest() =
+    UnaryContract(
+        name = name,
+        requestAddress = requestAddress,
+        requestCodec = requestCodec,
+        responseCodec = initialCodec,
+        responsePolicy = initialPolicy,
+        timeout = timeout,
+        failureSlug = failureSlug,
+    )
+
 /** A watch item that identifies whether a value is the initial snapshot or a later update. */
 sealed interface WatchMessage<out Initial : Any, out Update : Any> {
     data class Initial<Value : Any>(

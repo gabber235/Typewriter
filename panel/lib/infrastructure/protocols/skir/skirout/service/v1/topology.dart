@@ -18,9 +18,7 @@ import "package:skir_client/skir_client.dart" as _skir;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 import "../../kernel/v1/record_id.dart" as _lib_kernel_v1_record_id;
 
-// -----------------------------------------------------------------------------
 // struct ReconciledRevision
-// -----------------------------------------------------------------------------
 
 sealed class ReconciledRevision_orMutable {
   _core.int get desired;
@@ -52,7 +50,7 @@ final class ReconciledRevision implements ReconciledRevision_orMutable {
   static ReconciledRevision_mutable mutable() =>
       ReconciledRevision_mutable._(0, 0);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ReconciledRevision toFrozen() => this;
@@ -132,9 +130,7 @@ final class ReconciledRevision_mutable implements ReconciledRevision_orMutable {
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct EngineTarget
-// -----------------------------------------------------------------------------
 
 sealed class EngineTarget_orMutable {
   _core.String get engineId;
@@ -165,7 +161,7 @@ final class EngineTarget implements EngineTarget_orMutable {
   /// Fields are initialized to their default values.
   static EngineTarget_mutable mutable() => EngineTarget_mutable._("", "");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   EngineTarget toFrozen() => this;
@@ -246,9 +242,7 @@ final class EngineTarget_mutable implements EngineTarget_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct SupportedEngine
-// -----------------------------------------------------------------------------
 
 sealed class SupportedEngine_orMutable {
   _core.String get engineId;
@@ -274,7 +268,7 @@ final class SupportedEngine implements SupportedEngine_orMutable {
   /// Fields are initialized to their default values.
   static SupportedEngine_mutable mutable() => SupportedEngine_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SupportedEngine toFrozen() => this;
@@ -343,9 +337,7 @@ final class SupportedEngine_mutable implements SupportedEngine_orMutable {
       SupportedEngine(engineId: this.engineId).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum HostRuntimeStatus
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -467,9 +459,7 @@ enum _HostRuntimeStatus_consts implements HostRuntimeStatus {
       _skir.internal__stringify(this, HostRuntimeStatus.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // struct HostRuntimeState
-// -----------------------------------------------------------------------------
 
 sealed class HostRuntimeState_orMutable {
   HostRuntimeStatus get status;
@@ -512,7 +502,7 @@ final class HostRuntimeState implements HostRuntimeState_orMutable {
     _skir.unixEpoch,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   HostRuntimeState toFrozen() => this;
@@ -604,9 +594,7 @@ final class HostRuntimeState_mutable implements HostRuntimeState_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum ChildRuntimeStatus
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -745,9 +733,7 @@ enum _ChildRuntimeStatus_consts implements ChildRuntimeStatus {
       _skir.internal__stringify(this, ChildRuntimeStatus.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // struct ChildRuntimeState
-// -----------------------------------------------------------------------------
 
 sealed class ChildRuntimeState_orMutable {
   ChildRuntimeStatus get status;
@@ -806,7 +792,7 @@ final class ChildRuntimeState implements ChildRuntimeState_orMutable {
     _skir.unixEpoch,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ChildRuntimeState toFrozen() => this;
@@ -923,9 +909,7 @@ final class ChildRuntimeState_mutable implements ChildRuntimeState_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ServiceHost
-// -----------------------------------------------------------------------------
 
 sealed class ServiceHost_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get hostId;
@@ -1016,7 +1000,7 @@ final class ServiceHost implements ServiceHost_orMutable {
     HostRuntimeState.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ServiceHost toFrozen() => this;
@@ -1175,7 +1159,7 @@ final class ServiceHost_mutable implements ServiceHost_orMutable {
     this.state,
   );
 
-  /// If the value of [hostId] is already mutable, returns it as-is.
+  /// If the value of [hostId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [hostId] and returns it.
   _lib_kernel_v1_record_id.RecordId_mutable get mutableHostId {
     final value = this.hostId;
@@ -1187,7 +1171,7 @@ final class ServiceHost_mutable implements ServiceHost_orMutable {
     }
   }
 
-  /// If the value of [serviceId] is already mutable, returns it as-is.
+  /// If the value of [serviceId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [serviceId] and returns it.
   _lib_kernel_v1_record_id.RecordId_mutable get mutableServiceId {
     final value = this.serviceId;
@@ -1199,7 +1183,7 @@ final class ServiceHost_mutable implements ServiceHost_orMutable {
     }
   }
 
-  /// If the value of [supportedEngines] is already mutable, returns it as-is.
+  /// If the value of [supportedEngines] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [supportedEngines] and returns it.
   _core.List<SupportedEngine_orMutable> get mutableSupportedEngines {
     final value = this.supportedEngines;
@@ -1210,7 +1194,7 @@ final class ServiceHost_mutable implements ServiceHost_orMutable {
     }
   }
 
-  /// If the value of [topologyRevision] is already mutable, returns it as-is.
+  /// If the value of [topologyRevision] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [topologyRevision] and returns it.
   ReconciledRevision_mutable get mutableTopologyRevision {
     final value = this.topologyRevision;
@@ -1221,7 +1205,7 @@ final class ServiceHost_mutable implements ServiceHost_orMutable {
     }
   }
 
-  /// If the value of [state] is already mutable, returns it as-is.
+  /// If the value of [state] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [state] and returns it.
   HostRuntimeState_mutable get mutableState {
     final value = this.state;
@@ -1246,9 +1230,7 @@ final class ServiceHost_mutable implements ServiceHost_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct OwnerHost
-// -----------------------------------------------------------------------------
 
 sealed class OwnerHost_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get id;
@@ -1285,7 +1267,7 @@ final class OwnerHost implements OwnerHost_orMutable {
     "",
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   OwnerHost toFrozen() => this;
@@ -1356,7 +1338,7 @@ final class OwnerHost_mutable implements OwnerHost_orMutable {
 
   OwnerHost_mutable._(this.id, this.name);
 
-  /// If the value of [id] is already mutable, returns it as-is.
+  /// If the value of [id] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
   _lib_kernel_v1_record_id.RecordId_mutable get mutableId {
     final value = this.id;
@@ -1372,9 +1354,7 @@ final class OwnerHost_mutable implements OwnerHost_orMutable {
   OwnerHost toFrozen() => OwnerHost(id: this.id, name: this.name).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct RealmInstance
-// -----------------------------------------------------------------------------
 
 sealed class RealmInstance_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get realmId;
@@ -1441,7 +1421,7 @@ final class RealmInstance implements RealmInstance_orMutable {
     ChildRuntimeState.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RealmInstance toFrozen() => this;
@@ -1561,7 +1541,7 @@ final class RealmInstance_mutable implements RealmInstance_orMutable {
     this.state,
   );
 
-  /// If the value of [realmId] is already mutable, returns it as-is.
+  /// If the value of [realmId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
   _lib_kernel_v1_record_id.RecordId_mutable get mutableRealmId {
     final value = this.realmId;
@@ -1573,7 +1553,7 @@ final class RealmInstance_mutable implements RealmInstance_orMutable {
     }
   }
 
-  /// If the value of [ownerHost] is already mutable, returns it as-is.
+  /// If the value of [ownerHost] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [ownerHost] and returns it.
   OwnerHost_mutable get mutableOwnerHost {
     final value = this.ownerHost;
@@ -1584,7 +1564,7 @@ final class RealmInstance_mutable implements RealmInstance_orMutable {
     }
   }
 
-  /// If the value of [targetEngine] is already mutable, returns it as-is.
+  /// If the value of [targetEngine] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [targetEngine] and returns it.
   EngineTarget_mutable get mutableTargetEngine {
     final value = this.targetEngine;
@@ -1595,7 +1575,7 @@ final class RealmInstance_mutable implements RealmInstance_orMutable {
     }
   }
 
-  /// If the value of [state] is already mutable, returns it as-is.
+  /// If the value of [state] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [state] and returns it.
   ChildRuntimeState_mutable get mutableState {
     final value = this.state;
@@ -1617,9 +1597,7 @@ final class RealmInstance_mutable implements RealmInstance_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct RealmInfo
-// -----------------------------------------------------------------------------
 
 sealed class RealmInfo_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get realmId;
@@ -1656,7 +1634,7 @@ final class RealmInfo implements RealmInfo_orMutable {
     OwnerHost.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RealmInfo toFrozen() => this;
@@ -1728,7 +1706,7 @@ final class RealmInfo_mutable implements RealmInfo_orMutable {
 
   RealmInfo_mutable._(this.realmId, this.ownerHost);
 
-  /// If the value of [realmId] is already mutable, returns it as-is.
+  /// If the value of [realmId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
   _lib_kernel_v1_record_id.RecordId_mutable get mutableRealmId {
     final value = this.realmId;
@@ -1740,7 +1718,7 @@ final class RealmInfo_mutable implements RealmInfo_orMutable {
     }
   }
 
-  /// If the value of [ownerHost] is already mutable, returns it as-is.
+  /// If the value of [ownerHost] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [ownerHost] and returns it.
   OwnerHost_mutable get mutableOwnerHost {
     final value = this.ownerHost;
@@ -1757,9 +1735,7 @@ final class RealmInfo_mutable implements RealmInfo_orMutable {
       RealmInfo(realmId: this.realmId, ownerHost: this.ownerHost).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct EngineInstance
-// -----------------------------------------------------------------------------
 
 sealed class EngineInstance_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get engineId;
@@ -1834,7 +1810,7 @@ final class EngineInstance implements EngineInstance_orMutable {
     ChildRuntimeState.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   EngineInstance toFrozen() => this;
@@ -1967,7 +1943,7 @@ final class EngineInstance_mutable implements EngineInstance_orMutable {
     this.state,
   );
 
-  /// If the value of [engineId] is already mutable, returns it as-is.
+  /// If the value of [engineId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [engineId] and returns it.
   _lib_kernel_v1_record_id.RecordId_mutable get mutableEngineId {
     final value = this.engineId;
@@ -1979,7 +1955,7 @@ final class EngineInstance_mutable implements EngineInstance_orMutable {
     }
   }
 
-  /// If the value of [ownerHost] is already mutable, returns it as-is.
+  /// If the value of [ownerHost] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [ownerHost] and returns it.
   OwnerHost_mutable get mutableOwnerHost {
     final value = this.ownerHost;
@@ -1990,7 +1966,7 @@ final class EngineInstance_mutable implements EngineInstance_orMutable {
     }
   }
 
-  /// If the value of [realm] is already mutable, returns it as-is.
+  /// If the value of [realm] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [realm] and returns it.
   RealmInfo_mutable get mutableRealm {
     final value = this.realm;
@@ -2001,7 +1977,7 @@ final class EngineInstance_mutable implements EngineInstance_orMutable {
     }
   }
 
-  /// If the value of [target] is already mutable, returns it as-is.
+  /// If the value of [target] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
   EngineTarget_mutable get mutableTarget {
     final value = this.target;
@@ -2012,7 +1988,7 @@ final class EngineInstance_mutable implements EngineInstance_orMutable {
     }
   }
 
-  /// If the value of [state] is already mutable, returns it as-is.
+  /// If the value of [state] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [state] and returns it.
   ChildRuntimeState_mutable get mutableState {
     final value = this.state;
@@ -2035,9 +2011,7 @@ final class EngineInstance_mutable implements EngineInstance_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct HostedRealmConfiguration
-// -----------------------------------------------------------------------------
 
 sealed class HostedRealmConfiguration_orMutable {
   EngineTarget_orMutable get primaryEngine;
@@ -2068,7 +2042,7 @@ final class HostedRealmConfiguration
   static HostedRealmConfiguration_mutable mutable() =>
       HostedRealmConfiguration_mutable._(EngineTarget.defaultInstance);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   HostedRealmConfiguration toFrozen() => this;
@@ -2135,7 +2109,7 @@ final class HostedRealmConfiguration_mutable
 
   HostedRealmConfiguration_mutable._(this.primaryEngine);
 
-  /// If the value of [primaryEngine] is already mutable, returns it as-is.
+  /// If the value of [primaryEngine] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [primaryEngine] and returns it.
   EngineTarget_mutable get mutablePrimaryEngine {
     final value = this.primaryEngine;
@@ -2152,9 +2126,7 @@ final class HostedRealmConfiguration_mutable
       HostedRealmConfiguration(primaryEngine: this.primaryEngine).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct EngineRealmSelection.ExistingRealm
-// -----------------------------------------------------------------------------
 
 sealed class EngineRealmSelection_ExistingRealm_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get realmId;
@@ -2187,7 +2159,7 @@ final class EngineRealmSelection_ExistingRealm
         _lib_kernel_v1_record_id.RecordId.defaultInstance,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   EngineRealmSelection_ExistingRealm toFrozen() => this;
@@ -2254,7 +2226,7 @@ final class EngineRealmSelection_ExistingRealm_mutable
 
   EngineRealmSelection_ExistingRealm_mutable._(this.realmId);
 
-  /// If the value of [realmId] is already mutable, returns it as-is.
+  /// If the value of [realmId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
   _lib_kernel_v1_record_id.RecordId_mutable get mutableRealmId {
     final value = this.realmId;
@@ -2272,9 +2244,7 @@ final class EngineRealmSelection_ExistingRealm_mutable
       EngineRealmSelection_ExistingRealm(realmId: this.realmId).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum EngineRealmSelection
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -2417,9 +2387,7 @@ final class EngineRealmSelection_existingRealmWrapper
       EngineRealmSelection_kind.existingRealmWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct HostedEngineConfiguration
-// -----------------------------------------------------------------------------
 
 sealed class HostedEngineConfiguration_orMutable {
   EngineTarget_orMutable get target;
@@ -2458,7 +2426,7 @@ final class HostedEngineConfiguration
         EngineRealmSelection.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   HostedEngineConfiguration toFrozen() => this;
@@ -2535,7 +2503,7 @@ final class HostedEngineConfiguration_mutable
 
   HostedEngineConfiguration_mutable._(this.target, this.realm);
 
-  /// If the value of [target] is already mutable, returns it as-is.
+  /// If the value of [target] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
   EngineTarget_mutable get mutableTarget {
     final value = this.target;
@@ -2553,9 +2521,7 @@ final class HostedEngineConfiguration_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct HostExecutionConfiguration
-// -----------------------------------------------------------------------------
 
 sealed class HostExecutionConfiguration_orMutable {
   HostedRealmConfiguration_orMutable? get realm;
@@ -2591,7 +2557,7 @@ final class HostExecutionConfiguration
   static HostExecutionConfiguration_mutable mutable() =>
       HostExecutionConfiguration_mutable._(null, null);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   HostExecutionConfiguration toFrozen() => this;
@@ -2676,9 +2642,7 @@ final class HostExecutionConfiguration_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct HostConfigurationChange
-// -----------------------------------------------------------------------------
 
 sealed class HostConfigurationChange_orMutable {
   ServiceHost_orMutable get host;
@@ -2741,7 +2705,7 @@ final class HostConfigurationChange
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   HostConfigurationChange toFrozen() => this;
@@ -2855,7 +2819,7 @@ final class HostConfigurationChange_mutable
     this.removedResources,
   );
 
-  /// If the value of [host] is already mutable, returns it as-is.
+  /// If the value of [host] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [host] and returns it.
   ServiceHost_mutable get mutableHost {
     final value = this.host;
@@ -2866,7 +2830,7 @@ final class HostConfigurationChange_mutable
     }
   }
 
-  /// If the value of [removedResources] is already mutable, returns it as-is.
+  /// If the value of [removedResources] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [removedResources] and returns it.
   _core.List<_lib_kernel_v1_record_id.RecordId_orMutable>
   get mutableRemovedResources {
@@ -2891,9 +2855,7 @@ final class HostConfigurationChange_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ConfigureServiceHostRequest
-// -----------------------------------------------------------------------------
 
 sealed class ConfigureServiceHostRequest_orMutable {
   _core.String get operationId;
@@ -2954,7 +2916,7 @@ final class ConfigureServiceHostRequest
         HostExecutionConfiguration.defaultInstance,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ConfigureServiceHostRequest toFrozen() => this;
@@ -3066,7 +3028,7 @@ final class ConfigureServiceHostRequest_mutable
     this.execution,
   );
 
-  /// If the value of [hostId] is already mutable, returns it as-is.
+  /// If the value of [hostId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [hostId] and returns it.
   _lib_kernel_v1_record_id.RecordId_mutable get mutableHostId {
     final value = this.hostId;
@@ -3078,7 +3040,7 @@ final class ConfigureServiceHostRequest_mutable
     }
   }
 
-  /// If the value of [execution] is already mutable, returns it as-is.
+  /// If the value of [execution] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [execution] and returns it.
   HostExecutionConfiguration_mutable get mutableExecution {
     final value = this.execution;
@@ -3099,9 +3061,7 @@ final class ConfigureServiceHostRequest_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ConfigureServiceHostResponse.ConflictError
-// -----------------------------------------------------------------------------
 
 sealed class ConfigureServiceHostResponse_ConflictError_orMutable {
   HostConfigurationChange_orMutable get actual;
@@ -3134,7 +3094,7 @@ final class ConfigureServiceHostResponse_ConflictError
         HostConfigurationChange.defaultInstance,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ConfigureServiceHostResponse_ConflictError toFrozen() => this;
@@ -3203,7 +3163,7 @@ final class ConfigureServiceHostResponse_ConflictError_mutable
 
   ConfigureServiceHostResponse_ConflictError_mutable._(this.actual);
 
-  /// If the value of [actual] is already mutable, returns it as-is.
+  /// If the value of [actual] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [actual] and returns it.
   HostConfigurationChange_mutable get mutableActual {
     final value = this.actual;
@@ -3221,9 +3181,7 @@ final class ConfigureServiceHostResponse_ConflictError_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ConfigureServiceHostResponse.InvalidConfigurationError
-// -----------------------------------------------------------------------------
 
 sealed class ConfigureServiceHostResponse_InvalidConfigurationError_orMutable {
   _core.String get message;
@@ -3255,7 +3213,7 @@ final class ConfigureServiceHostResponse_InvalidConfigurationError
   mutable() =>
       ConfigureServiceHostResponse_InvalidConfigurationError_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ConfigureServiceHostResponse_InvalidConfigurationError toFrozen() => this;
@@ -3338,9 +3296,7 @@ final class ConfigureServiceHostResponse_InvalidConfigurationError_mutable
       ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ConfigureServiceHostResponse.IncompatibleEngineError
-// -----------------------------------------------------------------------------
 
 sealed class ConfigureServiceHostResponse_IncompatibleEngineError_orMutable {
   EngineTarget_orMutable get target;
@@ -3375,7 +3331,7 @@ final class ConfigureServiceHostResponse_IncompatibleEngineError
     EngineTarget.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ConfigureServiceHostResponse_IncompatibleEngineError toFrozen() => this;
@@ -3447,7 +3403,7 @@ final class ConfigureServiceHostResponse_IncompatibleEngineError_mutable
 
   ConfigureServiceHostResponse_IncompatibleEngineError_mutable._(this.target);
 
-  /// If the value of [target] is already mutable, returns it as-is.
+  /// If the value of [target] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
   EngineTarget_mutable get mutableTarget {
     final value = this.target;
@@ -3465,9 +3421,7 @@ final class ConfigureServiceHostResponse_IncompatibleEngineError_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ConfigureServiceHostResponse.RealmNotFoundError
-// -----------------------------------------------------------------------------
 
 sealed class ConfigureServiceHostResponse_RealmNotFoundError_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get realmId;
@@ -3501,7 +3455,7 @@ final class ConfigureServiceHostResponse_RealmNotFoundError
         _lib_kernel_v1_record_id.RecordId.defaultInstance,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ConfigureServiceHostResponse_RealmNotFoundError toFrozen() => this;
@@ -3569,7 +3523,7 @@ final class ConfigureServiceHostResponse_RealmNotFoundError_mutable
 
   ConfigureServiceHostResponse_RealmNotFoundError_mutable._(this.realmId);
 
-  /// If the value of [realmId] is already mutable, returns it as-is.
+  /// If the value of [realmId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
   _lib_kernel_v1_record_id.RecordId_mutable get mutableRealmId {
     final value = this.realmId;
@@ -3588,9 +3542,7 @@ final class ConfigureServiceHostResponse_RealmNotFoundError_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ConfigureServiceHostResponse.InvalidOperationIdError
-// -----------------------------------------------------------------------------
 
 sealed class ConfigureServiceHostResponse_InvalidOperationIdError_orMutable {
   ConfigureServiceHostResponse_InvalidOperationIdError toFrozen();
@@ -3615,7 +3567,7 @@ final class ConfigureServiceHostResponse_InvalidOperationIdError
   static ConfigureServiceHostResponse_InvalidOperationIdError_mutable
   mutable() => ConfigureServiceHostResponse_InvalidOperationIdError_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ConfigureServiceHostResponse_InvalidOperationIdError toFrozen() => this;
@@ -3681,9 +3633,7 @@ final class ConfigureServiceHostResponse_InvalidOperationIdError_mutable
       ConfigureServiceHostResponse_InvalidOperationIdError().._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ConfigureServiceHostResponse.OperationIdentityReusedError
-// -----------------------------------------------------------------------------
 
 sealed class ConfigureServiceHostResponse_OperationIdentityReusedError_orMutable {
   ConfigureServiceHostResponse_OperationIdentityReusedError toFrozen();
@@ -3710,7 +3660,7 @@ final class ConfigureServiceHostResponse_OperationIdentityReusedError
   mutable() =>
       ConfigureServiceHostResponse_OperationIdentityReusedError_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ConfigureServiceHostResponse_OperationIdentityReusedError toFrozen() => this;
@@ -3778,9 +3728,7 @@ final class ConfigureServiceHostResponse_OperationIdentityReusedError_mutable
       ConfigureServiceHostResponse_OperationIdentityReusedError().._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum ConfigureServiceHostResponse
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -4210,9 +4158,7 @@ final class ConfigureServiceHostResponse_internalErrorWrapper
       ConfigureServiceHostResponse_kind.internalErrorWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct OrganizationTopologySnapshot
-// -----------------------------------------------------------------------------
 
 sealed class OrganizationTopologySnapshot_orMutable {
   _core.Iterable<ServiceHost_orMutable> get hosts;
@@ -4261,7 +4207,7 @@ final class OrganizationTopologySnapshot
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   OrganizationTopologySnapshot toFrozen() => this;
@@ -4352,7 +4298,7 @@ final class OrganizationTopologySnapshot_mutable
 
   OrganizationTopologySnapshot_mutable._(this.hosts, this.realms, this.engines);
 
-  /// If the value of [hosts] is already mutable, returns it as-is.
+  /// If the value of [hosts] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [hosts] and returns it.
   _core.List<ServiceHost_orMutable> get mutableHosts {
     final value = this.hosts;
@@ -4363,7 +4309,7 @@ final class OrganizationTopologySnapshot_mutable
     }
   }
 
-  /// If the value of [realms] is already mutable, returns it as-is.
+  /// If the value of [realms] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [realms] and returns it.
   _core.List<RealmInstance_orMutable> get mutableRealms {
     final value = this.realms;
@@ -4374,7 +4320,7 @@ final class OrganizationTopologySnapshot_mutable
     }
   }
 
-  /// If the value of [engines] is already mutable, returns it as-is.
+  /// If the value of [engines] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [engines] and returns it.
   _core.List<EngineInstance_orMutable> get mutableEngines {
     final value = this.engines;
@@ -4394,9 +4340,455 @@ final class OrganizationTopologySnapshot_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
+// struct RealmRuntimeObservation
+
+sealed class RealmRuntimeObservation_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable get realmId;
+  ChildRuntimeState_orMutable get state;
+
+  RealmRuntimeObservation toFrozen();
+}
+
+/// Deeply immutable.
+final class RealmRuntimeObservation
+    implements RealmRuntimeObservation_orMutable {
+  @_core.override
+  final _lib_kernel_v1_record_id.RecordId realmId;
+  @_core.override
+  final ChildRuntimeState state;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory RealmRuntimeObservation({
+    required _lib_kernel_v1_record_id.RecordId_orMutable realmId,
+    required ChildRuntimeState_orMutable state,
+  }) => RealmRuntimeObservation._(realmId.toFrozen(), state.toFrozen());
+
+  RealmRuntimeObservation._(this.realmId, this.state);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = RealmRuntimeObservation._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    ChildRuntimeState.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static RealmRuntimeObservation_mutable mutable() =>
+      RealmRuntimeObservation_mutable._(
+        _lib_kernel_v1_record_id.RecordId.defaultInstance,
+        ChildRuntimeState.defaultInstance,
+      );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  RealmRuntimeObservation toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  RealmRuntimeObservation_mutable toMutable() =>
+      RealmRuntimeObservation_mutable._(this.realmId, this.state);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! RealmRuntimeObservation) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.realmId, this.state];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `RealmRuntimeObservation` instances.
+  static _skir.StructSerializer<
+    RealmRuntimeObservation,
+    RealmRuntimeObservation_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "realm_id",
+        "realmId",
+        0,
+        _lib_kernel_v1_record_id.RecordId.serializer,
+        "",
+        (it) => it.realmId,
+        (it, v) => it.realmId = v,
+      );
+      _serializerBuilder.addField(
+        "state",
+        "state",
+        1,
+        ChildRuntimeState.serializer,
+        "",
+        (it) => it.state,
+        (it, v) => it.state = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "service/v1/topology.skir:RealmRuntimeObservation",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (RealmRuntimeObservation_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [RealmRuntimeObservation].
+final class RealmRuntimeObservation_mutable
+    implements RealmRuntimeObservation_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable realmId;
+  ChildRuntimeState_orMutable state;
+  _skir.internal__UnrecognizedFields? _u;
+
+  RealmRuntimeObservation_mutable._(this.realmId, this.state);
+
+  /// If the value of [realmId] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
+  _lib_kernel_v1_record_id.RecordId_mutable get mutableRealmId {
+    final value = this.realmId;
+    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+      return value;
+    } else {
+      return this.realmId = (value as _lib_kernel_v1_record_id.RecordId)
+          .toMutable();
+    }
+  }
+
+  /// If the value of [state] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [state] and returns it.
+  ChildRuntimeState_mutable get mutableState {
+    final value = this.state;
+    if (value is ChildRuntimeState_mutable) {
+      return value;
+    } else {
+      return this.state = (value as ChildRuntimeState).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  RealmRuntimeObservation toFrozen() =>
+      RealmRuntimeObservation(realmId: this.realmId, state: this.state)
+        .._u = this._u;
+}
+
+// struct EngineRuntimeObservation
+
+sealed class EngineRuntimeObservation_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable get engineId;
+  ChildRuntimeState_orMutable get state;
+
+  EngineRuntimeObservation toFrozen();
+}
+
+/// Deeply immutable.
+final class EngineRuntimeObservation
+    implements EngineRuntimeObservation_orMutable {
+  @_core.override
+  final _lib_kernel_v1_record_id.RecordId engineId;
+  @_core.override
+  final ChildRuntimeState state;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory EngineRuntimeObservation({
+    required _lib_kernel_v1_record_id.RecordId_orMutable engineId,
+    required ChildRuntimeState_orMutable state,
+  }) => EngineRuntimeObservation._(engineId.toFrozen(), state.toFrozen());
+
+  EngineRuntimeObservation._(this.engineId, this.state);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = EngineRuntimeObservation._(
+    _lib_kernel_v1_record_id.RecordId.defaultInstance,
+    ChildRuntimeState.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static EngineRuntimeObservation_mutable mutable() =>
+      EngineRuntimeObservation_mutable._(
+        _lib_kernel_v1_record_id.RecordId.defaultInstance,
+        ChildRuntimeState.defaultInstance,
+      );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  EngineRuntimeObservation toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  EngineRuntimeObservation_mutable toMutable() =>
+      EngineRuntimeObservation_mutable._(this.engineId, this.state);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! EngineRuntimeObservation) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.engineId, this.state];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `EngineRuntimeObservation` instances.
+  static _skir.StructSerializer<
+    EngineRuntimeObservation,
+    EngineRuntimeObservation_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "engine_id",
+        "engineId",
+        0,
+        _lib_kernel_v1_record_id.RecordId.serializer,
+        "",
+        (it) => it.engineId,
+        (it, v) => it.engineId = v,
+      );
+      _serializerBuilder.addField(
+        "state",
+        "state",
+        1,
+        ChildRuntimeState.serializer,
+        "",
+        (it) => it.state,
+        (it, v) => it.state = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "service/v1/topology.skir:EngineRuntimeObservation",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (EngineRuntimeObservation_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [EngineRuntimeObservation].
+final class EngineRuntimeObservation_mutable
+    implements EngineRuntimeObservation_orMutable {
+  _lib_kernel_v1_record_id.RecordId_orMutable engineId;
+  ChildRuntimeState_orMutable state;
+  _skir.internal__UnrecognizedFields? _u;
+
+  EngineRuntimeObservation_mutable._(this.engineId, this.state);
+
+  /// If the value of [engineId] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [engineId] and returns it.
+  _lib_kernel_v1_record_id.RecordId_mutable get mutableEngineId {
+    final value = this.engineId;
+    if (value is _lib_kernel_v1_record_id.RecordId_mutable) {
+      return value;
+    } else {
+      return this.engineId = (value as _lib_kernel_v1_record_id.RecordId)
+          .toMutable();
+    }
+  }
+
+  /// If the value of [state] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [state] and returns it.
+  ChildRuntimeState_mutable get mutableState {
+    final value = this.state;
+    if (value is ChildRuntimeState_mutable) {
+      return value;
+    } else {
+      return this.state = (value as ChildRuntimeState).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  EngineRuntimeObservation toFrozen() =>
+      EngineRuntimeObservation(engineId: this.engineId, state: this.state)
+        .._u = this._u;
+}
+
+// struct HostExecutionObservation
+
+sealed class HostExecutionObservation_orMutable {
+  ServiceHost_orMutable get host;
+  RealmRuntimeObservation_orMutable? get realm;
+  EngineRuntimeObservation_orMutable? get engine;
+
+  HostExecutionObservation toFrozen();
+}
+
+/// Deeply immutable.
+final class HostExecutionObservation
+    implements HostExecutionObservation_orMutable {
+  @_core.override
+  final ServiceHost host;
+  @_core.override
+  final RealmRuntimeObservation? realm;
+  @_core.override
+  final EngineRuntimeObservation? engine;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory HostExecutionObservation({
+    required ServiceHost_orMutable host,
+    required RealmRuntimeObservation_orMutable? realm,
+    required EngineRuntimeObservation_orMutable? engine,
+  }) => HostExecutionObservation._(
+    host.toFrozen(),
+    (realm != null) ? realm.toFrozen() : null,
+    (engine != null) ? engine.toFrozen() : null,
+  );
+
+  HostExecutionObservation._(this.host, this.realm, this.engine);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = HostExecutionObservation._(
+    ServiceHost.defaultInstance,
+    null,
+    null,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static HostExecutionObservation_mutable mutable() =>
+      HostExecutionObservation_mutable._(
+        ServiceHost.defaultInstance,
+        null,
+        null,
+      );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  HostExecutionObservation toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  HostExecutionObservation_mutable toMutable() =>
+      HostExecutionObservation_mutable._(this.host, this.realm, this.engine);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! HostExecutionObservation) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.host, this.realm, this.engine];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `HostExecutionObservation` instances.
+  static _skir.StructSerializer<
+    HostExecutionObservation,
+    HostExecutionObservation_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "host",
+        "host",
+        0,
+        ServiceHost.serializer,
+        "",
+        (it) => it.host,
+        (it, v) => it.host = v,
+      );
+      _serializerBuilder.addField(
+        "realm",
+        "realm",
+        1,
+        _skir.Serializers.optional(RealmRuntimeObservation.serializer),
+        "",
+        (it) => it.realm,
+        (it, v) => it.realm = v,
+      );
+      _serializerBuilder.addField(
+        "engine",
+        "engine",
+        2,
+        _skir.Serializers.optional(EngineRuntimeObservation.serializer),
+        "",
+        (it) => it.engine,
+        (it, v) => it.engine = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "service/v1/topology.skir:HostExecutionObservation",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (HostExecutionObservation_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [HostExecutionObservation].
+final class HostExecutionObservation_mutable
+    implements HostExecutionObservation_orMutable {
+  ServiceHost_orMutable host;
+  RealmRuntimeObservation_orMutable? realm;
+  EngineRuntimeObservation_orMutable? engine;
+  _skir.internal__UnrecognizedFields? _u;
+
+  HostExecutionObservation_mutable._(this.host, this.realm, this.engine);
+
+  /// If the value of [host] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [host] and returns it.
+  ServiceHost_mutable get mutableHost {
+    final value = this.host;
+    if (value is ServiceHost_mutable) {
+      return value;
+    } else {
+      return this.host = (value as ServiceHost).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  HostExecutionObservation toFrozen() => HostExecutionObservation(
+    host: this.host,
+    realm: this.realm,
+    engine: this.engine,
+  ).._u = this._u;
+}
+
 // enum OrganizationTopologyChanged
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -4404,9 +4796,8 @@ final class OrganizationTopologySnapshot_mutable
 ///     case OrganizationTopologyChanged_unknown(): { ... }
 ///     case OrganizationTopologyChanged_replace(:var value): { ... }
 ///     case OrganizationTopologyChanged_configurationChanged(:var value): { ... }
-///     case OrganizationTopologyChanged_hostUpdated(:var value): { ... }
-///     case OrganizationTopologyChanged_realmUpdated(:var value): { ... }
-///     case OrganizationTopologyChanged_engineUpdated(:var value): { ... }
+///     case OrganizationTopologyChanged_observationsReported(:var value): { ... }
+///     case OrganizationTopologyChanged_hostAdvertised(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -4456,12 +4847,26 @@ sealed class OrganizationTopologyChanged {
     ),
   );
 
-  /// Create a 'host_updated' variant wrapping around the given value.
-  factory OrganizationTopologyChanged.wrapHostUpdated(ServiceHost value) =>
-      OrganizationTopologyChanged_hostUpdatedWrapper._(value);
+  /// Create a 'observations_reported' variant wrapping around the given value.
+  factory OrganizationTopologyChanged.wrapObservationsReported(
+    HostExecutionObservation value,
+  ) => OrganizationTopologyChanged_observationsReportedWrapper._(value);
 
-  /// Same as `wrapHostUpdated(ServiceHost(...))`.
-  factory OrganizationTopologyChanged.createHostUpdated({
+  /// Same as `wrapObservationsReported(HostExecutionObservation(...))`.
+  factory OrganizationTopologyChanged.createObservationsReported({
+    required ServiceHost_orMutable host,
+    required RealmRuntimeObservation_orMutable? realm,
+    required EngineRuntimeObservation_orMutable? engine,
+  }) => OrganizationTopologyChanged.wrapObservationsReported(
+    HostExecutionObservation(host: host, realm: realm, engine: engine),
+  );
+
+  /// Create a 'host_advertised' variant wrapping around the given value.
+  factory OrganizationTopologyChanged.wrapHostAdvertised(ServiceHost value) =>
+      OrganizationTopologyChanged_hostAdvertisedWrapper._(value);
+
+  /// Same as `wrapHostAdvertised(ServiceHost(...))`.
+  factory OrganizationTopologyChanged.createHostAdvertised({
     required _lib_kernel_v1_record_id.RecordId_orMutable hostId,
     required _lib_kernel_v1_record_id.RecordId_orMutable serviceId,
     required _core.int revision,
@@ -4470,7 +4875,7 @@ sealed class OrganizationTopologyChanged {
     required _core.Iterable<SupportedEngine_orMutable> supportedEngines,
     required ReconciledRevision_orMutable topologyRevision,
     required HostRuntimeState_orMutable state,
-  }) => OrganizationTopologyChanged.wrapHostUpdated(
+  }) => OrganizationTopologyChanged.wrapHostAdvertised(
     ServiceHost(
       hostId: hostId,
       serviceId: serviceId,
@@ -4479,50 +4884,6 @@ sealed class OrganizationTopologyChanged {
       canHostRealm: canHostRealm,
       supportedEngines: supportedEngines,
       topologyRevision: topologyRevision,
-      state: state,
-    ),
-  );
-
-  /// Create a 'realm_updated' variant wrapping around the given value.
-  factory OrganizationTopologyChanged.wrapRealmUpdated(RealmInstance value) =>
-      OrganizationTopologyChanged_realmUpdatedWrapper._(value);
-
-  /// Same as `wrapRealmUpdated(RealmInstance(...))`.
-  factory OrganizationTopologyChanged.createRealmUpdated({
-    required _lib_kernel_v1_record_id.RecordId_orMutable realmId,
-    required OwnerHost_orMutable ownerHost,
-    required _core.int revision,
-    required EngineTarget_orMutable targetEngine,
-    required ChildRuntimeState_orMutable state,
-  }) => OrganizationTopologyChanged.wrapRealmUpdated(
-    RealmInstance(
-      realmId: realmId,
-      ownerHost: ownerHost,
-      revision: revision,
-      targetEngine: targetEngine,
-      state: state,
-    ),
-  );
-
-  /// Create a 'engine_updated' variant wrapping around the given value.
-  factory OrganizationTopologyChanged.wrapEngineUpdated(EngineInstance value) =>
-      OrganizationTopologyChanged_engineUpdatedWrapper._(value);
-
-  /// Same as `wrapEngineUpdated(EngineInstance(...))`.
-  factory OrganizationTopologyChanged.createEngineUpdated({
-    required _lib_kernel_v1_record_id.RecordId_orMutable engineId,
-    required OwnerHost_orMutable ownerHost,
-    required RealmInfo_orMutable realm,
-    required _core.int revision,
-    required EngineTarget_orMutable target,
-    required ChildRuntimeState_orMutable state,
-  }) => OrganizationTopologyChanged.wrapEngineUpdated(
-    EngineInstance(
-      engineId: engineId,
-      ownerHost: ownerHost,
-      realm: realm,
-      revision: revision,
-      target: target,
       state: state,
     ),
   );
@@ -4557,33 +4918,26 @@ sealed class OrganizationTopologyChanged {
       );
       _serializerBuilder.addWrapperVariant(
         3,
-        "host_updated",
-        "wrapHostUpdated",
-        ServiceHost.serializer,
+        "observations_reported",
+        "wrapObservationsReported",
+        HostExecutionObservation.serializer,
         "",
-        OrganizationTopologyChanged_hostUpdatedWrapper._,
+        OrganizationTopologyChanged_observationsReportedWrapper._,
         (it) => it.value,
-        ordinal: OrganizationTopologyChanged_kind.hostUpdatedWrapper._ordinal,
+        ordinal: OrganizationTopologyChanged_kind
+            .observationsReportedWrapper
+            ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
         4,
-        "realm_updated",
-        "wrapRealmUpdated",
-        RealmInstance.serializer,
+        "host_advertised",
+        "wrapHostAdvertised",
+        ServiceHost.serializer,
         "",
-        OrganizationTopologyChanged_realmUpdatedWrapper._,
+        OrganizationTopologyChanged_hostAdvertisedWrapper._,
         (it) => it.value,
-        ordinal: OrganizationTopologyChanged_kind.realmUpdatedWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        5,
-        "engine_updated",
-        "wrapEngineUpdated",
-        EngineInstance.serializer,
-        "",
-        OrganizationTopologyChanged_engineUpdatedWrapper._,
-        (it) => it.value,
-        ordinal: OrganizationTopologyChanged_kind.engineUpdatedWrapper._ordinal,
+        ordinal:
+            OrganizationTopologyChanged_kind.hostAdvertisedWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -4607,9 +4961,8 @@ enum OrganizationTopologyChanged_kind {
   unknown(0),
   replaceWrapper(1),
   configurationChangedWrapper(2),
-  hostUpdatedWrapper(3),
-  realmUpdatedWrapper(4),
-  engineUpdatedWrapper(5);
+  observationsReportedWrapper(3),
+  hostAdvertisedWrapper(4);
 
   final _core.int _ordinal;
 
@@ -4677,42 +5030,29 @@ final class OrganizationTopologyChanged_configurationChangedWrapper
       OrganizationTopologyChanged_kind.configurationChangedWrapper;
 }
 
-final class OrganizationTopologyChanged_hostUpdatedWrapper
+final class OrganizationTopologyChanged_observationsReportedWrapper
+    extends _OrganizationTopologyChanged_wrapper {
+  final HostExecutionObservation value;
+
+  OrganizationTopologyChanged_observationsReportedWrapper._(this.value);
+
+  @_core.override
+  OrganizationTopologyChanged_kind get kind =>
+      OrganizationTopologyChanged_kind.observationsReportedWrapper;
+}
+
+final class OrganizationTopologyChanged_hostAdvertisedWrapper
     extends _OrganizationTopologyChanged_wrapper {
   final ServiceHost value;
 
-  OrganizationTopologyChanged_hostUpdatedWrapper._(this.value);
+  OrganizationTopologyChanged_hostAdvertisedWrapper._(this.value);
 
   @_core.override
   OrganizationTopologyChanged_kind get kind =>
-      OrganizationTopologyChanged_kind.hostUpdatedWrapper;
+      OrganizationTopologyChanged_kind.hostAdvertisedWrapper;
 }
 
-final class OrganizationTopologyChanged_realmUpdatedWrapper
-    extends _OrganizationTopologyChanged_wrapper {
-  final RealmInstance value;
-
-  OrganizationTopologyChanged_realmUpdatedWrapper._(this.value);
-
-  @_core.override
-  OrganizationTopologyChanged_kind get kind =>
-      OrganizationTopologyChanged_kind.realmUpdatedWrapper;
-}
-
-final class OrganizationTopologyChanged_engineUpdatedWrapper
-    extends _OrganizationTopologyChanged_wrapper {
-  final EngineInstance value;
-
-  OrganizationTopologyChanged_engineUpdatedWrapper._(this.value);
-
-  @_core.override
-  OrganizationTopologyChanged_kind get kind =>
-      OrganizationTopologyChanged_kind.engineUpdatedWrapper;
-}
-
-// -----------------------------------------------------------------------------
 // struct WatchOrganizationTopologyRequest
-// -----------------------------------------------------------------------------
 
 sealed class WatchOrganizationTopologyRequest_orMutable {
   WatchOrganizationTopologyRequest toFrozen();
@@ -4736,7 +5076,7 @@ final class WatchOrganizationTopologyRequest
   static WatchOrganizationTopologyRequest_mutable mutable() =>
       WatchOrganizationTopologyRequest_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   WatchOrganizationTopologyRequest toFrozen() => this;
@@ -4799,9 +5139,7 @@ final class WatchOrganizationTopologyRequest_mutable
       WatchOrganizationTopologyRequest().._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum WatchOrganizationTopologyResponse
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -4972,9 +5310,7 @@ final class WatchOrganizationTopologyResponse_internalErrorWrapper
       WatchOrganizationTopologyResponse_kind.internalErrorWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct WatchHostExecutionRequest
-// -----------------------------------------------------------------------------
 
 sealed class WatchHostExecutionRequest_orMutable {
   WatchHostExecutionRequest toFrozen();
@@ -4997,7 +5333,7 @@ final class WatchHostExecutionRequest
   static WatchHostExecutionRequest_mutable mutable() =>
       WatchHostExecutionRequest_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   WatchHostExecutionRequest toFrozen() => this;
@@ -5060,9 +5396,7 @@ final class WatchHostExecutionRequest_mutable
       WatchHostExecutionRequest().._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct WatchHostExecutionResponse.Desired
-// -----------------------------------------------------------------------------
 
 sealed class WatchHostExecutionResponse_Desired_orMutable {
   _core.int get topologyRevision;
@@ -5111,7 +5445,7 @@ final class WatchHostExecutionResponse_Desired
   static WatchHostExecutionResponse_Desired_mutable mutable() =>
       WatchHostExecutionResponse_Desired_mutable._(0, null, null);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   WatchHostExecutionResponse_Desired toFrozen() => this;
@@ -5220,9 +5554,7 @@ final class WatchHostExecutionResponse_Desired_mutable
       ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum WatchHostExecutionResponse
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -5384,9 +5716,7 @@ final class WatchHostExecutionResponse_internalErrorWrapper
       WatchHostExecutionResponse_kind.internalErrorWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct ReportHostExecutionRequest
-// -----------------------------------------------------------------------------
 
 sealed class ReportHostExecutionRequest_orMutable {
   _core.int get topologyRevision;
@@ -5431,7 +5761,7 @@ final class ReportHostExecutionRequest
   static ReportHostExecutionRequest_mutable mutable() =>
       ReportHostExecutionRequest_mutable._(0, null, null);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ReportHostExecutionRequest toFrozen() => this;
@@ -5539,9 +5869,7 @@ final class ReportHostExecutionRequest_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ReportHostExecutionResponse.Success
-// -----------------------------------------------------------------------------
 
 sealed class ReportHostExecutionResponse_Success_orMutable {
   ReportHostExecutionResponse_Success toFrozen();
@@ -5565,7 +5893,7 @@ final class ReportHostExecutionResponse_Success
   static ReportHostExecutionResponse_Success_mutable mutable() =>
       ReportHostExecutionResponse_Success_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ReportHostExecutionResponse_Success toFrozen() => this;
@@ -5628,9 +5956,7 @@ final class ReportHostExecutionResponse_Success_mutable
       ReportHostExecutionResponse_Success().._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ReportHostExecutionResponse.StaleRevisionError
-// -----------------------------------------------------------------------------
 
 sealed class ReportHostExecutionResponse_StaleRevisionError_orMutable {
   ReportHostExecutionResponse_StaleRevisionError toFrozen();
@@ -5655,7 +5981,7 @@ final class ReportHostExecutionResponse_StaleRevisionError
   static ReportHostExecutionResponse_StaleRevisionError_mutable mutable() =>
       ReportHostExecutionResponse_StaleRevisionError_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ReportHostExecutionResponse_StaleRevisionError toFrozen() => this;
@@ -5719,9 +6045,7 @@ final class ReportHostExecutionResponse_StaleRevisionError_mutable
       ReportHostExecutionResponse_StaleRevisionError().._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum ReportHostExecutionResponse
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -5911,9 +6235,7 @@ final class ReportHostExecutionResponse_internalErrorWrapper
       ReportHostExecutionResponse_kind.internalErrorWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct ServiceMessagingScope
-// -----------------------------------------------------------------------------
 
 sealed class ServiceMessagingScope_orMutable {
   _core.String get organizationId;
@@ -5957,7 +6279,7 @@ final class ServiceMessagingScope implements ServiceMessagingScope_orMutable {
   static ServiceMessagingScope_mutable mutable() =>
       ServiceMessagingScope_mutable._("", null, null);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ServiceMessagingScope toFrozen() => this;
@@ -6068,9 +6390,7 @@ final class ServiceMessagingScope_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct GetServiceMessagingScopeRequest
-// -----------------------------------------------------------------------------
 
 sealed class GetServiceMessagingScopeRequest_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get serviceId;
@@ -6103,7 +6423,7 @@ final class GetServiceMessagingScopeRequest
         _lib_kernel_v1_record_id.RecordId.defaultInstance,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   GetServiceMessagingScopeRequest toFrozen() => this;
@@ -6170,7 +6490,7 @@ final class GetServiceMessagingScopeRequest_mutable
 
   GetServiceMessagingScopeRequest_mutable._(this.serviceId);
 
-  /// If the value of [serviceId] is already mutable, returns it as-is.
+  /// If the value of [serviceId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [serviceId] and returns it.
   _lib_kernel_v1_record_id.RecordId_mutable get mutableServiceId {
     final value = this.serviceId;
@@ -6188,9 +6508,7 @@ final class GetServiceMessagingScopeRequest_mutable
       GetServiceMessagingScopeRequest(serviceId: this.serviceId).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct GetServiceMessagingScopeResponse.NotFound
-// -----------------------------------------------------------------------------
 
 sealed class GetServiceMessagingScopeResponse_NotFound_orMutable {
   GetServiceMessagingScopeResponse_NotFound toFrozen();
@@ -6214,7 +6532,7 @@ final class GetServiceMessagingScopeResponse_NotFound
   static GetServiceMessagingScopeResponse_NotFound_mutable mutable() =>
       GetServiceMessagingScopeResponse_NotFound_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   GetServiceMessagingScopeResponse_NotFound toFrozen() => this;
@@ -6279,9 +6597,7 @@ final class GetServiceMessagingScopeResponse_NotFound_mutable
       GetServiceMessagingScopeResponse_NotFound().._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum GetServiceMessagingScopeResponse
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -6484,9 +6800,7 @@ final class GetServiceMessagingScopeResponse_internalErrorWrapper
       GetServiceMessagingScopeResponse_kind.internalErrorWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct RegisterServiceHostRequest
-// -----------------------------------------------------------------------------
 
 sealed class RegisterServiceHostRequest_orMutable {
   _core.String get entrypoint;
@@ -6539,7 +6853,7 @@ final class RegisterServiceHostRequest
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RegisterServiceHostRequest toFrozen() => this;
@@ -6638,7 +6952,7 @@ final class RegisterServiceHostRequest_mutable
     this.supportedEngines,
   );
 
-  /// If the value of [supportedEngines] is already mutable, returns it as-is.
+  /// If the value of [supportedEngines] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [supportedEngines] and returns it.
   _core.List<SupportedEngine_orMutable> get mutableSupportedEngines {
     final value = this.supportedEngines;
@@ -6658,9 +6972,7 @@ final class RegisterServiceHostRequest_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum RegisterServiceHostResponse
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```

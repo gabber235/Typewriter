@@ -15,9 +15,7 @@ import "dart:core" as _core;
 
 import "package:skir_client/skir_client.dart" as _skir;
 
-// -----------------------------------------------------------------------------
 // enum Icon
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```

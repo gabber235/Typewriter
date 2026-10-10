@@ -108,7 +108,7 @@ class SetValueAction private constructor(
         );
 
         /**
-         * If the value of [target] is already mutable, returns it as-is.
+         * If the value of [target] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
          */
         val mutableTarget: skirout.editor.v1.binding.BindingRef.Mutable get() {
@@ -259,7 +259,7 @@ class InsertListItemAction private constructor(
         );
 
         /**
-         * If the value of [target] is already mutable, returns it as-is.
+         * If the value of [target] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
          */
         val mutableTarget: skirout.editor.v1.binding.BindingRef.Mutable get() {
@@ -403,7 +403,7 @@ class AppendListItemAction private constructor(
         );
 
         /**
-         * If the value of [target] is already mutable, returns it as-is.
+         * If the value of [target] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
          */
         val mutableTarget: skirout.editor.v1.binding.BindingRef.Mutable get() {
@@ -543,7 +543,7 @@ class RemoveListItemAction private constructor(
         );
 
         /**
-         * If the value of [target] is already mutable, returns it as-is.
+         * If the value of [target] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
          */
         val mutableTarget: skirout.editor.v1.binding.BindingRef.Mutable get() {
@@ -559,7 +559,7 @@ class RemoveListItemAction private constructor(
         }
 
         /**
-         * If the value of [item] is already mutable, returns it as-is.
+         * If the value of [item] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [item] and returns it.
          */
         val mutableItem: skirout.editor.v1.type_catalog.ItemId.Mutable get() {
@@ -699,7 +699,7 @@ class DuplicateListItemAction private constructor(
         );
 
         /**
-         * If the value of [target] is already mutable, returns it as-is.
+         * If the value of [target] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
          */
         val mutableTarget: skirout.editor.v1.binding.BindingRef.Mutable get() {
@@ -715,7 +715,7 @@ class DuplicateListItemAction private constructor(
         }
 
         /**
-         * If the value of [item] is already mutable, returns it as-is.
+         * If the value of [item] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [item] and returns it.
          */
         val mutableItem: skirout.editor.v1.type_catalog.ItemId.Mutable get() {
@@ -866,7 +866,7 @@ class MoveListItemAction private constructor(
         );
 
         /**
-         * If the value of [target] is already mutable, returns it as-is.
+         * If the value of [target] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
          */
         val mutableTarget: skirout.editor.v1.binding.BindingRef.Mutable get() {
@@ -882,7 +882,7 @@ class MoveListItemAction private constructor(
         }
 
         /**
-         * If the value of [item] is already mutable, returns it as-is.
+         * If the value of [item] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [item] and returns it.
          */
         val mutableItem: skirout.editor.v1.type_catalog.ItemId.Mutable get() {
@@ -1037,7 +1037,7 @@ class InsertMapRowAction private constructor(
         );
 
         /**
-         * If the value of [target] is already mutable, returns it as-is.
+         * If the value of [target] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
          */
         val mutableTarget: skirout.editor.v1.binding.BindingRef.Mutable get() {
@@ -1203,7 +1203,7 @@ class UpdateMapRowAction private constructor(
         );
 
         /**
-         * If the value of [target] is already mutable, returns it as-is.
+         * If the value of [target] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
          */
         val mutableTarget: skirout.editor.v1.binding.BindingRef.Mutable get() {
@@ -1219,7 +1219,7 @@ class UpdateMapRowAction private constructor(
         }
 
         /**
-         * If the value of [row] is already mutable, returns it as-is.
+         * If the value of [row] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [row] and returns it.
          */
         val mutableRow: skirout.editor.v1.type_catalog.ItemId.Mutable get() {
@@ -1367,7 +1367,7 @@ class RemoveMapRowAction private constructor(
         );
 
         /**
-         * If the value of [target] is already mutable, returns it as-is.
+         * If the value of [target] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
          */
         val mutableTarget: skirout.editor.v1.binding.BindingRef.Mutable get() {
@@ -1383,7 +1383,7 @@ class RemoveMapRowAction private constructor(
         }
 
         /**
-         * If the value of [row] is already mutable, returns it as-is.
+         * If the value of [row] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [row] and returns it.
          */
         val mutableRow: skirout.editor.v1.type_catalog.ItemId.Mutable get() {
@@ -1523,7 +1523,7 @@ class ChooseFormAction private constructor(
         );
 
         /**
-         * If the value of [target] is already mutable, returns it as-is.
+         * If the value of [target] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
          */
         val mutableTarget: skirout.editor.v1.binding.BindingRef.Mutable get() {
@@ -2131,7 +2131,7 @@ class CommandCapabilityAction private constructor(
         );
 
         /**
-         * If the value of [capabilityId] is already mutable, returns it as-is.
+         * If the value of [capabilityId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
          */
         val mutableCapabilityId: skirout.editor.v1.type_catalog.CapabilityId.Mutable get() {

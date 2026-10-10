@@ -17,9 +17,7 @@ import "package:skir_client/skir_client.dart" as _skir;
 
 import "../../kernel/v1/duration.dart" as _lib_kernel_v1_duration;
 
-// -----------------------------------------------------------------------------
 // struct DeclaredTypeId
-// -----------------------------------------------------------------------------
 
 sealed class DeclaredTypeId_orMutable {
   _core.String get value;
@@ -45,7 +43,7 @@ final class DeclaredTypeId implements DeclaredTypeId_orMutable {
   /// Fields are initialized to their default values.
   static DeclaredTypeId_mutable mutable() => DeclaredTypeId_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   DeclaredTypeId toFrozen() => this;
@@ -112,9 +110,7 @@ final class DeclaredTypeId_mutable implements DeclaredTypeId_orMutable {
   DeclaredTypeId toFrozen() => DeclaredTypeId(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct QualifiedTypeId
-// -----------------------------------------------------------------------------
 
 sealed class QualifiedTypeId_orMutable {
   _core.String get namespace;
@@ -145,7 +141,7 @@ final class QualifiedTypeId implements QualifiedTypeId_orMutable {
   /// Fields are initialized to their default values.
   static QualifiedTypeId_mutable mutable() => QualifiedTypeId_mutable._("", "");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   QualifiedTypeId toFrozen() => this;
@@ -224,9 +220,7 @@ final class QualifiedTypeId_mutable implements QualifiedTypeId_orMutable {
       QualifiedTypeId(namespace: this.namespace, name: this.name).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum TypeId
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -367,9 +361,7 @@ final class TypeId_qualifiedWrapper extends _TypeId_wrapper {
   TypeId_kind get kind => TypeId_kind.qualifiedWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct TypeDefinitionId
-// -----------------------------------------------------------------------------
 
 sealed class TypeDefinitionId_orMutable {
   TypeId get typeId;
@@ -401,7 +393,7 @@ final class TypeDefinitionId implements TypeDefinitionId_orMutable {
   static TypeDefinitionId_mutable mutable() =>
       TypeDefinitionId_mutable._(TypeId.unknown, 0);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   TypeDefinitionId toFrozen() => this;
@@ -481,9 +473,7 @@ final class TypeDefinitionId_mutable implements TypeDefinitionId_orMutable {
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ParameterKey
-// -----------------------------------------------------------------------------
 
 sealed class ParameterKey_orMutable {
   TypeDefinitionId_orMutable get owner;
@@ -518,7 +508,7 @@ final class ParameterKey implements ParameterKey_orMutable {
   static ParameterKey_mutable mutable() =>
       ParameterKey_mutable._(TypeDefinitionId.defaultInstance, 0);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ParameterKey toFrozen() => this;
@@ -591,7 +581,7 @@ final class ParameterKey_mutable implements ParameterKey_orMutable {
 
   ParameterKey_mutable._(this.owner, this.index);
 
-  /// If the value of [owner] is already mutable, returns it as-is.
+  /// If the value of [owner] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [owner] and returns it.
   TypeDefinitionId_mutable get mutableOwner {
     final value = this.owner;
@@ -608,9 +598,7 @@ final class ParameterKey_mutable implements ParameterKey_orMutable {
       ParameterKey(owner: this.owner, index: this.index).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum IntegerWidth
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -777,9 +765,7 @@ enum _IntegerWidth_consts implements IntegerWidth {
       _skir.internal__stringify(this, IntegerWidth.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // enum FloatWidth
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -880,9 +866,7 @@ enum _FloatWidth_consts implements FloatWidth {
       _skir.internal__stringify(this, FloatWidth.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // struct IntegerScalar
-// -----------------------------------------------------------------------------
 
 sealed class IntegerScalar_orMutable {
   IntegerWidth get width;
@@ -909,7 +893,7 @@ final class IntegerScalar implements IntegerScalar_orMutable {
   static IntegerScalar_mutable mutable() =>
       IntegerScalar_mutable._(IntegerWidth.unknown);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   IntegerScalar toFrozen() => this;
@@ -976,9 +960,7 @@ final class IntegerScalar_mutable implements IntegerScalar_orMutable {
   IntegerScalar toFrozen() => IntegerScalar(width: this.width).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct FloatScalar
-// -----------------------------------------------------------------------------
 
 sealed class FloatScalar_orMutable {
   FloatWidth get width;
@@ -1004,7 +986,7 @@ final class FloatScalar implements FloatScalar_orMutable {
   static FloatScalar_mutable mutable() =>
       FloatScalar_mutable._(FloatWidth.unknown);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   FloatScalar toFrozen() => this;
@@ -1071,9 +1053,7 @@ final class FloatScalar_mutable implements FloatScalar_orMutable {
   FloatScalar toFrozen() => FloatScalar(width: this.width).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum ScalarKind
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -1286,9 +1266,7 @@ final class ScalarKind_floatWrapper extends _ScalarKind_wrapper {
   ScalarKind_kind get kind => ScalarKind_kind.floatWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct NamedTypeTemplate
-// -----------------------------------------------------------------------------
 
 sealed class NamedTypeTemplate_orMutable {
   TypeDefinitionId_orMutable get definition;
@@ -1328,7 +1306,7 @@ final class NamedTypeTemplate implements NamedTypeTemplate_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   NamedTypeTemplate toFrozen() => this;
@@ -1401,7 +1379,7 @@ final class NamedTypeTemplate_mutable implements NamedTypeTemplate_orMutable {
 
   NamedTypeTemplate_mutable._(this.definition, this.arguments);
 
-  /// If the value of [definition] is already mutable, returns it as-is.
+  /// If the value of [definition] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [definition] and returns it.
   TypeDefinitionId_mutable get mutableDefinition {
     final value = this.definition;
@@ -1419,9 +1397,7 @@ final class NamedTypeTemplate_mutable implements NamedTypeTemplate_orMutable {
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct NullableTypeTemplate
-// -----------------------------------------------------------------------------
 
 sealed class NullableTypeTemplate_orMutable {
   TypeTemplate get value;
@@ -1448,7 +1424,7 @@ final class NullableTypeTemplate implements NullableTypeTemplate_orMutable {
   static NullableTypeTemplate_mutable mutable() =>
       NullableTypeTemplate_mutable._(TypeTemplate.unknown);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   NullableTypeTemplate toFrozen() => this;
@@ -1521,9 +1497,7 @@ final class NullableTypeTemplate_mutable
       NullableTypeTemplate(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum TypeTemplate
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -1724,9 +1698,7 @@ final class TypeTemplate_scalarWrapper extends _TypeTemplate_wrapper {
   TypeTemplate_kind get kind => TypeTemplate_kind.scalarWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct NamedTypeUse
-// -----------------------------------------------------------------------------
 
 sealed class NamedTypeUse_orMutable {
   TypeDefinitionId_orMutable get definition;
@@ -1766,7 +1738,7 @@ final class NamedTypeUse implements NamedTypeUse_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   NamedTypeUse toFrozen() => this;
@@ -1839,7 +1811,7 @@ final class NamedTypeUse_mutable implements NamedTypeUse_orMutable {
 
   NamedTypeUse_mutable._(this.definition, this.arguments);
 
-  /// If the value of [definition] is already mutable, returns it as-is.
+  /// If the value of [definition] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [definition] and returns it.
   TypeDefinitionId_mutable get mutableDefinition {
     final value = this.definition;
@@ -1857,9 +1829,7 @@ final class NamedTypeUse_mutable implements NamedTypeUse_orMutable {
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct NullableTypeUse
-// -----------------------------------------------------------------------------
 
 sealed class NullableTypeUse_orMutable {
   TypeUse get value;
@@ -1885,7 +1855,7 @@ final class NullableTypeUse implements NullableTypeUse_orMutable {
   static NullableTypeUse_mutable mutable() =>
       NullableTypeUse_mutable._(TypeUse.unknown);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   NullableTypeUse toFrozen() => this;
@@ -1953,9 +1923,7 @@ final class NullableTypeUse_mutable implements NullableTypeUse_orMutable {
       NullableTypeUse(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum TypeUse
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -2125,9 +2093,7 @@ final class TypeUse_scalarWrapper extends _TypeUse_wrapper {
   TypeUse_kind get kind => TypeUse_kind.scalarWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct TypeParameter
-// -----------------------------------------------------------------------------
 
 sealed class TypeParameter_orMutable {
   ParameterKey_orMutable get key;
@@ -2171,7 +2137,7 @@ final class TypeParameter implements TypeParameter_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   TypeParameter toFrozen() => this;
@@ -2254,7 +2220,7 @@ final class TypeParameter_mutable implements TypeParameter_orMutable {
 
   TypeParameter_mutable._(this.key, this.name, this.bounds);
 
-  /// If the value of [key] is already mutable, returns it as-is.
+  /// If the value of [key] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [key] and returns it.
   ParameterKey_mutable get mutableKey {
     final value = this.key;
@@ -2265,7 +2231,7 @@ final class TypeParameter_mutable implements TypeParameter_orMutable {
     }
   }
 
-  /// If the value of [bounds] is already mutable, returns it as-is.
+  /// If the value of [bounds] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [bounds] and returns it.
   _core.List<TypeTemplate> get mutableBounds {
     final value = this.bounds;
@@ -2283,9 +2249,7 @@ final class TypeParameter_mutable implements TypeParameter_orMutable {
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct FieldOwner
-// -----------------------------------------------------------------------------
 
 sealed class FieldOwner_orMutable {
   TypeDefinitionId_orMutable get definition;
@@ -2320,7 +2284,7 @@ final class FieldOwner implements FieldOwner_orMutable {
   static FieldOwner_mutable mutable() =>
       FieldOwner_mutable._(TypeDefinitionId.defaultInstance, "");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   FieldOwner toFrozen() => this;
@@ -2392,7 +2356,7 @@ final class FieldOwner_mutable implements FieldOwner_orMutable {
 
   FieldOwner_mutable._(this.definition, this.name);
 
-  /// If the value of [definition] is already mutable, returns it as-is.
+  /// If the value of [definition] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [definition] and returns it.
   TypeDefinitionId_mutable get mutableDefinition {
     final value = this.definition;
@@ -2409,9 +2373,7 @@ final class FieldOwner_mutable implements FieldOwner_orMutable {
       FieldOwner(definition: this.definition, name: this.name).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct FieldDeclaration
-// -----------------------------------------------------------------------------
 
 sealed class FieldDeclaration_orMutable {
   FieldOwner_orMutable get owner;
@@ -2470,7 +2432,7 @@ final class FieldDeclaration implements FieldDeclaration_orMutable {
     false,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   FieldDeclaration toFrozen() => this;
@@ -2577,7 +2539,7 @@ final class FieldDeclaration_mutable implements FieldDeclaration_orMutable {
     this.hasConstructorDefault,
   );
 
-  /// If the value of [owner] is already mutable, returns it as-is.
+  /// If the value of [owner] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [owner] and returns it.
   FieldOwner_mutable get mutableOwner {
     final value = this.owner;
@@ -2588,7 +2550,7 @@ final class FieldDeclaration_mutable implements FieldDeclaration_orMutable {
     }
   }
 
-  /// If the value of [overrides] is already mutable, returns it as-is.
+  /// If the value of [overrides] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [overrides] and returns it.
   _core.List<FieldOwner_orMutable> get mutableOverrides {
     final value = this.overrides;
@@ -2609,9 +2571,7 @@ final class FieldDeclaration_mutable implements FieldDeclaration_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum CollectionKind
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -2700,9 +2660,7 @@ enum _CollectionKind_consts implements CollectionKind {
       _skir.internal__stringify(this, CollectionKind.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // struct EnumVariant
-// -----------------------------------------------------------------------------
 
 sealed class EnumVariant_orMutable {
   _core.String get key;
@@ -2727,7 +2685,7 @@ final class EnumVariant implements EnumVariant_orMutable {
   /// Fields are initialized to their default values.
   static EnumVariant_mutable mutable() => EnumVariant_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   EnumVariant toFrozen() => this;
@@ -2794,9 +2752,7 @@ final class EnumVariant_mutable implements EnumVariant_orMutable {
   EnumVariant toFrozen() => EnumVariant(key: this.key).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ScalarRepresentationTemplate
-// -----------------------------------------------------------------------------
 
 sealed class ScalarRepresentationTemplate_orMutable {
   ScalarKind get kind;
@@ -2826,7 +2782,7 @@ final class ScalarRepresentationTemplate
   static ScalarRepresentationTemplate_mutable mutable() =>
       ScalarRepresentationTemplate_mutable._(ScalarKind.unknown);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ScalarRepresentationTemplate toFrozen() => this;
@@ -2899,9 +2855,7 @@ final class ScalarRepresentationTemplate_mutable
       ScalarRepresentationTemplate(kind: this.kind).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct RecordRepresentationTemplate
-// -----------------------------------------------------------------------------
 
 sealed class RecordRepresentationTemplate_orMutable {
   _core.Iterable<FieldDeclaration_orMutable> get fields;
@@ -2940,7 +2894,7 @@ final class RecordRepresentationTemplate
   static RecordRepresentationTemplate_mutable mutable() =>
       RecordRepresentationTemplate_mutable._(_skir.KeyedIterable.empty, false);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RecordRepresentationTemplate toFrozen() => this;
@@ -3017,7 +2971,7 @@ final class RecordRepresentationTemplate_mutable
 
   RecordRepresentationTemplate_mutable._(this.fields, this.abstract_);
 
-  /// If the value of [fields] is already mutable, returns it as-is.
+  /// If the value of [fields] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [fields] and returns it.
   _core.List<FieldDeclaration_orMutable> get mutableFields {
     final value = this.fields;
@@ -3036,9 +2990,7 @@ final class RecordRepresentationTemplate_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct SequenceRepresentationTemplate
-// -----------------------------------------------------------------------------
 
 sealed class SequenceRepresentationTemplate_orMutable {
   TypeTemplate get item;
@@ -3077,7 +3029,7 @@ final class SequenceRepresentationTemplate
         CollectionKind.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SequenceRepresentationTemplate toFrozen() => this;
@@ -3161,9 +3113,7 @@ final class SequenceRepresentationTemplate_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct MappingRepresentationTemplate
-// -----------------------------------------------------------------------------
 
 sealed class MappingRepresentationTemplate_orMutable {
   TypeTemplate get key;
@@ -3202,7 +3152,7 @@ final class MappingRepresentationTemplate
         TypeTemplate.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   MappingRepresentationTemplate toFrozen() => this;
@@ -3286,9 +3236,7 @@ final class MappingRepresentationTemplate_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct EnumerationRepresentationTemplate
-// -----------------------------------------------------------------------------
 
 sealed class EnumerationRepresentationTemplate_orMutable {
   _core.Iterable<EnumVariant_orMutable> get cases;
@@ -3326,7 +3274,7 @@ final class EnumerationRepresentationTemplate
   static EnumerationRepresentationTemplate_mutable mutable() =>
       EnumerationRepresentationTemplate_mutable._(_skir.KeyedIterable.empty);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   EnumerationRepresentationTemplate toFrozen() => this;
@@ -3397,7 +3345,7 @@ final class EnumerationRepresentationTemplate_mutable
 
   EnumerationRepresentationTemplate_mutable._(this.cases);
 
-  /// If the value of [cases] is already mutable, returns it as-is.
+  /// If the value of [cases] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [cases] and returns it.
   _core.List<EnumVariant_orMutable> get mutableCases {
     final value = this.cases;
@@ -3414,9 +3362,7 @@ final class EnumerationRepresentationTemplate_mutable
       EnumerationRepresentationTemplate(cases: this.cases).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct EndpointId
-// -----------------------------------------------------------------------------
 
 sealed class EndpointId_orMutable {
   _core.String get value;
@@ -3441,7 +3387,7 @@ final class EndpointId implements EndpointId_orMutable {
   /// Fields are initialized to their default values.
   static EndpointId_mutable mutable() => EndpointId_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   EndpointId toFrozen() => this;
@@ -3507,9 +3453,7 @@ final class EndpointId_mutable implements EndpointId_orMutable {
   EndpointId toFrozen() => EndpointId(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct LinkRepresentationTemplate
-// -----------------------------------------------------------------------------
 
 sealed class LinkRepresentationTemplate_orMutable {
   EndpointId_orMutable get endpoint;
@@ -3548,7 +3492,7 @@ final class LinkRepresentationTemplate
         TypeTemplate.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   LinkRepresentationTemplate toFrozen() => this;
@@ -3625,7 +3569,7 @@ final class LinkRepresentationTemplate_mutable
 
   LinkRepresentationTemplate_mutable._(this.endpoint, this.target);
 
-  /// If the value of [endpoint] is already mutable, returns it as-is.
+  /// If the value of [endpoint] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [endpoint] and returns it.
   EndpointId_mutable get mutableEndpoint {
     final value = this.endpoint;
@@ -3643,9 +3587,7 @@ final class LinkRepresentationTemplate_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum RepresentationTemplate
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -3941,9 +3883,7 @@ final class RepresentationTemplate_linkWrapper
       RepresentationTemplate_kind.linkWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct TypeDefinition
-// -----------------------------------------------------------------------------
 
 sealed class TypeDefinition_orMutable {
   TypeDefinitionId_orMutable get id;
@@ -3997,7 +3937,7 @@ final class TypeDefinition implements TypeDefinition_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   TypeDefinition toFrozen() => this;
@@ -4104,7 +4044,7 @@ final class TypeDefinition_mutable implements TypeDefinition_orMutable {
     this.parents,
   );
 
-  /// If the value of [id] is already mutable, returns it as-is.
+  /// If the value of [id] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
   TypeDefinitionId_mutable get mutableId {
     final value = this.id;
@@ -4115,7 +4055,7 @@ final class TypeDefinition_mutable implements TypeDefinition_orMutable {
     }
   }
 
-  /// If the value of [parameters] is already mutable, returns it as-is.
+  /// If the value of [parameters] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [parameters] and returns it.
   _core.List<TypeParameter_orMutable> get mutableParameters {
     final value = this.parameters;
@@ -4126,7 +4066,7 @@ final class TypeDefinition_mutable implements TypeDefinition_orMutable {
     }
   }
 
-  /// If the value of [parents] is already mutable, returns it as-is.
+  /// If the value of [parents] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [parents] and returns it.
   _core.List<NamedTypeTemplate_orMutable> get mutableParents {
     final value = this.parents;
@@ -4147,9 +4087,7 @@ final class TypeDefinition_mutable implements TypeDefinition_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ResourceId
-// -----------------------------------------------------------------------------
 
 sealed class ResourceId_orMutable {
   _core.String get value;
@@ -4174,7 +4112,7 @@ final class ResourceId implements ResourceId_orMutable {
   /// Fields are initialized to their default values.
   static ResourceId_mutable mutable() => ResourceId_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ResourceId toFrozen() => this;
@@ -4240,9 +4178,7 @@ final class ResourceId_mutable implements ResourceId_orMutable {
   ResourceId toFrozen() => ResourceId(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ItemId
-// -----------------------------------------------------------------------------
 
 sealed class ItemId_orMutable {
   _core.String get value;
@@ -4267,7 +4203,7 @@ final class ItemId implements ItemId_orMutable {
   /// Fields are initialized to their default values.
   static ItemId_mutable mutable() => ItemId_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ItemId toFrozen() => this;
@@ -4333,9 +4269,7 @@ final class ItemId_mutable implements ItemId_orMutable {
   ItemId toFrozen() => ItemId(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct LinkTarget
-// -----------------------------------------------------------------------------
 
 sealed class LinkTarget_orMutable {
   ResourceId_orMutable get resource;
@@ -4370,7 +4304,7 @@ final class LinkTarget implements LinkTarget_orMutable {
   static LinkTarget_mutable mutable() =>
       LinkTarget_mutable._(ResourceId.defaultInstance, null);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   LinkTarget toFrozen() => this;
@@ -4442,7 +4376,7 @@ final class LinkTarget_mutable implements LinkTarget_orMutable {
 
   LinkTarget_mutable._(this.resource, this.opposite);
 
-  /// If the value of [resource] is already mutable, returns it as-is.
+  /// If the value of [resource] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
   ResourceId_mutable get mutableResource {
     final value = this.resource;
@@ -4460,9 +4394,7 @@ final class LinkTarget_mutable implements LinkTarget_orMutable {
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct LinkValue
-// -----------------------------------------------------------------------------
 
 sealed class LinkValue_orMutable {
   EndpointId_orMutable get endpoint;
@@ -4499,7 +4431,7 @@ final class LinkValue implements LinkValue_orMutable {
     LinkTarget.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   LinkValue toFrozen() => this;
@@ -4571,7 +4503,7 @@ final class LinkValue_mutable implements LinkValue_orMutable {
 
   LinkValue_mutable._(this.endpoint, this.target);
 
-  /// If the value of [endpoint] is already mutable, returns it as-is.
+  /// If the value of [endpoint] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [endpoint] and returns it.
   EndpointId_mutable get mutableEndpoint {
     final value = this.endpoint;
@@ -4582,7 +4514,7 @@ final class LinkValue_mutable implements LinkValue_orMutable {
     }
   }
 
-  /// If the value of [target] is already mutable, returns it as-is.
+  /// If the value of [target] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
   LinkTarget_mutable get mutableTarget {
     final value = this.target;
@@ -4599,9 +4531,7 @@ final class LinkValue_mutable implements LinkValue_orMutable {
       LinkValue(endpoint: this.endpoint, target: this.target).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct FieldValue
-// -----------------------------------------------------------------------------
 
 sealed class FieldValue_orMutable {
   _core.String get name;
@@ -4631,7 +4561,7 @@ final class FieldValue implements FieldValue_orMutable {
   static FieldValue_mutable mutable() =>
       FieldValue_mutable._("", DataValue.unknown);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   FieldValue toFrozen() => this;
@@ -4708,9 +4638,7 @@ final class FieldValue_mutable implements FieldValue_orMutable {
       FieldValue(name: this.name, value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct RecordPayload
-// -----------------------------------------------------------------------------
 
 sealed class RecordPayload_orMutable {
   _core.Iterable<FieldValue_orMutable> get fields;
@@ -4745,7 +4673,7 @@ final class RecordPayload implements RecordPayload_orMutable {
   static RecordPayload_mutable mutable() =>
       RecordPayload_mutable._(_skir.KeyedIterable.empty);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RecordPayload toFrozen() => this;
@@ -4816,9 +4744,7 @@ final class RecordPayload_mutable implements RecordPayload_orMutable {
   RecordPayload toFrozen() => RecordPayload(fields: this.fields).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct NamedValue
-// -----------------------------------------------------------------------------
 
 sealed class NamedValue_orMutable {
   NamedTypeUse_orMutable get actualType;
@@ -4853,7 +4779,7 @@ final class NamedValue implements NamedValue_orMutable {
   static NamedValue_mutable mutable() =>
       NamedValue_mutable._(NamedTypeUse.defaultInstance, DataValue.unknown);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   NamedValue toFrozen() => this;
@@ -4925,7 +4851,7 @@ final class NamedValue_mutable implements NamedValue_orMutable {
 
   NamedValue_mutable._(this.actualType, this.payload);
 
-  /// If the value of [actualType] is already mutable, returns it as-is.
+  /// If the value of [actualType] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [actualType] and returns it.
   NamedTypeUse_mutable get mutableActualType {
     final value = this.actualType;
@@ -4943,9 +4869,7 @@ final class NamedValue_mutable implements NamedValue_orMutable {
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ListItem
-// -----------------------------------------------------------------------------
 
 sealed class ListItem_orMutable {
   ItemId_orMutable get id;
@@ -4978,7 +4902,7 @@ final class ListItem implements ListItem_orMutable {
   static ListItem_mutable mutable() =>
       ListItem_mutable._(ItemId.defaultInstance, DataValue.unknown);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ListItem toFrozen() => this;
@@ -5049,7 +4973,7 @@ final class ListItem_mutable implements ListItem_orMutable {
 
   ListItem_mutable._(this.id, this.value);
 
-  /// If the value of [id] is already mutable, returns it as-is.
+  /// If the value of [id] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
   ItemId_mutable get mutableId {
     final value = this.id;
@@ -5065,9 +4989,7 @@ final class ListItem_mutable implements ListItem_orMutable {
   ListItem toFrozen() => ListItem(id: this.id, value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ListPayload
-// -----------------------------------------------------------------------------
 
 sealed class ListPayload_orMutable {
   _core.Iterable<ListItem_orMutable> get items;
@@ -5096,7 +5018,7 @@ final class ListPayload implements ListPayload_orMutable {
   static ListPayload_mutable mutable() =>
       ListPayload_mutable._(_skir.KeyedIterable.empty);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ListPayload toFrozen() => this;
@@ -5163,9 +5085,7 @@ final class ListPayload_mutable implements ListPayload_orMutable {
   ListPayload toFrozen() => ListPayload(items: this.items).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct MapRow
-// -----------------------------------------------------------------------------
 
 sealed class MapRow_orMutable {
   ItemId_orMutable get id;
@@ -5208,7 +5128,7 @@ final class MapRow implements MapRow_orMutable {
     DataValue.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   MapRow toFrozen() => this;
@@ -5289,7 +5209,7 @@ final class MapRow_mutable implements MapRow_orMutable {
 
   MapRow_mutable._(this.id, this.key, this.value);
 
-  /// If the value of [id] is already mutable, returns it as-is.
+  /// If the value of [id] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
   ItemId_mutable get mutableId {
     final value = this.id;
@@ -5306,9 +5226,7 @@ final class MapRow_mutable implements MapRow_orMutable {
       MapRow(id: this.id, key: this.key, value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct MapPayload
-// -----------------------------------------------------------------------------
 
 sealed class MapPayload_orMutable {
   _core.Iterable<MapRow_orMutable> get rows;
@@ -5337,7 +5255,7 @@ final class MapPayload implements MapPayload_orMutable {
   static MapPayload_mutable mutable() =>
       MapPayload_mutable._(_skir.KeyedIterable.empty);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   MapPayload toFrozen() => this;
@@ -5403,9 +5321,7 @@ final class MapPayload_mutable implements MapPayload_orMutable {
   MapPayload toFrozen() => MapPayload(rows: this.rows).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct DurationValue
-// -----------------------------------------------------------------------------
 
 sealed class DurationValue_orMutable {
   _lib_kernel_v1_duration.Duration_orMutable get value;
@@ -5435,7 +5351,7 @@ final class DurationValue implements DurationValue_orMutable {
   static DurationValue_mutable mutable() =>
       DurationValue_mutable._(_lib_kernel_v1_duration.Duration.defaultInstance);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   DurationValue toFrozen() => this;
@@ -5497,7 +5413,7 @@ final class DurationValue_mutable implements DurationValue_orMutable {
 
   DurationValue_mutable._(this.value);
 
-  /// If the value of [value] is already mutable, returns it as-is.
+  /// If the value of [value] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
   _lib_kernel_v1_duration.Duration_mutable get mutableValue {
     final value = this.value;
@@ -5514,9 +5430,7 @@ final class DurationValue_mutable implements DurationValue_orMutable {
   DurationValue toFrozen() => DurationValue(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum DataValue
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -6045,9 +5959,7 @@ final class DataValue_linkWrapper extends _DataValue_wrapper {
   DataValue_kind get kind => DataValue_kind.linkWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // enum ArgumentSelection
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -6179,9 +6091,7 @@ final class ArgumentSelection_chosenWrapper extends _ArgumentSelection_wrapper {
   ArgumentSelection_kind get kind => ArgumentSelection_kind.chosenWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct PendingTypeSelection
-// -----------------------------------------------------------------------------
 
 sealed class PendingTypeSelection_orMutable {
   TypeDefinitionId_orMutable get definition;
@@ -6222,7 +6132,7 @@ final class PendingTypeSelection implements PendingTypeSelection_orMutable {
         _skir.KeyedIterable.empty,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PendingTypeSelection toFrozen() => this;
@@ -6299,7 +6209,7 @@ final class PendingTypeSelection_mutable
 
   PendingTypeSelection_mutable._(this.definition, this.arguments);
 
-  /// If the value of [definition] is already mutable, returns it as-is.
+  /// If the value of [definition] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [definition] and returns it.
   TypeDefinitionId_mutable get mutableDefinition {
     final value = this.definition;
@@ -6310,7 +6220,7 @@ final class PendingTypeSelection_mutable
     }
   }
 
-  /// If the value of [arguments] is already mutable, returns it as-is.
+  /// If the value of [arguments] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [arguments] and returns it.
   _core.List<ArgumentSelection> get mutableArguments {
     final value = this.arguments;
@@ -6329,9 +6239,7 @@ final class PendingTypeSelection_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum TypeSelection
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -6480,9 +6388,7 @@ final class TypeSelection_pendingWrapper extends _TypeSelection_wrapper {
   TypeSelection_kind get kind => TypeSelection_kind.pendingWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct AuthoringRecord
-// -----------------------------------------------------------------------------
 
 sealed class AuthoringRecord_orMutable {
   TypeSelection get configuration;
@@ -6527,7 +6433,7 @@ final class AuthoringRecord implements AuthoringRecord_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   AuthoringRecord toFrozen() => this;
@@ -6604,7 +6510,7 @@ final class AuthoringRecord_mutable implements AuthoringRecord_orMutable {
 
   AuthoringRecord_mutable._(this.configuration, this.fields);
 
-  /// If the value of [fields] is already mutable, returns it as-is.
+  /// If the value of [fields] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [fields] and returns it.
   _core.List<FieldValue_orMutable> get mutableFields {
     final value = this.fields;
@@ -6622,9 +6528,7 @@ final class AuthoringRecord_mutable implements AuthoringRecord_orMutable {
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct PresentationId
-// -----------------------------------------------------------------------------
 
 sealed class PresentationId_orMutable {
   _core.String get namespace;
@@ -6655,7 +6559,7 @@ final class PresentationId implements PresentationId_orMutable {
   /// Fields are initialized to their default values.
   static PresentationId_mutable mutable() => PresentationId_mutable._("", "");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PresentationId toFrozen() => this;
@@ -6734,9 +6638,7 @@ final class PresentationId_mutable implements PresentationId_orMutable {
       PresentationId(namespace: this.namespace, name: this.name).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ConversionId
-// -----------------------------------------------------------------------------
 
 sealed class ConversionId_orMutable {
   _core.String get namespace;
@@ -6767,7 +6669,7 @@ final class ConversionId implements ConversionId_orMutable {
   /// Fields are initialized to their default values.
   static ConversionId_mutable mutable() => ConversionId_mutable._("", "");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ConversionId toFrozen() => this;
@@ -6846,9 +6748,7 @@ final class ConversionId_mutable implements ConversionId_orMutable {
       ConversionId(namespace: this.namespace, name: this.name).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CapabilityId
-// -----------------------------------------------------------------------------
 
 sealed class CapabilityId_orMutable {
   _core.String get value;
@@ -6873,7 +6773,7 @@ final class CapabilityId implements CapabilityId_orMutable {
   /// Fields are initialized to their default values.
   static CapabilityId_mutable mutable() => CapabilityId_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CapabilityId toFrozen() => this;
@@ -6940,9 +6840,7 @@ final class CapabilityId_mutable implements CapabilityId_orMutable {
   CapabilityId toFrozen() => CapabilityId(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CatalogGeneration
-// -----------------------------------------------------------------------------
 
 sealed class CatalogGeneration_orMutable {
   _core.String get value;
@@ -6968,7 +6866,7 @@ final class CatalogGeneration implements CatalogGeneration_orMutable {
   /// Fields are initialized to their default values.
   static CatalogGeneration_mutable mutable() => CatalogGeneration_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CatalogGeneration toFrozen() => this;
@@ -7037,9 +6935,7 @@ final class CatalogGeneration_mutable implements CatalogGeneration_orMutable {
       CatalogGeneration(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct InputToken
-// -----------------------------------------------------------------------------
 
 sealed class InputToken_orMutable {
   _core.String get value;
@@ -7064,7 +6960,7 @@ final class InputToken implements InputToken_orMutable {
   /// Fields are initialized to their default values.
   static InputToken_mutable mutable() => InputToken_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   InputToken toFrozen() => this;
@@ -7130,9 +7026,7 @@ final class InputToken_mutable implements InputToken_orMutable {
   InputToken toFrozen() => InputToken(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ExpressionBindingId
-// -----------------------------------------------------------------------------
 
 sealed class ExpressionBindingId_orMutable {
   _core.String get value;
@@ -7159,7 +7053,7 @@ final class ExpressionBindingId implements ExpressionBindingId_orMutable {
   static ExpressionBindingId_mutable mutable() =>
       ExpressionBindingId_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ExpressionBindingId toFrozen() => this;
@@ -7232,9 +7126,7 @@ final class ExpressionBindingId_mutable
       ExpressionBindingId(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct OperationId
-// -----------------------------------------------------------------------------
 
 sealed class OperationId_orMutable {
   _core.String get value;
@@ -7259,7 +7151,7 @@ final class OperationId implements OperationId_orMutable {
   /// Fields are initialized to their default values.
   static OperationId_mutable mutable() => OperationId_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   OperationId toFrozen() => this;
@@ -7326,9 +7218,7 @@ final class OperationId_mutable implements OperationId_orMutable {
   OperationId toFrozen() => OperationId(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct RuleOrigin
-// -----------------------------------------------------------------------------
 
 sealed class RuleOrigin_orMutable {
   TypeDefinitionId_orMutable get owner;
@@ -7363,7 +7253,7 @@ final class RuleOrigin implements RuleOrigin_orMutable {
   static RuleOrigin_mutable mutable() =>
       RuleOrigin_mutable._(TypeDefinitionId.defaultInstance, 0);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RuleOrigin toFrozen() => this;
@@ -7435,7 +7325,7 @@ final class RuleOrigin_mutable implements RuleOrigin_orMutable {
 
   RuleOrigin_mutable._(this.owner, this.ordinal);
 
-  /// If the value of [owner] is already mutable, returns it as-is.
+  /// If the value of [owner] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [owner] and returns it.
   TypeDefinitionId_mutable get mutableOwner {
     final value = this.owner;
@@ -7452,9 +7342,7 @@ final class RuleOrigin_mutable implements RuleOrigin_orMutable {
       RuleOrigin(owner: this.owner, ordinal: this.ordinal).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct RuleId
-// -----------------------------------------------------------------------------
 
 sealed class RuleId_orMutable {
   RuleOrigin_orMutable get origin;
@@ -7486,7 +7374,7 @@ final class RuleId implements RuleId_orMutable {
   static RuleId_mutable mutable() =>
       RuleId_mutable._(RuleOrigin.defaultInstance, 0);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RuleId toFrozen() => this;
@@ -7557,7 +7445,7 @@ final class RuleId_mutable implements RuleId_orMutable {
 
   RuleId_mutable._(this.origin, this.localIndex);
 
-  /// If the value of [origin] is already mutable, returns it as-is.
+  /// If the value of [origin] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [origin] and returns it.
   RuleOrigin_mutable get mutableOrigin {
     final value = this.origin;
@@ -7574,9 +7462,7 @@ final class RuleId_mutable implements RuleId_orMutable {
       RuleId(origin: this.origin, localIndex: this.localIndex).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ValuePath
-// -----------------------------------------------------------------------------
 
 sealed class ValuePath_orMutable {
   _core.Iterable<PathSegment> get segments;
@@ -7603,7 +7489,7 @@ final class ValuePath implements ValuePath_orMutable {
   static ValuePath_mutable mutable() =>
       ValuePath_mutable._(_skir.KeyedIterable.empty);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ValuePath toFrozen() => this;
@@ -7664,7 +7550,7 @@ final class ValuePath_mutable implements ValuePath_orMutable {
 
   ValuePath_mutable._(this.segments);
 
-  /// If the value of [segments] is already mutable, returns it as-is.
+  /// If the value of [segments] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [segments] and returns it.
   _core.List<PathSegment> get mutableSegments {
     final value = this.segments;
@@ -7680,9 +7566,7 @@ final class ValuePath_mutable implements ValuePath_orMutable {
   ValuePath toFrozen() => ValuePath(segments: this.segments).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct FieldPathSegment
-// -----------------------------------------------------------------------------
 
 sealed class FieldPathSegment_orMutable {
   _core.String get name;
@@ -7708,7 +7592,7 @@ final class FieldPathSegment implements FieldPathSegment_orMutable {
   /// Fields are initialized to their default values.
   static FieldPathSegment_mutable mutable() => FieldPathSegment_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   FieldPathSegment toFrozen() => this;
@@ -7776,9 +7660,7 @@ final class FieldPathSegment_mutable implements FieldPathSegment_orMutable {
       FieldPathSegment(name: this.name).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ItemPathSegment
-// -----------------------------------------------------------------------------
 
 sealed class ItemPathSegment_orMutable {
   ItemId_orMutable get id;
@@ -7805,7 +7687,7 @@ final class ItemPathSegment implements ItemPathSegment_orMutable {
   static ItemPathSegment_mutable mutable() =>
       ItemPathSegment_mutable._(ItemId.defaultInstance);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ItemPathSegment toFrozen() => this;
@@ -7867,7 +7749,7 @@ final class ItemPathSegment_mutable implements ItemPathSegment_orMutable {
 
   ItemPathSegment_mutable._(this.id);
 
-  /// If the value of [id] is already mutable, returns it as-is.
+  /// If the value of [id] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
   ItemId_mutable get mutableId {
     final value = this.id;
@@ -7883,9 +7765,7 @@ final class ItemPathSegment_mutable implements ItemPathSegment_orMutable {
   ItemPathSegment toFrozen() => ItemPathSegment(id: this.id).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum PathSegment
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -8055,9 +7935,7 @@ final class PathSegment_itemWrapper extends _PathSegment_wrapper {
   PathSegment_kind get kind => PathSegment_kind.itemWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct ValueLocation
-// -----------------------------------------------------------------------------
 
 sealed class ValueLocation_orMutable {
   ResourceId_orMutable get resource;
@@ -8094,7 +7972,7 @@ final class ValueLocation implements ValueLocation_orMutable {
     ValuePath.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ValueLocation toFrozen() => this;
@@ -8167,7 +8045,7 @@ final class ValueLocation_mutable implements ValueLocation_orMutable {
 
   ValueLocation_mutable._(this.resource, this.path);
 
-  /// If the value of [resource] is already mutable, returns it as-is.
+  /// If the value of [resource] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
   ResourceId_mutable get mutableResource {
     final value = this.resource;
@@ -8178,7 +8056,7 @@ final class ValueLocation_mutable implements ValueLocation_orMutable {
     }
   }
 
-  /// If the value of [path] is already mutable, returns it as-is.
+  /// If the value of [path] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [path] and returns it.
   ValuePath_mutable get mutablePath {
     final value = this.path;
@@ -8195,9 +8073,7 @@ final class ValueLocation_mutable implements ValueLocation_orMutable {
       ValueLocation(resource: this.resource, path: this.path).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct NamedFieldPatternSegment
-// -----------------------------------------------------------------------------
 
 sealed class NamedFieldPatternSegment_orMutable {
   _core.String get name;
@@ -8225,7 +8101,7 @@ final class NamedFieldPatternSegment
   static NamedFieldPatternSegment_mutable mutable() =>
       NamedFieldPatternSegment_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   NamedFieldPatternSegment toFrozen() => this;
@@ -8298,9 +8174,7 @@ final class NamedFieldPatternSegment_mutable
       NamedFieldPatternSegment(name: this.name).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum FieldPatternSegment
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -8442,9 +8316,7 @@ final class FieldPatternSegment_fieldWrapper
   FieldPatternSegment_kind get kind => FieldPatternSegment_kind.fieldWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct RelativeFieldPattern
-// -----------------------------------------------------------------------------
 
 sealed class RelativeFieldPattern_orMutable {
   _core.Iterable<FieldPatternSegment> get segments;
@@ -8474,7 +8346,7 @@ final class RelativeFieldPattern implements RelativeFieldPattern_orMutable {
   static RelativeFieldPattern_mutable mutable() =>
       RelativeFieldPattern_mutable._(_skir.KeyedIterable.empty);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RelativeFieldPattern toFrozen() => this;
@@ -8541,7 +8413,7 @@ final class RelativeFieldPattern_mutable
 
   RelativeFieldPattern_mutable._(this.segments);
 
-  /// If the value of [segments] is already mutable, returns it as-is.
+  /// If the value of [segments] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [segments] and returns it.
   _core.List<FieldPatternSegment> get mutableSegments {
     final value = this.segments;
@@ -8558,9 +8430,7 @@ final class RelativeFieldPattern_mutable
       RelativeFieldPattern(segments: this.segments).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct InitializationRequestId
-// -----------------------------------------------------------------------------
 
 sealed class InitializationRequestId_orMutable {
   _core.String get value;
@@ -8588,7 +8458,7 @@ final class InitializationRequestId
   static InitializationRequestId_mutable mutable() =>
       InitializationRequestId_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   InitializationRequestId toFrozen() => this;
@@ -8661,9 +8531,7 @@ final class InitializationRequestId_mutable
       InitializationRequestId(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct NativeBindingId
-// -----------------------------------------------------------------------------
 
 sealed class NativeBindingId_orMutable {
   _core.String get value;
@@ -8689,7 +8557,7 @@ final class NativeBindingId implements NativeBindingId_orMutable {
   /// Fields are initialized to their default values.
   static NativeBindingId_mutable mutable() => NativeBindingId_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   NativeBindingId toFrozen() => this;
@@ -8757,9 +8625,7 @@ final class NativeBindingId_mutable implements NativeBindingId_orMutable {
       NativeBindingId(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CheckExecutionId
-// -----------------------------------------------------------------------------
 
 sealed class CheckExecutionId_orMutable {
   _core.String get value;
@@ -8785,7 +8651,7 @@ final class CheckExecutionId implements CheckExecutionId_orMutable {
   /// Fields are initialized to their default values.
   static CheckExecutionId_mutable mutable() => CheckExecutionId_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CheckExecutionId toFrozen() => this;
@@ -8854,9 +8720,7 @@ final class CheckExecutionId_mutable implements CheckExecutionId_orMutable {
       CheckExecutionId(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct DiagnosticId
-// -----------------------------------------------------------------------------
 
 sealed class DiagnosticId_orMutable {
   _core.String get value;
@@ -8881,7 +8745,7 @@ final class DiagnosticId implements DiagnosticId_orMutable {
   /// Fields are initialized to their default values.
   static DiagnosticId_mutable mutable() => DiagnosticId_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   DiagnosticId toFrozen() => this;
@@ -8948,9 +8812,7 @@ final class DiagnosticId_mutable implements DiagnosticId_orMutable {
   DiagnosticId toFrozen() => DiagnosticId(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct SelectionId
-// -----------------------------------------------------------------------------
 
 sealed class SelectionId_orMutable {
   _core.String get value;
@@ -8975,7 +8837,7 @@ final class SelectionId implements SelectionId_orMutable {
   /// Fields are initialized to their default values.
   static SelectionId_mutable mutable() => SelectionId_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SelectionId toFrozen() => this;
@@ -9042,9 +8904,7 @@ final class SelectionId_mutable implements SelectionId_orMutable {
   SelectionId toFrozen() => SelectionId(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct PublicationId
-// -----------------------------------------------------------------------------
 
 sealed class PublicationId_orMutable {
   _core.String get value;
@@ -9070,7 +8930,7 @@ final class PublicationId implements PublicationId_orMutable {
   /// Fields are initialized to their default values.
   static PublicationId_mutable mutable() => PublicationId_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PublicationId toFrozen() => this;
@@ -9137,9 +8997,7 @@ final class PublicationId_mutable implements PublicationId_orMutable {
   PublicationId toFrozen() => PublicationId(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CanonicalValueHash
-// -----------------------------------------------------------------------------
 
 sealed class CanonicalValueHash_orMutable {
   _core.String get value;
@@ -9166,7 +9024,7 @@ final class CanonicalValueHash implements CanonicalValueHash_orMutable {
   static CanonicalValueHash_mutable mutable() =>
       CanonicalValueHash_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CanonicalValueHash toFrozen() => this;
@@ -9235,9 +9093,7 @@ final class CanonicalValueHash_mutable implements CanonicalValueHash_orMutable {
       CanonicalValueHash(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct RuntimeMemberId
-// -----------------------------------------------------------------------------
 
 sealed class RuntimeMemberId_orMutable {
   _core.String get value;
@@ -9263,7 +9119,7 @@ final class RuntimeMemberId implements RuntimeMemberId_orMutable {
   /// Fields are initialized to their default values.
   static RuntimeMemberId_mutable mutable() => RuntimeMemberId_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RuntimeMemberId toFrozen() => this;
@@ -9331,9 +9187,7 @@ final class RuntimeMemberId_mutable implements RuntimeMemberId_orMutable {
       RuntimeMemberId(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ScriptCapabilityId
-// -----------------------------------------------------------------------------
 
 sealed class ScriptCapabilityId_orMutable {
   _core.String get value;
@@ -9360,7 +9214,7 @@ final class ScriptCapabilityId implements ScriptCapabilityId_orMutable {
   static ScriptCapabilityId_mutable mutable() =>
       ScriptCapabilityId_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ScriptCapabilityId toFrozen() => this;
@@ -9429,9 +9283,7 @@ final class ScriptCapabilityId_mutable implements ScriptCapabilityId_orMutable {
       ScriptCapabilityId(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct RelationId
-// -----------------------------------------------------------------------------
 
 sealed class RelationId_orMutable {
   _core.String get value;
@@ -9456,7 +9308,7 @@ final class RelationId implements RelationId_orMutable {
   /// Fields are initialized to their default values.
   static RelationId_mutable mutable() => RelationId_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RelationId toFrozen() => this;
@@ -9522,9 +9374,7 @@ final class RelationId_mutable implements RelationId_orMutable {
   RelationId toFrozen() => RelationId(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct RelationFamilyId
-// -----------------------------------------------------------------------------
 
 sealed class RelationFamilyId_orMutable {
   _core.String get value;
@@ -9550,7 +9400,7 @@ final class RelationFamilyId implements RelationFamilyId_orMutable {
   /// Fields are initialized to their default values.
   static RelationFamilyId_mutable mutable() => RelationFamilyId_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RelationFamilyId toFrozen() => this;
@@ -9619,9 +9469,7 @@ final class RelationFamilyId_mutable implements RelationFamilyId_orMutable {
       RelationFamilyId(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct TypeCatalog
-// -----------------------------------------------------------------------------
 
 sealed class TypeCatalog_orMutable {
   _core.Iterable<TypeDefinition_orMutable> get definitions;
@@ -9651,7 +9499,7 @@ final class TypeCatalog implements TypeCatalog_orMutable {
   static TypeCatalog_mutable mutable() =>
       TypeCatalog_mutable._(_skir.KeyedIterable.empty);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   TypeCatalog toFrozen() => this;
@@ -9713,7 +9561,7 @@ final class TypeCatalog_mutable implements TypeCatalog_orMutable {
 
   TypeCatalog_mutable._(this.definitions);
 
-  /// If the value of [definitions] is already mutable, returns it as-is.
+  /// If the value of [definitions] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [definitions] and returns it.
   _core.List<TypeDefinition_orMutable> get mutableDefinitions {
     final value = this.definitions;
@@ -9730,9 +9578,7 @@ final class TypeCatalog_mutable implements TypeCatalog_orMutable {
       TypeCatalog(definitions: this.definitions).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ScalarResolvedRepresentation
-// -----------------------------------------------------------------------------
 
 sealed class ScalarResolvedRepresentation_orMutable {
   ScalarKind get kind;
@@ -9762,7 +9608,7 @@ final class ScalarResolvedRepresentation
   static ScalarResolvedRepresentation_mutable mutable() =>
       ScalarResolvedRepresentation_mutable._(ScalarKind.unknown);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ScalarResolvedRepresentation toFrozen() => this;
@@ -9835,9 +9681,7 @@ final class ScalarResolvedRepresentation_mutable
       ScalarResolvedRepresentation(kind: this.kind).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct RecordResolvedRepresentation
-// -----------------------------------------------------------------------------
 
 sealed class RecordResolvedRepresentation_orMutable {
   _core.Iterable<ResolvedField_orMutable> get fields;
@@ -9881,7 +9725,7 @@ final class RecordResolvedRepresentation
   static RecordResolvedRepresentation_mutable mutable() =>
       RecordResolvedRepresentation_mutable._(_skir.KeyedIterable.empty, false);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RecordResolvedRepresentation toFrozen() => this;
@@ -9962,7 +9806,7 @@ final class RecordResolvedRepresentation_mutable
 
   RecordResolvedRepresentation_mutable._(this.fields, this.abstract_);
 
-  /// If the value of [fields] is already mutable, returns it as-is.
+  /// If the value of [fields] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [fields] and returns it.
   _core.List<ResolvedField_orMutable> get mutableFields {
     final value = this.fields;
@@ -9981,9 +9825,7 @@ final class RecordResolvedRepresentation_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct SequenceResolvedRepresentation
-// -----------------------------------------------------------------------------
 
 sealed class SequenceResolvedRepresentation_orMutable {
   TypeUse get item;
@@ -10022,7 +9864,7 @@ final class SequenceResolvedRepresentation
         CollectionKind.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SequenceResolvedRepresentation toFrozen() => this;
@@ -10106,9 +9948,7 @@ final class SequenceResolvedRepresentation_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct MappingResolvedRepresentation
-// -----------------------------------------------------------------------------
 
 sealed class MappingResolvedRepresentation_orMutable {
   TypeUse get key;
@@ -10144,7 +9984,7 @@ final class MappingResolvedRepresentation
   static MappingResolvedRepresentation_mutable mutable() =>
       MappingResolvedRepresentation_mutable._(TypeUse.unknown, TypeUse.unknown);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   MappingResolvedRepresentation toFrozen() => this;
@@ -10228,9 +10068,7 @@ final class MappingResolvedRepresentation_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct EnumerationResolvedRepresentation
-// -----------------------------------------------------------------------------
 
 sealed class EnumerationResolvedRepresentation_orMutable {
   _core.Iterable<EnumVariant_orMutable> get cases;
@@ -10268,7 +10106,7 @@ final class EnumerationResolvedRepresentation
   static EnumerationResolvedRepresentation_mutable mutable() =>
       EnumerationResolvedRepresentation_mutable._(_skir.KeyedIterable.empty);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   EnumerationResolvedRepresentation toFrozen() => this;
@@ -10339,7 +10177,7 @@ final class EnumerationResolvedRepresentation_mutable
 
   EnumerationResolvedRepresentation_mutable._(this.cases);
 
-  /// If the value of [cases] is already mutable, returns it as-is.
+  /// If the value of [cases] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [cases] and returns it.
   _core.List<EnumVariant_orMutable> get mutableCases {
     final value = this.cases;
@@ -10356,9 +10194,7 @@ final class EnumerationResolvedRepresentation_mutable
       EnumerationResolvedRepresentation(cases: this.cases).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct LinkResolvedRepresentation
-// -----------------------------------------------------------------------------
 
 sealed class LinkResolvedRepresentation_orMutable {
   EndpointId_orMutable get endpoint;
@@ -10397,7 +10233,7 @@ final class LinkResolvedRepresentation
         TypeUse.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   LinkResolvedRepresentation toFrozen() => this;
@@ -10474,7 +10310,7 @@ final class LinkResolvedRepresentation_mutable
 
   LinkResolvedRepresentation_mutable._(this.endpoint, this.target);
 
-  /// If the value of [endpoint] is already mutable, returns it as-is.
+  /// If the value of [endpoint] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [endpoint] and returns it.
   EndpointId_mutable get mutableEndpoint {
     final value = this.endpoint;
@@ -10492,9 +10328,7 @@ final class LinkResolvedRepresentation_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum ResolvedRepresentation
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -10790,9 +10624,7 @@ final class ResolvedRepresentation_linkWrapper
       ResolvedRepresentation_kind.linkWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct ResolvedField
-// -----------------------------------------------------------------------------
 
 sealed class ResolvedField_orMutable {
   _core.String get key;
@@ -10846,7 +10678,7 @@ final class ResolvedField implements ResolvedField_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ResolvedField toFrozen() => this;
@@ -10953,7 +10785,7 @@ final class ResolvedField_mutable implements ResolvedField_orMutable {
     this.guarantees,
   );
 
-  /// If the value of [declarationOwner] is already mutable, returns it as-is.
+  /// If the value of [declarationOwner] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [declarationOwner] and returns it.
   TypeDefinitionId_mutable get mutableDeclarationOwner {
     final value = this.declarationOwner;
@@ -10964,7 +10796,7 @@ final class ResolvedField_mutable implements ResolvedField_orMutable {
     }
   }
 
-  /// If the value of [guarantees] is already mutable, returns it as-is.
+  /// If the value of [guarantees] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [guarantees] and returns it.
   _core.List<RuleId_orMutable> get mutableGuarantees {
     final value = this.guarantees;
@@ -10985,9 +10817,7 @@ final class ResolvedField_mutable implements ResolvedField_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct AppliedSchema
-// -----------------------------------------------------------------------------
 
 sealed class AppliedSchema_orMutable {
   TypeUse get use;
@@ -11046,7 +10876,7 @@ final class AppliedSchema implements AppliedSchema_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   AppliedSchema toFrozen() => this;
@@ -11157,7 +10987,7 @@ final class AppliedSchema_mutable implements AppliedSchema_orMutable {
     this.ancestors,
   );
 
-  /// If the value of [fields] is already mutable, returns it as-is.
+  /// If the value of [fields] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [fields] and returns it.
   _core.List<ResolvedField_orMutable> get mutableFields {
     final value = this.fields;
@@ -11168,7 +10998,7 @@ final class AppliedSchema_mutable implements AppliedSchema_orMutable {
     }
   }
 
-  /// If the value of [ancestors] is already mutable, returns it as-is.
+  /// If the value of [ancestors] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [ancestors] and returns it.
   _core.List<NamedTypeUse_orMutable> get mutableAncestors {
     final value = this.ancestors;
@@ -11189,9 +11019,7 @@ final class AppliedSchema_mutable implements AppliedSchema_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CheckedType
-// -----------------------------------------------------------------------------
 
 sealed class CheckedType_orMutable {
   CatalogGeneration_orMutable get catalog;
@@ -11234,7 +11062,7 @@ final class CheckedType implements CheckedType_orMutable {
     AppliedSchema.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CheckedType toFrozen() => this;
@@ -11317,7 +11145,7 @@ final class CheckedType_mutable implements CheckedType_orMutable {
 
   CheckedType_mutable._(this.catalog, this.use, this.schema);
 
-  /// If the value of [catalog] is already mutable, returns it as-is.
+  /// If the value of [catalog] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [catalog] and returns it.
   CatalogGeneration_mutable get mutableCatalog {
     final value = this.catalog;
@@ -11328,7 +11156,7 @@ final class CheckedType_mutable implements CheckedType_orMutable {
     }
   }
 
-  /// If the value of [schema] is already mutable, returns it as-is.
+  /// If the value of [schema] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [schema] and returns it.
   AppliedSchema_mutable get mutableSchema {
     final value = this.schema;
@@ -11346,9 +11174,7 @@ final class CheckedType_mutable implements CheckedType_orMutable {
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ArgumentLocation
-// -----------------------------------------------------------------------------
 
 sealed class ArgumentLocation_orMutable {
   _core.int get index;
@@ -11374,7 +11200,7 @@ final class ArgumentLocation implements ArgumentLocation_orMutable {
   /// Fields are initialized to their default values.
   static ArgumentLocation_mutable mutable() => ArgumentLocation_mutable._(0);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ArgumentLocation toFrozen() => this;
@@ -11443,9 +11269,7 @@ final class ArgumentLocation_mutable implements ArgumentLocation_orMutable {
       ArgumentLocation(index: this.index).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct DependentField
-// -----------------------------------------------------------------------------
 
 sealed class DependentField_orMutable {
   FieldOwner_orMutable get owner;
@@ -11492,7 +11316,7 @@ final class DependentField implements DependentField_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   DependentField toFrozen() => this;
@@ -11575,7 +11399,7 @@ final class DependentField_mutable implements DependentField_orMutable {
 
   DependentField_mutable._(this.owner, this.type, this.missing);
 
-  /// If the value of [owner] is already mutable, returns it as-is.
+  /// If the value of [owner] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [owner] and returns it.
   FieldOwner_mutable get mutableOwner {
     final value = this.owner;
@@ -11586,7 +11410,7 @@ final class DependentField_mutable implements DependentField_orMutable {
     }
   }
 
-  /// If the value of [missing] is already mutable, returns it as-is.
+  /// If the value of [missing] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [missing] and returns it.
   _core.List<ParameterKey_orMutable> get mutableMissing {
     final value = this.missing;
@@ -11604,9 +11428,7 @@ final class DependentField_mutable implements DependentField_orMutable {
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct PartialSchema
-// -----------------------------------------------------------------------------
 
 sealed class PartialSchema_orMutable {
   _core.Iterable<ResolvedField_orMutable> get knownFields;
@@ -11662,7 +11484,7 @@ final class PartialSchema implements PartialSchema_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   PartialSchema toFrozen() => this;
@@ -11760,7 +11582,7 @@ final class PartialSchema_mutable implements PartialSchema_orMutable {
     this.pendingArguments,
   );
 
-  /// If the value of [knownFields] is already mutable, returns it as-is.
+  /// If the value of [knownFields] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [knownFields] and returns it.
   _core.List<ResolvedField_orMutable> get mutableKnownFields {
     final value = this.knownFields;
@@ -11771,7 +11593,7 @@ final class PartialSchema_mutable implements PartialSchema_orMutable {
     }
   }
 
-  /// If the value of [dependentFields] is already mutable, returns it as-is.
+  /// If the value of [dependentFields] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [dependentFields] and returns it.
   _core.List<DependentField_orMutable> get mutableDependentFields {
     final value = this.dependentFields;
@@ -11782,7 +11604,7 @@ final class PartialSchema_mutable implements PartialSchema_orMutable {
     }
   }
 
-  /// If the value of [pendingArguments] is already mutable, returns it as-is.
+  /// If the value of [pendingArguments] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [pendingArguments] and returns it.
   _core.List<ArgumentLocation_orMutable> get mutablePendingArguments {
     final value = this.pendingArguments;
@@ -11802,9 +11624,7 @@ final class PartialSchema_mutable implements PartialSchema_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ContributionSourceId
-// -----------------------------------------------------------------------------
 
 sealed class ContributionSourceId_orMutable {
   _core.String get value;
@@ -11831,7 +11651,7 @@ final class ContributionSourceId implements ContributionSourceId_orMutable {
   static ContributionSourceId_mutable mutable() =>
       ContributionSourceId_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ContributionSourceId toFrozen() => this;
@@ -11904,9 +11724,7 @@ final class ContributionSourceId_mutable
       ContributionSourceId(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ProducerId
-// -----------------------------------------------------------------------------
 
 sealed class ProducerId_orMutable {
   _core.String get value;
@@ -11931,7 +11749,7 @@ final class ProducerId implements ProducerId_orMutable {
   /// Fields are initialized to their default values.
   static ProducerId_mutable mutable() => ProducerId_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ProducerId toFrozen() => this;
@@ -11997,9 +11815,7 @@ final class ProducerId_mutable implements ProducerId_orMutable {
   ProducerId toFrozen() => ProducerId(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ContributionName
-// -----------------------------------------------------------------------------
 
 sealed class ContributionName_orMutable {
   _core.String get value;
@@ -12025,7 +11841,7 @@ final class ContributionName implements ContributionName_orMutable {
   /// Fields are initialized to their default values.
   static ContributionName_mutable mutable() => ContributionName_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ContributionName toFrozen() => this;
@@ -12094,9 +11910,7 @@ final class ContributionName_mutable implements ContributionName_orMutable {
       ContributionName(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ContributionKey
-// -----------------------------------------------------------------------------
 
 sealed class ContributionKey_orMutable {
   ContributionSourceId_orMutable get source;
@@ -12150,7 +11964,7 @@ final class ContributionKey implements ContributionKey_orMutable {
     ContributionName.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ContributionKey toFrozen() => this;
@@ -12257,7 +12071,7 @@ final class ContributionKey_mutable implements ContributionKey_orMutable {
     this.name,
   );
 
-  /// If the value of [source] is already mutable, returns it as-is.
+  /// If the value of [source] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
   ContributionSourceId_mutable get mutableSource {
     final value = this.source;
@@ -12268,7 +12082,7 @@ final class ContributionKey_mutable implements ContributionKey_orMutable {
     }
   }
 
-  /// If the value of [producer] is already mutable, returns it as-is.
+  /// If the value of [producer] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [producer] and returns it.
   ProducerId_mutable get mutableProducer {
     final value = this.producer;
@@ -12279,7 +12093,7 @@ final class ContributionKey_mutable implements ContributionKey_orMutable {
     }
   }
 
-  /// If the value of [name] is already mutable, returns it as-is.
+  /// If the value of [name] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [name] and returns it.
   ContributionName_mutable get mutableName {
     final value = this.name;
@@ -12300,9 +12114,7 @@ final class ContributionKey_mutable implements ContributionKey_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct DeclarationOwner
-// -----------------------------------------------------------------------------
 
 sealed class DeclarationOwner_orMutable {
   ContributionKey_orMutable get source;
@@ -12337,7 +12149,7 @@ final class DeclarationOwner implements DeclarationOwner_orMutable {
   static DeclarationOwner_mutable mutable() =>
       DeclarationOwner_mutable._(ContributionKey.defaultInstance, "");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   DeclarationOwner toFrozen() => this;
@@ -12410,7 +12222,7 @@ final class DeclarationOwner_mutable implements DeclarationOwner_orMutable {
 
   DeclarationOwner_mutable._(this.source, this.localIdentity);
 
-  /// If the value of [source] is already mutable, returns it as-is.
+  /// If the value of [source] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
   ContributionKey_mutable get mutableSource {
     final value = this.source;

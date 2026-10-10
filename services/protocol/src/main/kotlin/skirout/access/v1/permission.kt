@@ -104,9 +104,11 @@ sealed class EntityPermissionQualifier private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             organizationId: skirout.kernel.v1.record_id.RecordId_OrMutable?,
+            connectionSession: kotlin.String,
         ) = UserWrapper(
             skirout.access.v1.permission.EntityPermissionQualifier.User(
                 organizationId = organizationId,
+                connectionSession = connectionSession,
             )
         );
 
@@ -128,6 +130,7 @@ sealed class EntityPermissionQualifier private constructor() {
 
     sealed interface User_OrMutable {
         val organizationId: skirout.kernel.v1.record_id.RecordId_OrMutable?;
+        val connectionSession: kotlin.String;
 
         fun toFrozen(): skirout.access.v1.permission.EntityPermissionQualifier.User;
     }
@@ -136,6 +139,7 @@ sealed class EntityPermissionQualifier private constructor() {
     @kotlin.Suppress("UNUSED_PARAMETER")
     class User private constructor(
         override val organizationId: skirout.kernel.v1.record_id.RecordId?,
+        override val connectionSession: kotlin.String,
         internal val _unrecognizedFields: _UnrecognizedFields<skirout.access.v1.permission.EntityPermissionQualifier.User>? =
             null,
     ): skirout.access.v1.permission.EntityPermissionQualifier.User_OrMutable {
@@ -143,10 +147,12 @@ sealed class EntityPermissionQualifier private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             organizationId: skirout.kernel.v1.record_id.RecordId_OrMutable?,
+            connectionSession: kotlin.String,
             _unrecognizedFields: _UnrecognizedFields<skirout.access.v1.permission.EntityPermissionQualifier.User>? =
                 null,
         ): this(
             if (organizationId != null) organizationId.toFrozen() else null,
+            connectionSession,
             _unrecognizedFields,
         ) {}
 
@@ -156,6 +162,7 @@ sealed class EntityPermissionQualifier private constructor() {
         /** Returns a mutable shallow copy of this instance */
         fun toMutable() = Mutable(
             organizationId = this.organizationId,
+            connectionSession = this.connectionSession,
         );
 
         /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -164,8 +171,11 @@ sealed class EntityPermissionQualifier private constructor() {
                 _MustNameArguments,
             organizationId: skirout.kernel.v1.record_id.RecordId_OrMutable? =
                 this.organizationId,
+            connectionSession: kotlin.String =
+                this.connectionSession,
         ) = skirout.access.v1.permission.EntityPermissionQualifier.User(
             if (organizationId != null) organizationId.toFrozen() else null,
+            connectionSession,
             this._unrecognizedFields,
         );
 
@@ -173,11 +183,11 @@ sealed class EntityPermissionQualifier private constructor() {
         fun copy() = this;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.access.v1.permission.EntityPermissionQualifier.User && this.organizationId == other.organizationId);
+            return this === other || (other is skirout.access.v1.permission.EntityPermissionQualifier.User && this.organizationId == other.organizationId && this.connectionSession == other.connectionSession);
         }
 
         override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>(this.organizationId).hashCode();
+            return kotlin.collections.listOf<kotlin.Any?>(this.organizationId, this.connectionSession).hashCode();
         }
 
         override fun toString(): kotlin.String {
@@ -193,12 +203,15 @@ sealed class EntityPermissionQualifier private constructor() {
                 _MustNameArguments,
             override var organizationId: skirout.kernel.v1.record_id.RecordId_OrMutable? =
                 null,
+            override var connectionSession: kotlin.String =
+                "",
             internal var _unrecognizedFields: _UnrecognizedFields<skirout.access.v1.permission.EntityPermissionQualifier.User>? =
                 null,
         ): skirout.access.v1.permission.EntityPermissionQualifier.User_OrMutable {
             /** Returns a deeply immutable copy of this instance */
             override fun toFrozen() = skirout.access.v1.permission.EntityPermissionQualifier.User(
                 organizationId = this.organizationId,
+                connectionSession = this.connectionSession,
                 _unrecognizedFields = this._unrecognizedFields,
             );
         }
@@ -207,6 +220,7 @@ sealed class EntityPermissionQualifier private constructor() {
             private val default =
                 skirout.access.v1.permission.EntityPermissionQualifier.User(
                     null,
+                    "",
                 );
 
             /** Returns an instance with all fields set to their default values. */
@@ -222,8 +236,11 @@ sealed class EntityPermissionQualifier private constructor() {
                     _MustNameArguments,
                 organizationId: skirout.kernel.v1.record_id.RecordId_OrMutable? =
                     null,
+                connectionSession: kotlin.String =
+                    "",
             ) = skirout.access.v1.permission.EntityPermissionQualifier.User(
                 organizationId = organizationId,
+                connectionSession = connectionSession,
                 _unrecognizedFields = null,
             );
 
@@ -404,7 +421,7 @@ class Permission private constructor(
         );
 
         /**
-         * If the value of [allow] is already mutable, returns it as-is.
+         * If the value of [allow] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [allow] and returns it.
          */
         val mutableAllow: kotlin.collections.MutableList<kotlin.String> get() {
@@ -420,7 +437,7 @@ class Permission private constructor(
         }
 
         /**
-         * If the value of [deny] is already mutable, returns it as-is.
+         * If the value of [deny] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [deny] and returns it.
          */
         val mutableDeny: kotlin.collections.MutableList<kotlin.String> get() {
@@ -695,7 +712,7 @@ class Permissions private constructor(
         );
 
         /**
-         * If the value of [publish] is already mutable, returns it as-is.
+         * If the value of [publish] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [publish] and returns it.
          */
         val mutablePublish: skirout.access.v1.permission.Permission.Mutable get() {
@@ -711,7 +728,7 @@ class Permissions private constructor(
         }
 
         /**
-         * If the value of [subscribe] is already mutable, returns it as-is.
+         * If the value of [subscribe] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [subscribe] and returns it.
          */
         val mutableSubscribe: skirout.access.v1.permission.Permission.Mutable get() {
@@ -979,7 +996,7 @@ class GetEntityPermissionResponse private constructor(
         );
 
         /**
-         * If the value of [permissions] is already mutable, returns it as-is.
+         * If the value of [permissions] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [permissions] and returns it.
          */
         val mutablePermissions: skirout.access.v1.permission.Permissions.Mutable get() {
@@ -995,7 +1012,7 @@ class GetEntityPermissionResponse private constructor(
         }
 
         /**
-         * If the value of [tags] is already mutable, returns it as-is.
+         * If the value of [tags] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [tags] and returns it.
          */
         val mutableTags: kotlin.collections.MutableList<kotlin.String> get() {
@@ -1191,6 +1208,15 @@ private object _SerializerRegistry {
             "",
             { it.organizationId },
             { mut, v -> mut.organizationId = v },
+        );
+        EntityPermissionQualifier_UserSerializerImpl.addField(
+            "connection_session",
+            "connectionSession",
+            1,
+            build.skir.Serializers.string,
+            "",
+            { it.connectionSession },
+            { mut, v -> mut.connectionSession = v },
         );
         EntityPermissionQualifier_UserSerializerImpl.finalizeStruct();
 

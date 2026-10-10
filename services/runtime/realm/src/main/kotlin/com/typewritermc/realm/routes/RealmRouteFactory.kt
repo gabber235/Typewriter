@@ -1,8 +1,10 @@
 package com.typewritermc.realm.routes
 
 import com.typewritermc.authoring.InitializationRuntime
+import com.typewritermc.protocol.transport.generated.RealmRouteScope
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.checking.RealmCheckRuntime
+import com.typewritermc.realm.compiler.CompiledRootStatuses
 import com.typewritermc.realm.compiler.PublicationResults
 import com.typewritermc.realm.compiler.RealmPublicationCoordinator
 import com.typewritermc.realm.repository.AuthoringRepository
@@ -17,6 +19,7 @@ internal class RealmRouteFactory(
     private val snapshots: AuthoringViewStore,
     private val checks: RealmCheckRuntime,
     private val compiledContent: PublicationResults,
+    private val compiledRootStatuses: CompiledRootStatuses,
     private val publisher: RealmPublicationCoordinator,
     private val editorCatalog: RealmEditorCatalogSource,
     private val preparation: InitializationRuntime,
@@ -25,7 +28,7 @@ internal class RealmRouteFactory(
     private val checkEvents: EditorCheckEvents? = null,
 ) {
     fun create(
-        address: RealmAddress,
+        address: RealmRouteScope,
         communicator: Communicator,
     ): CommunicatorRoutes {
         val contracts = EditorContracts(address)
@@ -38,7 +41,7 @@ internal class RealmRouteFactory(
                 ?: AuthoringRoutes(authoring, snapshots, checks::findings, contracts = contracts)
         val authoringSearchRoutes = AuthoringSearchRoutes(authoringSearch, snapshots, contracts)
         val compiledContentRoutes = EditorCompiledContentRoutes(compiledContent, contracts)
-        val compiledResourceStatusRoutes = EditorCompiledResourceStatusRoutes(compiledContent, contracts)
+        val compiledResourceStatusRoutes = EditorCompiledResourceStatusRoutes(snapshots, compiledRootStatuses, contracts)
         val publicationRoutes = PublicationRoutes(publisher, compiledContent, contracts, address)
         val editorCatalogRoutes = EditorCatalogRoutes(editorCatalog, preparation, contracts)
         val presentationSearchRoutes = RealmPresentationSearchRoutes(presentationSearch, contracts, address)

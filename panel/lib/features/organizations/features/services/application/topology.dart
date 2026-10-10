@@ -4,9 +4,10 @@ part of "services.dart";
 ///
 /// The projection combines the topology watch with committed configuration
 /// changes from [ServiceResourceRepository]. [TopologyHost] contains desired
-/// and applied configuration revisions alongside host runtime observations;
-/// child realm and engine entries describe the resources currently reported by
-/// that host. A topology entry is therefore not another service identity.
+/// and applied configuration revisions alongside host runtime observations.
+/// Snapshots and configuration changes own child membership. Runtime reports
+/// update observed state only and cannot create or revive child resources. A
+/// topology entry is therefore not another service identity.
 ///
 /// Consumers may use the projection to display current backend knowledge and
 /// to choose configuration targets. They must not treat desired configuration
@@ -22,33 +23,37 @@ class OrganizationTopologyController extends _$OrganizationTopologyController {
       yield OrganizationTopology.empty;
       return;
     }
-    yield* ref.watchProjection<
-      OrganizationTopology,
-      skir.WatchOrganizationTopologyResponse,
-      skir.OrganizationTopologyChanged
-    >(
-      subject:
-          "cloud.to.user.$userId.organization.${organizationId.id}.topology.watch",
-      eventSubject:
-          "cloud.from.organization.${organizationId.id}.topology.watch",
-      requestBytes: skir.WatchOrganizationTopologyRequest.serializer.toBytes(
-        skir.WatchOrganizationTopologyRequest(),
-      ),
-      responseSerializer: skir.WatchOrganizationTopologyResponse.serializer,
-      eventSerializer: skir.OrganizationTopologyChanged.serializer,
-      snapshot: (response) => response.readSnapshot(),
-      reduce: (current, event) => event.applyTo(current),
-      confirmedEvents: ref
-          .watch(resourceRepositoriesProvider)
-          .services(organizationId)
-          .configurations
-          .map(skir.OrganizationTopologyChanged.wrapConfigurationChanged),
-      reconcileSnapshot: (current, incoming) =>
-          incoming.reconcileSnapshot(current),
-      initialValue: OrganizationTopology.empty,
-      delivery: const ProjectionDelivery.ephemeral(),
-      reconciliation: const ProjectionReconciliation.latest(),
-    );
+    final projection = skir.WatchOrganizationTopologyRequest()
+        .watch<OrganizationTopology>(
+          ref,
+          userId: userId,
+          organizationId: organizationId,
+          snapshot: (response) => response.readSnapshot(),
+          reduce: (current, event) => event.applyTo(current),
+          confirmedEvents: ref
+              .watch(resourceRepositoriesProvider)
+              .services(organizationId)
+              .configurations
+              .map(skir.OrganizationTopologyChanged.wrapConfigurationChanged),
+          reconcileSnapshot: (current, incoming) =>
+              incoming.reconcileSnapshot(current),
+          initialValue: OrganizationTopology.empty,
+          reconciliation: const ProjectionReconciliation.latest(),
+        );
+    await for (final topology in projection) {
+      if (!ref.mounted) return;
+      final observed = topology.realmInstances
+          .map((realm) => realm.realmId)
+          .toSet();
+      try {
+        await ref.read(natsProvider.notifier).refreshAuthorization(observed);
+      } on Object {
+        // The connection owner exposes the authorization failure while this
+        // topology fact remains available to the organization UI.
+      }
+      if (!ref.mounted) return;
+      yield topology;
+    }
   }
 
   /// Reloads the authoritative snapshot and replaces the owned subscription.
@@ -74,25 +79,13 @@ extension TopologyProjectionChange on skir.OrganizationTopologyChanged {
       :final value,
     ) =>
       current.applyConfiguration(value),
-    skir.OrganizationTopologyChanged_hostUpdatedWrapper(:final value) =>
-      current.applyHostObservation(TopologyHost.fromSkir(value)),
-    skir.OrganizationTopologyChanged_realmUpdatedWrapper(:final value) =>
-      current.applyRealmObservation(TopologyRealm.fromSkir(value)),
-    skir.OrganizationTopologyChanged_engineUpdatedWrapper(:final value) =>
-      current.applyEngineObservation(TopologyEngine.fromSkir(value)),
+    skir.OrganizationTopologyChanged_observationsReportedWrapper(
+      :final value,
+    ) =>
+      current.applyRuntimeObservation(value),
+    skir.OrganizationTopologyChanged_hostAdvertisedWrapper(:final value) =>
+      current.applyAdvertisement(value),
     skir.OrganizationTopologyChanged_unknown() =>
       throw ApiException.unknownResponseMessage(),
   };
-}
-
-List<Value> _upsertById<Value>(
-  List<Value> values,
-  Value incoming,
-  skir.RecordId Function(Value) idOf,
-) {
-  final index = values.indexWhere((value) => idOf(value) == idOf(incoming));
-  if (index == -1) return [...values, incoming];
-  final next = values.toList();
-  next[index] = incoming;
-  return next;
 }

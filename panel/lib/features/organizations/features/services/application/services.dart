@@ -41,21 +41,10 @@ class CanonicalOrganizationServices extends _$CanonicalOrganizationServices {
       return;
     }
 
-    final request = skir.WatchOrganizationServicesRequest();
-    yield* ref.watchProjection<
-      List<Service>,
-      skir.WatchOrganizationServicesResponse,
-      skir.OrganizationServicesChanged
-    >(
-      subject:
-          "cloud.to.user.$userId.organization.${this.organizationId.id}.services.watch",
-      eventSubject:
-          "cloud.from.organization.${this.organizationId.id}.services.watch",
-      requestBytes: skir.WatchOrganizationServicesRequest.serializer.toBytes(
-        request,
-      ),
-      responseSerializer: skir.WatchOrganizationServicesResponse.serializer,
-      eventSerializer: skir.OrganizationServicesChanged.serializer,
+    yield* skir.WatchOrganizationServicesRequest().watch(
+      ref,
+      userId: userId,
+      organizationId: organizationId,
       snapshot: (response) => response.readSnapshot(),
       reduce: (current, event) => event.applyWatched(current),
       confirmedEvents: ref
@@ -66,7 +55,6 @@ class CanonicalOrganizationServices extends _$CanonicalOrganizationServices {
       reconcileSnapshot: (current, incoming) =>
           incoming.reconcileSnapshot(current),
       initialValue: const [],
-      delivery: const ProjectionDelivery.ephemeral(),
       reconciliation: const ProjectionReconciliation.latest(),
     );
   }
@@ -86,12 +74,12 @@ extension ServiceSnapshotReply on skir.WatchOrganizationServicesResponse {
 extension ServiceProjectionChange on skir.OrganizationServicesChanged {
   List<Service> applyWatched(List<Service> current) => _apply(
     current,
-    (values, incoming) => _upsertWatchedService(values, incoming).values,
+    (values, incoming) => values.reconcileWatched(incoming).values,
   );
 
   List<Service> applyCanonical(List<Service> current) => _apply(
     current,
-    (values, incoming) => _upsertCanonicalService(values, incoming).values,
+    (values, incoming) => values.reconcileCanonical(incoming).values,
   );
 
   List<Service> _apply(
@@ -137,7 +125,7 @@ extension ServiceSnapshotProgress on Service {
   Service reconcileSnapshot(Service? previous) {
     final incoming = this;
     if (previous == null) return incoming;
-    final identity = _upsertWatchedService([previous], incoming).canonical;
+    final identity = [previous].reconcileWatched(incoming).canonical;
     final previousState = previous.state;
     final incomingState = incoming.state;
     final observation =

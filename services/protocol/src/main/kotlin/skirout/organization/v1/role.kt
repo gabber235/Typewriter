@@ -152,7 +152,7 @@ class OrganizationRole private constructor(
         );
 
         /**
-         * If the value of [roleId] is already mutable, returns it as-is.
+         * If the value of [roleId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [roleId] and returns it.
          */
         val mutableRoleId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -168,7 +168,7 @@ class OrganizationRole private constructor(
         }
 
         /**
-         * If the value of [color] is already mutable, returns it as-is.
+         * If the value of [color] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [color] and returns it.
          */
         val mutableColor: skirout.kernel.v1.color.Color.Mutable get() {

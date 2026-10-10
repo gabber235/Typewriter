@@ -4,12 +4,9 @@
 //! subject. Results are scoped to one organization and sorted by
 //! service name so the initial order is deterministic.
 
-use std::collections::HashMap;
-
 use otel_wasi::ResultWithSlug;
 use wasmcloud_utils::{
     database::{RecordId, read_query},
-    decode_skir, extract_params,
     skir::base::service::v1::organization::{
         WatchOrganizationServicesRequest, WatchOrganizationServicesResponse,
     },
@@ -19,21 +16,22 @@ use wasmcloud_utils::{
 
 use wasmcloud_utils::database::service::ServiceRecord;
 
-#[tracing::instrument(skip(msg, params))]
+#[tracing::instrument(skip_all)]
 /// Decodes the watch request and returns the current services for its organization.
 ///
 /// The user and organization path parameters identify the requested scope. The request body is
 /// still decoded to enforce the Skir boundary, although the current request has no fields.
 pub async fn handle_watch(
-    msg: NatsMessage,
-    params: HashMap<String, String>,
+    _msg: NatsMessage,
+    scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
+    _request: WatchOrganizationServicesRequest,
 ) -> Result<WatchOrganizationServicesResponse, otel_wasi::Error> {
-    let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
+    let actor_id = scope.user.as_str();
+    let org_id = scope.organization.as_str();
     otel_wasi::main_attribute!(
         "actor.id" = actor_id.to_string(),
         "organization.id" = org_id.to_string()
     );
-    let _ = decode_skir!(WatchOrganizationServicesRequest, &msg.body)?;
 
     snapshot(org_id)
         .await

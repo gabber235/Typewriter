@@ -199,19 +199,18 @@ async fn member_update_keeps_protected_founder_role(
         .expect_persisted_publish("typewriter.to.organization.alpha.members.changed")
         .body_matches(|body| {
             let Ok(event) =
-                OrganizationMembersChanged::serializer()
-                    .from_bytes(body, UnrecognizedValues::Drop)
+                OrganizationMembersChanged::serializer().from_bytes(body, UnrecognizedValues::Drop)
             else {
                 return false;
             };
-            let Some(member) = event.changes
-                .iter()
-                .find_map(|change| match change {
-                    OrganizationMembersChange::Update(member)
-                        if member.user_id.key.to_string() == "founder" => Some(member.as_ref()),
-                    _ => None,
-                })
-            else {
+            let Some(member) = event.changes.iter().find_map(|change| match change {
+                OrganizationMembersChange::Update(member)
+                    if member.user_id.key.to_string() == "founder" =>
+                {
+                    Some(member.as_ref())
+                }
+                _ => None,
+            }) else {
                 return false;
             };
             let mut names = member

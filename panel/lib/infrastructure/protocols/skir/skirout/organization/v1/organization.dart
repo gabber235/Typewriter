@@ -18,9 +18,7 @@ import "package:skir_client/skir_client.dart" as _skir;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 import "../../kernel/v1/record_id.dart" as _lib_kernel_v1_record_id;
 
-// -----------------------------------------------------------------------------
 // struct Organization
-// -----------------------------------------------------------------------------
 
 sealed class Organization_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get organizationId;
@@ -63,7 +61,7 @@ final class Organization implements Organization_orMutable {
     "",
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   Organization toFrozen() => this;
@@ -150,7 +148,7 @@ final class Organization_mutable implements Organization_orMutable {
 
   Organization_mutable._(this.organizationId, this.name, this.logoUrl);
 
-  /// If the value of [organizationId] is already mutable, returns it as-is.
+  /// If the value of [organizationId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [organizationId] and returns it.
   _lib_kernel_v1_record_id.RecordId_mutable get mutableOrganizationId {
     final value = this.organizationId;
@@ -171,9 +169,7 @@ final class Organization_mutable implements Organization_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct UserOrganizationsSnapshot
-// -----------------------------------------------------------------------------
 
 sealed class UserOrganizationsSnapshot_orMutable {
   _core.int get sequence;
@@ -212,7 +208,7 @@ final class UserOrganizationsSnapshot
   static UserOrganizationsSnapshot_mutable mutable() =>
       UserOrganizationsSnapshot_mutable._(0, _skir.KeyedIterable.empty);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   UserOrganizationsSnapshot toFrozen() => this;
@@ -289,7 +285,7 @@ final class UserOrganizationsSnapshot_mutable
 
   UserOrganizationsSnapshot_mutable._(this.sequence, this.values);
 
-  /// If the value of [values] is already mutable, returns it as-is.
+  /// If the value of [values] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [values] and returns it.
   _core.List<Organization_orMutable> get mutableValues {
     final value = this.values;
@@ -307,9 +303,7 @@ final class UserOrganizationsSnapshot_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum UserOrganizationsChange
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -466,9 +460,7 @@ final class UserOrganizationsChange_removeWrapper
       UserOrganizationsChange_kind.removeWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct UserOrganizationsChanged
-// -----------------------------------------------------------------------------
 
 sealed class UserOrganizationsChanged_orMutable {
   _core.int get sequence;
@@ -513,7 +505,7 @@ final class UserOrganizationsChanged
   static UserOrganizationsChanged_mutable mutable() =>
       UserOrganizationsChanged_mutable._(0, "", _skir.KeyedIterable.empty);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   UserOrganizationsChanged toFrozen() => this;
@@ -612,7 +604,7 @@ final class UserOrganizationsChanged_mutable
     this.changes,
   );
 
-  /// If the value of [changes] is already mutable, returns it as-is.
+  /// If the value of [changes] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [changes] and returns it.
   _core.List<UserOrganizationsChange> get mutableChanges {
     final value = this.changes;
@@ -632,9 +624,7 @@ final class UserOrganizationsChanged_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CreateOrganizationRequest
-// -----------------------------------------------------------------------------
 
 sealed class CreateOrganizationRequest_orMutable {
   _core.String get operationId;
@@ -671,7 +661,7 @@ final class CreateOrganizationRequest
   static CreateOrganizationRequest_mutable mutable() =>
       CreateOrganizationRequest_mutable._("", "", null);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CreateOrganizationRequest toFrozen() => this;
@@ -775,9 +765,7 @@ final class CreateOrganizationRequest_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CreateOrganizationResponse.InvalidOperationIdError
-// -----------------------------------------------------------------------------
 
 sealed class CreateOrganizationResponse_InvalidOperationIdError_orMutable {
   CreateOrganizationResponse_InvalidOperationIdError toFrozen();
@@ -802,7 +790,7 @@ final class CreateOrganizationResponse_InvalidOperationIdError
   static CreateOrganizationResponse_InvalidOperationIdError_mutable mutable() =>
       CreateOrganizationResponse_InvalidOperationIdError_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CreateOrganizationResponse_InvalidOperationIdError toFrozen() => this;
@@ -867,9 +855,7 @@ final class CreateOrganizationResponse_InvalidOperationIdError_mutable
       CreateOrganizationResponse_InvalidOperationIdError().._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CreateOrganizationResponse.OperationIdentityReusedError
-// -----------------------------------------------------------------------------
 
 sealed class CreateOrganizationResponse_OperationIdentityReusedError_orMutable {
   CreateOrganizationResponse_OperationIdentityReusedError toFrozen();
@@ -896,7 +882,7 @@ final class CreateOrganizationResponse_OperationIdentityReusedError
   mutable() =>
       CreateOrganizationResponse_OperationIdentityReusedError_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CreateOrganizationResponse_OperationIdentityReusedError toFrozen() => this;
@@ -963,9 +949,7 @@ final class CreateOrganizationResponse_OperationIdentityReusedError_mutable
       CreateOrganizationResponse_OperationIdentityReusedError().._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CreateOrganizationResponse.Success
-// -----------------------------------------------------------------------------
 
 sealed class CreateOrganizationResponse_Success_orMutable {
   Organization_orMutable get organization;
@@ -1007,7 +991,7 @@ final class CreateOrganizationResponse_Success
         UserOrganizationsChanged.defaultInstance,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CreateOrganizationResponse_Success toFrozen() => this;
@@ -1088,7 +1072,7 @@ final class CreateOrganizationResponse_Success_mutable
 
   CreateOrganizationResponse_Success_mutable._(this.organization, this.event);
 
-  /// If the value of [organization] is already mutable, returns it as-is.
+  /// If the value of [organization] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [organization] and returns it.
   Organization_mutable get mutableOrganization {
     final value = this.organization;
@@ -1099,7 +1083,7 @@ final class CreateOrganizationResponse_Success_mutable
     }
   }
 
-  /// If the value of [event] is already mutable, returns it as-is.
+  /// If the value of [event] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [event] and returns it.
   UserOrganizationsChanged_mutable get mutableEvent {
     final value = this.event;
@@ -1119,9 +1103,7 @@ final class CreateOrganizationResponse_Success_mutable
       ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum CreateOrganizationResponse
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -1354,9 +1336,7 @@ final class CreateOrganizationResponse_successWrapper
       CreateOrganizationResponse_kind.successWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct DeleteOrganizationRequest
-// -----------------------------------------------------------------------------
 
 sealed class DeleteOrganizationRequest_orMutable {
   _lib_kernel_v1_record_id.RecordId_orMutable get organizationId;
@@ -1389,7 +1369,7 @@ final class DeleteOrganizationRequest
         _lib_kernel_v1_record_id.RecordId.defaultInstance,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   DeleteOrganizationRequest toFrozen() => this;
@@ -1456,7 +1436,7 @@ final class DeleteOrganizationRequest_mutable
 
   DeleteOrganizationRequest_mutable._(this.organizationId);
 
-  /// If the value of [organizationId] is already mutable, returns it as-is.
+  /// If the value of [organizationId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [organizationId] and returns it.
   _lib_kernel_v1_record_id.RecordId_mutable get mutableOrganizationId {
     final value = this.organizationId;
@@ -1475,9 +1455,7 @@ final class DeleteOrganizationRequest_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct DeleteOrganizationResponse.Success
-// -----------------------------------------------------------------------------
 
 sealed class DeleteOrganizationResponse_Success_orMutable {
   DeleteOrganizationResponse_Success toFrozen();
@@ -1501,7 +1479,7 @@ final class DeleteOrganizationResponse_Success
   static DeleteOrganizationResponse_Success_mutable mutable() =>
       DeleteOrganizationResponse_Success_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   DeleteOrganizationResponse_Success toFrozen() => this;
@@ -1565,9 +1543,7 @@ final class DeleteOrganizationResponse_Success_mutable
       DeleteOrganizationResponse_Success().._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum DeleteOrganizationResponse
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```

@@ -1,19 +1,45 @@
 //! Stable identities for mutation receipts.
 //!
 //! A receipt belongs to the authenticated actor, operation scope, operation name, and caller
-//! supplied identity. The surrounding transaction owns creating or recalling it and storing the
-//! original request bytes with the result.
+//! supplied identity. It owns the original request bytes and binds both values to the transaction
+//! that creates or recalls the result.
 
 use super::RecordId;
 
-/// Builds the stable record identity used to recall an idempotent mutation result.
+/// Stable identity and original input for one idempotent mutation.
 ///
-/// Callers must bind this identity and the original request bytes to the effect transaction.
 /// The receipt is only useful for idempotency when the transaction stores it with the mutation
 /// result. Reusing the identity with different request bytes is a rejected operation, not a new
 /// mutation.
-pub fn receipt_id(actor: &str, scope: &str, operation: &str, identity: &str) -> RecordId {
-    let key = serde_json::to_string(&(actor, scope, operation, identity))
-        .expect("serializing a tuple of strings cannot fail");
-    RecordId::new("mutation_receipt", key)
+pub struct MutationReceipt {
+    record: RecordId,
+    request_bytes: Vec<u8>,
+}
+
+impl MutationReceipt {
+    /// Creates the receipt identity and retains the exact encoded request used by the caller.
+    pub fn new(
+        actor: &str,
+        scope: &str,
+        operation: &str,
+        operation_id: &str,
+        request_bytes: Vec<u8>,
+    ) -> Self {
+        let key = serde_json::to_string(&(actor, scope, operation, operation_id))
+            .expect("serializing a tuple of strings cannot fail");
+        Self {
+            record: RecordId::new("mutation_receipt", key),
+            request_bytes,
+        }
+    }
+
+    /// Consumes the receipt and binds its inseparable identity and request bytes to a transaction.
+    pub fn bind<'query, Outcome: serde::de::DeserializeOwned>(
+        self,
+        query: super::TransactionQuery<'query, Outcome>,
+    ) -> super::TransactionQuery<'query, Outcome> {
+        query
+            .bind("receipt", self.record)
+            .bind("request_bytes", self.request_bytes)
+    }
 }

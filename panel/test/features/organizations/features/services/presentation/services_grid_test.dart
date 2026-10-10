@@ -2,6 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../../../support/test_utils.dart";
 
@@ -283,10 +284,13 @@ class _Fixture {
   late final skir.RealmInstance realm;
   late final skir.EngineInstance engine;
   late final OrganizationTopology topology;
+  final nats = FakeNatsClient();
 
   List<Service> get services => [hostService, customService];
 
   List<Override> get overrides => [
+    userIdProvider.overrideWith((ref) async => "test-user"),
+    natsProvider.overrideWithValue(nats),
     organizationIdProvider.overrideWith(
       (ref) => skir.recordId("organization:test"),
     ),

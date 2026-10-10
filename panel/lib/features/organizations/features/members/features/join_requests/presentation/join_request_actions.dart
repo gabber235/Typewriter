@@ -40,9 +40,10 @@ class BulkJoinRequestActions extends HookConsumerWidget {
       final ids = Set<skir.RecordId>.unmodifiable(selectedIds);
       final roles = List<OrganizationRole>.unmodifiable(bulkRoles.value);
       try {
-        await ref
-            .read(organizationJoinRequestsProvider.notifier)
-            .approveRequests(ids, roles);
+        await ref.executeMembership(
+          ref.membershipCommands.approve(ids, roles),
+          (response) => response.requireAccepted(),
+        );
         if (context.mounted) {
           if (listEquals(bulkRoles.value, roles)) bulkRoles.value = [];
           if (setEquals(selectedIds, ids)) onClearSelection();

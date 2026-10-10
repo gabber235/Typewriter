@@ -15,9 +15,7 @@ import "dart:core" as _core;
 
 import "package:skir_client/skir_client.dart" as _skir;
 
-// -----------------------------------------------------------------------------
 // struct ServiceHeartbeatNotification
-// -----------------------------------------------------------------------------
 
 sealed class ServiceHeartbeatNotification_orMutable {
   ServiceHeartbeatNotification toFrozen();
@@ -40,7 +38,7 @@ final class ServiceHeartbeatNotification
   static ServiceHeartbeatNotification_mutable mutable() =>
       ServiceHeartbeatNotification_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ServiceHeartbeatNotification toFrozen() => this;
@@ -103,9 +101,7 @@ final class ServiceHeartbeatNotification_mutable
       ServiceHeartbeatNotification().._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ServiceShutdownNotification
-// -----------------------------------------------------------------------------
 
 sealed class ServiceShutdownNotification_orMutable {
   ServiceShutdownNotification toFrozen();
@@ -128,7 +124,7 @@ final class ServiceShutdownNotification
   static ServiceShutdownNotification_mutable mutable() =>
       ServiceShutdownNotification_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ServiceShutdownNotification toFrozen() => this;

@@ -7,10 +7,8 @@
 
 use otel_wasi::{ResultWithSlug, main_attribute, wasi_error};
 use serde::Deserialize;
-use std::collections::HashMap;
 use wasmcloud_utils::{
     database::{DatabaseDuration, RecordId, organization::JoinCodeRecord, transaction_query},
-    decode_skir, extract_params,
     skir::base::organization::v1::join_codes::*,
     skir_transaction_outcome,
     skir_utils::{IntoSkirRecordIds, IntoSurrealRecordIds},
@@ -40,17 +38,18 @@ impl JoinCodeGenerationOutcome {
 ///
 /// The snapshot sequence is read with the values and is the recovery point for the organization
 /// code change stream. Expired codes are excluded by the database snapshot query.
-#[tracing::instrument(skip(msg, params))]
+#[tracing::instrument(skip_all)]
 pub async fn handle_watch(
-    msg: NatsMessage,
-    params: HashMap<String, String>,
+    _msg: NatsMessage,
+    scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
+    _request: WatchOrganizationJoinCodesRequest,
 ) -> Result<WatchOrganizationJoinCodesResponse, otel_wasi::Error> {
-    let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
+    let actor_id = scope.user.as_str();
+    let org_id = scope.organization.as_str();
     main_attribute!(
         "actor.id" = actor_id.to_string(),
         "organization.id" = org_id.to_string()
     );
-    let _ = decode_skir!(WatchOrganizationJoinCodesRequest, &msg.body)?;
 
     wasmcloud_utils::database::organization::snapshots::join_codes(RecordId::new(
         "organization",
@@ -64,23 +63,25 @@ pub async fn handle_watch(
 /// A positive duration is stored as the database expiration interval. Zero and negative durations
 /// are rejected before any state change. The transaction rejects unknown or protected roles,
 /// records the committed result for operation replay, and publishes the code addition afterward.
-#[tracing::instrument(skip(msg, params))]
+#[tracing::instrument(skip_all)]
 pub async fn handle_generate(
     msg: NatsMessage,
-    params: HashMap<String, String>,
+    scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
+    req: GenerateOrganizationJoinCodeRequest,
 ) -> Result<GenerateOrganizationJoinCodeResponse, otel_wasi::Error> {
-    let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
-    let req = decode_skir!(GenerateOrganizationJoinCodeRequest, &msg.body)?;
+    let actor_id = scope.user.as_str();
+    let org_id = scope.organization.as_str();
     if req.operation_id.is_empty() {
         return Ok(wasmcloud_utils::skir_variant!(
             GenerateOrganizationJoinCodeResponse::InvalidOperationIdError
         ));
     }
-    let receipt = wasmcloud_utils::database::mutation::receipt_id(
+    let receipt = wasmcloud_utils::database::mutation::MutationReceipt::new(
         actor_id,
         org_id,
         "GenerateOrganizationJoinCode",
         &req.operation_id,
+        msg.body,
     );
     let operation_id = req.operation_id.clone();
     wasmcloud_utils::validate_record_ids!(
@@ -122,7 +123,8 @@ pub async fn handle_generate(
         .as_slice()
         .into_surreal_record_ids();
 
-    let result = transaction_query!(
+    let result = receipt
+        .bind(transaction_query!(
         JoinCodeGenerationOutcome,
         r#"
         BEGIN TRANSACTION;
@@ -173,9 +175,7 @@ RETURN {
     .bind("actor", actor_id)
     .bind("single_use", req.single_use)
     .bind("roles", role_ids)
-    .bind("duration", expiration)
-    .bind("receipt", receipt)
-    .bind("request_bytes", msg.body.clone())
+    .bind("duration", expiration))
     .execute()
     .await
     .error_with_slug("join-code-generate-query-failed")?
@@ -207,9 +207,11 @@ RETURN {
         changes: vec![OrganizationJoinCodesChange::Add(Box::new(code.clone()))],
         ..Default::default()
     };
-    wasmcloud_utils::skir_subjects::organization_join_codes_changed(org_id)
-        .persist(event.clone())
-        .await?;
+    wasmcloud_utils::transport_routes::OrganizationJoinCodesWatchRoute::delivery(
+        &wasmcloud_utils::transport_routes::OrganizationScope::try_from(org_id)?,
+    )
+    .persist(event.clone())
+    .await?;
 
     main_attribute!(
         "join_code.outcome" = "generated",
@@ -226,23 +228,25 @@ RETURN {
 /// Expired, missing, or already revoked codes return a not found response without advancing the
 /// organization code sequence. Replaying an operation identity returns the committed transaction
 /// result, while reusing it for different input is rejected.
-#[tracing::instrument(skip(msg, params))]
+#[tracing::instrument(skip_all)]
 pub async fn handle_revoke(
     msg: NatsMessage,
-    params: HashMap<String, String>,
+    scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
+    req: RevokeOrganizationJoinCodeRequest,
 ) -> Result<RevokeOrganizationJoinCodeResponse, otel_wasi::Error> {
-    let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
-    let req = decode_skir!(RevokeOrganizationJoinCodeRequest, &msg.body)?;
+    let actor_id = scope.user.as_str();
+    let org_id = scope.organization.as_str();
     if req.operation_id.is_empty() {
         return Ok(wasmcloud_utils::skir_variant!(
             RevokeOrganizationJoinCodeResponse::InvalidOperationIdError
         ));
     }
-    let receipt = wasmcloud_utils::database::mutation::receipt_id(
+    let receipt = wasmcloud_utils::database::mutation::MutationReceipt::new(
         actor_id,
         org_id,
         "RevokeOrganizationJoinCode",
         &req.operation_id,
+        msg.body,
     );
     wasmcloud_utils::validate_record_ids!(
         RevokeOrganizationJoinCodeResponse,
@@ -263,9 +267,11 @@ pub async fn handle_revoke(
         sequence: i64,
     }
 
-    let deleted = transaction_query!(
-        Option<RevokedJoinCode>,
-        r#"
+    let deleted = receipt
+        .bind(
+            transaction_query!(
+                Option<RevokedJoinCode>,
+                r#"
         BEGIN TRANSACTION;
         RETURN {
             LET $previous = fn::mutation::recall($receipt, $request_bytes);
@@ -289,16 +295,15 @@ LET $deleted = DELETE $code
         };
         COMMIT TRANSACTION;
         "#,
-    )
-    .bind("code", code_id)
-    .bind("org", organization_id)
-    .bind("receipt", receipt)
-    .bind("request_bytes", msg.body.clone())
-    .execute()
-    .await
-    .error_with_slug("join-code-revoke-query-failed")?
-    .decode()
-    .error_with_slug("join-code-revoke-result-parse-failed")?;
+            )
+            .bind("code", code_id)
+            .bind("org", organization_id),
+        )
+        .execute()
+        .await
+        .error_with_slug("join-code-revoke-query-failed")?
+        .decode()
+        .error_with_slug("join-code-revoke-result-parse-failed")?;
     let deleted = wasmcloud_utils::skir_domain_result!(RevokeOrganizationJoinCodeResponse, deleted,
         "operation-identity-reused-error" => {});
 
@@ -316,9 +321,11 @@ LET $deleted = DELETE $code
         changes: vec![OrganizationJoinCodesChange::Remove(Box::new(code.clone()))],
         ..Default::default()
     };
-    wasmcloud_utils::skir_subjects::organization_join_codes_changed(org_id)
-        .persist(event.clone())
-        .await?;
+    wasmcloud_utils::transport_routes::OrganizationJoinCodesWatchRoute::delivery(
+        &wasmcloud_utils::transport_routes::OrganizationScope::try_from(org_id)?,
+    )
+    .persist(event.clone())
+    .await?;
 
     main_attribute!("join_code.outcome" = "revoked");
     Ok(skir_variant!(RevokeOrganizationJoinCodeResponse::Success {

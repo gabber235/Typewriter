@@ -27,23 +27,25 @@ pub struct ReconciledRevision {
 
 impl ReconciledRevision {
     pub fn default_ref() -> &'static ReconciledRevision {
-        static D: std::sync::LazyLock<ReconciledRevision> = std::sync::LazyLock::new(ReconciledRevision::default);
+        static D: std::sync::LazyLock<ReconciledRevision> =
+            std::sync::LazyLock::new(ReconciledRevision::default);
         &D
     }
 }
 
 impl ReconciledRevision {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ReconciledRevision> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ReconciledRevision>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "ReconciledRevision",
-                    "",
-                    |x: &ReconciledRevision| &x._unrecognized,
-                    |x: &mut ReconciledRevision, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ReconciledRevision>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "ReconciledRevision",
+                "",
+                |x: &ReconciledRevision| &x._unrecognized,
+                |x: &mut ReconciledRevision, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ReconciledRevision> {
@@ -66,23 +68,25 @@ pub struct EngineTarget {
 
 impl EngineTarget {
     pub fn default_ref() -> &'static EngineTarget {
-        static D: std::sync::LazyLock<EngineTarget> = std::sync::LazyLock::new(EngineTarget::default);
+        static D: std::sync::LazyLock<EngineTarget> =
+            std::sync::LazyLock::new(EngineTarget::default);
         &D
     }
 }
 
 impl EngineTarget {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<EngineTarget> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<EngineTarget>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "EngineTarget",
-                    "",
-                    |x: &EngineTarget| &x._unrecognized,
-                    |x: &mut EngineTarget, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<EngineTarget>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "EngineTarget",
+                "",
+                |x: &EngineTarget| &x._unrecognized,
+                |x: &mut EngineTarget, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<EngineTarget> {
@@ -104,23 +108,25 @@ pub struct SupportedEngine {
 
 impl SupportedEngine {
     pub fn default_ref() -> &'static SupportedEngine {
-        static D: std::sync::LazyLock<SupportedEngine> = std::sync::LazyLock::new(SupportedEngine::default);
+        static D: std::sync::LazyLock<SupportedEngine> =
+            std::sync::LazyLock::new(SupportedEngine::default);
         &D
     }
 }
 
 impl SupportedEngine {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<SupportedEngine> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<SupportedEngine>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "SupportedEngine",
-                    "",
-                    |x: &SupportedEngine| &x._unrecognized,
-                    |x: &mut SupportedEngine, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<SupportedEngine>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "SupportedEngine",
+                "",
+                |x: &SupportedEngine| &x._unrecognized,
+                |x: &mut SupportedEngine, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<SupportedEngine> {
@@ -151,24 +157,28 @@ impl Default for HostRuntimeStatus {
 
 impl HostRuntimeStatus {
     fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<HostRuntimeStatus> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<HostRuntimeStatus>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &HostRuntimeStatus| match x {
-                        HostRuntimeStatus::Unknown(_) => 0,
-                        HostRuntimeStatus::Offline => 1,
-                        HostRuntimeStatus::Reconciling => 2,
-                        HostRuntimeStatus::Active => 3,
-                        HostRuntimeStatus::Failed => 4,
-                        HostRuntimeStatus::Drifted => 5,
-                    },
-                    |u| HostRuntimeStatus::Unknown(Some(u)),
-                    |x: &HostRuntimeStatus| match x { HostRuntimeStatus::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "service/v1/topology.skir",
-                    "HostRuntimeStatus",
-                    "",
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<HostRuntimeStatus>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &HostRuntimeStatus| match x {
+                    HostRuntimeStatus::Unknown(_) => 0,
+                    HostRuntimeStatus::Offline => 1,
+                    HostRuntimeStatus::Reconciling => 2,
+                    HostRuntimeStatus::Active => 3,
+                    HostRuntimeStatus::Failed => 4,
+                    HostRuntimeStatus::Drifted => 5,
+                },
+                |u| HostRuntimeStatus::Unknown(Some(u)),
+                |x: &HostRuntimeStatus| match x {
+                    HostRuntimeStatus::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "service/v1/topology.skir",
+                "HostRuntimeStatus",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<HostRuntimeStatus> {
@@ -192,7 +202,8 @@ pub struct HostRuntimeState {
 
 impl HostRuntimeState {
     pub fn default_ref() -> &'static HostRuntimeState {
-        static D: std::sync::LazyLock<HostRuntimeState> = std::sync::LazyLock::new(HostRuntimeState::default);
+        static D: std::sync::LazyLock<HostRuntimeState> =
+            std::sync::LazyLock::new(HostRuntimeState::default);
         &D
     }
 }
@@ -210,16 +221,17 @@ impl Default for HostRuntimeState {
 
 impl HostRuntimeState {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<HostRuntimeState> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<HostRuntimeState>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "HostRuntimeState",
-                    "",
-                    |x: &HostRuntimeState| &x._unrecognized,
-                    |x: &mut HostRuntimeState, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<HostRuntimeState>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "HostRuntimeState",
+                "",
+                |x: &HostRuntimeState| &x._unrecognized,
+                |x: &mut HostRuntimeState, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<HostRuntimeState> {
@@ -252,26 +264,30 @@ impl Default for ChildRuntimeStatus {
 
 impl ChildRuntimeStatus {
     fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ChildRuntimeStatus> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<ChildRuntimeStatus>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &ChildRuntimeStatus| match x {
-                        ChildRuntimeStatus::Unknown(_) => 0,
-                        ChildRuntimeStatus::Absent => 1,
-                        ChildRuntimeStatus::Staging => 2,
-                        ChildRuntimeStatus::Active => 3,
-                        ChildRuntimeStatus::Quiescing => 4,
-                        ChildRuntimeStatus::Failed => 5,
-                        ChildRuntimeStatus::RolledBack => 6,
-                        ChildRuntimeStatus::Drifted => 7,
-                    },
-                    |u| ChildRuntimeStatus::Unknown(Some(u)),
-                    |x: &ChildRuntimeStatus| match x { ChildRuntimeStatus::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "service/v1/topology.skir",
-                    "ChildRuntimeStatus",
-                    "",
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<ChildRuntimeStatus>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &ChildRuntimeStatus| match x {
+                    ChildRuntimeStatus::Unknown(_) => 0,
+                    ChildRuntimeStatus::Absent => 1,
+                    ChildRuntimeStatus::Staging => 2,
+                    ChildRuntimeStatus::Active => 3,
+                    ChildRuntimeStatus::Quiescing => 4,
+                    ChildRuntimeStatus::Failed => 5,
+                    ChildRuntimeStatus::RolledBack => 6,
+                    ChildRuntimeStatus::Drifted => 7,
+                },
+                |u| ChildRuntimeStatus::Unknown(Some(u)),
+                |x: &ChildRuntimeStatus| match x {
+                    ChildRuntimeStatus::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "service/v1/topology.skir",
+                "ChildRuntimeStatus",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ChildRuntimeStatus> {
@@ -296,7 +312,8 @@ pub struct ChildRuntimeState {
 
 impl ChildRuntimeState {
     pub fn default_ref() -> &'static ChildRuntimeState {
-        static D: std::sync::LazyLock<ChildRuntimeState> = std::sync::LazyLock::new(ChildRuntimeState::default);
+        static D: std::sync::LazyLock<ChildRuntimeState> =
+            std::sync::LazyLock::new(ChildRuntimeState::default);
         &D
     }
 }
@@ -315,16 +332,17 @@ impl Default for ChildRuntimeState {
 
 impl ChildRuntimeState {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ChildRuntimeState> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ChildRuntimeState>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "ChildRuntimeState",
-                    "",
-                    |x: &ChildRuntimeState| &x._unrecognized,
-                    |x: &mut ChildRuntimeState, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ChildRuntimeState>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "ChildRuntimeState",
+                "",
+                |x: &ChildRuntimeState| &x._unrecognized,
+                |x: &mut ChildRuntimeState, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ChildRuntimeState> {
@@ -360,16 +378,17 @@ impl ServiceHost {
 
 impl ServiceHost {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ServiceHost> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ServiceHost>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "ServiceHost",
-                    "",
-                    |x: &ServiceHost| &x._unrecognized,
-                    |x: &mut ServiceHost, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ServiceHost>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "ServiceHost",
+                "",
+                |x: &ServiceHost| &x._unrecognized,
+                |x: &mut ServiceHost, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ServiceHost> {
@@ -399,16 +418,17 @@ impl OwnerHost {
 
 impl OwnerHost {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<OwnerHost> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<OwnerHost>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "OwnerHost",
-                    "",
-                    |x: &OwnerHost| &x._unrecognized,
-                    |x: &mut OwnerHost, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<OwnerHost>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "OwnerHost",
+                "",
+                |x: &OwnerHost| &x._unrecognized,
+                |x: &mut OwnerHost, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<OwnerHost> {
@@ -434,23 +454,25 @@ pub struct RealmInstance {
 
 impl RealmInstance {
     pub fn default_ref() -> &'static RealmInstance {
-        static D: std::sync::LazyLock<RealmInstance> = std::sync::LazyLock::new(RealmInstance::default);
+        static D: std::sync::LazyLock<RealmInstance> =
+            std::sync::LazyLock::new(RealmInstance::default);
         &D
     }
 }
 
 impl RealmInstance {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RealmInstance> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RealmInstance>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "RealmInstance",
-                    "",
-                    |x: &RealmInstance| &x._unrecognized,
-                    |x: &mut RealmInstance, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RealmInstance>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "RealmInstance",
+                "",
+                |x: &RealmInstance| &x._unrecognized,
+                |x: &mut RealmInstance, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<RealmInstance> {
@@ -480,16 +502,17 @@ impl RealmInfo {
 
 impl RealmInfo {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RealmInfo> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RealmInfo>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "RealmInfo",
-                    "",
-                    |x: &RealmInfo| &x._unrecognized,
-                    |x: &mut RealmInfo, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RealmInfo>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "RealmInfo",
+                "",
+                |x: &RealmInfo| &x._unrecognized,
+                |x: &mut RealmInfo, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<RealmInfo> {
@@ -516,23 +539,25 @@ pub struct EngineInstance {
 
 impl EngineInstance {
     pub fn default_ref() -> &'static EngineInstance {
-        static D: std::sync::LazyLock<EngineInstance> = std::sync::LazyLock::new(EngineInstance::default);
+        static D: std::sync::LazyLock<EngineInstance> =
+            std::sync::LazyLock::new(EngineInstance::default);
         &D
     }
 }
 
 impl EngineInstance {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<EngineInstance> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<EngineInstance>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "EngineInstance",
-                    "",
-                    |x: &EngineInstance| &x._unrecognized,
-                    |x: &mut EngineInstance, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<EngineInstance>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "EngineInstance",
+                "",
+                |x: &EngineInstance| &x._unrecognized,
+                |x: &mut EngineInstance, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<EngineInstance> {
@@ -554,28 +579,33 @@ pub struct HostedRealmConfiguration {
 
 impl HostedRealmConfiguration {
     pub fn default_ref() -> &'static HostedRealmConfiguration {
-        static D: std::sync::LazyLock<HostedRealmConfiguration> = std::sync::LazyLock::new(HostedRealmConfiguration::default);
+        static D: std::sync::LazyLock<HostedRealmConfiguration> =
+            std::sync::LazyLock::new(HostedRealmConfiguration::default);
         &D
     }
 }
 
 impl HostedRealmConfiguration {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<HostedRealmConfiguration> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<HostedRealmConfiguration>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "HostedRealmConfiguration",
-                    "",
-                    |x: &HostedRealmConfiguration| &x._unrecognized,
-                    |x: &mut HostedRealmConfiguration, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<HostedRealmConfiguration>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<HostedRealmConfiguration>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "HostedRealmConfiguration",
+                "",
+                |x: &HostedRealmConfiguration| &x._unrecognized,
+                |x: &mut HostedRealmConfiguration, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<HostedRealmConfiguration> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(HostedRealmConfiguration::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            HostedRealmConfiguration::_adapter(),
+        )
     }
 }
 
@@ -587,33 +617,40 @@ impl HostedRealmConfiguration {
 pub struct EngineRealmSelection_ExistingRealm {
     pub realm_id: crate::skirout::base::kernel::v1::record_id::RecordId,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<EngineRealmSelection_ExistingRealm>>,
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<EngineRealmSelection_ExistingRealm>>,
 }
 
 impl EngineRealmSelection_ExistingRealm {
     pub fn default_ref() -> &'static EngineRealmSelection_ExistingRealm {
-        static D: std::sync::LazyLock<EngineRealmSelection_ExistingRealm> = std::sync::LazyLock::new(EngineRealmSelection_ExistingRealm::default);
+        static D: std::sync::LazyLock<EngineRealmSelection_ExistingRealm> =
+            std::sync::LazyLock::new(EngineRealmSelection_ExistingRealm::default);
         &D
     }
 }
 
 impl EngineRealmSelection_ExistingRealm {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<EngineRealmSelection_ExistingRealm> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<EngineRealmSelection_ExistingRealm>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "EngineRealmSelection.ExistingRealm",
-                    "",
-                    |x: &EngineRealmSelection_ExistingRealm| &x._unrecognized,
-                    |x: &mut EngineRealmSelection_ExistingRealm, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<EngineRealmSelection_ExistingRealm>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<EngineRealmSelection_ExistingRealm>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "EngineRealmSelection.ExistingRealm",
+                "",
+                |x: &EngineRealmSelection_ExistingRealm| &x._unrecognized,
+                |x: &mut EngineRealmSelection_ExistingRealm, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<EngineRealmSelection_ExistingRealm> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(EngineRealmSelection_ExistingRealm::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            EngineRealmSelection_ExistingRealm::_adapter(),
+        )
     }
 }
 
@@ -636,21 +673,25 @@ impl Default for EngineRealmSelection {
 
 impl EngineRealmSelection {
     fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<EngineRealmSelection> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<EngineRealmSelection>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &EngineRealmSelection| match x {
-                        EngineRealmSelection::Unknown(_) => 0,
-                        EngineRealmSelection::HostedRealm => 1,
-                        EngineRealmSelection::ExistingRealm(_) => 2,
-                    },
-                    |u| EngineRealmSelection::Unknown(Some(u)),
-                    |x: &EngineRealmSelection| match x { EngineRealmSelection::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "service/v1/topology.skir",
-                    "EngineRealmSelection",
-                    "",
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<EngineRealmSelection>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &EngineRealmSelection| match x {
+                    EngineRealmSelection::Unknown(_) => 0,
+                    EngineRealmSelection::HostedRealm => 1,
+                    EngineRealmSelection::ExistingRealm(_) => 2,
+                },
+                |u| EngineRealmSelection::Unknown(Some(u)),
+                |x: &EngineRealmSelection| match x {
+                    EngineRealmSelection::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "service/v1/topology.skir",
+                "EngineRealmSelection",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<EngineRealmSelection> {
@@ -673,28 +714,33 @@ pub struct HostedEngineConfiguration {
 
 impl HostedEngineConfiguration {
     pub fn default_ref() -> &'static HostedEngineConfiguration {
-        static D: std::sync::LazyLock<HostedEngineConfiguration> = std::sync::LazyLock::new(HostedEngineConfiguration::default);
+        static D: std::sync::LazyLock<HostedEngineConfiguration> =
+            std::sync::LazyLock::new(HostedEngineConfiguration::default);
         &D
     }
 }
 
 impl HostedEngineConfiguration {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<HostedEngineConfiguration> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<HostedEngineConfiguration>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "HostedEngineConfiguration",
-                    "",
-                    |x: &HostedEngineConfiguration| &x._unrecognized,
-                    |x: &mut HostedEngineConfiguration, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<HostedEngineConfiguration>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<HostedEngineConfiguration>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "HostedEngineConfiguration",
+                "",
+                |x: &HostedEngineConfiguration| &x._unrecognized,
+                |x: &mut HostedEngineConfiguration, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<HostedEngineConfiguration> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(HostedEngineConfiguration::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            HostedEngineConfiguration::_adapter(),
+        )
     }
 }
 
@@ -712,28 +758,33 @@ pub struct HostExecutionConfiguration {
 
 impl HostExecutionConfiguration {
     pub fn default_ref() -> &'static HostExecutionConfiguration {
-        static D: std::sync::LazyLock<HostExecutionConfiguration> = std::sync::LazyLock::new(HostExecutionConfiguration::default);
+        static D: std::sync::LazyLock<HostExecutionConfiguration> =
+            std::sync::LazyLock::new(HostExecutionConfiguration::default);
         &D
     }
 }
 
 impl HostExecutionConfiguration {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<HostExecutionConfiguration> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<HostExecutionConfiguration>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "HostExecutionConfiguration",
-                    "",
-                    |x: &HostExecutionConfiguration| &x._unrecognized,
-                    |x: &mut HostExecutionConfiguration, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<HostExecutionConfiguration>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<HostExecutionConfiguration>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "HostExecutionConfiguration",
+                "",
+                |x: &HostExecutionConfiguration| &x._unrecognized,
+                |x: &mut HostExecutionConfiguration, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<HostExecutionConfiguration> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(HostExecutionConfiguration::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            HostExecutionConfiguration::_adapter(),
+        )
     }
 }
 
@@ -753,28 +804,32 @@ pub struct HostConfigurationChange {
 
 impl HostConfigurationChange {
     pub fn default_ref() -> &'static HostConfigurationChange {
-        static D: std::sync::LazyLock<HostConfigurationChange> = std::sync::LazyLock::new(HostConfigurationChange::default);
+        static D: std::sync::LazyLock<HostConfigurationChange> =
+            std::sync::LazyLock::new(HostConfigurationChange::default);
         &D
     }
 }
 
 impl HostConfigurationChange {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<HostConfigurationChange> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<HostConfigurationChange>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "HostConfigurationChange",
-                    "",
-                    |x: &HostConfigurationChange| &x._unrecognized,
-                    |x: &mut HostConfigurationChange, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<HostConfigurationChange>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "HostConfigurationChange",
+                "",
+                |x: &HostConfigurationChange| &x._unrecognized,
+                |x: &mut HostConfigurationChange, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<HostConfigurationChange> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(HostConfigurationChange::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            HostConfigurationChange::_adapter(),
+        )
     }
 }
 
@@ -794,28 +849,33 @@ pub struct ConfigureServiceHostRequest {
 
 impl ConfigureServiceHostRequest {
     pub fn default_ref() -> &'static ConfigureServiceHostRequest {
-        static D: std::sync::LazyLock<ConfigureServiceHostRequest> = std::sync::LazyLock::new(ConfigureServiceHostRequest::default);
+        static D: std::sync::LazyLock<ConfigureServiceHostRequest> =
+            std::sync::LazyLock::new(ConfigureServiceHostRequest::default);
         &D
     }
 }
 
 impl ConfigureServiceHostRequest {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ConfigureServiceHostRequest> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ConfigureServiceHostRequest>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "ConfigureServiceHostRequest",
-                    "",
-                    |x: &ConfigureServiceHostRequest| &x._unrecognized,
-                    |x: &mut ConfigureServiceHostRequest, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<ConfigureServiceHostRequest> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ConfigureServiceHostRequest>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "ConfigureServiceHostRequest",
+                "",
+                |x: &ConfigureServiceHostRequest| &x._unrecognized,
+                |x: &mut ConfigureServiceHostRequest, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ConfigureServiceHostRequest> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ConfigureServiceHostRequest::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            ConfigureServiceHostRequest::_adapter(),
+        )
     }
 }
 
@@ -827,33 +887,41 @@ impl ConfigureServiceHostRequest {
 pub struct ConfigureServiceHostResponse_ConflictError {
     pub actual: HostConfigurationChange,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ConfigureServiceHostResponse_ConflictError>>,
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<ConfigureServiceHostResponse_ConflictError>>,
 }
 
 impl ConfigureServiceHostResponse_ConflictError {
     pub fn default_ref() -> &'static ConfigureServiceHostResponse_ConflictError {
-        static D: std::sync::LazyLock<ConfigureServiceHostResponse_ConflictError> = std::sync::LazyLock::new(ConfigureServiceHostResponse_ConflictError::default);
+        static D: std::sync::LazyLock<ConfigureServiceHostResponse_ConflictError> =
+            std::sync::LazyLock::new(ConfigureServiceHostResponse_ConflictError::default);
         &D
     }
 }
 
 impl ConfigureServiceHostResponse_ConflictError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ConfigureServiceHostResponse_ConflictError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ConfigureServiceHostResponse_ConflictError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "ConfigureServiceHostResponse.ConflictError",
-                    "",
-                    |x: &ConfigureServiceHostResponse_ConflictError| &x._unrecognized,
-                    |x: &mut ConfigureServiceHostResponse_ConflictError, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
+        ConfigureServiceHostResponse_ConflictError,
+    > {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ConfigureServiceHostResponse_ConflictError>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "ConfigureServiceHostResponse.ConflictError",
+                "",
+                |x: &ConfigureServiceHostResponse_ConflictError| &x._unrecognized,
+                |x: &mut ConfigureServiceHostResponse_ConflictError, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ConfigureServiceHostResponse_ConflictError> {
+    pub fn serializer() -> crate::skir_client::Serializer<ConfigureServiceHostResponse_ConflictError>
+    {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ConfigureServiceHostResponse_ConflictError::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            ConfigureServiceHostResponse_ConflictError::_adapter(),
+        )
     }
 }
 
@@ -865,33 +933,50 @@ impl ConfigureServiceHostResponse_ConflictError {
 pub struct ConfigureServiceHostResponse_InvalidConfigurationError {
     pub message: String,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ConfigureServiceHostResponse_InvalidConfigurationError>>,
+    pub _unrecognized: Option<
+        crate::skir_client::UnrecognizedFields<
+            ConfigureServiceHostResponse_InvalidConfigurationError,
+        >,
+    >,
 }
 
 impl ConfigureServiceHostResponse_InvalidConfigurationError {
     pub fn default_ref() -> &'static ConfigureServiceHostResponse_InvalidConfigurationError {
-        static D: std::sync::LazyLock<ConfigureServiceHostResponse_InvalidConfigurationError> = std::sync::LazyLock::new(ConfigureServiceHostResponse_InvalidConfigurationError::default);
+        static D: std::sync::LazyLock<ConfigureServiceHostResponse_InvalidConfigurationError> =
+            std::sync::LazyLock::new(
+                ConfigureServiceHostResponse_InvalidConfigurationError::default,
+            );
         &D
     }
 }
 
 impl ConfigureServiceHostResponse_InvalidConfigurationError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ConfigureServiceHostResponse_InvalidConfigurationError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ConfigureServiceHostResponse_InvalidConfigurationError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "ConfigureServiceHostResponse.InvalidConfigurationError",
-                    "",
-                    |x: &ConfigureServiceHostResponse_InvalidConfigurationError| &x._unrecognized,
-                    |x: &mut ConfigureServiceHostResponse_InvalidConfigurationError, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
+        ConfigureServiceHostResponse_InvalidConfigurationError,
+    > {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<
+                ConfigureServiceHostResponse_InvalidConfigurationError,
+            >,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "ConfigureServiceHostResponse.InvalidConfigurationError",
+                "",
+                |x: &ConfigureServiceHostResponse_InvalidConfigurationError| &x._unrecognized,
+                |x: &mut ConfigureServiceHostResponse_InvalidConfigurationError, u| {
+                    x._unrecognized = u
+                },
+            )
+        });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ConfigureServiceHostResponse_InvalidConfigurationError> {
+    pub fn serializer()
+    -> crate::skir_client::Serializer<ConfigureServiceHostResponse_InvalidConfigurationError> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ConfigureServiceHostResponse_InvalidConfigurationError::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            ConfigureServiceHostResponse_InvalidConfigurationError::_adapter(),
+        )
     }
 }
 
@@ -903,33 +988,48 @@ impl ConfigureServiceHostResponse_InvalidConfigurationError {
 pub struct ConfigureServiceHostResponse_IncompatibleEngineError {
     pub target: EngineTarget,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ConfigureServiceHostResponse_IncompatibleEngineError>>,
+    pub _unrecognized: Option<
+        crate::skir_client::UnrecognizedFields<
+            ConfigureServiceHostResponse_IncompatibleEngineError,
+        >,
+    >,
 }
 
 impl ConfigureServiceHostResponse_IncompatibleEngineError {
     pub fn default_ref() -> &'static ConfigureServiceHostResponse_IncompatibleEngineError {
-        static D: std::sync::LazyLock<ConfigureServiceHostResponse_IncompatibleEngineError> = std::sync::LazyLock::new(ConfigureServiceHostResponse_IncompatibleEngineError::default);
+        static D: std::sync::LazyLock<ConfigureServiceHostResponse_IncompatibleEngineError> =
+            std::sync::LazyLock::new(ConfigureServiceHostResponse_IncompatibleEngineError::default);
         &D
     }
 }
 
 impl ConfigureServiceHostResponse_IncompatibleEngineError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ConfigureServiceHostResponse_IncompatibleEngineError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ConfigureServiceHostResponse_IncompatibleEngineError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "ConfigureServiceHostResponse.IncompatibleEngineError",
-                    "",
-                    |x: &ConfigureServiceHostResponse_IncompatibleEngineError| &x._unrecognized,
-                    |x: &mut ConfigureServiceHostResponse_IncompatibleEngineError, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
+        ConfigureServiceHostResponse_IncompatibleEngineError,
+    > {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<
+                ConfigureServiceHostResponse_IncompatibleEngineError,
+            >,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "ConfigureServiceHostResponse.IncompatibleEngineError",
+                "",
+                |x: &ConfigureServiceHostResponse_IncompatibleEngineError| &x._unrecognized,
+                |x: &mut ConfigureServiceHostResponse_IncompatibleEngineError, u| {
+                    x._unrecognized = u
+                },
+            )
+        });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ConfigureServiceHostResponse_IncompatibleEngineError> {
+    pub fn serializer()
+    -> crate::skir_client::Serializer<ConfigureServiceHostResponse_IncompatibleEngineError> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ConfigureServiceHostResponse_IncompatibleEngineError::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            ConfigureServiceHostResponse_IncompatibleEngineError::_adapter(),
+        )
     }
 }
 
@@ -941,33 +1041,44 @@ impl ConfigureServiceHostResponse_IncompatibleEngineError {
 pub struct ConfigureServiceHostResponse_RealmNotFoundError {
     pub realm_id: crate::skirout::base::kernel::v1::record_id::RecordId,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ConfigureServiceHostResponse_RealmNotFoundError>>,
+    pub _unrecognized: Option<
+        crate::skir_client::UnrecognizedFields<ConfigureServiceHostResponse_RealmNotFoundError>,
+    >,
 }
 
 impl ConfigureServiceHostResponse_RealmNotFoundError {
     pub fn default_ref() -> &'static ConfigureServiceHostResponse_RealmNotFoundError {
-        static D: std::sync::LazyLock<ConfigureServiceHostResponse_RealmNotFoundError> = std::sync::LazyLock::new(ConfigureServiceHostResponse_RealmNotFoundError::default);
+        static D: std::sync::LazyLock<ConfigureServiceHostResponse_RealmNotFoundError> =
+            std::sync::LazyLock::new(ConfigureServiceHostResponse_RealmNotFoundError::default);
         &D
     }
 }
 
 impl ConfigureServiceHostResponse_RealmNotFoundError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ConfigureServiceHostResponse_RealmNotFoundError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ConfigureServiceHostResponse_RealmNotFoundError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "ConfigureServiceHostResponse.RealmNotFoundError",
-                    "",
-                    |x: &ConfigureServiceHostResponse_RealmNotFoundError| &x._unrecognized,
-                    |x: &mut ConfigureServiceHostResponse_RealmNotFoundError, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
+        ConfigureServiceHostResponse_RealmNotFoundError,
+    > {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<
+                ConfigureServiceHostResponse_RealmNotFoundError,
+            >,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "ConfigureServiceHostResponse.RealmNotFoundError",
+                "",
+                |x: &ConfigureServiceHostResponse_RealmNotFoundError| &x._unrecognized,
+                |x: &mut ConfigureServiceHostResponse_RealmNotFoundError, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ConfigureServiceHostResponse_RealmNotFoundError> {
+    pub fn serializer()
+    -> crate::skir_client::Serializer<ConfigureServiceHostResponse_RealmNotFoundError> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ConfigureServiceHostResponse_RealmNotFoundError::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            ConfigureServiceHostResponse_RealmNotFoundError::_adapter(),
+        )
     }
 }
 
@@ -978,33 +1089,48 @@ impl ConfigureServiceHostResponse_RealmNotFoundError {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ConfigureServiceHostResponse_InvalidOperationIdError {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ConfigureServiceHostResponse_InvalidOperationIdError>>,
+    pub _unrecognized: Option<
+        crate::skir_client::UnrecognizedFields<
+            ConfigureServiceHostResponse_InvalidOperationIdError,
+        >,
+    >,
 }
 
 impl ConfigureServiceHostResponse_InvalidOperationIdError {
     pub fn default_ref() -> &'static ConfigureServiceHostResponse_InvalidOperationIdError {
-        static D: std::sync::LazyLock<ConfigureServiceHostResponse_InvalidOperationIdError> = std::sync::LazyLock::new(ConfigureServiceHostResponse_InvalidOperationIdError::default);
+        static D: std::sync::LazyLock<ConfigureServiceHostResponse_InvalidOperationIdError> =
+            std::sync::LazyLock::new(ConfigureServiceHostResponse_InvalidOperationIdError::default);
         &D
     }
 }
 
 impl ConfigureServiceHostResponse_InvalidOperationIdError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ConfigureServiceHostResponse_InvalidOperationIdError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ConfigureServiceHostResponse_InvalidOperationIdError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "ConfigureServiceHostResponse.InvalidOperationIdError",
-                    "",
-                    |x: &ConfigureServiceHostResponse_InvalidOperationIdError| &x._unrecognized,
-                    |x: &mut ConfigureServiceHostResponse_InvalidOperationIdError, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
+        ConfigureServiceHostResponse_InvalidOperationIdError,
+    > {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<
+                ConfigureServiceHostResponse_InvalidOperationIdError,
+            >,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "ConfigureServiceHostResponse.InvalidOperationIdError",
+                "",
+                |x: &ConfigureServiceHostResponse_InvalidOperationIdError| &x._unrecognized,
+                |x: &mut ConfigureServiceHostResponse_InvalidOperationIdError, u| {
+                    x._unrecognized = u
+                },
+            )
+        });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ConfigureServiceHostResponse_InvalidOperationIdError> {
+    pub fn serializer()
+    -> crate::skir_client::Serializer<ConfigureServiceHostResponse_InvalidOperationIdError> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ConfigureServiceHostResponse_InvalidOperationIdError::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            ConfigureServiceHostResponse_InvalidOperationIdError::_adapter(),
+        )
     }
 }
 
@@ -1015,33 +1141,51 @@ impl ConfigureServiceHostResponse_InvalidOperationIdError {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ConfigureServiceHostResponse_OperationIdentityReusedError {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ConfigureServiceHostResponse_OperationIdentityReusedError>>,
+    pub _unrecognized: Option<
+        crate::skir_client::UnrecognizedFields<
+            ConfigureServiceHostResponse_OperationIdentityReusedError,
+        >,
+    >,
 }
 
 impl ConfigureServiceHostResponse_OperationIdentityReusedError {
     pub fn default_ref() -> &'static ConfigureServiceHostResponse_OperationIdentityReusedError {
-        static D: std::sync::LazyLock<ConfigureServiceHostResponse_OperationIdentityReusedError> = std::sync::LazyLock::new(ConfigureServiceHostResponse_OperationIdentityReusedError::default);
+        static D: std::sync::LazyLock<ConfigureServiceHostResponse_OperationIdentityReusedError> =
+            std::sync::LazyLock::new(
+                ConfigureServiceHostResponse_OperationIdentityReusedError::default,
+            );
         &D
     }
 }
 
 impl ConfigureServiceHostResponse_OperationIdentityReusedError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ConfigureServiceHostResponse_OperationIdentityReusedError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ConfigureServiceHostResponse_OperationIdentityReusedError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "ConfigureServiceHostResponse.OperationIdentityReusedError",
-                    "",
-                    |x: &ConfigureServiceHostResponse_OperationIdentityReusedError| &x._unrecognized,
-                    |x: &mut ConfigureServiceHostResponse_OperationIdentityReusedError, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
+        ConfigureServiceHostResponse_OperationIdentityReusedError,
+    > {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<
+                ConfigureServiceHostResponse_OperationIdentityReusedError,
+            >,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "ConfigureServiceHostResponse.OperationIdentityReusedError",
+                "",
+                |x: &ConfigureServiceHostResponse_OperationIdentityReusedError| &x._unrecognized,
+                |x: &mut ConfigureServiceHostResponse_OperationIdentityReusedError, u| {
+                    x._unrecognized = u
+                },
+            )
+        });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ConfigureServiceHostResponse_OperationIdentityReusedError> {
+    pub fn serializer()
+    -> crate::skir_client::Serializer<ConfigureServiceHostResponse_OperationIdentityReusedError>
+    {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ConfigureServiceHostResponse_OperationIdentityReusedError::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            ConfigureServiceHostResponse_OperationIdentityReusedError::_adapter(),
+        )
     }
 }
 
@@ -1070,34 +1214,41 @@ impl Default for ConfigureServiceHostResponse {
 }
 
 impl ConfigureServiceHostResponse {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ConfigureServiceHostResponse> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<ConfigureServiceHostResponse>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &ConfigureServiceHostResponse| match x {
-                        ConfigureServiceHostResponse::Unknown(_) => 0,
-                        ConfigureServiceHostResponse::Success(_) => 1,
-                        ConfigureServiceHostResponse::ConflictError(_) => 2,
-                        ConfigureServiceHostResponse::InvalidConfigurationError(_) => 3,
-                        ConfigureServiceHostResponse::IncompatibleEngineError(_) => 4,
-                        ConfigureServiceHostResponse::RealmNotFoundError(_) => 5,
-                        ConfigureServiceHostResponse::InvalidOperationIdError(_) => 6,
-                        ConfigureServiceHostResponse::OperationIdentityReusedError(_) => 7,
-                        ConfigureServiceHostResponse::InvalidRecordIdError(_) => 8,
-                        ConfigureServiceHostResponse::InternalError(_) => 9,
-                    },
-                    |u| ConfigureServiceHostResponse::Unknown(Some(u)),
-                    |x: &ConfigureServiceHostResponse| match x { ConfigureServiceHostResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "service/v1/topology.skir",
-                    "ConfigureServiceHostResponse",
-                    "",
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ConfigureServiceHostResponse>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<ConfigureServiceHostResponse>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &ConfigureServiceHostResponse| match x {
+                    ConfigureServiceHostResponse::Unknown(_) => 0,
+                    ConfigureServiceHostResponse::Success(_) => 1,
+                    ConfigureServiceHostResponse::ConflictError(_) => 2,
+                    ConfigureServiceHostResponse::InvalidConfigurationError(_) => 3,
+                    ConfigureServiceHostResponse::IncompatibleEngineError(_) => 4,
+                    ConfigureServiceHostResponse::RealmNotFoundError(_) => 5,
+                    ConfigureServiceHostResponse::InvalidOperationIdError(_) => 6,
+                    ConfigureServiceHostResponse::OperationIdentityReusedError(_) => 7,
+                    ConfigureServiceHostResponse::InvalidRecordIdError(_) => 8,
+                    ConfigureServiceHostResponse::InternalError(_) => 9,
+                },
+                |u| ConfigureServiceHostResponse::Unknown(Some(u)),
+                |x: &ConfigureServiceHostResponse| match x {
+                    ConfigureServiceHostResponse::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "service/v1/topology.skir",
+                "ConfigureServiceHostResponse",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ConfigureServiceHostResponse> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(ConfigureServiceHostResponse::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(
+            ConfigureServiceHostResponse::_adapter(),
+        )
     }
 }
 
@@ -1116,28 +1267,165 @@ pub struct OrganizationTopologySnapshot {
 
 impl OrganizationTopologySnapshot {
     pub fn default_ref() -> &'static OrganizationTopologySnapshot {
-        static D: std::sync::LazyLock<OrganizationTopologySnapshot> = std::sync::LazyLock::new(OrganizationTopologySnapshot::default);
+        static D: std::sync::LazyLock<OrganizationTopologySnapshot> =
+            std::sync::LazyLock::new(OrganizationTopologySnapshot::default);
         &D
     }
 }
 
 impl OrganizationTopologySnapshot {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<OrganizationTopologySnapshot> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<OrganizationTopologySnapshot>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "OrganizationTopologySnapshot",
-                    "",
-                    |x: &OrganizationTopologySnapshot| &x._unrecognized,
-                    |x: &mut OrganizationTopologySnapshot, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<OrganizationTopologySnapshot> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<OrganizationTopologySnapshot>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "OrganizationTopologySnapshot",
+                "",
+                |x: &OrganizationTopologySnapshot| &x._unrecognized,
+                |x: &mut OrganizationTopologySnapshot, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<OrganizationTopologySnapshot> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(OrganizationTopologySnapshot::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            OrganizationTopologySnapshot::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct RealmRuntimeObservation
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct RealmRuntimeObservation {
+    pub realm_id: crate::skirout::base::kernel::v1::record_id::RecordId,
+    pub state: ChildRuntimeState,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RealmRuntimeObservation>>,
+}
+
+impl RealmRuntimeObservation {
+    pub fn default_ref() -> &'static RealmRuntimeObservation {
+        static D: std::sync::LazyLock<RealmRuntimeObservation> =
+            std::sync::LazyLock::new(RealmRuntimeObservation::default);
+        &D
+    }
+}
+
+impl RealmRuntimeObservation {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RealmRuntimeObservation> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RealmRuntimeObservation>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "RealmRuntimeObservation",
+                "",
+                |x: &RealmRuntimeObservation| &x._unrecognized,
+                |x: &mut RealmRuntimeObservation, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RealmRuntimeObservation> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            RealmRuntimeObservation::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct EngineRuntimeObservation
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct EngineRuntimeObservation {
+    pub engine_id: crate::skirout::base::kernel::v1::record_id::RecordId,
+    pub state: ChildRuntimeState,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<EngineRuntimeObservation>>,
+}
+
+impl EngineRuntimeObservation {
+    pub fn default_ref() -> &'static EngineRuntimeObservation {
+        static D: std::sync::LazyLock<EngineRuntimeObservation> =
+            std::sync::LazyLock::new(EngineRuntimeObservation::default);
+        &D
+    }
+}
+
+impl EngineRuntimeObservation {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<EngineRuntimeObservation>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<EngineRuntimeObservation>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "EngineRuntimeObservation",
+                "",
+                |x: &EngineRuntimeObservation| &x._unrecognized,
+                |x: &mut EngineRuntimeObservation, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<EngineRuntimeObservation> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            EngineRuntimeObservation::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct HostExecutionObservation
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct HostExecutionObservation {
+    pub host: ServiceHost,
+    pub realm: Option<RealmRuntimeObservation>,
+    pub engine: Option<EngineRuntimeObservation>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<HostExecutionObservation>>,
+}
+
+impl HostExecutionObservation {
+    pub fn default_ref() -> &'static HostExecutionObservation {
+        static D: std::sync::LazyLock<HostExecutionObservation> =
+            std::sync::LazyLock::new(HostExecutionObservation::default);
+        &D
+    }
+}
+
+impl HostExecutionObservation {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<HostExecutionObservation>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<HostExecutionObservation>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "HostExecutionObservation",
+                "",
+                |x: &HostExecutionObservation| &x._unrecognized,
+                |x: &mut HostExecutionObservation, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<HostExecutionObservation> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            HostExecutionObservation::_adapter(),
+        )
     }
 }
 
@@ -1150,9 +1438,8 @@ pub enum OrganizationTopologyChanged {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<OrganizationTopologyChanged>>),
     Replace(Box<OrganizationTopologySnapshot>),
     ConfigurationChanged(Box<HostConfigurationChange>),
-    HostUpdated(Box<ServiceHost>),
-    RealmUpdated(Box<RealmInstance>),
-    EngineUpdated(Box<EngineInstance>),
+    ObservationsReported(Box<HostExecutionObservation>),
+    HostAdvertised(Box<ServiceHost>),
 }
 
 impl Default for OrganizationTopologyChanged {
@@ -1162,30 +1449,36 @@ impl Default for OrganizationTopologyChanged {
 }
 
 impl OrganizationTopologyChanged {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<OrganizationTopologyChanged> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<OrganizationTopologyChanged>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &OrganizationTopologyChanged| match x {
-                        OrganizationTopologyChanged::Unknown(_) => 0,
-                        OrganizationTopologyChanged::Replace(_) => 1,
-                        OrganizationTopologyChanged::ConfigurationChanged(_) => 2,
-                        OrganizationTopologyChanged::HostUpdated(_) => 3,
-                        OrganizationTopologyChanged::RealmUpdated(_) => 4,
-                        OrganizationTopologyChanged::EngineUpdated(_) => 5,
-                    },
-                    |u| OrganizationTopologyChanged::Unknown(Some(u)),
-                    |x: &OrganizationTopologyChanged| match x { OrganizationTopologyChanged::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "service/v1/topology.skir",
-                    "OrganizationTopologyChanged",
-                    "",
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<OrganizationTopologyChanged>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<OrganizationTopologyChanged>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &OrganizationTopologyChanged| match x {
+                    OrganizationTopologyChanged::Unknown(_) => 0,
+                    OrganizationTopologyChanged::Replace(_) => 1,
+                    OrganizationTopologyChanged::ConfigurationChanged(_) => 2,
+                    OrganizationTopologyChanged::ObservationsReported(_) => 3,
+                    OrganizationTopologyChanged::HostAdvertised(_) => 4,
+                },
+                |u| OrganizationTopologyChanged::Unknown(Some(u)),
+                |x: &OrganizationTopologyChanged| match x {
+                    OrganizationTopologyChanged::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "service/v1/topology.skir",
+                "OrganizationTopologyChanged",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<OrganizationTopologyChanged> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(OrganizationTopologyChanged::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(
+            OrganizationTopologyChanged::_adapter(),
+        )
     }
 }
 
@@ -1196,33 +1489,39 @@ impl OrganizationTopologyChanged {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct WatchOrganizationTopologyRequest {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<WatchOrganizationTopologyRequest>>,
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<WatchOrganizationTopologyRequest>>,
 }
 
 impl WatchOrganizationTopologyRequest {
     pub fn default_ref() -> &'static WatchOrganizationTopologyRequest {
-        static D: std::sync::LazyLock<WatchOrganizationTopologyRequest> = std::sync::LazyLock::new(WatchOrganizationTopologyRequest::default);
+        static D: std::sync::LazyLock<WatchOrganizationTopologyRequest> =
+            std::sync::LazyLock::new(WatchOrganizationTopologyRequest::default);
         &D
     }
 }
 
 impl WatchOrganizationTopologyRequest {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<WatchOrganizationTopologyRequest> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<WatchOrganizationTopologyRequest>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "WatchOrganizationTopologyRequest",
-                    "",
-                    |x: &WatchOrganizationTopologyRequest| &x._unrecognized,
-                    |x: &mut WatchOrganizationTopologyRequest, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<WatchOrganizationTopologyRequest> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<WatchOrganizationTopologyRequest>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "WatchOrganizationTopologyRequest",
+                "",
+                |x: &WatchOrganizationTopologyRequest| &x._unrecognized,
+                |x: &mut WatchOrganizationTopologyRequest, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<WatchOrganizationTopologyRequest> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(WatchOrganizationTopologyRequest::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            WatchOrganizationTopologyRequest::_adapter(),
+        )
     }
 }
 
@@ -1244,27 +1543,34 @@ impl Default for WatchOrganizationTopologyResponse {
 }
 
 impl WatchOrganizationTopologyResponse {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<WatchOrganizationTopologyResponse> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<WatchOrganizationTopologyResponse>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &WatchOrganizationTopologyResponse| match x {
-                        WatchOrganizationTopologyResponse::Unknown(_) => 0,
-                        WatchOrganizationTopologyResponse::List(_) => 1,
-                        WatchOrganizationTopologyResponse::InternalError(_) => 2,
-                    },
-                    |u| WatchOrganizationTopologyResponse::Unknown(Some(u)),
-                    |x: &WatchOrganizationTopologyResponse| match x { WatchOrganizationTopologyResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "service/v1/topology.skir",
-                    "WatchOrganizationTopologyResponse",
-                    "",
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::EnumAdapter<WatchOrganizationTopologyResponse> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<WatchOrganizationTopologyResponse>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &WatchOrganizationTopologyResponse| match x {
+                    WatchOrganizationTopologyResponse::Unknown(_) => 0,
+                    WatchOrganizationTopologyResponse::List(_) => 1,
+                    WatchOrganizationTopologyResponse::InternalError(_) => 2,
+                },
+                |u| WatchOrganizationTopologyResponse::Unknown(Some(u)),
+                |x: &WatchOrganizationTopologyResponse| match x {
+                    WatchOrganizationTopologyResponse::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "service/v1/topology.skir",
+                "WatchOrganizationTopologyResponse",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<WatchOrganizationTopologyResponse> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(WatchOrganizationTopologyResponse::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(
+            WatchOrganizationTopologyResponse::_adapter(),
+        )
     }
 }
 
@@ -1280,28 +1586,33 @@ pub struct WatchHostExecutionRequest {
 
 impl WatchHostExecutionRequest {
     pub fn default_ref() -> &'static WatchHostExecutionRequest {
-        static D: std::sync::LazyLock<WatchHostExecutionRequest> = std::sync::LazyLock::new(WatchHostExecutionRequest::default);
+        static D: std::sync::LazyLock<WatchHostExecutionRequest> =
+            std::sync::LazyLock::new(WatchHostExecutionRequest::default);
         &D
     }
 }
 
 impl WatchHostExecutionRequest {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<WatchHostExecutionRequest> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<WatchHostExecutionRequest>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "WatchHostExecutionRequest",
-                    "",
-                    |x: &WatchHostExecutionRequest| &x._unrecognized,
-                    |x: &mut WatchHostExecutionRequest, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<WatchHostExecutionRequest>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<WatchHostExecutionRequest>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "WatchHostExecutionRequest",
+                "",
+                |x: &WatchHostExecutionRequest| &x._unrecognized,
+                |x: &mut WatchHostExecutionRequest, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<WatchHostExecutionRequest> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(WatchHostExecutionRequest::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            WatchHostExecutionRequest::_adapter(),
+        )
     }
 }
 
@@ -1315,33 +1626,40 @@ pub struct WatchHostExecutionResponse_Desired {
     pub realm: Option<RealmInstance>,
     pub engine: Option<EngineInstance>,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<WatchHostExecutionResponse_Desired>>,
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<WatchHostExecutionResponse_Desired>>,
 }
 
 impl WatchHostExecutionResponse_Desired {
     pub fn default_ref() -> &'static WatchHostExecutionResponse_Desired {
-        static D: std::sync::LazyLock<WatchHostExecutionResponse_Desired> = std::sync::LazyLock::new(WatchHostExecutionResponse_Desired::default);
+        static D: std::sync::LazyLock<WatchHostExecutionResponse_Desired> =
+            std::sync::LazyLock::new(WatchHostExecutionResponse_Desired::default);
         &D
     }
 }
 
 impl WatchHostExecutionResponse_Desired {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<WatchHostExecutionResponse_Desired> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<WatchHostExecutionResponse_Desired>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "WatchHostExecutionResponse.Desired",
-                    "",
-                    |x: &WatchHostExecutionResponse_Desired| &x._unrecognized,
-                    |x: &mut WatchHostExecutionResponse_Desired, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<WatchHostExecutionResponse_Desired>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<WatchHostExecutionResponse_Desired>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "WatchHostExecutionResponse.Desired",
+                "",
+                |x: &WatchHostExecutionResponse_Desired| &x._unrecognized,
+                |x: &mut WatchHostExecutionResponse_Desired, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<WatchHostExecutionResponse_Desired> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(WatchHostExecutionResponse_Desired::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            WatchHostExecutionResponse_Desired::_adapter(),
+        )
     }
 }
 
@@ -1363,27 +1681,34 @@ impl Default for WatchHostExecutionResponse {
 }
 
 impl WatchHostExecutionResponse {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<WatchHostExecutionResponse> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<WatchHostExecutionResponse>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &WatchHostExecutionResponse| match x {
-                        WatchHostExecutionResponse::Unknown(_) => 0,
-                        WatchHostExecutionResponse::Desired(_) => 1,
-                        WatchHostExecutionResponse::InternalError(_) => 2,
-                    },
-                    |u| WatchHostExecutionResponse::Unknown(Some(u)),
-                    |x: &WatchHostExecutionResponse| match x { WatchHostExecutionResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "service/v1/topology.skir",
-                    "WatchHostExecutionResponse",
-                    "",
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<WatchHostExecutionResponse>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<WatchHostExecutionResponse>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &WatchHostExecutionResponse| match x {
+                    WatchHostExecutionResponse::Unknown(_) => 0,
+                    WatchHostExecutionResponse::Desired(_) => 1,
+                    WatchHostExecutionResponse::InternalError(_) => 2,
+                },
+                |u| WatchHostExecutionResponse::Unknown(Some(u)),
+                |x: &WatchHostExecutionResponse| match x {
+                    WatchHostExecutionResponse::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "service/v1/topology.skir",
+                "WatchHostExecutionResponse",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<WatchHostExecutionResponse> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(WatchHostExecutionResponse::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(
+            WatchHostExecutionResponse::_adapter(),
+        )
     }
 }
 
@@ -1402,28 +1727,33 @@ pub struct ReportHostExecutionRequest {
 
 impl ReportHostExecutionRequest {
     pub fn default_ref() -> &'static ReportHostExecutionRequest {
-        static D: std::sync::LazyLock<ReportHostExecutionRequest> = std::sync::LazyLock::new(ReportHostExecutionRequest::default);
+        static D: std::sync::LazyLock<ReportHostExecutionRequest> =
+            std::sync::LazyLock::new(ReportHostExecutionRequest::default);
         &D
     }
 }
 
 impl ReportHostExecutionRequest {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ReportHostExecutionRequest> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ReportHostExecutionRequest>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "ReportHostExecutionRequest",
-                    "",
-                    |x: &ReportHostExecutionRequest| &x._unrecognized,
-                    |x: &mut ReportHostExecutionRequest, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ReportHostExecutionRequest>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ReportHostExecutionRequest>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "ReportHostExecutionRequest",
+                "",
+                |x: &ReportHostExecutionRequest| &x._unrecognized,
+                |x: &mut ReportHostExecutionRequest, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ReportHostExecutionRequest> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ReportHostExecutionRequest::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            ReportHostExecutionRequest::_adapter(),
+        )
     }
 }
 
@@ -1434,33 +1764,40 @@ impl ReportHostExecutionRequest {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ReportHostExecutionResponse_Success {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ReportHostExecutionResponse_Success>>,
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<ReportHostExecutionResponse_Success>>,
 }
 
 impl ReportHostExecutionResponse_Success {
     pub fn default_ref() -> &'static ReportHostExecutionResponse_Success {
-        static D: std::sync::LazyLock<ReportHostExecutionResponse_Success> = std::sync::LazyLock::new(ReportHostExecutionResponse_Success::default);
+        static D: std::sync::LazyLock<ReportHostExecutionResponse_Success> =
+            std::sync::LazyLock::new(ReportHostExecutionResponse_Success::default);
         &D
     }
 }
 
 impl ReportHostExecutionResponse_Success {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ReportHostExecutionResponse_Success> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ReportHostExecutionResponse_Success>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "ReportHostExecutionResponse.Success",
-                    "",
-                    |x: &ReportHostExecutionResponse_Success| &x._unrecognized,
-                    |x: &mut ReportHostExecutionResponse_Success, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<ReportHostExecutionResponse_Success>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ReportHostExecutionResponse_Success>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "ReportHostExecutionResponse.Success",
+                "",
+                |x: &ReportHostExecutionResponse_Success| &x._unrecognized,
+                |x: &mut ReportHostExecutionResponse_Success, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ReportHostExecutionResponse_Success> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ReportHostExecutionResponse_Success::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            ReportHostExecutionResponse_Success::_adapter(),
+        )
     }
 }
 
@@ -1471,33 +1808,44 @@ impl ReportHostExecutionResponse_Success {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ReportHostExecutionResponse_StaleRevisionError {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ReportHostExecutionResponse_StaleRevisionError>>,
+    pub _unrecognized: Option<
+        crate::skir_client::UnrecognizedFields<ReportHostExecutionResponse_StaleRevisionError>,
+    >,
 }
 
 impl ReportHostExecutionResponse_StaleRevisionError {
     pub fn default_ref() -> &'static ReportHostExecutionResponse_StaleRevisionError {
-        static D: std::sync::LazyLock<ReportHostExecutionResponse_StaleRevisionError> = std::sync::LazyLock::new(ReportHostExecutionResponse_StaleRevisionError::default);
+        static D: std::sync::LazyLock<ReportHostExecutionResponse_StaleRevisionError> =
+            std::sync::LazyLock::new(ReportHostExecutionResponse_StaleRevisionError::default);
         &D
     }
 }
 
 impl ReportHostExecutionResponse_StaleRevisionError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ReportHostExecutionResponse_StaleRevisionError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ReportHostExecutionResponse_StaleRevisionError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "ReportHostExecutionResponse.StaleRevisionError",
-                    "",
-                    |x: &ReportHostExecutionResponse_StaleRevisionError| &x._unrecognized,
-                    |x: &mut ReportHostExecutionResponse_StaleRevisionError, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
+        ReportHostExecutionResponse_StaleRevisionError,
+    > {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<
+                ReportHostExecutionResponse_StaleRevisionError,
+            >,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "ReportHostExecutionResponse.StaleRevisionError",
+                "",
+                |x: &ReportHostExecutionResponse_StaleRevisionError| &x._unrecognized,
+                |x: &mut ReportHostExecutionResponse_StaleRevisionError, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ReportHostExecutionResponse_StaleRevisionError> {
+    pub fn serializer()
+    -> crate::skir_client::Serializer<ReportHostExecutionResponse_StaleRevisionError> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ReportHostExecutionResponse_StaleRevisionError::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            ReportHostExecutionResponse_StaleRevisionError::_adapter(),
+        )
     }
 }
 
@@ -1520,28 +1868,35 @@ impl Default for ReportHostExecutionResponse {
 }
 
 impl ReportHostExecutionResponse {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ReportHostExecutionResponse> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<ReportHostExecutionResponse>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &ReportHostExecutionResponse| match x {
-                        ReportHostExecutionResponse::Unknown(_) => 0,
-                        ReportHostExecutionResponse::Success(_) => 1,
-                        ReportHostExecutionResponse::StaleRevisionError(_) => 2,
-                        ReportHostExecutionResponse::InternalError(_) => 3,
-                    },
-                    |u| ReportHostExecutionResponse::Unknown(Some(u)),
-                    |x: &ReportHostExecutionResponse| match x { ReportHostExecutionResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "service/v1/topology.skir",
-                    "ReportHostExecutionResponse",
-                    "",
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ReportHostExecutionResponse>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<ReportHostExecutionResponse>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &ReportHostExecutionResponse| match x {
+                    ReportHostExecutionResponse::Unknown(_) => 0,
+                    ReportHostExecutionResponse::Success(_) => 1,
+                    ReportHostExecutionResponse::StaleRevisionError(_) => 2,
+                    ReportHostExecutionResponse::InternalError(_) => 3,
+                },
+                |u| ReportHostExecutionResponse::Unknown(Some(u)),
+                |x: &ReportHostExecutionResponse| match x {
+                    ReportHostExecutionResponse::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "service/v1/topology.skir",
+                "ReportHostExecutionResponse",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ReportHostExecutionResponse> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(ReportHostExecutionResponse::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(
+            ReportHostExecutionResponse::_adapter(),
+        )
     }
 }
 
@@ -1560,28 +1915,32 @@ pub struct ServiceMessagingScope {
 
 impl ServiceMessagingScope {
     pub fn default_ref() -> &'static ServiceMessagingScope {
-        static D: std::sync::LazyLock<ServiceMessagingScope> = std::sync::LazyLock::new(ServiceMessagingScope::default);
+        static D: std::sync::LazyLock<ServiceMessagingScope> =
+            std::sync::LazyLock::new(ServiceMessagingScope::default);
         &D
     }
 }
 
 impl ServiceMessagingScope {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ServiceMessagingScope> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ServiceMessagingScope>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "ServiceMessagingScope",
-                    "",
-                    |x: &ServiceMessagingScope| &x._unrecognized,
-                    |x: &mut ServiceMessagingScope, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ServiceMessagingScope>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "ServiceMessagingScope",
+                "",
+                |x: &ServiceMessagingScope| &x._unrecognized,
+                |x: &mut ServiceMessagingScope, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ServiceMessagingScope> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ServiceMessagingScope::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            ServiceMessagingScope::_adapter(),
+        )
     }
 }
 
@@ -1593,33 +1952,39 @@ impl ServiceMessagingScope {
 pub struct GetServiceMessagingScopeRequest {
     pub service_id: crate::skirout::base::kernel::v1::record_id::RecordId,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<GetServiceMessagingScopeRequest>>,
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<GetServiceMessagingScopeRequest>>,
 }
 
 impl GetServiceMessagingScopeRequest {
     pub fn default_ref() -> &'static GetServiceMessagingScopeRequest {
-        static D: std::sync::LazyLock<GetServiceMessagingScopeRequest> = std::sync::LazyLock::new(GetServiceMessagingScopeRequest::default);
+        static D: std::sync::LazyLock<GetServiceMessagingScopeRequest> =
+            std::sync::LazyLock::new(GetServiceMessagingScopeRequest::default);
         &D
     }
 }
 
 impl GetServiceMessagingScopeRequest {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<GetServiceMessagingScopeRequest> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<GetServiceMessagingScopeRequest>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "GetServiceMessagingScopeRequest",
-                    "",
-                    |x: &GetServiceMessagingScopeRequest| &x._unrecognized,
-                    |x: &mut GetServiceMessagingScopeRequest, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<GetServiceMessagingScopeRequest> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<GetServiceMessagingScopeRequest>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "GetServiceMessagingScopeRequest",
+                "",
+                |x: &GetServiceMessagingScopeRequest| &x._unrecognized,
+                |x: &mut GetServiceMessagingScopeRequest, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<GetServiceMessagingScopeRequest> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(GetServiceMessagingScopeRequest::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            GetServiceMessagingScopeRequest::_adapter(),
+        )
     }
 }
 
@@ -1630,33 +1995,41 @@ impl GetServiceMessagingScopeRequest {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct GetServiceMessagingScopeResponse_NotFound {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<GetServiceMessagingScopeResponse_NotFound>>,
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<GetServiceMessagingScopeResponse_NotFound>>,
 }
 
 impl GetServiceMessagingScopeResponse_NotFound {
     pub fn default_ref() -> &'static GetServiceMessagingScopeResponse_NotFound {
-        static D: std::sync::LazyLock<GetServiceMessagingScopeResponse_NotFound> = std::sync::LazyLock::new(GetServiceMessagingScopeResponse_NotFound::default);
+        static D: std::sync::LazyLock<GetServiceMessagingScopeResponse_NotFound> =
+            std::sync::LazyLock::new(GetServiceMessagingScopeResponse_NotFound::default);
         &D
     }
 }
 
 impl GetServiceMessagingScopeResponse_NotFound {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<GetServiceMessagingScopeResponse_NotFound> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<GetServiceMessagingScopeResponse_NotFound>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "GetServiceMessagingScopeResponse.NotFound",
-                    "",
-                    |x: &GetServiceMessagingScopeResponse_NotFound| &x._unrecognized,
-                    |x: &mut GetServiceMessagingScopeResponse_NotFound, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
+        GetServiceMessagingScopeResponse_NotFound,
+    > {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<GetServiceMessagingScopeResponse_NotFound>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "GetServiceMessagingScopeResponse.NotFound",
+                "",
+                |x: &GetServiceMessagingScopeResponse_NotFound| &x._unrecognized,
+                |x: &mut GetServiceMessagingScopeResponse_NotFound, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<GetServiceMessagingScopeResponse_NotFound> {
+    pub fn serializer() -> crate::skir_client::Serializer<GetServiceMessagingScopeResponse_NotFound>
+    {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(GetServiceMessagingScopeResponse_NotFound::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            GetServiceMessagingScopeResponse_NotFound::_adapter(),
+        )
     }
 }
 
@@ -1679,28 +2052,35 @@ impl Default for GetServiceMessagingScopeResponse {
 }
 
 impl GetServiceMessagingScopeResponse {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<GetServiceMessagingScopeResponse> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<GetServiceMessagingScopeResponse>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &GetServiceMessagingScopeResponse| match x {
-                        GetServiceMessagingScopeResponse::Unknown(_) => 0,
-                        GetServiceMessagingScopeResponse::Found(_) => 1,
-                        GetServiceMessagingScopeResponse::NotFound(_) => 2,
-                        GetServiceMessagingScopeResponse::InternalError(_) => 3,
-                    },
-                    |u| GetServiceMessagingScopeResponse::Unknown(Some(u)),
-                    |x: &GetServiceMessagingScopeResponse| match x { GetServiceMessagingScopeResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "service/v1/topology.skir",
-                    "GetServiceMessagingScopeResponse",
-                    "",
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::EnumAdapter<GetServiceMessagingScopeResponse> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<GetServiceMessagingScopeResponse>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &GetServiceMessagingScopeResponse| match x {
+                    GetServiceMessagingScopeResponse::Unknown(_) => 0,
+                    GetServiceMessagingScopeResponse::Found(_) => 1,
+                    GetServiceMessagingScopeResponse::NotFound(_) => 2,
+                    GetServiceMessagingScopeResponse::InternalError(_) => 3,
+                },
+                |u| GetServiceMessagingScopeResponse::Unknown(Some(u)),
+                |x: &GetServiceMessagingScopeResponse| match x {
+                    GetServiceMessagingScopeResponse::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "service/v1/topology.skir",
+                "GetServiceMessagingScopeResponse",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<GetServiceMessagingScopeResponse> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(GetServiceMessagingScopeResponse::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(
+            GetServiceMessagingScopeResponse::_adapter(),
+        )
     }
 }
 
@@ -1719,28 +2099,33 @@ pub struct RegisterServiceHostRequest {
 
 impl RegisterServiceHostRequest {
     pub fn default_ref() -> &'static RegisterServiceHostRequest {
-        static D: std::sync::LazyLock<RegisterServiceHostRequest> = std::sync::LazyLock::new(RegisterServiceHostRequest::default);
+        static D: std::sync::LazyLock<RegisterServiceHostRequest> =
+            std::sync::LazyLock::new(RegisterServiceHostRequest::default);
         &D
     }
 }
 
 impl RegisterServiceHostRequest {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RegisterServiceHostRequest> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RegisterServiceHostRequest>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/topology.skir",
-                    "RegisterServiceHostRequest",
-                    "",
-                    |x: &RegisterServiceHostRequest| &x._unrecognized,
-                    |x: &mut RegisterServiceHostRequest, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RegisterServiceHostRequest>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RegisterServiceHostRequest>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/topology.skir",
+                "RegisterServiceHostRequest",
+                "",
+                |x: &RegisterServiceHostRequest| &x._unrecognized,
+                |x: &mut RegisterServiceHostRequest, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<RegisterServiceHostRequest> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(RegisterServiceHostRequest::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            RegisterServiceHostRequest::_adapter(),
+        )
     }
 }
 
@@ -1762,27 +2147,34 @@ impl Default for RegisterServiceHostResponse {
 }
 
 impl RegisterServiceHostResponse {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<RegisterServiceHostResponse> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<RegisterServiceHostResponse>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &RegisterServiceHostResponse| match x {
-                        RegisterServiceHostResponse::Unknown(_) => 0,
-                        RegisterServiceHostResponse::Success(_) => 1,
-                        RegisterServiceHostResponse::InternalError(_) => 2,
-                    },
-                    |u| RegisterServiceHostResponse::Unknown(Some(u)),
-                    |x: &RegisterServiceHostResponse| match x { RegisterServiceHostResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "service/v1/topology.skir",
-                    "RegisterServiceHostResponse",
-                    "",
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<RegisterServiceHostResponse>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<RegisterServiceHostResponse>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &RegisterServiceHostResponse| match x {
+                    RegisterServiceHostResponse::Unknown(_) => 0,
+                    RegisterServiceHostResponse::Success(_) => 1,
+                    RegisterServiceHostResponse::InternalError(_) => 2,
+                },
+                |u| RegisterServiceHostResponse::Unknown(Some(u)),
+                |x: &RegisterServiceHostResponse| match x {
+                    RegisterServiceHostResponse::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "service/v1/topology.skir",
+                "RegisterServiceHostResponse",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<RegisterServiceHostResponse> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(RegisterServiceHostResponse::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(
+            RegisterServiceHostResponse::_adapter(),
+        )
     }
 }
 
@@ -1791,290 +2183,1286 @@ impl RegisterServiceHostResponse {
 // ==============================================================================
 
 fn initialize_module_serializers() {
-    static INIT: std::sync::LazyLock<()> =
-        std::sync::LazyLock::new(|| {
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ReconciledRevision> = ReconciledRevision::_adapter() as *const _ as *mut _;
-                (*a).add_field("desired", 0, crate::skir_client::Serializer::int64(), "", |x: &ReconciledRevision| &x.desired, |x: &mut ReconciledRevision, v| x.desired = v);
-                (*a).add_field("applied", 1, crate::skir_client::Serializer::int64(), "", |x: &ReconciledRevision| &x.applied, |x: &mut ReconciledRevision, v| x.applied = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<EngineTarget> = EngineTarget::_adapter() as *const _ as *mut _;
-                (*a).add_field("engine_id", 0, crate::skir_client::Serializer::string(), "", |x: &EngineTarget| &x.engine_id, |x: &mut EngineTarget, v| x.engine_id = v);
-                (*a).add_field("version_constraint", 1, crate::skir_client::Serializer::string(), "", |x: &EngineTarget| &x.version_constraint, |x: &mut EngineTarget, v| x.version_constraint = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<SupportedEngine> = SupportedEngine::_adapter() as *const _ as *mut _;
-                (*a).add_field("engine_id", 0, crate::skir_client::Serializer::string(), "", |x: &SupportedEngine| &x.engine_id, |x: &mut SupportedEngine, v| x.engine_id = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<HostRuntimeStatus> = HostRuntimeStatus::_adapter() as *const _ as *mut _;
-                (*a).add_constant_variant("offline", 1, 1, "", HostRuntimeStatus::Offline);
-                (*a).add_constant_variant("reconciling", 2, 2, "", HostRuntimeStatus::Reconciling);
-                (*a).add_constant_variant("active", 3, 3, "", HostRuntimeStatus::Active);
-                (*a).add_constant_variant("failed", 4, 4, "", HostRuntimeStatus::Failed);
-                (*a).add_constant_variant("drifted", 5, 5, "", HostRuntimeStatus::Drifted);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<HostRuntimeState> = HostRuntimeState::_adapter() as *const _ as *mut _;
-                (*a).add_field("status", 0, crate::skir_client::internal::enum_serializer_from_static(HostRuntimeStatus::_adapter()), "", |x: &HostRuntimeState| &x.status, |x: &mut HostRuntimeState, v| x.status = v);
-                (*a).add_field("message", 1, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &HostRuntimeState| &x.message, |x: &mut HostRuntimeState, v| x.message = v);
-                (*a).add_field("updated_at", 2, crate::skir_client::Serializer::timestamp(), "", |x: &HostRuntimeState| &x.updated_at, |x: &mut HostRuntimeState, v| x.updated_at = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<ChildRuntimeStatus> = ChildRuntimeStatus::_adapter() as *const _ as *mut _;
-                (*a).add_constant_variant("absent", 1, 1, "", ChildRuntimeStatus::Absent);
-                (*a).add_constant_variant("staging", 2, 2, "", ChildRuntimeStatus::Staging);
-                (*a).add_constant_variant("active", 3, 3, "", ChildRuntimeStatus::Active);
-                (*a).add_constant_variant("quiescing", 4, 4, "", ChildRuntimeStatus::Quiescing);
-                (*a).add_constant_variant("failed", 5, 5, "", ChildRuntimeStatus::Failed);
-                (*a).add_constant_variant("rolled_back", 6, 6, "", ChildRuntimeStatus::RolledBack);
-                (*a).add_constant_variant("drifted", 7, 7, "", ChildRuntimeStatus::Drifted);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ChildRuntimeState> = ChildRuntimeState::_adapter() as *const _ as *mut _;
-                (*a).add_field("status", 0, crate::skir_client::internal::enum_serializer_from_static(ChildRuntimeStatus::_adapter()), "", |x: &ChildRuntimeState| &x.status, |x: &mut ChildRuntimeState, v| x.status = v);
-                (*a).add_field("active_artifact_version", 1, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &ChildRuntimeState| &x.active_artifact_version, |x: &mut ChildRuntimeState, v| x.active_artifact_version = v);
-                (*a).add_field("message", 2, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &ChildRuntimeState| &x.message, |x: &mut ChildRuntimeState, v| x.message = v);
-                (*a).add_field("updated_at", 3, crate::skir_client::Serializer::timestamp(), "", |x: &ChildRuntimeState| &x.updated_at, |x: &mut ChildRuntimeState, v| x.updated_at = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ServiceHost> = ServiceHost::_adapter() as *const _ as *mut _;
-                (*a).add_field("host_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &ServiceHost| &x.host_id, |x: &mut ServiceHost, v| x.host_id = v);
-                (*a).add_field("service_id", 1, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &ServiceHost| &x.service_id, |x: &mut ServiceHost, v| x.service_id = v);
-                (*a).add_field("revision", 2, crate::skir_client::Serializer::int64(), "", |x: &ServiceHost| &x.revision, |x: &mut ServiceHost, v| x.revision = v);
-                (*a).add_field("entrypoint", 3, crate::skir_client::Serializer::string(), "", |x: &ServiceHost| &x.entrypoint, |x: &mut ServiceHost, v| x.entrypoint = v);
-                (*a).add_field("can_host_realm", 4, crate::skir_client::Serializer::bool(), "", |x: &ServiceHost| &x.can_host_realm, |x: &mut ServiceHost, v| x.can_host_realm = v);
-                (*a).add_field("supported_engines", 5, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(SupportedEngine::_adapter())), "", |x: &ServiceHost| &x.supported_engines, |x: &mut ServiceHost, v| x.supported_engines = v);
-                (*a).add_field("topology_revision", 6, crate::skir_client::internal::struct_serializer_from_static(ReconciledRevision::_adapter()), "", |x: &ServiceHost| &x.topology_revision, |x: &mut ServiceHost, v| x.topology_revision = v);
-                (*a).add_field("state", 7, crate::skir_client::internal::struct_serializer_from_static(HostRuntimeState::_adapter()), "", |x: &ServiceHost| &x.state, |x: &mut ServiceHost, v| x.state = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<OwnerHost> = OwnerHost::_adapter() as *const _ as *mut _;
-                (*a).add_field("id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &OwnerHost| &x.id, |x: &mut OwnerHost, v| x.id = v);
-                (*a).add_field("name", 1, crate::skir_client::Serializer::string(), "", |x: &OwnerHost| &x.name, |x: &mut OwnerHost, v| x.name = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<RealmInstance> = RealmInstance::_adapter() as *const _ as *mut _;
-                (*a).add_field("realm_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &RealmInstance| &x.realm_id, |x: &mut RealmInstance, v| x.realm_id = v);
-                (*a).add_field("owner_host", 1, crate::skir_client::internal::struct_serializer_from_static(OwnerHost::_adapter()), "", |x: &RealmInstance| &x.owner_host, |x: &mut RealmInstance, v| x.owner_host = v);
-                (*a).add_field("revision", 2, crate::skir_client::Serializer::int64(), "", |x: &RealmInstance| &x.revision, |x: &mut RealmInstance, v| x.revision = v);
-                (*a).add_field("target_engine", 3, crate::skir_client::internal::struct_serializer_from_static(EngineTarget::_adapter()), "", |x: &RealmInstance| &x.target_engine, |x: &mut RealmInstance, v| x.target_engine = v);
-                (*a).add_field("state", 4, crate::skir_client::internal::struct_serializer_from_static(ChildRuntimeState::_adapter()), "", |x: &RealmInstance| &x.state, |x: &mut RealmInstance, v| x.state = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<RealmInfo> = RealmInfo::_adapter() as *const _ as *mut _;
-                (*a).add_field("realm_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &RealmInfo| &x.realm_id, |x: &mut RealmInfo, v| x.realm_id = v);
-                (*a).add_field("owner_host", 1, crate::skir_client::internal::struct_serializer_from_static(OwnerHost::_adapter()), "", |x: &RealmInfo| &x.owner_host, |x: &mut RealmInfo, v| x.owner_host = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<EngineInstance> = EngineInstance::_adapter() as *const _ as *mut _;
-                (*a).add_field("engine_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &EngineInstance| &x.engine_id, |x: &mut EngineInstance, v| x.engine_id = v);
-                (*a).add_field("owner_host", 1, crate::skir_client::internal::struct_serializer_from_static(OwnerHost::_adapter()), "", |x: &EngineInstance| &x.owner_host, |x: &mut EngineInstance, v| x.owner_host = v);
-                (*a).add_field("realm", 2, crate::skir_client::internal::struct_serializer_from_static(RealmInfo::_adapter()), "", |x: &EngineInstance| &x.realm, |x: &mut EngineInstance, v| x.realm = v);
-                (*a).add_field("revision", 3, crate::skir_client::Serializer::int64(), "", |x: &EngineInstance| &x.revision, |x: &mut EngineInstance, v| x.revision = v);
-                (*a).add_field("target", 4, crate::skir_client::internal::struct_serializer_from_static(EngineTarget::_adapter()), "", |x: &EngineInstance| &x.target, |x: &mut EngineInstance, v| x.target = v);
-                (*a).add_field("state", 5, crate::skir_client::internal::struct_serializer_from_static(ChildRuntimeState::_adapter()), "", |x: &EngineInstance| &x.state, |x: &mut EngineInstance, v| x.state = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<HostedRealmConfiguration> = HostedRealmConfiguration::_adapter() as *const _ as *mut _;
-                (*a).add_field("primary_engine", 0, crate::skir_client::internal::struct_serializer_from_static(EngineTarget::_adapter()), "", |x: &HostedRealmConfiguration| &x.primary_engine, |x: &mut HostedRealmConfiguration, v| x.primary_engine = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<EngineRealmSelection_ExistingRealm> = EngineRealmSelection_ExistingRealm::_adapter() as *const _ as *mut _;
-                (*a).add_field("realm_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &EngineRealmSelection_ExistingRealm| &x.realm_id, |x: &mut EngineRealmSelection_ExistingRealm, v| x.realm_id = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<EngineRealmSelection> = EngineRealmSelection::_adapter() as *const _ as *mut _;
-                (*a).add_constant_variant("hosted_realm", 1, 1, "", EngineRealmSelection::HostedRealm);
-                (*a).add_wrapper_variant("existing_realm", 2, 2, crate::skir_client::internal::struct_serializer_from_static(EngineRealmSelection_ExistingRealm::_adapter()), "", |v| EngineRealmSelection::ExistingRealm(Box::new(v)), |x| match x { EngineRealmSelection::ExistingRealm(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<HostedEngineConfiguration> = HostedEngineConfiguration::_adapter() as *const _ as *mut _;
-                (*a).add_field("target", 0, crate::skir_client::internal::struct_serializer_from_static(EngineTarget::_adapter()), "", |x: &HostedEngineConfiguration| &x.target, |x: &mut HostedEngineConfiguration, v| x.target = v);
-                (*a).add_field("realm", 1, crate::skir_client::internal::enum_serializer_from_static(EngineRealmSelection::_adapter()), "", |x: &HostedEngineConfiguration| &x.realm, |x: &mut HostedEngineConfiguration, v| x.realm = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<HostExecutionConfiguration> = HostExecutionConfiguration::_adapter() as *const _ as *mut _;
-                (*a).add_field("realm", 0, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(HostedRealmConfiguration::_adapter())), "", |x: &HostExecutionConfiguration| &x.realm, |x: &mut HostExecutionConfiguration, v| x.realm = v);
-                (*a).add_field("primary_engine", 1, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(HostedEngineConfiguration::_adapter())), "", |x: &HostExecutionConfiguration| &x.primary_engine, |x: &mut HostExecutionConfiguration, v| x.primary_engine = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<HostConfigurationChange> = HostConfigurationChange::_adapter() as *const _ as *mut _;
-                (*a).add_field("host", 0, crate::skir_client::internal::struct_serializer_from_static(ServiceHost::_adapter()), "", |x: &HostConfigurationChange| &x.host, |x: &mut HostConfigurationChange, v| x.host = v);
-                (*a).add_field("realm", 1, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(RealmInstance::_adapter())), "", |x: &HostConfigurationChange| &x.realm, |x: &mut HostConfigurationChange, v| x.realm = v);
-                (*a).add_field("engine", 2, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(EngineInstance::_adapter())), "", |x: &HostConfigurationChange| &x.engine, |x: &mut HostConfigurationChange, v| x.engine = v);
-                (*a).add_field("removed_resources", 3, crate::skir_client::Serializer::array(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &HostConfigurationChange| &x.removed_resources, |x: &mut HostConfigurationChange, v| x.removed_resources = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ConfigureServiceHostRequest> = ConfigureServiceHostRequest::_adapter() as *const _ as *mut _;
-                (*a).add_field("operation_id", 0, crate::skir_client::Serializer::string(), "", |x: &ConfigureServiceHostRequest| &x.operation_id, |x: &mut ConfigureServiceHostRequest, v| x.operation_id = v);
-                (*a).add_field("host_id", 1, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &ConfigureServiceHostRequest| &x.host_id, |x: &mut ConfigureServiceHostRequest, v| x.host_id = v);
-                (*a).add_field("expected_revision", 2, crate::skir_client::Serializer::int64(), "", |x: &ConfigureServiceHostRequest| &x.expected_revision, |x: &mut ConfigureServiceHostRequest, v| x.expected_revision = v);
-                (*a).add_field("execution", 3, crate::skir_client::internal::struct_serializer_from_static(HostExecutionConfiguration::_adapter()), "", |x: &ConfigureServiceHostRequest| &x.execution, |x: &mut ConfigureServiceHostRequest, v| x.execution = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ConfigureServiceHostResponse_ConflictError> = ConfigureServiceHostResponse_ConflictError::_adapter() as *const _ as *mut _;
-                (*a).add_field("actual", 0, crate::skir_client::internal::struct_serializer_from_static(HostConfigurationChange::_adapter()), "", |x: &ConfigureServiceHostResponse_ConflictError| &x.actual, |x: &mut ConfigureServiceHostResponse_ConflictError, v| x.actual = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ConfigureServiceHostResponse_InvalidConfigurationError> = ConfigureServiceHostResponse_InvalidConfigurationError::_adapter() as *const _ as *mut _;
-                (*a).add_field("message", 0, crate::skir_client::Serializer::string(), "", |x: &ConfigureServiceHostResponse_InvalidConfigurationError| &x.message, |x: &mut ConfigureServiceHostResponse_InvalidConfigurationError, v| x.message = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ConfigureServiceHostResponse_IncompatibleEngineError> = ConfigureServiceHostResponse_IncompatibleEngineError::_adapter() as *const _ as *mut _;
-                (*a).add_field("target", 0, crate::skir_client::internal::struct_serializer_from_static(EngineTarget::_adapter()), "", |x: &ConfigureServiceHostResponse_IncompatibleEngineError| &x.target, |x: &mut ConfigureServiceHostResponse_IncompatibleEngineError, v| x.target = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ConfigureServiceHostResponse_RealmNotFoundError> = ConfigureServiceHostResponse_RealmNotFoundError::_adapter() as *const _ as *mut _;
-                (*a).add_field("realm_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &ConfigureServiceHostResponse_RealmNotFoundError| &x.realm_id, |x: &mut ConfigureServiceHostResponse_RealmNotFoundError, v| x.realm_id = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ConfigureServiceHostResponse_InvalidOperationIdError> = ConfigureServiceHostResponse_InvalidOperationIdError::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ConfigureServiceHostResponse_OperationIdentityReusedError> = ConfigureServiceHostResponse_OperationIdentityReusedError::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<ConfigureServiceHostResponse> = ConfigureServiceHostResponse::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("success", 1, 1, crate::skir_client::internal::struct_serializer_from_static(HostConfigurationChange::_adapter()), "", |v| ConfigureServiceHostResponse::Success(Box::new(v)), |x| match x { ConfigureServiceHostResponse::Success(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("conflict_error", 2, 2, crate::skir_client::internal::struct_serializer_from_static(ConfigureServiceHostResponse_ConflictError::_adapter()), "", |v| ConfigureServiceHostResponse::ConflictError(Box::new(v)), |x| match x { ConfigureServiceHostResponse::ConflictError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("invalid_configuration_error", 3, 3, crate::skir_client::internal::struct_serializer_from_static(ConfigureServiceHostResponse_InvalidConfigurationError::_adapter()), "", |v| ConfigureServiceHostResponse::InvalidConfigurationError(Box::new(v)), |x| match x { ConfigureServiceHostResponse::InvalidConfigurationError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("incompatible_engine_error", 4, 4, crate::skir_client::internal::struct_serializer_from_static(ConfigureServiceHostResponse_IncompatibleEngineError::_adapter()), "", |v| ConfigureServiceHostResponse::IncompatibleEngineError(Box::new(v)), |x| match x { ConfigureServiceHostResponse::IncompatibleEngineError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("realm_not_found_error", 5, 5, crate::skir_client::internal::struct_serializer_from_static(ConfigureServiceHostResponse_RealmNotFoundError::_adapter()), "", |v| ConfigureServiceHostResponse::RealmNotFoundError(Box::new(v)), |x| match x { ConfigureServiceHostResponse::RealmNotFoundError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("invalid_operation_id_error", 6, 6, crate::skir_client::internal::struct_serializer_from_static(ConfigureServiceHostResponse_InvalidOperationIdError::_adapter()), "", |v| ConfigureServiceHostResponse::InvalidOperationIdError(Box::new(v)), |x| match x { ConfigureServiceHostResponse::InvalidOperationIdError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("operation_identity_reused_error", 7, 7, crate::skir_client::internal::struct_serializer_from_static(ConfigureServiceHostResponse_OperationIdentityReusedError::_adapter()), "", |v| ConfigureServiceHostResponse::OperationIdentityReusedError(Box::new(v)), |x| match x { ConfigureServiceHostResponse::OperationIdentityReusedError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("invalid_record_id_error", 8, 8, crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(), "", |v| ConfigureServiceHostResponse::InvalidRecordIdError(Box::new(v)), |x| match x { ConfigureServiceHostResponse::InvalidRecordIdError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("internal_error", 9, 9, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| ConfigureServiceHostResponse::InternalError(Box::new(v)), |x| match x { ConfigureServiceHostResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<OrganizationTopologySnapshot> = OrganizationTopologySnapshot::_adapter() as *const _ as *mut _;
-                (*a).add_field("hosts", 0, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(ServiceHost::_adapter())), "", |x: &OrganizationTopologySnapshot| &x.hosts, |x: &mut OrganizationTopologySnapshot, v| x.hosts = v);
-                (*a).add_field("realms", 1, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(RealmInstance::_adapter())), "", |x: &OrganizationTopologySnapshot| &x.realms, |x: &mut OrganizationTopologySnapshot, v| x.realms = v);
-                (*a).add_field("engines", 2, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(EngineInstance::_adapter())), "", |x: &OrganizationTopologySnapshot| &x.engines, |x: &mut OrganizationTopologySnapshot, v| x.engines = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<OrganizationTopologyChanged> = OrganizationTopologyChanged::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("replace", 1, 1, crate::skir_client::internal::struct_serializer_from_static(OrganizationTopologySnapshot::_adapter()), "", |v| OrganizationTopologyChanged::Replace(Box::new(v)), |x| match x { OrganizationTopologyChanged::Replace(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("configuration_changed", 2, 2, crate::skir_client::internal::struct_serializer_from_static(HostConfigurationChange::_adapter()), "", |v| OrganizationTopologyChanged::ConfigurationChanged(Box::new(v)), |x| match x { OrganizationTopologyChanged::ConfigurationChanged(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("host_updated", 3, 3, crate::skir_client::internal::struct_serializer_from_static(ServiceHost::_adapter()), "", |v| OrganizationTopologyChanged::HostUpdated(Box::new(v)), |x| match x { OrganizationTopologyChanged::HostUpdated(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("realm_updated", 4, 4, crate::skir_client::internal::struct_serializer_from_static(RealmInstance::_adapter()), "", |v| OrganizationTopologyChanged::RealmUpdated(Box::new(v)), |x| match x { OrganizationTopologyChanged::RealmUpdated(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("engine_updated", 5, 5, crate::skir_client::internal::struct_serializer_from_static(EngineInstance::_adapter()), "", |v| OrganizationTopologyChanged::EngineUpdated(Box::new(v)), |x| match x { OrganizationTopologyChanged::EngineUpdated(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<WatchOrganizationTopologyRequest> = WatchOrganizationTopologyRequest::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<WatchOrganizationTopologyResponse> = WatchOrganizationTopologyResponse::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("list", 1, 1, crate::skir_client::internal::struct_serializer_from_static(OrganizationTopologySnapshot::_adapter()), "", |v| WatchOrganizationTopologyResponse::List(Box::new(v)), |x| match x { WatchOrganizationTopologyResponse::List(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("internal_error", 2, 2, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| WatchOrganizationTopologyResponse::InternalError(Box::new(v)), |x| match x { WatchOrganizationTopologyResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<WatchHostExecutionRequest> = WatchHostExecutionRequest::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<WatchHostExecutionResponse_Desired> = WatchHostExecutionResponse_Desired::_adapter() as *const _ as *mut _;
-                (*a).add_field("topology_revision", 0, crate::skir_client::Serializer::int64(), "", |x: &WatchHostExecutionResponse_Desired| &x.topology_revision, |x: &mut WatchHostExecutionResponse_Desired, v| x.topology_revision = v);
-                (*a).add_field("realm", 1, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(RealmInstance::_adapter())), "", |x: &WatchHostExecutionResponse_Desired| &x.realm, |x: &mut WatchHostExecutionResponse_Desired, v| x.realm = v);
-                (*a).add_field("engine", 2, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(EngineInstance::_adapter())), "", |x: &WatchHostExecutionResponse_Desired| &x.engine, |x: &mut WatchHostExecutionResponse_Desired, v| x.engine = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<WatchHostExecutionResponse> = WatchHostExecutionResponse::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("desired", 1, 1, crate::skir_client::internal::struct_serializer_from_static(WatchHostExecutionResponse_Desired::_adapter()), "", |v| WatchHostExecutionResponse::Desired(Box::new(v)), |x| match x { WatchHostExecutionResponse::Desired(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("internal_error", 2, 2, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| WatchHostExecutionResponse::InternalError(Box::new(v)), |x| match x { WatchHostExecutionResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ReportHostExecutionRequest> = ReportHostExecutionRequest::_adapter() as *const _ as *mut _;
-                (*a).add_field("topology_revision", 0, crate::skir_client::Serializer::int64(), "", |x: &ReportHostExecutionRequest| &x.topology_revision, |x: &mut ReportHostExecutionRequest, v| x.topology_revision = v);
-                (*a).add_field("realm_state", 1, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(ChildRuntimeState::_adapter())), "", |x: &ReportHostExecutionRequest| &x.realm_state, |x: &mut ReportHostExecutionRequest, v| x.realm_state = v);
-                (*a).add_field("engine_state", 2, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(ChildRuntimeState::_adapter())), "", |x: &ReportHostExecutionRequest| &x.engine_state, |x: &mut ReportHostExecutionRequest, v| x.engine_state = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ReportHostExecutionResponse_Success> = ReportHostExecutionResponse_Success::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ReportHostExecutionResponse_StaleRevisionError> = ReportHostExecutionResponse_StaleRevisionError::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<ReportHostExecutionResponse> = ReportHostExecutionResponse::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("success", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ReportHostExecutionResponse_Success::_adapter()), "", |v| ReportHostExecutionResponse::Success(Box::new(v)), |x| match x { ReportHostExecutionResponse::Success(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("stale_revision_error", 2, 2, crate::skir_client::internal::struct_serializer_from_static(ReportHostExecutionResponse_StaleRevisionError::_adapter()), "", |v| ReportHostExecutionResponse::StaleRevisionError(Box::new(v)), |x| match x { ReportHostExecutionResponse::StaleRevisionError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("internal_error", 3, 3, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| ReportHostExecutionResponse::InternalError(Box::new(v)), |x| match x { ReportHostExecutionResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ServiceMessagingScope> = ServiceMessagingScope::_adapter() as *const _ as *mut _;
-                (*a).add_field("organization_id", 0, crate::skir_client::Serializer::string(), "", |x: &ServiceMessagingScope| &x.organization_id, |x: &mut ServiceMessagingScope, v| x.organization_id = v);
-                (*a).add_field("owned_realm", 1, crate::skir_client::Serializer::optional(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &ServiceMessagingScope| &x.owned_realm, |x: &mut ServiceMessagingScope, v| x.owned_realm = v);
-                (*a).add_field("attached_realm", 2, crate::skir_client::Serializer::optional(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &ServiceMessagingScope| &x.attached_realm, |x: &mut ServiceMessagingScope, v| x.attached_realm = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<GetServiceMessagingScopeRequest> = GetServiceMessagingScopeRequest::_adapter() as *const _ as *mut _;
-                (*a).add_field("service_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &GetServiceMessagingScopeRequest| &x.service_id, |x: &mut GetServiceMessagingScopeRequest, v| x.service_id = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<GetServiceMessagingScopeResponse_NotFound> = GetServiceMessagingScopeResponse_NotFound::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<GetServiceMessagingScopeResponse> = GetServiceMessagingScopeResponse::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("found", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ServiceMessagingScope::_adapter()), "", |v| GetServiceMessagingScopeResponse::Found(Box::new(v)), |x| match x { GetServiceMessagingScopeResponse::Found(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("not_found", 2, 2, crate::skir_client::internal::struct_serializer_from_static(GetServiceMessagingScopeResponse_NotFound::_adapter()), "", |v| GetServiceMessagingScopeResponse::NotFound(Box::new(v)), |x| match x { GetServiceMessagingScopeResponse::NotFound(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("internal_error", 3, 3, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| GetServiceMessagingScopeResponse::InternalError(Box::new(v)), |x| match x { GetServiceMessagingScopeResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<RegisterServiceHostRequest> = RegisterServiceHostRequest::_adapter() as *const _ as *mut _;
-                (*a).add_field("entrypoint", 0, crate::skir_client::Serializer::string(), "", |x: &RegisterServiceHostRequest| &x.entrypoint, |x: &mut RegisterServiceHostRequest, v| x.entrypoint = v);
-                (*a).add_field("can_host_realm", 1, crate::skir_client::Serializer::bool(), "", |x: &RegisterServiceHostRequest| &x.can_host_realm, |x: &mut RegisterServiceHostRequest, v| x.can_host_realm = v);
-                (*a).add_field("supported_engines", 2, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(SupportedEngine::_adapter())), "", |x: &RegisterServiceHostRequest| &x.supported_engines, |x: &mut RegisterServiceHostRequest, v| x.supported_engines = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<RegisterServiceHostResponse> = RegisterServiceHostResponse::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("success", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ServiceHost::_adapter()), "", |v| RegisterServiceHostResponse::Success(Box::new(v)), |x| match x { RegisterServiceHostResponse::Success(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("internal_error", 2, 2, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| RegisterServiceHostResponse::InternalError(Box::new(v)), |x| match x { RegisterServiceHostResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-        });
+    static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| {
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ReconciledRevision> =
+                ReconciledRevision::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "desired",
+                0,
+                crate::skir_client::Serializer::int64(),
+                "",
+                |x: &ReconciledRevision| &x.desired,
+                |x: &mut ReconciledRevision, v| x.desired = v,
+            );
+            (*a).add_field(
+                "applied",
+                1,
+                crate::skir_client::Serializer::int64(),
+                "",
+                |x: &ReconciledRevision| &x.applied,
+                |x: &mut ReconciledRevision, v| x.applied = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<EngineTarget> =
+                EngineTarget::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "engine_id",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &EngineTarget| &x.engine_id,
+                |x: &mut EngineTarget, v| x.engine_id = v,
+            );
+            (*a).add_field(
+                "version_constraint",
+                1,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &EngineTarget| &x.version_constraint,
+                |x: &mut EngineTarget, v| x.version_constraint = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<SupportedEngine> =
+                SupportedEngine::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "engine_id",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &SupportedEngine| &x.engine_id,
+                |x: &mut SupportedEngine, v| x.engine_id = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<HostRuntimeStatus> =
+                HostRuntimeStatus::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("offline", 1, 1, "", HostRuntimeStatus::Offline);
+            (*a).add_constant_variant("reconciling", 2, 2, "", HostRuntimeStatus::Reconciling);
+            (*a).add_constant_variant("active", 3, 3, "", HostRuntimeStatus::Active);
+            (*a).add_constant_variant("failed", 4, 4, "", HostRuntimeStatus::Failed);
+            (*a).add_constant_variant("drifted", 5, 5, "", HostRuntimeStatus::Drifted);
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<HostRuntimeState> =
+                HostRuntimeState::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "status",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    HostRuntimeStatus::_adapter(),
+                ),
+                "",
+                |x: &HostRuntimeState| &x.status,
+                |x: &mut HostRuntimeState, v| x.status = v,
+            );
+            (*a).add_field(
+                "message",
+                1,
+                crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()),
+                "",
+                |x: &HostRuntimeState| &x.message,
+                |x: &mut HostRuntimeState, v| x.message = v,
+            );
+            (*a).add_field(
+                "updated_at",
+                2,
+                crate::skir_client::Serializer::timestamp(),
+                "",
+                |x: &HostRuntimeState| &x.updated_at,
+                |x: &mut HostRuntimeState, v| x.updated_at = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<ChildRuntimeStatus> =
+                ChildRuntimeStatus::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("absent", 1, 1, "", ChildRuntimeStatus::Absent);
+            (*a).add_constant_variant("staging", 2, 2, "", ChildRuntimeStatus::Staging);
+            (*a).add_constant_variant("active", 3, 3, "", ChildRuntimeStatus::Active);
+            (*a).add_constant_variant("quiescing", 4, 4, "", ChildRuntimeStatus::Quiescing);
+            (*a).add_constant_variant("failed", 5, 5, "", ChildRuntimeStatus::Failed);
+            (*a).add_constant_variant("rolled_back", 6, 6, "", ChildRuntimeStatus::RolledBack);
+            (*a).add_constant_variant("drifted", 7, 7, "", ChildRuntimeStatus::Drifted);
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ChildRuntimeState> =
+                ChildRuntimeState::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "status",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ChildRuntimeStatus::_adapter(),
+                ),
+                "",
+                |x: &ChildRuntimeState| &x.status,
+                |x: &mut ChildRuntimeState, v| x.status = v,
+            );
+            (*a).add_field(
+                "active_artifact_version",
+                1,
+                crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()),
+                "",
+                |x: &ChildRuntimeState| &x.active_artifact_version,
+                |x: &mut ChildRuntimeState, v| x.active_artifact_version = v,
+            );
+            (*a).add_field(
+                "message",
+                2,
+                crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()),
+                "",
+                |x: &ChildRuntimeState| &x.message,
+                |x: &mut ChildRuntimeState, v| x.message = v,
+            );
+            (*a).add_field(
+                "updated_at",
+                3,
+                crate::skir_client::Serializer::timestamp(),
+                "",
+                |x: &ChildRuntimeState| &x.updated_at,
+                |x: &mut ChildRuntimeState, v| x.updated_at = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ServiceHost> =
+                ServiceHost::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "host_id",
+                0,
+                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                "",
+                |x: &ServiceHost| &x.host_id,
+                |x: &mut ServiceHost, v| x.host_id = v,
+            );
+            (*a).add_field(
+                "service_id",
+                1,
+                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                "",
+                |x: &ServiceHost| &x.service_id,
+                |x: &mut ServiceHost, v| x.service_id = v,
+            );
+            (*a).add_field(
+                "revision",
+                2,
+                crate::skir_client::Serializer::int64(),
+                "",
+                |x: &ServiceHost| &x.revision,
+                |x: &mut ServiceHost, v| x.revision = v,
+            );
+            (*a).add_field(
+                "entrypoint",
+                3,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &ServiceHost| &x.entrypoint,
+                |x: &mut ServiceHost, v| x.entrypoint = v,
+            );
+            (*a).add_field(
+                "can_host_realm",
+                4,
+                crate::skir_client::Serializer::bool(),
+                "",
+                |x: &ServiceHost| &x.can_host_realm,
+                |x: &mut ServiceHost, v| x.can_host_realm = v,
+            );
+            (*a).add_field(
+                "supported_engines",
+                5,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        SupportedEngine::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &ServiceHost| &x.supported_engines,
+                |x: &mut ServiceHost, v| x.supported_engines = v,
+            );
+            (*a).add_field(
+                "topology_revision",
+                6,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ReconciledRevision::_adapter(),
+                ),
+                "",
+                |x: &ServiceHost| &x.topology_revision,
+                |x: &mut ServiceHost, v| x.topology_revision = v,
+            );
+            (*a).add_field(
+                "state",
+                7,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    HostRuntimeState::_adapter(),
+                ),
+                "",
+                |x: &ServiceHost| &x.state,
+                |x: &mut ServiceHost, v| x.state = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<OwnerHost> =
+                OwnerHost::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "id",
+                0,
+                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                "",
+                |x: &OwnerHost| &x.id,
+                |x: &mut OwnerHost, v| x.id = v,
+            );
+            (*a).add_field(
+                "name",
+                1,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &OwnerHost| &x.name,
+                |x: &mut OwnerHost, v| x.name = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<RealmInstance> =
+                RealmInstance::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "realm_id",
+                0,
+                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                "",
+                |x: &RealmInstance| &x.realm_id,
+                |x: &mut RealmInstance, v| x.realm_id = v,
+            );
+            (*a).add_field(
+                "owner_host",
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(OwnerHost::_adapter()),
+                "",
+                |x: &RealmInstance| &x.owner_host,
+                |x: &mut RealmInstance, v| x.owner_host = v,
+            );
+            (*a).add_field(
+                "revision",
+                2,
+                crate::skir_client::Serializer::int64(),
+                "",
+                |x: &RealmInstance| &x.revision,
+                |x: &mut RealmInstance, v| x.revision = v,
+            );
+            (*a).add_field(
+                "target_engine",
+                3,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    EngineTarget::_adapter(),
+                ),
+                "",
+                |x: &RealmInstance| &x.target_engine,
+                |x: &mut RealmInstance, v| x.target_engine = v,
+            );
+            (*a).add_field(
+                "state",
+                4,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ChildRuntimeState::_adapter(),
+                ),
+                "",
+                |x: &RealmInstance| &x.state,
+                |x: &mut RealmInstance, v| x.state = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<RealmInfo> =
+                RealmInfo::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "realm_id",
+                0,
+                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                "",
+                |x: &RealmInfo| &x.realm_id,
+                |x: &mut RealmInfo, v| x.realm_id = v,
+            );
+            (*a).add_field(
+                "owner_host",
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(OwnerHost::_adapter()),
+                "",
+                |x: &RealmInfo| &x.owner_host,
+                |x: &mut RealmInfo, v| x.owner_host = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<EngineInstance> =
+                EngineInstance::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "engine_id",
+                0,
+                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                "",
+                |x: &EngineInstance| &x.engine_id,
+                |x: &mut EngineInstance, v| x.engine_id = v,
+            );
+            (*a).add_field(
+                "owner_host",
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(OwnerHost::_adapter()),
+                "",
+                |x: &EngineInstance| &x.owner_host,
+                |x: &mut EngineInstance, v| x.owner_host = v,
+            );
+            (*a).add_field(
+                "realm",
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(RealmInfo::_adapter()),
+                "",
+                |x: &EngineInstance| &x.realm,
+                |x: &mut EngineInstance, v| x.realm = v,
+            );
+            (*a).add_field(
+                "revision",
+                3,
+                crate::skir_client::Serializer::int64(),
+                "",
+                |x: &EngineInstance| &x.revision,
+                |x: &mut EngineInstance, v| x.revision = v,
+            );
+            (*a).add_field(
+                "target",
+                4,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    EngineTarget::_adapter(),
+                ),
+                "",
+                |x: &EngineInstance| &x.target,
+                |x: &mut EngineInstance, v| x.target = v,
+            );
+            (*a).add_field(
+                "state",
+                5,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ChildRuntimeState::_adapter(),
+                ),
+                "",
+                |x: &EngineInstance| &x.state,
+                |x: &mut EngineInstance, v| x.state = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<HostedRealmConfiguration> =
+                HostedRealmConfiguration::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "primary_engine",
+                0,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    EngineTarget::_adapter(),
+                ),
+                "",
+                |x: &HostedRealmConfiguration| &x.primary_engine,
+                |x: &mut HostedRealmConfiguration, v| x.primary_engine = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                EngineRealmSelection_ExistingRealm,
+            > = EngineRealmSelection_ExistingRealm::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "realm_id",
+                0,
+                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                "",
+                |x: &EngineRealmSelection_ExistingRealm| &x.realm_id,
+                |x: &mut EngineRealmSelection_ExistingRealm, v| x.realm_id = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<EngineRealmSelection> =
+                EngineRealmSelection::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("hosted_realm", 1, 1, "", EngineRealmSelection::HostedRealm);
+            (*a).add_wrapper_variant(
+                "existing_realm",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    EngineRealmSelection_ExistingRealm::_adapter(),
+                ),
+                "",
+                |v| EngineRealmSelection::ExistingRealm(Box::new(v)),
+                |x| match x {
+                    EngineRealmSelection::ExistingRealm(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<HostedEngineConfiguration> =
+                HostedEngineConfiguration::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "target",
+                0,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    EngineTarget::_adapter(),
+                ),
+                "",
+                |x: &HostedEngineConfiguration| &x.target,
+                |x: &mut HostedEngineConfiguration, v| x.target = v,
+            );
+            (*a).add_field(
+                "realm",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    EngineRealmSelection::_adapter(),
+                ),
+                "",
+                |x: &HostedEngineConfiguration| &x.realm,
+                |x: &mut HostedEngineConfiguration, v| x.realm = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<HostExecutionConfiguration> =
+                HostExecutionConfiguration::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "realm",
+                0,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        HostedRealmConfiguration::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &HostExecutionConfiguration| &x.realm,
+                |x: &mut HostExecutionConfiguration, v| x.realm = v,
+            );
+            (*a).add_field(
+                "primary_engine",
+                1,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        HostedEngineConfiguration::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &HostExecutionConfiguration| &x.primary_engine,
+                |x: &mut HostExecutionConfiguration, v| x.primary_engine = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<HostConfigurationChange> =
+                HostConfigurationChange::_adapter() as *const _ as *mut _;
+            (*a).add_field("host", 0, crate::skir_client::internal::struct_serializer_from_static(ServiceHost::_adapter()), "", |x: &HostConfigurationChange| &x.host, |x: &mut HostConfigurationChange, v| x.host = v);
+            (*a).add_field(
+                "realm",
+                1,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        RealmInstance::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &HostConfigurationChange| &x.realm,
+                |x: &mut HostConfigurationChange, v| x.realm = v,
+            );
+            (*a).add_field(
+                "engine",
+                2,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        EngineInstance::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &HostConfigurationChange| &x.engine,
+                |x: &mut HostConfigurationChange, v| x.engine = v,
+            );
+            (*a).add_field(
+                "removed_resources",
+                3,
+                crate::skir_client::Serializer::array(
+                    crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                ),
+                "",
+                |x: &HostConfigurationChange| &x.removed_resources,
+                |x: &mut HostConfigurationChange, v| x.removed_resources = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ConfigureServiceHostRequest> =
+                ConfigureServiceHostRequest::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "operation_id",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &ConfigureServiceHostRequest| &x.operation_id,
+                |x: &mut ConfigureServiceHostRequest, v| x.operation_id = v,
+            );
+            (*a).add_field(
+                "host_id",
+                1,
+                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                "",
+                |x: &ConfigureServiceHostRequest| &x.host_id,
+                |x: &mut ConfigureServiceHostRequest, v| x.host_id = v,
+            );
+            (*a).add_field(
+                "expected_revision",
+                2,
+                crate::skir_client::Serializer::int64(),
+                "",
+                |x: &ConfigureServiceHostRequest| &x.expected_revision,
+                |x: &mut ConfigureServiceHostRequest, v| x.expected_revision = v,
+            );
+            (*a).add_field(
+                "execution",
+                3,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    HostExecutionConfiguration::_adapter(),
+                ),
+                "",
+                |x: &ConfigureServiceHostRequest| &x.execution,
+                |x: &mut ConfigureServiceHostRequest, v| x.execution = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                ConfigureServiceHostResponse_ConflictError,
+            > = ConfigureServiceHostResponse_ConflictError::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "actual",
+                0,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    HostConfigurationChange::_adapter(),
+                ),
+                "",
+                |x: &ConfigureServiceHostResponse_ConflictError| &x.actual,
+                |x: &mut ConfigureServiceHostResponse_ConflictError, v| x.actual = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                ConfigureServiceHostResponse_InvalidConfigurationError,
+            > = ConfigureServiceHostResponse_InvalidConfigurationError::_adapter() as *const _
+                as *mut _;
+            (*a).add_field(
+                "message",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &ConfigureServiceHostResponse_InvalidConfigurationError| &x.message,
+                |x: &mut ConfigureServiceHostResponse_InvalidConfigurationError, v| x.message = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                ConfigureServiceHostResponse_IncompatibleEngineError,
+            > = ConfigureServiceHostResponse_IncompatibleEngineError::_adapter() as *const _
+                as *mut _;
+            (*a).add_field(
+                "target",
+                0,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    EngineTarget::_adapter(),
+                ),
+                "",
+                |x: &ConfigureServiceHostResponse_IncompatibleEngineError| &x.target,
+                |x: &mut ConfigureServiceHostResponse_IncompatibleEngineError, v| x.target = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                ConfigureServiceHostResponse_RealmNotFoundError,
+            > = ConfigureServiceHostResponse_RealmNotFoundError::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "realm_id",
+                0,
+                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                "",
+                |x: &ConfigureServiceHostResponse_RealmNotFoundError| &x.realm_id,
+                |x: &mut ConfigureServiceHostResponse_RealmNotFoundError, v| x.realm_id = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                ConfigureServiceHostResponse_InvalidOperationIdError,
+            > = ConfigureServiceHostResponse_InvalidOperationIdError::_adapter() as *const _
+                as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                ConfigureServiceHostResponse_OperationIdentityReusedError,
+            > = ConfigureServiceHostResponse_OperationIdentityReusedError::_adapter() as *const _
+                as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<ConfigureServiceHostResponse> =
+                ConfigureServiceHostResponse::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "success",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    HostConfigurationChange::_adapter(),
+                ),
+                "",
+                |v| ConfigureServiceHostResponse::Success(Box::new(v)),
+                |x| match x {
+                    ConfigureServiceHostResponse::Success(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "conflict_error",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ConfigureServiceHostResponse_ConflictError::_adapter(),
+                ),
+                "",
+                |v| ConfigureServiceHostResponse::ConflictError(Box::new(v)),
+                |x| match x {
+                    ConfigureServiceHostResponse::ConflictError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "invalid_configuration_error",
+                3,
+                3,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ConfigureServiceHostResponse_InvalidConfigurationError::_adapter(),
+                ),
+                "",
+                |v| ConfigureServiceHostResponse::InvalidConfigurationError(Box::new(v)),
+                |x| match x {
+                    ConfigureServiceHostResponse::InvalidConfigurationError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "incompatible_engine_error",
+                4,
+                4,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ConfigureServiceHostResponse_IncompatibleEngineError::_adapter(),
+                ),
+                "",
+                |v| ConfigureServiceHostResponse::IncompatibleEngineError(Box::new(v)),
+                |x| match x {
+                    ConfigureServiceHostResponse::IncompatibleEngineError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "realm_not_found_error",
+                5,
+                5,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ConfigureServiceHostResponse_RealmNotFoundError::_adapter(),
+                ),
+                "",
+                |v| ConfigureServiceHostResponse::RealmNotFoundError(Box::new(v)),
+                |x| match x {
+                    ConfigureServiceHostResponse::RealmNotFoundError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "invalid_operation_id_error",
+                6,
+                6,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ConfigureServiceHostResponse_InvalidOperationIdError::_adapter(),
+                ),
+                "",
+                |v| ConfigureServiceHostResponse::InvalidOperationIdError(Box::new(v)),
+                |x| match x {
+                    ConfigureServiceHostResponse::InvalidOperationIdError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "operation_identity_reused_error",
+                7,
+                7,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ConfigureServiceHostResponse_OperationIdentityReusedError::_adapter(),
+                ),
+                "",
+                |v| ConfigureServiceHostResponse::OperationIdentityReusedError(Box::new(v)),
+                |x| match x {
+                    ConfigureServiceHostResponse::OperationIdentityReusedError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "invalid_record_id_error",
+                8,
+                8,
+                crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(),
+                "",
+                |v| ConfigureServiceHostResponse::InvalidRecordIdError(Box::new(v)),
+                |x| match x {
+                    ConfigureServiceHostResponse::InvalidRecordIdError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "internal_error",
+                9,
+                9,
+                crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
+                "",
+                |v| ConfigureServiceHostResponse::InternalError(Box::new(v)),
+                |x| match x {
+                    ConfigureServiceHostResponse::InternalError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<OrganizationTopologySnapshot> =
+                OrganizationTopologySnapshot::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "hosts",
+                0,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        ServiceHost::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &OrganizationTopologySnapshot| &x.hosts,
+                |x: &mut OrganizationTopologySnapshot, v| x.hosts = v,
+            );
+            (*a).add_field(
+                "realms",
+                1,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        RealmInstance::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &OrganizationTopologySnapshot| &x.realms,
+                |x: &mut OrganizationTopologySnapshot, v| x.realms = v,
+            );
+            (*a).add_field(
+                "engines",
+                2,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        EngineInstance::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &OrganizationTopologySnapshot| &x.engines,
+                |x: &mut OrganizationTopologySnapshot, v| x.engines = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<RealmRuntimeObservation> =
+                RealmRuntimeObservation::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "realm_id",
+                0,
+                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                "",
+                |x: &RealmRuntimeObservation| &x.realm_id,
+                |x: &mut RealmRuntimeObservation, v| x.realm_id = v,
+            );
+            (*a).add_field(
+                "state",
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ChildRuntimeState::_adapter(),
+                ),
+                "",
+                |x: &RealmRuntimeObservation| &x.state,
+                |x: &mut RealmRuntimeObservation, v| x.state = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<EngineRuntimeObservation> =
+                EngineRuntimeObservation::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "engine_id",
+                0,
+                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                "",
+                |x: &EngineRuntimeObservation| &x.engine_id,
+                |x: &mut EngineRuntimeObservation, v| x.engine_id = v,
+            );
+            (*a).add_field(
+                "state",
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ChildRuntimeState::_adapter(),
+                ),
+                "",
+                |x: &EngineRuntimeObservation| &x.state,
+                |x: &mut EngineRuntimeObservation, v| x.state = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<HostExecutionObservation> =
+                HostExecutionObservation::_adapter() as *const _ as *mut _;
+            (*a).add_field("host", 0, crate::skir_client::internal::struct_serializer_from_static(ServiceHost::_adapter()), "", |x: &HostExecutionObservation| &x.host, |x: &mut HostExecutionObservation, v| x.host = v);
+            (*a).add_field(
+                "realm",
+                1,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        RealmRuntimeObservation::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &HostExecutionObservation| &x.realm,
+                |x: &mut HostExecutionObservation, v| x.realm = v,
+            );
+            (*a).add_field(
+                "engine",
+                2,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        EngineRuntimeObservation::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &HostExecutionObservation| &x.engine,
+                |x: &mut HostExecutionObservation, v| x.engine = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<OrganizationTopologyChanged> =
+                OrganizationTopologyChanged::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "replace",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    OrganizationTopologySnapshot::_adapter(),
+                ),
+                "",
+                |v| OrganizationTopologyChanged::Replace(Box::new(v)),
+                |x| match x {
+                    OrganizationTopologyChanged::Replace(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "configuration_changed",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    HostConfigurationChange::_adapter(),
+                ),
+                "",
+                |v| OrganizationTopologyChanged::ConfigurationChanged(Box::new(v)),
+                |x| match x {
+                    OrganizationTopologyChanged::ConfigurationChanged(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "observations_reported",
+                3,
+                3,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    HostExecutionObservation::_adapter(),
+                ),
+                "",
+                |v| OrganizationTopologyChanged::ObservationsReported(Box::new(v)),
+                |x| match x {
+                    OrganizationTopologyChanged::ObservationsReported(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant("host_advertised", 4, 4, crate::skir_client::internal::struct_serializer_from_static(ServiceHost::_adapter()), "", |v| OrganizationTopologyChanged::HostAdvertised(Box::new(v)), |x| match x { OrganizationTopologyChanged::HostAdvertised(b) => b.as_ref(), _ => unreachable!() });
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                WatchOrganizationTopologyRequest,
+            > = WatchOrganizationTopologyRequest::_adapter() as *const _ as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<
+                WatchOrganizationTopologyResponse,
+            > = WatchOrganizationTopologyResponse::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "list",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    OrganizationTopologySnapshot::_adapter(),
+                ),
+                "",
+                |v| WatchOrganizationTopologyResponse::List(Box::new(v)),
+                |x| match x {
+                    WatchOrganizationTopologyResponse::List(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "internal_error",
+                2,
+                2,
+                crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
+                "",
+                |v| WatchOrganizationTopologyResponse::InternalError(Box::new(v)),
+                |x| match x {
+                    WatchOrganizationTopologyResponse::InternalError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<WatchHostExecutionRequest> =
+                WatchHostExecutionRequest::_adapter() as *const _ as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                WatchHostExecutionResponse_Desired,
+            > = WatchHostExecutionResponse_Desired::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "topology_revision",
+                0,
+                crate::skir_client::Serializer::int64(),
+                "",
+                |x: &WatchHostExecutionResponse_Desired| &x.topology_revision,
+                |x: &mut WatchHostExecutionResponse_Desired, v| x.topology_revision = v,
+            );
+            (*a).add_field(
+                "realm",
+                1,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        RealmInstance::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &WatchHostExecutionResponse_Desired| &x.realm,
+                |x: &mut WatchHostExecutionResponse_Desired, v| x.realm = v,
+            );
+            (*a).add_field(
+                "engine",
+                2,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        EngineInstance::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &WatchHostExecutionResponse_Desired| &x.engine,
+                |x: &mut WatchHostExecutionResponse_Desired, v| x.engine = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<WatchHostExecutionResponse> =
+                WatchHostExecutionResponse::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "desired",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    WatchHostExecutionResponse_Desired::_adapter(),
+                ),
+                "",
+                |v| WatchHostExecutionResponse::Desired(Box::new(v)),
+                |x| match x {
+                    WatchHostExecutionResponse::Desired(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "internal_error",
+                2,
+                2,
+                crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
+                "",
+                |v| WatchHostExecutionResponse::InternalError(Box::new(v)),
+                |x| match x {
+                    WatchHostExecutionResponse::InternalError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ReportHostExecutionRequest> =
+                ReportHostExecutionRequest::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "topology_revision",
+                0,
+                crate::skir_client::Serializer::int64(),
+                "",
+                |x: &ReportHostExecutionRequest| &x.topology_revision,
+                |x: &mut ReportHostExecutionRequest, v| x.topology_revision = v,
+            );
+            (*a).add_field(
+                "realm_state",
+                1,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        ChildRuntimeState::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &ReportHostExecutionRequest| &x.realm_state,
+                |x: &mut ReportHostExecutionRequest, v| x.realm_state = v,
+            );
+            (*a).add_field(
+                "engine_state",
+                2,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        ChildRuntimeState::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &ReportHostExecutionRequest| &x.engine_state,
+                |x: &mut ReportHostExecutionRequest, v| x.engine_state = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                ReportHostExecutionResponse_Success,
+            > = ReportHostExecutionResponse_Success::_adapter() as *const _ as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                ReportHostExecutionResponse_StaleRevisionError,
+            > = ReportHostExecutionResponse_StaleRevisionError::_adapter() as *const _ as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<ReportHostExecutionResponse> =
+                ReportHostExecutionResponse::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "success",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ReportHostExecutionResponse_Success::_adapter(),
+                ),
+                "",
+                |v| ReportHostExecutionResponse::Success(Box::new(v)),
+                |x| match x {
+                    ReportHostExecutionResponse::Success(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "stale_revision_error",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ReportHostExecutionResponse_StaleRevisionError::_adapter(),
+                ),
+                "",
+                |v| ReportHostExecutionResponse::StaleRevisionError(Box::new(v)),
+                |x| match x {
+                    ReportHostExecutionResponse::StaleRevisionError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "internal_error",
+                3,
+                3,
+                crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
+                "",
+                |v| ReportHostExecutionResponse::InternalError(Box::new(v)),
+                |x| match x {
+                    ReportHostExecutionResponse::InternalError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ServiceMessagingScope> =
+                ServiceMessagingScope::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "organization_id",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &ServiceMessagingScope| &x.organization_id,
+                |x: &mut ServiceMessagingScope, v| x.organization_id = v,
+            );
+            (*a).add_field(
+                "owned_realm",
+                1,
+                crate::skir_client::Serializer::optional(
+                    crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                ),
+                "",
+                |x: &ServiceMessagingScope| &x.owned_realm,
+                |x: &mut ServiceMessagingScope, v| x.owned_realm = v,
+            );
+            (*a).add_field(
+                "attached_realm",
+                2,
+                crate::skir_client::Serializer::optional(
+                    crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                ),
+                "",
+                |x: &ServiceMessagingScope| &x.attached_realm,
+                |x: &mut ServiceMessagingScope, v| x.attached_realm = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                GetServiceMessagingScopeRequest,
+            > = GetServiceMessagingScopeRequest::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "service_id",
+                0,
+                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                "",
+                |x: &GetServiceMessagingScopeRequest| &x.service_id,
+                |x: &mut GetServiceMessagingScopeRequest, v| x.service_id = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                GetServiceMessagingScopeResponse_NotFound,
+            > = GetServiceMessagingScopeResponse_NotFound::_adapter() as *const _ as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<
+                GetServiceMessagingScopeResponse,
+            > = GetServiceMessagingScopeResponse::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "found",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ServiceMessagingScope::_adapter(),
+                ),
+                "",
+                |v| GetServiceMessagingScopeResponse::Found(Box::new(v)),
+                |x| match x {
+                    GetServiceMessagingScopeResponse::Found(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "not_found",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    GetServiceMessagingScopeResponse_NotFound::_adapter(),
+                ),
+                "",
+                |v| GetServiceMessagingScopeResponse::NotFound(Box::new(v)),
+                |x| match x {
+                    GetServiceMessagingScopeResponse::NotFound(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "internal_error",
+                3,
+                3,
+                crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
+                "",
+                |v| GetServiceMessagingScopeResponse::InternalError(Box::new(v)),
+                |x| match x {
+                    GetServiceMessagingScopeResponse::InternalError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<RegisterServiceHostRequest> =
+                RegisterServiceHostRequest::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "entrypoint",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &RegisterServiceHostRequest| &x.entrypoint,
+                |x: &mut RegisterServiceHostRequest, v| x.entrypoint = v,
+            );
+            (*a).add_field(
+                "can_host_realm",
+                1,
+                crate::skir_client::Serializer::bool(),
+                "",
+                |x: &RegisterServiceHostRequest| &x.can_host_realm,
+                |x: &mut RegisterServiceHostRequest, v| x.can_host_realm = v,
+            );
+            (*a).add_field(
+                "supported_engines",
+                2,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        SupportedEngine::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &RegisterServiceHostRequest| &x.supported_engines,
+                |x: &mut RegisterServiceHostRequest, v| x.supported_engines = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<RegisterServiceHostResponse> =
+                RegisterServiceHostResponse::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant("success", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ServiceHost::_adapter()), "", |v| RegisterServiceHostResponse::Success(Box::new(v)), |x| match x { RegisterServiceHostResponse::Success(b) => b.as_ref(), _ => unreachable!() });
+            (*a).add_wrapper_variant(
+                "internal_error",
+                2,
+                2,
+                crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
+                "",
+                |v| RegisterServiceHostResponse::InternalError(Box::new(v)),
+                |x| match x {
+                    RegisterServiceHostResponse::InternalError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+    });
     let _ = *INIT;
 }
 
@@ -2082,80 +3470,96 @@ fn initialize_module_serializers() {
 // Methods
 // ==============================================================================
 
-pub fn configure_service_host_method() -> &'static crate::skir_client::Method<ConfigureServiceHostRequest, ConfigureServiceHostResponse> {
-    static METHOD: std::sync::LazyLock<crate::skir_client::Method<ConfigureServiceHostRequest, ConfigureServiceHostResponse>> = std::sync::LazyLock::new(|| {
-        crate::skir_client::Method {
-            name: "ConfigureServiceHost".to_string(),
-            number: 934201_i64,
-            request_serializer: ConfigureServiceHostRequest::serializer(),
-            response_serializer: ConfigureServiceHostResponse::serializer(),
-            doc: "".to_string(),
-        }
+pub fn configure_service_host_method()
+-> &'static crate::skir_client::Method<ConfigureServiceHostRequest, ConfigureServiceHostResponse> {
+    static METHOD: std::sync::LazyLock<
+        crate::skir_client::Method<ConfigureServiceHostRequest, ConfigureServiceHostResponse>,
+    > = std::sync::LazyLock::new(|| crate::skir_client::Method {
+        name: "ConfigureServiceHost".to_string(),
+        number: 934201_i64,
+        request_serializer: ConfigureServiceHostRequest::serializer(),
+        response_serializer: ConfigureServiceHostResponse::serializer(),
+        doc: "".to_string(),
     });
     &*METHOD
 }
 
-pub fn watch_organization_topology_method() -> &'static crate::skir_client::Method<WatchOrganizationTopologyRequest, WatchOrganizationTopologyResponse> {
-    static METHOD: std::sync::LazyLock<crate::skir_client::Method<WatchOrganizationTopologyRequest, WatchOrganizationTopologyResponse>> = std::sync::LazyLock::new(|| {
-        crate::skir_client::Method {
-            name: "WatchOrganizationTopology".to_string(),
-            number: 934202_i64,
-            request_serializer: WatchOrganizationTopologyRequest::serializer(),
-            response_serializer: WatchOrganizationTopologyResponse::serializer(),
-            doc: "".to_string(),
-        }
+pub fn watch_organization_topology_method() -> &'static crate::skir_client::Method<
+    WatchOrganizationTopologyRequest,
+    WatchOrganizationTopologyResponse,
+> {
+    static METHOD: std::sync::LazyLock<
+        crate::skir_client::Method<
+            WatchOrganizationTopologyRequest,
+            WatchOrganizationTopologyResponse,
+        >,
+    > = std::sync::LazyLock::new(|| crate::skir_client::Method {
+        name: "WatchOrganizationTopology".to_string(),
+        number: 934202_i64,
+        request_serializer: WatchOrganizationTopologyRequest::serializer(),
+        response_serializer: WatchOrganizationTopologyResponse::serializer(),
+        doc: "".to_string(),
     });
     &*METHOD
 }
 
-pub fn watch_host_execution_method() -> &'static crate::skir_client::Method<WatchHostExecutionRequest, WatchHostExecutionResponse> {
-    static METHOD: std::sync::LazyLock<crate::skir_client::Method<WatchHostExecutionRequest, WatchHostExecutionResponse>> = std::sync::LazyLock::new(|| {
-        crate::skir_client::Method {
-            name: "WatchHostExecution".to_string(),
-            number: 934203_i64,
-            request_serializer: WatchHostExecutionRequest::serializer(),
-            response_serializer: WatchHostExecutionResponse::serializer(),
-            doc: "".to_string(),
-        }
+pub fn watch_host_execution_method()
+-> &'static crate::skir_client::Method<WatchHostExecutionRequest, WatchHostExecutionResponse> {
+    static METHOD: std::sync::LazyLock<
+        crate::skir_client::Method<WatchHostExecutionRequest, WatchHostExecutionResponse>,
+    > = std::sync::LazyLock::new(|| crate::skir_client::Method {
+        name: "WatchHostExecution".to_string(),
+        number: 934203_i64,
+        request_serializer: WatchHostExecutionRequest::serializer(),
+        response_serializer: WatchHostExecutionResponse::serializer(),
+        doc: "".to_string(),
     });
     &*METHOD
 }
 
-pub fn report_host_execution_method() -> &'static crate::skir_client::Method<ReportHostExecutionRequest, ReportHostExecutionResponse> {
-    static METHOD: std::sync::LazyLock<crate::skir_client::Method<ReportHostExecutionRequest, ReportHostExecutionResponse>> = std::sync::LazyLock::new(|| {
-        crate::skir_client::Method {
-            name: "ReportHostExecution".to_string(),
-            number: 934204_i64,
-            request_serializer: ReportHostExecutionRequest::serializer(),
-            response_serializer: ReportHostExecutionResponse::serializer(),
-            doc: "".to_string(),
-        }
+pub fn report_host_execution_method()
+-> &'static crate::skir_client::Method<ReportHostExecutionRequest, ReportHostExecutionResponse> {
+    static METHOD: std::sync::LazyLock<
+        crate::skir_client::Method<ReportHostExecutionRequest, ReportHostExecutionResponse>,
+    > = std::sync::LazyLock::new(|| crate::skir_client::Method {
+        name: "ReportHostExecution".to_string(),
+        number: 934204_i64,
+        request_serializer: ReportHostExecutionRequest::serializer(),
+        response_serializer: ReportHostExecutionResponse::serializer(),
+        doc: "".to_string(),
     });
     &*METHOD
 }
 
-pub fn get_service_messaging_scope_method() -> &'static crate::skir_client::Method<GetServiceMessagingScopeRequest, GetServiceMessagingScopeResponse> {
-    static METHOD: std::sync::LazyLock<crate::skir_client::Method<GetServiceMessagingScopeRequest, GetServiceMessagingScopeResponse>> = std::sync::LazyLock::new(|| {
-        crate::skir_client::Method {
-            name: "GetServiceMessagingScope".to_string(),
-            number: 934205_i64,
-            request_serializer: GetServiceMessagingScopeRequest::serializer(),
-            response_serializer: GetServiceMessagingScopeResponse::serializer(),
-            doc: "".to_string(),
-        }
+pub fn get_service_messaging_scope_method() -> &'static crate::skir_client::Method<
+    GetServiceMessagingScopeRequest,
+    GetServiceMessagingScopeResponse,
+> {
+    static METHOD: std::sync::LazyLock<
+        crate::skir_client::Method<
+            GetServiceMessagingScopeRequest,
+            GetServiceMessagingScopeResponse,
+        >,
+    > = std::sync::LazyLock::new(|| crate::skir_client::Method {
+        name: "GetServiceMessagingScope".to_string(),
+        number: 934205_i64,
+        request_serializer: GetServiceMessagingScopeRequest::serializer(),
+        response_serializer: GetServiceMessagingScopeResponse::serializer(),
+        doc: "".to_string(),
     });
     &*METHOD
 }
 
-pub fn register_service_host_method() -> &'static crate::skir_client::Method<RegisterServiceHostRequest, RegisterServiceHostResponse> {
-    static METHOD: std::sync::LazyLock<crate::skir_client::Method<RegisterServiceHostRequest, RegisterServiceHostResponse>> = std::sync::LazyLock::new(|| {
-        crate::skir_client::Method {
-            name: "RegisterServiceHost".to_string(),
-            number: 934206_i64,
-            request_serializer: RegisterServiceHostRequest::serializer(),
-            response_serializer: RegisterServiceHostResponse::serializer(),
-            doc: "".to_string(),
-        }
+pub fn register_service_host_method()
+-> &'static crate::skir_client::Method<RegisterServiceHostRequest, RegisterServiceHostResponse> {
+    static METHOD: std::sync::LazyLock<
+        crate::skir_client::Method<RegisterServiceHostRequest, RegisterServiceHostResponse>,
+    > = std::sync::LazyLock::new(|| crate::skir_client::Method {
+        name: "RegisterServiceHost".to_string(),
+        number: 934206_i64,
+        request_serializer: RegisterServiceHostRequest::serializer(),
+        response_serializer: RegisterServiceHostResponse::serializer(),
+        doc: "".to_string(),
     });
     &*METHOD
 }

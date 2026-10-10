@@ -94,23 +94,27 @@ void topologyStateTests() {
           expect(container.read(provider).requireValue.realmInstances, isEmpty);
 
           emit(
-            skir.OrganizationTopologyChanged.wrapHostUpdated(
-              _host(
-                state: skir.HostRuntimeState(
-                  status: skir.HostRuntimeStatus.active,
-                  message: "fresh",
-                  updatedAt: DateTime.utc(2026),
+            skir.OrganizationTopologyChanged.wrapObservationsReported(
+              skir.HostExecutionObservation(
+                host: _host(
+                  state: skir.HostRuntimeState(
+                    status: skir.HostRuntimeStatus.active,
+                    message: "fresh",
+                    updatedAt: DateTime.utc(2026),
+                  ),
                 ),
+                realm: null,
+                engine: null,
               ),
             ),
           );
           emit(
-            skir.OrganizationTopologyChanged.wrapHostUpdated(
+            skir.OrganizationTopologyChanged.wrapHostAdvertised(
               _host(id: "host2"),
             ),
           );
           emit(
-            skir.OrganizationTopologyChanged.wrapHostUpdated(
+            skir.OrganizationTopologyChanged.wrapHostAdvertised(
               _host(id: "host3"),
             ),
           );

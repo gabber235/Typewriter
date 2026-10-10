@@ -39,25 +39,23 @@ class AuthoringSession extends _$AuthoringSession {
     final invalidations = repository.invalidations.listen(
       (_) => _scheduleRefresh(lifecycleRevision),
     );
-    final catalogSource = NatsRealmEditorCatalogSource(ref);
-    final catalogRoute = RealmEditorCatalogRoute(
-      organizationId: organizationId,
-      realmId: realmId,
+    final catalogInvalidations = ref.listen(
+      realmCatalogInvalidationsProvider(organizationId, realmId),
+      (previous, next) {
+        if (!_isActive(lifecycleRevision)) return;
+        if (next.hasError) {
+          _scheduleRefresh(lifecycleRevision, catalog: true);
+          return;
+        }
+        if (next case AsyncData(:final value)) {
+          _latestInvalidatedGeneration = value.generation;
+          final current = state.catalog?.snapshot.generation;
+          if (current != null && value.generation != current) {
+            _scheduleRefresh(lifecycleRevision, catalog: true);
+          }
+        }
+      },
     );
-    final catalogInvalidations = catalogSource
-        .watchInvalidations(catalogRoute)
-        .listen(
-          (event) {
-            if (!_isActive(lifecycleRevision)) return;
-            _latestInvalidatedGeneration = event.generation;
-            final current = state.catalog?.snapshot.generation;
-            if (current != null && event.generation != current) {
-              _scheduleRefresh(lifecycleRevision, catalog: true);
-            }
-          },
-          onError: (Object _, StackTrace _) =>
-              _scheduleRefresh(lifecycleRevision, catalog: true),
-        );
     ref
       ..onDispose(() {
         if (_lifecycleRevision == lifecycleRevision) {
@@ -66,25 +64,34 @@ class AuthoringSession extends _$AuthoringSession {
       })
       ..onDispose(changes.cancel)
       ..onDispose(invalidations.cancel)
-      ..onDispose(catalogInvalidations.cancel)
+      ..onDispose(catalogInvalidations.close)
       ..onDispose(() => repositories.releaseAuthoring(repository));
     unawaited(
       _start(
+        repositories,
         repository,
         lifecycleRevision,
         organizationId,
         realmId,
-      ).catchError((Object _) {}),
+      ).catchError((Object error, StackTrace stackTrace) {
+        if (!_isActive(lifecycleRevision)) return;
+        state = state.copyWith(refreshing: false, failure: error);
+      }),
     );
     return const AuthoringSessionState();
   }
 
   Future<void> _start(
+    ResourceRepositories repositories,
     AuthoringResourceRepository repository,
     int lifecycleRevision,
     skir.RecordId organizationId,
     skir.RecordId realmId,
   ) async {
+    await repositories.ensureAuthoringRealmsAdmitted(
+      repositories.authoringRealms(organizationId),
+    );
+    if (!_isActive(lifecycleRevision)) return;
     await repository.start();
     if (!_isActive(lifecycleRevision)) return;
     await _refresh(repository, lifecycleRevision, organizationId, realmId);
@@ -194,9 +201,19 @@ class AuthoringSession extends _$AuthoringSession {
   Future<skir.EditorCatalogWireSnapshot> _fetchCatalog(
     skir.RecordId organizationId,
     skir.RecordId realmId,
-  ) => NatsRealmEditorCatalogSource(ref).fetch(
-    RealmEditorCatalogRoute(organizationId: organizationId, realmId: realmId),
-  );
+  ) async {
+    final provider = realmCatalogTransferProvider(
+      organizationId,
+      realmId,
+      uuid.v4(),
+    );
+    final retention = ref.listen(provider, (previous, next) {});
+    try {
+      return await ref.read(provider.future);
+    } finally {
+      retention.close();
+    }
+  }
 
   bool _isActive(int lifecycleRevision) =>
       ref.mounted && _lifecycleRevision == lifecycleRevision;
@@ -247,10 +264,9 @@ class AuthoringSession extends _$AuthoringSession {
 
   Future<skir.PreparedValue> prepareValue(
     skir.ValuePreparationRequest request,
-  ) => NatsRealmEditorCatalogSource(ref).prepareValue(
-    RealmEditorCatalogRoute(organizationId: _organizationId, realmId: _realmId),
-    request,
-  );
+  ) =>
+      NatsRealmEditorCatalogSource(ref)
+          .prepareValue(_organizationId, _realmId, request);
 
   Future<skir.SearchAuthoringResponse> search(
     skir.SearchAuthoringRequest request,

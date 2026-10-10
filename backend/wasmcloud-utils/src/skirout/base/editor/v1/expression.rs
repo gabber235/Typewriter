@@ -27,23 +27,25 @@ pub struct ExpressionRead {
 
 impl ExpressionRead {
     pub fn default_ref() -> &'static ExpressionRead {
-        static D: std::sync::LazyLock<ExpressionRead> = std::sync::LazyLock::new(ExpressionRead::default);
+        static D: std::sync::LazyLock<ExpressionRead> =
+            std::sync::LazyLock::new(ExpressionRead::default);
         &D
     }
 }
 
 impl ExpressionRead {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ExpressionRead> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ExpressionRead>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/expression.skir",
-                    "ExpressionRead",
-                    "",
-                    |x: &ExpressionRead| &x._unrecognized,
-                    |x: &mut ExpressionRead, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ExpressionRead>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "ExpressionRead",
+                "",
+                |x: &ExpressionRead| &x._unrecognized,
+                |x: &mut ExpressionRead, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ExpressionRead> {
@@ -66,23 +68,25 @@ pub struct ExpressionCall {
 
 impl ExpressionCall {
     pub fn default_ref() -> &'static ExpressionCall {
-        static D: std::sync::LazyLock<ExpressionCall> = std::sync::LazyLock::new(ExpressionCall::default);
+        static D: std::sync::LazyLock<ExpressionCall> =
+            std::sync::LazyLock::new(ExpressionCall::default);
         &D
     }
 }
 
 impl ExpressionCall {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ExpressionCall> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ExpressionCall>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/expression.skir",
-                    "ExpressionCall",
-                    "",
-                    |x: &ExpressionCall| &x._unrecognized,
-                    |x: &mut ExpressionCall, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ExpressionCall>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "ExpressionCall",
+                "",
+                |x: &ExpressionCall| &x._unrecognized,
+                |x: &mut ExpressionCall, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ExpressionCall> {
@@ -105,23 +109,25 @@ pub struct BinaryExpression {
 
 impl BinaryExpression {
     pub fn default_ref() -> &'static BinaryExpression {
-        static D: std::sync::LazyLock<BinaryExpression> = std::sync::LazyLock::new(BinaryExpression::default);
+        static D: std::sync::LazyLock<BinaryExpression> =
+            std::sync::LazyLock::new(BinaryExpression::default);
         &D
     }
 }
 
 impl BinaryExpression {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<BinaryExpression> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<BinaryExpression>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/expression.skir",
-                    "BinaryExpression",
-                    "",
-                    |x: &BinaryExpression| &x._unrecognized,
-                    |x: &mut BinaryExpression, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<BinaryExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "BinaryExpression",
+                "",
+                |x: &BinaryExpression| &x._unrecognized,
+                |x: &mut BinaryExpression, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<BinaryExpression> {
@@ -145,28 +151,32 @@ pub struct ConditionalExpression {
 
 impl ConditionalExpression {
     pub fn default_ref() -> &'static ConditionalExpression {
-        static D: std::sync::LazyLock<ConditionalExpression> = std::sync::LazyLock::new(ConditionalExpression::default);
+        static D: std::sync::LazyLock<ConditionalExpression> =
+            std::sync::LazyLock::new(ConditionalExpression::default);
         &D
     }
 }
 
 impl ConditionalExpression {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ConditionalExpression> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ConditionalExpression>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/expression.skir",
-                    "ConditionalExpression",
-                    "",
-                    |x: &ConditionalExpression| &x._unrecognized,
-                    |x: &mut ConditionalExpression, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ConditionalExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "ConditionalExpression",
+                "",
+                |x: &ConditionalExpression| &x._unrecognized,
+                |x: &mut ConditionalExpression, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ConditionalExpression> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ConditionalExpression::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            ConditionalExpression::_adapter(),
+        )
     }
 }
 
@@ -184,23 +194,25 @@ pub struct OrElseExpression {
 
 impl OrElseExpression {
     pub fn default_ref() -> &'static OrElseExpression {
-        static D: std::sync::LazyLock<OrElseExpression> = std::sync::LazyLock::new(OrElseExpression::default);
+        static D: std::sync::LazyLock<OrElseExpression> =
+            std::sync::LazyLock::new(OrElseExpression::default);
         &D
     }
 }
 
 impl OrElseExpression {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<OrElseExpression> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<OrElseExpression>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/expression.skir",
-                    "OrElseExpression",
-                    "",
-                    |x: &OrElseExpression| &x._unrecognized,
-                    |x: &mut OrElseExpression, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<OrElseExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "OrElseExpression",
+                "",
+                |x: &OrElseExpression| &x._unrecognized,
+                |x: &mut OrElseExpression, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<OrElseExpression> {
@@ -226,23 +238,25 @@ pub struct CollectionExpression {
 
 impl CollectionExpression {
     pub fn default_ref() -> &'static CollectionExpression {
-        static D: std::sync::LazyLock<CollectionExpression> = std::sync::LazyLock::new(CollectionExpression::default);
+        static D: std::sync::LazyLock<CollectionExpression> =
+            std::sync::LazyLock::new(CollectionExpression::default);
         &D
     }
 }
 
 impl CollectionExpression {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CollectionExpression> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<CollectionExpression>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/expression.skir",
-                    "CollectionExpression",
-                    "",
-                    |x: &CollectionExpression| &x._unrecognized,
-                    |x: &mut CollectionExpression, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<CollectionExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "CollectionExpression",
+                "",
+                |x: &CollectionExpression| &x._unrecognized,
+                |x: &mut CollectionExpression, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<CollectionExpression> {
@@ -276,27 +290,31 @@ impl Default for ExpressionNode {
 
 impl ExpressionNode {
     fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ExpressionNode> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<ExpressionNode>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &ExpressionNode| match x {
-                        ExpressionNode::Unknown(_) => 0,
-                        ExpressionNode::Literal(_) => 1,
-                        ExpressionNode::Read(_) => 2,
-                        ExpressionNode::Call(_) => 3,
-                        ExpressionNode::And(_) => 4,
-                        ExpressionNode::Or(_) => 5,
-                        ExpressionNode::Conditional(_) => 6,
-                        ExpressionNode::OrElse(_) => 7,
-                        ExpressionNode::Collection(_) => 8,
-                    },
-                    |u| ExpressionNode::Unknown(Some(u)),
-                    |x: &ExpressionNode| match x { ExpressionNode::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "editor/v1/expression.skir",
-                    "ExpressionNode",
-                    "",
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<ExpressionNode>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &ExpressionNode| match x {
+                    ExpressionNode::Unknown(_) => 0,
+                    ExpressionNode::Literal(_) => 1,
+                    ExpressionNode::Read(_) => 2,
+                    ExpressionNode::Call(_) => 3,
+                    ExpressionNode::And(_) => 4,
+                    ExpressionNode::Or(_) => 5,
+                    ExpressionNode::Conditional(_) => 6,
+                    ExpressionNode::OrElse(_) => 7,
+                    ExpressionNode::Collection(_) => 8,
+                },
+                |u| ExpressionNode::Unknown(Some(u)),
+                |x: &ExpressionNode| match x {
+                    ExpressionNode::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/expression.skir",
+                "ExpressionNode",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ExpressionNode> {
@@ -319,23 +337,25 @@ pub struct ExpressionType {
 
 impl ExpressionType {
     pub fn default_ref() -> &'static ExpressionType {
-        static D: std::sync::LazyLock<ExpressionType> = std::sync::LazyLock::new(ExpressionType::default);
+        static D: std::sync::LazyLock<ExpressionType> =
+            std::sync::LazyLock::new(ExpressionType::default);
         &D
     }
 }
 
 impl ExpressionType {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ExpressionType> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ExpressionType>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/expression.skir",
-                    "ExpressionType",
-                    "",
-                    |x: &ExpressionType| &x._unrecognized,
-                    |x: &mut ExpressionType, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ExpressionType>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "ExpressionType",
+                "",
+                |x: &ExpressionType| &x._unrecognized,
+                |x: &mut ExpressionType, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ExpressionType> {
@@ -359,23 +379,25 @@ pub struct OperationDescriptor {
 
 impl OperationDescriptor {
     pub fn default_ref() -> &'static OperationDescriptor {
-        static D: std::sync::LazyLock<OperationDescriptor> = std::sync::LazyLock::new(OperationDescriptor::default);
+        static D: std::sync::LazyLock<OperationDescriptor> =
+            std::sync::LazyLock::new(OperationDescriptor::default);
         &D
     }
 }
 
 impl OperationDescriptor {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<OperationDescriptor> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<OperationDescriptor>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/expression.skir",
-                    "OperationDescriptor",
-                    "",
-                    |x: &OperationDescriptor| &x._unrecognized,
-                    |x: &mut OperationDescriptor, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<OperationDescriptor>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "OperationDescriptor",
+                "",
+                |x: &OperationDescriptor| &x._unrecognized,
+                |x: &mut OperationDescriptor, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<OperationDescriptor> {
@@ -398,23 +420,25 @@ pub struct EvaluationBudget {
 
 impl EvaluationBudget {
     pub fn default_ref() -> &'static EvaluationBudget {
-        static D: std::sync::LazyLock<EvaluationBudget> = std::sync::LazyLock::new(EvaluationBudget::default);
+        static D: std::sync::LazyLock<EvaluationBudget> =
+            std::sync::LazyLock::new(EvaluationBudget::default);
         &D
     }
 }
 
 impl EvaluationBudget {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<EvaluationBudget> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<EvaluationBudget>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/expression.skir",
-                    "EvaluationBudget",
-                    "",
-                    |x: &EvaluationBudget| &x._unrecognized,
-                    |x: &mut EvaluationBudget, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<EvaluationBudget>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "EvaluationBudget",
+                "",
+                |x: &EvaluationBudget| &x._unrecognized,
+                |x: &mut EvaluationBudget, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<EvaluationBudget> {
@@ -437,23 +461,25 @@ pub struct ExpressionBinding {
 
 impl ExpressionBinding {
     pub fn default_ref() -> &'static ExpressionBinding {
-        static D: std::sync::LazyLock<ExpressionBinding> = std::sync::LazyLock::new(ExpressionBinding::default);
+        static D: std::sync::LazyLock<ExpressionBinding> =
+            std::sync::LazyLock::new(ExpressionBinding::default);
         &D
     }
 }
 
 impl ExpressionBinding {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ExpressionBinding> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ExpressionBinding>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/expression.skir",
-                    "ExpressionBinding",
-                    "",
-                    |x: &ExpressionBinding| &x._unrecognized,
-                    |x: &mut ExpressionBinding, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ExpressionBinding>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "ExpressionBinding",
+                "",
+                |x: &ExpressionBinding| &x._unrecognized,
+                |x: &mut ExpressionBinding, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ExpressionBinding> {
@@ -475,23 +501,25 @@ pub struct ExpressionBindings {
 
 impl ExpressionBindings {
     pub fn default_ref() -> &'static ExpressionBindings {
-        static D: std::sync::LazyLock<ExpressionBindings> = std::sync::LazyLock::new(ExpressionBindings::default);
+        static D: std::sync::LazyLock<ExpressionBindings> =
+            std::sync::LazyLock::new(ExpressionBindings::default);
         &D
     }
 }
 
 impl ExpressionBindings {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ExpressionBindings> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ExpressionBindings>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/expression.skir",
-                    "ExpressionBindings",
-                    "",
-                    |x: &ExpressionBindings| &x._unrecognized,
-                    |x: &mut ExpressionBindings, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ExpressionBindings>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "ExpressionBindings",
+                "",
+                |x: &ExpressionBindings| &x._unrecognized,
+                |x: &mut ExpressionBindings, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ExpressionBindings> {
@@ -515,23 +543,25 @@ pub struct EvaluationDiagnostic {
 
 impl EvaluationDiagnostic {
     pub fn default_ref() -> &'static EvaluationDiagnostic {
-        static D: std::sync::LazyLock<EvaluationDiagnostic> = std::sync::LazyLock::new(EvaluationDiagnostic::default);
+        static D: std::sync::LazyLock<EvaluationDiagnostic> =
+            std::sync::LazyLock::new(EvaluationDiagnostic::default);
         &D
     }
 }
 
 impl EvaluationDiagnostic {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<EvaluationDiagnostic> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<EvaluationDiagnostic>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/expression.skir",
-                    "EvaluationDiagnostic",
-                    "",
-                    |x: &EvaluationDiagnostic| &x._unrecognized,
-                    |x: &mut EvaluationDiagnostic, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<EvaluationDiagnostic>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "EvaluationDiagnostic",
+                "",
+                |x: &EvaluationDiagnostic| &x._unrecognized,
+                |x: &mut EvaluationDiagnostic, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<EvaluationDiagnostic> {
@@ -545,97 +575,457 @@ impl EvaluationDiagnostic {
 // ==============================================================================
 
 fn initialize_module_serializers() {
-    static INIT: std::sync::LazyLock<()> =
-        std::sync::LazyLock::new(|| {
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ExpressionRead> = ExpressionRead::_adapter() as *const _ as *mut _;
-                (*a).add_field("binding", 0, crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(), "", |x: &ExpressionRead| &x.binding, |x: &mut ExpressionRead, v| x.binding = v);
-                (*a).add_field("path", 1, crate::skirout::base::editor::v1::type_catalog::ValuePath::serializer(), "", |x: &ExpressionRead| &x.path, |x: &mut ExpressionRead, v| x.path = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ExpressionCall> = ExpressionCall::_adapter() as *const _ as *mut _;
-                (*a).add_field("operation", 0, crate::skirout::base::editor::v1::type_catalog::OperationId::serializer(), "", |x: &ExpressionCall| &x.operation, |x: &mut ExpressionCall, v| x.operation = v);
-                (*a).add_field("arguments", 1, crate::skir_client::Serializer::array(crate::skir_client::internal::enum_serializer_from_static(ExpressionNode::_adapter())), "", |x: &ExpressionCall| &x.arguments, |x: &mut ExpressionCall, v| x.arguments = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<BinaryExpression> = BinaryExpression::_adapter() as *const _ as *mut _;
-                (*a).add_field("left", 0, crate::skir_client::internal::enum_serializer_from_static(ExpressionNode::_adapter()), "", |x: &BinaryExpression| &x.left, |x: &mut BinaryExpression, v| x.left = v);
-                (*a).add_field("right", 1, crate::skir_client::internal::enum_serializer_from_static(ExpressionNode::_adapter()), "", |x: &BinaryExpression| &x.right, |x: &mut BinaryExpression, v| x.right = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ConditionalExpression> = ConditionalExpression::_adapter() as *const _ as *mut _;
-                (*a).add_field("test", 0, crate::skir_client::internal::enum_serializer_from_static(ExpressionNode::_adapter()), "", |x: &ConditionalExpression| &x.test, |x: &mut ConditionalExpression, v| x.test = v);
-                (*a).add_field("yes", 1, crate::skir_client::internal::enum_serializer_from_static(ExpressionNode::_adapter()), "", |x: &ConditionalExpression| &x.yes, |x: &mut ConditionalExpression, v| x.yes = v);
-                (*a).add_field("no", 2, crate::skir_client::internal::enum_serializer_from_static(ExpressionNode::_adapter()), "", |x: &ConditionalExpression| &x.no, |x: &mut ConditionalExpression, v| x.no = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<OrElseExpression> = OrElseExpression::_adapter() as *const _ as *mut _;
-                (*a).add_field("input", 0, crate::skir_client::internal::enum_serializer_from_static(ExpressionNode::_adapter()), "", |x: &OrElseExpression| &x.input, |x: &mut OrElseExpression, v| x.input = v);
-                (*a).add_field("fallback", 1, crate::skir_client::internal::enum_serializer_from_static(ExpressionNode::_adapter()), "", |x: &OrElseExpression| &x.fallback, |x: &mut OrElseExpression, v| x.fallback = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<CollectionExpression> = CollectionExpression::_adapter() as *const _ as *mut _;
-                (*a).add_field("operation", 0, crate::skirout::base::editor::v1::type_catalog::OperationId::serializer(), "", |x: &CollectionExpression| &x.operation, |x: &mut CollectionExpression, v| x.operation = v);
-                (*a).add_field("input", 1, crate::skir_client::internal::enum_serializer_from_static(ExpressionNode::_adapter()), "", |x: &CollectionExpression| &x.input, |x: &mut CollectionExpression, v| x.input = v);
-                (*a).add_field("bindings", 2, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer()), "", |x: &CollectionExpression| &x.bindings, |x: &mut CollectionExpression, v| x.bindings = v);
-                (*a).add_field("arguments", 3, crate::skir_client::Serializer::array(crate::skir_client::internal::enum_serializer_from_static(ExpressionNode::_adapter())), "", |x: &CollectionExpression| &x.arguments, |x: &mut CollectionExpression, v| x.arguments = v);
-                (*a).add_field("body", 4, crate::skir_client::Serializer::optional(crate::skir_client::internal::enum_serializer_from_static(ExpressionNode::_adapter())), "", |x: &CollectionExpression| &x.body, |x: &mut CollectionExpression, v| x.body = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<ExpressionNode> = ExpressionNode::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("literal", 1, 1, crate::skirout::base::editor::v1::type_catalog::DataValue::serializer(), "", |v| ExpressionNode::Literal(Box::new(v)), |x| match x { ExpressionNode::Literal(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("read", 2, 2, crate::skir_client::internal::struct_serializer_from_static(ExpressionRead::_adapter()), "", |v| ExpressionNode::Read(Box::new(v)), |x| match x { ExpressionNode::Read(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("call", 3, 3, crate::skir_client::internal::struct_serializer_from_static(ExpressionCall::_adapter()), "", |v| ExpressionNode::Call(Box::new(v)), |x| match x { ExpressionNode::Call(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("and", 4, 4, crate::skir_client::internal::struct_serializer_from_static(BinaryExpression::_adapter()), "", |v| ExpressionNode::And(Box::new(v)), |x| match x { ExpressionNode::And(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("or", 5, 5, crate::skir_client::internal::struct_serializer_from_static(BinaryExpression::_adapter()), "", |v| ExpressionNode::Or(Box::new(v)), |x| match x { ExpressionNode::Or(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("conditional", 6, 6, crate::skir_client::internal::struct_serializer_from_static(ConditionalExpression::_adapter()), "", |v| ExpressionNode::Conditional(Box::new(v)), |x| match x { ExpressionNode::Conditional(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("or_else", 7, 7, crate::skir_client::internal::struct_serializer_from_static(OrElseExpression::_adapter()), "", |v| ExpressionNode::OrElse(Box::new(v)), |x| match x { ExpressionNode::OrElse(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("collection", 8, 8, crate::skir_client::internal::struct_serializer_from_static(CollectionExpression::_adapter()), "", |v| ExpressionNode::Collection(Box::new(v)), |x| match x { ExpressionNode::Collection(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ExpressionType> = ExpressionType::_adapter() as *const _ as *mut _;
-                (*a).add_field("value", 0, crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(), "", |x: &ExpressionType| &x.value, |x: &mut ExpressionType, v| x.value = v);
-                (*a).add_field("may_be_missing", 1, crate::skir_client::Serializer::bool(), "", |x: &ExpressionType| &x.may_be_missing, |x: &mut ExpressionType, v| x.may_be_missing = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<OperationDescriptor> = OperationDescriptor::_adapter() as *const _ as *mut _;
-                (*a).add_field("id", 0, crate::skirout::base::editor::v1::type_catalog::OperationId::serializer(), "", |x: &OperationDescriptor| &x.id, |x: &mut OperationDescriptor, v| x.id = v);
-                (*a).add_field("input", 1, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(ExpressionType::_adapter())), "", |x: &OperationDescriptor| &x.input, |x: &mut OperationDescriptor, v| x.input = v);
-                (*a).add_field("result", 2, crate::skir_client::internal::struct_serializer_from_static(ExpressionType::_adapter()), "", |x: &OperationDescriptor| &x.result, |x: &mut OperationDescriptor, v| x.result = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<EvaluationBudget> = EvaluationBudget::_adapter() as *const _ as *mut _;
-                (*a).add_field("max_steps", 0, crate::skir_client::Serializer::int64(), "", |x: &EvaluationBudget| &x.max_steps, |x: &mut EvaluationBudget, v| x.max_steps = v);
-                (*a).add_field("max_collection_items", 1, crate::skir_client::Serializer::int64(), "", |x: &EvaluationBudget| &x.max_collection_items, |x: &mut EvaluationBudget, v| x.max_collection_items = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ExpressionBinding> = ExpressionBinding::_adapter() as *const _ as *mut _;
-                (*a).add_field("id", 0, crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(), "", |x: &ExpressionBinding| &x.id, |x: &mut ExpressionBinding, v| x.id = v);
-                (*a).add_field("location", 1, crate::skirout::base::editor::v1::type_catalog::ValueLocation::serializer(), "", |x: &ExpressionBinding| &x.location, |x: &mut ExpressionBinding, v| x.location = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ExpressionBindings> = ExpressionBindings::_adapter() as *const _ as *mut _;
-                (*a).add_field("values", 0, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(ExpressionBinding::_adapter())), "", |x: &ExpressionBindings| &x.values, |x: &mut ExpressionBindings, v| x.values = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<EvaluationDiagnostic> = EvaluationDiagnostic::_adapter() as *const _ as *mut _;
-                (*a).add_field("code", 0, crate::skir_client::Serializer::string(), "", |x: &EvaluationDiagnostic| &x.code, |x: &mut EvaluationDiagnostic, v| x.code = v);
-                (*a).add_field("message", 1, crate::skir_client::Serializer::string(), "", |x: &EvaluationDiagnostic| &x.message, |x: &mut EvaluationDiagnostic, v| x.message = v);
-                (*a).add_field("locations", 2, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::ValueLocation::serializer()), "", |x: &EvaluationDiagnostic| &x.locations, |x: &mut EvaluationDiagnostic, v| x.locations = v);
-                (*a).finalize();
-            }
-        });
+    static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| {
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ExpressionRead> =
+                ExpressionRead::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "binding",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+                "",
+                |x: &ExpressionRead| &x.binding,
+                |x: &mut ExpressionRead, v| x.binding = v,
+            );
+            (*a).add_field(
+                "path",
+                1,
+                crate::skirout::base::editor::v1::type_catalog::ValuePath::serializer(),
+                "",
+                |x: &ExpressionRead| &x.path,
+                |x: &mut ExpressionRead, v| x.path = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ExpressionCall> =
+                ExpressionCall::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "operation",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::OperationId::serializer(),
+                "",
+                |x: &ExpressionCall| &x.operation,
+                |x: &mut ExpressionCall, v| x.operation = v,
+            );
+            (*a).add_field(
+                "arguments",
+                1,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::enum_serializer_from_static(
+                        ExpressionNode::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &ExpressionCall| &x.arguments,
+                |x: &mut ExpressionCall, v| x.arguments = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<BinaryExpression> =
+                BinaryExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "left",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &BinaryExpression| &x.left,
+                |x: &mut BinaryExpression, v| x.left = v,
+            );
+            (*a).add_field(
+                "right",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &BinaryExpression| &x.right,
+                |x: &mut BinaryExpression, v| x.right = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ConditionalExpression> =
+                ConditionalExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "test",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &ConditionalExpression| &x.test,
+                |x: &mut ConditionalExpression, v| x.test = v,
+            );
+            (*a).add_field(
+                "yes",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &ConditionalExpression| &x.yes,
+                |x: &mut ConditionalExpression, v| x.yes = v,
+            );
+            (*a).add_field(
+                "no",
+                2,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &ConditionalExpression| &x.no,
+                |x: &mut ConditionalExpression, v| x.no = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<OrElseExpression> =
+                OrElseExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "input",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &OrElseExpression| &x.input,
+                |x: &mut OrElseExpression, v| x.input = v,
+            );
+            (*a).add_field(
+                "fallback",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &OrElseExpression| &x.fallback,
+                |x: &mut OrElseExpression, v| x.fallback = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<CollectionExpression> =
+                CollectionExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "operation",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::OperationId::serializer(),
+                "",
+                |x: &CollectionExpression| &x.operation,
+                |x: &mut CollectionExpression, v| x.operation = v,
+            );
+            (*a).add_field(
+                "input",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &CollectionExpression| &x.input,
+                |x: &mut CollectionExpression, v| x.input = v,
+            );
+            (*a).add_field(
+                "bindings",
+                2,
+                crate::skir_client::Serializer::array(
+                    crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(
+                    ),
+                ),
+                "",
+                |x: &CollectionExpression| &x.bindings,
+                |x: &mut CollectionExpression, v| x.bindings = v,
+            );
+            (*a).add_field(
+                "arguments",
+                3,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::enum_serializer_from_static(
+                        ExpressionNode::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &CollectionExpression| &x.arguments,
+                |x: &mut CollectionExpression, v| x.arguments = v,
+            );
+            (*a).add_field(
+                "body",
+                4,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::enum_serializer_from_static(
+                        ExpressionNode::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &CollectionExpression| &x.body,
+                |x: &mut CollectionExpression, v| x.body = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<ExpressionNode> =
+                ExpressionNode::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "literal",
+                1,
+                1,
+                crate::skirout::base::editor::v1::type_catalog::DataValue::serializer(),
+                "",
+                |v| ExpressionNode::Literal(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::Literal(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "read",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ExpressionRead::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::Read(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::Read(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "call",
+                3,
+                3,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ExpressionCall::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::Call(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::Call(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "and",
+                4,
+                4,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    BinaryExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::And(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::And(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "or",
+                5,
+                5,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    BinaryExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::Or(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::Or(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "conditional",
+                6,
+                6,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ConditionalExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::Conditional(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::Conditional(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "or_else",
+                7,
+                7,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    OrElseExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::OrElse(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::OrElse(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "collection",
+                8,
+                8,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    CollectionExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::Collection(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::Collection(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ExpressionType> =
+                ExpressionType::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "value",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(),
+                "",
+                |x: &ExpressionType| &x.value,
+                |x: &mut ExpressionType, v| x.value = v,
+            );
+            (*a).add_field(
+                "may_be_missing",
+                1,
+                crate::skir_client::Serializer::bool(),
+                "",
+                |x: &ExpressionType| &x.may_be_missing,
+                |x: &mut ExpressionType, v| x.may_be_missing = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<OperationDescriptor> =
+                OperationDescriptor::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "id",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::OperationId::serializer(),
+                "",
+                |x: &OperationDescriptor| &x.id,
+                |x: &mut OperationDescriptor, v| x.id = v,
+            );
+            (*a).add_field(
+                "input",
+                1,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        ExpressionType::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &OperationDescriptor| &x.input,
+                |x: &mut OperationDescriptor, v| x.input = v,
+            );
+            (*a).add_field(
+                "result",
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ExpressionType::_adapter(),
+                ),
+                "",
+                |x: &OperationDescriptor| &x.result,
+                |x: &mut OperationDescriptor, v| x.result = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<EvaluationBudget> =
+                EvaluationBudget::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "max_steps",
+                0,
+                crate::skir_client::Serializer::int64(),
+                "",
+                |x: &EvaluationBudget| &x.max_steps,
+                |x: &mut EvaluationBudget, v| x.max_steps = v,
+            );
+            (*a).add_field(
+                "max_collection_items",
+                1,
+                crate::skir_client::Serializer::int64(),
+                "",
+                |x: &EvaluationBudget| &x.max_collection_items,
+                |x: &mut EvaluationBudget, v| x.max_collection_items = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ExpressionBinding> =
+                ExpressionBinding::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "id",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+                "",
+                |x: &ExpressionBinding| &x.id,
+                |x: &mut ExpressionBinding, v| x.id = v,
+            );
+            (*a).add_field(
+                "location",
+                1,
+                crate::skirout::base::editor::v1::type_catalog::ValueLocation::serializer(),
+                "",
+                |x: &ExpressionBinding| &x.location,
+                |x: &mut ExpressionBinding, v| x.location = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ExpressionBindings> =
+                ExpressionBindings::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "values",
+                0,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        ExpressionBinding::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &ExpressionBindings| &x.values,
+                |x: &mut ExpressionBindings, v| x.values = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<EvaluationDiagnostic> =
+                EvaluationDiagnostic::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "code",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &EvaluationDiagnostic| &x.code,
+                |x: &mut EvaluationDiagnostic, v| x.code = v,
+            );
+            (*a).add_field(
+                "message",
+                1,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &EvaluationDiagnostic| &x.message,
+                |x: &mut EvaluationDiagnostic, v| x.message = v,
+            );
+            (*a).add_field(
+                "locations",
+                2,
+                crate::skir_client::Serializer::array(
+                    crate::skirout::base::editor::v1::type_catalog::ValueLocation::serializer(),
+                ),
+                "",
+                |x: &EvaluationDiagnostic| &x.locations,
+                |x: &mut EvaluationDiagnostic, v| x.locations = v,
+            );
+            (*a).finalize();
+        }
+    });
     let _ = *INIT;
 }

@@ -15,9 +15,7 @@ import "dart:core" as _core;
 
 import "package:skir_client/skir_client.dart" as _skir;
 
-// -----------------------------------------------------------------------------
 // struct Duration
-// -----------------------------------------------------------------------------
 
 sealed class Duration_orMutable {
   _core.int get milliseconds;
@@ -43,7 +41,7 @@ final class Duration implements Duration_orMutable {
   /// Fields are initialized to their default values.
   static Duration_mutable mutable() => Duration_mutable._(0);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   Duration toFrozen() => this;

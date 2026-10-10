@@ -255,34 +255,31 @@ enum ServiceStateStatus {
   }
 }
 
-({List<Service> values, Service canonical}) _upsertCanonicalService(
-  List<Service>? values,
-  Service incoming,
-) => reconcileCanonicalRevision(
-  values: values,
-  incoming: incoming,
-  keyOf: (service) => service.serviceId,
-  revisionOf: (service) => service.revision,
-  identityOf: (service) => "Service ${service.serviceId.id}",
-  entityName: "Service",
-);
+extension ServiceCollectionReconciliation on List<Service>? {
+  CanonicalReconciliation<Service> reconcileCanonical(Service incoming) =>
+      reconcileRevision(
+        incoming: incoming,
+        keyOf: (service) => service.serviceId,
+        revisionOf: (service) => service.revision,
+        identityOf: (service) => "Service ${service.serviceId.id}",
+        entityName: "Service",
+      );
 
-({List<Service> values, Service canonical}) _upsertWatchedService(
-  List<Service>? values,
-  Service incoming,
-) {
-  final current = values?.firstWhereOrNull(
-    (service) => service.serviceId == incoming.serviceId,
-  );
-  if (current?.revision == incoming.revision &&
-      current?.copyWith(state: incoming.state) == incoming) {
-    return (
-      values: [
-        for (final service in values!)
-          if (service.serviceId == incoming.serviceId) incoming else service,
-      ],
-      canonical: incoming,
+  CanonicalReconciliation<Service> reconcileWatched(Service incoming) {
+    final values = this;
+    final current = values?.firstWhereOrNull(
+      (service) => service.serviceId == incoming.serviceId,
     );
+    if (current?.revision == incoming.revision &&
+        current?.copyWith(state: incoming.state) == incoming) {
+      return CanonicalReconciliation(
+        values: [
+          for (final service in values!)
+            if (service.serviceId == incoming.serviceId) incoming else service,
+        ],
+        canonical: incoming,
+      );
+    }
+    return reconcileCanonical(incoming);
   }
-  return _upsertCanonicalService(values, incoming);
 }

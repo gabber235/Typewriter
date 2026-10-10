@@ -6,8 +6,8 @@ part "resource_repositories.g.dart";
 
 /// Provides one resource repository owner for the active local work scope.
 ///
-/// Rebuilding the scope creates fresh transport and catalog dependencies; disposal
-/// cascades to all repositories cached by that owner.
+/// The owner retains its repositories across authenticated transport replacement
+/// and rebinds their active watches. Scope disposal cascades to every cached child.
 @Riverpod(keepAlive: true)
 ResourceRepositories resourceRepositories(Ref ref) {
   ref.watch(localWorkScopeProvider);
@@ -16,9 +16,30 @@ ResourceRepositories resourceRepositories(Ref ref) {
       () => ref.read(natsProvider),
       () => ref.read(panelTelemetryProvider.future),
     ),
-    ref.read(userIdProvider.future),
+    ref.watch(userIdProvider).value,
+    admitAuthoringRealms: (realms) =>
+        ref.read(natsProvider.notifier).ensureRealmsAdmitted(realms),
   );
-  ref.onDispose(repositories.dispose);
+  ref
+    ..listen(natsProvider, (previous, next) {
+      if (previous == null || identical(previous, next)) return;
+      unawaited(
+        repositories.rebindTransport(next).catchError((
+          Object error,
+          StackTrace stackTrace,
+        ) {
+          FlutterError.reportError(
+            FlutterErrorDetails(
+              exception: error,
+              stack: stackTrace,
+              library: "authoring transport",
+              context: ErrorDescription("rebinding retained authoring watches"),
+            ),
+          );
+        }),
+      );
+    })
+    ..onDispose(repositories.dispose);
   return repositories;
 }
 
@@ -29,17 +50,50 @@ ResourceRepositories resourceRepositories(Ref ref) {
 /// watches while their route session is active, so that session must release its
 /// child when it ends.
 final class ResourceRepositories {
-  ResourceRepositories(this.transport, this.userId);
+  ResourceRepositories(
+    this.transport,
+    this.userId, {
+    Future<void> Function(Set<skir.RecordId>)? admitAuthoringRealms,
+  }) : _admitAuthoringRealms = admitAuthoringRealms ?? ((_) async {});
   final SkirMutationClient transport;
-  final Future<String?> userId;
+  final String? userId;
+  final Future<void> Function(Set<skir.RecordId>) _admitAuthoringRealms;
   final _services = <skir.RecordId, ServiceResourceRepository>{};
   final _authoring =
       <(skir.RecordId, skir.RecordId), AuthoringResourceRepository>{};
+  final _memberships = <skir.RecordId, MembershipResourceRepository>{};
   bool _disposed = false;
 
   /// Fails fast when a child repository is requested after scope disposal.
   void checkActive() {
     if (_disposed) throw StateError("The resource session ended");
+  }
+
+  String requireUserId() {
+    checkActive();
+    return userId ?? (throw ApiException.notAuthenticated());
+  }
+
+  Future<void> ensureAuthoringRealmsAdmitted(Set<skir.RecordId> realms) {
+    checkActive();
+    return _admitAuthoringRealms(realms);
+  }
+
+  /// Returns the shared membership command owner for one organization.
+  MembershipResourceRepository membership(skir.RecordId organization) {
+    checkActive();
+    return _memberships.putIfAbsent(
+      organization,
+      () => MembershipResourceRepository(this, organization),
+    );
+  }
+
+  Future<void> rebindTransport(NatsClient client) async {
+    if (_disposed) return;
+    final retained = _authoring.values.toList(growable: false);
+    await Future.wait(
+      retained.map((repository) => repository.rebindTransport(client)),
+    );
   }
 
   /// Returns the cached services repository for one organization.
@@ -68,6 +122,14 @@ final class ResourceRepositories {
     ), () => AuthoringResourceRepository(this, organization, realm));
   }
 
+  /// Returns every Realm whose retained authoring repository needs transport.
+  Set<skir.RecordId> authoringRealms(skir.RecordId organization) =>
+      Set<skir.RecordId>.unmodifiable(
+        _authoring.keys
+            .where((scope) => scope.$1 == organization)
+            .map((scope) => scope.$2),
+      );
+
   /// Releases the exact authoring repository owned by a route session.
   ///
   /// Removing it from the cache before disposal ensures a later session receives
@@ -90,6 +152,10 @@ final class ResourceRepositories {
     for (final repository in _authoring.values) {
       repository.dispose();
     }
+    for (final repository in _memberships.values) {
+      repository.dispose();
+    }
+    _memberships.clear();
     _services.clear();
     _authoring.clear();
   }

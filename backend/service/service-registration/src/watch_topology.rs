@@ -5,8 +5,6 @@
 //! and runtime update events. Each collection is ordered by record identifier for deterministic
 //! initialization; subsequent changes arrive on the typed topology subject.
 
-use std::collections::HashMap;
-
 use otel_wasi::ResultWithSlug;
 use serde::Deserialize;
 use wasmcloud_utils::{
@@ -14,7 +12,6 @@ use wasmcloud_utils::{
         RecordId, read_query,
         topology::{EngineInstanceViewRecord, RealmInstanceViewRecord, ServiceHostRecord},
     },
-    decode_skir, extract_params,
     skir::base::service::v1::topology::{
         OrganizationTopologySnapshot, WatchOrganizationTopologyRequest,
         WatchOrganizationTopologyResponse,
@@ -29,18 +26,19 @@ struct TopologyListRecord {
     engines: Vec<EngineInstanceViewRecord>,
 }
 
-#[tracing::instrument(skip(msg, params))]
+#[tracing::instrument(skip_all)]
 /// Decodes the topology watch request and returns the caller's organization snapshot.
 ///
 /// The organization path parameter defines the query scope. The actor parameter is retained for
 /// tracing context supplied by the subject, while the request body currently carries no fields
 /// beyond the Skir boundary.
 pub async fn handle_watch(
-    msg: NatsMessage,
-    params: HashMap<String, String>,
+    _msg: NatsMessage,
+    scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
+    _request: WatchOrganizationTopologyRequest,
 ) -> Result<WatchOrganizationTopologyResponse, otel_wasi::Error> {
-    let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
-    let _ = decode_skir!(WatchOrganizationTopologyRequest, &msg.body)?;
+    let actor_id = scope.user.as_str();
+    let org_id = scope.organization.as_str();
     otel_wasi::main_attribute!(
         "actor.id" = actor_id.to_string(),
         "organization.id" = org_id.to_string(),

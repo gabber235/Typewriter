@@ -39,16 +39,20 @@ DEFINE FUNCTION OVERWRITE fn::service::valid_state($service: object) -> bool {
     RETURN true;
 };
 
-DEFINE FUNCTION OVERWRITE fn::service::valid_engine_target($target: object) -> bool {
+DEFINE FUNCTION OVERWRITE fn::service::engine_target_error($target: object) -> option<string> {
     IF !array::all(object::keys($target), |$key| $key IN ["engine_id", "version_constraint"]) {
-        THROW "engine-target-unknown-property-error"
+        RETURN "engine-target-unknown-property-error"
     };
-    IF !fn::is_artifact_id($target.engine_id) {
-        THROW "engine-target-id-invalid-error"
+    IF !fn::is_artifact_id($target.engine_id) { RETURN "engine-target-id-invalid-error" };
+    IF string::len(string::trim($target.version_constraint)) = 0 {
+        RETURN "engine-target-version-constraint-invalid-error"
     };
-    IF string::len(string::trim($target.version_constraint)) == 0 {
-        THROW "engine-target-version-constraint-invalid-error"
-    };
+    RETURN NONE;
+};
+
+DEFINE FUNCTION OVERWRITE fn::service::valid_engine_target($target: object) -> bool {
+    LET $error = fn::service::engine_target_error($target);
+    IF $error != NONE { THROW $error };
     RETURN true;
 };
 
@@ -105,3 +109,189 @@ DEFINE FUNCTION OVERWRITE fn::service::engine_view($engine: object) -> object {
         },
     };
 };
+
+DEFINE FUNCTION OVERWRITE fn::service::configure_host(
+    $host_id: record<service_host>,
+    $organization_id: record<organization>,
+    $expected_revision: int,
+    $desired: object,
+    $operation_id: string,
+    $receipt: record<mutation_receipt>,
+    $request_bytes: array<int>
+) -> object {
+    LET $has_realm = $desired.realm != NONE AND $desired.realm != NULL;
+    LET $has_engine = $desired.primary_engine != NONE AND $desired.primary_engine != NULL;
+    LET $realm_target = $desired.realm.primary_engine;
+    LET $engine_target = $desired.primary_engine.target;
+    LET $uses_hosted_realm = $has_engine AND $desired.primary_engine.realm.kind = 'hosted_realm';
+    LET $existing_realm_id = IF $has_engine AND !$uses_hosted_realm {
+        $desired.primary_engine.realm.realm_id
+    } ELSE { NONE };
+    IF $has_realm AND fn::service::engine_target_error($realm_target) != NONE {
+        RETURN { outcome: 'invalid-configuration-error', message: 'Realm target is invalid' }
+    };
+    IF $has_engine AND fn::service::engine_target_error($engine_target) != NONE {
+        RETURN { outcome: 'invalid-configuration-error', message: 'Engine target is invalid' }
+    };
+    IF $uses_hosted_realm AND !$has_realm {
+        RETURN {
+            outcome: 'invalid-configuration-error',
+            message: 'A hosted engine requires a hosted Realm configuration',
+        }
+    };
+    IF string::len($operation_id) = 0 { THROW 'invalid-operation-id-error' };
+    LET $previous = fn::mutation::recall($receipt, $request_bytes);
+    IF $previous != NONE { RETURN $previous };
+    LET $hosts = SELECT * FROM $host_id
+        WHERE service_id.organization = $organization_id;
+    IF array::is_empty($hosts) {
+        RETURN {
+            outcome: 'invalid-configuration-error',
+            message: 'Host was not found in this organization',
+        }
+    };
+    LET $host = array::first($hosts);
+    IF $host.revision != $expected_revision {
+        RETURN {
+            outcome: 'conflict-error',
+            host: $host,
+            realm: array::first(
+                (SELECT * FROM realm_instance
+                    WHERE owner_host_id = $host_id)
+                    .map(|$row| fn::service::realm_view($row))
+            ),
+            engine: array::first(
+                (SELECT * FROM engine_instance
+                    WHERE owner_host_id = $host_id)
+                    .map(|$row| fn::service::engine_view($row))
+            ),
+        }
+    };
+    IF $has_realm AND !$host.can_host_realm {
+        RETURN {
+            outcome: 'invalid-configuration-error',
+            message: 'Host cannot run a Realm',
+        }
+    };
+    IF $has_engine AND !array::any(
+        $host.supported_engines,
+        |$supported| $supported.engine_id = $engine_target.engine_id,
+    ) {
+        RETURN { outcome: 'incompatible-engine-error', target: $engine_target }
+    };
+
+    LET $current_realm = array::first(SELECT * FROM realm_instance WHERE owner_host_id = $host_id);
+    LET $current_engine = array::first(SELECT * FROM engine_instance WHERE owner_host_id = $host_id);
+
+    LET $external_realm = IF $has_engine AND !$uses_hosted_realm {
+        array::first(
+            SELECT * FROM $existing_realm_id
+            WHERE owner_host_id.service_id.organization = $organization_id
+        )
+    } ELSE {
+        NONE
+    };
+    IF $has_engine AND !$uses_hosted_realm AND $external_realm = NONE {
+        RETURN { outcome: 'realm-not-found-error', realm_id: $existing_realm_id }
+    };
+    LET $assigned_target = IF $uses_hosted_realm {
+        $realm_target
+    } ELSE {
+        $external_realm.target_engine
+    };
+    IF $has_engine AND $assigned_target != $engine_target {
+        RETURN { outcome: 'incompatible-engine-error', target: $engine_target }
+    };
+    IF !$has_realm AND $current_realm != NONE {
+        LET $dependents = SELECT id FROM engine_instance
+            WHERE realm_id = $current_realm.id
+            AND (id != $current_engine.id OR ($has_engine AND $existing_realm_id = $current_realm.id));
+        IF !array::is_empty($dependents) {
+            RETURN {
+                outcome: 'invalid-configuration-error',
+                message: 'Realm is still assigned to an execution engine',
+            }
+        };
+    };
+
+    LET $realm = IF $has_realm {
+        IF $current_realm = NONE {
+            CREATE ONLY realm_instance SET
+                owner_host_id = $host_id,
+                target_engine = $realm_target
+        } ELSE IF $current_realm.target_engine != $realm_target {
+            UPDATE ONLY $current_realm.id SET
+                target_engine = $realm_target,
+                revision += 1,
+                state = { status: 'STAGING', updated_at: time::now() }
+        } ELSE {
+            $current_realm
+        }
+    } ELSE {
+        NONE
+    };
+
+    LET $assigned_realm = IF $uses_hosted_realm { $realm } ELSE { $external_realm };
+
+    LET $engine = IF $has_engine {
+        IF $current_engine = NONE {
+            CREATE ONLY engine_instance SET
+                owner_host_id = $host_id,
+                realm_id = $assigned_realm.id,
+                target = $engine_target
+        } ELSE IF $current_engine.target != $engine_target
+            OR $current_engine.realm_id != $assigned_realm.id {
+            UPDATE ONLY $current_engine.id SET
+                realm_id = $assigned_realm.id,
+                target = $engine_target,
+                revision += 1,
+                state = { status: 'STAGING', updated_at: time::now() }
+        } ELSE {
+            $current_engine
+        }
+    } ELSE {
+        NONE
+    };
+
+    LET $removed_engine = IF !$has_engine AND $current_engine != NONE {
+        $current_engine.id
+    } ELSE {
+        NONE
+    };
+    IF $removed_engine != NONE {
+        DELETE $removed_engine
+    };
+
+    LET $removed_realm = IF !$has_realm AND $current_realm != NONE {
+        $current_realm.id
+    } ELSE {
+        NONE
+    };
+    IF $removed_realm != NONE {
+        DELETE $removed_realm
+    };
+
+    LET $updated_host = UPDATE ONLY $host_id SET
+        revision += 1,
+        topology_revision.desired += 1,
+        state = { status: 'RECONCILING', updated_at: time::now() }
+    RETURN AFTER;
+
+    LET $result = {
+        outcome: 'configured',
+        host: $updated_host,
+        realm: array::first(
+            (SELECT * FROM realm_instance
+                WHERE owner_host_id = $host_id)
+                .map(|$row| fn::service::realm_view($row))
+        ),
+        engine: array::first(
+            (SELECT * FROM engine_instance
+                WHERE owner_host_id = $host_id)
+                .map(|$row| fn::service::engine_view($row))
+        ),
+        removed_realm: $removed_realm,
+        removed_engine: $removed_engine,
+    };
+    RETURN fn::mutation::commit($receipt, $request_bytes, $result);
+} PERMISSIONS NONE;

@@ -188,7 +188,7 @@ class InvalidRecordIdError private constructor(
         );
 
         /**
-         * If the value of [givenTables] is already mutable, returns it as-is.
+         * If the value of [givenTables] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [givenTables] and returns it.
          */
         val mutableGivenTables: kotlin.collections.MutableList<kotlin.String> get() {

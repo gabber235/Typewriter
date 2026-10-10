@@ -81,6 +81,9 @@ final class NatsClientConfiguration {
     required this.url,
     required this.seed,
     required this.requestInboxPrefix,
+    required this.actorId,
+    required this.organizationId,
+    required this.connectionSession,
     this.jwt,
     this.username,
     this.password,
@@ -107,6 +110,15 @@ final class NatsClientConfiguration {
 
   /// Prefix used to isolate request replies for this authenticated session.
   final String requestInboxPrefix;
+
+  /// Verified actor identity retained by this connection owner.
+  final String actorId;
+
+  /// Selected organization identity retained by this connection owner.
+  final String? organizationId;
+
+  /// Exact session identity used for reply and projection ownership.
+  final String connectionSession;
 }
 
 /// Immutable transport data crossing the NATS boundary.
@@ -175,10 +187,19 @@ abstract interface class NatsClient {
   /// [NatsSubscription.unsubscribe] or connection shutdown.
   Future<NatsSubscription> subscribe(String subject);
 
-  /// Creates an ordered JetStream subscription for one stream filter.
-  /// Sequence recovery remains the responsibility of the protocol adapter.
-  Future<NatsSubscription> subscribeOrdered(
+  /// Verified actor identity retained by this connection owner.
+  String get actorId;
+
+  /// Selected organization identity retained by this connection owner.
+  String? get organizationId;
+
+  /// Exact session identity retained by this connection owner.
+  String get connectionSession;
+
+  /// Creates and owns one exact named persistent projection consumer.
+  Future<NatsSubscription> subscribePersistent(
     String stream,
+    String consumer,
     String filterSubject,
   );
 

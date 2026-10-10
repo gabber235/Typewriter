@@ -20,9 +20,7 @@ import "./diagnostic.dart" as _lib_editor_v1_diagnostic;
 import "./expression.dart" as _lib_editor_v1_expression;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 
-// -----------------------------------------------------------------------------
 // enum InspectionCompletion
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -157,9 +155,7 @@ final class InspectionCompletion_interruptedWrapper
       InspectionCompletion_kind.interruptedWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct UndecidedCandidate
-// -----------------------------------------------------------------------------
 
 sealed class UndecidedCandidate_orMutable {
   _lib_editor_v1_type_catalog.ResourceId_orMutable get resource;
@@ -201,7 +197,7 @@ final class UndecidedCandidate implements UndecidedCandidate_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   UndecidedCandidate toFrozen() => this;
@@ -276,7 +272,7 @@ final class UndecidedCandidate_mutable implements UndecidedCandidate_orMutable {
 
   UndecidedCandidate_mutable._(this.resource, this.inputs);
 
-  /// If the value of [resource] is already mutable, returns it as-is.
+  /// If the value of [resource] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
   _lib_editor_v1_type_catalog.ResourceId_mutable get mutableResource {
     final value = this.resource;
@@ -288,7 +284,7 @@ final class UndecidedCandidate_mutable implements UndecidedCandidate_orMutable {
     }
   }
 
-  /// If the value of [inputs] is already mutable, returns it as-is.
+  /// If the value of [inputs] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [inputs] and returns it.
   _core.List<_lib_editor_v1_type_catalog.ValueLocation_orMutable>
   get mutableInputs {
@@ -310,9 +306,7 @@ final class UndecidedCandidate_mutable implements UndecidedCandidate_orMutable {
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum CheckOutcome
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -500,9 +494,7 @@ final class CheckOutcome_incompleteWrapper extends _CheckOutcome_wrapper {
   CheckOutcome_kind get kind => CheckOutcome_kind.incompleteWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // enum FindingStatus
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -603,9 +595,7 @@ enum _FindingStatus_consts implements FindingStatus {
       _skir.internal__stringify(this, FindingStatus.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // struct CheckInstanceId
-// -----------------------------------------------------------------------------
 
 sealed class CheckInstanceId_orMutable {
   _lib_editor_v1_type_catalog.RuleId_orMutable get rule;
@@ -642,7 +632,7 @@ final class CheckInstanceId implements CheckInstanceId_orMutable {
     _lib_editor_v1_type_catalog.ValueLocation.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CheckInstanceId toFrozen() => this;
@@ -715,7 +705,7 @@ final class CheckInstanceId_mutable implements CheckInstanceId_orMutable {
 
   CheckInstanceId_mutable._(this.rule, this.location);
 
-  /// If the value of [rule] is already mutable, returns it as-is.
+  /// If the value of [rule] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [rule] and returns it.
   _lib_editor_v1_type_catalog.RuleId_mutable get mutableRule {
     final value = this.rule;
@@ -727,7 +717,7 @@ final class CheckInstanceId_mutable implements CheckInstanceId_orMutable {
     }
   }
 
-  /// If the value of [location] is already mutable, returns it as-is.
+  /// If the value of [location] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [location] and returns it.
   _lib_editor_v1_type_catalog.ValueLocation_mutable get mutableLocation {
     final value = this.location;
@@ -745,9 +735,7 @@ final class CheckInstanceId_mutable implements CheckInstanceId_orMutable {
       CheckInstanceId(rule: this.rule, location: this.location).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CheckTicket
-// -----------------------------------------------------------------------------
 
 sealed class CheckTicket_orMutable {
   CheckInstanceId_orMutable get instance;
@@ -801,7 +789,7 @@ final class CheckTicket implements CheckTicket_orMutable {
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CheckTicket toFrozen() => this;
@@ -908,7 +896,7 @@ final class CheckTicket_mutable implements CheckTicket_orMutable {
     this.catalog,
   );
 
-  /// If the value of [instance] is already mutable, returns it as-is.
+  /// If the value of [instance] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [instance] and returns it.
   CheckInstanceId_mutable get mutableInstance {
     final value = this.instance;
@@ -919,7 +907,7 @@ final class CheckTicket_mutable implements CheckTicket_orMutable {
     }
   }
 
-  /// If the value of [execution] is already mutable, returns it as-is.
+  /// If the value of [execution] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [execution] and returns it.
   _lib_editor_v1_type_catalog.CheckExecutionId_mutable get mutableExecution {
     final value = this.execution;
@@ -931,7 +919,7 @@ final class CheckTicket_mutable implements CheckTicket_orMutable {
     }
   }
 
-  /// If the value of [catalog] is already mutable, returns it as-is.
+  /// If the value of [catalog] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [catalog] and returns it.
   _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableCatalog {
     final value = this.catalog;
@@ -953,9 +941,7 @@ final class CheckTicket_mutable implements CheckTicket_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct FindingSet
-// -----------------------------------------------------------------------------
 
 sealed class FindingSet_orMutable {
   CheckTicket_orMutable get ticket;
@@ -1026,7 +1012,7 @@ final class FindingSet implements FindingSet_orMutable {
     FindingStatus.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   FindingSet toFrozen() => this;
@@ -1149,7 +1135,7 @@ final class FindingSet_mutable implements FindingSet_orMutable {
     this.status,
   );
 
-  /// If the value of [ticket] is already mutable, returns it as-is.
+  /// If the value of [ticket] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [ticket] and returns it.
   CheckTicket_mutable get mutableTicket {
     final value = this.ticket;
@@ -1160,7 +1146,7 @@ final class FindingSet_mutable implements FindingSet_orMutable {
     }
   }
 
-  /// If the value of [expectations] is already mutable, returns it as-is.
+  /// If the value of [expectations] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [expectations] and returns it.
   _core.List<_lib_editor_v1_authoring_facts.EditExpectation>
   get mutableExpectations {
@@ -1175,7 +1161,7 @@ final class FindingSet_mutable implements FindingSet_orMutable {
     }
   }
 
-  /// If the value of [findings] is already mutable, returns it as-is.
+  /// If the value of [findings] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [findings] and returns it.
   _core.List<_lib_editor_v1_diagnostic.Diagnostic_orMutable>
   get mutableFindings {
@@ -1201,9 +1187,7 @@ final class FindingSet_mutable implements FindingSet_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CheckResult
-// -----------------------------------------------------------------------------
 
 sealed class CheckResult_orMutable {
   CheckTicket_orMutable get ticket;
@@ -1261,7 +1245,7 @@ final class CheckResult implements CheckResult_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CheckResult toFrozen() => this;
@@ -1372,7 +1356,7 @@ final class CheckResult_mutable implements CheckResult_orMutable {
     this.findings,
   );
 
-  /// If the value of [ticket] is already mutable, returns it as-is.
+  /// If the value of [ticket] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [ticket] and returns it.
   CheckTicket_mutable get mutableTicket {
     final value = this.ticket;
@@ -1383,7 +1367,7 @@ final class CheckResult_mutable implements CheckResult_orMutable {
     }
   }
 
-  /// If the value of [expectations] is already mutable, returns it as-is.
+  /// If the value of [expectations] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [expectations] and returns it.
   _core.List<_lib_editor_v1_authoring_facts.EditExpectation>
   get mutableExpectations {
@@ -1398,7 +1382,7 @@ final class CheckResult_mutable implements CheckResult_orMutable {
     }
   }
 
-  /// If the value of [findings] is already mutable, returns it as-is.
+  /// If the value of [findings] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [findings] and returns it.
   _core.List<_lib_editor_v1_diagnostic.Diagnostic_orMutable>
   get mutableFindings {
@@ -1423,9 +1407,7 @@ final class CheckResult_mutable implements CheckResult_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct SelectionInspection
-// -----------------------------------------------------------------------------
 
 sealed class SelectionInspection_orMutable {
   _core.Iterable<_lib_editor_v1_type_catalog.ResourceId_orMutable>
@@ -1490,7 +1472,7 @@ final class SelectionInspection implements SelectionInspection_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SelectionInspection toFrozen() => this;
@@ -1606,7 +1588,7 @@ final class SelectionInspection_mutable
     this.failures,
   );
 
-  /// If the value of [knownMatches] is already mutable, returns it as-is.
+  /// If the value of [knownMatches] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [knownMatches] and returns it.
   _core.List<_lib_editor_v1_type_catalog.ResourceId_orMutable>
   get mutableKnownMatches {
@@ -1621,7 +1603,7 @@ final class SelectionInspection_mutable
     }
   }
 
-  /// If the value of [undecided] is already mutable, returns it as-is.
+  /// If the value of [undecided] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [undecided] and returns it.
   _core.List<UndecidedCandidate_orMutable> get mutableUndecided {
     final value = this.undecided;
@@ -1632,7 +1614,7 @@ final class SelectionInspection_mutable
     }
   }
 
-  /// If the value of [failures] is already mutable, returns it as-is.
+  /// If the value of [failures] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [failures] and returns it.
   _core.List<_lib_editor_v1_expression.EvaluationDiagnostic_orMutable>
   get mutableFailures {

@@ -5,8 +5,6 @@
 //! only that current revision, updates submitted child states, advances the applied revision only
 //! when every assigned child is active, and publishes the resulting topology views.
 
-use std::collections::HashMap;
-
 use otel_wasi::{ResultWithSlug, wasi_error};
 use serde::Deserialize;
 use wasmcloud_utils::{
@@ -18,13 +16,15 @@ use wasmcloud_utils::{
         },
         transaction_query,
     },
-    decode_skir, extract_params,
     skir::base::service::v1::topology::{
-        ReportHostExecutionRequest, ReportHostExecutionResponse,
+        EngineRuntimeObservation, HostExecutionObservation, OrganizationTopologyChanged,
+        RealmRuntimeObservation, ReportHostExecutionRequest, ReportHostExecutionResponse,
         ReportHostExecutionResponse_StaleRevisionError, ReportHostExecutionResponse_Success,
         WatchHostExecutionRequest, WatchHostExecutionResponse, WatchHostExecutionResponse_Desired,
     },
+    skir_utils::RecordIdKeyIdentity,
     skir_variant,
+    transport_routes::ServiceScope,
     wasmcloud::messaging::types::NatsMessage,
 };
 
@@ -48,19 +48,18 @@ enum ReportExecutionOutcome {
     HostNotFound,
 }
 
-#[tracing::instrument(skip(msg, params))]
+#[tracing::instrument(skip_all)]
 /// Returns the current desired Realm and engine assignment for one host service.
 ///
 /// The revision travels with the assignment so the runtime can report observations against the
 /// same desired state. The query returns joined resource views, which preserves owner and Realm
 /// context for the runtime without exposing database records directly.
 pub async fn handle_watch(
-    msg: NatsMessage,
-    params: HashMap<String, String>,
+    _msg: NatsMessage,
+    scope: ServiceScope,
+    _request: WatchHostExecutionRequest,
 ) -> Result<WatchHostExecutionResponse, otel_wasi::Error> {
-    let service_id = extract_params!(params, service_id)?;
-    let _ = decode_skir!(WatchHostExecutionRequest, &msg.body)?;
-    let service_id = RecordId::new("service", service_id);
+    let service_id = RecordId::new("service", scope.service.as_str());
     let desired = read_query!(
         r#"
         LET $host = array::first(SELECT * FROM service_host WHERE service_id = $service_id);
@@ -98,7 +97,7 @@ pub async fn handle_watch(
     }))
 }
 
-#[tracing::instrument(skip(msg, params))]
+#[tracing::instrument(skip_all)]
 /// Applies runtime observations for the requested topology revision.
 ///
 /// Reports for an older revision are rejected without changing child or host state. For the
@@ -106,11 +105,11 @@ pub async fn handle_watch(
 /// only when every currently assigned child is active. Failed, rolled back, or drifted child
 /// states determine the corresponding host status; otherwise it remains reconciling.
 pub async fn handle_report(
-    msg: NatsMessage,
-    params: HashMap<String, String>,
+    _msg: NatsMessage,
+    scope: ServiceScope,
+    request: ReportHostExecutionRequest,
 ) -> Result<ReportHostExecutionResponse, otel_wasi::Error> {
-    let service_id = extract_params!(params, service_id)?;
-    let request = decode_skir!(ReportHostExecutionRequest, &msg.body)?;
+    let service_id = scope.service;
     let realm_state = request
         .realm_state
         .as_ref()
@@ -234,7 +233,7 @@ pub async fn handle_report(
         COMMIT TRANSACTION;
         "#,
     )
-    .bind("service_id", RecordId::new("service", service_id))
+    .bind("service_id", RecordId::new("service", service_id.as_str()))
     .bind("topology_revision", request.topology_revision)
     .bind("realm_state", realm_state)
     .bind("engine_state", engine_state)
@@ -277,43 +276,36 @@ pub async fn handle_report(
     })
 }
 
-/// Publishes host and existing child views after a committed runtime observation.
+/// Publishes one compound event after a committed runtime observation.
 ///
-/// The organization topology stream receives one host update and one update for each returned
-/// child. Removed or absent children are not published here because configuration owns removals.
+/// Configuration remains the owner of child membership. The report carries only the host read
+/// model and the runtime state of children observed by this report.
 async fn publish_report(
     organization_id: &RecordId,
     host: &ServiceHostRecord,
     realm: Option<&RealmInstanceViewRecord>,
     engine: Option<&EngineInstanceViewRecord>,
 ) -> Result<(), otel_wasi::Error> {
-    let topology = wasmcloud_utils::skir_subjects::organization_topology_changed(
-        &organization_id.key.to_string(),
-    );
-    topology
-        .publish(
-            wasmcloud_utils::skir::base::service::v1::topology::OrganizationTopologyChanged::HostUpdated(
-                Box::new(host.clone().into()),
-            ),
-        )
-        .await?;
-    if let Some(realm) = realm {
-        topology
-            .publish(
-                wasmcloud_utils::skir::base::service::v1::topology::OrganizationTopologyChanged::RealmUpdated(
-                    Box::new(realm.clone().into()),
-                ),
-            )
-            .await?;
-    }
-    if let Some(engine) = engine {
-        topology
-            .publish(
-                wasmcloud_utils::skir::base::service::v1::topology::OrganizationTopologyChanged::EngineUpdated(
-                    Box::new(engine.clone().into()),
-                ),
-            )
-            .await?;
-    }
-    Ok(())
+    let observation = HostExecutionObservation {
+        host: host.clone().into(),
+        realm: realm.map(|realm| RealmRuntimeObservation {
+            realm_id: realm.id.clone().into(),
+            state: realm.state.clone().into(),
+            _unrecognized: None,
+        }),
+        engine: engine.map(|engine| EngineRuntimeObservation {
+            engine_id: engine.id.clone().into(),
+            state: engine.state.clone().into(),
+            _unrecognized: None,
+        }),
+        _unrecognized: None,
+    };
+    let organization_id = organization_id.key.raw_identity()?;
+    wasmcloud_utils::transport_routes::OrganizationTopologyWatchRoute::delivery(
+        &wasmcloud_utils::transport_routes::OrganizationScope::try_from(organization_id)?,
+    )
+    .publish(OrganizationTopologyChanged::ObservationsReported(Box::new(
+        observation,
+    )))
+    .await
 }

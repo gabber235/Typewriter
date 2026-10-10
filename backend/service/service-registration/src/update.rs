@@ -12,13 +12,11 @@
 //! nothing. The watch update is published only after commit, because a message cannot participate
 //! in the database rollback boundary.
 
-use std::collections::HashMap;
-
 use otel_wasi::ResultWithSlug;
 use serde::Deserialize;
 use wasmcloud_utils::{
     database::{RecordId, TransactionOutcome, service::ServiceRecord, transaction_query},
-    decode_skir, extract_params,
+    publication::{CommittedChange, PublicationEffect, PublicationExecutor, TransientFact},
     skir::base::service::v1::{
         organization::{
             OrganizationServicesChanged, ServiceUpdateValidationError,
@@ -62,13 +60,14 @@ impl ServiceUpdateOutcome {
 /// reused operation identities map to their contract responses without a metadata publication.
 /// After a successful commit, the organization service watch receives the updated projection. A
 /// publication failure occurs after durable mutation and is therefore not rolled back.
-#[tracing::instrument(skip(msg, params))]
+#[tracing::instrument(skip(msg, request))]
 pub async fn handle_update(
     msg: NatsMessage,
-    params: HashMap<String, String>,
+    scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
+    request: UpdateOrganizationServiceRequest,
 ) -> Result<UpdateOrganizationServiceResponse, otel_wasi::Error> {
-    let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
-    let request = decode_skir!(UpdateOrganizationServiceRequest, &msg.body)?;
+    let actor_id = scope.user.as_str();
+    let org_id = scope.organization.as_str();
     wasmcloud_utils::validate_record_ids!(
         UpdateOrganizationServiceResponse,
         request.service_id,
@@ -88,15 +87,18 @@ pub async fn handle_update(
             UpdateOrganizationServiceResponse::InvalidOperationIdError
         ));
     }
-    let receipt = wasmcloud_utils::database::mutation::receipt_id(
+    let receipt = wasmcloud_utils::database::mutation::MutationReceipt::new(
         actor_id,
         org_id,
         "service.update",
         &request.operation_id,
+        msg.body,
     );
-    let result = transaction_query!(
-        ServiceUpdateOutcome,
-        r#"
+    let result = receipt
+        .bind(
+            transaction_query!(
+                ServiceUpdateOutcome,
+                r#"
         BEGIN TRANSACTION;
 
         RETURN {
@@ -128,18 +130,17 @@ pub async fn handle_update(
 
         COMMIT TRANSACTION;
         "#,
-    )
-    .bind("service_id", service_id)
-    .bind("organization_id", organization_id)
-    .bind("expected_revision", request.expected_revision)
-    .bind("name", request.name)
-    .bind("receipt", receipt)
-    .bind("request_bytes", msg.body.clone())
-    .execute()
-    .await
-    .error_with_slug("service-update-query-failed")?
-    .decode()
-    .error_with_slug("service-update-result-parse-failed")?;
+            )
+            .bind("service_id", service_id)
+            .bind("organization_id", organization_id)
+            .bind("expected_revision", request.expected_revision)
+            .bind("name", request.name),
+        )
+        .execute()
+        .await
+        .error_with_slug("service-update-query-failed")?
+        .decode()
+        .error_with_slug("service-update-result-parse-failed")?;
 
     let result = match result {
         TransactionOutcome::Committed(result) => result,
@@ -170,17 +171,19 @@ pub async fn handle_update(
         }
     };
 
-    // The update is durable before this projection is published. The watch is a convergence
-    // mechanism, not part of the transaction's mutation receipt.
-    wasmcloud_utils::skir_subjects::organization_services_changed(org_id)
-        .publish(OrganizationServicesChanged::Update(Box::new(
-            service.clone(),
-        )))
-        .await?;
-
-    Ok(UpdateOrganizationServiceResponse::Success(Box::new(
-        service,
-    )))
+    CommittedChange::new(
+        UpdateOrganizationServiceResponse::Success(Box::new(service.clone())),
+        [PublicationEffect::CapturedTransient(
+            TransientFact::Services {
+                organization: org_id.to_owned(),
+                event: OrganizationServicesChanged::Update(Box::new(service)),
+            },
+        )],
+    )
+    .publish_with(&PublicationExecutor {
+        refresher: wasmcloud_utils::publication::CapturedOnly,
+    })
+    .await
 }
 
 fn validation_error(error: ServiceUpdateValidationError) -> UpdateOrganizationServiceResponse {

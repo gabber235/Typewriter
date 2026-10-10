@@ -44,11 +44,11 @@ abstract class OrganizationRole with _$OrganizationRole {
   );
 }
 
-/// Streams the role catalog for the selected organization.
+/// Loads the role catalog for the selected organization.
 ///
-/// The initial list and later add, update, and remove messages are folded into
-/// one provider value. Membership editors consume this catalog to render both
-/// available choices and the protected roles that must remain visible.
+/// Membership editors consume this catalog to render available choices and
+/// the protected roles that must remain visible. Invalidating this provider
+/// reloads the authoritative snapshot.
 @riverpod
 class OrganizationRoles extends _$OrganizationRoles {
   @override
@@ -66,60 +66,31 @@ class OrganizationRoles extends _$OrganizationRoles {
       return;
     }
 
-    final request = skir.WatchOrganizationRolesRequest();
-
-    yield* ref.watchProjection<
-      List<OrganizationRole>,
-      skir.WatchOrganizationRolesResponse,
-      skir.WatchOrganizationRolesResponse
-    >(
-      subject:
-          "cloud.to.user.$userId.organization.${organizationId.id}.roles.watch",
-      eventSubject: "cloud.from.organization.${organizationId.id}.roles.watch",
-      requestBytes: skir.WatchOrganizationRolesRequest.serializer.toBytes(
-        request,
+    final response = await ref.requestSkir(
+      skir.WatchOrganizationRolesRequest().operation(
+        userId: userId,
+        organizationId: organizationId,
       ),
-      responseSerializer: skir.WatchOrganizationRolesResponse.serializer,
-      eventSerializer: skir.WatchOrganizationRolesResponse.serializer,
-      snapshot: _roleSnapshot,
-      reduce: _applyRoleEvent,
-      delivery: const ProjectionDelivery.ephemeral(),
-      reconciliation: const ProjectionReconciliation.latest(),
     );
+    if (!ref.mounted) return;
+    yield response.readRoleSnapshot();
   }
 }
 
-List<OrganizationRole> _roleSnapshot(
-  skir.WatchOrganizationRolesResponse response,
-) => switch (response) {
-  skir.WatchOrganizationRolesResponse_listWrapper(:final value) =>
-    value.map(OrganizationRole.fromSkir).toList(),
-  skir.WatchOrganizationRolesResponse_unknown() =>
-    throw ApiException.unknownResponseMessage(),
-  skir.WatchOrganizationRolesResponse_internalErrorWrapper() =>
-    throw ApiException.internalServerError(),
-  _ => throw StateError("Snapshot request returned a role event"),
-};
-
-List<OrganizationRole> _applyRoleEvent(
-  List<OrganizationRole> current,
-  skir.WatchOrganizationRolesResponse event,
-) => switch (event) {
-  skir.WatchOrganizationRolesResponse_listWrapper(:final value) =>
-    value.map(OrganizationRole.fromSkir).toList(),
-  skir.WatchOrganizationRolesResponse_addWrapper(:final value) ||
-  skir.WatchOrganizationRolesResponse_updateWrapper(
-    :final value,
-  ) => current.upsertByKey(
-    (role) => role.roleId,
-    OrganizationRole.fromSkir(value),
-  ),
-  skir.WatchOrganizationRolesResponse_removeWrapper(:final value) =>
-    current.where((role) => role.roleId != value).toList(),
-  skir.WatchOrganizationRolesResponse_unknown() =>
-    throw ApiException.unknownResponseMessage(),
-  skir.WatchOrganizationRolesResponse_internalErrorWrapper() =>
-    throw ApiException.internalServerError(),
-};
+extension OrganizationRoleSnapshot on skir.WatchOrganizationRolesResponse {
+  List<OrganizationRole> readRoleSnapshot() => switch (this) {
+    skir.WatchOrganizationRolesResponse_listWrapper(:final value) =>
+      value.map(OrganizationRole.fromSkir).toList(),
+    skir.WatchOrganizationRolesResponse_unknown() =>
+      throw ApiException.unknownResponseMessage(),
+    skir.WatchOrganizationRolesResponse_internalErrorWrapper() =>
+      throw ApiException.internalServerError(),
+    skir.WatchOrganizationRolesResponse_addWrapper() ||
+    skir.WatchOrganizationRolesResponse_updateWrapper() ||
+    skir.WatchOrganizationRolesResponse_removeWrapper() => throw StateError(
+      "Snapshot request returned a role change",
+    ),
+  };
+}
 
 /// Provider for the list of members in the current organization.

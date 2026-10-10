@@ -17,9 +17,7 @@ import "package:skir_client/skir_client.dart" as _skir;
 
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 
-// -----------------------------------------------------------------------------
 // struct ExpressionRead
-// -----------------------------------------------------------------------------
 
 sealed class ExpressionRead_orMutable {
   _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get binding;
@@ -56,7 +54,7 @@ final class ExpressionRead implements ExpressionRead_orMutable {
     _lib_editor_v1_type_catalog.ValuePath.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ExpressionRead toFrozen() => this;
@@ -129,7 +127,7 @@ final class ExpressionRead_mutable implements ExpressionRead_orMutable {
 
   ExpressionRead_mutable._(this.binding, this.path);
 
-  /// If the value of [binding] is already mutable, returns it as-is.
+  /// If the value of [binding] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [binding] and returns it.
   _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableBinding {
     final value = this.binding;
@@ -142,7 +140,7 @@ final class ExpressionRead_mutable implements ExpressionRead_orMutable {
     }
   }
 
-  /// If the value of [path] is already mutable, returns it as-is.
+  /// If the value of [path] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [path] and returns it.
   _lib_editor_v1_type_catalog.ValuePath_mutable get mutablePath {
     final value = this.path;
@@ -160,9 +158,7 @@ final class ExpressionRead_mutable implements ExpressionRead_orMutable {
       ExpressionRead(binding: this.binding, path: this.path).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ExpressionCall
-// -----------------------------------------------------------------------------
 
 sealed class ExpressionCall_orMutable {
   _lib_editor_v1_type_catalog.OperationId_orMutable get operation;
@@ -202,7 +198,7 @@ final class ExpressionCall implements ExpressionCall_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ExpressionCall toFrozen() => this;
@@ -275,7 +271,7 @@ final class ExpressionCall_mutable implements ExpressionCall_orMutable {
 
   ExpressionCall_mutable._(this.operation, this.arguments);
 
-  /// If the value of [operation] is already mutable, returns it as-is.
+  /// If the value of [operation] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [operation] and returns it.
   _lib_editor_v1_type_catalog.OperationId_mutable get mutableOperation {
     final value = this.operation;
@@ -294,9 +290,7 @@ final class ExpressionCall_mutable implements ExpressionCall_orMutable {
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct BinaryExpression
-// -----------------------------------------------------------------------------
 
 sealed class BinaryExpression_orMutable {
   ExpressionNode get left;
@@ -333,7 +327,7 @@ final class BinaryExpression implements BinaryExpression_orMutable {
     ExpressionNode.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   BinaryExpression toFrozen() => this;
@@ -412,9 +406,7 @@ final class BinaryExpression_mutable implements BinaryExpression_orMutable {
       BinaryExpression(left: this.left, right: this.right).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ConditionalExpression
-// -----------------------------------------------------------------------------
 
 sealed class ConditionalExpression_orMutable {
   ExpressionNode get test;
@@ -458,7 +450,7 @@ final class ConditionalExpression implements ConditionalExpression_orMutable {
         ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ConditionalExpression toFrozen() => this;
@@ -552,9 +544,7 @@ final class ConditionalExpression_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct OrElseExpression
-// -----------------------------------------------------------------------------
 
 sealed class OrElseExpression_orMutable {
   ExpressionNode get input;
@@ -591,7 +581,7 @@ final class OrElseExpression implements OrElseExpression_orMutable {
     ExpressionNode.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   OrElseExpression toFrozen() => this;
@@ -671,9 +661,7 @@ final class OrElseExpression_mutable implements OrElseExpression_orMutable {
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CollectionExpression
-// -----------------------------------------------------------------------------
 
 sealed class CollectionExpression_orMutable {
   _lib_editor_v1_type_catalog.OperationId_orMutable get operation;
@@ -746,7 +734,7 @@ final class CollectionExpression implements CollectionExpression_orMutable {
         null,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CollectionExpression toFrozen() => this;
@@ -873,7 +861,7 @@ final class CollectionExpression_mutable
     this.body,
   );
 
-  /// If the value of [operation] is already mutable, returns it as-is.
+  /// If the value of [operation] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [operation] and returns it.
   _lib_editor_v1_type_catalog.OperationId_mutable get mutableOperation {
     final value = this.operation;
@@ -885,7 +873,7 @@ final class CollectionExpression_mutable
     }
   }
 
-  /// If the value of [bindings] is already mutable, returns it as-is.
+  /// If the value of [bindings] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [bindings] and returns it.
   _core.List<_lib_editor_v1_type_catalog.ExpressionBindingId_orMutable>
   get mutableBindings {
@@ -911,9 +899,7 @@ final class CollectionExpression_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum ExpressionNode
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -1260,9 +1246,7 @@ final class ExpressionNode_collectionWrapper extends _ExpressionNode_wrapper {
   ExpressionNode_kind get kind => ExpressionNode_kind.collectionWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct ExpressionType
-// -----------------------------------------------------------------------------
 
 sealed class ExpressionType_orMutable {
   _lib_editor_v1_type_catalog.TypeUse get value;
@@ -1299,7 +1283,7 @@ final class ExpressionType implements ExpressionType_orMutable {
     false,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ExpressionType toFrozen() => this;
@@ -1379,9 +1363,7 @@ final class ExpressionType_mutable implements ExpressionType_orMutable {
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct OperationDescriptor
-// -----------------------------------------------------------------------------
 
 sealed class OperationDescriptor_orMutable {
   _lib_editor_v1_type_catalog.OperationId_orMutable get id;
@@ -1428,7 +1410,7 @@ final class OperationDescriptor implements OperationDescriptor_orMutable {
     ExpressionType.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   OperationDescriptor toFrozen() => this;
@@ -1515,7 +1497,7 @@ final class OperationDescriptor_mutable
 
   OperationDescriptor_mutable._(this.id, this.input, this.result);
 
-  /// If the value of [id] is already mutable, returns it as-is.
+  /// If the value of [id] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
   _lib_editor_v1_type_catalog.OperationId_mutable get mutableId {
     final value = this.id;
@@ -1527,7 +1509,7 @@ final class OperationDescriptor_mutable
     }
   }
 
-  /// If the value of [input] is already mutable, returns it as-is.
+  /// If the value of [input] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [input] and returns it.
   _core.List<ExpressionType_orMutable> get mutableInput {
     final value = this.input;
@@ -1538,7 +1520,7 @@ final class OperationDescriptor_mutable
     }
   }
 
-  /// If the value of [result] is already mutable, returns it as-is.
+  /// If the value of [result] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [result] and returns it.
   ExpressionType_mutable get mutableResult {
     final value = this.result;
@@ -1556,9 +1538,7 @@ final class OperationDescriptor_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct EvaluationBudget
-// -----------------------------------------------------------------------------
 
 sealed class EvaluationBudget_orMutable {
   _core.int get maxSteps;
@@ -1589,7 +1569,7 @@ final class EvaluationBudget implements EvaluationBudget_orMutable {
   /// Fields are initialized to their default values.
   static EvaluationBudget_mutable mutable() => EvaluationBudget_mutable._(0, 0);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   EvaluationBudget toFrozen() => this;
@@ -1670,9 +1650,7 @@ final class EvaluationBudget_mutable implements EvaluationBudget_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ExpressionBinding
-// -----------------------------------------------------------------------------
 
 sealed class ExpressionBinding_orMutable {
   _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get id;
@@ -1709,7 +1687,7 @@ final class ExpressionBinding implements ExpressionBinding_orMutable {
     _lib_editor_v1_type_catalog.ValueLocation.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ExpressionBinding toFrozen() => this;
@@ -1782,7 +1760,7 @@ final class ExpressionBinding_mutable implements ExpressionBinding_orMutable {
 
   ExpressionBinding_mutable._(this.id, this.location);
 
-  /// If the value of [id] is already mutable, returns it as-is.
+  /// If the value of [id] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
   _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableId {
     final value = this.id;
@@ -1795,7 +1773,7 @@ final class ExpressionBinding_mutable implements ExpressionBinding_orMutable {
     }
   }
 
-  /// If the value of [location] is already mutable, returns it as-is.
+  /// If the value of [location] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [location] and returns it.
   _lib_editor_v1_type_catalog.ValueLocation_mutable get mutableLocation {
     final value = this.location;
@@ -1813,9 +1791,7 @@ final class ExpressionBinding_mutable implements ExpressionBinding_orMutable {
       ExpressionBinding(id: this.id, location: this.location).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ExpressionBindings
-// -----------------------------------------------------------------------------
 
 sealed class ExpressionBindings_orMutable {
   _core.Iterable<ExpressionBinding_orMutable> get values;
@@ -1847,7 +1823,7 @@ final class ExpressionBindings implements ExpressionBindings_orMutable {
   static ExpressionBindings_mutable mutable() =>
       ExpressionBindings_mutable._(_skir.KeyedIterable.empty);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ExpressionBindings toFrozen() => this;
@@ -1910,7 +1886,7 @@ final class ExpressionBindings_mutable implements ExpressionBindings_orMutable {
 
   ExpressionBindings_mutable._(this.values);
 
-  /// If the value of [values] is already mutable, returns it as-is.
+  /// If the value of [values] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [values] and returns it.
   _core.List<ExpressionBinding_orMutable> get mutableValues {
     final value = this.values;
@@ -1927,9 +1903,7 @@ final class ExpressionBindings_mutable implements ExpressionBindings_orMutable {
       ExpressionBindings(values: this.values).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct EvaluationDiagnostic
-// -----------------------------------------------------------------------------
 
 sealed class EvaluationDiagnostic_orMutable {
   _core.String get code;
@@ -1975,7 +1949,7 @@ final class EvaluationDiagnostic implements EvaluationDiagnostic_orMutable {
   static EvaluationDiagnostic_mutable mutable() =>
       EvaluationDiagnostic_mutable._("", "", _skir.KeyedIterable.empty);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   EvaluationDiagnostic toFrozen() => this;
@@ -2064,7 +2038,7 @@ final class EvaluationDiagnostic_mutable
 
   EvaluationDiagnostic_mutable._(this.code, this.message, this.locations);
 
-  /// If the value of [locations] is already mutable, returns it as-is.
+  /// If the value of [locations] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [locations] and returns it.
   _core.List<_lib_editor_v1_type_catalog.ValueLocation_orMutable>
   get mutableLocations {

@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 
 part of 'user_join_requests.dart';
 
@@ -6,7 +6,7 @@ part of 'user_join_requests.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 /// Owns the authenticated user's pending join request projection.
 ///
@@ -54,7 +54,7 @@ final class UserJoinRequestsProvider
   UserJoinRequests create() => UserJoinRequests();
 }
 
-String _$userJoinRequestsHash() => r'aaa8d8888595b5555775111a277bc7734cfdad62';
+String _$userJoinRequestsHash() => r'db6dcc44e7765b1135b7eed2b77bf74166036580';
 
 /// Owns the authenticated user's pending join request projection.
 ///

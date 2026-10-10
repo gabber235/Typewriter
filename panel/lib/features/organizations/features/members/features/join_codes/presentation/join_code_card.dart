@@ -150,11 +150,6 @@ class JoinCodeCard extends HookConsumerWidget {
                                 endDate: code.expiresAt,
                                 onExpired: () {
                                   onSelectionChanged(false);
-                                  ref
-                                      .read(
-                                        organizationJoinCodesProvider.notifier,
-                                      )
-                                      .cleanupExpiredCodes();
                                 },
                               ),
                               JoinCodeTypeBadges(code: code),
@@ -246,9 +241,10 @@ class JoinCodeCard extends HookConsumerWidget {
       confirmIcon: Fa6Solid.link_slash,
       onConfirm: () async {
         onSelectionChanged(false);
-        await ref
-            .read(organizationJoinCodesProvider.notifier)
-            .revokeCode(code.code);
+        await ref.executeMembership(
+          ref.membershipCommands.revoke(code.code),
+          (response) => response.requireAccepted(),
+        );
       },
     );
   }

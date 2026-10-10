@@ -237,6 +237,24 @@ val ServiceRegistrarLifecycleTest by testSuite {
             }
         }
     }
+    test("lease command resolves a concurrent bind without opening a watch") {
+        runTest {
+            fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
+                f.runtime.enqueueLease(RuntimeResult.Success(RegistrationLeaseResult.AlreadyBound(binding())))
+                f.runtime.enqueueQuery(RuntimeResult.Success(BindingStatus.Bound(binding())))
+                f.runtime.setConnectivity(RuntimeConnectivity.CONNECTED)
+                f.factory.enqueue(RuntimeCreateResult.Success(f.runtime))
+
+                f.registrar.start()
+                runCurrent()
+
+                f.registrar.states.value.state
+                    .shouldBeInstanceOf<RegistrarState.Ready>()
+                f.ledger.actions.count { it == RegistrarAction.EnsureRegistrationLease } shouldBe 1
+                f.ledger.actions.none { it is RegistrarAction.WatchBinding } shouldBe true
+            }
+        }
+    }
     test("attempt span inherits the start caller and ends when ready supervision begins") {
         runTest {
             fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
@@ -259,15 +277,16 @@ val ServiceRegistrarLifecycleTest by testSuite {
             }
         }
     }
-    test("initial unbound null token is defensively published") {
+    test("pure unbound observation retains the issued lease token") {
         runTest {
             fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
-                f.runtime.enqueueWatch(RuntimeResult.Success(BindingObservation.Initial(BindingStatus.Unbound(null))))
+                f.runtime.enqueueLease(RuntimeResult.Success(RegistrationLeaseResult.Issued(RegistrationToken("token"))))
+                f.runtime.enqueueWatch(RuntimeResult.Success(BindingObservation.Initial(BindingStatus.Unbound)))
                 f.runtime.setConnectivity(RuntimeConnectivity.CONNECTED)
                 f.factory.enqueue(RuntimeCreateResult.Success(f.runtime))
                 f.registrar.start()
                 runCurrent()
-                (f.registrar.states.value.state as RegistrarState.AwaitingBinding).registrationToken shouldBe null
+                (f.registrar.states.value.state as RegistrarState.AwaitingBinding).registrationToken shouldBe RegistrationToken("token")
                 f.runtime.activeWatchCount shouldBe 1
                 f.ledger.actions.count { it is RegistrarAction.WatchBinding } shouldBe 1
             }
@@ -276,8 +295,9 @@ val ServiceRegistrarLifecycleTest by testSuite {
     test("binding notification reauthorizes and confirms binding") {
         runTest {
             fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
+                f.runtime.enqueueLease(RuntimeResult.Success(RegistrationLeaseResult.Issued(RegistrationToken("token"))))
                 f.runtime.enqueueWatch(
-                    RuntimeResult.Success(BindingObservation.Initial(BindingStatus.Unbound(RegistrationToken("token")))),
+                    RuntimeResult.Success(BindingObservation.Initial(BindingStatus.Unbound)),
                 )
                 f.runtime.enqueueQuery(RuntimeResult.Success(BindingStatus.Bound(binding())))
                 f.runtime.setConnectivity(RuntimeConnectivity.CONNECTED)
@@ -292,13 +312,16 @@ val ServiceRegistrarLifecycleTest by testSuite {
             }
         }
     }
-    test("binding refresh queries while awaiting notification") {
+    test("binding refresh explicitly renews the registration lease") {
         runTest {
             fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
-                f.runtime.enqueueWatch(
-                    RuntimeResult.Success(BindingObservation.Initial(BindingStatus.Unbound(RegistrationToken("initial")))),
+                f.runtime.enqueueLease(
+                    RuntimeResult.Success(RegistrationLeaseResult.Issued(RegistrationToken("initial"))),
+                    RuntimeResult.Success(RegistrationLeaseResult.Issued(RegistrationToken("next"))),
                 )
-                f.runtime.enqueueQuery(RuntimeResult.Success(BindingStatus.Unbound(RegistrationToken("next"))))
+                f.runtime.enqueueWatch(
+                    RuntimeResult.Success(BindingObservation.Initial(BindingStatus.Unbound)),
+                )
                 f.runtime.enqueueWatch()
                 f.runtime.setConnectivity(RuntimeConnectivity.CONNECTED)
                 f.factory.enqueue(RuntimeCreateResult.Success(f.runtime))
@@ -307,22 +330,51 @@ val ServiceRegistrarLifecycleTest by testSuite {
 
                 advanceTimeBy(99)
                 runCurrent()
-                f.ledger.actions.none { it == RegistrarAction.QueryBinding } shouldBe true
+                f.ledger.actions.count { it == RegistrarAction.EnsureRegistrationLease } shouldBe 1
                 f.ledger.actions.count { it is RegistrarAction.WatchBinding } shouldBe 1
 
                 advanceTimeBy(2)
                 runCurrent()
-                f.ledger.actions.count { it == RegistrarAction.QueryBinding } shouldBe 1
+                f.ledger.actions.count { it == RegistrarAction.EnsureRegistrationLease } shouldBe 2
+                f.ledger.actions.none { it == RegistrarAction.QueryBinding } shouldBe true
                 f.ledger.actions.count { it is RegistrarAction.WatchBinding } shouldBe 2
+            }
+        }
+    }
+    test("successful lease rounds reset watch failure backoff") {
+        runTest {
+            fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
+                f.runtime.enqueueLease(
+                    RuntimeResult.Success(RegistrationLeaseResult.Issued(RegistrationToken("first"))),
+                    RuntimeResult.Success(RegistrationLeaseResult.Issued(RegistrationToken("second"))),
+                    RuntimeResult.Success(RegistrationLeaseResult.Issued(RegistrationToken("third"))),
+                )
+                f.runtime.enqueueWatch(
+                    RuntimeResult.Failure(RegistrarFailure.Messaging(MessagingOperation.BINDING_WATCH)),
+                )
+                f.runtime.enqueueWatch(
+                    RuntimeResult.Failure(RegistrarFailure.Messaging(MessagingOperation.BINDING_WATCH)),
+                )
+                f.runtime.enqueueWatch()
+                f.runtime.setConnectivity(RuntimeConnectivity.CONNECTED)
+                f.factory.enqueue(RuntimeCreateResult.Success(f.runtime))
+
+                f.registrar.start()
+                runCurrent()
+
+                f.ledger.actions
+                    .filterIsInstance<RegistrarAction.Delay>()
+                    .map { it.duration } shouldBe listOf(1.seconds, 1.seconds)
             }
         }
     }
     test("repeated unbound observations log waiting once") {
         runTest {
             fixture(this, CredentialLoadResult.Loaded(credentials())).use { f ->
+                f.runtime.enqueueLease(RuntimeResult.Success(RegistrationLeaseResult.Issued(RegistrationToken("first"))))
                 f.runtime.enqueueWatch(
-                    RuntimeResult.Success(BindingObservation.Initial(BindingStatus.Unbound(RegistrationToken("first")))),
-                    RuntimeResult.Success(BindingObservation.Initial(BindingStatus.Unbound(RegistrationToken("second")))),
+                    RuntimeResult.Success(BindingObservation.Initial(BindingStatus.Unbound)),
+                    RuntimeResult.Success(BindingObservation.Initial(BindingStatus.Unbound)),
                 )
                 f.runtime.setConnectivity(RuntimeConnectivity.CONNECTED)
                 f.factory.enqueue(RuntimeCreateResult.Success(f.runtime))
@@ -335,7 +387,7 @@ val ServiceRegistrarLifecycleTest by testSuite {
                     .mapNotNull { it.bodyValue?.asString() }
                     .count { it == "Waiting for service binding in the Typewriter Panel" } shouldBe 1
                 (f.registrar.states.value.state as RegistrarState.AwaitingBinding).registrationToken shouldBe
-                    RegistrationToken("second")
+                    RegistrationToken("first")
                 f.ledger.actions.count { it is RegistrarAction.WatchBinding } shouldBe 1
             }
         }
@@ -569,9 +621,10 @@ val ServiceRegistrarLifecycleTest by testSuite {
             credentials().toString().contains("password") shouldBe false
             RegistrarState.AwaitingBinding(identity(), RegistrationToken("secret")).toString().contains("secret") shouldBe false
             fixture(this).use { f ->
+                f.runtime.enqueueLease(RuntimeResult.Success(RegistrationLeaseResult.Issued(RegistrationToken("registration-secret"))))
                 f.runtime.enqueueWatch(
                     RuntimeResult.Success(
-                        BindingObservation.Initial(BindingStatus.Unbound(RegistrationToken("registration-secret"))),
+                        BindingObservation.Initial(BindingStatus.Unbound),
                     ),
                 )
                 f.runtime.setConnectivity(RuntimeConnectivity.CONNECTED)
@@ -620,6 +673,7 @@ private class Fixture(
 
     fun readyScript() {
         if (initialMissing()) issuer.enqueue(IdentityIssueResult.Success(credentials()))
+        runtime.enqueueLease(RuntimeResult.Success(RegistrationLeaseResult.Issued(RegistrationToken("token"))))
         runtime.enqueueWatch(RuntimeResult.Success(BindingObservation.Initial(BindingStatus.Bound(binding()))))
         runtime.enqueueQuery(RuntimeResult.Success(BindingStatus.Bound(binding())))
         runtime.setConnectivity(RuntimeConnectivity.CONNECTED)

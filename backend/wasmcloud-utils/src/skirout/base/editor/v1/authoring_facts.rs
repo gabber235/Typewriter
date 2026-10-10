@@ -30,23 +30,25 @@ pub struct LinkProjection {
 
 impl LinkProjection {
     pub fn default_ref() -> &'static LinkProjection {
-        static D: std::sync::LazyLock<LinkProjection> = std::sync::LazyLock::new(LinkProjection::default);
+        static D: std::sync::LazyLock<LinkProjection> =
+            std::sync::LazyLock::new(LinkProjection::default);
         &D
     }
 }
 
 impl LinkProjection {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<LinkProjection> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<LinkProjection>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/authoring_facts.skir",
-                    "LinkProjection",
-                    "",
-                    |x: &LinkProjection| &x._unrecognized,
-                    |x: &mut LinkProjection, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<LinkProjection>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/authoring_facts.skir",
+                "LinkProjection",
+                "",
+                |x: &LinkProjection| &x._unrecognized,
+                |x: &mut LinkProjection, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<LinkProjection> {
@@ -75,22 +77,26 @@ impl Default for TraversalDirection {
 
 impl TraversalDirection {
     fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<TraversalDirection> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<TraversalDirection>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &TraversalDirection| match x {
-                        TraversalDirection::Unknown(_) => 0,
-                        TraversalDirection::Forward => 1,
-                        TraversalDirection::Reverse => 2,
-                        TraversalDirection::Both => 3,
-                    },
-                    |u| TraversalDirection::Unknown(Some(u)),
-                    |x: &TraversalDirection| match x { TraversalDirection::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "editor/v1/authoring_facts.skir",
-                    "TraversalDirection",
-                    "",
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<TraversalDirection>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &TraversalDirection| match x {
+                    TraversalDirection::Unknown(_) => 0,
+                    TraversalDirection::Forward => 1,
+                    TraversalDirection::Reverse => 2,
+                    TraversalDirection::Both => 3,
+                },
+                |u| TraversalDirection::Unknown(Some(u)),
+                |x: &TraversalDirection| match x {
+                    TraversalDirection::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/authoring_facts.skir",
+                "TraversalDirection",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<TraversalDirection> {
@@ -113,28 +119,32 @@ pub struct EditExpectation_Value {
 
 impl EditExpectation_Value {
     pub fn default_ref() -> &'static EditExpectation_Value {
-        static D: std::sync::LazyLock<EditExpectation_Value> = std::sync::LazyLock::new(EditExpectation_Value::default);
+        static D: std::sync::LazyLock<EditExpectation_Value> =
+            std::sync::LazyLock::new(EditExpectation_Value::default);
         &D
     }
 }
 
 impl EditExpectation_Value {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<EditExpectation_Value> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<EditExpectation_Value>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/authoring_facts.skir",
-                    "EditExpectation.Value",
-                    "",
-                    |x: &EditExpectation_Value| &x._unrecognized,
-                    |x: &mut EditExpectation_Value, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<EditExpectation_Value>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/authoring_facts.skir",
+                "EditExpectation.Value",
+                "",
+                |x: &EditExpectation_Value| &x._unrecognized,
+                |x: &mut EditExpectation_Value, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<EditExpectation_Value> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(EditExpectation_Value::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            EditExpectation_Value::_adapter(),
+        )
     }
 }
 
@@ -152,28 +162,33 @@ pub struct EditExpectation_Resource {
 
 impl EditExpectation_Resource {
     pub fn default_ref() -> &'static EditExpectation_Resource {
-        static D: std::sync::LazyLock<EditExpectation_Resource> = std::sync::LazyLock::new(EditExpectation_Resource::default);
+        static D: std::sync::LazyLock<EditExpectation_Resource> =
+            std::sync::LazyLock::new(EditExpectation_Resource::default);
         &D
     }
 }
 
 impl EditExpectation_Resource {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<EditExpectation_Resource> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<EditExpectation_Resource>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/authoring_facts.skir",
-                    "EditExpectation.Resource",
-                    "",
-                    |x: &EditExpectation_Resource| &x._unrecognized,
-                    |x: &mut EditExpectation_Resource, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<EditExpectation_Resource>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<EditExpectation_Resource>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/authoring_facts.skir",
+                "EditExpectation.Resource",
+                "",
+                |x: &EditExpectation_Resource| &x._unrecognized,
+                |x: &mut EditExpectation_Resource, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<EditExpectation_Resource> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(EditExpectation_Resource::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            EditExpectation_Resource::_adapter(),
+        )
     }
 }
 
@@ -186,33 +201,39 @@ pub struct EditExpectation_ResourceExists {
     pub id: crate::skirout::base::editor::v1::type_catalog::ResourceId,
     pub expected: bool,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<EditExpectation_ResourceExists>>,
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<EditExpectation_ResourceExists>>,
 }
 
 impl EditExpectation_ResourceExists {
     pub fn default_ref() -> &'static EditExpectation_ResourceExists {
-        static D: std::sync::LazyLock<EditExpectation_ResourceExists> = std::sync::LazyLock::new(EditExpectation_ResourceExists::default);
+        static D: std::sync::LazyLock<EditExpectation_ResourceExists> =
+            std::sync::LazyLock::new(EditExpectation_ResourceExists::default);
         &D
     }
 }
 
 impl EditExpectation_ResourceExists {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<EditExpectation_ResourceExists> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<EditExpectation_ResourceExists>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/authoring_facts.skir",
-                    "EditExpectation.ResourceExists",
-                    "",
-                    |x: &EditExpectation_ResourceExists| &x._unrecognized,
-                    |x: &mut EditExpectation_ResourceExists, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<EditExpectation_ResourceExists> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<EditExpectation_ResourceExists>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/authoring_facts.skir",
+                "EditExpectation.ResourceExists",
+                "",
+                |x: &EditExpectation_ResourceExists| &x._unrecognized,
+                |x: &mut EditExpectation_ResourceExists, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<EditExpectation_ResourceExists> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(EditExpectation_ResourceExists::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            EditExpectation_ResourceExists::_adapter(),
+        )
     }
 }
 
@@ -225,33 +246,39 @@ pub struct EditExpectation_Configuration {
     pub at: crate::skirout::base::editor::v1::type_catalog::ValueLocation,
     pub expected: Option<crate::skirout::base::editor::v1::type_catalog::TypeSelection>,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<EditExpectation_Configuration>>,
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<EditExpectation_Configuration>>,
 }
 
 impl EditExpectation_Configuration {
     pub fn default_ref() -> &'static EditExpectation_Configuration {
-        static D: std::sync::LazyLock<EditExpectation_Configuration> = std::sync::LazyLock::new(EditExpectation_Configuration::default);
+        static D: std::sync::LazyLock<EditExpectation_Configuration> =
+            std::sync::LazyLock::new(EditExpectation_Configuration::default);
         &D
     }
 }
 
 impl EditExpectation_Configuration {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<EditExpectation_Configuration> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<EditExpectation_Configuration>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/authoring_facts.skir",
-                    "EditExpectation.Configuration",
-                    "",
-                    |x: &EditExpectation_Configuration| &x._unrecognized,
-                    |x: &mut EditExpectation_Configuration, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<EditExpectation_Configuration> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<EditExpectation_Configuration>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/authoring_facts.skir",
+                "EditExpectation.Configuration",
+                "",
+                |x: &EditExpectation_Configuration| &x._unrecognized,
+                |x: &mut EditExpectation_Configuration, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<EditExpectation_Configuration> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(EditExpectation_Configuration::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            EditExpectation_Configuration::_adapter(),
+        )
     }
 }
 
@@ -271,28 +298,32 @@ pub struct EditExpectation_Links {
 
 impl EditExpectation_Links {
     pub fn default_ref() -> &'static EditExpectation_Links {
-        static D: std::sync::LazyLock<EditExpectation_Links> = std::sync::LazyLock::new(EditExpectation_Links::default);
+        static D: std::sync::LazyLock<EditExpectation_Links> =
+            std::sync::LazyLock::new(EditExpectation_Links::default);
         &D
     }
 }
 
 impl EditExpectation_Links {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<EditExpectation_Links> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<EditExpectation_Links>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/authoring_facts.skir",
-                    "EditExpectation.Links",
-                    "",
-                    |x: &EditExpectation_Links| &x._unrecognized,
-                    |x: &mut EditExpectation_Links, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<EditExpectation_Links>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/authoring_facts.skir",
+                "EditExpectation.Links",
+                "",
+                |x: &EditExpectation_Links| &x._unrecognized,
+                |x: &mut EditExpectation_Links, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<EditExpectation_Links> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(EditExpectation_Links::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            EditExpectation_Links::_adapter(),
+        )
     }
 }
 
@@ -319,25 +350,29 @@ impl Default for EditExpectation {
 
 impl EditExpectation {
     fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<EditExpectation> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<EditExpectation>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &EditExpectation| match x {
-                        EditExpectation::Unknown(_) => 0,
-                        EditExpectation::Value(_) => 1,
-                        EditExpectation::Resource(_) => 2,
-                        EditExpectation::ResourceExists(_) => 3,
-                        EditExpectation::Configuration(_) => 4,
-                        EditExpectation::ResourceIds(_) => 5,
-                        EditExpectation::Links(_) => 6,
-                    },
-                    |u| EditExpectation::Unknown(Some(u)),
-                    |x: &EditExpectation| match x { EditExpectation::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "editor/v1/authoring_facts.skir",
-                    "EditExpectation",
-                    "",
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<EditExpectation>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &EditExpectation| match x {
+                    EditExpectation::Unknown(_) => 0,
+                    EditExpectation::Value(_) => 1,
+                    EditExpectation::Resource(_) => 2,
+                    EditExpectation::ResourceExists(_) => 3,
+                    EditExpectation::Configuration(_) => 4,
+                    EditExpectation::ResourceIds(_) => 5,
+                    EditExpectation::Links(_) => 6,
+                },
+                |u| EditExpectation::Unknown(Some(u)),
+                |x: &EditExpectation| match x {
+                    EditExpectation::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/authoring_facts.skir",
+                "EditExpectation",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<EditExpectation> {
@@ -360,23 +395,25 @@ pub struct ExpectationConflict {
 
 impl ExpectationConflict {
     pub fn default_ref() -> &'static ExpectationConflict {
-        static D: std::sync::LazyLock<ExpectationConflict> = std::sync::LazyLock::new(ExpectationConflict::default);
+        static D: std::sync::LazyLock<ExpectationConflict> =
+            std::sync::LazyLock::new(ExpectationConflict::default);
         &D
     }
 }
 
 impl ExpectationConflict {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ExpectationConflict> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ExpectationConflict>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/authoring_facts.skir",
-                    "ExpectationConflict",
-                    "",
-                    |x: &ExpectationConflict| &x._unrecognized,
-                    |x: &mut ExpectationConflict, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ExpectationConflict>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/authoring_facts.skir",
+                "ExpectationConflict",
+                "",
+                |x: &ExpectationConflict| &x._unrecognized,
+                |x: &mut ExpectationConflict, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ExpectationConflict> {
@@ -390,72 +427,312 @@ impl ExpectationConflict {
 // ==============================================================================
 
 fn initialize_module_serializers() {
-    static INIT: std::sync::LazyLock<()> =
-        std::sync::LazyLock::new(|| {
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<LinkProjection> = LinkProjection::_adapter() as *const _ as *mut _;
-                (*a).add_field("contract", 0, crate::skirout::base::editor::v1::type_catalog::RelationId::serializer(), "", |x: &LinkProjection| &x.contract, |x: &mut LinkProjection, v| x.contract = v);
-                (*a).add_field("first", 1, crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(), "", |x: &LinkProjection| &x.first, |x: &mut LinkProjection, v| x.first = v);
-                (*a).add_field("second", 2, crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(), "", |x: &LinkProjection| &x.second, |x: &mut LinkProjection, v| x.second = v);
-                (*a).add_field("first_location", 3, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::type_catalog::ValuePath::serializer()), "", |x: &LinkProjection| &x.first_location, |x: &mut LinkProjection, v| x.first_location = v);
-                (*a).add_field("second_location", 4, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::type_catalog::ValuePath::serializer()), "", |x: &LinkProjection| &x.second_location, |x: &mut LinkProjection, v| x.second_location = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<TraversalDirection> = TraversalDirection::_adapter() as *const _ as *mut _;
-                (*a).add_constant_variant("forward", 1, 1, "", TraversalDirection::Forward);
-                (*a).add_constant_variant("reverse", 2, 2, "", TraversalDirection::Reverse);
-                (*a).add_constant_variant("both", 3, 3, "", TraversalDirection::Both);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<EditExpectation_Value> = EditExpectation_Value::_adapter() as *const _ as *mut _;
-                (*a).add_field("at", 0, crate::skirout::base::editor::v1::type_catalog::ValueLocation::serializer(), "", |x: &EditExpectation_Value| &x.at, |x: &mut EditExpectation_Value, v| x.at = v);
-                (*a).add_field("expected", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::type_catalog::DataValue::serializer()), "", |x: &EditExpectation_Value| &x.expected, |x: &mut EditExpectation_Value, v| x.expected = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<EditExpectation_Resource> = EditExpectation_Resource::_adapter() as *const _ as *mut _;
-                (*a).add_field("id", 0, crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(), "", |x: &EditExpectation_Resource| &x.id, |x: &mut EditExpectation_Resource, v| x.id = v);
-                (*a).add_field("expected", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::type_catalog::AuthoringRecord::serializer()), "", |x: &EditExpectation_Resource| &x.expected, |x: &mut EditExpectation_Resource, v| x.expected = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<EditExpectation_ResourceExists> = EditExpectation_ResourceExists::_adapter() as *const _ as *mut _;
-                (*a).add_field("id", 0, crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(), "", |x: &EditExpectation_ResourceExists| &x.id, |x: &mut EditExpectation_ResourceExists, v| x.id = v);
-                (*a).add_field("expected", 1, crate::skir_client::Serializer::bool(), "", |x: &EditExpectation_ResourceExists| &x.expected, |x: &mut EditExpectation_ResourceExists, v| x.expected = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<EditExpectation_Configuration> = EditExpectation_Configuration::_adapter() as *const _ as *mut _;
-                (*a).add_field("at", 0, crate::skirout::base::editor::v1::type_catalog::ValueLocation::serializer(), "", |x: &EditExpectation_Configuration| &x.at, |x: &mut EditExpectation_Configuration, v| x.at = v);
-                (*a).add_field("expected", 1, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::type_catalog::TypeSelection::serializer()), "", |x: &EditExpectation_Configuration| &x.expected, |x: &mut EditExpectation_Configuration, v| x.expected = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<EditExpectation_Links> = EditExpectation_Links::_adapter() as *const _ as *mut _;
-                (*a).add_field("resource", 0, crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(), "", |x: &EditExpectation_Links| &x.resource, |x: &mut EditExpectation_Links, v| x.resource = v);
-                (*a).add_field("contract", 1, crate::skirout::base::editor::v1::type_catalog::RelationId::serializer(), "", |x: &EditExpectation_Links| &x.contract, |x: &mut EditExpectation_Links, v| x.contract = v);
-                (*a).add_field("direction", 2, crate::skir_client::internal::enum_serializer_from_static(TraversalDirection::_adapter()), "", |x: &EditExpectation_Links| &x.direction, |x: &mut EditExpectation_Links, v| x.direction = v);
-                (*a).add_field("expected", 3, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(LinkProjection::_adapter())), "", |x: &EditExpectation_Links| &x.expected, |x: &mut EditExpectation_Links, v| x.expected = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<EditExpectation> = EditExpectation::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("value", 1, 1, crate::skir_client::internal::struct_serializer_from_static(EditExpectation_Value::_adapter()), "", |v| EditExpectation::Value(Box::new(v)), |x| match x { EditExpectation::Value(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("resource", 2, 2, crate::skir_client::internal::struct_serializer_from_static(EditExpectation_Resource::_adapter()), "", |v| EditExpectation::Resource(Box::new(v)), |x| match x { EditExpectation::Resource(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("resource_exists", 3, 3, crate::skir_client::internal::struct_serializer_from_static(EditExpectation_ResourceExists::_adapter()), "", |v| EditExpectation::ResourceExists(Box::new(v)), |x| match x { EditExpectation::ResourceExists(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("configuration", 4, 4, crate::skir_client::internal::struct_serializer_from_static(EditExpectation_Configuration::_adapter()), "", |v| EditExpectation::Configuration(Box::new(v)), |x| match x { EditExpectation::Configuration(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("resource_ids", 5, 5, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer()), "", |v| EditExpectation::ResourceIds(v), |x| match x { EditExpectation::ResourceIds(v) => v, _ => unreachable!() });
-                (*a).add_wrapper_variant("links", 6, 6, crate::skir_client::internal::struct_serializer_from_static(EditExpectation_Links::_adapter()), "", |v| EditExpectation::Links(Box::new(v)), |x| match x { EditExpectation::Links(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ExpectationConflict> = ExpectationConflict::_adapter() as *const _ as *mut _;
-                (*a).add_field("expected", 0, crate::skir_client::internal::enum_serializer_from_static(EditExpectation::_adapter()), "", |x: &ExpectationConflict| &x.expected, |x: &mut ExpectationConflict, v| x.expected = v);
-                (*a).add_field("actual", 1, crate::skir_client::internal::enum_serializer_from_static(EditExpectation::_adapter()), "", |x: &ExpectationConflict| &x.actual, |x: &mut ExpectationConflict, v| x.actual = v);
-                (*a).finalize();
-            }
-        });
+    static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| {
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<LinkProjection> =
+                LinkProjection::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "contract",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::RelationId::serializer(),
+                "",
+                |x: &LinkProjection| &x.contract,
+                |x: &mut LinkProjection, v| x.contract = v,
+            );
+            (*a).add_field(
+                "first",
+                1,
+                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                "",
+                |x: &LinkProjection| &x.first,
+                |x: &mut LinkProjection, v| x.first = v,
+            );
+            (*a).add_field(
+                "second",
+                2,
+                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                "",
+                |x: &LinkProjection| &x.second,
+                |x: &mut LinkProjection, v| x.second = v,
+            );
+            (*a).add_field(
+                "first_location",
+                3,
+                crate::skir_client::Serializer::optional(
+                    crate::skirout::base::editor::v1::type_catalog::ValuePath::serializer(),
+                ),
+                "",
+                |x: &LinkProjection| &x.first_location,
+                |x: &mut LinkProjection, v| x.first_location = v,
+            );
+            (*a).add_field(
+                "second_location",
+                4,
+                crate::skir_client::Serializer::optional(
+                    crate::skirout::base::editor::v1::type_catalog::ValuePath::serializer(),
+                ),
+                "",
+                |x: &LinkProjection| &x.second_location,
+                |x: &mut LinkProjection, v| x.second_location = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<TraversalDirection> =
+                TraversalDirection::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("forward", 1, 1, "", TraversalDirection::Forward);
+            (*a).add_constant_variant("reverse", 2, 2, "", TraversalDirection::Reverse);
+            (*a).add_constant_variant("both", 3, 3, "", TraversalDirection::Both);
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<EditExpectation_Value> =
+                EditExpectation_Value::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "at",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::ValueLocation::serializer(),
+                "",
+                |x: &EditExpectation_Value| &x.at,
+                |x: &mut EditExpectation_Value, v| x.at = v,
+            );
+            (*a).add_field(
+                "expected",
+                1,
+                crate::skir_client::Serializer::optional(
+                    crate::skirout::base::editor::v1::type_catalog::DataValue::serializer(),
+                ),
+                "",
+                |x: &EditExpectation_Value| &x.expected,
+                |x: &mut EditExpectation_Value, v| x.expected = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<EditExpectation_Resource> =
+                EditExpectation_Resource::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "id",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                "",
+                |x: &EditExpectation_Resource| &x.id,
+                |x: &mut EditExpectation_Resource, v| x.id = v,
+            );
+            (*a).add_field(
+                "expected",
+                1,
+                crate::skir_client::Serializer::optional(
+                    crate::skirout::base::editor::v1::type_catalog::AuthoringRecord::serializer(),
+                ),
+                "",
+                |x: &EditExpectation_Resource| &x.expected,
+                |x: &mut EditExpectation_Resource, v| x.expected = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                EditExpectation_ResourceExists,
+            > = EditExpectation_ResourceExists::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "id",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                "",
+                |x: &EditExpectation_ResourceExists| &x.id,
+                |x: &mut EditExpectation_ResourceExists, v| x.id = v,
+            );
+            (*a).add_field(
+                "expected",
+                1,
+                crate::skir_client::Serializer::bool(),
+                "",
+                |x: &EditExpectation_ResourceExists| &x.expected,
+                |x: &mut EditExpectation_ResourceExists, v| x.expected = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<EditExpectation_Configuration> =
+                EditExpectation_Configuration::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "at",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::ValueLocation::serializer(),
+                "",
+                |x: &EditExpectation_Configuration| &x.at,
+                |x: &mut EditExpectation_Configuration, v| x.at = v,
+            );
+            (*a).add_field(
+                "expected",
+                1,
+                crate::skir_client::Serializer::optional(
+                    crate::skirout::base::editor::v1::type_catalog::TypeSelection::serializer(),
+                ),
+                "",
+                |x: &EditExpectation_Configuration| &x.expected,
+                |x: &mut EditExpectation_Configuration, v| x.expected = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<EditExpectation_Links> =
+                EditExpectation_Links::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "resource",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                "",
+                |x: &EditExpectation_Links| &x.resource,
+                |x: &mut EditExpectation_Links, v| x.resource = v,
+            );
+            (*a).add_field(
+                "contract",
+                1,
+                crate::skirout::base::editor::v1::type_catalog::RelationId::serializer(),
+                "",
+                |x: &EditExpectation_Links| &x.contract,
+                |x: &mut EditExpectation_Links, v| x.contract = v,
+            );
+            (*a).add_field(
+                "direction",
+                2,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    TraversalDirection::_adapter(),
+                ),
+                "",
+                |x: &EditExpectation_Links| &x.direction,
+                |x: &mut EditExpectation_Links, v| x.direction = v,
+            );
+            (*a).add_field(
+                "expected",
+                3,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        LinkProjection::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &EditExpectation_Links| &x.expected,
+                |x: &mut EditExpectation_Links, v| x.expected = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<EditExpectation> =
+                EditExpectation::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "value",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    EditExpectation_Value::_adapter(),
+                ),
+                "",
+                |v| EditExpectation::Value(Box::new(v)),
+                |x| match x {
+                    EditExpectation::Value(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "resource",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    EditExpectation_Resource::_adapter(),
+                ),
+                "",
+                |v| EditExpectation::Resource(Box::new(v)),
+                |x| match x {
+                    EditExpectation::Resource(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "resource_exists",
+                3,
+                3,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    EditExpectation_ResourceExists::_adapter(),
+                ),
+                "",
+                |v| EditExpectation::ResourceExists(Box::new(v)),
+                |x| match x {
+                    EditExpectation::ResourceExists(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "configuration",
+                4,
+                4,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    EditExpectation_Configuration::_adapter(),
+                ),
+                "",
+                |v| EditExpectation::Configuration(Box::new(v)),
+                |x| match x {
+                    EditExpectation::Configuration(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "resource_ids",
+                5,
+                5,
+                crate::skir_client::Serializer::array(
+                    crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
+                ),
+                "",
+                |v| EditExpectation::ResourceIds(v),
+                |x| match x {
+                    EditExpectation::ResourceIds(v) => v,
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "links",
+                6,
+                6,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    EditExpectation_Links::_adapter(),
+                ),
+                "",
+                |v| EditExpectation::Links(Box::new(v)),
+                |x| match x {
+                    EditExpectation::Links(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ExpectationConflict> =
+                ExpectationConflict::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "expected",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    EditExpectation::_adapter(),
+                ),
+                "",
+                |x: &ExpectationConflict| &x.expected,
+                |x: &mut ExpectationConflict, v| x.expected = v,
+            );
+            (*a).add_field(
+                "actual",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    EditExpectation::_adapter(),
+                ),
+                "",
+                |x: &ExpectationConflict| &x.actual,
+                |x: &mut ExpectationConflict, v| x.actual = v,
+            );
+            (*a).finalize();
+        }
+    });
     let _ = *INIT;
 }

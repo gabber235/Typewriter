@@ -15,9 +15,7 @@ import "dart:core" as _core;
 
 import "package:skir_client/skir_client.dart" as _skir;
 
-// -----------------------------------------------------------------------------
 // struct InternalError
-// -----------------------------------------------------------------------------
 
 sealed class InternalError_orMutable {
   InternalError toFrozen();
@@ -38,7 +36,7 @@ final class InternalError implements InternalError_orMutable {
   /// Fields are initialized to their default values.
   static InternalError_mutable mutable() => InternalError_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   InternalError toFrozen() => this;
@@ -95,9 +93,7 @@ final class InternalError_mutable implements InternalError_orMutable {
   InternalError toFrozen() => InternalError().._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct InvalidRecordIdError
-// -----------------------------------------------------------------------------
 
 sealed class InvalidRecordIdError_orMutable {
   _core.String get expectedTable;
@@ -135,7 +131,7 @@ final class InvalidRecordIdError implements InvalidRecordIdError_orMutable {
   static InvalidRecordIdError_mutable mutable() =>
       InvalidRecordIdError_mutable._("", _skir.KeyedIterable.empty);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   InvalidRecordIdError toFrozen() => this;
@@ -212,7 +208,7 @@ final class InvalidRecordIdError_mutable
 
   InvalidRecordIdError_mutable._(this.expectedTable, this.givenTables);
 
-  /// If the value of [givenTables] is already mutable, returns it as-is.
+  /// If the value of [givenTables] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [givenTables] and returns it.
   _core.List<_core.String> get mutableGivenTables {
     final value = this.givenTables;

@@ -8,9 +8,11 @@ sealed class ProjectionDelivery with _$ProjectionDelivery {
   /// Uses a core NATS subscription for current observations.
   const factory ProjectionDelivery.ephemeral() = ProjectionDeliveryEphemeral;
 
-  /// Uses an ordered consumer from the named persisted stream.
-  const factory ProjectionDelivery.ordered({required String stream}) =
-      ProjectionDeliveryOrdered;
+  /// Uses one exact named consumer from the persisted stream.
+  const factory ProjectionDelivery.persistent({
+    required String stream,
+    required String consumer,
+  }) = ProjectionDeliveryPersistent;
 }
 
 /// Chooses how a snapshot and later events reconcile into one projection.

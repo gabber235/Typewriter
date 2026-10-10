@@ -284,8 +284,9 @@ void main() {
           eventSerializer: skir.Duration.serializer,
           snapshot: (response) => response.milliseconds,
           reduce: (_, event) => event.milliseconds,
-          delivery: const ProjectionDelivery.ordered(
+          delivery: const ProjectionDelivery.persistent(
             stream: "TYPEWRITER_MEMBERSHIP",
+            consumer: "TW_watch_request_delivery",
           ),
           reconciliation: ProjectionReconciliation.sequenced(
             snapshotSequence: (response) => response.milliseconds,
@@ -319,4 +320,180 @@ void main() {
     await completed.future.timeout(const Duration(seconds: 2));
     expect(values, [1, 2, 3]);
   });
+
+  test(
+    "sequenced confirmations wait for snapshot and deduplicate broker delivery",
+    () async {
+      final reply = Completer<Uint8List>();
+      final confirmations = StreamController<skir.Duration>.broadcast(
+        sync: true,
+      );
+      final nats = FakeNatsClient()
+        ..registerHandler("watch", (_) => reply.future);
+      final container = ProviderContainer.test(
+        overrides: [
+          natsProvider.overrideWithValue(nats),
+          panelTelemetryProvider.overrideWithValue(
+            const AsyncData(NoopPanelTelemetry()),
+          ),
+        ],
+      );
+      addTearDown(nats.dispose);
+      addTearDown(container.dispose);
+      addTearDown(confirmations.close);
+      final sequenceState = SequencedCollection<int>();
+      final values = <int>[];
+      final listener = container
+          .read(_refProvider)
+          .watchProjection<int, skir.Duration, skir.Duration>(
+            subject: "watch",
+            eventSubject: "events",
+            requestBytes: Uint8List(0),
+            responseSerializer: skir.Duration.serializer,
+            eventSerializer: skir.Duration.serializer,
+            snapshot: (response) => response.milliseconds,
+            reduce: (_, event) => event.milliseconds,
+            reduceConfirmed: (_, event) => event.milliseconds,
+            confirmedEvents: confirmations.stream,
+            delivery: const ProjectionDelivery.persistent(
+              stream: "TYPEWRITER_MEMBERSHIP",
+              consumer: "TW_sequenced_confirmations",
+            ),
+            reconciliation: ProjectionReconciliation.sequenced(
+              snapshotSequence: (response) => response.milliseconds,
+              eventSequence: (event) => event.milliseconds,
+              sequenceState: sequenceState,
+            ),
+          )
+          .listen(values.add);
+      addTearDown(listener.cancel);
+      await pumpEventQueue();
+
+      confirmations.add(skir.Duration(milliseconds: 2));
+      nats
+        ..emitMessageOnSubject(
+          "events",
+          skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 2)),
+        )
+        ..emitMessageOnSubject(
+          "events",
+          skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 3)),
+        );
+      await pumpEventQueue();
+      expect(values, isEmpty);
+
+      reply.complete(
+        skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 1)),
+      );
+      await pumpEventQueue();
+      expect(values, [1, 2, 3]);
+      expect(sequenceState.snapshot?.sequence, 3);
+    },
+  );
+
+  test("failed snapshot rejects queued sequenced confirmations", () async {
+    final reply = Completer<Uint8List>();
+    final confirmations = StreamController<skir.Duration>.broadcast(sync: true);
+    final nats = FakeNatsClient()
+      ..registerHandler("watch", (_) => reply.future);
+    final container = ProviderContainer.test(
+      overrides: [
+        natsProvider.overrideWithValue(nats),
+        panelTelemetryProvider.overrideWithValue(
+          const AsyncData(NoopPanelTelemetry()),
+        ),
+      ],
+    );
+    addTearDown(nats.dispose);
+    addTearDown(container.dispose);
+    addTearDown(confirmations.close);
+    var reductions = 0;
+    final errors = <Object>[];
+    final listener = container
+        .read(_refProvider)
+        .watchProjection<int, skir.Duration, skir.Duration>(
+          subject: "watch",
+          eventSubject: "events",
+          requestBytes: Uint8List(0),
+          responseSerializer: skir.Duration.serializer,
+          eventSerializer: skir.Duration.serializer,
+          snapshot: (response) => response.milliseconds,
+          reduce: (_, event) {
+            reductions++;
+            return event.milliseconds;
+          },
+          confirmedEvents: confirmations.stream,
+          delivery: const ProjectionDelivery.persistent(
+            stream: "TYPEWRITER_MEMBERSHIP",
+            consumer: "TW_failed_sequenced_snapshot",
+          ),
+          reconciliation: ProjectionReconciliation.sequenced(
+            snapshotSequence: (response) => response.milliseconds,
+            eventSequence: (event) => event.milliseconds,
+            sequenceState: SequencedCollection<int>(),
+          ),
+        )
+        .listen((_) {}, onError: errors.add);
+    addTearDown(listener.cancel);
+    await pumpEventQueue();
+    confirmations.add(skir.Duration(milliseconds: 2));
+    reply.completeError(StateError("snapshot rejected"));
+    await pumpEventQueue();
+    expect(errors, isNotEmpty);
+    expect(reductions, 0);
+  });
+
+  test(
+    "sequenced projection ignores a confirmed fact older than its snapshot",
+    () async {
+      final confirmations = StreamController<skir.Duration>.broadcast(
+        sync: true,
+      );
+      final nats = FakeNatsClient()
+        ..registerHandler(
+          "watch",
+          (_) =>
+              skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 2)),
+        );
+      final container = ProviderContainer.test(
+        overrides: [
+          natsProvider.overrideWithValue(nats),
+          panelTelemetryProvider.overrideWithValue(
+            const AsyncData(NoopPanelTelemetry()),
+          ),
+        ],
+      );
+      addTearDown(nats.dispose);
+      addTearDown(container.dispose);
+      addTearDown(confirmations.close);
+      final values = <int>[];
+      final listener = container
+          .read(_refProvider)
+          .watchProjection<int, skir.Duration, skir.Duration>(
+            subject: "watch",
+            eventSubject: "events",
+            requestBytes: Uint8List(0),
+            responseSerializer: skir.Duration.serializer,
+            eventSerializer: skir.Duration.serializer,
+            snapshot: (response) => response.milliseconds,
+            reduce: (_, event) => event.milliseconds,
+            confirmedEvents: confirmations.stream,
+            delivery: const ProjectionDelivery.persistent(
+              stream: "TYPEWRITER_MEMBERSHIP",
+              consumer: "TW_historical_confirmation",
+            ),
+            reconciliation: ProjectionReconciliation.sequenced(
+              snapshotSequence: (response) => response.milliseconds,
+              eventSequence: (event) => event.milliseconds,
+              sequenceState: SequencedCollection<int>(),
+            ),
+          )
+          .listen(values.add);
+      addTearDown(listener.cancel);
+      await pumpEventQueue();
+      confirmations.add(skir.Duration(milliseconds: 1));
+      await pumpEventQueue();
+      expect(values, [2]);
+    },
+  );
 }

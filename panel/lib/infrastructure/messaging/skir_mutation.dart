@@ -19,9 +19,7 @@ enum MutationResponseDisposition { confirmed, rejected, uncertain }
 extension RefSkirMutation on Ref {
   /// Freezes a mutation for deferred execution by the shared work owner.
   PreparedCommit<TResponse> prepareSkir<TResponse>(
-    String subject,
-    Uint8List requestBytes,
-    skir.Serializer<TResponse> serializer, {
+    SkirRouteOperation<TResponse> operation, {
     required String label,
     required MutationResponseDisposition Function(TResponse) classify,
     String Function(TResponse)? rejectionMessage,
@@ -36,9 +34,7 @@ extension RefSkirMutation on Ref {
           () => read(panelTelemetryProvider.future),
         )
         .prepare(
-          subject,
-          requestBytes,
-          serializer,
+          operation,
           label: label,
           classify: classify,
           rejectionMessage: rejectionMessage,
@@ -55,9 +51,7 @@ extension RefSkirMutation on Ref {
   /// Unlike [prepareSkir], this operation transfers the prepared commit to the
   /// current work owner before returning its decoded response.
   Future<TResponse> mutateSkir<TResponse>(
-    String subject,
-    Uint8List requestBytes,
-    skir.Serializer<TResponse> serializer, {
+    SkirRouteOperation<TResponse> operation, {
     required String label,
     required MutationResponseDisposition Function(TResponse) classify,
     String Function(TResponse)? rejectionMessage,
@@ -67,9 +61,7 @@ extension RefSkirMutation on Ref {
     SubmissionReplay replay = SubmissionReplay.unsupported,
   }) => read(localWorkControllerProvider).execute(
     prepareSkir(
-      subject,
-      requestBytes,
-      serializer,
+      operation,
       label: label,
       classify: classify,
       rejectionMessage: rejectionMessage,
@@ -187,9 +179,7 @@ final class SkirMutationClient {
   /// reservation stay separate because preparation freezes intent, while the
   /// coordinator controls contention and lifetime.
   PreparedCommit<TResponse> prepare<TResponse>(
-    FutureOr<String> subject,
-    Uint8List requestBytes,
-    skir.Serializer<TResponse> serializer, {
+    SkirRouteOperation<TResponse> operation, {
     required String label,
     required MutationResponseDisposition Function(TResponse) classify,
     String Function(TResponse)? rejectionMessage,
@@ -198,7 +188,7 @@ final class SkirMutationClient {
     Set<Object> resources = const {},
     SubmissionReplay replay = SubmissionReplay.unsupported,
   }) {
-    final bytes = Uint8List.fromList(requestBytes).asUnmodifiableView();
+    final bytes = operation.requestBytes;
 
     return PreparedCommit<TResponse>(
       id: submissionId ?? uuid.v4(),
@@ -223,7 +213,7 @@ final class SkirMutationClient {
         final NatsClient client;
         final String destination;
         try {
-          destination = await subject;
+          destination = operation.subject;
           telemetry = await _telemetry();
           client = _client();
         } on Object catch (error) {
@@ -244,7 +234,7 @@ final class SkirMutationClient {
           ),
         );
 
-        final value = serializer.fromBytes(response.payload);
+        final value = operation.responseSerializer.fromBytes(response.payload);
         final disposition = classify(value);
 
         return switch (disposition) {

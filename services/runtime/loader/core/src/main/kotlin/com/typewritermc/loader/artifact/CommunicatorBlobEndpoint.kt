@@ -1,18 +1,12 @@
 package com.typewritermc.loader.artifact
 
-import com.typewritermc.loader.api.RealmServiceAddress
-import com.typewritermc.loader.api.artifact.ArtifactDigest
-import com.typewritermc.loader.api.artifact.BlobChunk
-import com.typewritermc.loader.api.artifact.BlobEndpoint
-import com.typewritermc.loader.api.artifact.BlobMetadata
-import com.typewritermc.loader.api.artifact.BlobResult
-import com.typewritermc.loader.api.artifact.BlobWriteSession
-import com.typewritermc.loader.api.artifact.DigestAlgorithm
-import com.typewritermc.loader.api.artifact.TransferId
-import com.typewritermc.loader.api.realmRequestAddress
-import com.typewritermc.services.libs.communicator.address.addressValuesOf
+import com.typewritermc.protocol.transport.generated.RealmRouteScope
+import com.typewritermc.protocol.transport.generated.sharedBlobBegin
+import com.typewritermc.protocol.transport.generated.sharedBlobComplete
+import com.typewritermc.protocol.transport.generated.sharedBlobMetadata
+import com.typewritermc.protocol.transport.generated.sharedBlobRead
+import com.typewritermc.protocol.transport.generated.sharedBlobWrite
 import com.typewritermc.services.libs.communicator.client.Communicator
-import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponseClassifier
 import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
@@ -20,29 +14,28 @@ import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
 import com.typewritermc.services.libs.communicator.contract.ResponseVariant
 import com.typewritermc.services.libs.communicator.contract.UnaryContract
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
-import com.typewritermc.services.libs.communicator.skir.skirUnaryContract
-import com.typewritermc.services.libs.telemetry.ErrorSlug
+import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
+import com.typewritermc.services.libs.filetransfer.blob.BlobChunk
+import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
+import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
+import com.typewritermc.services.libs.filetransfer.blob.BlobResult
+import com.typewritermc.services.libs.filetransfer.blob.BlobWriteSession
+import com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm
+import com.typewritermc.services.libs.filetransfer.blob.TransferId
 import okio.ByteString.Companion.toByteString
-import skirout.service.v1.artifact.BeginArtifactBlobWrite
 import skirout.service.v1.artifact.BeginArtifactBlobWriteRequest
 import skirout.service.v1.artifact.BeginArtifactBlobWriteResponse
-import skirout.service.v1.artifact.CompleteArtifactBlobWrite
 import skirout.service.v1.artifact.CompleteArtifactBlobWriteRequest
 import skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse
-import skirout.service.v1.artifact.FetchArtifactBlobMetadata
 import skirout.service.v1.artifact.FetchArtifactBlobMetadataRequest
 import skirout.service.v1.artifact.FetchArtifactBlobMetadataResponse
-import skirout.service.v1.artifact.ReadArtifactBlob
 import skirout.service.v1.artifact.ReadArtifactBlobRequest
 import skirout.service.v1.artifact.ReadArtifactBlobResponse
-import skirout.service.v1.artifact.WriteArtifactBlobChunk
 import skirout.service.v1.artifact.WriteArtifactBlobChunkRequest
 import skirout.service.v1.artifact.WriteArtifactBlobChunkResponse
 import skirout.service.v1.artifact.ArtifactDigest as SkirArtifactDigest
 import skirout.service.v1.artifact.BlobMetadata as SkirBlobMetadata
 import skirout.service.v1.artifact.DigestAlgorithm as SkirDigestAlgorithm
-
-typealias RealmArtifactAddress = RealmServiceAddress
 
 /**
  * Identifies an unavailable Realm artifact request attempt.
@@ -63,13 +56,13 @@ internal class RealmArtifactCommunicationException(
  */
 class CommunicatorBlobEndpoint(
     private val communicator: Communicator,
-    private val address: RealmArtifactAddress,
+    private val address: RealmRouteScope,
 ) : BlobEndpoint {
     override suspend fun metadata(digest: ArtifactDigest): BlobResult<BlobMetadata> =
         when (
             val response =
                 request(
-                    blobContracts.metadata,
+                    blobContracts.metadata(address),
                     FetchArtifactBlobMetadataRequest(digest = digest.toSkir()),
                 )
         ) {
@@ -87,7 +80,7 @@ class CommunicatorBlobEndpoint(
         when (
             val response =
                 request(
-                    blobContracts.read,
+                    blobContracts.read(address),
                     ReadArtifactBlobRequest(
                         digest = digest.toSkir(),
                         offset = offset,
@@ -125,7 +118,7 @@ class CommunicatorBlobEndpoint(
         when (
             val response =
                 request(
-                    blobContracts.begin,
+                    blobContracts.begin(address),
                     BeginArtifactBlobWriteRequest(
                         transferId = transfer.value,
                         expected = expected.toSkir(),
@@ -157,7 +150,7 @@ class CommunicatorBlobEndpoint(
         when (
             val response =
                 request(
-                    blobContracts.write,
+                    blobContracts.write(address),
                     WriteArtifactBlobChunkRequest(
                         transferId = transfer.value,
                         offset = offset,
@@ -176,7 +169,7 @@ class CommunicatorBlobEndpoint(
         when (
             val response =
                 request(
-                    blobContracts.complete,
+                    blobContracts.complete(address),
                     CompleteArtifactBlobWriteRequest(transferId = transfer.value),
                 )
         ) {
@@ -188,7 +181,7 @@ class CommunicatorBlobEndpoint(
         }
 
     private suspend fun <Request : Any, Response : Any> request(
-        contract: UnaryContract<RealmArtifactAddress, Request, Response>,
+        contract: UnaryContract<RealmRouteScope, Request, Response>,
         request: Request,
     ): Response =
         when (val result = communicator.request(contract, address, request)) {
@@ -206,44 +199,20 @@ class CommunicatorBlobEndpoint(
 }
 
 internal class BlobContracts {
-    val metadata =
-        contract(
-            FetchArtifactBlobMetadata,
-            "shared.blob.metadata",
-            FetchArtifactBlobMetadataResponse.createUnavailable(),
-        )
-    val read = contract(ReadArtifactBlob, "shared.blob.read", ReadArtifactBlobResponse.createUnavailable())
-    val begin =
-        contract(
-            BeginArtifactBlobWrite,
-            "shared.blob.begin",
-            BeginArtifactBlobWriteResponse.createUnavailable(),
-        )
-    val write =
-        contract(
-            WriteArtifactBlobChunk,
-            "shared.blob.write",
-            WriteArtifactBlobChunkResponse.createUnavailable(),
-        )
-    val complete =
-        contract(
-            CompleteArtifactBlobWrite,
-            "shared.blob.complete",
-            CompleteArtifactBlobWriteResponse.createUnavailable(),
-        )
+    fun metadata(scope: RealmRouteScope) =
+        scope.sharedBlobMetadata(ResponsePolicy(FetchArtifactBlobMetadataResponse.createUnavailable(), unavailableClassifier()))
 
-    private fun <Request : Any, Response : Any> contract(
-        method: build.skir.service.Method<Request, Response>,
-        suffix: String,
-        unavailable: Response,
-    ): UnaryContract<RealmArtifactAddress, Request, Response> =
-        skirUnaryContract(
-            method,
-            OperationName.of(suffix),
-            suffix.realmRequestAddress(),
-            ResponsePolicy(unavailable, unavailableClassifier()),
-            ErrorSlug.of(suffix.replace('.', '-')),
-        )
+    fun read(scope: RealmRouteScope) =
+        scope.sharedBlobRead(ResponsePolicy(ReadArtifactBlobResponse.createUnavailable(), unavailableClassifier()))
+
+    fun begin(scope: RealmRouteScope) =
+        scope.sharedBlobBegin(ResponsePolicy(BeginArtifactBlobWriteResponse.createUnavailable(), unavailableClassifier()))
+
+    fun write(scope: RealmRouteScope) =
+        scope.sharedBlobWrite(ResponsePolicy(WriteArtifactBlobChunkResponse.createUnavailable(), unavailableClassifier()))
+
+    fun complete(scope: RealmRouteScope) =
+        scope.sharedBlobComplete(ResponsePolicy(CompleteArtifactBlobWriteResponse.createUnavailable(), unavailableClassifier()))
 }
 
 internal val blobContracts = BlobContracts()

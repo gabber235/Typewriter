@@ -184,7 +184,7 @@ class DeclarationOrigin private constructor(
         );
 
         /**
-         * If the value of [owner] is already mutable, returns it as-is.
+         * If the value of [owner] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [owner] and returns it.
          */
         val mutableOwner: skirout.editor.v1.type_catalog.DeclarationOwner.Mutable get() {
@@ -342,7 +342,7 @@ class DeclarationDiagnostic private constructor(
         );
 
         /**
-         * If the value of [affected] is already mutable, returns it as-is.
+         * If the value of [affected] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [affected] and returns it.
          */
         val mutableAffected: skirout.editor.v1.type_catalog.TypeDefinitionId.Mutable get() {
@@ -358,7 +358,7 @@ class DeclarationDiagnostic private constructor(
         }
 
         /**
-         * If the value of [origins] is already mutable, returns it as-is.
+         * If the value of [origins] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [origins] and returns it.
          */
         val mutableOrigins: kotlin.collections.MutableList<skirout.editor.v1.diagnostic.DeclarationOrigin_OrMutable> get() {
@@ -528,7 +528,7 @@ class DiagnosticTemplate private constructor(
         );
 
         /**
-         * If the value of [targets] is already mutable, returns it as-is.
+         * If the value of [targets] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [targets] and returns it.
          */
         val mutableTargets: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.RelativeFieldPattern_OrMutable> get() {
@@ -731,7 +731,7 @@ class Diagnostic private constructor(
         );
 
         /**
-         * If the value of [id] is already mutable, returns it as-is.
+         * If the value of [id] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
          */
         val mutableId: skirout.editor.v1.type_catalog.DiagnosticId.Mutable get() {
@@ -747,7 +747,7 @@ class Diagnostic private constructor(
         }
 
         /**
-         * If the value of [origin] is already mutable, returns it as-is.
+         * If the value of [origin] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [origin] and returns it.
          */
         val mutableOrigin: skirout.editor.v1.type_catalog.RuleOrigin.Mutable get() {
@@ -763,7 +763,7 @@ class Diagnostic private constructor(
         }
 
         /**
-         * If the value of [related] is already mutable, returns it as-is.
+         * If the value of [related] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [related] and returns it.
          */
         val mutableRelated: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ValueLocation_OrMutable> get() {
@@ -923,7 +923,7 @@ class ValueProblem private constructor(
         );
 
         /**
-         * If the value of [location] is already mutable, returns it as-is.
+         * If the value of [location] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [location] and returns it.
          */
         val mutableLocation: skirout.editor.v1.type_catalog.ValueLocation.Mutable get() {
@@ -1217,7 +1217,7 @@ class CompleteValue private constructor(
         );
 
         /**
-         * If the value of [schema] is already mutable, returns it as-is.
+         * If the value of [schema] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [schema] and returns it.
          */
         val mutableSchema: skirout.editor.v1.type_catalog.CheckedType.Mutable get() {

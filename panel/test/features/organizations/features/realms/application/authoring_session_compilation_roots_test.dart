@@ -108,8 +108,17 @@ void main() {
       final source = container.read(
         realmPublicationRepositoryProvider(_organization, _realm),
       );
-      final states = await source.states([root]);
-      expect(captured!.roots, [root]);
+      final states = await source.states(
+        skir.CompilationStatusSelection.wrapSuppliedRoots([root]),
+      );
+      expect(
+        captured!.selection,
+        isA<skir.CompilationStatusSelection_suppliedRootsWrapper>().having(
+          (selection) => selection.value.single,
+          "selected root",
+          root,
+        ),
+      );
       expect(states.single.root, root);
       expect(
         states.single.state,

@@ -19,9 +19,7 @@ import "./binding.dart" as _lib_editor_v1_binding;
 import "./expression.dart" as _lib_editor_v1_expression;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 
-// -----------------------------------------------------------------------------
 // struct SetValueAction
-// -----------------------------------------------------------------------------
 
 sealed class SetValueAction_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable get target;
@@ -58,7 +56,7 @@ final class SetValueAction implements SetValueAction_orMutable {
     _lib_editor_v1_expression.ExpressionNode.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SetValueAction toFrozen() => this;
@@ -131,7 +129,7 @@ final class SetValueAction_mutable implements SetValueAction_orMutable {
 
   SetValueAction_mutable._(this.target, this.value);
 
-  /// If the value of [target] is already mutable, returns it as-is.
+  /// If the value of [target] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
   _lib_editor_v1_binding.BindingRef_mutable get mutableTarget {
     final value = this.target;
@@ -149,9 +147,7 @@ final class SetValueAction_mutable implements SetValueAction_orMutable {
       SetValueAction(target: this.target, value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct InsertListItemAction
-// -----------------------------------------------------------------------------
 
 sealed class InsertListItemAction_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable get target;
@@ -199,7 +195,7 @@ final class InsertListItemAction implements InsertListItemAction_orMutable {
         _lib_editor_v1_expression.ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   InsertListItemAction toFrozen() => this;
@@ -288,7 +284,7 @@ final class InsertListItemAction_mutable
 
   InsertListItemAction_mutable._(this.target, this.after, this.value);
 
-  /// If the value of [target] is already mutable, returns it as-is.
+  /// If the value of [target] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
   _lib_editor_v1_binding.BindingRef_mutable get mutableTarget {
     final value = this.target;
@@ -309,9 +305,7 @@ final class InsertListItemAction_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct AppendListItemAction
-// -----------------------------------------------------------------------------
 
 sealed class AppendListItemAction_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable get target;
@@ -349,7 +343,7 @@ final class AppendListItemAction implements AppendListItemAction_orMutable {
         _lib_editor_v1_expression.ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   AppendListItemAction toFrozen() => this;
@@ -426,7 +420,7 @@ final class AppendListItemAction_mutable
 
   AppendListItemAction_mutable._(this.target, this.value);
 
-  /// If the value of [target] is already mutable, returns it as-is.
+  /// If the value of [target] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
   _lib_editor_v1_binding.BindingRef_mutable get mutableTarget {
     final value = this.target;
@@ -445,9 +439,7 @@ final class AppendListItemAction_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct RemoveListItemAction
-// -----------------------------------------------------------------------------
 
 sealed class RemoveListItemAction_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable get target;
@@ -485,7 +477,7 @@ final class RemoveListItemAction implements RemoveListItemAction_orMutable {
         _lib_editor_v1_type_catalog.ItemId.defaultInstance,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RemoveListItemAction toFrozen() => this;
@@ -562,7 +554,7 @@ final class RemoveListItemAction_mutable
 
   RemoveListItemAction_mutable._(this.target, this.item);
 
-  /// If the value of [target] is already mutable, returns it as-is.
+  /// If the value of [target] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
   _lib_editor_v1_binding.BindingRef_mutable get mutableTarget {
     final value = this.target;
@@ -574,7 +566,7 @@ final class RemoveListItemAction_mutable
     }
   }
 
-  /// If the value of [item] is already mutable, returns it as-is.
+  /// If the value of [item] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [item] and returns it.
   _lib_editor_v1_type_catalog.ItemId_mutable get mutableItem {
     final value = this.item;
@@ -592,9 +584,7 @@ final class RemoveListItemAction_mutable
       RemoveListItemAction(target: this.target, item: this.item).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct DuplicateListItemAction
-// -----------------------------------------------------------------------------
 
 sealed class DuplicateListItemAction_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable get target;
@@ -633,7 +623,7 @@ final class DuplicateListItemAction
         _lib_editor_v1_type_catalog.ItemId.defaultInstance,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   DuplicateListItemAction toFrozen() => this;
@@ -710,7 +700,7 @@ final class DuplicateListItemAction_mutable
 
   DuplicateListItemAction_mutable._(this.target, this.item);
 
-  /// If the value of [target] is already mutable, returns it as-is.
+  /// If the value of [target] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
   _lib_editor_v1_binding.BindingRef_mutable get mutableTarget {
     final value = this.target;
@@ -722,7 +712,7 @@ final class DuplicateListItemAction_mutable
     }
   }
 
-  /// If the value of [item] is already mutable, returns it as-is.
+  /// If the value of [item] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [item] and returns it.
   _lib_editor_v1_type_catalog.ItemId_mutable get mutableItem {
     final value = this.item;
@@ -741,9 +731,7 @@ final class DuplicateListItemAction_mutable
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct MoveListItemAction
-// -----------------------------------------------------------------------------
 
 sealed class MoveListItemAction_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable get target;
@@ -790,7 +778,7 @@ final class MoveListItemAction implements MoveListItemAction_orMutable {
     null,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   MoveListItemAction toFrozen() => this;
@@ -875,7 +863,7 @@ final class MoveListItemAction_mutable implements MoveListItemAction_orMutable {
 
   MoveListItemAction_mutable._(this.target, this.item, this.after);
 
-  /// If the value of [target] is already mutable, returns it as-is.
+  /// If the value of [target] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
   _lib_editor_v1_binding.BindingRef_mutable get mutableTarget {
     final value = this.target;
@@ -887,7 +875,7 @@ final class MoveListItemAction_mutable implements MoveListItemAction_orMutable {
     }
   }
 
-  /// If the value of [item] is already mutable, returns it as-is.
+  /// If the value of [item] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [item] and returns it.
   _lib_editor_v1_type_catalog.ItemId_mutable get mutableItem {
     final value = this.item;
@@ -908,9 +896,7 @@ final class MoveListItemAction_mutable implements MoveListItemAction_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct InsertMapRowAction
-// -----------------------------------------------------------------------------
 
 sealed class InsertMapRowAction_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable get target;
@@ -953,7 +939,7 @@ final class InsertMapRowAction implements InsertMapRowAction_orMutable {
     _lib_editor_v1_expression.ExpressionNode.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   InsertMapRowAction toFrozen() => this;
@@ -1036,7 +1022,7 @@ final class InsertMapRowAction_mutable implements InsertMapRowAction_orMutable {
 
   InsertMapRowAction_mutable._(this.target, this.key, this.value);
 
-  /// If the value of [target] is already mutable, returns it as-is.
+  /// If the value of [target] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
   _lib_editor_v1_binding.BindingRef_mutable get mutableTarget {
     final value = this.target;
@@ -1055,9 +1041,7 @@ final class InsertMapRowAction_mutable implements InsertMapRowAction_orMutable {
         .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct UpdateMapRowAction
-// -----------------------------------------------------------------------------
 
 sealed class UpdateMapRowAction_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable get target;
@@ -1106,7 +1090,7 @@ final class UpdateMapRowAction implements UpdateMapRowAction_orMutable {
     _lib_editor_v1_expression.ExpressionNode.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   UpdateMapRowAction toFrozen() => this;
@@ -1204,7 +1188,7 @@ final class UpdateMapRowAction_mutable implements UpdateMapRowAction_orMutable {
 
   UpdateMapRowAction_mutable._(this.target, this.row, this.key, this.value);
 
-  /// If the value of [target] is already mutable, returns it as-is.
+  /// If the value of [target] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
   _lib_editor_v1_binding.BindingRef_mutable get mutableTarget {
     final value = this.target;
@@ -1216,7 +1200,7 @@ final class UpdateMapRowAction_mutable implements UpdateMapRowAction_orMutable {
     }
   }
 
-  /// If the value of [row] is already mutable, returns it as-is.
+  /// If the value of [row] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [row] and returns it.
   _lib_editor_v1_type_catalog.ItemId_mutable get mutableRow {
     final value = this.row;
@@ -1238,9 +1222,7 @@ final class UpdateMapRowAction_mutable implements UpdateMapRowAction_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct RemoveMapRowAction
-// -----------------------------------------------------------------------------
 
 sealed class RemoveMapRowAction_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable get target;
@@ -1277,7 +1259,7 @@ final class RemoveMapRowAction implements RemoveMapRowAction_orMutable {
     _lib_editor_v1_type_catalog.ItemId.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   RemoveMapRowAction toFrozen() => this;
@@ -1350,7 +1332,7 @@ final class RemoveMapRowAction_mutable implements RemoveMapRowAction_orMutable {
 
   RemoveMapRowAction_mutable._(this.target, this.row);
 
-  /// If the value of [target] is already mutable, returns it as-is.
+  /// If the value of [target] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
   _lib_editor_v1_binding.BindingRef_mutable get mutableTarget {
     final value = this.target;
@@ -1362,7 +1344,7 @@ final class RemoveMapRowAction_mutable implements RemoveMapRowAction_orMutable {
     }
   }
 
-  /// If the value of [row] is already mutable, returns it as-is.
+  /// If the value of [row] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [row] and returns it.
   _lib_editor_v1_type_catalog.ItemId_mutable get mutableRow {
     final value = this.row;
@@ -1380,9 +1362,7 @@ final class RemoveMapRowAction_mutable implements RemoveMapRowAction_orMutable {
       RemoveMapRowAction(target: this.target, row: this.row).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ChooseFormAction
-// -----------------------------------------------------------------------------
 
 sealed class ChooseFormAction_orMutable {
   _lib_editor_v1_binding.BindingRef_orMutable get target;
@@ -1419,7 +1399,7 @@ final class ChooseFormAction implements ChooseFormAction_orMutable {
     _lib_editor_v1_type_catalog.TypeUse.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ChooseFormAction toFrozen() => this;
@@ -1492,7 +1472,7 @@ final class ChooseFormAction_mutable implements ChooseFormAction_orMutable {
 
   ChooseFormAction_mutable._(this.target, this.type);
 
-  /// If the value of [target] is already mutable, returns it as-is.
+  /// If the value of [target] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
   _lib_editor_v1_binding.BindingRef_mutable get mutableTarget {
     final value = this.target;
@@ -1510,9 +1490,7 @@ final class ChooseFormAction_mutable implements ChooseFormAction_orMutable {
       ChooseFormAction(target: this.target, type: this.type).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum LocalEditorAction
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -1945,9 +1923,7 @@ final class LocalEditorAction_chooseFormWrapper
   LocalEditorAction_kind get kind => LocalEditorAction_kind.chooseFormWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct ReloadRealmAction
-// -----------------------------------------------------------------------------
 
 sealed class ReloadRealmAction_orMutable {
   ReloadRealmAction toFrozen();
@@ -1968,7 +1944,7 @@ final class ReloadRealmAction implements ReloadRealmAction_orMutable {
   /// Fields are initialized to their default values.
   static ReloadRealmAction_mutable mutable() => ReloadRealmAction_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ReloadRealmAction toFrozen() => this;
@@ -2025,9 +2001,7 @@ final class ReloadRealmAction_mutable implements ReloadRealmAction_orMutable {
   ReloadRealmAction toFrozen() => ReloadRealmAction().._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CommandCapabilityAction
-// -----------------------------------------------------------------------------
 
 sealed class CommandCapabilityAction_orMutable {
   _lib_editor_v1_type_catalog.CapabilityId_orMutable get capabilityId;
@@ -2066,7 +2040,7 @@ final class CommandCapabilityAction
         _lib_editor_v1_expression.ExpressionNode.unknown,
       );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CommandCapabilityAction toFrozen() => this;
@@ -2143,7 +2117,7 @@ final class CommandCapabilityAction_mutable
 
   CommandCapabilityAction_mutable._(this.capabilityId, this.payload);
 
-  /// If the value of [capabilityId] is already mutable, returns it as-is.
+  /// If the value of [capabilityId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
   _lib_editor_v1_type_catalog.CapabilityId_mutable get mutableCapabilityId {
     final value = this.capabilityId;
@@ -2163,9 +2137,7 @@ final class CommandCapabilityAction_mutable
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum RealmEditorAction
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -2311,9 +2283,7 @@ final class RealmEditorAction_commandWrapper
   RealmEditorAction_kind get kind => RealmEditorAction_kind.commandWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // enum EditorAction
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```

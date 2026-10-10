@@ -108,7 +108,7 @@ class BindingRef private constructor(
         );
 
         /**
-         * If the value of [path] is already mutable, returns it as-is.
+         * If the value of [path] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [path] and returns it.
          */
         val mutablePath: skirout.editor.v1.type_catalog.ValuePath.Mutable get() {
@@ -124,7 +124,7 @@ class BindingRef private constructor(
         }
 
         /**
-         * If the value of [bindingId] is already mutable, returns it as-is.
+         * If the value of [bindingId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [bindingId] and returns it.
          */
         val mutableBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
@@ -297,7 +297,7 @@ class ResolvedBinding private constructor(
         );
 
         /**
-         * If the value of [reference] is already mutable, returns it as-is.
+         * If the value of [reference] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [reference] and returns it.
          */
         val mutableReference: skirout.editor.v1.binding.BindingRef.Mutable get() {

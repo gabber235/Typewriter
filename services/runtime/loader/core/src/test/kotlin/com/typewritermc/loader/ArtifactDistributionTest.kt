@@ -16,19 +16,12 @@ import com.typewritermc.imprint.RealmManifest
 import com.typewritermc.imprint.ResolvedArtifact
 import com.typewritermc.imprint.VersionConstraint
 import com.typewritermc.loader.api.EngineImplementationArtifact
-import com.typewritermc.loader.api.RealmServiceAddress
 import com.typewritermc.loader.api.RuntimePlacement
-import com.typewritermc.loader.api.artifact.ArtifactDigest
-import com.typewritermc.loader.api.artifact.BlobMetadata
-import com.typewritermc.loader.api.artifact.BlobResult
 import com.typewritermc.loader.api.artifact.ProducerMetadata
 import com.typewritermc.loader.api.artifact.PublishResult
 import com.typewritermc.loader.api.artifact.PublishSharedArtifact
 import com.typewritermc.loader.api.artifact.SharedArtifactId
 import com.typewritermc.loader.api.artifact.SharedArtifactProvenance
-import com.typewritermc.loader.api.artifact.TransferId
-import com.typewritermc.loader.api.realmEventAddress
-import com.typewritermc.loader.api.realmRequestAddress
 import com.typewritermc.loader.artifact.ArtifactCoordinate
 import com.typewritermc.loader.artifact.ArtifactInboxReconciler
 import com.typewritermc.loader.artifact.BlobContracts
@@ -62,10 +55,24 @@ import com.typewritermc.loader.rollout.RolloutEnvelope
 import com.typewritermc.loader.rollout.RolloutMessenger
 import com.typewritermc.loader.rollout.RuntimeHealthSnapshot
 import com.typewritermc.loader.rollout.deploymentSelectionOrNull
+import com.typewritermc.loader.rollout.hostExecutionReportResponsePolicy
+import com.typewritermc.loader.rollout.hostExecutionResponseClassifier
+import com.typewritermc.loader.rollout.hostExecutionResponsePolicy
+import com.typewritermc.loader.rollout.hostRegistrationResponsePolicy
 import com.typewritermc.loader.rollout.toChildRuntimeState
 import com.typewritermc.loader.rollout.toDesiredHostExecution
 import com.typewritermc.loader.shared.FileSharedArtifactRepository
 import com.typewritermc.loader.shared.SharedArtifactService
+import com.typewritermc.protocol.transport.generated.RealmRouteScope
+import com.typewritermc.protocol.transport.generated.ServiceRouteScope
+import com.typewritermc.protocol.transport.generated.authoringCompiledChanged
+import com.typewritermc.protocol.transport.generated.hostExecutionReport
+import com.typewritermc.protocol.transport.generated.hostExecutionWatch
+import com.typewritermc.protocol.transport.generated.serviceHostRegister
+import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
+import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
+import com.typewritermc.services.libs.filetransfer.blob.BlobResult
+import com.typewritermc.services.libs.filetransfer.blob.TransferId
 import com.typewritermc.services.libs.registrar.ServiceId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
@@ -154,29 +161,43 @@ val ArtifactDistributionTest by testSuite {
 
     test("shared artifact contracts use valid telemetry slugs") {
         val contracts = SharedContracts()
-        contracts.catalog.failureSlug.value shouldBe "shared-catalog-fetch"
-        contracts.publish.failureSlug.value shouldBe "shared-publish"
+        val scope = RealmRouteScope(organizationId = "writers", realmId = "quests")
+        contracts.catalog(scope).failureSlug.value shouldBe "shared-catalog-fetch-failed"
+        contracts.publish(scope).failureSlug.value shouldBe "shared-publish-failed"
     }
 
     test("blob contracts use valid telemetry slugs") {
         val contracts = BlobContracts()
-        contracts.metadata.failureSlug.value shouldBe "shared-blob-metadata"
-        contracts.read.failureSlug.value shouldBe "shared-blob-read"
-        contracts.begin.failureSlug.value shouldBe "shared-blob-begin"
-        contracts.write.failureSlug.value shouldBe "shared-blob-write"
-        contracts.complete.failureSlug.value shouldBe "shared-blob-complete"
+        val scope = RealmRouteScope(organizationId = "writers", realmId = "quests")
+        contracts.metadata(scope).failureSlug.value shouldBe "shared-blob-metadata-failed"
+        contracts.read(scope).failureSlug.value shouldBe "shared-blob-read-failed"
+        contracts.begin(scope).failureSlug.value shouldBe "shared-blob-begin-failed"
+        contracts.write(scope).failureSlug.value shouldBe "shared-blob-write-failed"
+        contracts.complete(scope).failureSlug.value shouldBe "shared-blob-complete-failed"
     }
 
-    test("Realm service addresses preserve the established authority family") {
-        val address = RealmServiceAddress(realmId = "quests", organizationId = "writers")
+    test("generated Realm routes preserve the established authority family") {
+        val address = RealmRouteScope(realmId = "quests", organizationId = "writers")
+        val shared = SharedContracts().publish(address)
 
-        "shared.publish".realmRequestAddress().render(address).value shouldBe
+        shared.requestAddress.render(address).value shouldBe
             "service.to.quests.organization.writers.realm.shared.publish"
-        "catalog.invalidate".realmEventAddress().render(address).value shouldBe
-            "service.from.quests.organization.writers.realm.catalog.invalidate"
-        shouldThrow<IllegalArgumentException> {
-            "shared.*".realmRequestAddress()
-        }
+        address.authoringCompiledChanged.address
+            .render(address)
+            .value shouldBe
+            "service.from.quests.organization.writers.realm.editor.authoring.compiled.changed"
+    }
+
+    test("generated host execution routes preserve the service authority family") {
+        val scope = ServiceRouteScope("host")
+        val registration = scope.serviceHostRegister(hostRegistrationResponsePolicy)
+        val watch = scope.hostExecutionWatch(hostExecutionResponsePolicy, hostExecutionResponseClassifier)
+        val report = scope.hostExecutionReport(hostExecutionReportResponsePolicy)
+
+        registration.requestAddress.render(scope).value shouldBe "cloud.to.service.host.execution.register"
+        watch.requestAddress.render(scope).value shouldBe "cloud.to.service.host.execution.watch"
+        watch.updateAddress.render(scope).value shouldBe "cloud.from.service.host.execution.watch"
+        report.requestAddress.render(scope).value shouldBe "cloud.to.service.host.execution.report"
     }
 
     test("combined host receives Realm panel and primary runtimes as one projection") {
@@ -709,6 +730,18 @@ val ArtifactDistributionTest by testSuite {
             service.catalog().artifacts shouldContainExactly listOf(published.descriptor)
             FileSharedArtifactRepository(root.resolve("shared.cbor")).catalog().artifacts shouldContainExactly
                 listOf(published.descriptor)
+
+            val deleted =
+                service.delete(
+                    command.id,
+                    published.descriptor.revision,
+                    SharedArtifactProvenance.HostedRuntime("paper", "primary"),
+                ) as PublishResult.Published
+            deleted.catalogRevision.value shouldBe published.catalogRevision.value + 1
+            deleted.descriptor.deleted shouldBe true
+            val restartedCatalog = FileSharedArtifactRepository(root.resolve("shared.cbor")).catalog()
+            restartedCatalog.revision shouldBe deleted.catalogRevision
+            restartedCatalog.artifacts shouldContainExactly listOf(deleted.descriptor)
         }
     }
 

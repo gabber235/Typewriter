@@ -1,29 +1,39 @@
 import { InternalError } from "kernel/v1/errors.skir";
 
-// Current binding view returned to the service registrar. Bound is durable organization association. Unbound may
-// include a temporary registration token for operator binding, or no token when none has been issued yet.
-// Querying status may renew that lease while unbound, so this is both a view and the lease bootstrap boundary.
+// Durable organization association returned without changing registration state.
 enum ServiceBinding {
   bound: struct {
     organization_id: string;
     organization_name: string?;
   };
-  unbound: struct {
-    registration_token: string?;
-  };
+  unbound;
 }
 
-// Returns the service binding and, when unbound, exposes the current registration lease for operator use.
-// The service scoped endpoint distinguishes a missing service from internal failure. It does not report liveness;
-// heartbeat and shutdown notifications own that state.
-method GetServiceStatus(
+struct RegistrationLease {
+  token: string;
+  expires_at: timestamp;
+}
+
+// Reads the durable binding only. It does not renew a lease or report liveness.
+method QueryServiceBinding(
   struct {}
 ): enum {
-  internal_error: InternalError;
-
-  service_not_found_error: struct {};
-
-  status: struct {
+  binding: struct {
     binding: ServiceBinding;
   };
+  service_not_found_error: struct {};
+  internal_error: InternalError;
 } = 955610;
+
+// Issues or reuses the temporary capability required to bind an unbound service.
+method EnsureRegistrationLease(
+  struct {}
+): enum {
+  issued: RegistrationLease;
+  already_bound: struct {
+    organization_id: string;
+    organization_name: string?;
+  };
+  service_not_found_error: struct {};
+  internal_error: InternalError;
+} = 955611;

@@ -47,9 +47,10 @@ class MemberRowActions extends HookConsumerWidget {
       confirmIcon: Fa6Solid.user_minus,
       onConfirm: () async {
         isRemoving.value = true;
-        await ref
-            .read(organizationMembersProvider.notifier)
-            .removeMember(member.userId);
+        await ref.executeMembership(
+          ref.membershipCommands.remove(member.userId),
+          (response) => response.requireAccepted(),
+        );
       },
     );
   }

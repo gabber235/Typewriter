@@ -108,7 +108,7 @@ class CatalogPresentationSubject private constructor(
         );
 
         /**
-         * If the value of [descriptor] is already mutable, returns it as-is.
+         * If the value of [descriptor] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [descriptor] and returns it.
          */
         val mutableDescriptor: skirout.editor.v1.typed_value.PortableValue.Mutable get() {

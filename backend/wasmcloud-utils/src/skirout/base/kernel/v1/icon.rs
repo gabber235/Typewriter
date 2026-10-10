@@ -41,7 +41,10 @@ impl Icon {
                         Icon::Svg(_) => 2,
                     },
                     |u| Icon::Unknown(Some(u)),
-                    |x: &Icon| match x { Icon::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
+                    |x: &Icon| match x {
+                        Icon::Unknown(Some(u)) => Some(u.as_ref()),
+                        _ => None,
+                    },
                     "kernel/v1/icon.skir",
                     "Icon",
                     "",
@@ -60,14 +63,34 @@ impl Icon {
 // ==============================================================================
 
 fn initialize_module_serializers() {
-    static INIT: std::sync::LazyLock<()> =
-        std::sync::LazyLock::new(|| {
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<Icon> = Icon::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("iconify", 1, 1, crate::skir_client::Serializer::string(), "", |v| Icon::Iconify(v), |x| match x { Icon::Iconify(v) => v, _ => unreachable!() });
-                (*a).add_wrapper_variant("svg", 2, 2, crate::skir_client::Serializer::string(), "", |v| Icon::Svg(v), |x| match x { Icon::Svg(v) => v, _ => unreachable!() });
-                (*a).finalize();
-            }
-        });
+    static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| unsafe {
+        let a: *mut crate::skir_client::internal::EnumAdapter<Icon> =
+            Icon::_adapter() as *const _ as *mut _;
+        (*a).add_wrapper_variant(
+            "iconify",
+            1,
+            1,
+            crate::skir_client::Serializer::string(),
+            "",
+            |v| Icon::Iconify(v),
+            |x| match x {
+                Icon::Iconify(v) => v,
+                _ => unreachable!(),
+            },
+        );
+        (*a).add_wrapper_variant(
+            "svg",
+            2,
+            2,
+            crate::skir_client::Serializer::string(),
+            "",
+            |v| Icon::Svg(v),
+            |x| match x {
+                Icon::Svg(v) => v,
+                _ => unreachable!(),
+            },
+        );
+        (*a).finalize();
+    });
     let _ = *INIT;
 }

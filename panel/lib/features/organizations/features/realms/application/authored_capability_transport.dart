@@ -5,15 +5,13 @@ import "package:typewriter_panel/typewriter_panel.dart";
 final class NatsAuthoredCapabilityTransport {
   NatsAuthoredCapabilityTransport({
     required this.ref,
-    required skir.RecordId organizationId,
-    required skir.RecordId realmId,
-  }) : _address = RealmServiceAddress(
-         organizationId: organizationId,
-         realmId: realmId,
-       );
+    required this.organizationId,
+    required this.realmId,
+  });
 
   final Ref ref;
-  final RealmServiceAddress _address;
+  final skir.RecordId organizationId;
+  final skir.RecordId realmId;
 
   Future<skir.CommandResult> command({
     required skir.CatalogGeneration generation,
@@ -21,18 +19,16 @@ final class NatsAuthoredCapabilityTransport {
     required skir.DataValue payload,
   }) async {
     final invocation = skir.InvocationId(value: const Uuid().v4());
+    final request = skir.CapabilityInvocationRequest(
+      invocationId: invocation,
+      generation: generation,
+      capabilityId: capabilityId,
+      payload: payload,
+      expectedResultType: null,
+    );
     final result = await ref.requestSkir(
-      _address.request("editor.capability.command.invoke"),
-      skir.CapabilityInvocationRequest.serializer.toBytes(
-        skir.CapabilityInvocationRequest(
-          invocationId: invocation,
-          generation: generation,
-          capabilityId: capabilityId,
-          payload: payload,
-          expectedResultType: null,
-        ),
-      ),
-      skir.CommandResult.serializer,
+      EditorCapabilityCommandInvokeRouteNats(request)
+          .commandOperation(organizationId: organizationId, realmId: realmId),
     );
     if (_commandInvocation(result) != invocation) {
       throw ApiException.internalServerError();
@@ -47,18 +43,17 @@ final class NatsAuthoredCapabilityTransport {
     required skir.TypeTemplate expectedResultType,
   }) async {
     final invocation = skir.InvocationId(value: const Uuid().v4());
+    final request = skir.CapabilityInvocationRequest(
+      invocationId: invocation,
+      generation: generation,
+      capabilityId: capabilityId,
+      payload: payload,
+      expectedResultType: expectedResultType,
+    );
     final result = await ref.requestSkir(
-      _address.request("editor.capability.computation.invoke"),
-      skir.CapabilityInvocationRequest.serializer.toBytes(
-        skir.CapabilityInvocationRequest(
-          invocationId: invocation,
-          generation: generation,
-          capabilityId: capabilityId,
-          payload: payload,
-          expectedResultType: expectedResultType,
-        ),
-      ),
-      skir.ComputationResult.serializer,
+      EditorCapabilityComputationInvokeRouteNats(
+        request,
+      ).computationOperation(organizationId: organizationId, realmId: realmId),
     );
     if (_computationInvocation(result) != invocation) {
       throw ApiException.internalServerError();

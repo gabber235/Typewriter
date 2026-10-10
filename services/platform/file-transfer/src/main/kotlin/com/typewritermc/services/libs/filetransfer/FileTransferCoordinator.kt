@@ -10,6 +10,8 @@ package com.typewritermc.services.libs.filetransfer
 class FileTransferCoordinator(
     val chunkSize: Int = DEFAULT_CHUNK_SIZE,
 ) {
+    private val bytes = SequentialByteTransfer(chunkSize)
+
     init {
         require(chunkSize in 1..MAXIMUM_CHUNK_SIZE) { "Chunk size is outside the supported range" }
     }
@@ -51,39 +53,24 @@ class FileTransferCoordinator(
         key: FileKey,
         source: FileTransferEndpoint,
         destination: FileTransferEndpoint,
-    ): FileTransferResult<FileMetadata> {
-        val metadata = source.metadata(key).valueOrReturn { return it }
-        val session = destination.beginWrite(transferId, metadata).valueOrReturn { return it }
-        if (session.acceptedOffset !in 0..metadata.size) {
-            return FileTransferResult.Failure(
-                FileTransferError.InvalidOffset(metadata.size, session.acceptedOffset),
+    ): FileTransferResult<FileMetadata> =
+        try {
+            val metadata = source.metadata(key).requireTransferValue()
+            val session = destination.beginWrite(transferId, metadata).requireTransferValue()
+            bytes.copy(
+                metadata.size,
+                session.acceptedOffset,
+                read = { offset, maximum ->
+                    val chunk = source.read(key, offset, maximum).requireTransferValue()
+                    ByteTransferChunk(chunk.offset, chunk.bytes, chunk.offset + chunk.bytes.size == metadata.size)
+                },
+                write = { offset, chunk -> destination.write(transferId, offset, chunk).requireTransferValue() },
             )
-        }
-
-        var offset = session.acceptedOffset
-        while (offset < metadata.size) {
-            val maximumBytes = minOf(chunkSize.toLong(), metadata.size - offset).toInt()
-            val chunk = source.read(key, offset, maximumBytes).valueOrReturn { return it }
-            if (chunk.offset != offset) {
-                return FileTransferResult.Failure(FileTransferError.InvalidOffset(offset, chunk.offset))
-            }
-            if (chunk.bytes.isEmpty() || chunk.bytes.size > maximumBytes) {
-                return FileTransferResult.Failure(FileTransferError.InvalidChunk("Source returned an invalid chunk size"))
-            }
-            val nextOffset = destination.write(transferId, offset, chunk.bytes).valueOrReturn { return it }
-            val expectedOffset = offset + chunk.bytes.size
-            if (nextOffset != expectedOffset) {
-                return FileTransferResult.Failure(FileTransferError.InvalidOffset(expectedOffset, nextOffset))
-            }
-            offset = nextOffset
-        }
-        return destination.complete(transferId)
-    }
-
-    private inline fun <Value> FileTransferResult<Value>.valueOrReturn(failure: (FileTransferResult.Failure) -> Nothing): Value =
-        when (this) {
-            is FileTransferResult.Success -> value
-            is FileTransferResult.Failure -> failure(this)
+            destination.complete(transferId)
+        } catch (failure: EndpointFailure) {
+            failure.result
+        } catch (failure: TransferProtocolException) {
+            FileTransferResult.Failure(FileTransferError.InvalidChunk(requireNotNull(failure.message)))
         }
 
     companion object {
@@ -91,3 +78,13 @@ class FileTransferCoordinator(
         const val MAXIMUM_CHUNK_SIZE = 1024 * 1024
     }
 }
+
+private class EndpointFailure(
+    val result: FileTransferResult.Failure,
+) : RuntimeException(null, null, false, false)
+
+private fun <Value> FileTransferResult<Value>.requireTransferValue(): Value =
+    when (this) {
+        is FileTransferResult.Success -> value
+        is FileTransferResult.Failure -> throw EndpointFailure(this)
+    }

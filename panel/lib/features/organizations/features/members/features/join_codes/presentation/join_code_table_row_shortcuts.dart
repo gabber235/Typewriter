@@ -90,9 +90,10 @@ class JoinCodeTableRowShortcuts extends ConsumerWidget {
       content: "Are you sure you want to revoke this join code? It will no longer work for new members.",
       confirmText: "Revoke",
       confirmIcon: Fa6Solid.link_slash,
-      onConfirm: () => ref
-          .read(organizationJoinCodesProvider.notifier)
-          .revokeCode(code.code),
+      onConfirm: () => ref.executeMembership(
+        ref.membershipCommands.revoke(code.code),
+        (response) => response.requireAccepted(),
+      ),
     );
   }
 }

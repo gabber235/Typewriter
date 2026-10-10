@@ -293,7 +293,7 @@ class BlobMetadata private constructor(
         );
 
         /**
-         * If the value of [digest] is already mutable, returns it as-is.
+         * If the value of [digest] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [digest] and returns it.
          */
         val mutableDigest: skirout.service.v1.artifact.ArtifactDigest.Mutable get() {
@@ -1286,7 +1286,7 @@ class SharedArtifactCatalog private constructor(
         );
 
         /**
-         * If the value of [artifacts] is already mutable, returns it as-is.
+         * If the value of [artifacts] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [artifacts] and returns it.
          */
         val mutableArtifacts: kotlin.collections.MutableList<skirout.service.v1.artifact.SharedArtifactDescriptor_OrMutable> get() {
@@ -1335,161 +1335,6 @@ class SharedArtifactCatalog private constructor(
 
         /** Describes the [SharedArtifactCatalog] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = _SerializerRegistry.SharedArtifactCatalogSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface SharedArtifactChanged_OrMutable {
-    val realmId: kotlin.String;
-    val artifact: skirout.service.v1.artifact.SharedArtifactDescriptor_OrMutable;
-    val catalogRevision: kotlin.Long;
-
-    fun toFrozen(): skirout.service.v1.artifact.SharedArtifactChanged;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class SharedArtifactChanged private constructor(
-    override val realmId: kotlin.String,
-    override val artifact: skirout.service.v1.artifact.SharedArtifactDescriptor,
-    override val catalogRevision: kotlin.Long,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.SharedArtifactChanged>? =
-        null,
-): skirout.service.v1.artifact.SharedArtifactChanged_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        realmId: kotlin.String,
-        artifact: skirout.service.v1.artifact.SharedArtifactDescriptor_OrMutable,
-        catalogRevision: kotlin.Long,
-        _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.SharedArtifactChanged>? =
-            null,
-    ): this(
-        realmId,
-        artifact.toFrozen(),
-        catalogRevision,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        realmId = this.realmId,
-        artifact = this.artifact,
-        catalogRevision = this.catalogRevision,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        realmId: kotlin.String =
-            this.realmId,
-        artifact: skirout.service.v1.artifact.SharedArtifactDescriptor_OrMutable =
-            this.artifact,
-        catalogRevision: kotlin.Long =
-            this.catalogRevision,
-    ) = skirout.service.v1.artifact.SharedArtifactChanged(
-        realmId,
-        artifact.toFrozen(),
-        catalogRevision,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.artifact.SharedArtifactChanged && this.realmId == other.realmId && this.artifact == other.artifact && this.catalogRevision == other.catalogRevision);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.realmId, this.artifact, this.catalogRevision).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.SharedArtifactChangedSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [SharedArtifactChanged]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var realmId: kotlin.String =
-            "",
-        override var artifact: skirout.service.v1.artifact.SharedArtifactDescriptor_OrMutable =
-            skirout.service.v1.artifact.SharedArtifactDescriptor.partial(),
-        override var catalogRevision: kotlin.Long =
-            0L,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.artifact.SharedArtifactChanged>? =
-            null,
-    ): skirout.service.v1.artifact.SharedArtifactChanged_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.service.v1.artifact.SharedArtifactChanged(
-            realmId = this.realmId,
-            artifact = this.artifact,
-            catalogRevision = this.catalogRevision,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [artifact] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [artifact] and returns it.
-         */
-        val mutableArtifact: skirout.service.v1.artifact.SharedArtifactDescriptor.Mutable get() {
-            var value = this.artifact;
-            return when (value) {
-                is skirout.service.v1.artifact.SharedArtifactDescriptor -> {
-                    value = value.toMutable();
-                    this.artifact = value;
-                    return value;
-                }
-                is skirout.service.v1.artifact.SharedArtifactDescriptor.Mutable -> value;
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.service.v1.artifact.SharedArtifactChanged(
-                "",
-                skirout.service.v1.artifact.SharedArtifactDescriptor.partial(),
-                0L,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [SharedArtifactChanged].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            realmId: kotlin.String =
-                "",
-            artifact: skirout.service.v1.artifact.SharedArtifactDescriptor_OrMutable =
-                skirout.service.v1.artifact.SharedArtifactDescriptor.partial(),
-            catalogRevision: kotlin.Long =
-                0L,
-        ) = skirout.service.v1.artifact.SharedArtifactChanged(
-            realmId = realmId,
-            artifact = artifact,
-            catalogRevision = catalogRevision,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [SharedArtifactChanged] instances. */
-        val serializer get() = _SerializerRegistry.SharedArtifactChangedSerializer;
-
-        /** Describes the [SharedArtifactChanged] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.SharedArtifactChangedSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1694,7 +1539,7 @@ class ProducerMetadata private constructor(
         );
 
         /**
-         * If the value of [entries] is already mutable, returns it as-is.
+         * If the value of [entries] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [entries] and returns it.
          */
         val mutableEntries: kotlin.collections.MutableList<skirout.service.v1.artifact.ProducerMetadataEntry_OrMutable> get() {
@@ -2637,7 +2482,7 @@ class ReadArtifactBlobRequest private constructor(
         );
 
         /**
-         * If the value of [digest] is already mutable, returns it as-is.
+         * If the value of [digest] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [digest] and returns it.
          */
         val mutableDigest: skirout.service.v1.artifact.ArtifactDigest.Mutable get() {
@@ -3220,7 +3065,7 @@ class BeginArtifactBlobWriteRequest private constructor(
         );
 
         /**
-         * If the value of [expected] is already mutable, returns it as-is.
+         * If the value of [expected] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [expected] and returns it.
          */
         val mutableExpected: skirout.service.v1.artifact.BlobMetadata.Mutable get() {
@@ -5434,7 +5279,7 @@ class FetchArtifactBlobMetadataRequest private constructor(
         );
 
         /**
-         * If the value of [digest] is already mutable, returns it as-is.
+         * If the value of [digest] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [digest] and returns it.
          */
         val mutableDigest: skirout.service.v1.artifact.ArtifactDigest.Mutable get() {
@@ -6438,18 +6283,6 @@ private object _SerializerRegistry {
 
     val SharedArtifactCatalogSerializer = build.skir.internal.makeSerializer(SharedArtifactCatalogSerializerImpl);
 
-    val SharedArtifactChangedSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "service/v1/artifact.skir:SharedArtifactChanged",
-        doc = "",
-        defaultInstance = skirout.service.v1.artifact.SharedArtifactChanged.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.service.v1.artifact.SharedArtifactChanged.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val SharedArtifactChangedSerializer = build.skir.internal.makeSerializer(SharedArtifactChangedSerializerImpl);
-
     val SharedArtifactDescriptorSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "service/v1/artifact.skir:SharedArtifactDescriptor",
         doc = "",
@@ -7220,35 +7053,6 @@ private object _SerializerRegistry {
             { mut, v -> mut.artifacts = v },
         );
         SharedArtifactCatalogSerializerImpl.finalizeStruct();
-
-        SharedArtifactChangedSerializerImpl.addField(
-            "realm_id",
-            "realmId",
-            0,
-            build.skir.Serializers.string,
-            "",
-            { it.realmId },
-            { mut, v -> mut.realmId = v },
-        );
-        SharedArtifactChangedSerializerImpl.addField(
-            "artifact",
-            "artifact",
-            1,
-            _SerializerRegistry.SharedArtifactDescriptorSerializer,
-            "",
-            { it.artifact },
-            { mut, v -> mut.artifact = v },
-        );
-        SharedArtifactChangedSerializerImpl.addField(
-            "catalog_revision",
-            "catalogRevision",
-            2,
-            build.skir.Serializers.int64,
-            "",
-            { it.catalogRevision },
-            { mut, v -> mut.catalogRevision = v },
-        );
-        SharedArtifactChangedSerializerImpl.finalizeStruct();
 
         SharedArtifactDescriptorSerializerImpl.addField(
             "id",

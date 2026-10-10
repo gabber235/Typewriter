@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 
 part of 'roles.dart';
 
@@ -6,29 +6,29 @@ part of 'roles.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Streams the role catalog for the selected organization.
+/// Loads the role catalog for the selected organization.
 ///
-/// The initial list and later add, update, and remove messages are folded into
-/// one provider value. Membership editors consume this catalog to render both
-/// available choices and the protected roles that must remain visible.
+/// Membership editors consume this catalog to render available choices and
+/// the protected roles that must remain visible. Invalidating this provider
+/// reloads the authoritative snapshot.
 
 @ProviderFor(OrganizationRoles)
 final organizationRolesProvider = OrganizationRolesProvider._();
 
-/// Streams the role catalog for the selected organization.
+/// Loads the role catalog for the selected organization.
 ///
-/// The initial list and later add, update, and remove messages are folded into
-/// one provider value. Membership editors consume this catalog to render both
-/// available choices and the protected roles that must remain visible.
+/// Membership editors consume this catalog to render available choices and
+/// the protected roles that must remain visible. Invalidating this provider
+/// reloads the authoritative snapshot.
 final class OrganizationRolesProvider
     extends $StreamNotifierProvider<OrganizationRoles, List<OrganizationRole>> {
-  /// Streams the role catalog for the selected organization.
+  /// Loads the role catalog for the selected organization.
   ///
-  /// The initial list and later add, update, and remove messages are folded into
-  /// one provider value. Membership editors consume this catalog to render both
-  /// available choices and the protected roles that must remain visible.
+  /// Membership editors consume this catalog to render available choices and
+  /// the protected roles that must remain visible. Invalidating this provider
+  /// reloads the authoritative snapshot.
   OrganizationRolesProvider._()
     : super(
         from: null,
@@ -48,13 +48,13 @@ final class OrganizationRolesProvider
   OrganizationRoles create() => OrganizationRoles();
 }
 
-String _$organizationRolesHash() => r'1a49470919cffe4d51184116252b0124a6614068';
+String _$organizationRolesHash() => r'90b0b0d4cbe491fab747a0f9cfce584ef8ce6973';
 
-/// Streams the role catalog for the selected organization.
+/// Loads the role catalog for the selected organization.
 ///
-/// The initial list and later add, update, and remove messages are folded into
-/// one provider value. Membership editors consume this catalog to render both
-/// available choices and the protected roles that must remain visible.
+/// Membership editors consume this catalog to render available choices and
+/// the protected roles that must remain visible. Invalidating this provider
+/// reloads the authoritative snapshot.
 
 abstract class _$OrganizationRoles
     extends $StreamNotifier<List<OrganizationRole>> {

@@ -50,6 +50,10 @@ struct CompiledResourceStatus(810900108) {
 struct CompiledContentChanged(810900109) {
   generation: CatalogGeneration = 0;
 }
+enum CompilationStatusSelection(810900110) {
+  all_roots = 1;
+  supplied_roots: [CompilationRoot] = 2;
+}
 
 method QueryPublishedContent(
   struct {
@@ -64,7 +68,7 @@ method QueryPublishedContent(
 
 method QueryCompiledResourceStatus(
   struct {
-    roots: [CompilationRoot] = 0;
+    selection: CompilationStatusSelection = 0;
   }
 ): enum {
   success: struct {

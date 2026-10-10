@@ -10,11 +10,7 @@ use typewriter_component_test::prelude::{
 };
 use wasmcloud_utils::{
     skir::base::organization::v1::{
-        join_codes::*,
-        join_request::*,
-        member::*,
-        organization::*,
-        user::*,
+        join_codes::*, join_request::*, member::*, organization::*, user::*,
     },
     skir_client::UnrecognizedValues,
 };
@@ -451,7 +447,8 @@ async fn watch_returns_only_requested_user_organizations(
         anyhow::bail!("expected organization list")
     };
     assert_eq!(
-        snapshot.values
+        snapshot
+            .values
             .iter()
             .map(|organization| organization.name.as_str())
             .collect::<Vec<_>>(),
