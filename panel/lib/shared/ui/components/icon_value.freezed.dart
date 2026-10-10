@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'icon_value.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -42,7 +42,7 @@ $IconValueCopyWith(IconValue _, $Res Function(IconValue) __);
 }
 
 
-/// Adds pattern-matching-related methods to [IconValue].
+/// Adds pattern matching related methods to [IconValue].
 extension IconValuePatterns on IconValue {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -66,7 +66,7 @@ return svg(_that);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -129,7 +129,7 @@ return svg(_that.source);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -182,7 +182,7 @@ class IconifyIconValue implements IconValue {
  final  String value;
 
 /// Create a copy of IconValue
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $IconifyIconValueCopyWith<IconifyIconValue> get copyWith => _$IconifyIconValueCopyWithImpl<IconifyIconValue>(this, _$identity);
@@ -229,7 +229,7 @@ class _$IconifyIconValueCopyWithImpl<$Res>
   final $Res Function(IconifyIconValue) _then;
 
 /// Create a copy of IconValue
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? value = null,}) {
   return _then(IconifyIconValue(
 null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
@@ -250,7 +250,7 @@ class SvgIconValue implements IconValue {
  final  String source;
 
 /// Create a copy of IconValue
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SvgIconValueCopyWith<SvgIconValue> get copyWith => _$SvgIconValueCopyWithImpl<SvgIconValue>(this, _$identity);
@@ -297,7 +297,7 @@ class _$SvgIconValueCopyWithImpl<$Res>
   final $Res Function(SvgIconValue) _then;
 
 /// Create a copy of IconValue
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? source = null,}) {
   return _then(SvgIconValue(
 null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable

@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'local_editor_values.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -17,7 +17,7 @@ mixin _$LocalEditorValue {
 
  skir.DataValue get value; Set<skir.ValuePath> get editedPaths;
 /// Create a copy of LocalEditorValue
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $LocalEditorValueCopyWith<LocalEditorValue> get copyWith => _$LocalEditorValueCopyWithImpl<LocalEditorValue>(this as LocalEditorValue, _$identity);
@@ -67,7 +67,7 @@ class _$LocalEditorValueCopyWithImpl<$Res>
   final $Res Function(LocalEditorValue) _then;
 
 /// Create a copy of LocalEditorValue
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? value = null,Object? editedPaths = null,}) {
   return _then(LocalEditorValue(
 value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
@@ -79,7 +79,7 @@ as Set<skir.ValuePath>,
 }
 
 
-/// Adds pattern-matching-related methods to [LocalEditorValue].
+/// Adds pattern matching related methods to [LocalEditorValue].
 extension LocalEditorValuePatterns on LocalEditorValue {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -102,7 +102,7 @@ return $default(_that);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -165,7 +165,7 @@ return $default(_that.value,_that.editedPaths);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -226,7 +226,7 @@ class _LocalEditorValue extends LocalEditorValue {
 
 
 /// Create a copy of LocalEditorValue
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$LocalEditorValueCopyWith<_LocalEditorValue> get copyWith => __$LocalEditorValueCopyWithImpl<_LocalEditorValue>(this, _$identity);
@@ -273,7 +273,7 @@ class __$LocalEditorValueCopyWithImpl<$Res>
   final $Res Function(_LocalEditorValue) _then;
 
 /// Create a copy of LocalEditorValue
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? value = null,Object? editedPaths = null,}) {
   return _then(_LocalEditorValue(
 value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
