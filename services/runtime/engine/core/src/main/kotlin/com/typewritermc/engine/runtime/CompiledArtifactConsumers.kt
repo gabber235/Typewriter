@@ -1,16 +1,14 @@
 package com.typewritermc.engine.runtime
 
 import com.typewritermc.engine.CompiledArtifactReference
-import com.typewritermc.engine.CompiledBlobPointer
+import com.typewritermc.engine.ContentDigest
 import com.typewritermc.engine.LoadedCompiledArtifact
 import com.typewritermc.engine.LoadedPublishedContent
 import com.typewritermc.engine.PublishedContent
-import com.typewritermc.loader.api.artifact.ArtifactDigest
-import com.typewritermc.loader.api.artifact.BlobEndpoint
-import com.typewritermc.loader.api.artifact.BlobResult
-import com.typewritermc.loader.api.artifact.DEFAULT_CHUNK_SIZE
-import com.typewritermc.loader.api.artifact.DigestAlgorithm
-import java.io.ByteArrayOutputStream
+import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
+import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
+import com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm
+import com.typewritermc.services.libs.filetransfer.blob.readVerified
 
 /** Contributes every artifact for one projection and media type to an atomic engine content snapshot. */
 interface CompiledArtifactConsumer {
@@ -56,40 +54,13 @@ class BlobCompiledArtifactSource(
     suspend fun load(content: PublishedContent): LoadedPublishedContent =
         LoadedPublishedContent(
             content,
-            content.outputs.map { output -> LoadedCompiledArtifact(output.reference, read(output.blob)) },
+            content.outputs.map { output ->
+                LoadedCompiledArtifact(
+                    output.reference,
+                    blobs.readVerified(output.blob.digest.asArtifactDigest(), output.blob.size),
+                )
+            },
         )
-
-    private suspend fun read(pointer: CompiledBlobPointer): ByteArray {
-        require(pointer.size <= Int.MAX_VALUE) { "Compiled blob is too large to buffer." }
-        val expected = ArtifactDigest(DigestAlgorithm.SHA_256, pointer.digest.value)
-        val metadata = blobs.metadata(expected).success("read compiled blob metadata")
-        require(metadata.size == pointer.size) { "Compiled blob size does not match its descriptor." }
-        val output = ByteArrayOutputStream(pointer.size.toInt())
-        var offset = 0L
-        var complete = pointer.size == 0L
-        while (offset < pointer.size) {
-            val chunk = blobs.read(expected, offset, DEFAULT_CHUNK_SIZE).success("read compiled blob")
-            require(chunk.offset == offset) { "Compiled blob returned a noncontiguous chunk." }
-            require(chunk.bytes.isNotEmpty()) { "Compiled blob ended before its declared size." }
-            require(chunk.bytes.size.toLong() <= pointer.size - offset) {
-                "Compiled blob exceeded its declared size."
-            }
-            output.write(chunk.bytes)
-            offset += chunk.bytes.size
-            require(!chunk.complete || offset == pointer.size) { "Compiled blob ended before its declared size." }
-            complete = chunk.complete
-        }
-        require(complete) { "Compiled blob did not mark its final chunk complete." }
-        val bytes = output.toByteArray()
-        require(ArtifactDigest.sha256(bytes) == expected) { "Compiled blob digest verification failed." }
-        return bytes
-    }
 }
 
-private fun <T> BlobResult<T>.success(operation: String): T =
-    when (this) {
-        is BlobResult.Success -> value
-        BlobResult.NotFound -> error("$operation failed because the blob was not found.")
-        is BlobResult.Conflict -> error("$operation failed: $reason")
-        is BlobResult.Invalid -> error("$operation failed: $reason")
-    }
+private fun ContentDigest.asArtifactDigest(): ArtifactDigest = ArtifactDigest(DigestAlgorithm.SHA_256, value)

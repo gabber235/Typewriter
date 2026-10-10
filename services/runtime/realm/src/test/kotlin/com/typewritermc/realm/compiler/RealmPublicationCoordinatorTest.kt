@@ -4,18 +4,20 @@ import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.PublicationId
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.engine.CompilationProjectionId
+import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.engine.PageCompileResult
 import com.typewritermc.engine.PublishedContent
+import com.typewritermc.engine.encodeShard
 import com.typewritermc.library.PAGE_CONTRACT_TYPE
-import com.typewritermc.loader.api.artifact.ArtifactDigest
-import com.typewritermc.loader.api.artifact.BlobEndpoint
-import com.typewritermc.loader.api.artifact.BlobMetadata
-import com.typewritermc.loader.api.artifact.BlobResult
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.checking.TestCatalogLease
+import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
+import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
+import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
+import com.typewritermc.services.libs.filetransfer.blob.BlobResult
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.FieldDeclaration
 import com.typewritermc.types.FieldOwner
@@ -33,8 +35,6 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 
 val RealmPublicationCoordinatorTest by testSuite {
     test("the local publication gate captures once and rejects overlapping publication") {
@@ -175,14 +175,13 @@ val RealmPublicationCoordinatorTest by testSuite {
         views.capture().use { capture ->
             val bindings = listOf(NativeBindingRequirement(PUBLICATION_PAGE_USE, NativeBindingId("publication_page"), "page:v1"))
             val expected =
-                PageCompiler(emptySet(), bindings.associateBy(NativeBindingRequirement::actual))
-                    .compile(page, capture.root)
-                    .shouldBeInstanceOf<PageCompileResult.Success>()
-                    .shard
+                with(capture.root) {
+                    PageCompiler(emptySet(), bindings.associateBy(NativeBindingRequirement::actual)).compile(page)
+                }.shouldBeInstanceOf<PageCompileResult.Success>()
             val producer = PageCompiledArtifactProducer()
+            val inputs = CompilationInputs(capture.root, bindings)
             val artifact =
-                producer
-                    .compile(CompilationInputs(capture.root, bindings))
+                with(inputs) { producer.compile(producer.roots(capture.root)) }
                     .shouldBeInstanceOf<CompilationOutcome.Ready>()
                     .artifacts
                     .single()
@@ -192,8 +191,11 @@ val RealmPublicationCoordinatorTest by testSuite {
             artifact.mediaType shouldBe "application/vnd.typewriter.page+json"
             artifact.formatRevision shouldBe 2
             artifact.inputFingerprint shouldBe expected.inputFingerprint
-            artifact.semanticDigest shouldBe expected.digest
-            artifact.payload.toList() shouldBe Json { encodeDefaults = true }.encodeToString(expected).encodeToByteArray().toList()
+            artifact.semanticDigest shouldBe expected.shard.digest
+            artifact.payload.toList() shouldBe
+                expected.shard.facts
+                    .encodeShard()
+                    .toList()
         }
         views.close()
     }
@@ -227,7 +229,10 @@ val RealmPublicationCoordinatorTest by testSuite {
                 override val projection = CompilationProjectionId("fixture.blocked")
                 override val mediaType = "application/blocked"
 
-                override fun compile(inputs: CompilationInputs) = CompilationOutcome.Blocked(emptyList())
+                override fun roots(view: com.typewritermc.realm.authoring.AuthoringView) = emptySet<CompilationRoot>()
+
+                context(inputs: CompilationInputs)
+                override fun compile(roots: Set<CompilationRoot>) = CompilationOutcome.Blocked(emptyList())
             }
         val publisher =
             RealmPublicationCoordinator(

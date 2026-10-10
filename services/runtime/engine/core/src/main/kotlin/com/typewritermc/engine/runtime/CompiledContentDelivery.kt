@@ -4,12 +4,10 @@ import com.typewritermc.authoring.PublicationId
 import com.typewritermc.engine.LoadedPublishedContent
 import com.typewritermc.engine.PublishedContentCodec
 import com.typewritermc.loader.api.HostedRuntimeHost
-import com.typewritermc.loader.api.RealmServiceAddress
-import com.typewritermc.loader.api.realmEventAddress
-import com.typewritermc.loader.api.realmRequestAddress
+import com.typewritermc.protocol.transport.generated.RealmRouteScope
+import com.typewritermc.protocol.transport.generated.authoringCompiledChanged
+import com.typewritermc.protocol.transport.generated.authoringCompiledQuery
 import com.typewritermc.services.libs.communicator.client.Communicator
-import com.typewritermc.services.libs.communicator.contract.EventContract
-import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponseClassifier
 import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
@@ -19,8 +17,6 @@ import com.typewritermc.services.libs.communicator.contract.WatchMessage
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
 import com.typewritermc.services.libs.communicator.router.RouterResult
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
-import com.typewritermc.services.libs.communicator.skir.asPayloadCodec
-import com.typewritermc.services.libs.communicator.skir.skirWatchContract
 import com.typewritermc.services.libs.communicator.transfer.BoundedByteTransferAssembler
 import com.typewritermc.services.libs.communicator.transfer.BoundedTransferChunk
 import com.typewritermc.services.libs.communicator.transport.Payload
@@ -40,8 +36,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
-import skirout.editor.v1.compiled_content.CompiledContentChanged
-import skirout.editor.v1.compiled_content.QueryPublishedContent
 import skirout.editor.v1.compiled_content.QueryPublishedContentRequest
 import skirout.editor.v1.compiled_content.QueryPublishedContentResponse
 import java.util.UUID
@@ -91,9 +85,9 @@ class MessagingEngineContentDelivery(
                         return@collectLatest
                     }
                     coroutineScope {
-                        val address = RealmServiceAddress(realmId, session.organizationId)
+                        val address = RealmRouteScope(organizationId = session.organizationId, realmId = realmId)
                         val hints = Channel<Unit>(Channel.CONFLATED)
-                        val contract = compiledContentHints()
+                        val contract = address.authoringCompiledChanged
                         val router =
                             session.communicator.createRouter(
                                 communicatorRoutes { eventAt(contract, address) { hints.trySend(Unit) } },
@@ -136,7 +130,7 @@ class MessagingEngineContentDelivery(
 
 internal suspend fun fetchPublishedContent(
     communicator: Communicator,
-    address: RealmServiceAddress,
+    address: RealmRouteScope,
 ): com.typewritermc.engine.PublishedContent? {
     val id = UUID.randomUUID().toString()
     val assembler = BoundedByteTransferAssembler(id)
@@ -194,32 +188,10 @@ internal suspend fun fetchPublishedContent(
     return content
 }
 
-private fun publishedContentQuery(address: RealmServiceAddress) =
-    skirWatchContract(
-        method = QueryPublishedContent,
-        updateSerializer = QueryPublishedContentResponse.serializer,
-        name = OperationName.of("editor.authoring.compiled.query"),
-        requestAddress = "editor.authoring.compiled.query".realmRequestAddress().subscribedAt(address),
-        updateAddress = "editor.authoring.compiled.query".realmEventAddress(),
-        updateAddressResolver = { realm, request ->
-            com.typewritermc.services.libs.communicator.address.MessageAddress.of(
-                "editor.authoring.compiled.query".realmEventAddress().render(realm).value + "." + request.transferId,
-            )
-        },
-        initialPolicy = ResponsePolicy(QueryPublishedContentResponse.createInternalError(), compiledContentResponseClassifier),
-        updateClassifier = compiledContentResponseClassifier,
-        failureSlug =
-            com.typewritermc.services.libs.telemetry.ErrorSlug
-                .of("compiled-content-query-failed"),
-    )
-
-private fun compiledContentHints() =
-    EventContract(
-        OperationName.of("editor.authoring.compiled.changed"),
-        "editor.authoring.compiled.changed".realmEventAddress(),
-        CompiledContentChanged.serializer.asPayloadCodec(),
-        com.typewritermc.services.libs.telemetry.ErrorSlug
-            .of("compiled-content-hint-failed"),
+private fun publishedContentQuery(address: RealmRouteScope) =
+    address.authoringCompiledQuery(
+        policy = ResponsePolicy(QueryPublishedContentResponse.createInternalError(), compiledContentResponseClassifier),
+        updates = compiledContentResponseClassifier,
     )
 
 private val compiledContentResponseClassifier =

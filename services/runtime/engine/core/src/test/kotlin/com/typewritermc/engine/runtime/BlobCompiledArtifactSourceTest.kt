@@ -12,14 +12,15 @@ import com.typewritermc.engine.CompiledResourceKey
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.engine.PublishedContent
 import com.typewritermc.engine.PublishedOutput
-import com.typewritermc.loader.api.artifact.ArtifactDigest
-import com.typewritermc.loader.api.artifact.BlobChunk
-import com.typewritermc.loader.api.artifact.BlobEndpoint
-import com.typewritermc.loader.api.artifact.BlobMetadata
-import com.typewritermc.loader.api.artifact.BlobResult
-import com.typewritermc.loader.api.artifact.BlobWriteSession
-import com.typewritermc.loader.api.artifact.TransferId
+import com.typewritermc.engine.RuntimeCompilationFacts
 import com.typewritermc.scripting.RuntimeMemberSignature
+import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
+import com.typewritermc.services.libs.filetransfer.blob.BlobChunk
+import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
+import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
+import com.typewritermc.services.libs.filetransfer.blob.BlobResult
+import com.typewritermc.services.libs.filetransfer.blob.BlobWriteSession
+import com.typewritermc.services.libs.filetransfer.blob.TransferId
 import com.typewritermc.types.ResourceId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
@@ -84,18 +85,62 @@ val BlobCompiledArtifactSourceTest by testSuite {
             shouldThrow<IllegalArgumentException> { BlobCompiledArtifactSource(blobs).load(activation) }
         }
     }
+
+    test("metadata size disagreement is rejected") {
+        runTest {
+            val blobs = FakeBlobEndpoint()
+            val activation = activation(1, listOf(shard("e", "size")), blobs)
+            blobs.misreportSize(activation.outputs.single().blob)
+
+            shouldThrow<IllegalArgumentException> { BlobCompiledArtifactSource(blobs).load(activation) }
+        }
+    }
+
+    test("empty chunk progress is rejected") {
+        runTest {
+            val blobs = FakeBlobEndpoint()
+            val activation = activation(1, listOf(shard("f", "empty")), blobs)
+            blobs.returnEmptyChunk(activation.outputs.single().blob)
+
+            shouldThrow<IllegalArgumentException> { BlobCompiledArtifactSource(blobs).load(activation) }
+        }
+    }
+
+    test("chunk offset disagreement is rejected") {
+        runTest {
+            val blobs = FakeBlobEndpoint()
+            val activation = activation(1, listOf(shard("a", "offset")), blobs)
+            blobs.shiftChunkOffset(activation.outputs.single().blob)
+
+            shouldThrow<IllegalArgumentException> { BlobCompiledArtifactSource(blobs).load(activation) }
+        }
+    }
+
+    test("missing final completion is rejected") {
+        runTest {
+            val blobs = FakeBlobEndpoint()
+            val activation = activation(1, listOf(shard("b", "completion")), blobs)
+            blobs.omitCompletion(activation.outputs.single().blob)
+
+            shouldThrow<IllegalArgumentException> { BlobCompiledArtifactSource(blobs).load(activation) }
+        }
+    }
 }
 
 private fun shard(
     digestCharacter: String,
     pageKey: String,
 ) = CompiledPageShard(
-    formatRevision = 2,
     digest = ContentDigest(digestCharacter.repeat(64)),
-    inputFingerprint = ContentDigest("f".repeat(64)),
-    root = CompiledResourceKey(ResourceId(pageKey), CompilationContext.Root),
-    resources = emptyList(),
-    edges = emptyList(),
+    facts =
+        RuntimeCompilationFacts(
+            formatRevision = 2,
+            root = CompiledResourceKey(ResourceId(pageKey), CompilationContext.Root),
+            resources = emptyList(),
+            edges = emptyList(),
+            types = emptyList(),
+            relations = emptyList(),
+        ),
 )
 
 private fun activation(
@@ -107,8 +152,8 @@ private fun activation(
         shards.map { shard ->
             PublishedOutput(
                 CompiledArtifactReference(
-                    CompilationRoot(CompilationProjectionId("typewriter.page"), shard.root.source),
-                    shard.formatRevision,
+                    CompilationRoot(CompilationProjectionId("typewriter.page"), shard.facts.root.source),
+                    shard.facts.formatRevision,
                     PageCompiledArtifactConsumer.PAGE_MEDIA_TYPE,
                     shard.digest,
                 ),
@@ -128,6 +173,9 @@ private fun activation(
 private class FakeBlobEndpoint : BlobEndpoint {
     private val bytes = mutableMapOf<ArtifactDigest, ByteArray>()
     private val declaredSizes = mutableMapOf<ArtifactDigest, Long>()
+    private val emptyChunks = mutableSetOf<ArtifactDigest>()
+    private val shiftedOffsets = mutableSetOf<ArtifactDigest>()
+    private val missingCompletions = mutableSetOf<ArtifactDigest>()
 
     fun remove(pointer: CompiledBlobPointer) {
         bytes.remove(pointer.artifactDigest())
@@ -143,6 +191,23 @@ private class FakeBlobEndpoint : BlobEndpoint {
         bytes[digest] = bytes.getValue(digest).copyOf(1)
     }
 
+    fun misreportSize(pointer: CompiledBlobPointer) {
+        val digest = pointer.artifactDigest()
+        declaredSizes[digest] = declaredSizes.getValue(digest) + 1
+    }
+
+    fun returnEmptyChunk(pointer: CompiledBlobPointer) {
+        emptyChunks += pointer.artifactDigest()
+    }
+
+    fun shiftChunkOffset(pointer: CompiledBlobPointer) {
+        shiftedOffsets += pointer.artifactDigest()
+    }
+
+    fun omitCompletion(pointer: CompiledBlobPointer) {
+        missingCompletions += pointer.artifactDigest()
+    }
+
     override suspend fun metadata(digest: ArtifactDigest): BlobResult<BlobMetadata> {
         if (digest !in bytes) return BlobResult.NotFound
         return BlobResult.Success(BlobMetadata(digest, declaredSizes.getValue(digest)))
@@ -154,9 +219,12 @@ private class FakeBlobEndpoint : BlobEndpoint {
         maximumBytes: Int,
     ): BlobResult<BlobChunk> {
         val value = bytes[digest] ?: return BlobResult.NotFound
+        if (digest in emptyChunks) return BlobResult.Success(BlobChunk(offset, byteArrayOf(), complete = false))
         val start = offset.toInt().coerceAtMost(value.size)
         val end = (start + maximumBytes).coerceAtMost(value.size)
-        return BlobResult.Success(BlobChunk(offset, value.copyOfRange(start, end), complete = end == value.size))
+        val reportedOffset = if (digest in shiftedOffsets) offset + 1 else offset
+        val complete = end == value.size && digest !in missingCompletions
+        return BlobResult.Success(BlobChunk(reportedOffset, value.copyOfRange(start, end), complete))
     }
 
     override suspend fun beginWrite(
@@ -182,6 +250,6 @@ private class FakeBlobEndpoint : BlobEndpoint {
 
 private fun CompiledBlobPointer.artifactDigest() =
     ArtifactDigest(
-        com.typewritermc.loader.api.artifact.DigestAlgorithm.SHA_256,
+        com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm.SHA_256,
         digest.value,
     )

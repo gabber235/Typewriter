@@ -1,6 +1,7 @@
 package com.typewritermc.realm.compiler
 
 import com.typewritermc.authoring.TypeSelection
+import com.typewritermc.authoring.descendants
 import com.typewritermc.engine.CompilationContext
 import com.typewritermc.engine.CompileDiagnostic
 import com.typewritermc.engine.CompileDiagnosticSeverity
@@ -11,12 +12,19 @@ import com.typewritermc.engine.CompiledResource
 import com.typewritermc.engine.CompiledResourceKey
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.engine.PageCompileResult
+import com.typewritermc.engine.RuntimeCompilationFacts
+import com.typewritermc.engine.RuntimeRelationFact
+import com.typewritermc.engine.canonicalized
+import com.typewritermc.engine.semanticDigest
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.types.DataValue
+import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
+import com.typewritermc.types.RelationFamilyId
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.catalog.runtimeDefinitions
 import java.security.MessageDigest
 
 internal class PageCompiler(
@@ -24,10 +32,8 @@ internal class PageCompiler(
     private val bindings: Map<com.typewritermc.types.TypeUse.Named, NativeBindingRequirement>,
     private val formatRevision: Int = CURRENT_COMPILER_FORMAT,
 ) {
-    fun compile(
-        root: ResourceId,
-        snapshot: AuthoringView,
-    ): PageCompileResult {
+    context(snapshot: AuthoringView)
+    fun compile(root: ResourceId): PageCompileResult {
         val projected =
             ResourceValueMapper.project(
                 snapshot.links.values,
@@ -153,24 +159,48 @@ internal class PageCompiler(
                 },
             )
         if (diagnostics.isNotEmpty()) return PageCompileResult.Blocked(fingerprint, diagnostics)
-        val compiledResources = resources.map { (id, record) -> record.compile(id, snapshot, bindings) }
-        val edges = projectedEdges.distinct()
-        return PageCompileResult.Success(
-            CompiledPageShard(
+        val runtimeResources = resources.map { (id, record) -> record.compile(id, bindings) }
+        val relationIds =
+            projectedEdges.mapTo(linkedSetOf()) { edge ->
+                (edge.origin as CompiledEdgeOrigin.Relation).relation
+            }
+        val facts =
+            RuntimeCompilationFacts(
                 formatRevision = formatRevision,
-                digest = digest("root:${root.value}|input:${fingerprint.value}"),
-                inputFingerprint = fingerprint,
                 root = CompiledResourceKey(root, CompilationContext.Root),
-                resources = compiledResources,
-                edges = edges,
-            ),
+                resources = runtimeResources,
+                edges = projectedEdges,
+                types =
+                    snapshot.catalog.checked.runtimeDefinitions(
+                        runtimeResources.flatMap { resource ->
+                            resource.value
+                                .descendants()
+                                .mapNotNull { located ->
+                                    (located.value as? DataValue.Named)?.actualType
+                                }.toList()
+                        },
+                    ),
+                relations =
+                    snapshot.catalog.relations
+                        .filter { relation -> relation.id in relationIds }
+                        .map { relation ->
+                            RuntimeRelationFact(
+                                relation.id,
+                                RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID) in relation.families,
+                            )
+                        },
+            )
+        val canonical = facts.canonicalized()
+        return PageCompileResult.Success(
+            shard = CompiledPageShard(canonical.semanticDigest(), canonical),
+            inputFingerprint = fingerprint,
         )
     }
 }
 
+context(snapshot: AuthoringView)
 private fun com.typewritermc.authoring.AuthoringRecord.compile(
     id: ResourceId,
-    snapshot: AuthoringView,
     bindings: Map<com.typewritermc.types.TypeUse.Named, NativeBindingRequirement>,
 ): CompiledResource {
     val actual = (configuration as TypeSelection.Complete).use

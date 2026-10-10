@@ -3,7 +3,6 @@ package com.typewritermc.realm.compiler
 import com.surrealdb.Surreal
 import com.typewritermc.authoring.PublicationId
 import com.typewritermc.checking.Diagnostic
-import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.engine.PublishedContent
 import kotlinx.serialization.builtins.ListSerializer
 
@@ -25,8 +24,6 @@ interface PublicationResults {
     suspend fun selected(): PublishedContent?
 
     suspend fun latestReport(): PublicationReport?
-
-    suspend fun states(roots: Set<CompilationRoot>): Map<CompilationRoot, RegisteredCompiledState>
 }
 
 /** Published descriptors and attempt findings are native objects in the attempt record. */
@@ -81,19 +78,5 @@ class SurrealRegisteredCompiledContentRepository(
             state,
             findings,
         )
-    }
-
-    override suspend fun states(roots: Set<CompilationRoot>): Map<CompilationRoot, RegisteredCompiledState> {
-        val result = selected()
-        val available = result?.outputs?.mapTo(hashSetOf()) { it.reference.root }.orEmpty()
-        return roots.associateWith { root ->
-            if (root in
-                available
-            ) {
-                RegisteredCompiledState.Active(requireNotNull(result).publication)
-            } else {
-                RegisteredCompiledState.NotCompiled
-            }
-        }
     }
 }

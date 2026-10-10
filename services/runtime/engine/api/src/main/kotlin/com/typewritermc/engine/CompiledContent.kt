@@ -6,6 +6,7 @@ import com.typewritermc.authoring.ValuePath
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.RelationId
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeUse
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -82,15 +83,27 @@ value class ContentDigest(
     }
 }
 
-/** A Page rooted typed graph with owned records and incident links. */
 @Serializable
-data class CompiledPageShard(
+data class RuntimeRelationFact(
+    val relation: RelationId,
+    val ownsResources: Boolean,
+)
+
+@Serializable
+data class RuntimeCompilationFacts(
     val formatRevision: Int,
-    val digest: ContentDigest,
-    val inputFingerprint: ContentDigest,
     val root: CompiledResourceKey,
     val resources: List<CompiledResource>,
     val edges: List<CompiledEdge>,
+    val types: List<TypeDefinition>,
+    val relations: List<RuntimeRelationFact>,
+)
+
+/** A canonical Page rooted graph and its semantic identity. */
+@Serializable
+data class CompiledPageShard(
+    val digest: ContentDigest,
+    val facts: RuntimeCompilationFacts,
 )
 
 /**
@@ -145,6 +158,7 @@ sealed interface PageCompileResult {
     @SerialName("success")
     data class Success(
         val shard: CompiledPageShard,
+        val inputFingerprint: ContentDigest,
     ) : PageCompileResult
 
     /** A page that produced no publishable shard and retains the input state that generated its diagnostics. */

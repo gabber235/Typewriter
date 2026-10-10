@@ -38,15 +38,6 @@ val RegisteredCompiledContentRepositoryTest by testSuite {
             attempts.phase(second.publication, PublicationState.Activating)
             attempts.install(second)
             results.selected() shouldBe second
-            results
-                .states(
-                    setOf(
-                        first.outputs
-                            .single()
-                            .reference.root,
-                    ),
-                ).values
-                .single() shouldBe RegisteredCompiledState.NotCompiled
             val empty = second.copy(publication = PublicationId("empty"), outputs = emptyList())
             attempts.start(empty.publication, empty.catalog, testEngineInputs())
             attempts.phase(empty.publication, PublicationState.Activating)

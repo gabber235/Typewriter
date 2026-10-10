@@ -6,9 +6,9 @@ import com.typewritermc.elements.Cue
 import com.typewritermc.elements.Element
 import com.typewritermc.engine.CompiledEdge
 import com.typewritermc.engine.CompiledEdgeOrigin
-import com.typewritermc.engine.CompiledPageShard
 import com.typewritermc.engine.CompiledResource
 import com.typewritermc.engine.CompiledResourceKey
+import com.typewritermc.engine.RuntimeCompilationFacts
 import com.typewritermc.library.Page
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
@@ -55,23 +55,23 @@ class CompiledResourceGraph private constructor(
 
     companion object {
         fun assemble(
-            shards: List<CompiledPageShard>,
+            facts: List<RuntimeCompilationFacts>,
             relations: Collection<RelationContract>,
             catalog: CheckedCatalog,
             bindings: NativeBindingRegistry,
         ): CompiledResourceGraph {
             val records = linkedMapOf<CompiledResourceKey, CompiledResource>()
             val edges = linkedSetOf<CompiledEdge>()
-            shards.forEach { shard ->
-                require(shard.resources.any { it.key == shard.root }) {
+            facts.forEach { compilation ->
+                require(compilation.resources.any { it.key == compilation.root }) {
                     "Compiled Page root is absent from its shard."
                 }
-                shard.resources.forEach { record ->
+                compilation.resources.forEach { record ->
                     require(records.putIfAbsent(record.key, record) == null) {
                         "Compiled resource ${record.key} appears in more than one shard."
                     }
                 }
-                edges.addAll(shard.edges)
+                edges.addAll(compilation.edges)
             }
             val knownRelations = relations.associateBy(RelationContract::id)
             edges.forEach { edge ->

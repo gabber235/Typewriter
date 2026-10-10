@@ -30,7 +30,7 @@ val CompiledArtifactProducerRegistryTest by testSuite {
                     CompilationOutcome.Blocked(emptyList())
                 }
 
-            val result = CompiledArtifactProducerRegistry(listOf(ready, blocked)).compile(inputs)
+            val result = with(inputs) { CompiledArtifactProducerRegistry(listOf(ready, blocked)).compile() }
 
             result.shouldBeInstanceOf<CompilationOutcome.Blocked>().findings shouldBe emptyList()
             received.size shouldBe 2
@@ -59,7 +59,8 @@ val CompiledArtifactProducerRegistryTest by testSuite {
                 }
             listOf(wrongMedia, wrongProjection).forEach { producer ->
                 shouldThrow<IllegalArgumentException> {
-                    CompiledArtifactProducerRegistry(listOf(producer)).compile(CompilationInputs(capture.root, emptyList()))
+                    val inputs = CompilationInputs(capture.root, emptyList())
+                    with(inputs) { CompiledArtifactProducerRegistry(listOf(producer)).compile() }
                 }
             }
         }
@@ -79,7 +80,8 @@ val CompiledArtifactProducerRegistryTest by testSuite {
                 }
 
             shouldThrow<IllegalArgumentException> {
-                CompiledArtifactProducerRegistry(listOf(first, second)).compile(CompilationInputs(capture.root, emptyList()))
+                val inputs = CompilationInputs(capture.root, emptyList())
+                with(inputs) { CompiledArtifactProducerRegistry(listOf(first, second)).compile() }
             }
         }
         views.close()
@@ -95,7 +97,11 @@ private fun producer(
         override val projection = CompilationProjectionId(projection)
         override val mediaType = mediaType
 
-        override fun compile(inputs: CompilationInputs): CompilationOutcome = compile.invoke(inputs)
+        override fun roots(view: com.typewritermc.realm.authoring.AuthoringView): Set<CompilationRoot> =
+            setOf(CompilationRoot(this.projection, ResourceId("root")))
+
+        context(inputs: CompilationInputs)
+        override fun compile(roots: Set<CompilationRoot>): CompilationOutcome = compile.invoke(inputs)
     }
 
 private fun artifact(

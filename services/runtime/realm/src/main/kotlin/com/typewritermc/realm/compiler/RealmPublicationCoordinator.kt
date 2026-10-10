@@ -136,7 +136,8 @@ internal class RealmPublicationCoordinator(
                 if (accepted is AcceptanceResult.Blocked) return blocked(accepted.findings)
                 accepted as AcceptanceResult.Accepted
                 phase(PublicationState.Compiling)
-                val compiled = compilation.compile(CompilationInputs(captured.root, accepted.proof.bindingRequirements))
+                val compilationInputs = CompilationInputs(captured.root, accepted.proof.bindingRequirements)
+                val compiled = with(compilationInputs) { compilation.compile() }
                 if (compiled is CompilationOutcome.Blocked) return blocked(compiled.findings)
                 compiled as CompilationOutcome.Ready
                 val result =

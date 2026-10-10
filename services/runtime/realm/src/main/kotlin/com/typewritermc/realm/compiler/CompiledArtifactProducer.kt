@@ -15,7 +15,10 @@ internal interface CompiledArtifactProducer {
     val projection: CompilationProjectionId
     val mediaType: String
 
-    fun compile(inputs: CompilationInputs): CompilationOutcome
+    fun roots(view: AuthoringView): Set<com.typewritermc.engine.CompilationRoot>
+
+    context(inputs: CompilationInputs)
+    fun compile(roots: Set<com.typewritermc.engine.CompilationRoot>): CompilationOutcome
 }
 
 internal sealed interface CompilationOutcome {

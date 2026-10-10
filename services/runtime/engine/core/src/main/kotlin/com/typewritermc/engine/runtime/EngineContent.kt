@@ -4,18 +4,17 @@ import com.typewritermc.elements.Cue
 import com.typewritermc.elements.Element
 import com.typewritermc.engine.CompilationProjectionId
 import com.typewritermc.engine.CompiledArtifactReference
-import com.typewritermc.engine.CompiledPageShard
 import com.typewritermc.engine.CompiledResourceKey
-import com.typewritermc.engine.ContentDigest
 import com.typewritermc.engine.LoadedCompiledArtifact
 import com.typewritermc.engine.LoadedPublishedContent
 import com.typewritermc.engine.PublishedContent
+import com.typewritermc.engine.RuntimeCompilationFacts
+import com.typewritermc.engine.decodeCompiledPageShard
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.catalog.CheckedCatalog
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.serialization.json.Json
 
 /**
  * Accepts loaded compiled content at the engine content boundary.
@@ -87,31 +86,30 @@ class PageCompiledArtifactConsumer(
     private fun decode(
         reference: CompiledArtifactReference,
         payload: ByteArray,
-    ): CompiledPageShard {
-        val shard = json.decodeFromString(CompiledPageShard.serializer(), payload.decodeToString())
-        require(shard.root.source == reference.root.resource) {
-            "Compiled Page artifact root does not match its payload."
-        }
+    ): RuntimeCompilationFacts {
+        val shard = payload.decodeCompiledPageShard()
         require(shard.digest == reference.semanticDigest) {
             "Compiled Page artifact identity does not match its manifest."
         }
-        require(shard.formatRevision == reference.formatRevision) {
+        val facts = shard.facts
+        require(facts.root.source == reference.root.resource) {
+            "Compiled Page artifact root does not match its payload."
+        }
+        require(facts.formatRevision == reference.formatRevision && facts.formatRevision == 2) {
             "Compiled Page artifact format does not match its manifest."
         }
-        return shard
+        facts.requireAccepted(catalog, relations)
+        return facts
     }
 
     override fun contribute(
         artifacts: List<LoadedCompiledArtifact>,
         target: EngineContentBuilder,
     ) {
-        val shards = artifacts.map { decode(it.reference, it.payload) }
-        require(shards.all { it.formatRevision == 2 }) {
-            "Unsupported compiled Page graph format."
-        }
+        val facts = artifacts.map { decode(it.reference, it.payload) }
         target.set(
             EngineContentSnapshot.Resources,
-            CompiledResourceGraph.assemble(shards, relations, catalog, bindings),
+            CompiledResourceGraph.assemble(facts, relations, catalog, bindings),
         )
     }
 
@@ -137,8 +135,6 @@ class AssemblingEngineContentGateway(
         mutableSnapshot.value = target.build(content.descriptor)
     }
 }
-
-private val json = Json { ignoreUnknownKeys = true }
 
 /** Reports whether the complete publication was installed or was already current. */
 sealed interface ContentApplicationResult {

@@ -52,13 +52,13 @@ private val missingId = ResourceId("missing")
 val PageCompilerTest by testSuite {
     test("one sided ownership links compile the complete owned shard") {
         fixture(mapOf(pageId to pageRecord(listOf(childId)), childId to childRecord("first"))).use { captured ->
-            val result = compiler().compile(pageId, captured.root)
+            val result = with(captured.root) { compiler().compile(pageId) }
 
             result as PageCompileResult.Success
-            result.shard.resources
+            result.shard.facts.resources
                 .map { it.key.source }
                 .toSet() shouldBe setOf(pageId, childId)
-            result.shard.edges.single().let { edge ->
+            result.shard.facts.edges.single().let { edge ->
                 edge.source.source shouldBe pageId
                 edge.target.source shouldBe childId
                 (edge.origin as CompiledEdgeOrigin.Relation).relation shouldBe OWNERSHIP
@@ -70,10 +70,10 @@ val PageCompilerTest by testSuite {
         val first = fixture(mapOf(pageId to pageRecord(listOf(childId)), childId to childRecord("first")))
         val second = fixture(mapOf(pageId to pageRecord(listOf(childId)), childId to childRecord("second")), "snapshot_2")
         try {
-            val firstResult = compiler().compile(pageId, first.root) as PageCompileResult.Success
-            val secondResult = compiler().compile(pageId, second.root) as PageCompileResult.Success
+            val firstResult = with(first.root) { compiler().compile(pageId) } as PageCompileResult.Success
+            val secondResult = with(second.root) { compiler().compile(pageId) } as PageCompileResult.Success
 
-            (secondResult.shard.inputFingerprint == firstResult.shard.inputFingerprint) shouldBe false
+            (secondResult.inputFingerprint == firstResult.inputFingerprint) shouldBe false
             (secondResult.shard.digest == firstResult.shard.digest) shouldBe false
         } finally {
             first.close()
@@ -83,7 +83,7 @@ val PageCompilerTest by testSuite {
 
     test("missing owned resources block publication") {
         fixture(mapOf(pageId to pageRecord(listOf(missingId)))).use { captured ->
-            val result = compiler().compile(pageId, captured.root)
+            val result = with(captured.root) { compiler().compile(pageId) }
 
             result as PageCompileResult.Blocked
             result.diagnostics.single().code shouldBe "missing_owned_resource"
@@ -92,10 +92,10 @@ val PageCompilerTest by testSuite {
 
     test("parallel occurrences retain distinct endpoint locations") {
         fixture(mapOf(pageId to pageRecord(listOf(childId, childId)), childId to childRecord("child"))).use { captured ->
-            val result = compiler().compile(pageId, captured.root) as PageCompileResult.Success
+            val result = with(captured.root) { compiler().compile(pageId) } as PageCompileResult.Success
 
-            result.shard.edges.size shouldBe 2
-            result.shard.edges
+            result.shard.facts.edges.size shouldBe 2
+            result.shard.facts.edges
                 .map { (it.origin as CompiledEdgeOrigin.Relation).firstLocation }
                 .distinct()
                 .size shouldBe 2
@@ -113,7 +113,7 @@ val PageCompilerTest by testSuite {
             resources = mapOf(pageId to unavailable),
             resourceDefinitions = mapOf(pageId to ResourceDefinitionId("page")),
         ).use { captured ->
-            val result = compiler().compile(pageId, captured.root) as PageCompileResult.Blocked
+            val result = with(captured.root) { compiler().compile(pageId) } as PageCompileResult.Blocked
 
             result.diagnostics.map { it.code }.toSet() shouldBe
                 setOf("unavailable_resource_type", "missing_native_binding_evidence")
