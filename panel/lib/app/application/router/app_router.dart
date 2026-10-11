@@ -26,7 +26,9 @@ Raw<AppRouter> appRouter(Ref ref) {
     authentication: AuthenticationRouteAccess(),
     organizations: OrganizationRouteAccess(),
   );
-  final workSessionLoss = ref.watch(workSessionLossProvider);
+  // This stable command owner reads route derived work at admission time.
+  // Watching it would make that work a reactive descendant of its own guard.
+  final workSessionLoss = ref.read(workSessionLossProvider);
   final router = AppRouter(access, workSessionLoss);
   final reevaluation = RouteReevaluationCoordinator(
     access: access,
