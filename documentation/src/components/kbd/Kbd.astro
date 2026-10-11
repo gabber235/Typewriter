@@ -21,7 +21,7 @@ const chords = parseChords(keys);
           return (
             <Fragment>
               {keyIndex > 0 && <span class={s.plus}>+</span>}
-              <kbd class={s.cap}>
+              <kbd class={s.cap} title={cap.spoken}>
                 {cap.spoken ? (
                   <Fragment>
                     <span aria-hidden="true">{cap.glyph}</span>

@@ -1,13 +1,23 @@
+// Copies the 1.0 panel's solid key cap (panel/lib/shared/ui/components/
+// shortcut_display.dart, `_KeyDisplay` + `KeyStyle.solid()` at size 12):
+// one cap per key 4px apart, no visible "+"; 20px tall, at least 20px wide,
+// 4px padding and radius; JetBrains Mono 12px bold, 0.5px tracking; no
+// border, a hard ledge underneath (2px light, 3px dark). Colours are the
+// panel's surfaceContainerHighest / onSurface / ledge, computed from its
+// fromSeed(#62646A) scheme. Sizes are px like the panel, not em.
 export const kbdStyles = {
+	// Baseline, not middle: the cap's letters sit on the text's baseline, and
+	// `middle` placed groups inconsistently on tall reading lines.
 	group:
-		"inline-flex items-center gap-1 align-baseline whitespace-nowrap font-mono not-italic text-[0.9em] leading-none",
+		"inline-flex items-center gap-1 align-baseline whitespace-nowrap not-italic leading-none",
 
-	cap: "inline-flex items-center justify-center min-w-[1.6em] rounded-[0.35em] border border-[var(--sl-color-gray-4)] border-b-2 border-b-[var(--sl-color-gray-3)] bg-[var(--surface-container-lowest)] px-[0.45em] pt-[0.2em] pb-[0.15em] text-[0.9em] font-medium not-italic text-[var(--sl-color-white)] shadow-[0_1px_0_rgba(0,0,0,0.08)]",
+	cap: "inline-flex h-5 min-w-5 items-center justify-center rounded px-1 font-(family-name:--font-mono) text-xs leading-none font-bold tracking-[0.5px] not-italic bg-[#E1E2E9] text-[#191C20] shadow-[0_2px_0_#C7C8D5] transition-[background-color,color,box-shadow] duration-200 dark:bg-[#33353A] dark:text-[#E1E2E9] dark:shadow-[0_3px_0_#1E1F23] forced-colors:border forced-colors:border-solid",
 
-	plus: "select-none text-[0.85em] not-italic text-[var(--on-surface-variant)]",
+	// The panel shows no "+"; screen readers still hear "Control plus S".
+	plus: "sr-only",
 
 	chord:
-		"select-none px-[0.15em] text-[0.8em] not-italic text-[var(--on-surface-variant)]",
+		"select-none px-0.5 font-(family-name:--font-mono) text-xs leading-none not-italic text-(--on-surface-variant)",
 
 	srOnly: "sr-only",
 } as const;

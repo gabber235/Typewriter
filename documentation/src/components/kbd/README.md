@@ -1,6 +1,30 @@
 # Kbd
 
-Renders keyboard shortcuts as `<kbd>` keycaps.
+Renders keyboard shortcuts as `<kbd>` keycaps, styled exactly like the key
+caps in the 1.0 panel (`panel/lib/shared/ui/components/shortcut_display.dart`,
+`_KeyDisplay` with `KeyStyle.solid()` at size 12).
+
+## Look
+
+- One cap per key, 4px apart, no visible `+` (screen readers still hear
+  "plus").
+- 20px tall, at least 20px wide (wider for words like `Esc`), 4px horizontal
+  padding, 4px radius, no border.
+- JetBrains Mono 12px bold, 0.5px letter spacing, line height 1.
+- A hard ledge under the cap: `0 2px 0` in light, `0 3px 0` in dark.
+- Colours are the panel's `surfaceContainerHighest` / `onSurface` and the
+  ledge (background darkened in OkHSL), computed from the panel's
+  `ColorScheme.fromSeed(#62646A)`:
+
+  | | Light | Dark |
+  | --- | --- | --- |
+  | Cap | `#E1E2E9` | `#33353A` |
+  | Text | `#191C20` | `#E1E2E9` |
+  | Ledge | `#C7C8D5` | `#1E1F23` |
+
+- Sizes are px, as in the panel, so a shortcut in a heading stays panel-size.
+- Groups align on the text baseline. `vertical-align: middle` placed groups
+  inconsistently on the tall reading lines.
 
 ## Syntax
 
@@ -11,7 +35,8 @@ Renders keyboard shortcuts as `<kbd>` keycaps.
 ```
 
 - `+` joins keys pressed **together**.
-- `,` separates **sequential** chords; a `then` separator is rendered between them.
+- `,` separates **sequential** chords; a muted `then` is rendered between them
+  (the panel has no multi-step shortcuts, so this is the docs' own addition).
 - Whitespace around keys is trimmed, so `:kbd[ Ctrl + S ]` is the same as `:kbd[Ctrl+S]`.
 
 No attributes.
@@ -30,23 +55,23 @@ separator characters stay usable as keys:
 
 ## Display names
 
-Recognised names are normalised (`keys.ts`): `ctrl`/`control` → `Ctrl`,
-`cmd`/`command`/`meta` → `⌘ Cmd`, `opt`/`option` → `⌥ Option`, `shift` →
-`⇧ Shift`, `alt` → `Alt`, `enter`/`return` → `Enter ↵`, `esc`/`escape` → `Esc`,
-`up`/`down`/`left`/`right` → `↑ ↓ ← →`, `space` → `Space`, plus `tab`,
-`backspace`, `delete`, `home`, `end`, `pageup`, `pagedown`, `win`/`super`.
+Recognised names become the panel's symbols (`keys.ts`): `ctrl`/`control` →
+`⌃`, `alt` → `⌥`, `cmd`/`command`/`meta` → `⌘`, `opt`/`option` → `⌥`, `shift` →
+`⇧`, `enter`/`return` → `↵`, `tab` → `⇥`, `space` → `⎵`, `backspace` → `⌫`,
+`delete` → `Del`, `esc`/`escape` → `Esc`, `up`/`down`/`left`/`right` → `↑ ↓ ← →`,
+`win`/`super` → `⊞`. `home`, `end`, `pageup` and `pagedown` stay words. The
+panel draws these as icons; the docs use the matching characters.
 
 Anything else falls back to: single characters are upper-cased (`s` → `S`),
 longer names get their first letter capitalised (`f5` → `F5`).
 
 ### Spoken names
 
-A cap whose printed glyph does not read as a key name carries a second, spoken
-name (`keys.ts`, `KeyCap.spoken`): `↑` is announced as "Up arrow", `⌘ Cmd` as
-"Command", `Ctrl` as "Control", `Esc` as "Escape". The glyph is hidden from
-assistive technology and the spoken name is rendered as visually hidden text
-next to it. Caps with no `spoken` entry (`Alt`, `Tab`, `F5`, `S`) render as
-plain text.
+A symbol cap carries a spoken name (`keys.ts`, `KeyCap.spoken`): `⌃` is
+announced as "Control", `↑` as "Up arrow", `Esc` as "Escape". The symbol is
+hidden from assistive technology, the spoken name is rendered as visually
+hidden text next to it, and it is also the cap's `title`, so hovering a symbol
+shows its name. Caps with no `spoken` entry (`F5`, `S`) render as plain text.
 
 ## Markup
 

@@ -43,8 +43,11 @@ function chordNodes(keys: string[], index: number): PhrasingContent[] {
  * announced as "Up arrow" instead of being skipped or spelled out.
  */
 function cap(key: KeyCap): PhrasingContent {
-	const properties = { class: kbdStyles.cap };
-	if (!key.spoken) return element("kbd", properties, [text(key.glyph)]);
+	if (!key.spoken) {
+		return element("kbd", { class: kbdStyles.cap }, [text(key.glyph)]);
+	}
+	// Symbol caps (⌃, ⇧, ↵) name themselves on hover too.
+	const properties = { class: kbdStyles.cap, title: key.spoken };
 	return element("kbd", properties, [
 		element("span", { ariaHidden: "true" }, [text(key.glyph)]),
 		element("span", { class: kbdStyles.srOnly }, [text(key.spoken)]),
