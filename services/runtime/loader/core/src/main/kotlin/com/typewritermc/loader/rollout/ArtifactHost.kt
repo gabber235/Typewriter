@@ -35,6 +35,7 @@ import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
@@ -45,6 +46,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import java.nio.file.Path
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.seconds
@@ -122,6 +124,7 @@ class ArtifactHost(
     private var sessionJob: Job? = null
 
     suspend fun start() {
+        withContext(Dispatchers.IO) { inbox.reconcile() }
         inboxJob = scope.launch { inbox.run() }
         sessionJob =
             scope.launch {
