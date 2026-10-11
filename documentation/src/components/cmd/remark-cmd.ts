@@ -63,8 +63,11 @@ function label(command: string): PhrasingContent[] {
 	if (!command.startsWith("/")) {
 		return [element("span", { class: cmdStyles.text }, [text(command)])];
 	}
+	// One wrapper, so the chip's flex gap never lands between `/` and the name.
 	return [
-		element("span", { class: cmdStyles.slash }, [text("/")]),
-		element("span", { class: cmdStyles.text }, [text(command.slice(1))]),
+		element("span", { class: cmdStyles.text }, [
+			element("span", { class: cmdStyles.slash }, [text("/")]),
+			text(command.slice(1)),
+		]),
 	];
 }
