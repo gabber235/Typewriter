@@ -115,6 +115,7 @@ void main() {
       initialQuery: null,
     );
     final scope = PortablePresentationScope(
+      operations: testPortableOperations(),
       bindings: {
         target: PortableExpressionBinding(
           value: skir.DataValue.wrapStringValue("Alpha"),
@@ -170,6 +171,7 @@ void main() {
         body: PortableSearchInput(
           control: control,
           scope: PortablePresentationScope(
+            operations: testPortableOperations(),
             bindings: {
               target: PortableExpressionBinding(
                 value: skir.DataValue.wrapStringValue(""),
@@ -340,6 +342,7 @@ void main() {
       );
     });
     final scope = PortablePresentationScope(
+      operations: testPortableOperations(),
       bindings: {
         target: const PortableExpressionBinding(value: skir.DataValue.unfilled),
       },
@@ -404,6 +407,7 @@ void main() {
     );
     PortablePresentationScope scope(PortablePresentationHost host) =>
         PortablePresentationScope(
+          operations: testPortableOperations(),
           bindings: const {},
           budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
           catalog: catalog,
@@ -618,7 +622,11 @@ final class _TestHost extends ChangeNotifier
   Future<PortablePresentationWriteResult> execute(
     skir.EditorAction editorAction, {
     required PortableInvocationContext context,
-  }) async => const PortablePresentationWriteResult.rejected(
-    "Actions are unavailable in this fixture",
-  );
+  }) async => PortablePresentationWriteResult.rejected([
+    PortablePresentationDiagnostic(
+      code: "unavailable_action",
+      message: "Actions are unavailable in this fixture",
+      severity: skir.DiagnosticSeverity.error,
+    ),
+  ]);
 }

@@ -20,7 +20,6 @@ final class AuthoredPresentationHost extends ChangeNotifier
     this.readOnly = false,
     this.prepareValue,
     this.edit,
-    this.reportStatus,
   });
 
   final skir.ResourceId resource;
@@ -37,7 +36,6 @@ final class AuthoredPresentationHost extends ChangeNotifier
   Future<skir.PreparedValue> Function(skir.ValuePreparationRequest request)?
   prepareValue;
   final RealmEditingBinding? edit;
-  ValueChanged<String>? reportStatus;
   var _disposed = false;
 
   /// Updates view metadata without replacing an active operation's host.
@@ -48,14 +46,12 @@ final class AuthoredPresentationHost extends ChangeNotifier
     required bool readOnly,
     Future<skir.PreparedValue> Function(skir.ValuePreparationRequest)?
     prepareValue,
-    ValueChanged<String>? reportStatus,
   }) {
     _source = source;
     this.capabilities = capabilities;
     this.available = available;
     this.readOnly = readOnly;
     this.prepareValue = prepareValue;
-    this.reportStatus = reportStatus;
   }
 
   @override
@@ -78,12 +74,13 @@ final class AuthoredPresentationHost extends ChangeNotifier
 
   @override
   PortablePresentationDocument get document {
-    final record = authored.resource(resource);
+    final observation = authored;
+    final record = observation.resource(resource);
     if (record == null) {
       throw StateError("The authored resource is absent");
     }
-    final checked = authored.catalog;
-    if (checked.snapshot.generation != authored.generation) {
+    final checked = observation.catalog;
+    if (checked.snapshot.generation != observation.generation) {
       throw StateError("The authoring catalog is unavailable");
     }
     final payload = skir.DataValue.createRecord(fields: record.fields);
@@ -91,6 +88,14 @@ final class AuthoredPresentationHost extends ChangeNotifier
       skir.TypeSelection_completeWrapper(:final value) =>
         skir.DataValue.createNamed(actualType: value, payload: payload),
       _ => payload,
+    };
+    final schema = switch (record.configuration) {
+      skir.TypeSelection_completeWrapper(:final value) =>
+        CompletePortablePresentationBinding(skir.TypeUse.wrapNamed(value)),
+      skir.TypeSelection_pendingWrapper() => PartialPortablePresentationBinding(
+        record.configuration,
+      ),
+      skir.TypeSelection_unknown() => null,
     };
     return PortablePresentationDocument(
       catalog: checked,
@@ -102,28 +107,42 @@ final class AuthoredPresentationHost extends ChangeNotifier
           ),
           value: skir.DataValue.wrapStringValue(resource.value),
         ),
-        configuredValueBindingId: PortablePresentationBinding(
-          schema: switch (record.configuration) {
-            skir.TypeSelection_completeWrapper(:final value) =>
-              CompletePortablePresentationBinding(
-                skir.TypeUse.wrapNamed(value),
-              ),
-            _ => PartialPortablePresentationBinding(record.configuration),
-          },
-          value: value,
-          editable: true,
-          location: skir.ValueLocation(
-            resource: resource,
-            path: skir.ValuePath(segments: const []),
+        if (schema != null)
+          configuredValueBindingId: PortablePresentationBinding(
+            schema: schema,
+            value: value,
+            editable: true,
+            location: skir.ValueLocation(
+              resource: resource,
+              path: skir.ValuePath(segments: const []),
+            ),
           ),
-        ),
       },
       budget: budget,
+      diagnostics: [
+        ..._diagnosticsFor(observation, resource),
+        for (final finding in observation.initializationFindings)
+          PortablePresentationDiagnostic(
+            code: finding.code,
+            message: formatPortableInitializationDiagnostic(finding),
+            severity: skir.DiagnosticSeverity.warning,
+          ),
+      ],
       role: role,
       material: material,
       activePresentations: {material.provider},
     );
   }
+
+  List<PortablePresentationDiagnostic> _diagnosticsFor(
+    AuthoringDocument observation,
+    skir.ResourceId resource,
+  ) => AuthoredRuleProjection.evaluate(
+    draft: observation,
+    catalog: observation.catalog,
+    resource: resource,
+    budget: budget,
+  ).diagnostics;
 
   @override
   skir.DataValue? read(
@@ -173,21 +192,15 @@ final class AuthoredPresentationHost extends ChangeNotifier
     required PortableInvocationContext context,
   }) async {
     if (!enabled || readOnly) {
-      return const PortablePresentationWriteRejected(
-        "This presentation is read only",
-      );
+      return _reject("This presentation is read only");
     }
     final target = location(reference, context: context);
     if (target == null) {
-      return const PortablePresentationWriteRejected(
-        "The presentation binding is unavailable",
-      );
+      return _reject("The presentation binding is unavailable", target: target);
     }
     final binding = edit;
     if (binding == null) {
-      return const PortablePresentationWriteRejected(
-        "This presentation is read only",
-      );
+      return _reject("This presentation is read only", target: target);
     }
     final currentRecord = authored.resource(target.resource);
     if (!context.isCurrent(
@@ -197,11 +210,11 @@ final class AuthoredPresentationHost extends ChangeNotifier
           ? null
           : _recordValue(currentRecord).editorValueAt(target.path),
     )) {
-      return const PortablePresentationWriteRejected(
+      return _reject(
         "The presentation value changed before this write",
+        target: target,
       );
     }
-    final previousFindingCount = authored.initializationFindings.length;
     final result = await binding.prepare(
       label: "Edit value",
       from: authored,
@@ -217,13 +230,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
       },
     );
     if (result case EditStageRejected(:final message)) {
-      return PortablePresentationWriteRejected(message);
-    }
-    final findings = authored.initializationFindings.skip(previousFindingCount);
-    if (!_disposed && findings.isNotEmpty) {
-      reportStatus?.call(
-        findings.map(formatPortableInitializationDiagnostic).join("\n"),
-      );
+      return _reject(message, target: target);
     }
     return const PortablePresentationWriteApplied();
   }
@@ -234,14 +241,10 @@ final class AuthoredPresentationHost extends ChangeNotifier
     required PortableInvocationContext context,
   }) async {
     if (!enabled || readOnly || edit == null) {
-      return const PortablePresentationWriteRejected(
-        "This presentation is read only",
-      );
+      return _reject("This presentation is read only");
     }
     if (context.catalogGeneration != authored.generation) {
-      return const PortablePresentationWriteRejected(
-        "The editor catalog changed",
-      );
+      return _reject("The editor catalog changed");
     }
     try {
       return switch (editorAction) {
@@ -253,14 +256,12 @@ final class AuthoredPresentationHost extends ChangeNotifier
           value,
           context,
         ),
-        skir.EditorAction_unknown() => const PortablePresentationWriteRejected(
+        skir.EditorAction_unknown() => _reject(
           "This editor action is unavailable",
         ),
       };
     } on Object catch (error) {
-      return PortablePresentationWriteRejected(
-        "The editor action did not complete: $error",
-      );
+      return _reject("The editor action did not complete: $error");
     }
   }
 
@@ -276,9 +277,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
       _ => current?.authoredItems?.toList(),
     };
     if (target == null || items == null || edit == null) {
-      return const PortablePresentationWriteRejected(
-        "The collection binding is unavailable",
-      );
+      return _reject("The collection binding is unavailable", target: target);
     }
     final item = skir.ItemId(value: "panel:${const Uuid().v4()}");
     final itemReference = skir.BindingRef(
@@ -317,13 +316,11 @@ final class AuthoredPresentationHost extends ChangeNotifier
           items.lastOrNull?.id,
           skir.ListItem(id: item, value: authored.defaultValue(expected)),
         );
-      });
+      }, target: target);
     }
     final prepare = prepareValue;
     if (named == null || prepare == null) {
-      return const PortablePresentationWriteRejected(
-        "The collection item cannot be prepared",
-      );
+      return _reject("The collection item cannot be prepared", target: target);
     }
     final selection = skir.TypeSelection.wrapComplete(named);
     final identity = sha256
@@ -340,7 +337,6 @@ final class AuthoredPresentationHost extends ChangeNotifier
       suppliedValue: skir.DataValue.createRecord(fields: const []),
       intentHash: identity,
     );
-    final previousFindingCount = authored.initializationFindings.length;
     final result = await edit!.prepare(
       label: "Add collection item",
       from: authored,
@@ -360,13 +356,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
       },
     );
     if (result case EditStageRejected(:final message)) {
-      return PortablePresentationWriteRejected(message);
-    }
-    final findings = authored.initializationFindings.skip(previousFindingCount);
-    if (findings.isNotEmpty) {
-      reportStatus?.call(
-        findings.map(formatPortableInitializationDiagnostic).join("\n"),
-      );
+      return _reject(message, target: target);
     }
     return const PortablePresentationWriteApplied();
   }
@@ -470,14 +460,16 @@ final class AuthoredPresentationHost extends ChangeNotifier
     skir.ResourceId resource, {
     required PortableInvocationContext context,
   }) {
-    if (context.catalogGeneration != authored.generation) return null;
-    final record = authored.resource(resource);
+    final observation = authored;
+    if (context.catalogGeneration != observation.generation) return null;
+    final record = observation.resource(resource);
     if (record == null) return null;
     return PortableResourceProjection(
       resource: resource,
       configuration: record.configuration,
       label: _resourceLabel(record) ?? resource.value,
       value: _resourceRow(record),
+      diagnostics: _diagnosticsFor(observation, resource),
     );
   }
 
@@ -508,14 +500,10 @@ final class AuthoredPresentationHost extends ChangeNotifier
   }) async {
     final binding = edit;
     if (!enabled || readOnly || binding == null) {
-      return const PortablePresentationWriteRejected(
-        "This presentation is read only",
-      );
+      return _reject("This presentation is read only");
     }
     if (context.catalogGeneration != authored.generation) {
-      return const PortablePresentationWriteRejected(
-        "The editor catalog changed",
-      );
+      return _reject("The editor catalog changed");
     }
     final preparation = switch (counterpart) {
       PortableCreatedCounterpart(:final slot) => _counterpartPreparation(
@@ -547,9 +535,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
       },
     );
     return switch (result) {
-      EditStageRejected(:final message) => PortablePresentationWriteRejected(
-        message,
-      ),
+      EditStageRejected(:final message) => _reject(message),
       _ => const PortablePresentationWriteApplied(),
     };
   }
@@ -590,9 +576,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
     required PortableInvocationContext context,
   }) {
     if (context.catalogGeneration != authored.generation) {
-      return const PortablePresentationWriteRejected(
-        "The editor catalog changed",
-      );
+      return _reject("The editor catalog changed");
     }
     return _stage("Clear link", (operation) {
       operation.disconnect(occurrence);
@@ -764,9 +748,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
     void Function(AuthoringEdit operation) apply,
   ) {
     if (context.catalogGeneration != authored.generation) {
-      return const PortablePresentationWriteRejected(
-        "The editor catalog changed",
-      );
+      return _reject("The editor catalog changed");
     }
     return _stage(label, apply, independent: true);
   }
@@ -1087,9 +1069,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
       _ => null,
     };
     if (target == null || rows == null) {
-      return const PortablePresentationWriteRejected(
-        "The map binding is unavailable",
-      );
+      return _reject("The map binding is unavailable", target: target);
     }
     final item = skir.ItemId(value: "panel:${const Uuid().v4()}");
     skir.TypeUse? branchType(skir.PathSegment branch) => expectedType(
@@ -1119,7 +1099,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
           value: authored.defaultValue(branchType(skir.PathSegment.mapValue)),
         ),
       ]);
-    });
+    }, target: target);
   }
 
   Future<PortablePresentationWriteResult> _executeLocal(
@@ -1130,8 +1110,9 @@ final class AuthoredPresentationHost extends ChangeNotifier
       case skir.LocalEditorAction_setValueWrapper(:final value):
         final replacement = _evaluate(value.value, context);
         return replacement == null
-            ? const PortablePresentationWriteRejected(
+            ? _reject(
                 "The action value is unavailable",
+                target: location(value.target, context: context),
               )
             : _stage("Edit value", (operation) {
                 final target = location(value.target, context: context);
@@ -1141,12 +1122,13 @@ final class AuthoredPresentationHost extends ChangeNotifier
                 operation
                   ..observeExpressionReads(replacement.reads)
                   ..set(target, replacement.value);
-              });
+              }, target: location(value.target, context: context));
       case skir.LocalEditorAction_insertListItemWrapper(:final value):
         final replacement = _evaluate(value.value, context);
         if (replacement == null) {
-          return const PortablePresentationWriteRejected(
+          return _reject(
             "The action value is unavailable",
+            target: location(value.target, context: context),
           );
         }
         return _editList(
@@ -1166,8 +1148,9 @@ final class AuthoredPresentationHost extends ChangeNotifier
         final replacement = _evaluate(value.value, context);
         final items = read(value.target, context: context)?.authoredItems;
         if (replacement == null || items == null) {
-          return const PortablePresentationWriteRejected(
+          return _reject(
             "The action target is not a collection",
+            target: location(value.target, context: context),
           );
         }
         return _editList(
@@ -1195,8 +1178,9 @@ final class AuthoredPresentationHost extends ChangeNotifier
             ?.where((candidate) => candidate.id == value.item)
             .firstOrNull;
         if (target == null || source == null) {
-          return const PortablePresentationWriteRejected(
+          return _reject(
             "The collection item is no longer available",
+            target: location(value.target, context: context),
           );
         }
         return _editList(
@@ -1242,8 +1226,9 @@ final class AuthoredPresentationHost extends ChangeNotifier
         final key = _evaluate(value.key, context);
         final replacement = _evaluate(value.value, context);
         if (key == null || replacement == null) {
-          return const PortablePresentationWriteRejected(
+          return _reject(
             "The action value is unavailable",
+            target: location(value.target, context: context),
           );
         }
         return _editMap(
@@ -1263,8 +1248,9 @@ final class AuthoredPresentationHost extends ChangeNotifier
         final key = _evaluate(value.key, context);
         final replacement = _evaluate(value.value, context);
         if (key == null || replacement == null) {
-          return const PortablePresentationWriteRejected(
+          return _reject(
             "The action value is unavailable",
+            target: location(value.target, context: context),
           );
         }
         return _editMap(
@@ -1296,9 +1282,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
       case skir.LocalEditorAction_chooseFormWrapper(:final value):
         return _chooseForm(value, context);
       case skir.LocalEditorAction_unknown():
-        return const PortablePresentationWriteRejected(
-          "This local editor action is unavailable",
-        );
+        return _reject("This local editor action is unavailable");
     }
   }
 
@@ -1310,24 +1294,18 @@ final class AuthoredPresentationHost extends ChangeNotifier
       case skir.RealmEditorAction_reloadWrapper():
         final reload = capabilities.reload;
         if (reload == null) {
-          return const PortablePresentationWriteRejected(
-            "Reload is unavailable",
-          );
+          return _reject("Reload is unavailable");
         }
         await reload();
       case skir.RealmEditorAction_commandWrapper(:final value):
         final invoke = capabilities.invokeCommand;
         final payload = _evaluate(value.payload, context);
         if (invoke == null || payload == null) {
-          return const PortablePresentationWriteRejected(
-            "Realm commands are unavailable",
-          );
+          return _reject("Realm commands are unavailable");
         }
         await invoke(value.capabilityId, payload.value);
       case skir.RealmEditorAction_unknown():
-        return const PortablePresentationWriteRejected(
-          "This Realm editor action is unavailable",
-        );
+        return _reject("This Realm editor action is unavailable");
     }
     return const PortablePresentationWriteApplied();
   }
@@ -1356,14 +1334,12 @@ final class AuthoredPresentationHost extends ChangeNotifier
   }) {
     final target = location(reference, context: context);
     if (target == null) {
-      return const PortablePresentationWriteRejected(
-        "The action target is unavailable",
-      );
+      return _reject("The action target is unavailable", target: target);
     }
     return _stage("Edit collection", (operation) {
       operation.observeExpressionReads(reads);
       apply(target, operation);
-    });
+    }, target: target);
   }
 
   PortablePresentationWriteResult _editMap(
@@ -1376,15 +1352,11 @@ final class AuthoredPresentationHost extends ChangeNotifier
     final target = location(reference, context: context);
     final current = read(reference, context: context)?.authoredPayload;
     if (target == null || current is! skir.DataValue_mapValueWrapper) {
-      return const PortablePresentationWriteRejected(
-        "The action target is not a map",
-      );
+      return _reject("The action target is not a map", target: target);
     }
     final rows = current.value.rows.toList();
     if (requiredRow != null && rows.every((row) => row.id != requiredRow)) {
-      return const PortablePresentationWriteRejected(
-        "The map row is no longer available",
-      );
+      return _reject("The map row is no longer available", target: target);
     }
     return _stage("Edit map", (operation) {
       operation.observeExpressionReads(reads);
@@ -1394,7 +1366,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
         throw StateError("The map changed before this action");
       }
       operation.replaceMap(target, update(rows));
-    });
+    }, target: target);
   }
 
   Future<PortablePresentationWriteResult> _chooseForm(
@@ -1408,9 +1380,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
       _ => null,
     };
     if (target == null || prepare == null || named == null) {
-      return const PortablePresentationWriteRejected(
-        "The selected form cannot be prepared",
-      );
+      return _reject("The selected form cannot be prepared", target: target);
     }
     final operationId = const Uuid().v4();
     final request = skir.ValuePreparationRequest(
@@ -1429,7 +1399,6 @@ final class AuthoredPresentationHost extends ChangeNotifier
           .toString(),
     );
     final binding = edit!;
-    final previousFindingCount = authored.initializationFindings.length;
     final result = await binding.prepare(
       label: "Choose form",
       from: authored,
@@ -1443,13 +1412,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
       },
     );
     if (result case EditStageRejected(:final message)) {
-      return PortablePresentationWriteRejected(message);
-    }
-    final findings = authored.initializationFindings.skip(previousFindingCount);
-    if (findings.isNotEmpty) {
-      reportStatus?.call(
-        findings.map(formatPortableInitializationDiagnostic).join("\n"),
-      );
+      return _reject(message, target: target);
     }
     return const PortablePresentationWriteApplied();
   }
@@ -1458,23 +1421,34 @@ final class AuthoredPresentationHost extends ChangeNotifier
     String label,
     void Function(AuthoringEdit operation) apply, {
     bool independent = false,
+    skir.ValueLocation? target,
   }) {
     final binding = edit;
     if (!enabled || readOnly || binding == null) {
-      return const PortablePresentationWriteRejected(
-        "This presentation is read only",
-      );
+      return _reject("This presentation is read only", target: target);
     }
     final result = independent
         ? binding.workspace.edit(label: label, apply: apply, from: authored)
         : binding.edit(label: label, apply: apply, from: authored);
     return switch (result) {
-      EditStageRejected(:final message) => PortablePresentationWriteRejected(
-        message,
-      ),
+      EditStageRejected(:final message) => _reject(message, target: target),
       _ => const PortablePresentationWriteApplied(),
     };
   }
+
+  PortablePresentationWriteResult _reject(
+    String message, {
+    skir.ValueLocation? target,
+  }) => PortablePresentationWriteResult.rejected([
+    PortablePresentationDiagnostic(
+      code: "edit_rejected",
+      message: message,
+      severity: skir.DiagnosticSeverity.error,
+      targets: target == null
+          ? const []
+          : [PortableDiagnosticTarget.value(target)],
+    ),
+  ]);
 
   @override
   void dispose() {

@@ -198,14 +198,18 @@ class RealmInboxStoryFixture extends ChangeNotifier {
           for (final notice in notices) RealmInboxIssue.notice(notice),
         if (scenario == RealmInboxScenario.localDraft)
           RealmInboxIssue.localFinding(
-            AuthoredLocalDiagnostic(
+            PortablePresentationDiagnostic(
               code: "required",
               message: "The draft dialogue needs a speaker",
               severity: skir.DiagnosticSeverity.error,
-              location: skir.ValueLocation(
-                resource: root.resource,
-                path: skir.ValuePath(segments: const []),
-              ),
+              targets: [
+                PortableDiagnosticTarget.value(
+                  skir.ValueLocation(
+                    resource: root.resource,
+                    path: skir.ValuePath(segments: const []),
+                  ),
+                ),
+              ],
             ),
           ),
       ],

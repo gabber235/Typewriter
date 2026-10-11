@@ -180,7 +180,7 @@ extension _PortableStructuredInputRendering
     control: control,
     bindings: childScope.bindings,
     budget: childScope.budget,
-    setBinding: childScope.write,
+    setBinding: childScope.apply,
     unavailableBuilder: (context, message) => _diagnostic(message),
     builder: (context, customPresentation, payload) {
       if (customPresentation == null) {

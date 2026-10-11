@@ -17,7 +17,13 @@ void main() {
     expect(projection.diagnostics, hasLength(1));
     expect(projection.diagnostics.single.code, "positive");
     expect(
-      projection.diagnostics.single.location,
+      projection.diagnostics.single.origin,
+      fixture.catalog.snapshot.configuration.single.origin,
+    );
+    expect(
+      (projection.diagnostics.single.targets.single
+              as PortableValueDiagnosticTarget)
+          .location,
       skir.ValueLocation(
         resource: fixture.resource,
         path: skir.ValuePath(
@@ -42,11 +48,256 @@ void main() {
 
     expect(projection.diagnostics, hasLength(1));
     expect(projection.diagnostics.single.code, "positive");
-    expect(projection.diagnostics.single.location.path.segments, [
-      skir.PathSegment.createField(name: "placements"),
-      skir.PathSegment.createItem(id: skir.ItemId(value: "first")),
-      skir.PathSegment.createField(name: "width"),
+    expect(
+      (projection.diagnostics.single.targets.single
+              as PortableValueDiagnosticTarget)
+          .location
+          .path
+          .segments,
+      [
+        skir.PathSegment.createField(name: "placements"),
+        skir.PathSegment.createItem(id: skir.ItemId(value: "first")),
+        skir.PathSegment.createField(name: "width"),
+      ],
+    );
+  });
+  test(
+    "unknown root configuration does not become a partial presentation binding",
+    () {
+      final fixture = _nestedRuleFixture();
+      final record = fixture.draft.resource(fixture.resource)!;
+      final observation = AuthoringDocument(
+        catalog: fixture.catalog,
+        entries: {
+          fixture.resource: skir.AuthoringResource(
+            id: fixture.resource,
+            definition: skir.ResourceDefinitionId(value: "test.tag"),
+            content: skir.AuthoringRecord(
+              configuration: skir.TypeSelection.unknown,
+              fields: record.fields,
+            ),
+          ),
+        },
+        links: const [],
+      );
+      final host = AuthoredPresentationHost(
+        resource: fixture.resource,
+        source: observation,
+        material: skir.PresentationMaterial.defaultInstance,
+        role: skir.PresentationRole.editor,
+        budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
+        capabilities: const PortablePresentationCapabilities(),
+      );
+      addTearDown(host.dispose);
+      final document = host.document;
+      expect(document.bindings.containsKey(configuredValueBindingId), isFalse);
+      expect(
+        document.bindings[presentationSubjectIdentifierBindingId]!.value,
+        skir.DataValue.wrapStringValue(fixture.resource.value),
+      );
+      expect(document.diagnostics.single.targets, [
+        PortableDiagnosticTarget.value(
+          skir.ValueLocation(
+            resource: fixture.resource,
+            path: editorRootPath.field("placement").field("width"),
+          ),
+        ),
+      ]);
+    },
+  );
+
+  test("resource projections retain addressed rules while initialization findings stay general", () {
+    final fixture = _nestedRuleFixture();
+    final observation = AuthoringDocument(
+      catalog: fixture.catalog,
+      entries: {
+        fixture.resource: skir.AuthoringResource(
+          id: fixture.resource,
+          definition: skir.ResourceDefinitionId(value: "test.tag"),
+          content: fixture.draft.resource(fixture.resource)!,
+        ),
+      },
+      links: const [],
+      initializationFindings: [
+        skir.InitializationDiagnostic(
+          field: null,
+          code: "initialization_pending",
+          message: "A default could not be prepared",
+          relativePath: editorRootPath.field("otherResourceField"),
+        ),
+      ],
+    );
+    final host = AuthoredPresentationHost(
+      resource: fixture.resource,
+      source: observation,
+      material: skir.PresentationMaterial.defaultInstance,
+      role: skir.PresentationRole.editor,
+      budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
+      capabilities: const PortablePresentationCapabilities(),
+    );
+    addTearDown(host.dispose);
+    final document = host.document;
+    final projected = host.projectResource(
+      fixture.resource,
+      context: PortableInvocationContext(
+        catalogGeneration: document.catalog.snapshot.generation,
+        bindings: const {},
+      ),
+    );
+    expect(document.diagnostics, hasLength(2));
+    expect(projected!.diagnostics, [document.diagnostics.first]);
+    final initialization = document.diagnostics.last;
+    expect(initialization.code, "initialization_pending");
+    expect(
+      initialization.message,
+      "otherResourceField: A default could not be prepared",
+    );
+    expect(initialization.targets, isEmpty);
+    expect(initialization.severity, skir.DiagnosticSeverity.warning);
+    expect(document.diagnostics.first.targets, [
+      PortableDiagnosticTarget.value(
+        skir.ValueLocation(
+          resource: fixture.resource,
+          path: editorRootPath.field("placement").field("width"),
+        ),
+      ),
     ]);
+  });
+
+  test("diagnostic templates preserve concrete missing fields and deduplicate targets", () {
+    final origin = skir.ValueLocation(
+      resource: skir.ResourceId(value: "owner"),
+      path: editorRootPath.field("subject"),
+    );
+    final diagnostic = skir.DiagnosticTemplate(
+      code: "related",
+      message: "Fix related fields",
+      severity: skir.DiagnosticSeverity.warning,
+      targets: [
+        for (var repeat = 0; repeat < 2; repeat++)
+          skir.RelativeFieldPattern(
+            segments: [
+              skir.FieldPatternSegment.createField(name: "missing"),
+              skir.FieldPatternSegment.createField(name: "child"),
+            ],
+          ),
+      ],
+    );
+    expect(
+      diagnostic.resolveTargets(
+        value: skir.DataValue.createRecord(fields: const []),
+        origin: origin,
+      ),
+      [
+        PortableDiagnosticTarget.value(
+          skir.ValueLocation(
+            resource: origin.resource,
+            path: origin.path.field("missing").field("child"),
+          ),
+        ),
+      ],
+    );
+  });
+
+  test("diagnostic wildcards retain stable item and map branch addresses", () {
+    final origin = skir.ValueLocation(
+      resource: skir.ResourceId(value: "owner"),
+      path: editorRootPath,
+    );
+    final first = skir.ItemId(value: "first");
+    final second = skir.ItemId(value: "second");
+    final value = skir.DataValue.createRecord(
+      fields: [
+        skir.FieldValue(
+          name: "items",
+          value: skir.DataValue.createListValue(
+            items: [
+              skir.ListItem(id: second, value: skir.DataValue.unfilled),
+              skir.ListItem(id: first, value: skir.DataValue.unfilled),
+            ],
+          ),
+        ),
+        skir.FieldValue(
+          name: "map",
+          value: skir.DataValue.createMapValue(
+            rows: [
+              skir.MapRow(
+                id: first,
+                key: skir.DataValue.unfilled,
+                value: skir.DataValue.unfilled,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+    final diagnostic = skir.DiagnosticTemplate(
+      code: "related",
+      message: "Fix related fields",
+      severity: skir.DiagnosticSeverity.error,
+      targets: [
+        skir.RelativeFieldPattern(
+          segments: [
+            skir.FieldPatternSegment.createField(name: "items"),
+            skir.FieldPatternSegment.items,
+          ],
+        ),
+        for (final branch in [
+          skir.FieldPatternSegment.keys,
+          skir.FieldPatternSegment.values,
+        ])
+          skir.RelativeFieldPattern(
+            segments: [
+              skir.FieldPatternSegment.createField(name: "map"),
+              branch,
+            ],
+          ),
+      ],
+    );
+    final paths = diagnostic
+        .resolveTargets(value: value, origin: origin)
+        .cast<PortableValueDiagnosticTarget>()
+        .map((target) => target.location.path)
+        .toList();
+    expect(paths, [
+      for (final id in [second, first])
+        skir.ValuePath(
+          segments: [
+            skir.PathSegment.createField(name: "items"),
+            skir.PathSegment.createItem(id: id),
+          ],
+        ),
+      for (final branch in [skir.PathSegment.mapKey, skir.PathSegment.mapValue])
+        skir.ValuePath(
+          segments: [
+            skir.PathSegment.createField(name: "map"),
+            skir.PathSegment.createItem(id: first),
+            branch,
+          ],
+        ),
+    ]);
+  });
+
+  test("empty wildcard diagnostics retain their collection owner", () {
+    final origin = skir.ValueLocation(
+      resource: skir.ResourceId(value: "owner"),
+      path: editorRootPath,
+    );
+    final diagnostic = skir.DiagnosticTemplate(
+      code: "empty",
+      message: "Needs an item",
+      severity: skir.DiagnosticSeverity.error,
+      targets: [
+        skir.RelativeFieldPattern(segments: [skir.FieldPatternSegment.items]),
+      ],
+    );
+    expect(
+      diagnostic.resolveTargets(
+        value: skir.DataValue.createListValue(items: const []),
+        origin: origin,
+      ),
+      [PortableDiagnosticTarget.value(origin)],
+    );
   });
 }
 

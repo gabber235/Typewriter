@@ -117,8 +117,9 @@ final class _AuthoredScalarGalleryState extends State<AuthoredScalarGallery> {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      PortablePresentationRenderer(host: _host);
+  Widget build(BuildContext context) {
+    return PortablePresentationRenderer(host: _host);
+  }
 }
 
 final class AuthoredInteractionGallery extends StatefulWidget {
@@ -152,7 +153,6 @@ final class _AuthoredInteractionGalleryState
     budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 1000),
     capabilities: const PortablePresentationCapabilities(),
     edit: _binding,
-    reportStatus: (status) => setState(() => _status = status),
   );
   void _updated() {
     if (mounted) setState(() {});
@@ -161,12 +161,18 @@ final class _AuthoredInteractionGalleryState
   @override
   void initState() {
     super.initState();
+    _operations.onStatus = (status) {
+      if (mounted) {
+        setState(() => _status = status);
+      }
+    };
     _workspace.addListener(_updated);
   }
 
   @override
   void dispose() {
     _workspace.removeListener(_updated);
+    _operations.dispose();
     _host.dispose();
     _binding.detach();
     _workspace.dispose();
@@ -175,6 +181,7 @@ final class _AuthoredInteractionGalleryState
     super.dispose();
   }
 
+  final _operations = PortableOperationResults();
   String? _status;
 
   @override
@@ -185,7 +192,6 @@ final class _AuthoredInteractionGalleryState
       capabilities: const PortablePresentationCapabilities(),
       available: true,
       readOnly: false,
-      reportStatus: (status) => setState(() => _status = status),
     );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -193,6 +199,7 @@ final class _AuthoredInteractionGalleryState
         PortablePresentationNodeRenderer(
           node: _interactionGallery,
           scope: PortablePresentationScope(
+            operations: _operations,
             bindings: {
               _interactionRoot: PortableExpressionBinding(
                 value: skir.DataValue.createRecord(fields: record.fields),
@@ -782,7 +789,7 @@ Widget resourceHeadingUseCase(BuildContext context) {
   );
 }
 
-final class ResourceHeadingGallery extends StatelessWidget {
+final class ResourceHeadingGallery extends HookWidget {
   const ResourceHeadingGallery({
     this.title = "A long book title that adapts to its inspector",
     this.multiple = false,
@@ -793,7 +800,10 @@ final class ResourceHeadingGallery extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final operations = useMemoized(PortableOperationResults.new);
+    useEffect(() => operations.dispose, [operations]);
     final scope = PortablePresentationScope(
+      operations: operations,
       bindings: {
         presentationSelectionCountBindingId: PortableExpressionBinding(
           value: skir.DataValue.wrapInteger(multiple ? "2" : "1"),

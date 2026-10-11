@@ -58,7 +58,7 @@ class AuthoringSearchResultItem extends StatelessWidget {
   }
 }
 
-final class _AuthoringResultPresentation extends StatelessWidget {
+final class _AuthoringResultPresentation extends HookWidget {
   const _AuthoringResultPresentation({
     required this.payload,
     required this.selection,
@@ -68,40 +68,45 @@ final class _AuthoringResultPresentation extends StatelessWidget {
   final EditorPresentationSelection selection;
 
   @override
-  Widget build(BuildContext context) => switch (selection) {
-    SelectedEditorPresentation(:final material) =>
-      PortablePresentationNodeRenderer(
-        node: material.layout,
-        scope: PortablePresentationScope(
-          bindings: {
-            configuredValueBindingId: PortableExpressionBinding(
-              value: skir.DataValue.createRecord(
-                fields: payload.subject.content.fields,
+  Widget build(BuildContext context) {
+    final operations = useMemoized(PortableOperationResults.new);
+    useEffect(() => operations.dispose, [operations]);
+    return switch (selection) {
+      SelectedEditorPresentation(:final material) =>
+        PortablePresentationNodeRenderer(
+          node: material.layout,
+          scope: PortablePresentationScope(
+            operations: operations,
+            bindings: {
+              configuredValueBindingId: PortableExpressionBinding(
+                value: skir.DataValue.createRecord(
+                  fields: payload.subject.content.fields,
+                ),
+                location: skir.ValueLocation(
+                  resource: payload.id,
+                  path: skir.ValuePath(segments: const []),
+                ),
               ),
-              location: skir.ValueLocation(
-                resource: payload.id,
-                path: skir.ValuePath(segments: const []),
-              ),
+            },
+            budget: skir.EvaluationBudget(
+              maxSteps: 10000,
+              maxCollectionItems: 10000,
             ),
-          },
-          budget: skir.EvaluationBudget(
-            maxSteps: 10000,
-            maxCollectionItems: 10000,
+            readOnly: true,
+            enabled: false,
+            catalog: payload.catalog,
+            resource: payload.id,
+            role: material.role,
+            activePresentations: {material.provider},
           ),
-          readOnly: true,
-          enabled: false,
-          catalog: payload.catalog,
-          resource: payload.id,
-          role: material.role,
-          activePresentations: {material.provider},
         ),
+      MissingEditorPresentation() => Text(payload.title),
+      ConflictingEditorPresentation() => const Text(
+        "The search result presentation is ambiguous",
       ),
-    MissingEditorPresentation() => Text(payload.title),
-    ConflictingEditorPresentation() => const Text(
-      "The search result presentation is ambiguous",
-    ),
-    UnavailableEditorPresentation() => const Text(
-      "The search result presentation is unavailable",
-    ),
-  };
+      UnavailableEditorPresentation() => const Text(
+        "The search result presentation is unavailable",
+      ),
+    };
+  }
 }

@@ -107,3 +107,10 @@ String _sanitizeFileName(String input) {
   if (sanitized.isEmpty) return "screenshot";
   return sanitized;
 }
+
+/// Supplies one explicit operation lifetime to a manual presentation fixture.
+PortableOperationResults testPortableOperations() {
+  final operations = PortableOperationResults();
+  addTearDown(operations.dispose);
+  return operations;
+}

@@ -48,6 +48,7 @@ abstract class PortablePresentationDocument
     required Map<skir.ExpressionBindingId, PortablePresentationBinding>
     bindings,
     required skir.EvaluationBudget budget,
+    List<PortablePresentationDiagnostic> diagnostics = const [],
     skir.PresentationRole? role,
     skir.PresentationMaterial? material,
     Set<skir.PresentationId> activePresentations = const {},
@@ -68,6 +69,7 @@ abstract class PortablePresentationDocument
       root: root,
       bindings: Map.unmodifiable(bindings),
       budget: budget,
+      diagnostics: List.unmodifiable(diagnostics),
       role: role,
       material: material,
       activePresentations: Set.unmodifiable(activePresentations),
@@ -83,6 +85,7 @@ abstract class PortablePresentationDocument
     required Map<skir.ExpressionBindingId, PortablePresentationBinding>
     bindings,
     required skir.EvaluationBudget budget,
+    required List<PortablePresentationDiagnostic> diagnostics,
     required skir.PresentationRole? role,
     required skir.PresentationMaterial? material,
     required Set<skir.PresentationId> activePresentations,
@@ -180,8 +183,9 @@ sealed class PortablePresentationWriteResult
   const factory PortablePresentationWriteResult.applied() =
       PortablePresentationWriteApplied;
 
-  const factory PortablePresentationWriteResult.rejected(String message) =
-      PortablePresentationWriteRejected;
+  const factory PortablePresentationWriteResult.rejected(
+    List<PortablePresentationDiagnostic> diagnostics,
+  ) = PortablePresentationWriteRejected;
 }
 
 /// Owns one portable presentation document and its mutation boundary.
@@ -285,6 +289,7 @@ abstract class PortableResourceProjection with _$PortableResourceProjection {
     required skir.TypeSelection configuration,
     required String label,
     required skir.DataValue value,
+    @Default([]) List<PortablePresentationDiagnostic> diagnostics,
   }) = _PortableResourceProjection;
 }
 

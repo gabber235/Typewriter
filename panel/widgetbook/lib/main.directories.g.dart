@@ -927,6 +927,55 @@ final directories = <_widgetbook.WidgetbookNode>[
                   ),
                 ],
               ),
+              _widgetbook.WidgetbookFolder(
+                name: 'portable_renderer',
+                children: [
+                  _widgetbook.WidgetbookComponent(
+                    name: 'PortableDiagnosticFrame',
+                    useCases: [
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Field validation',
+                        builder:
+                            _widgetbook_workspace_stories_shared_editors_presentation_portable_presentation_renderer_stories
+                                .portableFieldValidationUseCase,
+                      ),
+                    ],
+                  ),
+                  _widgetbook.WidgetbookComponent(
+                    name: 'PortableDiagnosticHeaderMarker',
+                    useCases: [
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Descendant summary',
+                        builder:
+                            _widgetbook_workspace_stories_shared_editors_presentation_portable_presentation_renderer_stories
+                                .portableHeaderDiagnosticsUseCase,
+                      ),
+                    ],
+                  ),
+                  _widgetbook.WidgetbookComponent(
+                    name: 'PortableDiagnosticMessages',
+                    useCases: [
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'Inline messages',
+                        builder:
+                            _widgetbook_workspace_stories_shared_editors_presentation_portable_presentation_renderer_stories
+                                .portableDiagnosticMessagesUseCase,
+                      ),
+                    ],
+                  ),
+                  _widgetbook.WidgetbookComponent(
+                    name: 'PortablePresentationChrome',
+                    useCases: [
+                      _widgetbook.WidgetbookUseCase(
+                        name: 'General feedback',
+                        builder:
+                            _widgetbook_workspace_stories_shared_editors_presentation_portable_presentation_renderer_stories
+                                .portableGeneralDiagnosticsUseCase,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ],
           ),
         ],

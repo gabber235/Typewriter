@@ -9,6 +9,10 @@ part "portable_renderer/collection_inputs.dart";
 part "portable_renderer/collections.dart";
 part "portable_renderer/content.dart";
 part "portable_renderer/control_frame.dart";
+part "portable_renderer/operation_results.dart";
+part "portable_renderer/diagnostic_tree.dart";
+part "portable_renderer/diagnostic_placement.dart";
+part "portable_renderer/diagnostic_chrome.dart";
 part "portable_renderer/delegation.dart";
 part "portable_renderer/expression_resolution.dart";
 part "portable_renderer/header.dart";
@@ -38,6 +42,24 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (PortableDiagnosticScope.maybeOf(context) == null) {
+      return _PortableDiagnosticBoundary(
+        key: ObjectKey(scope.operations),
+        operations: scope.operations,
+        diagnostics: scope.host?.document.diagnostics ?? const [],
+        observations:
+            scope.host?.document.diagnosticObservations ??
+            scope.diagnosticObservations,
+        child: PortablePresentationChrome(
+          role: scope.role,
+          child: PortablePresentationNodeRenderer(
+            node: node,
+            scope: scope,
+            fillAvailableSpace: fillAvailableSpace,
+          ),
+        ),
+      );
+    }
     final enabled = _boolean(scope, node.properties.enabledIf, fallback: true);
     if (enabled case _ResolvedFailure(:final message)) {
       return _diagnostic(message);
@@ -318,264 +340,85 @@ typedef PortablePresentationScopeBuilder = PortablePresentationScope Function({
   required PortablePresentationHost host,
   required PortablePresentationDocument document,
   required Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings,
+  required PortableOperationResults operations,
   required ValueChanged<String> reportStatus,
 });
 
-final class PortablePresentationRenderer extends StatefulWidget {
+final class PortablePresentationRenderer extends HookWidget {
   const PortablePresentationRenderer({
     required this.host,
     this.scopeBuilder,
     this.onStatus,
-    this.compactDiagnostics = const [],
     this.fillAvailableSpace = false,
     super.key,
   });
-
   final PortablePresentationHost host;
   final PortablePresentationScopeBuilder? scopeBuilder;
   final ValueChanged<String>? onStatus;
-  final List<skir.DiagnosticTemplate> compactDiagnostics;
   final bool fillAvailableSpace;
 
   @override
-  State<PortablePresentationRenderer> createState() =>
-      _PortablePresentationRendererState();
-}
-
-final class _PortablePresentationRendererState
-    extends State<PortablePresentationRenderer> {
-  String? _status;
-
-  @override
-  Widget build(BuildContext context) => ListenableBuilder(
-    listenable: widget.host,
-    builder: (context, _) {
-      final document = widget.host.document;
-      final Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings;
-      try {
-        bindings =
-            {
-              for (final entry in document.bindings.entries)
-                entry.key: PortableExpressionBinding(
-                  value: entry.value.value,
-                  location: entry.value.location,
-                  schema: entry.value.schema,
-                ),
-            }.withPresentationEnvironment(
-              PresentationEnvironment.maybeOf(context)?.bindings ?? const {},
-            );
-      } on StateError catch (error) {
-        return _diagnostic(error.message);
-      }
-      final scope =
-          widget.scopeBuilder?.call(
-            host: widget.host,
-            document: document,
-            bindings: bindings,
-            reportStatus: _reportStatus,
-          ) ??
-          _defaultScope(document, bindings);
-      final root = PortablePresentationNodeRenderer(
-        node: document.root,
-        scope: scope,
-        fillAvailableSpace:
-            widget.fillAvailableSpace ||
-            document.role == skir.PresentationRole.editor,
-      );
-      if (document.role == skir.PresentationRole.editor) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (_status case final status?)
-              Semantics(
-                liveRegion: true,
-                child: Text(
-                  status,
-                  style: context.theme.textTheme.bodyMedium?.copyWith(
-                    color: context.colors.danger,
-                  ),
-                ),
-              ),
-            Expanded(child: root),
-          ],
-        );
-      }
-      if (document.role != skir.PresentationRole.inspector) {
-        final diagnostics = [
-          ...widget.compactDiagnostics,
-          if (_status case final status?)
-            skir.DiagnosticTemplate(
-              code: "presentation_status",
-              message: status,
-              severity: skir.DiagnosticSeverity.error,
-              targets: const [],
-            ),
-        ];
-        if (diagnostics.isEmpty) return root;
-        return _CompactPresentationNotice(
-          diagnostics: diagnostics,
-          child: root,
-        );
-      }
-      if (_status == null) return root;
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (_status case final status?)
-            Semantics(
-              liveRegion: true,
-              child: Text(
-                status,
-                style: context.theme.textTheme.bodyMedium?.copyWith(
-                  color: context.colors.danger,
-                ),
-              ),
-            ),
-          root,
-        ],
-      );
-    },
-  );
-
-  PortablePresentationScope _defaultScope(
-    PortablePresentationDocument document,
-    Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings,
-  ) {
-    final capabilities = widget.host.capabilities;
-    return PortablePresentationScope(
-      bindings: bindings,
-      budget: document.budget,
-      enabled: widget.host.enabled,
-      readOnly: widget.host.readOnly,
-      watchSearch: capabilities.watchSearch,
-      openResource: capabilities.openResource,
-      reportStatus: _reportStatus,
-      catalog: document.catalog,
-      role: document.role,
-      material: document.material,
-      activePresentations: document.activePresentations,
-      slots: document.slots,
-      host: widget.host,
-    );
-  }
-
-  void _reportStatus(String message) {
-    widget.onStatus?.call(message);
-    if (!mounted || widget.onStatus != null) return;
-    setState(() => _status = message);
-  }
-}
-
-final class _CompactPresentationNotice extends StatefulWidget {
-  const _CompactPresentationNotice({
-    required this.diagnostics,
-    required this.child,
-  });
-
-  final List<skir.DiagnosticTemplate> diagnostics;
-  final Widget child;
-
-  @override
-  State<_CompactPresentationNotice> createState() =>
-      _CompactPresentationNoticeState();
-}
-
-final class _CompactPresentationNoticeState
-    extends State<_CompactPresentationNotice> {
-  final _tooltipKey = GlobalKey<TooltipState>();
-
-  @override
   Widget build(BuildContext context) {
-    final message = widget.diagnostics
-        .map((diagnostic) => diagnostic.message)
-        .join("\n");
-    final severity = _strongestSeverity(widget.diagnostics);
-    final label = switch (severity.kind) {
-      skir.DiagnosticSeverity_kind.informationConst =>
-        "Presentation information",
-      skir.DiagnosticSeverity_kind.warningConst => "Presentation warning",
-      skir.DiagnosticSeverity_kind.errorConst => "Presentation error",
-      skir.DiagnosticSeverity_kind.unknown => "Presentation problem",
-    };
-    final color = switch (severity.kind) {
-      skir.DiagnosticSeverity_kind.informationConst => context.colors.info,
-      skir.DiagnosticSeverity_kind.warningConst => context.colors.warning,
-      skir.DiagnosticSeverity_kind.errorConst ||
-      skir.DiagnosticSeverity_kind.unknown => context.colors.danger,
-    };
-    final icon = switch (severity.kind) {
-      skir.DiagnosticSeverity_kind.informationConst =>
-        Icons.info_outline_rounded,
-      skir.DiagnosticSeverity_kind.warningConst => Icons.warning_amber_rounded,
-      skir.DiagnosticSeverity_kind.errorConst ||
-      skir.DiagnosticSeverity_kind.unknown => Icons.error_outline_rounded,
-    };
-    return Tooltip(
-      key: _tooltipKey,
-      message: message,
-      child: Stack(
-        fit: StackFit.passthrough,
-        children: [
-          widget.child,
-          PositionedDirectional(
-            top: 0,
-            end: 0,
-            child: IgnorePointer(
-              child: Focus(
-                debugLabel: label,
-                onFocusChange: (focused) {
-                  if (!focused) {
-                    Tooltip.dismissAllToolTips();
-                    return;
-                  }
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) {
-                      _tooltipKey.currentState?.ensureTooltipVisible();
-                    }
-                  });
-                },
-                child: Semantics(
-                  label: label,
-                  tooltip: message,
-                  child: ExcludeSemantics(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: context.theme.colorScheme.surface,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: color),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(2),
-                        child: Icon(icon, size: 14, color: color),
-                      ),
-                    ),
-                  ),
-                ),
+    useListenable(host);
+    final document = host.document;
+    final generation = document.catalog.snapshot.generation;
+    final operations = useMemoized(PortableOperationResults.new, [
+      host,
+      generation,
+    ])..onStatus = onStatus;
+    useEffect(() => operations.dispose, [operations]);
+    final Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings;
+    try {
+      bindings =
+          {
+            for (final entry in document.bindings.entries)
+              entry.key: PortableExpressionBinding(
+                value: entry.value.value,
+                location: entry.value.location,
+                schema: entry.value.schema,
               ),
-            ),
-          ),
-        ],
-      ),
+          }.withPresentationEnvironment(
+            PresentationEnvironment.maybeOf(context)?.bindings ?? const {},
+          );
+    } on StateError catch (error) {
+      return _diagnostic(error.message);
+    }
+    final scope =
+        scopeBuilder?.call(
+          host: host,
+          document: document,
+          bindings: bindings,
+          operations: operations,
+          reportStatus: operations.reportStatus,
+        ) ??
+        PortablePresentationScope(
+          bindings: bindings,
+          budget: document.budget,
+          enabled: host.enabled,
+          readOnly: host.readOnly,
+          operations: operations,
+          watchSearch: host.capabilities.watchSearch,
+          openResource: host.capabilities.openResource,
+          reportStatus: operations.reportStatus,
+          catalog: document.catalog,
+          role: document.role,
+          material: document.material,
+          activePresentations: document.activePresentations,
+          slots: document.slots,
+          host: host,
+        );
+    final root = PortablePresentationNodeRenderer(
+      node: document.root,
+      scope: scope,
+      fillAvailableSpace:
+          fillAvailableSpace || document.role == skir.PresentationRole.editor,
+    );
+    return _PortableDiagnosticBoundary(
+      key: ObjectKey(operations),
+      operations: operations,
+      diagnostics: document.diagnostics,
+      observations: document.diagnosticObservations,
+      child: PortablePresentationChrome(role: document.role, child: root),
     );
   }
 }
-
-skir.DiagnosticSeverity _strongestSeverity(
-  Iterable<skir.DiagnosticTemplate> diagnostics,
-) => diagnostics.map((diagnostic) => diagnostic.severity).reduce((
-  current,
-  next,
-) {
-  final currentRank = _diagnosticSeverityRank(current);
-  final nextRank = _diagnosticSeverityRank(next);
-  return nextRank > currentRank ? next : current;
-});
-
-int _diagnosticSeverityRank(skir.DiagnosticSeverity severity) =>
-    switch (severity.kind) {
-      skir.DiagnosticSeverity_kind.informationConst => 0,
-      skir.DiagnosticSeverity_kind.warningConst => 1,
-      skir.DiagnosticSeverity_kind.errorConst ||
-      skir.DiagnosticSeverity_kind.unknown => 2,
-    };

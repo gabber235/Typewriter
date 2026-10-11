@@ -122,11 +122,13 @@ void main() {
                   required document,
                   required bindings,
                   required reportStatus,
+                  required operations,
                 }) {
                   observed =
                       bindings[presentationSelectionCountBindingId]?.value ==
                       skir.DataValue.wrapInteger("2");
                   return PortablePresentationScope(
+                    operations: operations,
                     bindings: bindings,
                     budget: document.budget,
                     host: host,
@@ -169,6 +171,7 @@ void main() {
   test("field scopes clear identity and resource scopes supply their own", () {
     final root = skir.ExpressionBindingId(value: "root");
     final scope = PortablePresentationScope(
+      operations: testPortableOperations(),
       bindings: {
         presentationSubjectIdentifierBindingId: PortableExpressionBinding(
           value: skir.DataValue.wrapStringValue("outer"),
@@ -452,6 +455,7 @@ BoundPresentationHost _host(
   budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
 );
 PortablePresentationScope _scope() => PortablePresentationScope(
+  operations: testPortableOperations(),
   bindings: const {},
   budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
 );

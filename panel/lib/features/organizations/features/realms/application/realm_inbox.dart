@@ -26,7 +26,7 @@ sealed class RealmInboxIssue with _$RealmInboxIssue {
   const factory RealmInboxIssue.savedFinding(AuthoredFindingView finding) =
       RealmInboxSavedFinding;
   const factory RealmInboxIssue.localFinding(
-    AuthoredLocalDiagnostic diagnostic,
+    PortablePresentationDiagnostic diagnostic,
   ) = RealmInboxLocalFinding;
   const factory RealmInboxIssue.work(WorkEntryState entry) =
       RealmInboxWorkIssue;
@@ -41,7 +41,7 @@ sealed class RealmInboxIssue with _$RealmInboxIssue {
     RealmInboxSavedFinding(:final finding) => ("saved", finding.diagnostic.id),
     RealmInboxLocalFinding(:final diagnostic) => (
       "local",
-      diagnostic.location,
+      diagnostic.targets,
       diagnostic.code,
     ),
     RealmInboxWorkIssue(:final entry) => ("work", entry.id),
@@ -83,7 +83,11 @@ sealed class RealmInboxIssue with _$RealmInboxIssue {
     RealmInboxNotice() => _noticeDetails?.primary,
     RealmInboxSavedFinding(:final finding) =>
       finding.diagnostic.primary ?? finding.source.ticket.instance.location,
-    RealmInboxLocalFinding(:final diagnostic) => diagnostic.location,
+    RealmInboxLocalFinding(:final diagnostic) =>
+      diagnostic.targets
+          .whereType<PortableValueDiagnosticTarget>()
+          .map((target) => target.location)
+          .firstOrNull,
     _ => null,
   };
   List<skir.ValueLocation> get related => switch (this) {
@@ -91,6 +95,12 @@ sealed class RealmInboxIssue with _$RealmInboxIssue {
     RealmInboxNotice() => _noticeDetails?.related.toList() ?? [],
     RealmInboxSavedFinding(:final finding) =>
       finding.diagnostic.related.toList(),
+    RealmInboxLocalFinding(:final diagnostic) =>
+      diagnostic.targets
+          .whereType<PortableValueDiagnosticTarget>()
+          .map((target) => target.location)
+          .skip(1)
+          .toList(growable: false),
     _ => [],
   };
   String get provenance => switch (this) {

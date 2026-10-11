@@ -1,165 +1,164 @@
 part of "../portable_presentation_renderer.dart";
 
-final class _AuthoredPresentationHeader extends StatefulWidget {
+final class _AuthoredPresentationHeader extends HookWidget {
   const _AuthoredPresentationHeader({
     required this.header,
     required this.body,
     required this.scope,
   });
-
   final skir.PresentationHeader header;
   final Widget body;
   final PortablePresentationScope scope;
 
   @override
-  State<_AuthoredPresentationHeader> createState() =>
-      _AuthoredPresentationHeaderState();
-}
-
-final class _PortableHeaderTitle extends InheritedWidget {
-  const _PortableHeaderTitle({required this.title, required super.child});
-
-  final String title;
-
-  static String? maybeOf(BuildContext context) =>
-      context.dependOnInheritedWidgetOfExactType<_PortableHeaderTitle>()?.title;
-
-  @override
-  bool updateShouldNotify(covariant _PortableHeaderTitle oldWidget) =>
-      title != oldWidget.title;
-}
-
-final class _AuthoredPresentationHeaderState
-    extends State<_AuthoredPresentationHeader> {
-  late bool _expanded;
-
-  @override
-  void initState() {
-    super.initState();
-    _expanded = widget.header.initiallyExpanded ?? true;
-  }
-
-  @override
-  void didUpdateWidget(covariant _AuthoredPresentationHeader oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.header.initiallyExpanded != widget.header.initiallyExpanded) {
-      _expanded = widget.header.initiallyExpanded ?? true;
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final items = _items(context);
-    final before = items
-        .where(
-          (item) =>
-              item.placement.kind ==
-              skir.HeaderActionPlacement_kind.beforeTitleConst,
-        )
-        .toList();
-    final after = items
-        .where(
-          (item) =>
-              item.placement.kind ==
-              skir.HeaderActionPlacement_kind.afterTitleConst,
-        )
-        .toList();
-    final end = items
-        .where(
-          (item) =>
-              item.placement.kind == skir.HeaderActionPlacement_kind.endConst ||
-              item.placement.kind == skir.HeaderActionPlacement_kind.unknown,
-        )
-        .toList();
-    final title = _title();
-    final description = widget.header.description == null
-        ? null
-        : _string(widget.scope, widget.header.description!);
-    final collapsible = widget.header.initiallyExpanded != null;
-    final contentPadding = widget.header.contentPadding == null
-        ? EdgeInsets.symmetric(
-            horizontal: context.spacing.space2,
-            vertical: context.spacing.space1,
-          )
-        : _presentationInsets(widget.header.contentPadding);
-    final header = Material(
-      color: context.colors.surface.withValues(alpha: 0),
-      child: InkWell(
-        onTap: collapsible && widget.scope.enabled ? _toggleExpanded : null,
-        child: Padding(
-          padding: widget.header.headerPadding == null
-              ? EdgeInsets.symmetric(
-                  horizontal: context.spacing.space2,
-                  vertical: context.spacing.space1,
-                )
-              : _presentationInsets(widget.header.headerPadding),
-          child: LayoutBuilder(
-            builder: (context, constraints) => Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _PortableHeaderRow(
-                  before: [
-                    if (collapsible) _expandButton(),
-                    for (final item in before) item.widget,
-                  ],
-                  title: ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: constraints.maxWidth),
-                    child: title,
-                  ),
-                  after: [for (final item in after) item.widget],
-                  end: [for (final item in end) item.widget],
+    final expanded = useState(header.initiallyExpanded ?? true);
+    useEffect(() {
+      expanded.value = header.initiallyExpanded ?? true;
+      return null;
+    }, [header.initiallyExpanded]);
+    void toggleExpanded() {
+      expanded.value = !expanded.value;
+    }
+
+    return PortableDiagnosticAnchor(
+      node: PortableDiagnosticNode(
+        kind: PortableDiagnosticNodeKind.header,
+        observations: header.binding == null
+            ? const []
+            : [
+                PortableDiagnosticObservation(
+                  target: scope.diagnosticTarget(header.binding!),
+                  value: scope.read(header.binding!),
                 ),
-                if (description != null)
-                  Padding(
-                    padding: EdgeInsets.only(top: context.spacing.space1),
-                    child: switch (description) {
-                      _ResolvedValue(:final value) when value.isNotEmpty =>
-                        Text(
-                          value,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      _ResolvedFailure(:final message) => _diagnostic(message),
-                      _ => const SizedBox.shrink(),
-                    },
-                  ),
               ],
+      ),
+      builder: (context, summary, owner) {
+        final items = _items(context);
+        final before = items
+            .where(
+              (item) =>
+                  item.placement.kind ==
+                  skir.HeaderActionPlacement_kind.beforeTitleConst,
+            )
+            .toList();
+        final after = items
+            .where(
+              (item) =>
+                  item.placement.kind ==
+                  skir.HeaderActionPlacement_kind.afterTitleConst,
+            )
+            .toList();
+        final end = items
+            .where(
+              (item) =>
+                  item.placement.kind ==
+                      skir.HeaderActionPlacement_kind.endConst ||
+                  item.placement.kind ==
+                      skir.HeaderActionPlacement_kind.unknown,
+            )
+            .toList();
+        final title = _title(context);
+        final description = header.description == null
+            ? null
+            : _string(scope, header.description!);
+        final collapsible = header.initiallyExpanded != null;
+        final contentPadding = header.contentPadding == null
+            ? EdgeInsets.symmetric(
+                horizontal: context.spacing.space2,
+                vertical: context.spacing.space1,
+              )
+            : _presentationInsets(header.contentPadding);
+        final headerWidget = Material(
+          color: context.colors.surface.withValues(alpha: 0),
+          child: InkWell(
+            onTap: collapsible && scope.enabled ? toggleExpanded : null,
+            child: Padding(
+              padding: header.headerPadding == null
+                  ? EdgeInsets.symmetric(
+                      horizontal: context.spacing.space2,
+                      vertical: context.spacing.space1,
+                    )
+                  : _presentationInsets(header.headerPadding),
+              child: LayoutBuilder(
+                builder: (context, constraints) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _PortableHeaderRow(
+                      before: [
+                        if (collapsible)
+                          _expandButton(expanded.value, toggleExpanded),
+                        for (final item in before) item.widget,
+                      ],
+                      title: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: constraints.maxWidth,
+                        ),
+                        child: title,
+                      ),
+                      after: [for (final item in after) item.widget],
+                      end: [
+                        if (!summary.isEmpty)
+                          PortableDiagnosticHeaderMarker(summary: summary),
+                        for (final item in end) item.widget,
+                      ],
+                    ),
+                    if (description != null)
+                      Padding(
+                        padding: EdgeInsets.only(top: context.spacing.space1),
+                        child: switch (description) {
+                          _ResolvedValue(:final value) when value.isNotEmpty =>
+                            Text(
+                              value,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          _ResolvedFailure(:final message) => _diagnostic(
+                            message,
+                          ),
+                          _ => const SizedBox.shrink(),
+                        },
+                      ),
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
-      ),
-    );
-    final plainTitle = _plainTitle();
-    final body = Padding(
-      padding: contentPadding,
-      child: plainTitle == null
-          ? widget.body
-          : _PortableHeaderTitle(title: plainTitle, child: widget.body),
-    );
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        header,
-        Visibility(
-          visible: _expanded,
-          maintainState: true,
-          maintainAnimation: true,
-          child: body,
-        ),
-      ],
+        );
+        final plainTitle = _plainTitle();
+        final bodyWidget = Padding(
+          padding: contentPadding,
+          child: plainTitle == null
+              ? body
+              : _PortableHeaderTitle(title: plainTitle, child: body),
+        );
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            headerWidget,
+            PortableDiagnosticMessages(diagnostics: summary.direct),
+            Visibility(
+              visible: expanded.value,
+              maintainState: true,
+              maintainAnimation: true,
+              child: bodyWidget,
+            ),
+          ],
+        );
+      },
     );
   }
 
-  void _toggleExpanded() => setState(() => _expanded = !_expanded);
+  Widget _expandButton(bool expanded, VoidCallback toggleExpanded) {
+    return IconButton(
+      tooltip: expanded ? "Collapse" : "Expand",
+      onPressed: scope.enabled ? toggleExpanded : null,
+      icon: Icon(expanded ? Icons.expand_less : Icons.expand_more),
+    );
+  }
 
-  Widget _expandButton() => IconButton(
-    tooltip: _expanded ? "Collapse" : "Expand",
-    onPressed: widget.scope.enabled ? _toggleExpanded : null,
-    icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more),
-  );
-
-  Widget _title() => switch (widget.header.title) {
+  Widget _title(BuildContext context) => switch (header.title) {
     skir.PresentationHeaderTitle_textWrapper(:final value) => switch (_string(
-      widget.scope,
+      scope,
       value,
     )) {
       _ResolvedValue(:final value) => Text(
@@ -171,13 +170,13 @@ final class _AuthoredPresentationHeaderState
       _ResolvedFailure(:final message) => _diagnostic(message),
     },
     skir.PresentationHeaderTitle_presentationWrapper(:final value) =>
-      PortablePresentationNodeRenderer(node: value, scope: widget.scope),
+      PortablePresentationNodeRenderer(node: value, scope: scope),
     _ => _diagnostic("The presentation header title is unavailable"),
   };
 
-  String? _plainTitle() => switch (widget.header.title) {
+  String? _plainTitle() => switch (header.title) {
     skir.PresentationHeaderTitle_textWrapper(:final value) => switch (_string(
-      widget.scope,
+      scope,
       value,
     )) {
       _ResolvedValue(:final value) => value,
@@ -189,15 +188,11 @@ final class _AuthoredPresentationHeaderState
   List<_AuthoredHeaderItem> _items(BuildContext context) {
     final resolved = <_AuthoredHeaderItem>[];
     var order = 0;
-    for (final item in widget.header.items) {
+    for (final item in header.items) {
       final currentOrder = order++;
       switch (item) {
         case skir.HeaderItem_buttonWrapper(:final value):
-          final visible = _boolean(
-            widget.scope,
-            value.visibleIf,
-            fallback: true,
-          );
+          final visible = _boolean(scope, value.visibleIf, fallback: true);
           if (visible case _ResolvedValue(value: false)) continue;
           if (visible case _ResolvedFailure(:final message)) {
             resolved.add(
@@ -205,7 +200,7 @@ final class _AuthoredPresentationHeaderState
             );
             continue;
           }
-          final labelResult = _string(widget.scope, value.label);
+          final labelResult = _string(scope, value.label);
           if (labelResult case _ResolvedFailure(:final message)) {
             resolved.add(
               _failureItem(context, message, value.placement, currentOrder),
@@ -216,14 +211,14 @@ final class _AuthoredPresentationHeaderState
           final iconName = _resolvedString(value.icon);
           final tooltipResult = value.tooltip == null
               ? _ResolvedValue(label)
-              : _string(widget.scope, value.tooltip!);
+              : _string(scope, value.tooltip!);
           final enabledResult = _boolean(
-            widget.scope,
+            scope,
             value.enabledIf,
             fallback: true,
           );
           final enabled =
-              widget.scope.canExecuteAction &&
+              scope.canExecuteAction &&
               enabledResult is _ResolvedValue<bool> &&
               enabledResult.value;
           final tooltip = switch (enabledResult) {
@@ -264,14 +259,10 @@ final class _AuthoredPresentationHeaderState
             ),
           );
         case skir.HeaderItem_booleanToggleWrapper(:final value):
-          final visible = _boolean(
-            widget.scope,
-            value.visibleIf,
-            fallback: true,
-          );
+          final visible = _boolean(scope, value.visibleIf, fallback: true);
           if (visible case _ResolvedValue(value: false)) continue;
-          final label = _string(widget.scope, value.label);
-          final checked = _boolean(widget.scope, value.checked);
+          final label = _string(scope, value.label);
+          final checked = _boolean(scope, value.checked);
           final failure = switch ((visible, label, checked)) {
             (_ResolvedFailure(:final message), _, _) => message,
             (_, _ResolvedFailure(:final message), _) => message,
@@ -287,12 +278,12 @@ final class _AuthoredPresentationHeaderState
           final labelValue = (label as _ResolvedValue<String>).value;
           final checkedValue = (checked as _ResolvedValue<bool>).value;
           final enabledResult = _boolean(
-            widget.scope,
+            scope,
             value.enabledIf,
             fallback: true,
           );
           final enabled =
-              widget.scope.canExecuteAction &&
+              scope.canExecuteAction &&
               enabledResult is _ResolvedValue<bool> &&
               enabledResult.value;
           final checkbox = Shortcuts(
@@ -320,7 +311,7 @@ final class _AuthoredPresentationHeaderState
                           )
                         : checkbox
                   : Tooltip(
-                      message: switch (_string(widget.scope, value.tooltip!)) {
+                      message: switch (_string(scope, value.tooltip!)) {
                         _ResolvedValue(:final value) => value,
                         _ResolvedFailure(:final message) => message,
                       },
@@ -332,13 +323,9 @@ final class _AuthoredPresentationHeaderState
             ),
           );
         case skir.HeaderItem_reorderHandleWrapper(:final value):
-          final visible = _boolean(
-            widget.scope,
-            value.visibleIf,
-            fallback: true,
-          );
+          final visible = _boolean(scope, value.visibleIf, fallback: true);
           if (visible case _ResolvedValue(value: false)) continue;
-          final label = _string(widget.scope, value.label);
+          final label = _string(scope, value.label);
           final target = _reorderTarget(value.source);
           final failure = switch ((visible, label, target)) {
             (_ResolvedFailure(:final message), _, _) => message,
@@ -361,12 +348,12 @@ final class _AuthoredPresentationHeaderState
           final actualTarget = target!;
           final labelValue = (label as _ResolvedValue<String>).value;
           final enabledResult = _boolean(
-            widget.scope,
+            scope,
             value.enabledIf,
             fallback: true,
           );
           final enabled =
-              widget.scope.canExecuteAction &&
+              scope.canExecuteAction &&
               enabledResult is _ResolvedValue<bool> &&
               enabledResult.value;
           final tooltip = switch (enabledResult) {
@@ -374,7 +361,7 @@ final class _AuthoredPresentationHeaderState
             _ =>
               value.tooltip == null
                   ? labelValue
-                  : switch (_string(widget.scope, value.tooltip!)) {
+                  : switch (_string(scope, value.tooltip!)) {
                       _ResolvedValue(:final value) => value,
                       _ResolvedFailure(:final message) => message,
                     },
@@ -434,7 +421,7 @@ final class _AuthoredPresentationHeaderState
   );
 
   _AuthoredReorderTarget? _reorderTarget(skir.BindingRef source) {
-    final resolved = widget.scope.sourceReference(source);
+    final resolved = scope.sourceReference(source);
     if (resolved == null) return null;
     final segments = resolved.path.segments.toList(growable: false);
     final last = segments.lastOrNull;
@@ -444,7 +431,7 @@ final class _AuthoredPresentationHeaderState
       bindingId: resolved.bindingId,
       path: skir.ValuePath(segments: segments.take(segments.length - 1)),
     );
-    final items = widget.scope.read(containing)?.authoredItems?.toList();
+    final items = scope.read(containing)?.authoredItems?.toList();
     if (items == null) return null;
     final index = items.indexWhere((candidate) => candidate.id == item);
     if (index < 0) return null;
@@ -460,12 +447,12 @@ final class _AuthoredPresentationHeaderState
     _AuthoredReorderTarget target, {
     required skir.ItemId? after,
   }) {
-    widget.scope.moveListItem(target.containing, target.item, after);
+    scope.moveListItem(target.containing, target.item, after);
   }
 
   int _priority(skir.ExpressionNode? value) {
     if (value == null) return 0;
-    return switch (widget.scope.evaluate(value)) {
+    return switch (scope.evaluate(value)) {
       PortableExpressionAvailable(:final value) =>
         switch (value.authoredPayload) {
           skir.DataValue_integerWrapper(:final value) =>
@@ -478,7 +465,7 @@ final class _AuthoredPresentationHeaderState
   }
 
   String? _resolvedString(skir.ExpressionNode value) =>
-      switch (widget.scope.evaluate(value)) {
+      switch (scope.evaluate(value)) {
         PortableExpressionAvailable(:final value) => value.authoredString,
         _ => null,
       };
@@ -494,9 +481,7 @@ final class _AuthoredPresentationHeaderState
       final message = _resolvedString(confirmation.message);
       final label = _resolvedString(confirmation.confirmationLabel);
       if (title == null || message == null || label == null) {
-        widget.scope.reportStatus?.call(
-          "The action confirmation is unavailable",
-        );
+        scope.reportStatus?.call("The action confirmation is unavailable");
         return;
       }
       final confirmed = await showDialog<bool>(
@@ -523,8 +508,21 @@ final class _AuthoredPresentationHeaderState
       );
       if (confirmed != true) return;
     }
-    await widget.scope.executeAction(editorAction);
+    await scope.executeAction(editorAction);
   }
+}
+
+final class _PortableHeaderTitle extends InheritedWidget {
+  const _PortableHeaderTitle({required this.title, required super.child});
+
+  final String title;
+
+  static String? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_PortableHeaderTitle>()?.title;
+
+  @override
+  bool updateShouldNotify(covariant _PortableHeaderTitle oldWidget) =>
+      title != oldWidget.title;
 }
 
 final class _AuthoredHeaderItem {

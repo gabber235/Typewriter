@@ -303,6 +303,7 @@ Widget _linkControl(
           header: null,
         ),
         scope: PortablePresentationScope(
+          operations: testPortableOperations(),
           bindings: {
             root: PortableExpressionBinding(
               value: skir.DataValue.createRecord(fields: record.fields),

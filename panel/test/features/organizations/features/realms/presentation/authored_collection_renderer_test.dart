@@ -370,6 +370,7 @@ _nestedMaterialFixture() {
   final resource = base.document.resources.keys.first;
   return (
     scope: PortablePresentationScope(
+      operations: testPortableOperations(),
       bindings: {
         ...base.scope.bindings,
         _nestedLookupBinding: PortableExpressionBinding(
@@ -595,6 +596,7 @@ _fixture({
     material: material,
     document: document,
     scope: PortablePresentationScope(
+      operations: testPortableOperations(),
       bindings: {
         _lookupBinding: PortableExpressionBinding(
           value: skir.DataValue.wrapStringValue(

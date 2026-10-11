@@ -1,6 +1,6 @@
 part of "portable_presentation_renderer.dart";
 
-final class PortableSearchInput extends StatefulWidget {
+final class PortableSearchInput extends HookWidget {
   const PortableSearchInput({
     required this.control,
     required this.scope,
@@ -13,136 +13,97 @@ final class PortableSearchInput extends StatefulWidget {
   final Client? client;
 
   @override
-  State<PortableSearchInput> createState() => _PortableSearchInputState();
-}
-
-final class _PortableSearchInputState extends State<PortableSearchInput> {
-  final FocusNode _summaryFocus = FocusNode(
-    debugLabel: "Portable search summary",
-  );
-  final Object _tapRegionGroup = Object();
-  late Client _http;
-  late bool _ownsHttp;
-  late PortableSearchBinding _picker;
-  late SearchController<void> _controller;
-  var _editing = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _installHttp();
-    _installSearch();
-  }
-
-  @override
-  void didUpdateWidget(covariant PortableSearchInput oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    final clientChanged = !identical(oldWidget.client, widget.client);
-    if (clientChanged) {
-      if (_ownsHttp) _http.close();
-      _installHttp();
+  Widget build(BuildContext context) {
+    final summaryFocus = useFocusNode(debugLabel: "Portable search summary");
+    useListenable(summaryFocus);
+    final tapRegionGroup = useMemoized(Object.new);
+    final editing = useState(false);
+    final http = useMemoized(() => client ?? Client(), [client]);
+    useEffect(() => client == null ? http.close : null, [http]);
+    void closeSearch({bool restoreFocus = true}) {
+      if (!context.mounted || !editing.value) return;
+      editing.value = false;
+      if (restoreFocus) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted && !editing.value) summaryFocus.requestFocus();
+        });
+      }
     }
-    if (clientChanged ||
-        oldWidget.control != widget.control ||
-        oldWidget.scope.bindings != widget.scope.bindings ||
-        oldWidget.scope.host != widget.scope.host ||
-        oldWidget.scope.material != widget.scope.material ||
-        oldWidget.scope.catalog != widget.scope.catalog ||
-        oldWidget.scope.searchHistoryNamespace !=
-            widget.scope.searchHistoryNamespace) {
-      _controller.dispose();
-      _picker.dispose();
-      _installSearch();
+
+    void openSearch() {
+      if (!editing.value && scope.enabled && !scope.readOnly) {
+        editing.value = true;
+      }
     }
-  }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    _picker.dispose();
-    if (_ownsHttp) _http.close();
-    _summaryFocus.dispose();
-    super.dispose();
-  }
-
-  void _installHttp() {
-    _ownsHttp = widget.client == null;
-    _http = widget.client ?? Client();
-  }
-
-  void _installSearch() {
-    final scope = widget.scope;
     final host = scope.host;
     final catalog = scope.catalog ?? host?.document.catalog;
     if (host == null || catalog == null) {
       throw StateError("Portable search requires a checked presentation host");
     }
-    final environment = PortableSearchEnvironment(
-      catalog: catalog,
-      budget: scope.budget,
-      context: scope.invocation,
-      http: _http,
-      historyStorage: scope.searchHistoryNamespace == null
-          ? _EphemeralSearchHistoryStorage()
-          : PortableLocalSearchHistoryStorage(catalog: catalog),
-      historyNamespace: scope.searchHistoryNamespace ?? "ephemeral",
-      watchRealm: scope.watchSearch,
-      collectionHost: host is PortableCollectionProjectionHost
-          ? host as PortableCollectionProjectionHost
-          : null,
-      material: scope.material,
+    final picker = useMemoized(
+      () {
+        final environment = PortableSearchEnvironment(
+          catalog: catalog,
+          budget: scope.budget,
+          context: scope.invocation,
+          http: http,
+          historyStorage: scope.searchHistoryNamespace == null
+              ? _EphemeralSearchHistoryStorage()
+              : PortableLocalSearchHistoryStorage(catalog: catalog),
+          historyNamespace: scope.searchHistoryNamespace ?? "ephemeral",
+          watchRealm: scope.watchSearch,
+          collectionHost: host is PortableCollectionProjectionHost
+              ? host as PortableCollectionProjectionHost
+              : null,
+          material: scope.material,
+        );
+        return const PortableSearchCompiler().bindControl(
+          control: control,
+          environment: environment,
+          host: host,
+        );
+      },
+      [
+        http,
+        control,
+        scope.bindings,
+        host,
+        scope.material,
+        catalog,
+        scope.searchHistoryNamespace,
+        scope.budget,
+        scope.watchSearch,
+      ],
     );
-    _picker = const PortableSearchCompiler().bindControl(
-      control: widget.control,
-      environment: environment,
-      host: host,
-    );
-    _controller = SearchController<void>(
-      session: _picker.session(initialQuery: _initialQuery()),
-      baseSelectors: const [],
-      onCloseRequested: _closeSearch,
-      onCompleted: (_) => _closeSearch(),
-    );
-  }
-
-  String _initialQuery() {
-    final expression = widget.control.initialQuery;
-    if (expression == null) return "";
-    return switch (widget.scope.evaluate(expression)) {
-          PortableExpressionAvailable(:final value) => value.authoredString,
-          _ => null,
-        } ??
-        "";
-  }
-
-  void _openSearch() {
-    if (_editing || !widget.scope.enabled || widget.scope.readOnly) return;
-    setState(() => _editing = true);
-  }
-
-  void _closeSearch({bool restoreFocus = true}) {
-    if (!_editing) return;
-    setState(() => _editing = false);
-    if (restoreFocus) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && !_editing) _summaryFocus.requestFocus();
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final placeholder = widget.control.placeholder == null
+    useEffect(() => picker.dispose, [picker]);
+    final controller = useMemoized(() {
+      final expression = control.initialQuery;
+      final initialQuery = expression == null
+          ? ""
+          : switch (scope.evaluate(expression)) {
+                  PortableExpressionAvailable(:final value) =>
+                    value.authoredString,
+                  _ => null,
+                } ??
+                "";
+      return SearchController<void>(
+        session: picker.session(initialQuery: initialQuery),
+        baseSelectors: const [],
+        onCloseRequested: closeSearch,
+        onCompleted: (_) => closeSearch(),
+      );
+    }, [picker]);
+    useEffect(() => controller.dispose, [controller]);
+    final placeholder = control.placeholder == null
         ? "Search"
-        : switch (widget.scope.evaluate(widget.control.placeholder!)) {
+        : switch (scope.evaluate(control.placeholder!)) {
                 PortableExpressionAvailable(:final value) =>
                   value.authoredString,
                 _ => null,
               } ??
               "Search";
-    final maximum = switch (widget.scope.evaluate(
-      widget.control.maximumExtent,
-    )) {
+    final maximum = switch (scope.evaluate(control.maximumExtent)) {
       PortableExpressionAvailable(
         value: skir.DataValue_integerWrapper(:final value),
       ) =>
@@ -157,25 +118,25 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
         double.tryParse(value),
       _ => null,
     };
-    final editable = widget.scope.enabled && !widget.scope.readOnly;
-    return _controlFrame(
-      widget.control.control,
-      widget.scope,
+    final editable = scope.enabled && !scope.readOnly;
+    final content = _controlFrame(
+      control.control,
+      scope,
       _withControlPrefix(
-        widget.control.control,
-        widget.scope,
+        control.control,
+        scope,
         TapRegion(
-          groupId: _tapRegionGroup,
-          onTapOutside: (_) => _closeSearch(restoreFocus: false),
+          groupId: tapRegionGroup,
+          onTapOutside: (_) => closeSearch(restoreFocus: false),
           child: AnchoredOverlayPortal(
-            visible: _editing,
+            visible: editing.value,
             config: AnchoredOverlayConfig(
               preferredSide: AnchoredOverlaySide.bottom,
               spacing: 6,
               maxHeight: (maximum ?? 320).clamp(80, 800),
             ),
             overlayBuilder: (context, anchorSize) => TapRegion(
-              groupId: _tapRegionGroup,
+              groupId: tapRegionGroup,
               child: Material(
                 elevation: 8,
                 borderRadius: context.shapes.mediumBorderRadius,
@@ -183,11 +144,11 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
                 child: SizedBox(
                   width: max(anchorSize.width, 420),
                   child: SearchRoot.borrowed(
-                    controller: _controller,
+                    controller: controller,
                     child: _PortableSearchSurface(
                       placeholder: placeholder,
-                      picker: _picker,
-                      scope: widget.scope,
+                      picker: picker,
+                      scope: scope,
                     ),
                   ),
                 ),
@@ -199,13 +160,13 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
               label: "Activate search input",
               child: InkWell(
                 key: const ValueKey("authored_search_summary"),
-                focusNode: _summaryFocus,
+                focusNode: summaryFocus,
                 canRequestFocus: editable,
-                onTap: editable ? _openSearch : null,
+                onTap: editable ? openSearch : null,
                 borderRadius: context.shapes.mediumBorderRadius,
                 child: InputDecorator(
                   isEmpty: false,
-                  isFocused: _editing || _summaryFocus.hasFocus,
+                  isFocused: editing.value || summaryFocus.hasFocus,
                   decoration: InputDecoration(
                     isDense: true,
                     enabled: editable,
@@ -224,10 +185,19 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
         ),
       ),
     );
+    if (PortableDiagnosticScope.maybeOf(context) != null) return content;
+    final document = host.document;
+    return _PortableDiagnosticBoundary(
+      key: ObjectKey(scope.operations),
+      operations: scope.operations,
+      observations: document.diagnosticObservations,
+      diagnostics: document.diagnostics,
+      child: PortablePresentationChrome(role: scope.role, child: content),
+    );
   }
 
   Widget _summary(String placeholder) {
-    final current = widget.scope.read(widget.control.control.binding);
+    final current = scope.read(control.control.binding);
     if (current == null ||
         current.authoredPayload == skir.DataValue.unfilled ||
         current.authoredPayload == skir.DataValue.null_) {
@@ -235,12 +205,12 @@ final class _PortableSearchInputState extends State<PortableSearchInput> {
     }
     final text = current.authoredString;
     if (text != null && text.trim().isEmpty) return Text(placeholder);
-    final summary = widget.control.summary;
+    final summary = control.summary;
     if (summary != null) {
       return PortablePresentationNodeRenderer(
         node: summary,
-        scope: widget.scope
-            .withValues({widget.control.summaryBindingId: current})
+        scope: scope
+            .withValues({control.summaryBindingId: current})
             .withReadOnly(true),
       );
     }

@@ -19,11 +19,13 @@ void main() {
       );
       addTearDown(presentationHost.dispose);
 
+      final operations = testPortableOperations();
       Widget host(bool visible) => testApp(
         child: Scaffold(
           body: PortablePresentationNodeRenderer(
             node: _rootPresentation(),
             scope: PortablePresentationScope(
+              operations: operations,
               bindings: _bindings(visible),
               budget: skir.EvaluationBudget(
                 maxSteps: 100,
@@ -86,6 +88,7 @@ void main() {
           body: PortablePresentationNodeRenderer(
             node: disabled,
             scope: PortablePresentationScope(
+              operations: testPortableOperations(),
               bindings: {
                 skir.ExpressionBindingId(
                   value: "configured_value",

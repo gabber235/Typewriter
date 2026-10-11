@@ -132,12 +132,7 @@ final class _SearchInputStoryState extends State<_SearchInputStory> {
   }
 
   @override
-  Widget build(BuildContext context) => PortableSearchInput(
-    control: _control,
-    scope: PortablePresentationScope(
-      bindings: {_target: PortableExpressionBinding(value: _value)},
-      budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 1000),
-      host: _host,
-    ),
-  );
+  Widget build(BuildContext context) {
+    return PortablePresentationRenderer(host: _host);
+  }
 }

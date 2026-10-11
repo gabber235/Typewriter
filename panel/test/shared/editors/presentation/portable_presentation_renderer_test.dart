@@ -26,10 +26,11 @@ void main() {
       "body": (_) => const SizedBox.shrink(),
     };
     final projectedWriters = <skir.ExpressionBindingId, PortableBindingSetter>{
-      bindingId: (_, _) {},
+      bindingId: (_, _) => const PortablePresentationWriteApplied(),
     };
 
     final scope = PortablePresentationScope(
+      operations: testPortableOperations(),
       bindings: bindings,
       budget: skir.EvaluationBudget(maxSteps: 10, maxCollectionItems: 10),
       activePresentations: activePresentations,
@@ -354,7 +355,16 @@ void main() {
   });
 
   testWidgets("compact indicators do not steal card selection", (tester) async {
-    final host = _TestPortableHost(root: _compactNode);
+    final host = _TestPortableHost(
+      root: _compactNode,
+      diagnostics: [
+        PortablePresentationDiagnostic(
+          code: "compact_error",
+          message: "Compact problem",
+          severity: skir.DiagnosticSeverity.error,
+        ),
+      ],
+    );
     var cardTaps = 0;
     addTearDown(host.dispose);
     await tester.pumpTestApp(
@@ -362,17 +372,7 @@ void main() {
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () => cardTaps++,
-          child: PortablePresentationRenderer(
-            host: host,
-            compactDiagnostics: [
-              skir.DiagnosticTemplate(
-                code: "compact_error",
-                message: "Compact problem",
-                severity: skir.DiagnosticSeverity.error,
-                targets: const [],
-              ),
-            ],
-          ),
+          child: PortablePresentationRenderer(host: host),
         ),
       ),
     );
@@ -416,22 +416,19 @@ void main() {
   testWidgets("compact information remains visibly informational", (
     tester,
   ) async {
-    final host = _TestPortableHost(root: _numericNode);
+    final host = _TestPortableHost(
+      root: _numericNode,
+      diagnostics: [
+        PortablePresentationDiagnostic(
+          code: "informational",
+          message: "This value was inferred",
+          severity: skir.DiagnosticSeverity.information,
+        ),
+      ],
+    );
     addTearDown(host.dispose);
     await tester.pumpTestApp(
-      child: Material(
-        child: PortablePresentationRenderer(
-          host: host,
-          compactDiagnostics: [
-            skir.DiagnosticTemplate(
-              code: "informational",
-              message: "This value was inferred",
-              severity: skir.DiagnosticSeverity.information,
-              targets: const [],
-            ),
-          ],
-        ),
-      ),
+      child: Material(child: PortablePresentationRenderer(host: host)),
     );
 
     expect(find.bySemanticsLabel("Presentation information"), findsOneWidget);
@@ -542,6 +539,7 @@ void main() {
             ),
           ),
           scope: PortablePresentationScope(
+            operations: testPortableOperations(),
             bindings: const {},
             budget: skir.EvaluationBudget(
               maxSteps: 100,
@@ -659,6 +657,7 @@ void main() {
     }
 
     final scope = PortablePresentationScope(
+      operations: testPortableOperations(),
       bindings: const {},
       budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
     );
@@ -762,6 +761,7 @@ void main() {
       ),
     );
     final scope = PortablePresentationScope(
+      operations: testPortableOperations(),
       bindings: const {},
       budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
     );
@@ -811,6 +811,7 @@ void main() {
     );
     addTearDown(host.dispose);
     final scope = PortablePresentationScope(
+      operations: testPortableOperations(),
       bindings: {
         _bindingId: PortableExpressionBinding(
           value: skir.DataValue.createNamed(
@@ -921,6 +922,7 @@ void main() {
       ),
     );
     final scope = PortablePresentationScope(
+      operations: testPortableOperations(),
       bindings: {_configuredBindingId: PortableExpressionBinding(value: root)},
       budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
       host: host,
@@ -961,6 +963,7 @@ void main() {
       ),
     );
     final scope = PortablePresentationScope(
+      operations: testPortableOperations(),
       bindings: {
         root: PortableExpressionBinding(
           value: skir.DataValue.unfilled,
@@ -1292,6 +1295,7 @@ void main() {
         child: PortablePresentationNodeRenderer(
           node: _polymorphicNode,
           scope: PortablePresentationScope(
+            operations: testPortableOperations(),
             bindings: {
               _bindingId: PortableExpressionBinding(
                 value: skir.DataValue.unfilled,
@@ -1417,6 +1421,7 @@ void main() {
       ),
     );
     final scope = PortablePresentationScope(
+      operations: testPortableOperations(),
       bindings: const {},
       budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
     );
@@ -2004,6 +2009,7 @@ _linkCollectionFixture({
                 ),
               ),
         scope: PortablePresentationScope(
+          operations: testPortableOperations(),
           bindings: {
             rootBinding: PortableExpressionBinding(
               value: skir.DataValue.createRecord(fields: sourceRecord.fields),
@@ -2028,6 +2034,7 @@ PortablePresentationScope _authoringScope(
   String field,
   skir.DataValue value,
 ) => PortablePresentationScope(
+  operations: testPortableOperations(),
   bindings: {
     _bindingId: PortableExpressionBinding(
       value: skir.DataValue.createRecord(
@@ -2159,6 +2166,7 @@ final class _TestPortableHost extends ChangeNotifier
     required skir.PresentationNode root,
     this.rejectWrites = false,
     skir.PresentationRole? role,
+    List<PortablePresentationDiagnostic> diagnostics = const [],
   }) : _document = PortablePresentationDocument(
          catalog: CheckedEditorCatalog(
            skir.EditorCatalogWireSnapshot.defaultInstance,
@@ -2173,6 +2181,7 @@ final class _TestPortableHost extends ChangeNotifier
          },
          budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
          role: role,
+         diagnostics: diagnostics,
        );
 
   final bool rejectWrites;
@@ -2238,9 +2247,13 @@ final class _TestPortableHost extends ChangeNotifier
   }) async {
     writes.add((reference, value));
     if (rejectWrites) {
-      return const PortablePresentationWriteResult.rejected(
-        "The document rejected this write",
-      );
+      return PortablePresentationWriteResult.rejected([
+        PortablePresentationDiagnostic(
+          code: "rejected_write",
+          message: "The document rejected this write",
+          severity: skir.DiagnosticSeverity.error,
+        ),
+      ]);
     }
     final current = _document.bindings[_bindingId]!;
     _document = PortablePresentationDocument(
@@ -2253,6 +2266,7 @@ final class _TestPortableHost extends ChangeNotifier
       budget: _document.budget,
       role: _document.role,
       material: _document.material,
+      diagnostics: _document.diagnostics,
       activePresentations: _document.activePresentations,
       slots: _document.slots,
     );

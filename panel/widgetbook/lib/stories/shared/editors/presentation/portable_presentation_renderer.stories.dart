@@ -30,30 +30,18 @@ Widget portablePresentationRendererUseCase(BuildContext context) {
   );
 }
 
-final class PortablePresentationGallery extends StatefulWidget {
+final class PortablePresentationGallery extends HookWidget {
   const PortablePresentationGallery({super.key});
 
   @override
-  State<PortablePresentationGallery> createState() =>
-      _PortablePresentationGalleryState();
-}
-
-final class _PortablePresentationGalleryState
-    extends State<PortablePresentationGallery> {
-  final _PortableGalleryHost _host = _PortableGalleryHost();
-
-  @override
-  void dispose() {
-    _host.dispose();
-    super.dispose();
+  Widget build(BuildContext context) {
+    final host = useMemoized(_PortableGalleryHost.new);
+    useEffect(() => host.dispose, [host]);
+    return PortablePresentationRenderer(host: host);
   }
-
-  @override
-  Widget build(BuildContext context) =>
-      PortablePresentationRenderer(host: _host);
 }
 
-final class _PortableGalleryHost extends ChangeNotifier
+class _PortableGalleryHost extends ChangeNotifier
     implements PortablePresentationHost {
   @override
   EditControl? commitControl(
@@ -100,9 +88,13 @@ final class _PortableGalleryHost extends ChangeNotifier
   Future<PortablePresentationWriteResult> execute(
     skir.EditorAction editorAction, {
     required PortableInvocationContext context,
-  }) async => const PortablePresentationWriteResult.rejected(
-    "This gallery action has no persistence owner",
-  );
+  }) async => PortablePresentationWriteResult.rejected([
+    PortablePresentationDiagnostic(
+      code: "gallery_action",
+      message: "This gallery action has no persistence owner",
+      severity: skir.DiagnosticSeverity.error,
+    ),
+  ]);
 
   @override
   skir.TypeUse? expectedType(
@@ -134,9 +126,13 @@ final class _PortableGalleryHost extends ChangeNotifier
   }) async {
     if (reference.path.segments.isNotEmpty ||
         !_values.containsKey(reference.bindingId)) {
-      return const PortablePresentationWriteResult.rejected(
-        "The gallery binding is unavailable",
-      );
+      return PortablePresentationWriteResult.rejected([
+        PortablePresentationDiagnostic(
+          code: "gallery_binding",
+          message: "The gallery binding is unavailable",
+          severity: skir.DiagnosticSeverity.error,
+        ),
+      ]);
     }
     _values[reference.bindingId] = value;
     notifyListeners();
@@ -221,3 +217,159 @@ skir.BoundControl _control(skir.ExpressionBindingId binding, String label) =>
 
 skir.ExpressionNode _literal(String value) =>
     skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapStringValue(value));
+// Add alongside the existing portable renderer stories.
+@widgetbook.UseCase(name: "Field validation", type: PortableDiagnosticFrame)
+Widget portableFieldValidationUseCase(BuildContext context) =>
+    context.diagnosticStory();
+
+@widgetbook.UseCase(
+  name: "Descendant summary",
+  type: PortableDiagnosticHeaderMarker,
+)
+Widget portableHeaderDiagnosticsUseCase(BuildContext context) =>
+    context.diagnosticStory();
+
+@widgetbook.UseCase(name: "Inline messages", type: PortableDiagnosticMessages)
+Widget portableDiagnosticMessagesUseCase(BuildContext context) =>
+    context.diagnosticStory();
+
+@widgetbook.UseCase(name: "General feedback", type: PortablePresentationChrome)
+Widget portableGeneralDiagnosticsUseCase(BuildContext context) =>
+    context.diagnosticStory(initiallyGeneral: true);
+
+extension _PortableDiagnosticStoryContext on BuildContext {
+  Widget diagnosticStory({bool initiallyGeneral = false}) => FakeApp(
+    child: Scaffold(
+      body: Center(
+        child: SizedBox(
+          width: knobs.double.slider(
+            label: "Diagnostic width",
+            initialValue: 480,
+            min: 320,
+            max: 900,
+          ),
+          height: 520,
+          child: PortableDiagnosticGallery(
+            severity: knobs.object.dropdown(
+              label: "Diagnostic severity",
+              options: [
+                skir.DiagnosticSeverity.information,
+                skir.DiagnosticSeverity.warning,
+                skir.DiagnosticSeverity.error,
+              ],
+              initialOption: skir.DiagnosticSeverity.error,
+            ),
+            role: knobs.object.dropdown(
+              label: "Presentation role",
+              options: [
+                skir.PresentationRole.inspector,
+                skir.PresentationRole.editor,
+                skir.PresentationRole.authoringResult,
+              ],
+              initialOption: skir.PresentationRole.inspector,
+            ),
+            general: knobs.boolean(
+              label: "General message",
+              initialValue: initiallyGeneral,
+            ),
+            readOnly: knobs.boolean(label: "Read only", initialValue: false),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class PortableDiagnosticGallery extends HookWidget {
+  const PortableDiagnosticGallery({
+    required this.severity,
+    required this.role,
+    required this.general,
+    required this.readOnly,
+    super.key,
+  });
+  final skir.DiagnosticSeverity severity;
+  final skir.PresentationRole role;
+  final bool general;
+  final bool readOnly;
+
+  @override
+  Widget build(BuildContext context) {
+    final host = useMemoized(
+      () => _PortableDiagnosticGalleryHost(
+        severity: severity,
+        role: role,
+        general: general,
+        readOnly: readOnly,
+      ),
+      [severity, role, general, readOnly],
+    );
+    useEffect(() => host.dispose, [host]);
+    return PortablePresentationRenderer(host: host);
+  }
+}
+
+// Reuse the existing binding schemas, root header, and controls.
+class _PortableDiagnosticGalleryHost extends _PortableGalleryHost {
+  _PortableDiagnosticGalleryHost({
+    required this.severity,
+    required this.role,
+    required this.general,
+    required this.readOnly,
+  }) {
+    _values[_title] = skir.DataValue.wrapStringValue("ga");
+    _diagnostics = [_titleDiagnostic];
+  }
+  final skir.DiagnosticSeverity severity;
+  final skir.PresentationRole role;
+  final bool general;
+  @override
+  final bool readOnly;
+  List<PortablePresentationDiagnostic> _diagnostics = const [];
+
+  PortablePresentationDiagnostic get _titleDiagnostic =>
+      PortablePresentationDiagnostic(
+        code: "gallery_title",
+        message: "Use at least three characters",
+        severity: severity,
+        targets: general
+            ? const []
+            : [
+                PortableDiagnosticTarget.binding(
+                  skir.BindingRef(bindingId: _title, path: editorRootPath),
+                ),
+              ],
+      );
+
+  @override
+  PortablePresentationDocument get document {
+    final source = super.document;
+    return PortablePresentationDocument(
+      catalog: source.catalog,
+      root: source.root,
+      bindings: source.bindings,
+      budget: source.budget,
+      role: role,
+      diagnostics: _diagnostics,
+      material: source.material,
+      activePresentations: source.activePresentations,
+      slots: source.slots,
+    );
+  }
+
+  @override
+  Future<PortablePresentationWriteResult> write(
+    skir.BindingRef reference,
+    skir.DataValue value, {
+    required PortableInvocationContext context,
+  }) async {
+    if (reference.bindingId == _title && reference.path.segments.isEmpty) {
+      if (value case skir.DataValue_stringValueWrapper(value: final text)
+          when text.length < 3) {
+        return PortablePresentationWriteResult.rejected([_titleDiagnostic]);
+      }
+    }
+    _diagnostics = const [];
+    return super.write(reference, value, context: context);
+  }
+}

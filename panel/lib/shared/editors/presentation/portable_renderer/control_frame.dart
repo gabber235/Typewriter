@@ -27,14 +27,18 @@ Widget _controlFrame(
         final hasMessage =
             (label != null && label.isNotEmpty) ||
             (description != null && description.isNotEmpty);
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            LabeledMessage(label: label, message: description),
-            if (hasMessage) const SizedBox(height: 6),
-            semanticChild,
-          ],
+        return PortableDiagnosticFrame(
+          target: childScope.diagnosticTarget(control.binding),
+          value: childScope.read(control.binding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              LabeledMessage(label: label, message: description),
+              if (hasMessage) const SizedBox(height: 6),
+              semanticChild,
+            ],
+          ),
         );
       },
     ),

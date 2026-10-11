@@ -334,7 +334,10 @@ final class PortableSearchBinding {
           if (selection.added) _committedSelections.add(result);
         }
         return PortableSearchSelectionResult.applied(added: selection.added);
-      case PortablePresentationWriteRejected(:final message):
+      case PortablePresentationWriteRejected(:final diagnostics):
+        final message = diagnostics
+            .map((diagnostic) => diagnostic.message)
+            .join("\n");
         if (!_disposed) feedback.value = message;
         return PortableSearchSelectionResult.rejected(message);
     }
@@ -350,9 +353,16 @@ final class PortableSearchBinding {
     final items = current?.authoredItems?.toList();
     if (items == null) {
       return (
-        outcome: const PortablePresentationWriteRejected(
-          "The selected binding is not a collection",
-        ),
+        outcome: PortablePresentationWriteResult.rejected([
+          PortablePresentationDiagnostic(
+            code: "invalid_collection",
+            message: "The selected binding is not a collection",
+            severity: skir.DiagnosticSeverity.error,
+            targets: [
+              PortableDiagnosticTarget.binding(control.control.binding),
+            ],
+          ),
+        ]),
         added: false,
       );
     }

@@ -29,6 +29,7 @@ final class PageWorkspaceStory extends StatefulWidget {
 }
 
 final class _PageWorkspaceStoryState extends State<PageWorkspaceStory> {
+  final _operations = PortableOperationResults();
   late final _PageFixture _fixture = _pageFixture();
   late skir.ResourceId _selected = _fixture.firstEntry;
   late final _transport = ScriptedAuthoringTransport(
@@ -66,6 +67,7 @@ final class _PageWorkspaceStoryState extends State<PageWorkspaceStory> {
   @override
   void dispose() {
     _workspace.removeListener(_updated);
+    _operations.dispose();
     _host.dispose();
     _binding.detach();
     _inspector?.detach();
@@ -108,6 +110,7 @@ final class _PageWorkspaceStoryState extends State<PageWorkspaceStory> {
             child: PortablePresentationNodeRenderer(
               node: workspace,
               scope: PortablePresentationScope(
+                operations: _operations,
                 bindings: {
                   configuredValueBindingId: PortableExpressionBinding(
                     value: skir.DataValue.createRecord(

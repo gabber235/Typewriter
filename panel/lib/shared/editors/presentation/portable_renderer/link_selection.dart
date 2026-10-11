@@ -72,15 +72,21 @@ Future<void> _chooseLink({
     },
   );
   if (decision == null) return;
-  final result = await linkHost.connectLink(
-    plan: decision.plan,
-    target: decision.target,
-    counterpart: decision.counterpart,
-    context: scope.invocation,
+  final reference = control.control.binding;
+  final address = scope.diagnosticTarget(reference);
+  await scope.operations.run(
+    key: PortableOperationKey.write(address),
+    input: PortableDiagnosticObservation(
+      target: address,
+      value: scope.read(reference),
+    ),
+    operation: () => linkHost.connectLink(
+      plan: decision.plan,
+      target: decision.target,
+      counterpart: decision.counterpart,
+      context: scope.invocation,
+    ),
   );
-  if (result case PortablePresentationWriteRejected(:final message)) {
-    scope.reportStatus?.call(message);
-  }
 }
 
 final class _AuthoredLinkDecision {

@@ -81,40 +81,32 @@ BoundPresentationBinding _serviceNamePresentationBinding(
         : skir.DataValue.unfilled;
   },
   write: (path, value) {
-    if (path.segments.isNotEmpty) {
-      return const PortablePresentationWriteResult.rejected(
-        "The service name path is invalid",
-      );
-    }
-    if (value case skir.DataValue_stringValueWrapper(:final value)) {
-      return identityOwner
-          .update(
-            editorRootPath.field("name"),
-            skir.DataValue.wrapStringValue(value),
-          )
-          .portablePresentationResult;
-    }
-    return const PortablePresentationWriteResult.rejected(
-      "The service name must be text",
+    final target = PortableDiagnosticTarget.binding(
+      skir.BindingRef(bindingId: _serviceNameBinding, path: path),
     );
+    PortablePresentationWriteResult reject(String code, String message) =>
+        PortablePresentationWriteResult.rejected([
+          PortablePresentationDiagnostic(
+            code: code,
+            message: message,
+            severity: skir.DiagnosticSeverity.error,
+            targets: [target],
+          ),
+        ]);
+    if (path.segments.isNotEmpty) {
+      return reject("invalid_path", "The service name path is invalid");
+    }
+    if (value is! skir.DataValue_stringValueWrapper) {
+      return reject("invalid_value", "The service name must be text");
+    }
+    return identityOwner
+        .update(editorRootPath.field("name"), value)
+        .toPortablePresentationResult(
+          binding: _serviceNameBinding,
+          sourcePath: editorRootPath.field("name"),
+        );
   },
 );
-
-extension EditorMutationPortablePresentation on EditorMutationResult {
-  PortablePresentationWriteResult get portablePresentationResult =>
-      switch (this) {
-        AppliedEditorMutation() =>
-          const PortablePresentationWriteResult.applied(),
-        ConflictingEditorMutation() =>
-          const PortablePresentationWriteResult.rejected(
-            "The service changed while it was being edited",
-          ),
-        InvalidEditorMutation() =>
-          const PortablePresentationWriteResult.rejected(
-            "The service name is invalid",
-          ),
-      };
-}
 
 skir.PresentationNode _servicePortablePresentation(
   Color color,

@@ -69,52 +69,60 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
     return _controlFrame(
       control,
       childScope,
-      ValidatedTextField<skir.DataValue>(
-        key: ValueKey("${node.nodeId}.input"),
-        value: current == skir.DataValue.unfilled ? null : current,
-        name: "number",
-        icon: HeroiconsSolid.hashtag,
-        readOnly: childScope.readOnly || !childScope.enabled,
-        keyboardType: const TextInputType.numberWithOptions(
-          signed: true,
-          decimal: true,
-        ),
-        inputFormatters: [
-          TextInputFormatter.withFunction((oldValue, newValue) {
-            return acceptsPortableNumericInput(
-                  current: current,
-                  expected: expected,
-                  text: newValue.text,
-                )
-                ? newValue
-                : oldValue;
-          }),
-        ],
-        decoration: InputDecoration(
-          hintText: "Enter a number",
-          helperText: current == skir.DataValue.unfilled
-              ? "This value is Unfilled"
-              : null,
-          prefixIcon: _paddedControlPrefix(control, childScope),
-        ),
-        deserialize: (_) => text,
-        serialize: (next) {
-          if (next.isEmpty) {
-            return skir.DataValue.unfilled;
-          }
-          final replacement = admitPortableNumericInput(
-            current: current,
-            expected: expected,
-            text: next,
+      Builder(
+        builder: (context) {
+          final diagnostics = PortableControlDiagnostics.of(context);
+          return ValidatedTextField<skir.DataValue>(
+            showValidationMessage: false,
+            onValidationChanged: diagnostics.onValidationChanged,
+            validationIdentity: diagnostics.identity,
+            key: ValueKey("${node.nodeId}.input"),
+            value: current == skir.DataValue.unfilled ? null : current,
+            name: "number",
+            icon: HeroiconsSolid.hashtag,
+            readOnly: childScope.readOnly || !childScope.enabled,
+            keyboardType: const TextInputType.numberWithOptions(
+              signed: true,
+              decimal: true,
+            ),
+            inputFormatters: [
+              TextInputFormatter.withFunction((oldValue, newValue) {
+                return acceptsPortableNumericInput(
+                      current: current,
+                      expected: expected,
+                      text: newValue.text,
+                    )
+                    ? newValue
+                    : oldValue;
+              }),
+            ],
+            decoration: InputDecoration(
+              hintText: "Enter a number",
+              helperText: current == skir.DataValue.unfilled
+                  ? "This value is Unfilled"
+                  : null,
+              prefixIcon: _paddedControlPrefix(control, childScope),
+            ),
+            deserialize: (_) => text,
+            serialize: (next) {
+              if (next.isEmpty) {
+                return skir.DataValue.unfilled;
+              }
+              final replacement = admitPortableNumericInput(
+                current: current,
+                expected: expected,
+                text: next,
+              );
+              if (replacement == null) {
+                throw const FormatException("Enter a valid number");
+              }
+              return replacement;
+            },
+            onChanged: (replacement) => replacement == skir.DataValue.unfilled
+                ? childScope.write(control.binding, skir.DataValue.unfilled)
+                : childScope.writePayload(control.binding, replacement),
           );
-          if (replacement == null) {
-            throw const FormatException("Enter a valid number");
-          }
-          return replacement;
         },
-        onChanged: (replacement) => replacement == skir.DataValue.unfilled
-            ? childScope.write(control.binding, skir.DataValue.unfilled)
-            : childScope.writePayload(control.binding, replacement),
       ),
     );
   }

@@ -242,22 +242,27 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
                           _ => null,
                         };
                         if (linkHost == null) return;
-                        final result = linkHost.disconnectLink(
-                          skir.LinkOccurrence(
-                            id: skir.LinkOccurrenceId(
-                              endpoint: link.endpoint,
-                              location: location,
+                        final address = scope.diagnosticTarget(reference);
+                        unawaited(
+                          scope.operations.run(
+                            key: PortableOperationKey.write(address),
+                            input: PortableDiagnosticObservation(
+                              target: address,
+                              value: scope.read(reference),
                             ),
-                            source: location.resource,
-                            target: link.target,
+                            operation: () => linkHost.disconnectLink(
+                              skir.LinkOccurrence(
+                                id: skir.LinkOccurrenceId(
+                                  endpoint: link.endpoint,
+                                  location: location,
+                                ),
+                                source: location.resource,
+                                target: link.target,
+                              ),
+                              context: scope.invocation,
+                            ),
                           ),
-                          context: scope.invocation,
                         );
-                        if (result case PortablePresentationWriteRejected(
-                          :final message,
-                        )) {
-                          scope.reportStatus?.call(message);
-                        }
                       }
                     : null,
                 icon: const Icon(Icons.link_off),

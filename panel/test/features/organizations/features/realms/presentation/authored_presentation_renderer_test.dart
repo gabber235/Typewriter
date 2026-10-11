@@ -109,6 +109,7 @@ void main() {
               header: null,
             ),
             scope: PortablePresentationScope(
+              operations: testPortableOperations(),
               bindings: {
                 _rootBinding: PortableExpressionBinding(
                   value: skir.DataValue.createRecord(
@@ -173,6 +174,7 @@ void main() {
               header: null,
             ),
             scope: PortablePresentationScope(
+              operations: testPortableOperations(),
               bindings: {
                 _rootBinding: PortableExpressionBinding(
                   value: skir.DataValue.createRecord(
@@ -233,6 +235,7 @@ void main() {
               header: null,
             ),
             scope: PortablePresentationScope(
+              operations: testPortableOperations(),
               bindings: {
                 _rootBinding: PortableExpressionBinding(
                   value: skir.DataValue.createRecord(
@@ -395,6 +398,7 @@ void main() {
       );
       addTearDown(host.dispose);
       final scope = PortablePresentationScope(
+        operations: testPortableOperations(),
         bindings: {
           _rootBinding: PortableExpressionBinding(
             value: skir.DataValue.createNamed(
@@ -784,6 +788,7 @@ void main() {
               header: null,
             ),
             scope: PortablePresentationScope(
+              operations: testPortableOperations(),
               bindings: const {},
               budget: _budget,
             ),
@@ -843,6 +848,7 @@ Future<void> _pumpControl(
   bool rebindWrites = false,
 }) {
   var current = value;
+  final operations = testPortableOperations();
   late StateSetter rebuild;
   final host = _ControlHost(
     expected: switch (element) {
@@ -870,6 +876,7 @@ Future<void> _pumpControl(
               header: null,
             ),
             scope: PortablePresentationScope(
+              operations: operations,
               bindings: {
                 _rootBinding: PortableExpressionBinding(value: current),
               },

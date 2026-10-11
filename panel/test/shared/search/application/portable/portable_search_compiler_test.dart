@@ -557,7 +557,13 @@ final class _FakeHost extends ChangeNotifier
       return completion.future;
     }
     if (rejection case final message?) {
-      return PortablePresentationWriteResult.rejected(message);
+      return PortablePresentationWriteResult.rejected([
+        PortablePresentationDiagnostic(
+          code: "search_rejected",
+          message: message,
+          severity: skir.DiagnosticSeverity.error,
+        ),
+      ]);
     }
     written = value;
     _value = value;
@@ -571,7 +577,13 @@ final class _FakeHost extends ChangeNotifier
   }) async {
     writtenContext = context;
     if (rejection case final message?) {
-      return PortablePresentationWriteResult.rejected(message);
+      return PortablePresentationWriteResult.rejected([
+        PortablePresentationDiagnostic(
+          code: "search_rejected",
+          message: message,
+          severity: skir.DiagnosticSeverity.error,
+        ),
+      ]);
     }
     final items = _value.authoredItems?.toList() ?? <skir.ListItem>[];
     switch (editorAction) {
@@ -590,9 +602,13 @@ final class _FakeHost extends ChangeNotifier
       ):
         items.removeWhere((item) => item.id == value.item);
       case _:
-        return const PortablePresentationWriteResult.rejected(
-          "Unsupported action",
-        );
+        return PortablePresentationWriteResult.rejected([
+          PortablePresentationDiagnostic(
+            code: "unsupported_action",
+            message: "Unsupported action",
+            severity: skir.DiagnosticSeverity.error,
+          ),
+        ]);
     }
     _value = skir.DataValue.createListValue(items: items);
     return const PortablePresentationWriteResult.applied();

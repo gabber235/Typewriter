@@ -11,6 +11,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
   factory PortablePresentationScope({
     required Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings,
     required skir.EvaluationBudget budget,
+    required PortableOperationResults operations,
     bool readOnly = false,
     bool enabled = true,
     Stream<skir.RealmPresentationSearchUpdate> Function(
@@ -33,6 +34,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
   }) => PortablePresentationScope._value(
     bindings: Map.unmodifiable(bindings),
     budget: budget,
+    operations: operations,
     readOnly: readOnly,
     enabled: enabled,
     watchSearch: watchSearch,
@@ -53,6 +55,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
   const factory PortablePresentationScope._value({
     required Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings,
     required skir.EvaluationBudget budget,
+    required PortableOperationResults operations,
     required bool readOnly,
     required bool enabled,
     required Stream<skir.RealmPresentationSearchUpdate> Function(
@@ -74,6 +77,18 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     projectedWriters,
   }) = _PortablePresentationScope;
   const PortablePresentationScope._();
+
+  List<PortableDiagnosticObservation> get diagnosticObservations => [
+    for (final entry in bindings.entries)
+      PortableDiagnosticObservation(
+        target: entry.value.location == null
+            ? PortableDiagnosticTarget.binding(
+                skir.BindingRef(bindingId: entry.key, path: editorRootPath),
+              )
+            : PortableDiagnosticTarget.value(entry.value.location!),
+        value: entry.value.value,
+      ),
+  ];
 
   PortableInvocationContext get invocation => PortableInvocationContext(
     bindings: bindings,
@@ -125,6 +140,14 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     );
   }
 
+  PortableDiagnosticTarget diagnosticTarget(skir.BindingRef reference) {
+    final located = location(reference);
+    if (located != null) return PortableDiagnosticTarget.value(located);
+    return PortableDiagnosticTarget.binding(
+      sourceReference(reference) ?? reference,
+    );
+  }
+
   skir.TypeUse? expectedType(skir.BindingRef reference) {
     return host?.expectedType(reference, context: invocation);
   }
@@ -147,20 +170,39 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
   }
 
   void write(skir.BindingRef reference, skir.DataValue value) {
-    final target = host;
-    if (!enabled || readOnly || target == null) return;
-    final projectedWriter = projectedWriters[reference.bindingId];
-    if (projectedWriter != null) {
-      projectedWriter(reference, value);
-      return;
-    }
+    if (!enabled || readOnly || host == null) return;
+    final address = diagnosticTarget(reference);
     unawaited(
-      target.write(reference, value, context: invocation).then((result) {
-        if (result case PortablePresentationWriteRejected(:final message)) {
-          reportStatus?.call(message);
-        }
-      }),
+      operations.run(
+        key: PortableOperationKey.write(address),
+        input: PortableDiagnosticObservation(
+          target: address,
+          value: read(reference),
+        ),
+        operation: () => apply(reference, value),
+      ),
     );
+  }
+
+  Future<PortablePresentationWriteResult> apply(
+    skir.BindingRef reference,
+    skir.DataValue value,
+  ) async {
+    final target = host;
+    if (!enabled || readOnly || target == null) {
+      return PortablePresentationWriteResult.rejected([
+        PortablePresentationDiagnostic(
+          code: "read_only",
+          message: "This presentation is read only",
+          severity: skir.DiagnosticSeverity.error,
+          targets: [diagnosticTarget(reference)],
+        ),
+      ]);
+    }
+    final writer = projectedWriters[reference.bindingId];
+    return writer == null
+        ? target.write(reference, value, context: invocation)
+        : await writer(reference, value);
   }
 
   void writePayload(skir.BindingRef reference, skir.DataValue payload) {
@@ -191,13 +233,24 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
   // enters the private Freezed value constructor directly.
   PortablePresentationScope withNamedPayload(PortableNamedPayload payload) {
     final configured = skir.ExpressionBindingId(value: "configured_value");
-    void writeConfigured(skir.BindingRef reference, skir.DataValue value) {
+    FutureOr<PortablePresentationWriteResult> writeConfigured(
+      skir.BindingRef reference,
+      skir.DataValue value,
+    ) {
       final replaced = reference.path.segments.isEmpty
           ? PortablePathValue(value)
           : payload.value.replaceAt(reference.path, value);
       if (replaced case PortablePathValue(:final value)) {
-        payload.replace(value);
+        return payload.replace(value);
       }
+      return PortablePresentationWriteResult.rejected([
+        PortablePresentationDiagnostic(
+          code: "invalid_path",
+          message: "The named value path is unavailable",
+          severity: skir.DiagnosticSeverity.error,
+          targets: [diagnosticTarget(reference)],
+        ),
+      ]);
     }
 
     return copyWith(
@@ -241,20 +294,18 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     final originalWriter = projectedWriters[reference.bindingId];
     final nextWriters = {...projectedWriters}..remove(id);
     if (originalWriter != null) {
-      nextWriters[id] = (nestedReference, replacement) {
-        originalWriter(
-          skir.BindingRef(
-            bindingId: reference.bindingId,
-            path: skir.ValuePath(
-              segments: [
-                ...reference.path.segments,
-                ...nestedReference.path.segments,
-              ],
-            ),
+      nextWriters[id] = (nestedReference, replacement) => originalWriter(
+        skir.BindingRef(
+          bindingId: reference.bindingId,
+          path: skir.ValuePath(
+            segments: [
+              ...reference.path.segments,
+              ...nestedReference.path.segments,
+            ],
           ),
-          replacement,
-        );
-      };
+        ),
+        replacement,
+      );
     }
     return copyWith(
       bindings: {

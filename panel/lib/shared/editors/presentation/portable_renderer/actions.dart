@@ -4,10 +4,11 @@ extension _PortableScopeActions on PortablePresentationScope {
   Future<void> executeAction(skir.EditorAction editorAction) async {
     final target = host;
     if (!canExecuteAction || target == null) return;
-    final result = await target.execute(editorAction, context: invocation);
-    if (result case PortablePresentationWriteRejected(:final message)) {
-      reportStatus?.call(message);
-    }
+    final context = invocation;
+    await operations.run(
+      key: PortableOperationKey.execute(editorAction),
+      operation: () => target.execute(editorAction, context: context),
+    );
   }
 
   void moveListItem(
@@ -44,27 +45,38 @@ extension _PortableScopeActions on PortablePresentationScope {
 
   Future<void> addCollectionItem(skir.BindingRef reference) async {
     final target = host;
-    if (!canExecuteAction || target == null) return;
-    if (target is! PortableCollectionMutationHost) return;
-    final collectionTarget = target as PortableCollectionMutationHost;
-    final result = await collectionTarget.addCollectionItem(
-      reference,
-      context: invocation,
+    if (!canExecuteAction || target is! PortableCollectionMutationHost) return;
+    final address = diagnosticTarget(reference);
+    final context = invocation;
+    await operations.run(
+      key: PortableOperationKey.addItem(address),
+      input: PortableDiagnosticObservation(
+        target: address,
+        value: read(reference),
+      ),
+      operation: () => (target! as PortableCollectionMutationHost)
+          .addCollectionItem(reference, context: context),
     );
-    if (result case PortablePresentationWriteRejected(:final message)) {
-      reportStatus?.call(message);
-    }
   }
 
   void addMapRow(skir.BindingRef reference) {
     final target = host;
-    if (!canExecuteAction || target == null) return;
-    if (target is! PortableCollectionMutationHost) return;
-    final collectionTarget = target as PortableCollectionMutationHost;
-    final result = collectionTarget.addMapRow(reference, context: invocation);
-    if (result case PortablePresentationWriteRejected(:final message)) {
-      reportStatus?.call(message);
-    }
+    if (!canExecuteAction || target is! PortableCollectionMutationHost) return;
+    final address = diagnosticTarget(reference);
+    final context = invocation;
+    unawaited(
+      operations.run(
+        key: PortableOperationKey.addMapRow(address),
+        input: PortableDiagnosticObservation(
+          target: address,
+          value: read(reference),
+        ),
+        operation: () => (target! as PortableCollectionMutationHost).addMapRow(
+          reference,
+          context: context,
+        ),
+      ),
+    );
   }
 }
 

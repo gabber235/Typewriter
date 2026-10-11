@@ -157,14 +157,13 @@ final class BoundPresentationHost extends ChangeNotifier
     required PortableInvocationContext context,
   }) async {
     if (!enabled || readOnly) {
-      return const PortablePresentationWriteRejected(
-        "This presentation is read only",
-      );
+      return _reject("This presentation is read only", target: reference);
     }
     final writer = _bindings[reference.bindingId]?.write;
     if (writer == null) {
-      return const PortablePresentationWriteRejected(
+      return _reject(
         "This presentation binding is read only",
+        target: reference,
       );
     }
     if (!context.isCurrent(
@@ -174,14 +173,16 @@ final class BoundPresentationHost extends ChangeNotifier
           ?.read(editorRootPath)
           ?.editorValueAt(reference.path),
     )) {
-      return const PortablePresentationWriteRejected(
+      return _reject(
         "The presentation value changed before this write",
+        target: reference,
       );
     }
     final expected = expectedType(reference, context: context);
     if (expected == null || !catalog.admitsPortableValue(expected, value)) {
-      return const PortablePresentationWriteRejected(
+      return _reject(
         "The value does not match the binding type",
+        target: reference,
       );
     }
     final result = await writer(reference.path, value);
@@ -195,9 +196,7 @@ final class BoundPresentationHost extends ChangeNotifier
     required PortableInvocationContext context,
   }) async {
     if (!enabled || readOnly) {
-      return const PortablePresentationWriteRejected(
-        "This presentation is read only",
-      );
+      return _reject("This presentation is read only");
     }
     if (editorAction case skir.EditorAction_localWrapper(
       value: skir.LocalEditorAction_setValueWrapper(:final value),
@@ -212,18 +211,32 @@ final class BoundPresentationHost extends ChangeNotifier
           replacement,
           context: context,
         ),
-        PortableExpressionFailed(:final message) =>
-          PortablePresentationWriteRejected(message),
-        PortableExpressionUnavailable() =>
-          const PortablePresentationWriteRejected(
-            "The action value is unavailable",
-          ),
+        PortableExpressionFailed(:final message) => _reject(
+          message,
+          target: value.target,
+        ),
+        PortableExpressionUnavailable() => _reject(
+          "The action value is unavailable",
+          target: value.target,
+        ),
       };
     }
-    return const PortablePresentationWriteRejected(
-      "This presentation action is unavailable",
-    );
+    return _reject("This presentation action is unavailable");
   }
+
+  PortablePresentationWriteResult _reject(
+    String message, {
+    skir.BindingRef? target,
+  }) => PortablePresentationWriteResult.rejected([
+    PortablePresentationDiagnostic(
+      code: "binding_rejected",
+      message: message,
+      severity: skir.DiagnosticSeverity.error,
+      targets: target == null
+          ? const []
+          : [PortableDiagnosticTarget.binding(target)],
+    ),
+  ]);
 
   PortablePresentationDocument _snapshot() => PortablePresentationDocument(
     catalog: catalog,

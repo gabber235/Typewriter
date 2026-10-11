@@ -168,7 +168,8 @@ BoundPresentationHost topologyHostPortableHost({
         },
         write: identityOwner == null
             ? null
-            : (path, value) => _writeLegacyString(
+            : (path, value) => _writeBoundString(
+                _serviceNameBinding,
                 identityOwner,
                 editorRootPath.field("name"),
                 path,
@@ -423,16 +424,28 @@ BoundPresentationBinding _configurationToggle({
   },
   write: (path, value) {
     if (path.segments.isNotEmpty || value is! skir.DataValue_booleanWrapper) {
-      return const PortablePresentationWriteResult.rejected(
-        "The workload mode is invalid",
-      );
+      return PortablePresentationWriteResult.rejected([
+        PortablePresentationDiagnostic(
+          code: "invalid_value",
+          message: "The workload mode is invalid",
+          severity: skir.DiagnosticSeverity.error,
+          targets: [
+            PortableDiagnosticTarget.binding(
+              skir.BindingRef(bindingId: id, path: path),
+            ),
+          ],
+        ),
+      ]);
     }
     return owner
         .update(
           editorRootPath.field(field),
           value.value ? enabled : _draftVariant(disabled),
         )
-        .portablePresentationResult;
+        .toPortablePresentationResult(
+          binding: id,
+          sourcePath: editorRootPath.field(field),
+        );
   },
 );
 
@@ -450,10 +463,11 @@ BoundPresentationBinding _configurationString({
   read: (_) => skir.DataValue.wrapStringValue(
     owner.value(path).valueOrNull?.authoredString ?? "",
   ),
-  write: (suffix, value) => _writeLegacyString(owner, path, suffix, value),
+  write: (suffix, value) => _writeBoundString(id, owner, path, suffix, value),
 );
 
-PortablePresentationWriteResult _writeLegacyString(
+PortablePresentationWriteResult _writeBoundString(
+  skir.ExpressionBindingId id,
   EditOwner owner,
   skir.ValuePath path,
   skir.ValuePath suffix,
@@ -461,11 +475,22 @@ PortablePresentationWriteResult _writeLegacyString(
 ) {
   if (suffix.segments.isNotEmpty ||
       value is! skir.DataValue_stringValueWrapper) {
-    return const PortablePresentationWriteResult.rejected(
-      "The selected value is invalid",
-    );
+    return PortablePresentationWriteResult.rejected([
+      PortablePresentationDiagnostic(
+        code: "invalid_value",
+        message: "The selected value is invalid",
+        severity: skir.DiagnosticSeverity.error,
+        targets: [
+          PortableDiagnosticTarget.binding(
+            skir.BindingRef(bindingId: id, path: suffix),
+          ),
+        ],
+      ),
+    ]);
   }
-  return owner.update(path, value).portablePresentationResult;
+  return owner
+      .update(path, value)
+      .toPortablePresentationResult(binding: id, sourcePath: path);
 }
 
 skir.TypeUse _portableUse(skir.DataValue value) {

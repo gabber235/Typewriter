@@ -69,6 +69,9 @@ class ValidatedTextField<T> extends HookConsumerWidget {
     this.readOnly = false,
     this.selectAllOnFocus = false,
     this.mixed = false,
+    this.onValidationChanged,
+    this.validationIdentity,
+    this.showValidationMessage = true,
     super.key,
   }) : assert(!mixed || value == null);
   final T? value;
@@ -127,6 +130,15 @@ class ValidatedTextField<T> extends HookConsumerWidget {
   final bool selectAllOnFocus;
   final bool mixed;
 
+  /// Reports parser validity without admitting invalid drafts to the edit owner.
+  final ValueChanged<String?>? onValidationChanged;
+
+  /// Replaces the reporting lifetime when the surrounding control changes.
+  final Object? validationIdentity;
+
+  /// Shared presentation frames can render the message beside the whole control.
+  final bool showValidationMessage;
+
   _State _parse(String value) {
     if (_clears(value)) return _initial;
     try {
@@ -167,6 +179,21 @@ class ValidatedTextField<T> extends HookConsumerWidget {
       return null;
     }, [focus, formattedValue]);
 
+    final validationMessage = state.value is _Invalid
+        ? (state.value as _Invalid).message
+        : null;
+    final currentReporter = useRef(onValidationChanged)
+      ..value = onValidationChanged;
+    useEffect(() {
+      var active = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (active && context.mounted) {
+          currentReporter.value?.call(validationMessage);
+        }
+      });
+      return () => active = false;
+    }, [validationMessage, validationIdentity]);
+
     useFocusedChange(focus, ({required hasFocus}) {
       if (!hasFocus && !keepErrorVisibleWhenUnfocused) {
         state.value = _initial;
@@ -199,8 +226,9 @@ class ValidatedTextField<T> extends HookConsumerWidget {
             ),
           ),
       hintText: baseDecoration.hintText ?? "Enter a $name",
-      errorText:
-          state.value.cast<_Invalid>()?.message ?? baseDecoration.errorText,
+      errorText: showValidationMessage
+          ? state.value.cast<_Invalid>()?.message ?? baseDecoration.errorText
+          : baseDecoration.errorText,
     );
 
     return Column(

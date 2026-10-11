@@ -132,7 +132,7 @@ return submission(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( skir.PublicationDiagnosticDetails details)?  blocker,TResult Function( skir.PublicationNotice notice)?  notice,TResult Function( AuthoredFindingView finding)?  savedFinding,TResult Function( AuthoredLocalDiagnostic diagnostic)?  localFinding,TResult Function( WorkEntryState entry)?  work,TResult Function( LocalWorkSubmissionState submission)?  submission,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( skir.PublicationDiagnosticDetails details)?  blocker,TResult Function( skir.PublicationNotice notice)?  notice,TResult Function( AuthoredFindingView finding)?  savedFinding,TResult Function( PortablePresentationDiagnostic diagnostic)?  localFinding,TResult Function( WorkEntryState entry)?  work,TResult Function( LocalWorkSubmissionState submission)?  submission,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case RealmInboxBlocker() when blocker != null:
 return blocker(_that.details);case RealmInboxNotice() when notice != null:
@@ -158,7 +158,7 @@ return submission(_that.submission);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( skir.PublicationDiagnosticDetails details)  blocker,required TResult Function( skir.PublicationNotice notice)  notice,required TResult Function( AuthoredFindingView finding)  savedFinding,required TResult Function( AuthoredLocalDiagnostic diagnostic)  localFinding,required TResult Function( WorkEntryState entry)  work,required TResult Function( LocalWorkSubmissionState submission)  submission,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( skir.PublicationDiagnosticDetails details)  blocker,required TResult Function( skir.PublicationNotice notice)  notice,required TResult Function( AuthoredFindingView finding)  savedFinding,required TResult Function( PortablePresentationDiagnostic diagnostic)  localFinding,required TResult Function( WorkEntryState entry)  work,required TResult Function( LocalWorkSubmissionState submission)  submission,}) {final _that = this;
 switch (_that) {
 case RealmInboxBlocker():
 return blocker(_that.details);case RealmInboxNotice():
@@ -180,7 +180,7 @@ return submission(_that.submission);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( skir.PublicationDiagnosticDetails details)?  blocker,TResult? Function( skir.PublicationNotice notice)?  notice,TResult? Function( AuthoredFindingView finding)?  savedFinding,TResult? Function( AuthoredLocalDiagnostic diagnostic)?  localFinding,TResult? Function( WorkEntryState entry)?  work,TResult? Function( LocalWorkSubmissionState submission)?  submission,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( skir.PublicationDiagnosticDetails details)?  blocker,TResult? Function( skir.PublicationNotice notice)?  notice,TResult? Function( AuthoredFindingView finding)?  savedFinding,TResult? Function( PortablePresentationDiagnostic diagnostic)?  localFinding,TResult? Function( WorkEntryState entry)?  work,TResult? Function( LocalWorkSubmissionState submission)?  submission,}) {final _that = this;
 switch (_that) {
 case RealmInboxBlocker() when blocker != null:
 return blocker(_that.details);case RealmInboxNotice() when notice != null:
@@ -407,7 +407,7 @@ class RealmInboxLocalFinding extends RealmInboxIssue {
   const RealmInboxLocalFinding(this.diagnostic): super._();
 
 
- final  AuthoredLocalDiagnostic diagnostic;
+ final  PortablePresentationDiagnostic diagnostic;
 
 /// Create a copy of RealmInboxIssue
 /// with the given fields replaced by the non null parameter values.
@@ -441,11 +441,11 @@ abstract mixin class $RealmInboxLocalFindingCopyWith<$Res> implements $RealmInbo
   factory $RealmInboxLocalFindingCopyWith(RealmInboxLocalFinding value, $Res Function(RealmInboxLocalFinding) _then) = _$RealmInboxLocalFindingCopyWithImpl;
 @useResult
 $Res call({
- AuthoredLocalDiagnostic diagnostic
+ PortablePresentationDiagnostic diagnostic
 });
 
 
-
+$PortablePresentationDiagnosticCopyWith<$Res> get diagnostic;
 
 }
 /// @nodoc
@@ -461,11 +461,20 @@ class _$RealmInboxLocalFindingCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') $Res call({Object? diagnostic = null,}) {
   return _then(RealmInboxLocalFinding(
 null == diagnostic ? _self.diagnostic : diagnostic // ignore: cast_nullable_to_non_nullable
-as AuthoredLocalDiagnostic,
+as PortablePresentationDiagnostic,
   ));
 }
 
+/// Create a copy of RealmInboxIssue
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortablePresentationDiagnosticCopyWith<$Res> get diagnostic {
 
+  return $PortablePresentationDiagnosticCopyWith<$Res>(_self.diagnostic, (value) {
+    return _then(_self.copyWith(diagnostic: value));
+  });
+}
 }
 
 /// @nodoc

@@ -7,6 +7,37 @@ import "../../../../../support/publication.dart";
 import "../../../../../support/test_utils.dart";
 
 void main() {
+  test("local findings retain every resource target for inbox navigation", () {
+    final owner = skir.ResourceId(value: "owner");
+    final primary = skir.ValueLocation(
+      resource: owner,
+      path: editorRootPath.field("name"),
+    );
+    final related = skir.ValueLocation(
+      resource: owner,
+      path: editorRootPath.field("title"),
+    );
+    final issue = RealmInboxIssue.localFinding(
+      PortablePresentationDiagnostic(
+        code: "related",
+        message: "Names must agree",
+        severity: skir.DiagnosticSeverity.error,
+        targets: [
+          PortableDiagnosticTarget.binding(
+            skir.BindingRef(
+              bindingId: skir.ExpressionBindingId(value: "external"),
+              path: editorRootPath,
+            ),
+          ),
+          PortableDiagnosticTarget.value(primary),
+          PortableDiagnosticTarget.value(related),
+        ],
+      ),
+    );
+    expect(issue.primary, primary);
+    expect(issue.related, [related]);
+  });
+
   final scope = AuthoringScope(
     organizationId: skir.recordId("organization:inbox"),
     realmId: skir.recordId("service:inbox"),

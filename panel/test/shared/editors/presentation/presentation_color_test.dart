@@ -6,10 +6,14 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "../../../support/test_utils.dart";
 
 void main() {
-  final scope = PortablePresentationScope(
-    bindings: const {},
-    budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
-  );
+  late PortablePresentationScope scope;
+  setUp(() {
+    scope = PortablePresentationScope(
+      operations: testPortableOperations(),
+      bindings: const {},
+      budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
+    );
+  });
   final appearance = SurfaceAppearance(
     color: Colors.black,
     foreground: Colors.white,
@@ -372,6 +376,7 @@ void main() {
       throwsA(isA<PresentationColorFailure>()),
     );
     final limited = PortablePresentationScope(
+      operations: testPortableOperations(),
       bindings: const {},
       budget: skir.EvaluationBudget(maxSteps: 1, maxCollectionItems: 1),
     );
@@ -451,8 +456,10 @@ skir.PresentationStateColorRule _rule(
 class _InteractionOwnerProbe extends StatelessWidget {
   const _InteractionOwnerProbe();
   @override
-  Widget build(BuildContext context) => const PresentationInteractionScope(
-    value: PresentationInteraction(),
-    child: Text("Independent"),
-  );
+  Widget build(BuildContext context) {
+    return const PresentationInteractionScope(
+      value: PresentationInteraction(),
+      child: Text("Independent"),
+    );
+  }
 }

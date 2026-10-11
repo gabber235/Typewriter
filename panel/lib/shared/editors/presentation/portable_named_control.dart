@@ -2,10 +2,13 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-typedef PortableBindingSetter = void Function(
-  skir.BindingRef reference,
-  skir.DataValue value,
-);
+part "portable_named_control.freezed.dart";
+
+typedef PortableBindingSetter =
+    FutureOr<PortablePresentationWriteResult> Function(
+      skir.BindingRef reference,
+      skir.DataValue value,
+    );
 
 typedef PortableNamedPayloadBuilder = Widget Function(
   BuildContext context,
@@ -18,24 +21,18 @@ typedef PortableControlUnavailableBuilder = Widget Function(
   String message,
 );
 
-final class PortableNamedPayload {
-  const PortableNamedPayload({
-    required this.reference,
-    required this.actualType,
-    required this.value,
-    required this.location,
-    required this.bindings,
-    required this.budget,
-    required this.setBinding,
-  });
-
-  final skir.BindingRef reference;
-  final skir.NamedTypeUse actualType;
-  final skir.DataValue value;
-  final skir.ValueLocation location;
-  final Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings;
-  final skir.EvaluationBudget budget;
-  final PortableBindingSetter setBinding;
+@freezed
+abstract class PortableNamedPayload with _$PortableNamedPayload {
+  const factory PortableNamedPayload({
+    required skir.BindingRef reference,
+    required skir.NamedTypeUse actualType,
+    required skir.DataValue value,
+    required skir.ValueLocation location,
+    required Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings,
+    required skir.EvaluationBudget budget,
+    required PortableBindingSetter setBinding,
+  }) = _PortableNamedPayload;
+  const PortableNamedPayload._();
 
   PortableExpressionEvaluator evaluator() =>
       PortableExpressionEvaluator.configuredValue(
@@ -45,12 +42,12 @@ final class PortableNamedPayload {
         additional: bindings,
       );
 
-  void replace(skir.DataValue replacement) {
-    setBinding(
-      reference,
-      skir.DataValue.createNamed(actualType: actualType, payload: replacement),
-    );
-  }
+  FutureOr<PortablePresentationWriteResult> replace(
+    skir.DataValue replacement,
+  ) => setBinding(
+    reference,
+    skir.DataValue.createNamed(actualType: actualType, payload: replacement),
+  );
 }
 
 final class PortableNamedControlHost extends StatelessWidget {

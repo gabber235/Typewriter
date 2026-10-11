@@ -223,30 +223,42 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
     if (selected is! SelectedEditorPresentation) {
       return Text(projected.label);
     }
-    return PortablePresentationNodeRenderer(
-      node: selected.material.layout,
-      scope: PortablePresentationScope(
-        bindings: {
-          _configuredValueBindingId: PortableExpressionBinding(
-            value: projected.value,
-            location: skir.ValueLocation(
-              resource: resource,
-              path: skir.ValuePath(segments: const []),
-            ),
+    return PortableDiagnosticSource(
+      diagnostics: projected.diagnostics,
+      observations: [
+        PortableDiagnosticObservation(
+          target: PortableDiagnosticTarget.value(
+            skir.ValueLocation(resource: resource, path: editorRootPath),
           ),
-        },
-        budget: parent.budget,
-        readOnly: parent.readOnly,
-        enabled: parent.enabled,
-        watchSearch: parent.watchSearch,
-        reportStatus: parent.reportStatus,
-        catalog: catalog,
-        resource: resource,
-        role: selected.resolvedRole,
-        material: selected.material,
-        activePresentations: {selected.material.provider},
-        openResource: parent.openResource,
-        host: parent.host,
+          value: projected.value,
+        ),
+      ],
+      child: PortablePresentationNodeRenderer(
+        node: selected.material.layout,
+        scope: PortablePresentationScope(
+          bindings: {
+            _configuredValueBindingId: PortableExpressionBinding(
+              value: projected.value,
+              location: skir.ValueLocation(
+                resource: resource,
+                path: editorRootPath,
+              ),
+            ),
+          },
+          budget: parent.budget,
+          readOnly: parent.readOnly,
+          enabled: parent.enabled,
+          operations: parent.operations,
+          watchSearch: parent.watchSearch,
+          reportStatus: parent.reportStatus,
+          catalog: catalog,
+          resource: resource,
+          role: selected.resolvedRole,
+          material: selected.material,
+          activePresentations: {selected.material.provider},
+          openResource: parent.openResource,
+          host: parent.host,
+        ),
       ),
     );
   }
@@ -258,9 +270,12 @@ void _reportPageWrite(
   PortablePresentationScope scope,
   PortablePresentationWriteResult result,
 ) {
-  if (result case PortablePresentationWriteRejected(:final message)) {
-    scope.reportStatus?.call(message);
-  }
+  unawaited(
+    scope.operations.run(
+      key: const PortableOperationKey.status(),
+      operation: () => result,
+    ),
+  );
 }
 
 TimelineElement? _timelineElement(

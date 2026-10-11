@@ -2,7 +2,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-final class AuthoredResourceEditor extends ConsumerStatefulWidget {
+final class AuthoredResourceEditor extends HookConsumerWidget {
   const AuthoredResourceEditor({
     required this.resource,
     required this.document,
@@ -45,63 +45,67 @@ final class AuthoredResourceEditor extends ConsumerStatefulWidget {
   final bool fillAvailableSpace;
 
   @override
-  ConsumerState<AuthoredResourceEditor> createState() =>
-      _AuthoredResourceEditorState();
-}
-
-final class _AuthoredResourceEditorState
-    extends ConsumerState<AuthoredResourceEditor> {
-  AuthoredPresentationHost? _host;
-  AuthoringDocument get _document => widget.edit?.document ?? widget.document;
-  void _updated() {
-    if (mounted) setState(() {});
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    widget.edit?.addListener(_updated);
-  }
-
-  @override
-  void didUpdateWidget(covariant AuthoredResourceEditor oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.edit != widget.edit) {
-      oldWidget.edit?.removeListener(_updated);
-      widget.edit?.addListener(_updated);
-    }
-  }
-
-  @override
-  void dispose() {
-    widget.edit?.removeListener(_updated);
-    _host?.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    useListenable(edit);
+    final observation = edit?.document ?? document;
     final workScope = ref.watch(localWorkScopeProvider);
-    final record = _document.resource(widget.resource);
+    final record = observation.resource(resource);
+    final catalog = observation.catalog;
+    final selected = record == null
+        ? null
+        : catalog.selectPresentation(record.configuration, role);
+    final capabilities = PortablePresentationCapabilities(
+      invokeCommand: invokeCommand,
+      watchSearch: watchSearch,
+      reload: reload,
+      openResource: openResource,
+      prepareValue: prepareValue,
+    );
+    final host = useMemoized(
+      () => selected is SelectedEditorPresentation
+          ? AuthoredPresentationHost(
+              resource: resource,
+              source: observation,
+              edit: edit,
+              material: selected.material,
+              role: selected.resolvedRole,
+              budget: budget,
+              capabilities: capabilities,
+              available: enabled,
+              readOnly: edit == null,
+              prepareValue: prepareValue,
+            )
+          : null,
+      [
+        resource,
+        edit,
+        switch (selected) {
+          SelectedEditorPresentation(:final material) => material,
+          _ => null,
+        },
+        if (selected is SelectedEditorPresentation)
+          selected.resolvedRole
+        else
+          null,
+        budget,
+      ],
+    );
+    useEffect(() => host?.dispose, [host]);
+    host?.update(
+      source: observation,
+      capabilities: capabilities,
+      available: enabled,
+      readOnly: edit == null,
+      prepareValue: prepareValue,
+    );
+    final scope = ref.watch(selectedAuthoringScopeProvider);
     if (record == null) {
       return _diagnostic(context, "The authored resource is absent");
     }
-    final catalog = _document.catalog;
-    final localRules = AuthoredRuleProjection.evaluate(
-      draft: _document,
-      catalog: catalog,
-      resource: widget.resource,
-      budget: widget.budget,
-    );
-    final selected = catalog.selectPresentation(
-      record.configuration,
-      widget.role,
-    );
     final rendered = switch (selected) {
-      SelectedEditorPresentation(:final material) => _renderSelected(
-        selected,
-        material,
-        localRules,
+      SelectedEditorPresentation() => _renderSelected(
+        host!,
+        capabilities,
         searchHistoryNamespace: workScope.searchHistoryNamespace,
       ),
       MissingEditorPresentation() => _diagnostic(
@@ -112,18 +116,18 @@ final class _AuthoredResourceEditorState
         context,
         "The authored resource has ${candidates.length} conflicting presentations",
       ),
+      null => _diagnostic(context, "The authored resource is absent"),
       UnavailableEditorPresentation(:final presentation) => _diagnostic(
         context,
         "Presentation ${presentation.namespace}:${presentation.name} is unavailable",
       ),
     };
-    final scope = ref.watch(selectedAuthoringScopeProvider);
     if (scope == null) return rendered;
     return PortableLocationRevealScope(
       controller: ref.watch(realmLocationRevealProvider(scope)),
       child: PortableLocationTarget(
         location: skir.ValueLocation(
-          resource: widget.resource,
+          resource: resource,
           path: skir.ValuePath(segments: const []),
         ),
         child: rendered,
@@ -132,74 +136,21 @@ final class _AuthoredResourceEditorState
   }
 
   Widget _renderSelected(
-    SelectedEditorPresentation selected,
-    skir.PresentationMaterial material,
-    AuthoredRuleProjection localRules, {
+    AuthoredPresentationHost host,
+    PortablePresentationCapabilities capabilities, {
     required String? searchHistoryNamespace,
   }) {
-    final capabilities = PortablePresentationCapabilities(
-      invokeCommand: widget.invokeCommand,
-      watchSearch: widget.watchSearch,
-      reload: widget.reload,
-      openResource: widget.openResource,
-      prepareValue: widget.prepareValue,
-    );
-    final showsFullDiagnostics =
-        widget.role == skir.PresentationRole.editor ||
-        widget.role == skir.PresentationRole.inspector;
-    var authoredHost = _host;
-    if (authoredHost == null ||
-        authoredHost.resource != widget.resource ||
-        authoredHost.edit != widget.edit ||
-        authoredHost.material != material ||
-        authoredHost.role != selected.resolvedRole ||
-        authoredHost.budget != widget.budget) {
-      authoredHost?.dispose();
-      authoredHost = _host = AuthoredPresentationHost(
-        resource: widget.resource,
-        source: _document,
-        edit: widget.edit,
-        material: material,
-        role: selected.resolvedRole,
-        budget: widget.budget,
-        capabilities: capabilities,
-        available: widget.enabled,
-        readOnly: widget.edit == null,
-        prepareValue: widget.prepareValue,
-        reportStatus: widget.onStatus,
-      );
-    } else {
-      authoredHost.update(
-        source: _document,
-        capabilities: capabilities,
-        available: widget.enabled,
-        readOnly: widget.edit == null,
-        prepareValue: widget.prepareValue,
-        reportStatus: widget.onStatus,
-      );
-    }
-    final installedHost = authoredHost;
     final renderer = PortablePresentationRenderer(
-      host: installedHost,
-      fillAvailableSpace: widget.fillAvailableSpace,
-      onStatus: widget.onStatus,
-      compactDiagnostics: showsFullDiagnostics
-          ? const []
-          : [
-              for (final diagnostic in localRules.diagnostics)
-                skir.DiagnosticTemplate(
-                  code: diagnostic.code,
-                  message: diagnostic.message,
-                  severity: diagnostic.severity,
-                  targets: const [],
-                ),
-            ],
+      host: host,
+      fillAvailableSpace: fillAvailableSpace,
+      onStatus: onStatus,
       scopeBuilder:
           ({
             required host,
             required document,
             required bindings,
             required reportStatus,
+            required operations,
           }) => PortablePresentationScope(
             bindings: bindings,
             budget: document.budget,
@@ -208,8 +159,9 @@ final class _AuthoredResourceEditorState
             watchSearch: capabilities.watchSearch,
             openResource: capabilities.openResource,
             reportStatus: reportStatus,
+            operations: operations,
             catalog: document.catalog,
-            resource: widget.resource,
+            resource: resource,
             searchHistoryNamespace: searchHistoryNamespace,
             role: document.role,
             material: document.material,
@@ -218,22 +170,7 @@ final class _AuthoredResourceEditorState
             host: host,
           ),
     );
-    if (!showsFullDiagnostics) return renderer;
-    if (widget.role == skir.PresentationRole.inspector &&
-        localRules.diagnostics.isEmpty) {
-      return renderer;
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (final diagnostic in localRules.diagnostics)
-          _localDiagnostic(diagnostic),
-        if (widget.role == skir.PresentationRole.editor)
-          Expanded(child: renderer)
-        else
-          renderer,
-      ],
-    );
+    return renderer;
   }
 }
 
@@ -248,19 +185,5 @@ Widget _diagnostic(BuildContext context, String message) => Text(
   message,
   style: context.theme.textTheme.bodyMedium?.copyWith(
     color: context.colors.danger,
-  ),
-);
-
-Widget _localDiagnostic(AuthoredLocalDiagnostic diagnostic) => Builder(
-  builder: (context) => Semantics(
-    liveRegion: true,
-    child: Text(
-      diagnostic.message,
-      style: context.theme.textTheme.bodyMedium?.copyWith(
-        color: diagnostic.severity == skir.DiagnosticSeverity.warning
-            ? context.colors.warning
-            : context.colors.danger,
-      ),
-    ),
   ),
 );
