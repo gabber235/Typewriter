@@ -30,7 +30,7 @@ class _Harness {
       overrides: [
         userIdProvider.overrideWith((ref) async => "user1"),
         organizationIdProvider.overrideWithValue(_organizationId),
-        natsProvider.overrideWithValue(nats),
+        natsProvider.overrideWith(() => FakeNats(nats)),
         panelTelemetryProvider.overrideWithValue(
           const AsyncData(NoopPanelTelemetry()),
         ),
@@ -215,7 +215,8 @@ void main() {
     final conflict = result as MutationConflict;
     expect(conflict.expectedRevision, 1);
     expect(conflict.actualRevision, 3);
-    expect(harness.container.read(canonicalServicesProvider).requireValue, [
+    await harness.container.pump();
+    expect(await harness.container.read(canonicalServicesProvider.future), [
       actual,
     ]);
     expect(reports, isEmpty);
@@ -239,7 +240,8 @@ void main() {
       expect(uncertain.cause, isA<StateError>());
       expect(uncertain.replay, isNotNull);
       expect(uncertain.submissionId, isNotNull);
-      expect(harness.container.read(canonicalServicesProvider).requireValue, [
+      await harness.container.pump();
+      expect(await harness.container.read(canonicalServicesProvider.future), [
         newest,
       ]);
 
@@ -266,7 +268,9 @@ void main() {
       throwsA(isA<SubmissionException>()),
     );
 
-    expect(harness.container.read(canonicalServicesProvider).requireValue, [
+    await harness.container.pump();
+
+    expect(await harness.container.read(canonicalServicesProvider.future), [
       newest,
     ]);
     expect(reports, isEmpty);

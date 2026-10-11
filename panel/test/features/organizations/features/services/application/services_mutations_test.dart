@@ -34,7 +34,7 @@ class _Harness {
               ? _organizationId
               : organizationId as skir.RecordId?,
         ),
-        natsProvider.overrideWithValue(nats),
+        natsProvider.overrideWith(() => FakeNats(nats)),
         panelTelemetryProvider.overrideWithValue(
           const AsyncData(NoopPanelTelemetry()),
         ),
@@ -197,7 +197,8 @@ void main() {
         expect(request!.expectedRevision, updated.revision);
         expect(request!.name, "Updated");
         expect(result, isA<MutationSuccess>());
-        expect(harness.container.read(canonicalServicesProvider).requireValue, [
+        await harness.container.pump();
+        expect(await harness.container.read(canonicalServicesProvider.future), [
           canonical,
         ]);
       },
@@ -223,7 +224,8 @@ void main() {
 
         expect(result, isA<MutationSuccess>());
         expect((result as MutationSuccess).revision, delayed.revision);
-        expect(harness.container.read(canonicalServicesProvider).requireValue, [
+        await harness.container.pump();
+        expect(await harness.container.read(canonicalServicesProvider.future), [
           newest,
         ]);
       },
@@ -244,7 +246,8 @@ void main() {
         );
 
         expect(result, isA<MutationUnavailable>());
-        expect(harness.container.read(canonicalServicesProvider).requireValue, [
+        await harness.container.pump();
+        expect(await harness.container.read(canonicalServicesProvider.future), [
           _service(),
         ]);
       },
@@ -270,8 +273,9 @@ void main() {
           hasLength(1),
         );
         expect(request!.serviceId, "service1");
+        await harness.container.pump();
         expect(
-          harness.container.read(canonicalServicesProvider).requireValue,
+          await harness.container.read(canonicalServicesProvider.future),
           isEmpty,
         );
       },
@@ -289,7 +293,8 @@ void main() {
         harness.container.deleteService(_service().serviceId),
         throwsA(_apiException(404)),
       );
-      expect(harness.container.read(canonicalServicesProvider).requireValue, [
+      await harness.container.pump();
+      expect(await harness.container.read(canonicalServicesProvider.future), [
         _service(),
       ]);
     });

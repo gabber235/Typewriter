@@ -3,9 +3,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Gates authenticated route content on the panel's NATS lifecycle.
 ///
 /// Unauthenticated content passes through so the sign in route remains usable.
-/// Authenticated content is withheld while connecting, and failure states are
-/// mapped to safe recovery actions. The underlying exception is not displayed
-/// because it may contain sensitive connection details.
+/// Authenticated routes stay mounted while connection status blocks access.
+/// Failure states map to safe recovery actions. The underlying exception is
+/// not displayed because it may contain sensitive connection details.
 class RequiredNatsConnection extends HookConsumerWidget {
   const RequiredNatsConnection({required this.child, super.key});
 
@@ -22,16 +22,27 @@ class RequiredNatsConnection extends HookConsumerWidget {
 
     final connectionState = ref.watch(natsLifecycleProvider);
     ref.watch(organizationPresenceProvider);
-    switch (connectionState) {
-      case NatsConnecting() || NatsReconnecting():
-        return const LoadingScreen();
-      case NatsConnected():
-        return child;
-      case NatsFailed(:final failure):
-        return _ConnectionFailure(failure);
-      case NatsClosed():
-        return const _ConnectionClosed();
-    }
+    final status = switch (connectionState) {
+      NatsConnected() => null,
+      NatsConnecting() || NatsReconnecting() => const LoadingScreen(),
+      NatsFailed(:final failure) => _ConnectionFailure(failure),
+      NatsClosed() => const _ConnectionClosed(),
+    };
+    final blocked = status != null;
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Offstage(
+            offstage: blocked,
+            child: ExcludeFocus(
+              excluding: blocked,
+              child: TickerMode(enabled: !blocked, child: child),
+            ),
+          ),
+        ),
+        if (status != null) Positioned.fill(child: status),
+      ],
+    );
   }
 }
 

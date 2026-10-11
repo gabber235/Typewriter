@@ -290,23 +290,14 @@ class _Fixture {
 
   List<Override> get overrides => [
     userIdProvider.overrideWith((ref) async => "test-user"),
-    natsProvider.overrideWithValue(nats),
+    natsProvider.overrideWith(() => FakeNats(nats)),
     organizationIdProvider.overrideWith(
       (ref) => skir.recordId("organization:test"),
     ),
     organizationTopologyControllerProvider(skir.recordId("organization:test"))
         .overrideWith(() => _FixtureScopedTopology(topology)),
-    canonicalServicesProvider.overrideWith(() => _FixtureServices(services)),
+    canonicalServicesProvider.overrideWith((ref) async => services),
   ];
-}
-
-class _FixtureServices extends CanonicalServices {
-  _FixtureServices(this.services);
-
-  final List<Service> services;
-
-  @override
-  Stream<List<Service>> build() => Stream.value(services);
 }
 
 Service _service({

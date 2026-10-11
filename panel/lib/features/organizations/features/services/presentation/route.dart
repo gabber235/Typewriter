@@ -13,7 +13,7 @@ class ServicesPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final servicesAsync = ref.watch(projectedServicesProvider);
-    final topologyAsync = ref.watch(organizationTopologyStreamProvider);
+    final topologyAsync = ref.watch(organizationTopologyProvider);
 
     return Pane(
       id: "services",

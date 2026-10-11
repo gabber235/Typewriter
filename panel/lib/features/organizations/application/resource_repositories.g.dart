@@ -68,4 +68,4 @@ final class ResourceRepositoriesProvider
 }
 
 String _$resourceRepositoriesHash() =>
-    r'831f0647c21866d44c7728ec51afa7ebfda2f24b';
+    r'0aa03b8f9081c46e4749269339042eb07895da72';

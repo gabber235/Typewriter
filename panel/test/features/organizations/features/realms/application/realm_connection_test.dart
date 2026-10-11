@@ -13,13 +13,11 @@ void main() {
             hostConnectedProvider(skir.recordId("service_host:host"))
                 .overrideWithValue(true),
             routeParamProvider("realmId").overrideWithValue("test"),
-            organizationTopologyStreamProvider.overrideWith(
-              (ref) => Stream.value(
-                OrganizationTopology(
-                  hosts: [],
-                  realmInstances: [realm],
-                  engineInstances: [],
-                ),
+            organizationTopologyProvider.overrideWith(
+              (ref) async => OrganizationTopology(
+                hosts: [],
+                realmInstances: [realm],
+                engineInstances: [],
               ),
             ),
           ],

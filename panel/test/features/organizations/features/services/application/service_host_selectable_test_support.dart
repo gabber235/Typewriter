@@ -111,7 +111,7 @@ class _Harness {
         organizationIdProvider.overrideWith(
           (ref) => organization?.call() ?? _organizationId,
         ),
-        natsProvider.overrideWith(() => _ReplaceableNats(nats)),
+        natsProvider.overrideWith(() => FakeNats(nats)),
         panelTelemetryProvider.overrideWithValue(
           const AsyncData(NoopPanelTelemetry()),
         ),
@@ -128,11 +128,11 @@ class _Harness {
       (previous, next) {},
     );
     final topologySubscription = container.listen(
-      organizationTopologyStreamProvider,
+      organizationTopologyProvider,
       (previous, next) {},
     );
     await container.read(canonicalServicesProvider.future);
-    await container.read(organizationTopologyStreamProvider.future);
+    await container.read(organizationTopologyProvider.future);
     container
         .read(selectionProvider.notifier)
         .select(ServiceHostIdentifier(host.hostId));
@@ -213,16 +213,6 @@ EditorSource _configurationSource(EditorOwnerRegistry owners) => owners
           resource.source.commitPolicy == EditorCommitPolicy.applyResource,
     )
     .source;
-
-class _ReplaceableNats extends Nats {
-  _ReplaceableNats(this.client);
-  final NatsClient client;
-
-  @override
-  NatsClient build() => client;
-  NatsClient get connection => state;
-  set connection(NatsClient next) => state = next;
-}
 
 class _SeededServices extends CanonicalOrganizationServices {
   _SeededServices(this.services);

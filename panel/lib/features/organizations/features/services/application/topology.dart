@@ -23,6 +23,7 @@ class OrganizationTopologyController extends _$OrganizationTopologyController {
       yield OrganizationTopology.empty;
       return;
     }
+    final connection = ref.watch(natsProvider.notifier);
     final projection = skir.WatchOrganizationTopologyRequest()
         .watch<OrganizationTopology>(
           ref,
@@ -46,7 +47,7 @@ class OrganizationTopologyController extends _$OrganizationTopologyController {
           .map((realm) => realm.realmId)
           .toSet();
       try {
-        await ref.read(natsProvider.notifier).refreshAuthorization(observed);
+        await connection.refreshAuthorization(observed);
       } on Object {
         // A failed grant refresh retains the current connection and does not
         // invalidate this topology fact.

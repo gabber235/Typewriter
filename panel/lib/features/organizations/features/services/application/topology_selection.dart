@@ -17,7 +17,7 @@ class ServiceHostIdentifier extends SelectableIdentifier {
 
   @override
   AsyncValue<Selectable> create(Ref ref) {
-    final topologyState = ref.watch(organizationTopologyStreamProvider);
+    final topologyState = ref.watch(organizationTopologyProvider);
     final servicesState = ref.watch(canonicalServicesProvider);
     final connections = ref.watch(serviceConnectionsProvider);
     final organization = ref.watch(organizationIdProvider);
@@ -119,7 +119,7 @@ class RealmInstanceIdentifier extends SelectableIdentifier {
 
   @override
   AsyncValue<Selectable> create(Ref ref) {
-    final topologyState = ref.watch(organizationTopologyStreamProvider);
+    final topologyState = ref.watch(organizationTopologyProvider);
     final servicesState = ref.watch(canonicalServicesProvider);
     final connections = ref.watch(serviceConnectionsProvider);
     if (topologyState.mapUnready<Selectable>() case final state?) return state;
@@ -182,7 +182,7 @@ class EngineInstanceIdentifier extends SelectableIdentifier {
 
   @override
   AsyncValue<Selectable> create(Ref ref) {
-    final topologyState = ref.watch(organizationTopologyStreamProvider);
+    final topologyState = ref.watch(organizationTopologyProvider);
     final servicesState = ref.watch(canonicalServicesProvider);
     if (topologyState.mapUnready<Selectable>() case final state?) return state;
     if (servicesState.mapUnready<Selectable>() case final state?) return state;

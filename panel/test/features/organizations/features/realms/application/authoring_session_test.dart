@@ -322,7 +322,7 @@ final class _Harness {
     );
     container = ProviderContainer.test(
       overrides: [
-        natsProvider.overrideWithValue(nats),
+        natsProvider.overrideWith(() => FakeNats(nats)),
         resourceRepositoriesProvider.overrideWithValue(repositories),
         organizationIdProvider.overrideWithValue(_organization),
         realmIdProvider.overrideWithValue(_realm),

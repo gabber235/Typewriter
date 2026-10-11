@@ -9,7 +9,7 @@ LocalWorkScope _scope(String organization) => LocalWorkScope(
 );
 
 final class _Fixture {
-  _Fixture() {
+  _Fixture({Widget servicesPage = const Text("Services")}) {
     access = RouteAccessCoordinator(
       authentication: AuthenticationRouteAccess()
         ..setDecision(const RouteAuthenticationDecision.authenticated()),
@@ -26,6 +26,7 @@ final class _Fixture {
       WorkSessionLossController(() => scope, () => protected),
       confirmWorkSessionLoss: (_) => confirm(),
       confirmWorkSessionPop: confirm,
+      servicesPage: servicesPage,
     );
   }
   late final RouteAccessCoordinator access;
@@ -64,7 +65,10 @@ final class _MountedAppRouter extends AppRouter {
     super.workSessionLoss, {
     super.confirmWorkSessionLoss,
     super.confirmWorkSessionPop,
+    this.servicesPage = const Text("Services"),
   });
+
+  final Widget servicesPage;
   @override
   List<AutoRoute> get routes => [
     AutoRoute(
@@ -98,7 +102,7 @@ final class _MountedAppRouter extends AppRouter {
         AutoRoute(
           page: PageInfo(
             ServicesRoute.name,
-            builder: (_) => const Scaffold(body: Text("Services")),
+            builder: (_) => Scaffold(body: servicesPage),
           ),
           path: "services",
           initial: true,
@@ -140,6 +144,88 @@ final class _MountedAppRouter extends AppRouter {
 }
 
 void main() {
+  testWidgets(
+    "organization entry retains Services while its first snapshot is pending",
+    (tester) async {
+      final lifecycle = _MutableLifecycle();
+      var subscriptions = 0;
+      var cancellations = 0;
+      final services = StreamController<List<Service>>(
+        onListen: () => subscriptions++,
+        onCancel: () => cancellations++,
+      );
+      final fixture = _Fixture(
+        servicesPage: Consumer(
+          builder: (context, ref, _) {
+            final value = ref.watch(canonicalServicesProvider);
+            return Text(value.hasValue ? "Services ready" : "Services pending");
+          },
+        ),
+      );
+      final pushes = <Route>[];
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            accessTokenProvider.overrideWithValue(
+              const AsyncData(AccessToken(token: "fixture-token")),
+            ),
+            organizationIdProvider.overrideWithValue(
+              skir.recordId("organization:two"),
+            ),
+            canonicalOrganizationServicesProvider(
+              skir.recordId("organization:two"),
+            ).overrideWith(() => _PendingServices(services.stream)),
+            organizationPresenceProvider.overrideWithBuild(
+              (ref, notifier) => const {},
+            ),
+            natsLifecycleProvider.overrideWith(() => lifecycle),
+          ],
+          child: MaterialApp.router(
+            routerConfig: fixture.router.config(
+              navigatorObservers: () => [_NavigationObserver(pushes)],
+            ),
+            theme: buildTheme(Brightness.light),
+            builder: (context, child) => Responsive(
+              child: AppRequiredWidgets(
+                child: RequiredNatsConnection(child: child!),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await fixture.router.navigate(OrganizationRoute(organizationId: "two"));
+      await tester.pumpAndSettle();
+      expect(find.text("Services pending"), findsOneWidget);
+      expect(subscriptions, 1);
+      final stack = fixture.ids;
+      final pushCount = pushes.length;
+      lifecycle.status = const NatsConnecting();
+      await tester.pump(const Duration(milliseconds: 1));
+      await tester.pump(const Duration(milliseconds: 1));
+      expect(find.text("Services pending"), findsNothing);
+      expect(
+        find.text("Services pending", skipOffstage: false),
+        findsOneWidget,
+      );
+      expect(cancellations, 0);
+
+      services.add(const []);
+      lifecycle.status = const NatsConnected();
+      await tester.pumpAndSettle();
+      expect(find.text("Services ready"), findsOneWidget);
+      expect(fixture.ids, stack);
+      expect(pushes, hasLength(pushCount));
+      expect(subscriptions, 1);
+      expect(cancellations, 0);
+
+      await fixture.close(tester);
+      await tester.pump(const Duration(milliseconds: 1));
+      expect(cancellations, 1);
+      await tester.runAsync(services.close);
+    },
+  );
+
   testWidgets("actual back within the organization remains free", (
     tester,
   ) async {
@@ -432,4 +518,29 @@ void main() {
     expect(fixture.confirmations, 0);
     await fixture.close(tester);
   });
+}
+
+class _MutableLifecycle extends NatsLifecycle {
+  @override
+  NatsConnectionState build() => const NatsConnected();
+
+  NatsConnectionState get status => state;
+
+  set status(NatsConnectionState value) => state = value;
+}
+
+class _PendingServices extends CanonicalOrganizationServices {
+  _PendingServices(this.stream);
+  final Stream<List<Service>> stream;
+
+  @override
+  Stream<List<Service>> build(skir.RecordId organizationId) => stream;
+}
+
+class _NavigationObserver extends NavigatorObserver {
+  _NavigationObserver(this.pushes);
+  final List<Route> pushes;
+
+  @override
+  void didPush(Route route, Route? previousRoute) => pushes.add(route);
 }

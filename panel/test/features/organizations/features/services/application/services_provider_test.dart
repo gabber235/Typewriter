@@ -36,7 +36,7 @@ class _Harness {
       overrides: [
         userIdProvider.overrideWith((ref) async => "user1"),
         organizationIdProvider.overrideWith((ref) => _organizationId),
-        natsProvider.overrideWithValue(nats),
+        natsProvider.overrideWith(() => FakeNats(nats)),
       ],
     );
     subscription = container.listen(
@@ -64,7 +64,7 @@ class _Harness {
       skir.OrganizationServicesChanged.serializer.toBytes(event),
     );
     await _waitFor(() => !identical(value, previous));
-    return value.requireValue;
+    return await container.read(canonicalServicesProvider.future);
   }
 
   Future<List<Service>> emitWithoutChange(
@@ -80,14 +80,14 @@ class _Harness {
 
   Future<Object> emitError(skir.OrganizationServicesChanged event) async {
     final completer = Completer<Object>();
-    final errorSubscription = container.listen(canonicalServicesProvider, (
-      previous,
-      next,
-    ) {
-      if (next.hasError && !completer.isCompleted) {
-        completer.complete(next.error!);
-      }
-    });
+    final errorSubscription = container.listen(
+      canonicalOrganizationServicesProvider(_organizationId),
+      (previous, next) {
+        if (next.hasError && !completer.isCompleted) {
+          completer.complete(next.error!);
+        }
+      },
+    );
     nats.emitMessageOnSubject(
       _listenSubject,
       skir.OrganizationServicesChanged.serializer.toBytes(event),
@@ -323,7 +323,7 @@ void main() {
         overrides: [
           userIdProvider.overrideWith((ref) async => auth.userId),
           organizationIdProvider.overrideWith((ref) => auth.organizationId),
-          natsProvider.overrideWithValue(nats),
+          natsProvider.overrideWith(() => FakeNats(nats)),
         ],
       );
       addTearDown(container.dispose);

@@ -6,7 +6,7 @@ void topologyLifecycleTests() {
     final container = ProviderContainer.test(
       overrides: [
         userIdProvider.overrideWith((ref) async => null),
-        natsProvider.overrideWithValue(nats),
+        natsProvider.overrideWith(() => FakeNats(nats)),
       ],
     );
     addTearDown(nats.dispose);
@@ -41,7 +41,7 @@ void topologyLifecycleTests() {
     final container = ProviderContainer.test(
       overrides: [
         userIdProvider.overrideWith((ref) async => "user1"),
-        natsProvider.overrideWithValue(nats),
+        natsProvider.overrideWith(() => FakeNats(nats)),
       ],
     );
     addTearDown(nats.dispose);
@@ -72,6 +72,7 @@ void topologyLifecycleTests() {
       ),
     );
     final result = await command;
+    await container.pump();
     expect(
       (result as skir.ConfigureServiceHostResponse_successWrapper)
           .value

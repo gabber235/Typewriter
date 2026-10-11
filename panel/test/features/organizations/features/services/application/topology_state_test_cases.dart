@@ -28,7 +28,7 @@ void topologyStateTests() {
             overrides: [
               userIdProvider.overrideWith((ref) async => "user1"),
               organizationIdProvider.overrideWith((ref) => _organizationId),
-              natsProvider.overrideWithValue(nats),
+              natsProvider.overrideWith(() => FakeNats(nats)),
             ],
           );
           addTearDown(nats.dispose);
@@ -86,6 +86,7 @@ void topologyStateTests() {
                 : skir.ConfigureServiceHostResponse.wrapSuccess(change),
           );
           await commandCompleted;
+          await container.pump();
 
           expect(
             container.read(provider).requireValue.hosts.single.revision,
@@ -193,7 +194,7 @@ void topologyStateTests() {
       final container = ProviderContainer.test(
         overrides: [
           userIdProvider.overrideWith((ref) async => "user1"),
-          natsProvider.overrideWithValue(nats),
+          natsProvider.overrideWith(() => FakeNats(nats)),
         ],
       );
       addTearDown(nats.dispose);
@@ -213,6 +214,7 @@ void topologyStateTests() {
         TopologyHost.fromSkir(_host()),
         skir.HostExecutionConfiguration(realm: null, primaryEngine: null),
       );
+      await container.pump();
       expect(container.read(first).requireValue.hosts.single.revision, 2);
       expect(container.read(second).requireValue.hosts.single.revision, 1);
       subscription.close();
@@ -254,14 +256,14 @@ void topologyStateTests() {
         overrides: [
           userIdProvider.overrideWith((ref) async => "user1"),
           organizationIdProvider.overrideWith((ref) => _organizationId),
-          natsProvider.overrideWithValue(nats),
+          natsProvider.overrideWith(() => FakeNats(nats)),
         ],
       );
       addTearDown(container.dispose);
       addTearDown(nats.dispose);
 
-      container.listen(organizationTopologyStreamProvider, (_, _) {});
-      await container.read(organizationTopologyStreamProvider.future);
+      container.listen(organizationTopologyProvider, (_, _) {});
+      await container.read(organizationTopologyProvider.future);
       final execution = skir.HostExecutionConfiguration(
         realm: null,
         primaryEngine: null,

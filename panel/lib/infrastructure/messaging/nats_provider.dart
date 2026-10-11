@@ -66,163 +66,47 @@ Future<skir.GetSentinelCredentialsResponse_Success> sentinelCredentials(
   };
 }
 
-/// Owns the authenticated NATS client for the current user and organization.
+/// Publishes the active client owned by the authenticated connection scope.
 ///
-/// Credential providers and the organization qualifier are read when this
-/// owner is built. Authorization refresh admits a connected candidate before
-/// replacing the current client and closing its transport resources.
+/// Credential and organization changes dispose the entire previous connection.
+/// Permission refresh and retry retain the current client until a replacement
+/// has been admitted by the server.
 @Riverpod(keepAlive: true)
 class Nats extends _$Nats {
-  var _authorizationGeneration = 0;
-  NatsClient? _ownedClient;
-  Future<void> _authorizationTail = Future<void>.value();
-  Set<skir.RecordId>? _acceptedRealmIds;
-  Set<skir.RecordId>? _demandedRealmIds;
-  var _demandedExact = false;
+  late NatsConnectionOwner _connection;
+
+  NatsClient get client => state;
+
   @override
   NatsClient build() {
-    final client = _connectCandidate(watch: true);
-    _authorizationGeneration++;
-    _ownedClient = client;
-    _acceptedRealmIds = null;
-    _demandedRealmIds = null;
-    _demandedExact = false;
-    ref.onDispose(() {
-      _authorizationGeneration++;
-      unawaited(_ownedClient?.close() ?? Future<void>.value());
-    });
-    return client;
-  }
-
-  NatsClient _connectCandidate({bool watch = false}) {
-    final token = watch
-        ? ref.watch(accessTokenProvider).value?.token
-        : ref.read(accessTokenProvider).value?.token;
+    final token = ref.watch(accessTokenProvider).value?.token;
     if (token == null) {
       throw StateError("User must be authenticated before connecting to NATS");
     }
-    final user = watch
-        ? ref.watch(authUserInfoProvider).requireValue
-        : ref.read(authUserInfoProvider).requireValue;
-    final sentinel = watch
-        ? ref.watch(sentinelCredentialsProvider).requireValue
-        : ref.read(sentinelCredentialsProvider).requireValue;
-    final organizationId = watch
-        ? ref.watch(organizationIdProvider)
-        : ref.read(organizationIdProvider);
-    final sessionFactory = watch
-        ? ref.watch(natsConnectionSessionFactoryProvider)
-        : ref.read(natsConnectionSessionFactoryProvider);
-    final connectionSession = sessionFactory();
-    final qualifier = skir.EntityPermissionQualifier.createUser(
-      organizationId: organizationId,
-      connectionSession: connectionSession,
-    );
-    final configuration = NatsClientConfiguration(
-      url: AppConfig.nats.url,
-      seed: sentinel.seed,
-      jwt: sentinel.jwt,
-      username: user.username ?? user.name ?? user.sub,
-      password: token,
-      actorId: user.sub,
-      organizationId: organizationId?.id,
-      connectionSession: connectionSession,
-      connectNkey: base64.encode(
-        skir.EntityPermissionQualifier.serializer.toBytes(qualifier),
+    final connection = NatsConnectionOwner(
+      settings: NatsConnectionSettings(
+        url: AppConfig.nats.url,
+        token: token,
+        user: ref.watch(authUserInfoProvider).requireValue,
+        sentinel: ref.watch(sentinelCredentialsProvider).requireValue,
+        organization: ref.watch(organizationIdProvider),
       ),
-      requestInboxPrefix: "_INBOX.${user.sub}.$connectionSession",
+      clientFactory: ref.watch(natsClientFactoryProvider),
+      sessionFactory: ref.watch(natsConnectionSessionFactoryProvider),
+      onReplacement: (client) => state = client,
     );
-
-    debugPrint("nats: connecting to ${configuration.url}");
-    final factory = watch
-        ? ref.watch(natsClientFactoryProvider)
-        : ref.read(natsClientFactoryProvider);
-    return factory(configuration);
+    _connection = connection;
+    ref.onDispose(() => unawaited(connection.close()));
+    return connection.client;
   }
 
   Future<void> ensureRealmsAdmitted(Set<skir.RecordId> required) =>
-      _admitRealms(required);
+      _connection.ensureRealmsAdmitted(required);
 
-  Future<void> _admitRealms(
-    Set<skir.RecordId> required, {
-    bool exact = false,
-    bool forceReplacement = false,
-  }) {
-    final generation = _authorizationGeneration;
-    final demanded = Set<skir.RecordId>.unmodifiable(required);
-    _demandedRealmIds = demanded;
-    _demandedExact = exact;
-    bool matches(Set<skir.RecordId> admitted) => exact
-        ? const SetEquality<skir.RecordId>().equals(admitted, demanded)
-        : admitted.containsAll(demanded);
-    final operation = _authorizationTail.then((_) async {
-      if (!ref.mounted || generation != _authorizationGeneration) return;
-      NatsClient? candidate;
-      try {
-        final previous = state;
-        if (!forceReplacement) {
-          final current = (await previous.queryPermissions()).admittedRealms(
-            previous,
-          );
-          if (!ref.mounted || generation != _authorizationGeneration) return;
-          if (matches(current)) {
-            _acceptedRealmIds = current;
-            return;
-          }
-        }
-        candidate = _connectCandidate();
-        final admitted = (await candidate.queryPermissions()).admittedRealms(
-          candidate,
-        );
-        if (!matches(admitted)) {
-          throw const NatsClientException(
-            kind: NatsFailureKind.permission,
-            message: "Required Realm grants were not admitted by the server",
-          );
-        }
-        if (!ref.mounted || generation != _authorizationGeneration) return;
-        _acceptedRealmIds = admitted;
-        _ownedClient = candidate;
-        state = candidate;
-        candidate = null;
-        try {
-          await previous.close();
-        } on Object catch (error, stackTrace) {
-          FlutterError.reportError(
-            FlutterErrorDetails(
-              exception: error,
-              stack: stackTrace,
-              library: "NATS authorization",
-              context: ErrorDescription("closing the replaced connection"),
-            ),
-          );
-        }
-      } finally {
-        await candidate?.close();
-      }
-    });
-    _authorizationTail = operation.catchError((Object _, StackTrace _) {});
-    return operation;
-  }
+  Future<void> refreshAuthorization(Set<skir.RecordId> observedRealms) =>
+      _connection.refreshAuthorization(observedRealms);
 
-  Future<void> refreshAuthorization(Set<skir.RecordId> observedRealms) {
-    final known = _acceptedRealmIds;
-    if (known != null &&
-        const SetEquality<skir.RecordId>().equals(known, observedRealms)) {
-      return Future<void>.value();
-    }
-    return _admitRealms(observedRealms, exact: true);
-  }
-
-  Future<void> retry() {
-    final demanded =
-        _demandedRealmIds ?? _acceptedRealmIds ?? const <skir.RecordId>{};
-    return _admitRealms(
-      demanded,
-      exact: _demandedExact,
-      forceReplacement: true,
-    );
-  }
+  Future<void> retry() => _connection.retry();
 }
 
 /// Projects transport lifecycle into Riverpod for connection status UI.

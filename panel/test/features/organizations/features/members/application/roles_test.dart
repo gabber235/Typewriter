@@ -33,7 +33,7 @@ final class _Harness {
       overrides: [
         userIdProvider.overrideWith((ref) async => _userId),
         organizationIdProvider.overrideWith((ref) => _organizationId),
-        natsProvider.overrideWithValue(nats),
+        natsProvider.overrideWith(() => FakeNats(nats)),
       ],
     );
     subscription = container.listen(

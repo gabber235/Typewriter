@@ -7,6 +7,7 @@ library;
 
 export "nats_authorization.dart";
 export "nats_client.dart";
+export "nats_connection.dart";
 export "nats_core_client.dart";
 export "nats_provider.dart";
 export "skir_mutation.dart";

@@ -11,14 +11,12 @@ part "resource_repositories.g.dart";
 @Riverpod(keepAlive: true)
 ResourceRepositories resourceRepositories(Ref ref) {
   ref.watch(localWorkScopeProvider);
+  final connection = ref.watch(natsProvider.notifier);
+  final telemetry = ref.watch(panelTelemetryProvider.future);
   final repositories = ResourceRepositories(
-    SkirMutationClient(
-      () => ref.read(natsProvider),
-      () => ref.read(panelTelemetryProvider.future),
-    ),
+    SkirMutationClient(() => connection.client, () => telemetry),
     ref.watch(userIdProvider).value,
-    admitAuthoringRealms: (realms) =>
-        ref.read(natsProvider.notifier).ensureRealmsAdmitted(realms),
+    admitAuthoringRealms: connection.ensureRealmsAdmitted,
   );
   ref
     ..listen(natsProvider, (previous, next) {

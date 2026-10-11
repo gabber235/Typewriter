@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 
 part of 'realm.dart';
 
@@ -6,7 +6,7 @@ part of 'realm.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 /// Reloads topology when a previously disconnected service becomes available.
 ///
@@ -176,7 +176,7 @@ final class SelectedRealmProvider
   }
 }
 
-String _$selectedRealmHash() => r'c519620c0a77a2ee3ece7e8496937fb6a3d5ca59';
+String _$selectedRealmHash() => r'55651a7e38c6f2d9ae3e91fc1ecb2aef5bc4d4e8';
 
 /// Exposes all realms in the current organization topology for selection UI.
 
@@ -222,7 +222,7 @@ final class RealmsProvider
   }
 }
 
-String _$realmsHash() => r'a6a67271ad2071acc9794999988313a29132975d';
+String _$realmsHash() => r'8c75ecbbc7533ed1d2315cc04909bdb119dbeb80';
 
 @ProviderFor(realmsAvailability)
 final realmsAvailabilityProvider = RealmsAvailabilityProvider._();

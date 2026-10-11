@@ -37,7 +37,7 @@ void _testTopologySelectionRemoval() {
             );
         await container.pump();
 
-        await container.read(organizationTopologyStreamProvider.future);
+        await container.read(organizationTopologyProvider.future);
         final identifier = switch (kind) {
           "host" => ServiceHostIdentifier(harness.host.hostId),
           "realm" => RealmInstanceIdentifier(harness.realm.realmId),

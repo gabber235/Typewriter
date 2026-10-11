@@ -87,7 +87,7 @@ skir.RecordId? realmId(Ref ref) {
 Future<TopologyRealm?> selectedRealm(Ref ref) async {
   final id = ref.watch(realmIdProvider);
   if (id == null) return null;
-  final topology = await ref.watch(organizationTopologyStreamProvider.future);
+  final topology = await ref.watch(organizationTopologyProvider.future);
   return topology.realmInstances.firstWhereOrNull(
     (realm) => realm.realmId == id,
   );
@@ -96,7 +96,7 @@ Future<TopologyRealm?> selectedRealm(Ref ref) async {
 /// Exposes all realms in the current organization topology for selection UI.
 @riverpod
 Future<List<TopologyRealm>> realms(Ref ref) async {
-  final topology = await ref.watch(organizationTopologyStreamProvider.future);
+  final topology = await ref.watch(organizationTopologyProvider.future);
   return topology.realmInstances;
 }
 

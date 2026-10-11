@@ -210,26 +210,26 @@ final class SentinelCredentialsProvider
 String _$sentinelCredentialsHash() =>
     r'd9ee71cee1fde6104af98ba3f2095b6144815fd6';
 
-/// Owns the authenticated NATS client for the current user and organization.
+/// Publishes the active client owned by the authenticated connection scope.
 ///
-/// Credential providers and the organization qualifier are read when this
-/// owner is built. Authorization refresh admits a connected candidate before
-/// replacing the current client and closing its transport resources.
+/// Credential and organization changes dispose the entire previous connection.
+/// Permission refresh and retry retain the current client until a replacement
+/// has been admitted by the server.
 
 @ProviderFor(Nats)
 final natsProvider = NatsProvider._();
 
-/// Owns the authenticated NATS client for the current user and organization.
+/// Publishes the active client owned by the authenticated connection scope.
 ///
-/// Credential providers and the organization qualifier are read when this
-/// owner is built. Authorization refresh admits a connected candidate before
-/// replacing the current client and closing its transport resources.
+/// Credential and organization changes dispose the entire previous connection.
+/// Permission refresh and retry retain the current client until a replacement
+/// has been admitted by the server.
 final class NatsProvider extends $NotifierProvider<Nats, NatsClient> {
-  /// Owns the authenticated NATS client for the current user and organization.
+  /// Publishes the active client owned by the authenticated connection scope.
   ///
-  /// Credential providers and the organization qualifier are read when this
-  /// owner is built. Authorization refresh admits a connected candidate before
-  /// replacing the current client and closing its transport resources.
+  /// Credential and organization changes dispose the entire previous connection.
+  /// Permission refresh and retry retain the current client until a replacement
+  /// has been admitted by the server.
   NatsProvider._()
     : super(
         from: null,
@@ -257,13 +257,13 @@ final class NatsProvider extends $NotifierProvider<Nats, NatsClient> {
   }
 }
 
-String _$natsHash() => r'5baf5bf9d3d92cddba7563fe8872083db12b0790';
+String _$natsHash() => r'e9d6f3ac768a4bbe52579c7be177e8e2c9605b7c';
 
-/// Owns the authenticated NATS client for the current user and organization.
+/// Publishes the active client owned by the authenticated connection scope.
 ///
-/// Credential providers and the organization qualifier are read when this
-/// owner is built. Authorization refresh admits a connected candidate before
-/// replacing the current client and closing its transport resources.
+/// Credential and organization changes dispose the entire previous connection.
+/// Permission refresh and retry retain the current client until a replacement
+/// has been admitted by the server.
 
 abstract class _$Nats extends $Notifier<NatsClient> {
   NatsClient build();

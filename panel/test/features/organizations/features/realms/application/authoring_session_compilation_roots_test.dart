@@ -22,7 +22,7 @@ void main() {
           );
         final container = ProviderContainer.test(
           overrides: [
-            natsProvider.overrideWithValue(nats),
+            natsProvider.overrideWith(() => FakeNats(nats)),
             panelTelemetryProvider.overrideWithValue(
               const AsyncData(NoopPanelTelemetry()),
             ),
@@ -99,7 +99,7 @@ void main() {
       });
       final container = ProviderContainer.test(
         overrides: [
-          natsProvider.overrideWithValue(nats),
+          natsProvider.overrideWith(() => FakeNats(nats)),
           panelTelemetryProvider.overrideWithValue(
             const AsyncData(NoopPanelTelemetry()),
           ),
@@ -154,7 +154,7 @@ void main() {
         });
       final container = ProviderContainer.test(
         overrides: [
-          natsProvider.overrideWithValue(nats),
+          natsProvider.overrideWith(() => FakeNats(nats)),
           panelTelemetryProvider.overrideWithValue(
             const AsyncData(NoopPanelTelemetry()),
           ),

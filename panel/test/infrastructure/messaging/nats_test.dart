@@ -1275,6 +1275,193 @@ void main() {
   });
 
   group("Nats retry", () {
+    for (final scope in ["token", "organization"]) {
+      test(
+        "$scope change closes a pending admission without stale publication",
+        () async {
+          var token = "first-token";
+          var organization = skir.recordId("organization:first");
+          final realm = skir.recordId("realm_instance:demanded");
+          final started = Completer<void>();
+          final permissionReply = Completer<Uint8List>();
+          final clients = <FakeNatsClient>[];
+          final container = ProviderContainer.test(
+            overrides: [
+              accessTokenProvider.overrideWith(
+                (ref) => AccessToken(token: token),
+              ),
+              authUserInfoProvider.overrideWithValue(
+                const AsyncData(UserInfo(sub: "user-id")),
+              ),
+              sentinelCredentialsProvider.overrideWithValue(
+                AsyncData(
+                  skir.GetSentinelCredentialsResponse_Success(
+                    jwt: "fixture-jwt",
+                    seed: "fixture-seed",
+                  ),
+                ),
+              ),
+              organizationIdProvider.overrideWith((ref) => organization),
+              natsConnectionSessionFactoryProvider.overrideWithValue(
+                () => clients.length.toString().padLeft(32, "0"),
+              ),
+              natsClientFactoryProvider.overrideWithValue((configuration) {
+                final client = FakeNatsClient(
+                  actorId: configuration.actorId,
+                  organizationId: configuration.organizationId,
+                  connectionSession: configuration.connectionSession,
+                );
+                _admitPermissions(client, clients.isEmpty ? [] : [realm]);
+                if (clients.length == 1) {
+                  client.registerHandler(r"$SYS.REQ.USER.INFO", (_) {
+                    started.complete();
+                    return permissionReply.future;
+                  });
+                }
+                clients.add(client);
+                return client;
+              }),
+            ],
+          );
+          addTearDown(() async {
+            container.dispose();
+            await Future.wait(clients.map((client) => client.close()));
+          });
+          final subscription = container.listen(natsProvider, (_, _) {});
+          addTearDown(subscription.close);
+          final admission = container
+              .read(natsProvider.notifier)
+              .ensureRealmsAdmitted({realm});
+          final rejected = expectLater(
+            admission,
+            throwsA(
+              isA<NatsClientException>().having(
+                (error) => error.kind,
+                "kind",
+                NatsFailureKind.closed,
+              ),
+            ),
+          );
+          await started.future;
+          final candidate = clients[1];
+          if (scope == "token") {
+            token = "second-token";
+            container.invalidate(accessTokenProvider);
+          } else {
+            organization = skir.recordId("organization:second");
+            container.invalidate(organizationIdProvider);
+          }
+          await container.pump();
+          final current = container.read(natsProvider);
+          expect(clients, hasLength(3));
+          expect(current, same(clients.last));
+          expect(
+            clients.take(2).map((client) => client.connectionState),
+            everyElement(isA<NatsClosed>()),
+          );
+
+          final permissions = panelTransportPermissions(
+            actorId: candidate.actorId,
+            organizationId: skir.recordId(
+              "organization:${candidate.organizationId}",
+            ),
+            connectionSession: candidate.connectionSession,
+            realmIds: [realm],
+          );
+          permissionReply.complete(
+            Uint8List.fromList(
+              utf8.encode(
+                jsonEncode({
+                  "data": {
+                    "permissions": {
+                      "publish": {"allow": permissions.publish.toList()},
+                      "subscribe": {"allow": permissions.subscribe.toList()},
+                    },
+                  },
+                }),
+              ),
+            ),
+          );
+          await rejected;
+          expect(container.read(natsProvider), same(current));
+        },
+      );
+    }
+
+    test("tracks connection inputs and gives retry a fresh session", () async {
+      var token = "first-token";
+      var organization = skir.recordId("organization:first");
+      var session = 0;
+      final configurations = <NatsClientConfiguration>[];
+      final clients = <FakeNatsClient>[];
+      final container = ProviderContainer.test(
+        overrides: [
+          accessTokenProvider.overrideWith((ref) => AccessToken(token: token)),
+          authUserInfoProvider.overrideWithValue(
+            const AsyncData(UserInfo(sub: "user-id")),
+          ),
+          sentinelCredentialsProvider.overrideWithValue(
+            AsyncData(
+              skir.GetSentinelCredentialsResponse_Success(
+                jwt: "sentinel-jwt",
+                seed: "sentinel-seed",
+              ),
+            ),
+          ),
+          organizationIdProvider.overrideWith((ref) => organization),
+          natsConnectionSessionFactoryProvider.overrideWithValue(
+            () => (++session).toString().padLeft(32, "0"),
+          ),
+          natsClientFactoryProvider.overrideWithValue((configuration) {
+            configurations.add(configuration);
+            final client = FakeNatsClient(
+              actorId: configuration.actorId,
+              organizationId: configuration.organizationId,
+              connectionSession: configuration.connectionSession,
+            );
+            _admitPermissions(client, []);
+            clients.add(client);
+            return client;
+          }),
+        ],
+      );
+      addTearDown(() async {
+        container.dispose();
+        for (final client in clients) {
+          await client.dispose();
+        }
+      });
+
+      container.read(natsProvider);
+      expect(configurations.single.password, token);
+      expect(configurations.single.organizationId, "first");
+
+      token = "second-token";
+      container.invalidate(accessTokenProvider);
+      await container.pump();
+      container.read(natsProvider);
+      expect(configurations.last.password, token);
+      expect(clients.first.connectionState, isA<NatsClosed>());
+
+      organization = skir.recordId("organization:second");
+      container.invalidate(organizationIdProvider);
+      await container.pump();
+      final previous = container.read(natsProvider);
+      expect(configurations.last.organizationId, "second");
+
+      await container.read(natsProvider.notifier).retry();
+      expect(container.read(natsProvider), same(clients.last));
+      expect(clients.last, isNot(same(previous)));
+      expect(previous.connectionState, isA<NatsClosed>());
+      expect(configurations.last.password, token);
+      expect(configurations.last.organizationId, "second");
+      expect(
+        configurations.map((value) => value.connectionSession).toSet(),
+        hasLength(configurations.length),
+      );
+      expect(configurations, hasLength(4));
+    });
+
     test("rejects insufficient grants before replacing the client", () async {
       final existingRealm = skir.recordId("realm_instance:realm1");
       final demandedRealm = skir.recordId("realm_instance:realm2");

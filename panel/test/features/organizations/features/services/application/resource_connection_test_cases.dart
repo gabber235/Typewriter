@@ -46,7 +46,7 @@ void _testResourceConnections() {
         );
       (harness.container.read(
         natsProvider.notifier,
-      ) as _ReplaceableNats).connection = replacement;
+      ) as FakeNats).connection = replacement;
       await harness.container.pump();
 
       expect(

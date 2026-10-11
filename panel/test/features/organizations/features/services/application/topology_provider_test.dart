@@ -134,14 +134,14 @@ void main() {
       overrides: [
         userIdProvider.overrideWith((ref) async => "user1"),
         organizationIdProvider.overrideWith((ref) => _organizationId),
-        natsProvider.overrideWithValue(nats),
+        natsProvider.overrideWith(() => FakeNats(nats)),
       ],
     );
     addTearDown(container.dispose);
     addTearDown(nats.dispose);
     AsyncValue<OrganizationTopology> value = const AsyncLoading();
     final subscription = container.listen(
-      organizationTopologyStreamProvider,
+      organizationTopologyProvider,
       (previous, next) => value = next,
       fireImmediately: true,
     );
@@ -259,18 +259,18 @@ void main() {
       overrides: [
         userIdProvider.overrideWith((ref) async => "user1"),
         organizationIdProvider.overrideWith((ref) => _organizationId),
-        natsProvider.overrideWithValue(nats),
+        natsProvider.overrideWith(() => FakeNats(nats)),
       ],
     );
     addTearDown(container.dispose);
     addTearDown(nats.dispose);
     final subscription = container.listen(
-      organizationTopologyStreamProvider,
+      organizationTopologyProvider,
       (_, _) {},
     );
     addTearDown(subscription.close);
     OrganizationTopology? current() =>
-        container.read(organizationTopologyStreamProvider).value;
+        container.read(organizationTopologyProvider).value;
     await _waitFor(() => current()?.hosts.length == 1);
     final reply = Completer<Uint8List>();
     nats
@@ -422,13 +422,13 @@ void main() {
         overrides: [
           userIdProvider.overrideWith((ref) async => "user1"),
           organizationIdProvider.overrideWith((ref) => _organizationId),
-          natsProvider.overrideWithValue(nats),
+          natsProvider.overrideWith(() => FakeNats(nats)),
         ],
       );
       addTearDown(container.dispose);
       addTearDown(nats.dispose);
       final values = <OrganizationTopology>[];
-      final listener = container.listen(organizationTopologyStreamProvider, (
+      final listener = container.listen(organizationTopologyProvider, (
         _,
         next,
       ) {
@@ -478,16 +478,13 @@ void main() {
       overrides: [
         userIdProvider.overrideWith((ref) async => "user1"),
         organizationIdProvider.overrideWith((ref) => _organizationId),
-        natsProvider.overrideWithValue(nats),
+        natsProvider.overrideWith(() => FakeNats(nats)),
         serviceConnectionsProvider.overrideWith((ref) => connections),
       ],
     );
     addTearDown(container.dispose);
     addTearDown(nats.dispose);
-    final topology = container.listen(
-      organizationTopologyStreamProvider,
-      (_, _) {},
-    );
+    final topology = container.listen(organizationTopologyProvider, (_, _) {});
     final recovery = container.listen(realmTopologyRecoveryProvider, (_, _) {});
     addTearDown(topology.close);
     addTearDown(recovery.close);

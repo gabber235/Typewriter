@@ -82,10 +82,6 @@ void main() {
             editorRootPath.field("name"),
             skir.DataValue.wrapStringValue("Edited first"),
           );
-      await container.read(canonicalServicesProvider.future);
-      await container.read(canonicalServiceProvider(_firstId).future);
-      await container.read(canonicalServiceProvider(_secondId).future);
-      await container.pump();
       final firstProjection = container.listen(
         projectedServiceProvider(_firstId),
         (_, _) {},
@@ -101,7 +97,10 @@ void main() {
       addTearDown(firstProjection.close);
       addTearDown(secondProjection.close);
       addTearDown(listProjection.close);
-      await Future<void>.delayed(Duration.zero);
+      await container.read(canonicalServicesProvider.future);
+      await container.read(canonicalServiceProvider(_firstId).future);
+      await container.read(canonicalServiceProvider(_secondId).future);
+      await container.pump();
 
       expect(
         container.read(projectedServiceProvider(_firstId)).requireValue?.name,

@@ -35,14 +35,12 @@ void main() {
 
         final container = ProviderContainer.test(
           overrides: [
-            canonicalServicesProvider.overrideWith(() => _Services(service)),
-            organizationTopologyStreamProvider.overrideWith(
-              (ref) => Stream.value(
-                OrganizationTopology(
-                  hosts: [host],
-                  realmInstances: [],
-                  engineInstances: [],
-                ),
+            canonicalServicesProvider.overrideWith((ref) async => [service]),
+            organizationTopologyProvider.overrideWith(
+              (ref) async => OrganizationTopology(
+                hosts: [host],
+                realmInstances: [],
+                engineInstances: [],
               ),
             ),
           ],
@@ -85,12 +83,4 @@ void main() {
       });
     },
   );
-}
-
-class _Services extends CanonicalServices {
-  _Services(this.service);
-  final Service service;
-
-  @override
-  Stream<List<Service>> build() => Stream.value([service]);
 }
