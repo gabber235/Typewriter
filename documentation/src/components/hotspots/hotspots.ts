@@ -7,6 +7,12 @@ import {
 	showInLegend,
 } from "./figure";
 import {
+	cancelHover,
+	dismissHovered,
+	onPointerOut,
+	onPointerOver,
+} from "./hover";
+import {
 	figureOf,
 	pairContains,
 	pairFrom,
@@ -19,13 +25,16 @@ import {
 import {
 	bridgeTabOrder,
 	closePopover,
+	currentOpenMode,
 	hasOpenPopover,
 	isInsideOpenPopover,
 	isOpenPin,
 	openPopover,
+	pinOpenPopover,
 	queueReposition,
 	resetPopover,
 } from "./popover";
+import type { HotspotOpenMode } from "./types";
 
 let bound = false;
 
@@ -51,6 +60,10 @@ function bindOnce(): void {
 	bound = true;
 	document.addEventListener("mouseover", onMouseOver);
 	document.addEventListener("mouseout", onMouseOut);
+	document.addEventListener("pointerover", (event) =>
+		onPointerOver(event, (pin) => open(pin, "hover")),
+	);
+	document.addEventListener("pointerout", onPointerOut);
 	document.addEventListener("focusin", onFocusIn);
 	document.addEventListener("focusout", onFocusOut);
 	document.addEventListener("click", onClick);
@@ -61,7 +74,10 @@ function bindOnce(): void {
 		capture: true,
 	});
 	window.addEventListener("resize", onResize, { passive: true });
-	document.addEventListener("astro:before-swap", resetPopover);
+	document.addEventListener("astro:before-swap", () => {
+		cancelHover();
+		resetPopover();
+	});
 }
 
 function onMouseOver(event: MouseEvent): void {
@@ -106,6 +122,13 @@ function onClick(event: MouseEvent): void {
 	const pin = pinFrom(event.target);
 	if (pin) {
 		event.preventDefault();
+		cancelHover();
+		// A card opened by hovering is kept open by a click instead of being
+		// closed by it.
+		if (isOpenPin(pin) && currentOpenMode() === "hover") {
+			pinOpenPopover();
+			return;
+		}
 		toggle(pin);
 		return;
 	}
@@ -117,6 +140,7 @@ function onKeyDown(event: KeyboardEvent): void {
 	if (!hasOpenPopover()) return;
 	if (event.key === "Escape") {
 		event.preventDefault();
+		if (dismissHovered()) return;
 		closePopover(true);
 		return;
 	}
@@ -132,7 +156,12 @@ function toggle(pin: HTMLButtonElement): void {
 	const wasOpen = isOpenPin(pin);
 	closePopover(false);
 	if (wasOpen) return;
+	open(pin, "click");
+}
 
+// Hover never falls back to the legend: on a narrow stage only a click
+// highlights the legend entry.
+function open(pin: HTMLButtonElement, mode: HotspotOpenMode): void {
 	const figure = figureOf(pin);
 	const stage = figure ? stageOf(figure) : null;
 	const description = document.getElementById(
@@ -141,8 +170,9 @@ function toggle(pin: HTMLButtonElement): void {
 	if (!figure || !stage || !description) return;
 
 	if (needsLegendFallback(figure, stage)) {
-		showInLegend(figure, pin);
+		if (mode === "click") showInLegend(figure, pin);
 		return;
 	}
-	openPopover(pin, figure, description);
+	if (mode === "hover") closePopover(false);
+	openPopover(pin, figure, description, mode);
 }

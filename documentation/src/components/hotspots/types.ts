@@ -33,3 +33,7 @@ export interface HotspotPopover {
 	badge: HTMLElement;
 	body: HTMLElement;
 }
+
+// How the card was opened: by hovering a pin with a mouse, or by a click,
+// tap or Enter/Space.
+export type HotspotOpenMode = "hover" | "click";

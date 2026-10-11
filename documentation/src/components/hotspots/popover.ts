@@ -1,5 +1,9 @@
 import { hotspotStyles as s } from "./styles";
-import type { HotspotPlacement, HotspotPopover } from "./types";
+import type {
+	HotspotOpenMode,
+	HotspotPlacement,
+	HotspotPopover,
+} from "./types";
 
 const MARGIN = 12;
 const GAP = 10;
@@ -9,6 +13,7 @@ const FOCUSABLE =
 	'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 let openPin: HTMLButtonElement | null = null;
+let openMode: HotspotOpenMode = "click";
 let popover: HotspotPopover | null = null;
 let repositionQueued = false;
 
@@ -18,6 +23,25 @@ export function hasOpenPopover(): boolean {
 
 export function isOpenPin(pin: HTMLButtonElement): boolean {
 	return openPin === pin;
+}
+
+export function openPinElement(): HTMLButtonElement | null {
+	return openPin;
+}
+
+/** "hover" cards close when the pointer leaves; "click" cards stay. */
+export function currentOpenMode(): HotspotOpenMode {
+	return openMode;
+}
+
+// Clicking a pin whose card was opened by hovering keeps it open.
+export function pinOpenPopover(): void {
+	openMode = "click";
+}
+
+export function isInsideCard(target: EventTarget | null): boolean {
+	if (!(target instanceof Node) || !popover) return false;
+	return !popover.element.hidden && popover.element.contains(target);
 }
 
 export function isInsideOpenPopover(target: EventTarget | null): boolean {
@@ -32,6 +56,7 @@ export function openPopover(
 	pin: HTMLButtonElement,
 	figure: HTMLElement,
 	description: HTMLElement,
+	mode: HotspotOpenMode = "click",
 ): void {
 	const card = ensurePopover();
 	card.badge.textContent = pin.dataset.hotspotPin ?? "";
@@ -42,6 +67,7 @@ export function openPopover(
 	pin.setAttribute("aria-expanded", "true");
 	pin.setAttribute("aria-controls", card.element.id);
 	openPin = pin;
+	openMode = mode;
 	position(pin, card.element);
 }
 

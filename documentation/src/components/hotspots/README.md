@@ -55,6 +55,15 @@ visible list when the picture cannot carry the annotation.
   legend item; hovering a legend item does the same for its pin. Keyboard focus
   on a pin scrolls its legend item into view (`block: "nearest"`), only while
   the legend is visible.
+- **Hover (desktop).** With a mouse on a hover-capable device
+  (`(hover: hover) and (pointer: fine)`), resting on a pin for 120ms opens its
+  card, so sweeping across the image doesn't flash every card. Leaving the pin
+  closes it after 200ms, long enough to move onto the card, which stays open
+  while hovered. Clicking a hover-opened pin keeps its card open after the
+  pointer leaves; a second click closes it. Escape closes a hover-opened card
+  without moving focus, and it stays closed until the pointer leaves that pin.
+  Hovering never triggers the narrow-stage legend fallback; only a click does.
+  Touch and keyboard are unaffected (`hover.ts`).
 - **Popover.** Click/tap (or Enter/Space) toggles a card with a clone of the
   legend item's HTML, plus the pin's number badge when `numbers` is on. There is
   one card element for the whole page, appended to `<body>` and positioned with
@@ -115,6 +124,9 @@ overlap without fighting.
 - Badges and numbers inside pins/legend are `aria-hidden`; the list order
   carries the numbering semantically. The badge digit is white on the light
   theme's primary and `grey-900` on the dark theme's, both above 4.5:1.
+- Hover cards follow 1.4.13 (content on hover): dismissible with Escape
+  without moving the pointer, hoverable (a 200ms grace period covers the gap
+  to the card), and persistent while the pin or the card is hovered.
 - Pins have a 44px hit area (`after:-inset-2`; 32px for `numbers=false` dots)
   and a dark `focus-visible` outline drawn flush against the pin's white ring.
   All motion is behind `motion-reduce`.
@@ -127,7 +139,8 @@ overlap without fighting.
 | `hotspots.ts`           | Client entry (`setupHotspots`): delegated listeners and the pin toggle.  |
 | `figure.ts`             | Per-figure setup: image and width watching, fallbacks, ping.             |
 | `pairs.ts`              | Pin ↔ legend item lookup and `data-active` sync.                         |
-| `popover.ts`            | The single popover card: open/close, positioning, Tab bridging.          |
+| `popover.ts`            | The single popover card: open/close, open mode, positioning, Tab bridging. |
+| `hover.ts`              | Desktop hover: open/close delays, card hover, Escape dismissal.          |
 | `HotspotsRuntime.astro` | Renders nothing; the inline `hotspots-js` marker plus the `<script>` that wires `setupHotspots`. |
 | `styles.ts`             | Tailwind class strings (`as const`), scanned by Tailwind 4.              |
 | `types.ts`              | Shared types.                                                            |
