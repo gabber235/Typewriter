@@ -43,8 +43,7 @@ export const wizardStyles = {
 	resultBody:
 		"text-sm leading-relaxed text-[var(--sl-color-text)] [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2 [&_p]:my-0 [&_p+p]:mt-2 [&_code]:rounded [&_code]:bg-[var(--sl-color-gray-6)] [&_code]:px-1",
 
-	footer:
-		"flex items-center gap-2 border-t border-[var(--sl-color-hairline-shade)] pt-3",
+	footer: "flex items-center gap-2 pt-3",
 	control: `inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-transparent bg-transparent px-3 py-1 text-xs font-semibold text-[var(--on-surface-variant)] transition-colors duration-150 hover:text-[var(--sl-color-white)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-default disabled:opacity-40 disabled:hover:text-[var(--on-surface-variant)] font-sans`,
 
 	srOnly: "sr-only",

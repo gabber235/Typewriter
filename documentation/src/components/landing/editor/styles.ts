@@ -2,7 +2,7 @@ export const editorStyles = {
 	// Phones bleed the screenshot to both edges and keep the legend text on the
 	// container's own margin, so the shot is the only thing that touches the edge.
 	screenshot:
-		"max-sm:-mx-5 max-sm:[&_[data-hotspots-stage]>img]:rounded-none max-sm:[&_[data-hotspots-stage]>img]:border-x-0 max-sm:[&_figcaption]:mx-5 max-sm:[&_[data-hotspot-item]]:px-5 max-sm:[&_[data-hotspot-item]]:text-base",
+		"max-sm:-mx-5 max-sm:[&_[data-hotspots-stage]>img]:rounded-none max-sm:[&_[data-hotspots-stage]>img]:border-0 max-sm:[&_figcaption]:mx-5 max-sm:[&_[data-hotspot-item]]:px-5 max-sm:[&_[data-hotspot-item]]:text-base",
 
 	// Phones scroll the tiles sideways with the next one peeking past the edge;
 	// from `sm` up this is the original stacked grid.

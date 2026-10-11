@@ -3,7 +3,7 @@
 // full width and the avatars shrink a step so fourteen fit in two short rows.
 export const ctaStyles = {
 	section: "pt-14 pb-12 sm:pt-24 sm:pb-16",
-	grid: "grid grid-cols-1 gap-x-12 gap-y-8 border-t border-[var(--sl-color-hairline)] pt-10 sm:gap-y-10 sm:pt-12 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start lg:pt-14",
+	grid: "grid grid-cols-1 gap-x-12 gap-y-8 pt-10 sm:gap-y-10 sm:pt-12 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start lg:pt-14",
 	copy: "flex flex-col gap-5 sm:gap-6",
 	title:
 		"m-0 font-[family-name:var(--font-sans)] text-3xl font-extrabold leading-[1.05] tracking-tight text-[var(--sl-color-white)] text-balance sm:text-4xl lg:text-5xl",

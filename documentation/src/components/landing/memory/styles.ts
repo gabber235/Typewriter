@@ -15,7 +15,7 @@ export const memoryStyles = {
 		"m-0 font-[family-name:var(--font-sans)] text-[0.7rem] font-bold uppercase tracking-[0.14em] text-[var(--on-surface-variant)]",
 	headNote: `m-0 mt-1 font-[family-name:var(--font-reading)] text-sm text-[var(--on-surface-variant)] [&>b]:font-semibold [&>b]:${purple}`,
 	beats: "m-0 list-none p-0 lg:col-span-2",
-	beat: "grid grid-cols-1 gap-x-12 gap-y-5 border-t border-[var(--sl-color-hairline)] pt-5 pb-8 lg:gap-y-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:pb-12",
+	beat: "grid grid-cols-1 gap-x-12 gap-y-5 pt-5 pb-8 lg:gap-y-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:pb-12",
 	when: "m-0 font-[family-name:var(--font-sans)] text-base font-bold uppercase tracking-[0.12em] text-[var(--sl-color-white)] lg:col-span-2",
 	where: "font-normal text-[var(--on-surface-variant)]",
 	// NPC turns sit left, the player's answers right, like a chat log.
@@ -30,7 +30,7 @@ export const memoryStyles = {
 	reply:
 		"m-0 font-[family-name:var(--font-mono)] text-base leading-relaxed text-[var(--sl-color-text)]",
 	ledger:
-		"self-start font-[family-name:var(--font-mono)] text-sm max-lg:border-t max-lg:border-dashed max-lg:border-[var(--sl-color-hairline)] max-lg:pt-5 lg:mt-7 lg:max-w-[24rem]",
+		"self-start font-[family-name:var(--font-mono)] text-sm max-lg:pt-5 lg:mt-7 lg:max-w-[24rem]",
 	ledgerLabel:
 		"m-0 mb-3 font-[family-name:var(--font-sans)] text-[0.7rem] font-bold uppercase tracking-[0.14em] text-[var(--on-surface-variant)] lg:hidden",
 	rows: "m-0 flex flex-col gap-2.5",
@@ -40,11 +40,11 @@ export const memoryStyles = {
 	valueChanged: `font-bold ${purple}`,
 
 	recall:
-		"mt-4 grid grid-cols-1 gap-x-12 gap-y-8 border-t border-[var(--sl-color-hairline)] pt-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:pt-12",
+		"mt-4 grid grid-cols-1 gap-x-12 gap-y-8 pt-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:pt-12",
 	recallHeader: "flex flex-col gap-3",
 	recallList: "m-0 flex flex-col",
 	recallItem:
-		"grid grid-cols-1 gap-x-8 gap-y-1 border-b border-[var(--sl-color-hairline)] py-4 first:pt-0 sm:grid-cols-[11rem_minmax(0,1fr)]",
+		"grid grid-cols-1 gap-x-8 gap-y-1 py-4 first:pt-0 sm:grid-cols-[11rem_minmax(0,1fr)]",
 	recallTitle:
 		"m-0 font-[family-name:var(--font-sans)] text-base font-bold text-[var(--sl-color-white)]",
 	recallBody:

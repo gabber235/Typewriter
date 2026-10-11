@@ -68,8 +68,7 @@ export const sheetStyles = {
 	icon: "size-4 shrink-0 text-(--on-surface-variant)",
 	dialog:
 		"inset-x-0 top-auto bottom-[max(0.75rem,env(safe-area-inset-bottom))] mx-auto my-0 max-h-[min(75dvh,40rem)] w-[calc(100%-1.5rem)] max-w-lg flex-col overflow-hidden rounded-2xl border border-(--sl-color-hairline-light) bg-(--surface-container-lowest) p-0 text-(--sl-color-white) shadow-2xl open:flex backdrop:bg-black/50",
-	header:
-		"flex shrink-0 items-center gap-2.5 border-b border-(--sl-color-hairline) py-1 ps-4 pe-1.5",
+	header: "flex shrink-0 items-center gap-2.5 py-1 ps-4 pe-1.5",
 	title:
 		"m-0 font-(family-name:--font-sans) text-sm font-bold text-(--sl-color-white)",
 	headerRing: "size-5.5",

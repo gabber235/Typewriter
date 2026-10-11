@@ -34,7 +34,7 @@ export const spoilerStyles = {
 	root: `relative my-6 grid grid-cols-1 grid-rows-[auto_1fr] rounded-lg border border-[var(--spoiler-tint)]/70 bg-[var(--spoiler-surface)] [--spoiler-surface:color-mix(in_oklab,var(--spoiler-tint)_5%,var(--sl-color-bg))]`,
 	rootAnimating: "overflow-hidden",
 
-	bar: `not-content sticky ${STICKY_TOP} z-10 col-start-1 row-start-1 mt-0! flex [&[hidden]]:hidden items-center gap-2.5 rounded-t-[calc(0.5rem-1px)] border-b border-[var(--spoiler-tint)]/30 bg-[var(--spoiler-surface)] px-4 py-2`,
+	bar: `not-content sticky ${STICKY_TOP} z-10 col-start-1 row-start-1 mt-0! flex [&[hidden]]:hidden items-center gap-2.5 rounded-t-[calc(0.5rem-1px)] bg-[var(--spoiler-surface)] px-4 py-2`,
 	barIcon: "flex shrink-0 items-center text-[var(--spoiler-ink)]",
 	barTitle:
 		"flex-1 truncate text-sm font-semibold text-[var(--spoiler-ink)] font-[family-name:var(--font-sans)]",

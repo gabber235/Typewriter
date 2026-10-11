@@ -6,19 +6,13 @@ import { BASE_PATH } from "@lib/base-path";
 import { footerGroups } from "./links";
 import { footerStyles as s } from "./styles";
 
-interface Props {
-	/** Draw a hairline above the band; off when a sidebar column ends above it. */
-	rule?: boolean;
-}
-
-const { rule = true } = Astro.props;
 const { siteTitle } = Astro.locals.starlightRoute;
 ---
 
 {/* Rendered by PageFrame below the sidebar and content, so it spans the
     whole viewport like a site footer should; the inner container lines the
     columns up with the landing page's. */}
-<footer class:list={[s.site, rule && s.siteRule]}>
+<footer class={s.site}>
   <div class={s.siteInner}>
   <div class={s.siteGrid}>
     <div class={s.brand}>

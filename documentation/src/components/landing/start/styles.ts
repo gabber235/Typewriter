@@ -18,10 +18,9 @@ export const startStyles = {
 		"mt-8 grid grid-cols-1 gap-x-12 gap-y-6 lg:mt-12 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]",
 	label:
 		"m-0 mb-2 font-[family-name:var(--font-sans)] text-xs font-bold uppercase tracking-[0.14em] text-[var(--on-surface-variant)]",
-	// `:::details` renders cards; here they flatten into a list separated by
-	// hairlines between items only.
+	// `:::details` blocks flatten into a plain list here.
 	questions:
-		"lg:min-h-[19.5rem] [&>details]:my-0 [&>details]:rounded-none [&>details]:border-0 [&>details]:bg-transparent [&>details+details]:border-t [&>details+details]:border-[var(--sl-color-hairline)] [&>details>summary]:rounded-none [&>details>summary]:px-0 [&>details>summary]:py-3.5 [&>details>summary]:text-base lg:[&>details>summary]:py-3 [&>details>summary:hover]:bg-transparent [&>details>summary:hover]:text-[var(--color-primary)] [&>details>div]:max-w-[72ch] [&>details>div]:px-0 [&>details>div]:pt-0 [&>details>div]:pb-4 [&>details>div]:text-sm [&>details>div]:leading-relaxed",
+		"lg:min-h-[19.5rem] [&>details]:my-0 [&>details]:rounded-none [&>details]:border-0 [&>details]:bg-transparent [&>details>summary]:rounded-none [&>details>summary]:px-0 [&>details>summary]:py-3.5 [&>details>summary]:text-base lg:[&>details>summary]:py-3 [&>details>summary:hover]:bg-transparent [&>details>summary:hover]:text-[var(--color-primary)] [&>details>div]:max-w-[72ch] [&>details>div]:px-0 [&>details>div]:pt-0 [&>details>div]:pb-4 [&>details>div]:text-sm [&>details>div]:leading-relaxed",
 	help: "flex flex-col lg:pt-8",
 	helpText:
 		"m-0 max-w-[36ch] font-[family-name:var(--font-reading)] text-sm leading-relaxed text-[var(--on-surface-variant)] [&_a]:-my-3 [&_a]:inline-block [&_a]:py-3 [&_a]:text-[var(--color-primary)] [&_a]:underline [&_a]:underline-offset-4",

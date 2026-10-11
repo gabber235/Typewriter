@@ -6,9 +6,9 @@ export const footerStyles = {
 	container: "@container not-content flex flex-col print:hidden",
 
 	// Sits directly under the previous/next row as one "about this page" block;
-	// it only draws its own rule when there is no pagination above it.
+	// without pagination above it, it keeps the same spacing on its own.
 	meta: "flex flex-col items-start gap-3 @md:flex-row @md:flex-wrap @md:items-center @md:justify-between @md:gap-x-6 @md:gap-y-1",
-	metaRule: "mt-12 border-t border-[var(--sl-color-hairline)] pt-4",
+	metaRule: "mt-12 pt-4",
 	metaActions: "flex flex-wrap items-center gap-x-5 gap-y-1",
 
 	editLink:
@@ -36,11 +36,8 @@ export const footerStyles = {
 	fallback:
 		"flex size-6 items-center justify-center rounded-full bg-[var(--surface-container)] text-xs font-semibold text-[var(--on-surface-variant)] ring-2 ring-[var(--sl-color-bg)]",
 
-	// Full-bleed band under every page; its own container-query root. The rule
-	// only appears where no sidebar sits above it (the homepage), otherwise it
-	// would cut across the sidebar column.
+	// Full-bleed band under every page; its own container-query root.
 	site: "@container w-full bg-[var(--surface)] print:hidden",
-	siteRule: "border-t border-[var(--sl-color-hairline)]",
 	siteInner: "mx-auto w-full max-w-6xl px-5 py-10 sm:px-8 @md:py-12",
 	// Two columns on phones, three in the docs reading column, brand beside the
 	// groups only when the container is wide enough for all four.

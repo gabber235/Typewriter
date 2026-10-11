@@ -35,7 +35,6 @@ export const chatStyles = {
 export const ledgerStyles = {
 	row: "flex items-baseline gap-2",
 	key: "m-0 shrink-0",
-	leader:
-		"min-w-4 flex-1 -translate-y-[0.35em] border-b border-dotted border-[var(--sl-color-hairline)]",
+	leader: "min-w-4 flex-1 -translate-y-[0.35em]",
 	value: "m-0 shrink-0",
 } as const;
