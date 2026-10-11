@@ -3039,7 +3039,7 @@ checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 [[package]]
 name = "surrealdb-component-sdk"
 version = "0.9.0"
-source = "git+https://github.com/Seamlezz/surrealdb-wasi-component?rev=cb3083cba338bc485f3491ef9acb233be92b22fb#cb3083cba338bc485f3491ef9acb233be92b22fb"
+source = "git+https://github.com/Seamlezz/surrealdb-wasi-component?rev=e5bdb434314325c9e64426eda26a2519a508a10b#e5bdb434314325c9e64426eda26a2519a508a10b"
 dependencies = [
  "anyhow",
  "chrono",
