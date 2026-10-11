@@ -1,3 +1,4 @@
+import "package:fake_async/fake_async.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
@@ -9,47 +10,51 @@ import "../features/join_requests/application/support/join_requests_test_support
     as requests;
 
 void main() {
-  test("expiry timer removes a request without manual clock changes", () async {
-    final request = OrganizationJoinRequest(
-      requestId: skir.recordId("request_to_join:soon_expired"),
-      userId: skir.recordId("user:soon_expired"),
-      requestedAt: DateTime.now(),
-      expiresAt: DateTime.now().add(const Duration(milliseconds: 200)),
-    );
-    final container = ProviderContainer.test(
-      overrides: [
-        pendingMembershipRemovalsProvider.overrideWithValue(const {}),
-        organizationJoinRequestsProvider.overrideWith(
-          () => requests.MockJoinRequestsNotifier([request]),
-        ),
-      ],
-    );
-    addTearDown(container.dispose);
-    final firstVisible = Completer<void>();
-    final expired = Completer<void>();
-    final subscription = container.listen(
-      visibleOrganizationJoinRequestsProvider,
-      (_, next) {
-        if (next case AsyncData(:final value)) {
-          if (value.contains(request) && !firstVisible.isCompleted) {
-            firstVisible.complete();
+  test("expiry timer removes a request without manual invalidation", () {
+    fakeAsync((async) {
+      final clock = async.getClock(DateTime.utc(2026));
+      final request = OrganizationJoinRequest(
+        requestId: skir.recordId("request_to_join:soon_expired"),
+        userId: skir.recordId("user:soon_expired"),
+        requestedAt: clock.now(),
+        expiresAt: clock.now().add(const Duration(milliseconds: 200)),
+      );
+      final container = ProviderContainer.test(
+        overrides: [
+          membershipDisplayTimeProvider.overrideWith((ref) => clock.now()),
+          pendingMembershipRemovalsProvider.overrideWithValue(const {}),
+          organizationJoinRequestsProvider.overrideWith(
+            () => requests.MockJoinRequestsNotifier([request]),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      final observations = <List<OrganizationJoinRequest>>[];
+      final subscription = container.listen(
+        visibleOrganizationJoinRequestsProvider,
+        (_, next) {
+          if (next case AsyncData(:final value)) {
+            observations.add(value);
           }
-          if (firstVisible.isCompleted &&
-              value.isEmpty &&
-              !expired.isCompleted) {
-            expired.complete();
-          }
-        }
-      },
-      fireImmediately: true,
-    );
-    addTearDown(subscription.close);
+        },
+        fireImmediately: true,
+      );
+      addTearDown(subscription.close);
 
-    await firstVisible.future.timeout(const Duration(seconds: 2));
-    await expired.future.timeout(const Duration(seconds: 2));
-    expect(container.read(organizationJoinRequestsProvider).requireValue, [
-      request,
-    ]);
+      async.flushMicrotasks();
+      async.elapse(Duration.zero);
+      expect(observations.last, [request]);
+      async.elapse(const Duration(milliseconds: 199));
+      expect(observations.last, [request]);
+      async.elapse(const Duration(milliseconds: 1));
+      async.flushMicrotasks();
+      expect(observations.last, isEmpty);
+      expect(container.read(organizationJoinRequestsProvider).requireValue, [
+        request,
+      ]);
+      subscription.close();
+      container.dispose();
+    });
   });
 
   test(
