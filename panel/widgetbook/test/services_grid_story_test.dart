@@ -167,7 +167,7 @@ void main() {
       FakeApp(
         overrides: [
           userIdProvider.overrideWith((ref) async => "story-user"),
-          natsProvider.overrideWithValue(nats),
+          natsProvider.overrideWith(() => FakeNats(nats)),
           canonicalOrganizationServicesProvider.overrideWith2(
             (_) => _StoryServices(services),
           ),
@@ -202,7 +202,7 @@ void main() {
     expect(find.text("Host a Realm"), findsOneWidget);
     expect(find.text("Run an execution engine"), findsOneWidget);
     expect(find.text("Apply"), findsNothing);
-    expect(find.text("Save"), findsOneWidget);
+    expect(find.text("Save"), findsNothing);
 
     expect(find.byTooltip("Zoom to fit"), findsNothing);
     expect(find.text("Enabled"), findsNothing);

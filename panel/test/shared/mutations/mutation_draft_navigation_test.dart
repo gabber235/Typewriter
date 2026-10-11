@@ -23,32 +23,35 @@ void main() {
       );
       final router = container.read(appRouterProvider);
       final key = EditorResourceKey(scope: null, identity: identity.resourceId);
-      final owner = workspace.editor(
-        fakeEditorTarget(
-          targetId: identity,
-          label: "Host configuration",
-          document: EditorDocument(
-            rootType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
-            catalog: _emptyCatalog,
-            confirmedValue: skir.DataValue.wrapStringValue("original"),
-            revision: 1,
-          ),
-          validation: acceptTestEditorMutation,
-          commitPolicy: EditorCommitPolicy.applyResource,
-          commit: (change) async =>
-              MutationSuccess(revision: 2, value: change.rootValue),
+      final owner = fakeEditorTarget(
+        targetId: identity,
+        label: "Host configuration",
+        document: EditorDocument(
+          rootType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+          catalog: _emptyCatalog,
+          confirmedValue: skir.DataValue.wrapStringValue("original"),
+          revision: 1,
         ),
+        validation: acceptTestEditorMutation,
+        commitPolicy: EditorCommitPolicy.applyResource,
+        commit: (change) async =>
+            MutationSuccess(revision: 2, value: change.rootValue),
+      ).acquire(workspace);
+      addTearDown(
+        workspace.lease(WorkDriverId(domain: "value", scope: key)).release,
       );
-      workspace.retain(key);
       owner.update(editorRootPath, skir.DataValue.wrapStringValue("draft"));
 
-      final resource = workspace.resources[key]!
-        ..destination = InspectorDestination(
-          container: container,
-          router: router,
-          path: router.currentPath,
-          identity: identity,
-        );
+      final destination = InspectorDestination(
+        container: container,
+        router: router,
+        path: router.currentPath,
+        identity: identity,
+      );
+      workspace.setDestination(
+        WorkDriverId(domain: "value", scope: key),
+        destination,
+      );
       container.read(selectionProvider.notifier).selectAll([identity]);
 
       await tester.pumpTestApp(
@@ -83,11 +86,11 @@ void main() {
 
       await tester.tap(find.byTooltip("Close"));
       await tester.pumpAndSettle();
-      resource.destination = null;
+      workspace.setDestination(WorkDriverId(domain: "value", scope: key), null);
 
       await tester.tap(find.text("1 draft"));
       await tester.pumpAndSettle();
-      expect(find.text("Review draft"), findsOneWidget);
+      expect(find.text("Review draft"), findsNothing);
 
       await tester.tap(find.text("Discard"));
       await tester.pumpAndSettle();

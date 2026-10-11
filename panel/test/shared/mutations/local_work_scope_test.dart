@@ -27,21 +27,19 @@ void main() {
 
     expect(container.read(localWorkControllerProvider), same(controller));
     expect(
-      () => controller.editor(
-        fakeEditorTarget(
-          targetId: "resource",
-          label: "Resource",
-          scope: EditorResourceScope(organizationId: organization),
-          document: EditorDocument(
-            rootType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
-            catalog: _emptyCatalog,
-            confirmedValue: skir.DataValue.wrapStringValue("Original"),
-            revision: 1,
-          ),
-          validation: acceptTestEditorMutation,
-          commit: (_) async => throw StateError("No save expected"),
+      () => fakeEditorTarget(
+        targetId: "resource",
+        label: "Resource",
+        scope: EditorResourceScope(organizationId: organization),
+        document: EditorDocument(
+          rootType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+          catalog: _emptyCatalog,
+          confirmedValue: skir.DataValue.wrapStringValue("Original"),
+          revision: 1,
         ),
-      ),
+        validation: acceptTestEditorMutation,
+        commit: (_) async => throw StateError("No save expected"),
+      ).acquire(controller),
       returnsNormally,
     );
   });
@@ -90,7 +88,7 @@ void main() {
         commitPolicy: EditorCommitPolicy.applyResource,
         commit: (_) async => throw StateError("No save expected"),
       );
-      final source = workspace.editor(target)
+      final source = target.acquire(workspace)
         ..update(editorRootPath, skir.DataValue.wrapStringValue("Draft"));
 
       realm = _id("realm", "second");
@@ -107,7 +105,7 @@ void main() {
       expect(next, same(workspace));
       final nextState = container.read(localWorkProvider);
       expect(nextState.entries, isEmpty);
-      expect(workspace.resources, isEmpty);
+      expect(source.workspace.closed, isTrue);
       expect(await source.flush(), isA<MutationUnavailable>());
     },
   );

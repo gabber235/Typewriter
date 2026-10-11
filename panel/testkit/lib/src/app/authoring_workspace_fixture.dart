@@ -6,20 +6,20 @@ import "realm_catalog_fixture.dart";
 import "../shared/testing/testing.dart";
 
 /// Controls replies and confirmed observations independently. It never simulates Realm mutations.
-final class ScriptedAuthoringTransport extends ChangeNotifier
-    implements AuthoringWorkspaceTransport {
+final class ScriptedAuthoringTransport extends ChangeNotifier {
   ScriptedAuthoringTransport(this.observation, {this.onRequest});
   AsyncValue<AuthoringDocument> observation;
   final void Function(skir.PreparedEdit edit)? onRequest;
   final requests = <ScriptedAuthoringRequest>[];
   Object? refreshFailure;
   int fetches = 0;
+  RealmEditPersistence get persistence =>
+      fixtureRealmPersistence(commit: commit, confirmed: fetchConfirmed);
   void publish(AsyncValue<AuthoringDocument> next) {
     observation = next;
     notifyListeners();
   }
 
-  @override
   Future<skir.CommitPreparedEditResponse> commit(skir.PreparedEdit edit) {
     final request = ScriptedAuthoringRequest(edit);
     requests.add(request);
@@ -28,7 +28,6 @@ final class ScriptedAuthoringTransport extends ChangeNotifier
     return request.response.future;
   }
 
-  @override
   Future<AuthoringDocument> fetchConfirmed() async {
     fetches++;
     if (refreshFailure case final error?) throw error;
@@ -130,7 +129,9 @@ List<Override> authoringFixtureOverrides({
         organizationId: selected?.organizationId,
       );
     }),
-    authoringWorkspaceTransportProvider.overrideWith((ref, scope) => scripted),
+    realmEditPersistenceProvider.overrideWith(
+      (ref, scope) => scripted.persistence,
+    ),
     authoredResourceCommandsProvider.overrideWith(
       (ref, scope) => commands ?? fixtureAuthoringCommands(scripted),
     ),
@@ -624,4 +625,38 @@ skir.PublishedType _published(
       ),
   ],
   ancestorTemplates: const [],
+);
+
+/// External reply control composed with the production editing owner.
+RealmEditPersistence fixtureRealmPersistence({
+  required Future<skir.CommitPreparedEditResponse> Function(skir.PreparedEdit)
+  commit,
+  required Future<AuthoringDocument> Function() confirmed,
+}) => RealmEditPersistence(
+  reservations: (edits) => {for (final edit in edits) ...edit.editedResources},
+  observe: confirmed,
+  request: (edit) => PreparedCommit(
+    id: Object(),
+    label: "Apply fixture changes",
+    resources: edit.editedResources.toSet(),
+    send: () async {
+      final response = await commit(edit);
+      return switch (response) {
+        skir.CommitPreparedEditResponse_internalErrorWrapper() ||
+        skir.CommitPreparedEditResponse_unknown() => SubmissionResult.uncertain(
+          message: "Unknown fixture outcome",
+          cause: response,
+          stackTrace: StackTrace.current,
+        ),
+        skir.CommitPreparedEditResponse_resultWrapper(
+          value: skir.CommitResult.committed,
+        ) =>
+          SubmissionResult.confirmed(response),
+        _ => SubmissionResult.rejected(
+          message: response.rejectionMessage,
+          response: response,
+        ),
+      };
+    },
+  ),
 );

@@ -79,6 +79,9 @@ void main() {
               )
             : skir.DataValue.wrapStringValue(""),
       );
+      await tester.pumpWidget(const SizedBox.shrink());
+      (authoring.workspace.workspace.submissions as ScopedWorkSession)
+          .dispose();
     });
   }
 
@@ -112,7 +115,7 @@ void main() {
         find.byType(TextFormField),
         field == "priority" ? "3" : "new",
       );
-      await tester.pump(AuthoringWorkspace.debounce);
+      await tester.pump(const Duration(milliseconds: 250));
       await tester.pump();
       final submitted = authoring.transport.requests.single.edit;
       final set = submitted.intents.single as skir.EditIntent_setValueWrapper;
@@ -167,7 +170,7 @@ void main() {
     );
     expect(authoring.workspace.state.groups, hasLength(1));
     expect(find.text("Apply"), findsNWidgets(2));
-    await tester.tap(find.text("Cancel").last);
+    await tester.tap(find.text("Discard").last);
     await tester.pumpAndSettle();
     expect(
       tester
@@ -214,9 +217,13 @@ void main() {
     );
     authoring.binding.detach();
     await tester.pumpTestApp(
-      child: AuthoringGroupControls(
-        workspace: authoring.workspace,
-        group: authoring.workspace.state.groups.values.single,
+      child: EditingGroupPanel(
+        workspace: authoring.workspace.workspace,
+        id: authoring.workspace.state.groups.values.single.id,
+        review: () => RealmEditingReview(
+          workspace: authoring.workspace,
+          id: authoring.workspace.state.groups.values.single.id,
+        ),
       ),
     );
     expect(find.text("Rename message"), findsOneWidget);
@@ -320,7 +327,7 @@ void main() {
     );
     authoring.workspace.acceptConfirmed(second.draft.toDocument());
     await tester.pump();
-    expect(authoring.binding.phase, isA<AuthoringGroupCatalogChanged>());
+    expect(authoring.binding.phase, isA<EditGroupContractChanged>());
     expect(authoring.workspace.document.generation, first.draft.generation);
     await tester.tap(find.text("Discard"));
     await tester.pump();
@@ -414,7 +421,7 @@ void main() {
   });
 }
 
-Widget _editor(skir.ResourceId resource, AuthoringBinding binding) =>
+Widget _editor(skir.ResourceId resource, RealmEditingBinding binding) =>
     AuthoredResourceEditor(
       resource: resource,
       document: binding.document,
@@ -424,8 +431,8 @@ Widget _editor(skir.ResourceId resource, AuthoringBinding binding) =>
     );
 
 ({
-  AuthoringWorkspace workspace,
-  AuthoringBinding binding,
+  RealmEditing workspace,
+  RealmEditingBinding binding,
   ScriptedAuthoringTransport transport,
 })
 _editing(
@@ -433,8 +440,9 @@ _editing(
   EditorCommitPolicy policy = EditorCommitPolicy.applyResource,
 }) {
   final transport = ScriptedAuthoringTransport(AsyncData(initial.toDocument()));
-  final workspace = AuthoringWorkspace(
-    transport: transport,
+  final workspace = RealmEditing(
+    persistence: transport.persistence,
+    submissions: _workSession(),
     initial: initial.toDocument(),
   );
   final binding = workspace.attach(
@@ -1116,3 +1124,9 @@ final _chapterTextType = skir.NamedTypeUse(
   ),
   arguments: const [],
 );
+
+ScopedWorkSession _workSession() {
+  final session = ScopedWorkSession();
+  addTearDown(session.dispose);
+  return session;
+}

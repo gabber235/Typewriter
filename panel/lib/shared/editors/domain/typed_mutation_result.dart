@@ -9,8 +9,8 @@ part "typed_mutation_result.freezed.dart";
 /// Success confirms the applied value and revision. Conflict exposes the
 /// current value so the editor can reconcile it. Invalid, unavailable, and
 /// permission outcomes remain distinct because each has different recovery.
-/// Uncertain retains the exact replay operation when submission may have
-/// succeeded but its response was not observed.
+/// Uncertain identifies a submission whose response was not observed.
+/// Replay belongs to the captured request in the submission journal.
 @freezed
 sealed class TypedMutationResult with _$TypedMutationResult {
   @Assert("revision >= 0", "Revision must not be negative.")
@@ -36,7 +36,6 @@ sealed class TypedMutationResult with _$TypedMutationResult {
     required String message,
     required Object cause,
     required StackTrace stackTrace,
-    Future<TypedMutationResult> Function()? replay,
     Object? submissionId,
   }) = MutationUncertain;
 

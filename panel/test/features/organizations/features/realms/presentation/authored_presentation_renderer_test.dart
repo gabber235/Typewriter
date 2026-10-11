@@ -366,11 +366,11 @@ void main() {
         bindingId: _rootBinding,
         path: location.path,
       );
-      final host = EditorSourcePresentationHost(
+      final host = BoundPresentationHost(
         catalog: checked,
         root: () => skir.PresentationNode.defaultInstance,
         bindings: [
-          EditorSourcePresentationBinding(
+          BoundPresentationBinding(
             id: _rootBinding,
             use: skir.TypeUse.createNamed(
               definition: root,
@@ -891,6 +891,12 @@ final class _ControlHost extends ChangeNotifier
 
   final void Function(skir.BindingRef reference, skir.DataValue value) onWrite;
   final skir.TypeUse? expected;
+
+  @override
+  EditControl? commitControl(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => null;
 
   @override
   PortablePresentationCapabilities get capabilities =>

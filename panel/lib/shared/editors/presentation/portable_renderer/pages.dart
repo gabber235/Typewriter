@@ -240,7 +240,6 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
         enabled: parent.enabled,
         watchSearch: parent.watchSearch,
         reportStatus: parent.reportStatus,
-        commit: parent.commit,
         catalog: catalog,
         resource: resource,
         role: selected.resolvedRole,

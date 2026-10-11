@@ -2,8 +2,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-part "resource_creation.g.dart";
 part "resource_creation.freezed.dart";
+part "resource_creation.g.dart";
 
 @Riverpod(keepAlive: true)
 ResourceCreationSession resourceCreation(Ref ref, AuthoringScope scope) =>
@@ -139,7 +139,7 @@ final class ResourceCreationSession {
     required BuildContext context,
     required ResourceCreationRequest request,
   }) async {
-    final workspace = ref.read(authoringWorkspaceProvider(scope));
+    final workspace = ref.read(realmEditingProvider(scope));
     final checked = workspace.document.catalog;
     final commands = ref.read(authoredResourceCommandsProvider(scope));
     CreatedAuthoringResource? created;

@@ -1,6 +1,5 @@
 library;
 
-export "document_work_driver.dart";
 export "local_editor_values.dart";
 export "local_work.dart";
 export "local_work_session.dart";

@@ -7,11 +7,11 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 import "../../../../../support/provider_test_utils.dart";
 import "../../../../../support/test_utils.dart";
 
-part "topology_selection_removal_test_cases.dart";
 part "host_apply_test_cases.dart";
 part "host_target_selection_test_cases.dart";
 part "resource_connection_test_cases.dart";
 part "service_host_selectable_test_support.dart";
+part "topology_selection_removal_test_cases.dart";
 
 const _updateSubject = "cloud.to.user.user1.organization.org1.services.update";
 const _configureSubject =
@@ -29,12 +29,10 @@ void main() {
   test("host presentation owns separate runtime and resource inputs", () async {
     final harness = await _Harness.create();
     addTearDown(harness.dispose);
-    final owners = EditorOwnerRegistry();
+    final owners = InspectionBindings();
     addTearDown(owners.dispose);
     final content = _buildInspection(harness, owners);
-    final edits = owners.workspace.resources.values
-        .map((resource) => resource.source)
-        .toList();
+    final edits = owners.labels.keys.whereType<ValueEditing>().toList();
     expect(edits, hasLength(2));
     expect(edits.map((owner) => owner.document.revision), [1, 1]);
     expect(identical(edits[0], edits[1]), isFalse);
@@ -60,7 +58,7 @@ void main() {
         ),
       );
     });
-    final owners = EditorOwnerRegistry();
+    final owners = InspectionBindings();
     addTearDown(owners.dispose);
 
     _buildInspection(harness, owners);
@@ -96,7 +94,7 @@ void main() {
         ),
       );
     });
-    final owners = EditorOwnerRegistry();
+    final owners = InspectionBindings();
     addTearDown(owners.dispose);
     final host = _buildInspection(harness, owners).host!;
     final editable = host.document.bindings.entries.singleWhere(
@@ -113,8 +111,8 @@ void main() {
     );
     expect(result, isA<PortablePresentationWriteApplied>());
 
-    final saved = await owners.flush();
-    expect(saved.values, contains(isA<MutationSuccess>()));
+    final saved = await _identitySource(owners).flush();
+    expect(saved, isA<MutationSuccess>());
     expect(request!.name, "portable_name");
     expect(request!.expectedRevision, 1);
   });
@@ -122,7 +120,7 @@ void main() {
   test("service runtime bindings stay read only", () async {
     final harness = await _Harness.create();
     addTearDown(harness.dispose);
-    final owners = EditorOwnerRegistry();
+    final owners = InspectionBindings();
     addTearDown(owners.dispose);
     final host = _buildInspection(harness, owners).host!;
     final runtime = host.document.bindings.entries.firstWhere(
@@ -157,7 +155,7 @@ void main() {
         ),
       );
     });
-    final owners = EditorOwnerRegistry();
+    final owners = InspectionBindings();
     addTearDown(owners.dispose);
 
     _buildInspection(harness, owners);
@@ -207,7 +205,7 @@ void main() {
     await Future<void>.delayed(Duration.zero);
 
     expect(session.hosts, hasLength(1));
-    expect(session.owners.workspace.resources, hasLength(1));
+    expect(session.owners.labels, hasLength(1));
     expect(
       session.hosts.single.document.bindings.keys.map((id) => id.value),
       contains("service.identity.name"),
@@ -239,7 +237,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       expect(session.hosts, hasLength(2));
-      expect(session.owners.workspace.resources, hasLength(3));
+      expect(session.owners.labels, hasLength(3));
       expect(
         session.hosts
             .expand((host) => host.document.bindings.keys)

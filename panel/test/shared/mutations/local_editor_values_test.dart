@@ -15,7 +15,7 @@ skir.DataValue _value(String name, int color) => skir.DataValue.createRecord(
   ],
 );
 
-ResourceEditorTarget _target() => fakeEditorTarget(
+ValueEditingRegistration _target() => fakeEditorTarget(
   targetId: _key.identity,
   scope: _key.scope,
   label: "Resource",
@@ -105,7 +105,7 @@ void main() {
 
     expect(workspace.state.editorValues, isEmpty);
 
-    final source = workspace.editor(_target())
+    final source = (_target()).acquire(workspace)
       ..update(_name, skir.DataValue.wrapStringValue("Draft"));
 
     final local = workspace.state.editorValues[_key];

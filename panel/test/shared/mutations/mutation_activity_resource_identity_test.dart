@@ -32,16 +32,16 @@ void main() {
     );
     final workspace = ScopedWorkSession();
     addTearDown(workspace.dispose);
-    final source = workspace.editor(
-      ResourceEditorTarget(
-        targetId: key.identity,
-        label: "Uncertain configuration",
-        resource: _UncertainResource(key, snapshot),
-        snapshot: snapshot,
-        commitPolicy: EditorCommitPolicy.applyResource,
-      ),
+    final source = ValueEditingRegistration(
+      targetId: key.identity,
+      label: "Uncertain configuration",
+      persistence: _UncertainResource(key, snapshot),
+      snapshot: snapshot,
+      commitPolicy: EditorCommitPolicy.applyResource,
+    ).acquire(workspace);
+    addTearDown(
+      workspace.lease(WorkDriverId(domain: "value", scope: key)).release,
     );
-    workspace.retain(key);
     source.update(
       editorRootPath.field("name"),
       skir.DataValue.wrapStringValue("local draft"),
@@ -57,7 +57,11 @@ void main() {
     );
     await tester.tap(find.text("Needs attention"));
     await tester.pumpAndSettle();
-    await tester.tap(find.text("Outcome unknown. Verify before retrying."));
+    await tester.tap(
+      find.text(
+        "The outcome is unknown. Local work is retained and will not be resubmitted",
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text("Submission"), findsNothing);
@@ -117,7 +121,7 @@ final _recordCatalog = CheckedEditorCatalog(
   ),
 );
 
-final class _UncertainResource implements EditableResource {
+final class _UncertainResource extends ValueEditPersistence {
   _UncertainResource(this.key, this.snapshot);
 
   @override
@@ -128,26 +132,20 @@ final class _UncertainResource implements EditableResource {
   Set<Object> get reservations => {key};
 
   @override
-  Future<EditorSnapshot?> refresh() async => snapshot;
+  Future<EditorSnapshot?> refreshSnapshot() async => snapshot;
 
   @override
-  MutationIntent prepare(
+  PreparedCommit<TypedMutationResult> prepareValue(
     EditorSnapshot snapshot,
     EditorCommit changes,
-    void Function(TypedMutationResult) accept,
-  ) => IndependentMutation(
-    PendingCommit<TypedMutationResult>(
-      resources: reservations,
-      prepare: () => PreparedCommit<TypedMutationResult>(
-        id: "not-a-uuid",
-        label: "Uncertain configuration",
-        resources: reservations,
-        send: () async => SubmissionResult<TypedMutationResult>.uncertain(
-          message: "The response could not be confirmed",
-          cause: StateError("response lost"),
-          stackTrace: StackTrace.current,
-        ),
-      ),
+  ) => PreparedCommit(
+    id: "not-a-uuid",
+    label: "Uncertain configuration",
+    resources: reservations,
+    send: () async => SubmissionResult.uncertain(
+      message: "The response could not be confirmed",
+      cause: StateError("response lost"),
+      stackTrace: StackTrace.current,
     ),
   );
 }

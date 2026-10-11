@@ -12,8 +12,9 @@ void main() {
     final transport = ScriptedAuthoringTransport(
       AsyncData(pageWorkspaceStoryDocument()),
     );
-    final workspace = AuthoringWorkspace(
-      transport: transport,
+    final workspace = RealmEditing(
+      persistence: transport.persistence,
+      submissions: ScopedWorkSession(),
       initial: transport.observation.requireValue,
     );
     addTearDown(workspace.dispose);
@@ -59,7 +60,7 @@ void main() {
     expect(selected?.value, "entry:reward");
     expect(find.text("Reward"), findsWidgets);
     expect(tester.takeException(), isNull);
-    await tester.pump(AuthoringWorkspace.debounce);
+    await tester.pump(const Duration(milliseconds: 250));
     await tester.pumpAndSettle();
   });
 
@@ -69,8 +70,9 @@ void main() {
     final transport = ScriptedAuthoringTransport(
       AsyncData(pageWorkspaceStoryDocument()),
     );
-    final workspace = AuthoringWorkspace(
-      transport: transport,
+    final workspace = RealmEditing(
+      persistence: transport.persistence,
+      submissions: ScopedWorkSession(),
       initial: transport.observation.requireValue,
     );
     addTearDown(workspace.dispose);
@@ -110,7 +112,7 @@ void main() {
       BigInt.from(96),
     );
     expect(tester.takeException(), isNull);
-    await tester.pump(AuthoringWorkspace.debounce);
+    await tester.pump(const Duration(milliseconds: 250));
     await tester.pumpAndSettle();
   });
 }

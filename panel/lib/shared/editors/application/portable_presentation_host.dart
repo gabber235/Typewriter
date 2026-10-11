@@ -99,6 +99,40 @@ final class PortableInvocationContext {
   final Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings;
   final skir.CatalogGeneration catalogGeneration;
 
+  skir.DataValue? read(
+    skir.BindingRef reference,
+    skir.CatalogGeneration generation,
+  ) {
+    if (catalogGeneration != generation) return null;
+    final value = bindings[reference.bindingId]?.value;
+    return value?.editorValueAt(reference.path);
+  }
+
+  skir.ValueLocation? location(
+    skir.BindingRef reference,
+    skir.CatalogGeneration generation,
+  ) {
+    if (catalogGeneration != generation) return null;
+    final base = bindings[reference.bindingId]?.location;
+    return base == null
+        ? null
+        : skir.ValueLocation(
+            resource: base.resource,
+            path: skir.ValuePath(
+              segments: [...base.path.segments, ...reference.path.segments],
+            ),
+          );
+  }
+
+  bool isCurrent(
+    skir.BindingRef reference,
+    skir.CatalogGeneration generation,
+    skir.DataValue? current,
+  ) =>
+      catalogGeneration == generation &&
+      current != null &&
+      read(reference, generation) == current;
+
   PortableInvocationContext withBinding(
     skir.ExpressionBindingId id,
     PortableExpressionBinding binding,
@@ -134,7 +168,6 @@ abstract class PortablePresentationCapabilities
     )?
     watchSearch,
     Future<void> Function()? reload,
-    Future<void> Function()? commit,
     ValueChanged<skir.ResourceId>? openResource,
     Future<skir.PreparedValue> Function(skir.ValuePreparationRequest request)?
     prepareValue,
@@ -164,6 +197,11 @@ abstract interface class PortablePresentationHost implements Listenable {
   bool get readOnly;
 
   PortablePresentationCapabilities get capabilities;
+
+  EditControl? commitControl(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  });
 
   skir.DataValue? read(
     skir.BindingRef reference, {
@@ -457,16 +495,3 @@ extension PortablePresentationRootInvocation on PortablePresentationHost {
     catalogGeneration: document.catalog.snapshot.generation,
   );
 }
-
-/// Supplies the portable presentation used to review one retained draft.
-///
-/// The target owns the feature specific schema and binding codecs. The local
-/// work session owns the live [EditorSource], so constructing this host keeps
-/// presentation metadata separate from draft persistence and conflict policy.
-abstract interface class PortablePresentationTarget {
-  PortablePresentationHost? buildPortablePresentationHost(EditorSource source);
-}
-
-typedef PortablePresentationHostBuilder = PortablePresentationHost Function(
-  EditorSource source,
-);

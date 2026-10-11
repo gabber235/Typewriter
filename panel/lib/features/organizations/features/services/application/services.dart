@@ -2,26 +2,26 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-part "services.freezed.dart";
-part "services.g.dart";
-part "service_models.dart";
-part "service_resource_repository.dart";
-part "host_editor_resource.dart";
-part "service_editor_resource.dart";
-part "service_route_projection.dart";
-part "service_connections.dart";
-part "service_portable_presentation.dart";
-part "service_inspector_layout.dart";
-part "topology_portable_presentation.dart";
-part "service_selection.dart";
-part "topology_models.dart";
-part "topology.dart";
-part "topology_configuration.dart";
+part "host_configuration_editing.dart";
 part "host_configuration_types.dart";
 part "host_configuration_value.dart";
-part "topology_selection.dart";
+part "service_connections.dart";
+part "service_identity_editing.dart";
+part "service_inspector_layout.dart";
+part "service_models.dart";
+part "service_portable_presentation.dart";
+part "service_resource_repository.dart";
+part "service_route_projection.dart";
+part "service_selection.dart";
+part "services.freezed.dart";
+part "services.g.dart";
+part "topology.dart";
+part "topology_configuration.dart";
 part "topology_host_selection.dart";
+part "topology_models.dart";
+part "topology_portable_presentation.dart";
 part "topology_runtime_selection.dart";
+part "topology_selection.dart";
 
 /// Owns the organization scoped canonical service identity projection.
 ///

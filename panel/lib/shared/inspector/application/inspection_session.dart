@@ -4,33 +4,26 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Composes the selected resources into one inspector presentation graph.
 ///
-/// [EditorOwnerRegistry] is the authority for resource editor owners and keeps
-/// those owners, drafts, and persistence state across graph refreshes. This
-/// session owns only the current composite graph. Refreshes stage a new owner
-/// set and graph, then commit both together; failed builds roll back staged
-/// owners and preserve the installed graph.
+/// The scoped work session owns drafts and persistence. [InspectionBindings]
+/// owns view leases across graph refreshes. This session owns the current
+/// composite graph. Refreshes acquire prospective leases before releasing the
+/// installed graph; failed builds preserve the installed view.
 ///
 /// Selection is read from [selectedProvider]. Focus is deliberately unrelated:
 /// selectable surfaces own focus, while this session reacts only to selection
 /// resolution and resource availability.
 final class InspectionSession extends ChangeNotifier {
   InspectionSession(this.ref)
-    : owners = EditorOwnerRegistry(
+    : owners = InspectionBindings(
         workspace: ref.read(localWorkControllerProvider),
       ) {
     ref.listen(inspectedSelectionProvider, (_, next) {
       if (next.asError?.error case SelectableNotFoundException(:final id)) {
-        owners.deleted(id);
         SchedulerBinding.instance.addPostFrameCallback((_) {
           if (!_disposed) ref.read(selectionProvider.notifier).unselect(id);
         });
         SchedulerBinding.instance.ensureVisualUpdate();
       } else if (next.isLoading || next.hasError) {
-        owners.unavailable(
-          next.hasError
-              ? "The selected resources could not be refreshed"
-              : "The selected resources are refreshing",
-        );
         notifyListeners();
       } else {
         _refresh();
@@ -40,7 +33,7 @@ final class InspectionSession extends ChangeNotifier {
   }
   final Ref ref;
   bool _disposed = false;
-  final EditorOwnerRegistry owners;
+  final InspectionBindings owners;
   InspectionBuildContext? _buildContext;
 
   List<PortablePresentationHost> hosts = const [];
@@ -146,7 +139,7 @@ final class InspectionSession extends ChangeNotifier {
     final hosts = <PortablePresentationHost>[];
     for (final plan in plans) {
       final owners =
-          (Set<EditorSource>.identity()..addAll(
+          (Set<ValueEditing>.identity()..addAll(
                 plan.members.map(
                   (surface) => context.owners.editor(surface.target),
                 ),
@@ -157,13 +150,7 @@ final class InspectionSession extends ChangeNotifier {
         rootType: plan.rootType,
         catalog: plan.catalog,
       );
-      final host = plan.members.first.buildHost(
-        plan.members,
-        combined,
-        () async {
-          await Future.wait(owners.map((owner) => owner.flush()));
-        },
-      );
+      final host = plan.members.first.buildHost(plan.members, combined);
       context.ownHosts(InspectionContent(host: host));
       hosts.add(host);
     }
@@ -196,15 +183,6 @@ final class InspectionSession extends ChangeNotifier {
             ),
     );
   }
-
-  /// Flushes resource owners retained by the current graph.
-  ///
-  /// This persists the owners' local drafts according to their commit policy;
-  /// it does not change selection or rebuild the presentation graph. When
-  /// [failedOnly] is true, only resources reporting a retryable save state are
-  /// submitted.
-  Future<Map<Object, TypedMutationResult>> flush({bool failedOnly = false}) =>
-      owners.flush(failedOnly: failedOnly);
 
   @override
   void dispose() {
@@ -264,10 +242,10 @@ final class InspectorDestination extends WorkDestination {
     required this.identity,
   }) {
     router.addListener(notifyListeners);
-    _selection = container.listen(
-      selectionProvider,
-      (_, _) => notifyListeners(),
-    );
+    _selection = container.listen(selectionProvider, (_, next) {
+      _selected = next;
+      notifyListeners();
+    }, fireImmediately: true);
   }
 
   final ProviderContainer container;
@@ -275,16 +253,18 @@ final class InspectorDestination extends WorkDestination {
   final String path;
   final Object identity;
   late final ProviderSubscription<List<SelectableIdentifier>> _selection;
+  List<SelectableIdentifier> _selected = const [];
 
   @override
   bool get isCurrent =>
+      !_selection.closed &&
       router.currentPath == path &&
-      (identity is! SelectableIdentifier ||
-          container.read(selectionProvider).contains(identity));
+      (identity is! SelectableIdentifier || _selected.contains(identity));
 
   /// Navigates to the saved route and selects the saved resource, if any.
   @override
   Future<void> open() async {
+    if (_selection.closed) return;
     if (router.currentPath != path) await router.navigatePath(path);
     if (identity case final SelectableIdentifier selected) {
       container.read(selectionProvider.notifier).selectAll([selected]);

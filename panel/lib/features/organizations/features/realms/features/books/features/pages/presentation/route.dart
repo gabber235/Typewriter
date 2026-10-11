@@ -33,7 +33,7 @@ class PagePage extends ConsumerWidget {
         child = AuthoredResourceInspection(
           key: ValueKey((resource, skir.PresentationRole.editor)),
           resource: resource,
-          workspace: ref.watch(authoringWorkspaceProvider(scope)),
+          workspace: ref.watch(realmEditingProvider(scope)),
           commands: ref.watch(authoredResourceCommandsProvider(scope)),
           role: skir.PresentationRole.editor,
           openResource: (selected) {

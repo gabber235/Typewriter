@@ -228,7 +228,11 @@ final class _LinkWorkspace {
   _LinkWorkspace(AuthoringEdit operation, skir.ResourceId resource) {
     final document = operation.toDocument();
     transport = ScriptedAuthoringTransport(AsyncData(document));
-    workspace = AuthoringWorkspace(transport: transport, initial: document);
+    workspace = RealmEditing(
+      persistence: transport.persistence,
+      submissions: _workSession(),
+      initial: document,
+    );
     binding = workspace.attach(
       resource,
       policy: EditorCommitPolicy.applyResource,
@@ -238,8 +242,8 @@ final class _LinkWorkspace {
     addTearDown(transport.dispose);
   }
   late final ScriptedAuthoringTransport transport;
-  late final AuthoringWorkspace workspace;
-  late final AuthoringBinding binding;
+  late final RealmEditing workspace;
+  late final RealmEditingBinding binding;
 }
 
 Widget _linkControl(
@@ -595,3 +599,9 @@ skir.TypeDefinitionId _definition(String name) => skir.TypeDefinitionId(
 
 skir.ValuePath _fieldPath(String name) =>
     skir.ValuePath(segments: [skir.PathSegment.createField(name: name)]);
+
+ScopedWorkSession _workSession() {
+  final session = ScopedWorkSession();
+  addTearDown(session.dispose);
+  return session;
+}

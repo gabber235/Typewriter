@@ -91,6 +91,7 @@ void main() {
         }
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox.shrink());
+        fixture.submissions.dispose();
       },
     );
   }
@@ -113,14 +114,14 @@ void main() {
         find.text("Working Page name: Welcome to the town"),
         findsOneWidget,
       );
-      expect(find.widgetWithText(TextButton, "Apply"), findsOneWidget);
+      expect(find.widgetWithText(FilledButton, "Apply"), findsOneWidget);
       await tester.tap(find.text("Publish saved content"));
       await tester.pumpAndSettle();
       expect(fixture.repository.publishedNames, ["Welcome"]);
       expect(fixture.transport.requests, isEmpty);
       expect(fixture.workspace.state.groups, hasLength(1));
       expect(fixture.workingName, "Welcome to the town");
-      await tester.tap(find.widgetWithText(TextButton, "Apply"));
+      await tester.tap(find.widgetWithText(FilledButton, "Apply"));
       await tester.pumpAndSettle();
       expect(fixture.transport.requests, hasLength(1));
       expect(fixture.savedName, "Welcome to the town");
@@ -128,6 +129,7 @@ void main() {
       expect(fixture.repository.publishedNames, ["Welcome"]);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
+      fixture.submissions.dispose();
     },
   );
 }

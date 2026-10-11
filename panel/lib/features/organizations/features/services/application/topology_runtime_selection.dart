@@ -34,7 +34,7 @@ class _RealmInstanceSelectable
   ];
 
   @override
-  InspectionContent buildInspection(EditorOwnerScope owners) =>
+  InspectionContent buildInspection(InspectionBindingScope owners) =>
       InspectionContent(host: realm.portablePresentationHost());
 }
 
@@ -77,6 +77,6 @@ class _EngineInstanceSelectable
   List<SelectionCapability> get capabilities => [];
 
   @override
-  InspectionContent buildInspection(EditorOwnerScope owners) =>
+  InspectionContent buildInspection(InspectionBindingScope owners) =>
       InspectionContent(host: engine.portablePresentationHost());
 }

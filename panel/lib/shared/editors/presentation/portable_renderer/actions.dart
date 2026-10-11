@@ -69,18 +69,22 @@ extension _PortableScopeActions on PortablePresentationScope {
 }
 
 extension _PortableActionRendering on PortablePresentationNodeRenderer {
-  Widget _renderCommitControls(PortablePresentationScope childScope) => Align(
-    alignment: AlignmentDirectional.centerEnd,
-    child: FilledButton(
-      onPressed:
-          childScope.enabled &&
-              !childScope.readOnly &&
-              childScope.commit != null
-          ? childScope.commit
-          : null,
-      child: const Text("Save"),
-    ),
-  );
+  Widget _renderCommitControls(
+    skir.CommitControlsElement element,
+    PortablePresentationScope childScope,
+  ) {
+    final reference = childScope.sourceReference(element.binding);
+    if (reference == null || !childScope.enabled || childScope.readOnly) {
+      return const SizedBox.shrink();
+    }
+    final control = childScope.host?.commitControl(
+      reference,
+      context: childScope.invocation,
+    );
+    return control == null
+        ? const SizedBox.shrink()
+        : ApplyControls(control: control);
+  }
 
   Widget _renderButton(
     skir.ButtonElement button,

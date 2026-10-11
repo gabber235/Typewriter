@@ -15,8 +15,9 @@ void main() {
     );
     final document = fixtureAuthoringDocument(tags: [tag]);
     final transport = ScriptedAuthoringTransport(AsyncData(document));
-    final workspace = AuthoringWorkspace(
-      transport: transport,
+    final workspace = RealmEditing(
+      persistence: transport.persistence,
+      submissions: _workSession(),
       initial: document,
     );
     addTearDown(workspace.dispose);
@@ -30,7 +31,7 @@ void main() {
       workspace: workspace,
       commands: fixtureAuthoringCommands(transport),
     );
-    final owners = EditorOwnerRegistry();
+    final owners = InspectionBindings();
     addTearDown(owners.dispose);
 
     final inspection = selection.buildInspection(owners);
@@ -42,4 +43,10 @@ void main() {
         .onDelete();
     expect(workspace.document.entry(tag.tagId), isNull);
   });
+}
+
+ScopedWorkSession _workSession() {
+  final session = ScopedWorkSession();
+  addTearDown(session.dispose);
+  return session;
 }

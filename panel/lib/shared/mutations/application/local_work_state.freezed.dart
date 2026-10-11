@@ -1118,7 +1118,7 @@ as String,
 /// @nodoc
 mixin _$WorkEntryState {
 
- WorkEntryId get id; String get label; String get phase; List<WorkFact> get details; bool get retained; bool get hasWork; bool get canSave; bool get canDiscard; bool get canRetry; bool get blocksNavigation; bool get saving; bool get needsAttention; bool get needsInput; LocalWorkDestinationState get destination;
+ WorkEntryId get id; String get label; String get phase; List<WorkFact> get details; bool get retained; bool get hasWork; bool get canSave; bool get canDiscard; bool get canRetry; bool get canReview; bool get blocksNavigation; bool get saving; bool get needsAttention; bool get needsInput; LocalWorkDestinationState get destination;
 /// Create a copy of WorkEntryState
 /// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1130,20 +1130,20 @@ $WorkEntryStateCopyWith<WorkEntryState> get copyWith => _$WorkEntryStateCopyWith
 @override
 bool operator ==(Object other) {
   final _this = this as WorkEntryState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorkEntryState&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.phase, _this.phase) || other.phase == _this.phase)&&const DeepCollectionEquality().equals(other.details, _this.details)&&(identical(other.retained, _this.retained) || other.retained == _this.retained)&&(identical(other.hasWork, _this.hasWork) || other.hasWork == _this.hasWork)&&(identical(other.canSave, _this.canSave) || other.canSave == _this.canSave)&&(identical(other.canDiscard, _this.canDiscard) || other.canDiscard == _this.canDiscard)&&(identical(other.canRetry, _this.canRetry) || other.canRetry == _this.canRetry)&&(identical(other.blocksNavigation, _this.blocksNavigation) || other.blocksNavigation == _this.blocksNavigation)&&(identical(other.saving, _this.saving) || other.saving == _this.saving)&&(identical(other.needsAttention, _this.needsAttention) || other.needsAttention == _this.needsAttention)&&(identical(other.needsInput, _this.needsInput) || other.needsInput == _this.needsInput)&&(identical(other.destination, _this.destination) || other.destination == _this.destination));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorkEntryState&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.phase, _this.phase) || other.phase == _this.phase)&&const DeepCollectionEquality().equals(other.details, _this.details)&&(identical(other.retained, _this.retained) || other.retained == _this.retained)&&(identical(other.hasWork, _this.hasWork) || other.hasWork == _this.hasWork)&&(identical(other.canSave, _this.canSave) || other.canSave == _this.canSave)&&(identical(other.canDiscard, _this.canDiscard) || other.canDiscard == _this.canDiscard)&&(identical(other.canRetry, _this.canRetry) || other.canRetry == _this.canRetry)&&(identical(other.canReview, _this.canReview) || other.canReview == _this.canReview)&&(identical(other.blocksNavigation, _this.blocksNavigation) || other.blocksNavigation == _this.blocksNavigation)&&(identical(other.saving, _this.saving) || other.saving == _this.saving)&&(identical(other.needsAttention, _this.needsAttention) || other.needsAttention == _this.needsAttention)&&(identical(other.needsInput, _this.needsInput) || other.needsInput == _this.needsInput)&&(identical(other.destination, _this.destination) || other.destination == _this.destination));
 }
 
 
 @override
 int get hashCode {
   final _this = this as WorkEntryState;
-  return Object.hash(runtimeType,_this.id,_this.label,_this.phase,const DeepCollectionEquality().hash(_this.details),_this.retained,_this.hasWork,_this.canSave,_this.canDiscard,_this.canRetry,_this.blocksNavigation,_this.saving,_this.needsAttention,_this.needsInput,_this.destination);
+  return Object.hash(runtimeType,_this.id,_this.label,_this.phase,const DeepCollectionEquality().hash(_this.details),_this.retained,_this.hasWork,_this.canSave,_this.canDiscard,_this.canRetry,_this.canReview,_this.blocksNavigation,_this.saving,_this.needsAttention,_this.needsInput,_this.destination);
 }
 
 @override
 String toString() {
   final _this = this as WorkEntryState;
-  return 'WorkEntryState(id: ${_this.id}, label: ${_this.label}, phase: ${_this.phase}, details: ${_this.details}, retained: ${_this.retained}, hasWork: ${_this.hasWork}, canSave: ${_this.canSave}, canDiscard: ${_this.canDiscard}, canRetry: ${_this.canRetry}, blocksNavigation: ${_this.blocksNavigation}, saving: ${_this.saving}, needsAttention: ${_this.needsAttention}, needsInput: ${_this.needsInput}, destination: ${_this.destination})';
+  return 'WorkEntryState(id: ${_this.id}, label: ${_this.label}, phase: ${_this.phase}, details: ${_this.details}, retained: ${_this.retained}, hasWork: ${_this.hasWork}, canSave: ${_this.canSave}, canDiscard: ${_this.canDiscard}, canRetry: ${_this.canRetry}, canReview: ${_this.canReview}, blocksNavigation: ${_this.blocksNavigation}, saving: ${_this.saving}, needsAttention: ${_this.needsAttention}, needsInput: ${_this.needsInput}, destination: ${_this.destination})';
 }
 
 
@@ -1154,7 +1154,7 @@ abstract mixin class $WorkEntryStateCopyWith<$Res>  {
   factory $WorkEntryStateCopyWith(WorkEntryState value, $Res Function(WorkEntryState) _then) = _$WorkEntryStateCopyWithImpl;
 @useResult
 $Res call({
- WorkEntryId id, String label, String phase, List<WorkFact> details, bool retained, bool hasWork, bool canSave, bool canDiscard, bool canRetry, bool blocksNavigation, bool saving, bool needsAttention, bool needsInput, LocalWorkDestinationState destination
+ WorkEntryId id, String label, String phase, List<WorkFact> details, bool retained, bool hasWork, bool canSave, bool canDiscard, bool canRetry, bool canReview, bool blocksNavigation, bool saving, bool needsAttention, bool needsInput, LocalWorkDestinationState destination
 });
 
 
@@ -1171,7 +1171,7 @@ class _$WorkEntryStateCopyWithImpl<$Res>
 
 /// Create a copy of WorkEntryState
 /// with the given fields replaced by the non null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? label = null,Object? phase = null,Object? details = null,Object? retained = null,Object? hasWork = null,Object? canSave = null,Object? canDiscard = null,Object? canRetry = null,Object? blocksNavigation = null,Object? saving = null,Object? needsAttention = null,Object? needsInput = null,Object? destination = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? label = null,Object? phase = null,Object? details = null,Object? retained = null,Object? hasWork = null,Object? canSave = null,Object? canDiscard = null,Object? canRetry = null,Object? canReview = null,Object? blocksNavigation = null,Object? saving = null,Object? needsAttention = null,Object? needsInput = null,Object? destination = null,}) {
   return _then(WorkEntryState(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as WorkEntryId,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
@@ -1182,6 +1182,7 @@ as bool,hasWork: null == hasWork ? _self.hasWork : hasWork // ignore: cast_nulla
 as bool,canSave: null == canSave ? _self.canSave : canSave // ignore: cast_nullable_to_non_nullable
 as bool,canDiscard: null == canDiscard ? _self.canDiscard : canDiscard // ignore: cast_nullable_to_non_nullable
 as bool,canRetry: null == canRetry ? _self.canRetry : canRetry // ignore: cast_nullable_to_non_nullable
+as bool,canReview: null == canReview ? _self.canReview : canReview // ignore: cast_nullable_to_non_nullable
 as bool,blocksNavigation: null == blocksNavigation ? _self.blocksNavigation : blocksNavigation // ignore: cast_nullable_to_non_nullable
 as bool,saving: null == saving ? _self.saving : saving // ignore: cast_nullable_to_non_nullable
 as bool,needsAttention: null == needsAttention ? _self.needsAttention : needsAttention // ignore: cast_nullable_to_non_nullable
@@ -1281,10 +1282,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( WorkEntryId id,  String label,  String phase,  List<WorkFact> details,  bool retained,  bool hasWork,  bool canSave,  bool canDiscard,  bool canRetry,  bool blocksNavigation,  bool saving,  bool needsAttention,  bool needsInput,  LocalWorkDestinationState destination)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( WorkEntryId id,  String label,  String phase,  List<WorkFact> details,  bool retained,  bool hasWork,  bool canSave,  bool canDiscard,  bool canRetry,  bool canReview,  bool blocksNavigation,  bool saving,  bool needsAttention,  bool needsInput,  LocalWorkDestinationState destination)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _WorkEntryState() when $default != null:
-return $default(_that.id,_that.label,_that.phase,_that.details,_that.retained,_that.hasWork,_that.canSave,_that.canDiscard,_that.canRetry,_that.blocksNavigation,_that.saving,_that.needsAttention,_that.needsInput,_that.destination);case _:
+return $default(_that.id,_that.label,_that.phase,_that.details,_that.retained,_that.hasWork,_that.canSave,_that.canDiscard,_that.canRetry,_that.canReview,_that.blocksNavigation,_that.saving,_that.needsAttention,_that.needsInput,_that.destination);case _:
   return orElse();
 
 }
@@ -1302,10 +1303,10 @@ return $default(_that.id,_that.label,_that.phase,_that.details,_that.retained,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( WorkEntryId id,  String label,  String phase,  List<WorkFact> details,  bool retained,  bool hasWork,  bool canSave,  bool canDiscard,  bool canRetry,  bool blocksNavigation,  bool saving,  bool needsAttention,  bool needsInput,  LocalWorkDestinationState destination)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( WorkEntryId id,  String label,  String phase,  List<WorkFact> details,  bool retained,  bool hasWork,  bool canSave,  bool canDiscard,  bool canRetry,  bool canReview,  bool blocksNavigation,  bool saving,  bool needsAttention,  bool needsInput,  LocalWorkDestinationState destination)  $default,) {final _that = this;
 switch (_that) {
 case _WorkEntryState():
-return $default(_that.id,_that.label,_that.phase,_that.details,_that.retained,_that.hasWork,_that.canSave,_that.canDiscard,_that.canRetry,_that.blocksNavigation,_that.saving,_that.needsAttention,_that.needsInput,_that.destination);case _:
+return $default(_that.id,_that.label,_that.phase,_that.details,_that.retained,_that.hasWork,_that.canSave,_that.canDiscard,_that.canRetry,_that.canReview,_that.blocksNavigation,_that.saving,_that.needsAttention,_that.needsInput,_that.destination);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1322,10 +1323,10 @@ return $default(_that.id,_that.label,_that.phase,_that.details,_that.retained,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( WorkEntryId id,  String label,  String phase,  List<WorkFact> details,  bool retained,  bool hasWork,  bool canSave,  bool canDiscard,  bool canRetry,  bool blocksNavigation,  bool saving,  bool needsAttention,  bool needsInput,  LocalWorkDestinationState destination)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( WorkEntryId id,  String label,  String phase,  List<WorkFact> details,  bool retained,  bool hasWork,  bool canSave,  bool canDiscard,  bool canRetry,  bool canReview,  bool blocksNavigation,  bool saving,  bool needsAttention,  bool needsInput,  LocalWorkDestinationState destination)?  $default,) {final _that = this;
 switch (_that) {
 case _WorkEntryState() when $default != null:
-return $default(_that.id,_that.label,_that.phase,_that.details,_that.retained,_that.hasWork,_that.canSave,_that.canDiscard,_that.canRetry,_that.blocksNavigation,_that.saving,_that.needsAttention,_that.needsInput,_that.destination);case _:
+return $default(_that.id,_that.label,_that.phase,_that.details,_that.retained,_that.hasWork,_that.canSave,_that.canDiscard,_that.canRetry,_that.canReview,_that.blocksNavigation,_that.saving,_that.needsAttention,_that.needsInput,_that.destination);case _:
   return null;
 
 }
@@ -1337,7 +1338,7 @@ return $default(_that.id,_that.label,_that.phase,_that.details,_that.retained,_t
 
 
 class _WorkEntryState implements WorkEntryState {
-  const _WorkEntryState({required this.id, required this.label, required this.phase,  List<WorkFact> details = const [], this.retained = false, this.hasWork = false, this.canSave = false, this.canDiscard = false, this.canRetry = false, this.blocksNavigation = false, this.saving = false, this.needsAttention = false, this.needsInput = false, this.destination = LocalWorkDestinationState.unavailable}): _details = details;
+  const _WorkEntryState({required this.id, required this.label, required this.phase,  List<WorkFact> details = const [], this.retained = false, this.hasWork = false, this.canSave = false, this.canDiscard = false, this.canRetry = false, this.canReview = false, this.blocksNavigation = false, this.saving = false, this.needsAttention = false, this.needsInput = false, this.destination = LocalWorkDestinationState.unavailable}): _details = details;
 
 
 @override final  WorkEntryId id;
@@ -1355,6 +1356,7 @@ class _WorkEntryState implements WorkEntryState {
 @override@JsonKey() final  bool canSave;
 @override@JsonKey() final  bool canDiscard;
 @override@JsonKey() final  bool canRetry;
+@override@JsonKey() final  bool canReview;
 @override@JsonKey() final  bool blocksNavigation;
 @override@JsonKey() final  bool saving;
 @override@JsonKey() final  bool needsAttention;
@@ -1371,18 +1373,18 @@ _$WorkEntryStateCopyWith<_WorkEntryState> get copyWith => __$WorkEntryStateCopyW
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _WorkEntryState&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.phase, phase) || other.phase == phase)&&const DeepCollectionEquality().equals(other.details, _details)&&(identical(other.retained, retained) || other.retained == retained)&&(identical(other.hasWork, hasWork) || other.hasWork == hasWork)&&(identical(other.canSave, canSave) || other.canSave == canSave)&&(identical(other.canDiscard, canDiscard) || other.canDiscard == canDiscard)&&(identical(other.canRetry, canRetry) || other.canRetry == canRetry)&&(identical(other.blocksNavigation, blocksNavigation) || other.blocksNavigation == blocksNavigation)&&(identical(other.saving, saving) || other.saving == saving)&&(identical(other.needsAttention, needsAttention) || other.needsAttention == needsAttention)&&(identical(other.needsInput, needsInput) || other.needsInput == needsInput)&&(identical(other.destination, destination) || other.destination == destination));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _WorkEntryState&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.phase, phase) || other.phase == phase)&&const DeepCollectionEquality().equals(other.details, _details)&&(identical(other.retained, retained) || other.retained == retained)&&(identical(other.hasWork, hasWork) || other.hasWork == hasWork)&&(identical(other.canSave, canSave) || other.canSave == canSave)&&(identical(other.canDiscard, canDiscard) || other.canDiscard == canDiscard)&&(identical(other.canRetry, canRetry) || other.canRetry == canRetry)&&(identical(other.canReview, canReview) || other.canReview == canReview)&&(identical(other.blocksNavigation, blocksNavigation) || other.blocksNavigation == blocksNavigation)&&(identical(other.saving, saving) || other.saving == saving)&&(identical(other.needsAttention, needsAttention) || other.needsAttention == needsAttention)&&(identical(other.needsInput, needsInput) || other.needsInput == needsInput)&&(identical(other.destination, destination) || other.destination == destination));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,label,phase,const DeepCollectionEquality().hash(_details),retained,hasWork,canSave,canDiscard,canRetry,blocksNavigation,saving,needsAttention,needsInput,destination);
+    return Object.hash(runtimeType,id,label,phase,const DeepCollectionEquality().hash(_details),retained,hasWork,canSave,canDiscard,canRetry,canReview,blocksNavigation,saving,needsAttention,needsInput,destination);
 }
 
 @override
 String toString() {
-    return 'WorkEntryState(id: $id, label: $label, phase: $phase, details: $details, retained: $retained, hasWork: $hasWork, canSave: $canSave, canDiscard: $canDiscard, canRetry: $canRetry, blocksNavigation: $blocksNavigation, saving: $saving, needsAttention: $needsAttention, needsInput: $needsInput, destination: $destination)';
+    return 'WorkEntryState(id: $id, label: $label, phase: $phase, details: $details, retained: $retained, hasWork: $hasWork, canSave: $canSave, canDiscard: $canDiscard, canRetry: $canRetry, canReview: $canReview, blocksNavigation: $blocksNavigation, saving: $saving, needsAttention: $needsAttention, needsInput: $needsInput, destination: $destination)';
 }
 
 
@@ -1393,7 +1395,7 @@ abstract mixin class _$WorkEntryStateCopyWith<$Res> implements $WorkEntryStateCo
   factory _$WorkEntryStateCopyWith(_WorkEntryState value, $Res Function(_WorkEntryState) _then) = __$WorkEntryStateCopyWithImpl;
 @override @useResult
 $Res call({
- WorkEntryId id, String label, String phase, List<WorkFact> details, bool retained, bool hasWork, bool canSave, bool canDiscard, bool canRetry, bool blocksNavigation, bool saving, bool needsAttention, bool needsInput, LocalWorkDestinationState destination
+ WorkEntryId id, String label, String phase, List<WorkFact> details, bool retained, bool hasWork, bool canSave, bool canDiscard, bool canRetry, bool canReview, bool blocksNavigation, bool saving, bool needsAttention, bool needsInput, LocalWorkDestinationState destination
 });
 
 
@@ -1410,7 +1412,7 @@ class __$WorkEntryStateCopyWithImpl<$Res>
 
 /// Create a copy of WorkEntryState
 /// with the given fields replaced by the non null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? label = null,Object? phase = null,Object? details = null,Object? retained = null,Object? hasWork = null,Object? canSave = null,Object? canDiscard = null,Object? canRetry = null,Object? blocksNavigation = null,Object? saving = null,Object? needsAttention = null,Object? needsInput = null,Object? destination = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? label = null,Object? phase = null,Object? details = null,Object? retained = null,Object? hasWork = null,Object? canSave = null,Object? canDiscard = null,Object? canRetry = null,Object? canReview = null,Object? blocksNavigation = null,Object? saving = null,Object? needsAttention = null,Object? needsInput = null,Object? destination = null,}) {
   return _then(_WorkEntryState(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as WorkEntryId,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
@@ -1421,6 +1423,7 @@ as bool,hasWork: null == hasWork ? _self.hasWork : hasWork // ignore: cast_nulla
 as bool,canSave: null == canSave ? _self.canSave : canSave // ignore: cast_nullable_to_non_nullable
 as bool,canDiscard: null == canDiscard ? _self.canDiscard : canDiscard // ignore: cast_nullable_to_non_nullable
 as bool,canRetry: null == canRetry ? _self.canRetry : canRetry // ignore: cast_nullable_to_non_nullable
+as bool,canReview: null == canReview ? _self.canReview : canReview // ignore: cast_nullable_to_non_nullable
 as bool,blocksNavigation: null == blocksNavigation ? _self.blocksNavigation : blocksNavigation // ignore: cast_nullable_to_non_nullable
 as bool,saving: null == saving ? _self.saving : saving // ignore: cast_nullable_to_non_nullable
 as bool,needsAttention: null == needsAttention ? _self.needsAttention : needsAttention // ignore: cast_nullable_to_non_nullable
@@ -1445,7 +1448,7 @@ $WorkEntryIdCopyWith<$Res> get id {
 /// @nodoc
 mixin _$WorkDriverSnapshot {
 
- List<WorkEntryState> get entries;
+ Map<EditorResourceKey, LocalEditorValue> get editorValues; List<WorkEntryState> get entries;
 /// Create a copy of WorkDriverSnapshot
 /// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1457,20 +1460,20 @@ $WorkDriverSnapshotCopyWith<WorkDriverSnapshot> get copyWith => _$WorkDriverSnap
 @override
 bool operator ==(Object other) {
   final _this = this as WorkDriverSnapshot;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorkDriverSnapshot&&const DeepCollectionEquality().equals(other.entries, _this.entries));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorkDriverSnapshot&&const DeepCollectionEquality().equals(other.editorValues, _this.editorValues)&&const DeepCollectionEquality().equals(other.entries, _this.entries));
 }
 
 
 @override
 int get hashCode {
   final _this = this as WorkDriverSnapshot;
-  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.entries));
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.editorValues),const DeepCollectionEquality().hash(_this.entries));
 }
 
 @override
 String toString() {
   final _this = this as WorkDriverSnapshot;
-  return 'WorkDriverSnapshot(entries: ${_this.entries})';
+  return 'WorkDriverSnapshot(editorValues: ${_this.editorValues}, entries: ${_this.entries})';
 }
 
 
@@ -1481,7 +1484,7 @@ abstract mixin class $WorkDriverSnapshotCopyWith<$Res>  {
   factory $WorkDriverSnapshotCopyWith(WorkDriverSnapshot value, $Res Function(WorkDriverSnapshot) _then) = _$WorkDriverSnapshotCopyWithImpl;
 @useResult
 $Res call({
- List<WorkEntryState> entries
+ Map<EditorResourceKey, LocalEditorValue> editorValues, List<WorkEntryState> entries
 });
 
 
@@ -1498,9 +1501,10 @@ class _$WorkDriverSnapshotCopyWithImpl<$Res>
 
 /// Create a copy of WorkDriverSnapshot
 /// with the given fields replaced by the non null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? entries = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? editorValues = null,Object? entries = null,}) {
   return _then(WorkDriverSnapshot(
-entries: null == entries ? _self.entries : entries // ignore: cast_nullable_to_non_nullable
+editorValues: null == editorValues ? _self.editorValues : editorValues // ignore: cast_nullable_to_non_nullable
+as Map<EditorResourceKey, LocalEditorValue>,entries: null == entries ? _self.entries : entries // ignore: cast_nullable_to_non_nullable
 as List<WorkEntryState>,
   ));
 }
@@ -1586,10 +1590,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<WorkEntryState> entries)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Map<EditorResourceKey, LocalEditorValue> editorValues,  List<WorkEntryState> entries)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _WorkDriverSnapshot() when $default != null:
-return $default(_that.entries);case _:
+return $default(_that.editorValues,_that.entries);case _:
   return orElse();
 
 }
@@ -1607,10 +1611,10 @@ return $default(_that.entries);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<WorkEntryState> entries)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Map<EditorResourceKey, LocalEditorValue> editorValues,  List<WorkEntryState> entries)  $default,) {final _that = this;
 switch (_that) {
 case _WorkDriverSnapshot():
-return $default(_that.entries);case _:
+return $default(_that.editorValues,_that.entries);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1627,10 +1631,10 @@ return $default(_that.entries);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<WorkEntryState> entries)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Map<EditorResourceKey, LocalEditorValue> editorValues,  List<WorkEntryState> entries)?  $default,) {final _that = this;
 switch (_that) {
 case _WorkDriverSnapshot() when $default != null:
-return $default(_that.entries);case _:
+return $default(_that.editorValues,_that.entries);case _:
   return null;
 
 }
@@ -1642,8 +1646,15 @@ return $default(_that.entries);case _:
 
 
 class _WorkDriverSnapshot implements WorkDriverSnapshot {
-  const _WorkDriverSnapshot({ List<WorkEntryState> entries = const []}): _entries = entries;
+  const _WorkDriverSnapshot({ Map<EditorResourceKey, LocalEditorValue> editorValues = const {},  List<WorkEntryState> entries = const []}): _editorValues = editorValues,_entries = entries;
 
+
+ final  Map<EditorResourceKey, LocalEditorValue> _editorValues;
+@override@JsonKey() Map<EditorResourceKey, LocalEditorValue> get editorValues {
+  if (_editorValues is EqualUnmodifiableMapView) return _editorValues;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_editorValues);
+}
 
  final  List<WorkEntryState> _entries;
 @override@JsonKey() List<WorkEntryState> get entries {
@@ -1663,18 +1674,18 @@ _$WorkDriverSnapshotCopyWith<_WorkDriverSnapshot> get copyWith => __$WorkDriverS
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _WorkDriverSnapshot&&const DeepCollectionEquality().equals(other.entries, _entries));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _WorkDriverSnapshot&&const DeepCollectionEquality().equals(other.editorValues, _editorValues)&&const DeepCollectionEquality().equals(other.entries, _entries));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_entries));
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_editorValues),const DeepCollectionEquality().hash(_entries));
 }
 
 @override
 String toString() {
-    return 'WorkDriverSnapshot(entries: $entries)';
+    return 'WorkDriverSnapshot(editorValues: $editorValues, entries: $entries)';
 }
 
 
@@ -1685,7 +1696,7 @@ abstract mixin class _$WorkDriverSnapshotCopyWith<$Res> implements $WorkDriverSn
   factory _$WorkDriverSnapshotCopyWith(_WorkDriverSnapshot value, $Res Function(_WorkDriverSnapshot) _then) = __$WorkDriverSnapshotCopyWithImpl;
 @override @useResult
 $Res call({
- List<WorkEntryState> entries
+ Map<EditorResourceKey, LocalEditorValue> editorValues, List<WorkEntryState> entries
 });
 
 
@@ -1702,9 +1713,10 @@ class __$WorkDriverSnapshotCopyWithImpl<$Res>
 
 /// Create a copy of WorkDriverSnapshot
 /// with the given fields replaced by the non null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? entries = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? editorValues = null,Object? entries = null,}) {
   return _then(_WorkDriverSnapshot(
-entries: null == entries ? _self._entries : entries // ignore: cast_nullable_to_non_nullable
+editorValues: null == editorValues ? _self._editorValues : editorValues // ignore: cast_nullable_to_non_nullable
+as Map<EditorResourceKey, LocalEditorValue>,entries: null == entries ? _self._entries : entries // ignore: cast_nullable_to_non_nullable
 as List<WorkEntryState>,
   ));
 }

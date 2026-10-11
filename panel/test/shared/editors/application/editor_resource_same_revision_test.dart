@@ -34,7 +34,7 @@ void main() {
     final workspace = ScopedWorkSession();
     addTearDown(workspace.dispose);
     var sends = 0;
-    final resource = FakeEditableResource(
+    final resource = ScriptedValuePersistence(
       key: _key,
       current: _snapshot(title: "Green", revision: 2),
       commit: (commit) async {
@@ -46,16 +46,18 @@ void main() {
         );
       },
     );
-    final source = workspace.editor(
-      ResourceEditorTarget(
-        targetId: resource.key.identity,
-        label: "Resource",
-        resource: resource,
-        snapshot: _snapshot(title: "Blue", revision: 2),
-        commitPolicy: EditorCommitPolicy.applyResource,
-      ),
-    ) as TransactionalEditorSource;
-    workspace.retain(resource.key);
+    final source = ValueEditingRegistration(
+      targetId: resource.key.identity,
+      label: "Resource",
+      persistence: resource,
+      snapshot: _snapshot(title: "Blue", revision: 2),
+      commitPolicy: EditorCommitPolicy.applyResource,
+    ).acquire(workspace);
+    addTearDown(
+      workspace
+          .lease(WorkDriverId(domain: "value", scope: resource.key))
+          .release,
+    );
     source.update(_title, skir.DataValue.wrapStringValue("Red"));
 
     expect(await source.flush(), isA<MutationUnavailable>());

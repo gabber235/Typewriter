@@ -61,7 +61,7 @@ final class _AuthoredScalarGalleryState extends State<AuthoredScalarGallery> {
     _bytes: skir.DataValue.unfilled,
   };
 
-  late final _host = EditorSourcePresentationHost(
+  late final _host = BoundPresentationHost(
     catalog: skir.EditorCatalogWireSnapshot.defaultInstance
         .asTrustedLocalCatalog(),
     root: () => _gallery,
@@ -97,10 +97,10 @@ final class _AuthoredScalarGalleryState extends State<AuthoredScalarGallery> {
     budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 1000),
   );
 
-  EditorSourcePresentationBinding _binding(
+  BoundPresentationBinding _binding(
     skir.ExpressionBindingId id,
     skir.TypeUse use,
-  ) => EditorSourcePresentationBinding(
+  ) => BoundPresentationBinding(
     id: id,
     use: use,
     read: (_) => _values[id],
@@ -134,8 +134,10 @@ final class _AuthoredInteractionGalleryState
   late final _transport = ScriptedAuthoringTransport(
     AsyncData(_interactionDraft().toDocument()),
   );
-  late final _workspace = AuthoringWorkspace(
-    transport: _transport,
+  final _submissions = ScopedWorkSession();
+  late final _workspace = RealmEditing(
+    persistence: _transport.persistence,
+    submissions: _submissions,
     initial: _transport.observation.requireValue,
   );
   late final _binding = _workspace.attach(
@@ -169,6 +171,7 @@ final class _AuthoredInteractionGalleryState
     _binding.detach();
     _workspace.dispose();
     _transport.dispose();
+    _submissions.dispose();
     super.dispose();
   }
 

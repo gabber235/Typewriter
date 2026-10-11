@@ -5,6 +5,7 @@
 /// that owns the capability it uses.
 library;
 
+export "editing/editing.dart";
 export "editors/editors.dart";
 export "graph/graph.dart";
 export "hooks/hooks.dart";

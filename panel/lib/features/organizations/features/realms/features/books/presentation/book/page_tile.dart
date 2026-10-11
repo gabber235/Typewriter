@@ -85,7 +85,7 @@ class _PageTile extends HookConsumerWidget {
           onWillAcceptWithDetails: (details) => details.data.pageId != pageId,
           onAcceptWithDetails: (details) async {
             ref
-                .readAuthoringWorkspace()
+                .readRealmEditing()
                 .edit(
                   label: "Move page to chapter",
                   apply: (edit) {

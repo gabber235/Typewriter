@@ -21,21 +21,22 @@ void main() {
     );
     var prepared = false;
 
-    final queued = work.enqueue(
-      PendingCommit(
-        resources: {"resource"},
-        prepare: () {
-          prepared = true;
-          final capturedRevision = revision;
-          return PreparedCommit<int>(
-            id: "second",
-            label: "Second",
-            resources: {"resource"},
-            send: () async => SubmissionResult.confirmed(capturedRevision),
-          );
-        },
-      ),
-    );
+    Future<MutationSubmission<int>> captureQueued() async {
+      final reservation = await work.reserve({"resource"});
+      prepared = true;
+      final capturedRevision = revision;
+      return work.start(
+        PreparedCommit<int>(
+          id: "second",
+          label: "Second",
+          resources: {"resource"},
+          send: () async => SubmissionResult.confirmed(capturedRevision),
+        ),
+        reservation: reservation,
+      );
+    }
+
+    final queued = captureQueued();
     await Future<void>.delayed(Duration.zero);
     expect(prepared, isFalse);
     integrated.complete();

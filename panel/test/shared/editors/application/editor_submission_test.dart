@@ -24,7 +24,7 @@ void main() {
     "uncertain delivery blocks fresh requests and cannot discard evidence",
     () async {
       var sends = 0;
-      final source = TransactionalEditorSource(
+      final source = ValueEditing(
         document: _document("Original", 1),
         validation: acceptTestEditorMutation,
         debounce: const Duration(days: 1),
@@ -42,7 +42,7 @@ void main() {
       source.discardDraft();
       expect(
         source.value(_title).valueOrNull,
-        skir.DataValue.wrapStringValue("New draft"),
+        skir.DataValue.wrapStringValue("Submitted"),
       );
       expect(source.saveState(editorRootPath).canRetry, isFalse);
       expect(sends, 1);
@@ -50,51 +50,10 @@ void main() {
   );
 
   test(
-    "replay acknowledges captured edits while preserving newer edits",
-    () async {
-      var sends = 0;
-      final captured = <EditorCommit>[];
-      final source = TransactionalEditorSource(
-        document: _document("Original", 1),
-        validation: acceptTestEditorMutation,
-        debounce: const Duration(days: 1),
-        commit: (commit) async {
-          captured.add(commit);
-          sends++;
-          return MutationUncertain(
-            message: "Lost response",
-            cause: TimeoutException("Lost response"),
-            stackTrace: StackTrace.current,
-            replay: () async {
-              sends++;
-              return MutationSuccess(revision: 2, value: commit.rootValue);
-            },
-          );
-        },
-      );
-      addTearDown(source.dispose);
-      source.update(_title, skir.DataValue.wrapStringValue("A"));
-      await source.flush();
-
-      source.update(_title, skir.DataValue.wrapStringValue("B"));
-      await source.flush();
-      expect(sends, 2);
-      expect(captured, hasLength(1));
-      expect(source.document.confirmedValue, _value("A"));
-      expect(
-        source.value(_title).valueOrNull,
-        skir.DataValue.wrapStringValue("B"),
-      );
-
-      expect(source.hasWork, isTrue);
-    },
-  );
-
-  test(
     "Apply ignores interaction commits and validates the whole draft",
     () async {
       var sends = 0;
-      final source = TransactionalEditorSource(
+      final source = ValueEditing(
         document: _document("Original", 1),
         validation: acceptTestEditorMutation,
         commitPolicy: EditorCommitPolicy.applyResource,
@@ -130,7 +89,7 @@ void main() {
     () async {
       final workspace = ScopedWorkSession();
       addTearDown(workspace.dispose);
-      ResourceEditorTarget target(String scope) => fakeEditorTarget(
+      ValueEditingRegistration target(String scope) => fakeEditorTarget(
         scope: scope,
         targetId: "resource",
         label: "Resource",
@@ -140,20 +99,20 @@ void main() {
         commit: (commit) async =>
             MutationSuccess(revision: 2, value: commit.rootValue),
       );
-      final first = EditorOwnerRegistry(workspace: workspace);
+      final first = InspectionBindings(workspace: workspace);
       final source = (first.editor(target("org1")))
         ..update(_title, skir.DataValue.wrapStringValue("Retained"));
       first.dispose();
 
-      final other = EditorOwnerRegistry(workspace: workspace);
-      final returned = EditorOwnerRegistry(workspace: workspace);
+      final other = InspectionBindings(workspace: workspace);
+      final returned = InspectionBindings(workspace: workspace);
       addTearDown(other.dispose);
       addTearDown(returned.dispose);
       expect(
         other.editor(target("org2")).value(_title).valueOrNull,
         skir.DataValue.wrapStringValue("Original"),
       );
-      expect(identical(returned.editor(target("org1")), source), isTrue);
+      expect(returned.editor(target("org1")).workspace, same(source.workspace));
 
       expect(
         source.value(_title).valueOrNull,

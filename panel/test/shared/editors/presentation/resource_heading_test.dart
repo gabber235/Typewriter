@@ -19,7 +19,7 @@ void main() {
         identifier: "resource:1".portableExpression,
       ),
       bindings: [
-        EditorSourcePresentationBinding(
+        BoundPresentationBinding(
           id: name,
           use: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
           read: (_) => skir.DataValue.wrapStringValue(title),
@@ -441,10 +441,10 @@ void main() {
   });
 }
 
-EditorSourcePresentationHost _host(
+BoundPresentationHost _host(
   skir.PresentationNode root, {
-  List<EditorSourcePresentationBinding> bindings = const [],
-}) => EditorSourcePresentationHost(
+  List<BoundPresentationBinding> bindings = const [],
+}) => BoundPresentationHost(
   catalog: skir.EditorCatalogWireSnapshot.defaultInstance
       .asTrustedLocalCatalog(),
   root: () => root,

@@ -513,6 +513,12 @@ final class _FakeHost extends ChangeNotifier
   PortableInvocationContext? writtenContext;
 
   @override
+  EditControl? commitControl(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => null;
+
+  @override
   PortablePresentationCapabilities get capabilities =>
       const PortablePresentationCapabilities();
   @override

@@ -71,6 +71,13 @@ final class _RealmWorkToolbarStoryState extends State<RealmWorkToolbarStory> {
         _fixture.scope.organizationId,
         _fixture.scope.realmId,
       ).overrideWithValue(_fixture.repository),
+      confirmedAuthoringDocumentProvider.overrideWith((ref, scope) {
+        _fixture.transport.addListener(ref.invalidateSelf);
+        ref.onDispose(
+          () => _fixture.transport.removeListener(ref.invalidateSelf),
+        );
+        return _fixture.transport.observation;
+      }),
     ],
     child: SizedBox(
       width: widget.width,
@@ -80,10 +87,7 @@ final class _RealmWorkToolbarStoryState extends State<RealmWorkToolbarStory> {
           builder: (context, _) => Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              RealmWorkToolbar(
-                workspace: _fixture.workspace,
-                scope: _fixture.scope,
-              ),
+              RealmWorkToolbar(scope: _fixture.scope),
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -95,9 +99,9 @@ final class _RealmWorkToolbarStoryState extends State<RealmWorkToolbarStory> {
                 ),
               ),
               for (final group in _fixture.workspace.state.groups.values)
-                AuthoringGroupControls(
-                  workspace: _fixture.workspace,
-                  group: group,
+                EditingGroupPanel(
+                  workspace: _fixture.workspace.workspace,
+                  id: group.id,
                 ),
             ],
           ),

@@ -88,7 +88,7 @@ class BookWidget extends HookConsumerWidget {
             } else {
               tags.removeAt(index);
             }
-            final workspace = ref.read(authoringWorkspaceProvider(scope));
+            final workspace = ref.read(realmEditingProvider(scope));
             workspace
                 .edit(
                   label: "Change book tags",

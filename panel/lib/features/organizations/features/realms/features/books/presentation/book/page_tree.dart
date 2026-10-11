@@ -168,7 +168,7 @@ class _TreeCategory extends HookConsumerWidget {
                   onWillAcceptWithDetails: (details) => true,
                   onAcceptWithDetails: (details) async {
                     ref
-                        .readAuthoringWorkspace()
+                        .readRealmEditing()
                         .edit(
                           label: "Move page to chapter",
                           apply: (edit) {

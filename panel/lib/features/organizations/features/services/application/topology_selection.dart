@@ -47,7 +47,7 @@ class ServiceHostIdentifier extends SelectableIdentifier {
     final repository = ref
         .watch(resourceRepositoriesProvider)
         .services(organization);
-    final work = ref.watch(localWorkControllerProvider);
+    final work = ref.watch(localWorkProvider.notifier);
     final configurationSnapshot = HostEditorSnapshot(host, topology);
 
     return AsyncData(
@@ -57,11 +57,32 @@ class ServiceHostIdentifier extends SelectableIdentifier {
         service: service,
         topology: topology,
         connected: connections[host.serviceId] ?? false,
-        configurationTarget: ResourceEditorTarget(
+        configurationTarget: ValueEditingRegistration(
           targetId: this,
           label: "${service?.displayName ?? host.hostId.id}: configuration",
-          resource: HostEditorResource(repository, hostId),
+          persistence: HostEditPersistence(repository, hostId),
           snapshot: configurationSnapshot,
+          observations: EditObservationAdmission.reviewChanges,
+          observe: (workspace) => work.observe(
+            organizationTopologyControllerProvider(organization),
+            (next) {
+              if (next.value case final topology?) {
+                final current = topology.hosts.firstWhereOrNull(
+                  (value) => value.hostId == hostId,
+                );
+                workspace.acceptConfirmed(
+                  current == null
+                      ? workspace.confirmed.copyWith(exists: false)
+                      : ValueEditDocument.fromSnapshot(
+                          HostEditorSnapshot(current, topology),
+                          identity: workspace.confirmed.identity,
+                        ),
+                );
+              } else if (next.error case final error?) {
+                workspace.acceptFailure(error);
+              }
+            },
+          ),
           commitPolicy: EditorCommitPolicy.applyResource,
           portablePresentation: (source) => topologyHostPortableHost(
             host: host,
@@ -91,6 +112,7 @@ class ServiceHostIdentifier extends SelectableIdentifier {
                 service: canonicalService,
                 connected: connections[host.serviceId] ?? false,
                 repository: repository,
+                work: work,
               ),
       ),
     );

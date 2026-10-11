@@ -1,5 +1,3 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "local_work_snapshot.dart";
@@ -12,15 +10,10 @@ part "local_work_snapshot.dart";
 abstract interface class LocalWorkCommands {
   Stream<LocalWorkState> get changes;
 
-  /// Current resources with live editors or retained leases.
-  Map<EditorResourceKey, EditorResource> get resources;
-
   /// Submission records that have not yet expired or been dismissed.
   List<MutationSubmission<Object?>> get submissions;
 
-  /// Reserves [pending] resources, captures the draft after reservation, and
-  /// starts the resulting submission.
-  Future<MutationSubmission<T>> enqueue<T>(PendingCommit<T> pending);
+  Future<MutationReservation> reserve(Set<Object> resources);
 
   /// Starts an already captured commit, optionally transferring [reservation].
   MutationSubmission<T> start<T>(
@@ -38,14 +31,8 @@ abstract interface class LocalWorkCommands {
   /// Removes a settled submission from the activity journal.
   void dismiss(Object id);
 
-  /// Returns the live editor owner for [target], creating or refreshing it.
-  EditorSource editor(EditorTarget target);
-
-  /// Keeps a resource alive while a caller is using its editor or destination.
-  void retain(EditorResourceKey key);
-
-  /// Releases one caller lease. The resource is disposed when no work remains.
-  void release(EditorResourceKey key);
+  void setDestination(WorkDriverId driver, WorkDestination? destination);
+  WorkReviewLease? review(WorkEntryId entry);
 
   /// Retries a failed submission or flushes the draft that owns its identity.
   Future<void> retrySubmission(Object id);
@@ -65,67 +52,6 @@ abstract interface class LocalWorkCommands {
 
   /// Opens the current destination for [key], if one is available.
   Future<void> open(WorkEntryId entry);
-
-  /// Looks up a live editor without creating or retaining one.
-  EditorSource? source(EditorResourceKey key);
-}
-
-/// Mutable session record joining one editor source to navigation ownership.
-///
-/// [source] owns canonical and draft values. This record owns the label,
-/// destination, destination observation, and lease count used to decide when
-/// the source can be released.
-final class EditorResource {
-  EditorResource(EditorTarget target, this.source)
-    : target = target,
-      targetId = target.targetId,
-      label = target.label;
-
-  EditorTarget target;
-  final Object targetId;
-  String label;
-  WorkDestination? _destination;
-  WorkDestination? get destination => _destination;
-  LocalWorkDestinationState destinationState =
-      LocalWorkDestinationState.unavailable;
-  VoidCallback? listener;
-  VoidCallback? _destinationListener;
-  final TransactionalEditorSource source;
-
-  PortablePresentationHost? buildPortablePresentationHost() {
-    final current = target;
-    if (current case final PortablePresentationTarget portable) {
-      return portable.buildPortablePresentationHost(source);
-    }
-    return null;
-  }
-
-  set destination(WorkDestination? value) {
-    if (identical(value, _destination)) return;
-    if (_destinationListener case final changed?) {
-      _destination?.removeListener(changed);
-    }
-    _destination?.dispose();
-    _destination = value;
-    if (value == null) {
-      destinationState = LocalWorkDestinationState.unavailable;
-      _destinationListener = null;
-    } else {
-      void changed() {
-        destinationState = value.isCurrent
-            ? LocalWorkDestinationState.current
-            : LocalWorkDestinationState.available;
-        listener?.call();
-      }
-
-      _destinationListener = changed;
-      value.addListener(changed);
-      destinationState = value.isCurrent
-          ? LocalWorkDestinationState.current
-          : LocalWorkDestinationState.available;
-    }
-    listener?.call();
-  }
 }
 
 /// Owns mutable editors and submissions for one user and organization scope.
@@ -139,11 +65,6 @@ final class ScopedWorkSession implements LocalWorkCommands {
   ScopedWorkSession();
 
   final Map<WorkDriverId, OwnedWorkDriver> _drivers = {};
-  Map<EditorResourceKey, EditorResource> get _resources => {
-    for (final owned in _drivers.values)
-      if (owned.driver case final DocumentWorkDriver driver)
-        driver.key: driver.resource,
-  };
   final MutationCoordinator coordinator = MutationCoordinator();
   final Map<Object, MutationSubmission<Object?>> _submissions = {};
   final Map<Object, Timer> _expiry = {};
@@ -152,9 +73,6 @@ final class ScopedWorkSession implements LocalWorkCommands {
   LocalWorkState _state = const LocalWorkState();
   bool _disposed = false;
 
-  @override
-  Map<EditorResourceKey, EditorResource> get resources =>
-      Map.unmodifiable(_resources);
   @override
   List<MutationSubmission<Object?>> get submissions =>
       List.unmodifiable(_submissions.values);
@@ -166,22 +84,9 @@ final class ScopedWorkSession implements LocalWorkCommands {
   @override
   Stream<LocalWorkState> get changes => _changes.stream;
 
-  /// Waits for all participants, then captures and starts the pending commit.
-  ///
-  /// Reservation precedes preparation so overlapping mutations cannot cross
-  /// the consistency boundary while current draft values are captured. A
-  /// failed preparation or disposed session releases the reservation.
   @override
-  Future<MutationSubmission<T>> enqueue<T>(PendingCommit<T> pending) async {
-    final reservation = await coordinator.reserve(pending.resources);
-    try {
-      if (_disposed) throw StateError("Mutation session ended");
-      return pending.start(this, reservation);
-    } on Object {
-      reservation.release();
-      rethrow;
-    }
-  }
+  Future<MutationReservation> reserve(Set<Object> resources) =>
+      coordinator.reserve(resources);
 
   @override
   MutationSubmission<T> start<T>(
@@ -280,33 +185,14 @@ final class ScopedWorkSession implements LocalWorkCommands {
   }
 
   @override
-  EditorSource editor(EditorTarget target) {
-    if (_disposed) throw StateError("Editor workspace is disposed");
-    final key = target.resource.key;
-    final existing = _resources[key];
-    if (existing != null) {
-      if (existing.source.commitPolicy != target.commitPolicy) {
-        throw StateError("A resource cannot change its commit policy");
-      }
-      existing
-        ..target = target
-        ..label = target.label
-        ..source.refreshTarget(target);
-      _publish();
-      return existing.source;
+  void setDestination(WorkDriverId driver, WorkDestination? destination) {
+    final owned = _drivers[driver];
+    if (_disposed || owned == null) {
+      destination?.dispose();
+      throw StateError("The work driver is unavailable");
     }
-
-    late final EditorResource resource;
-    final source = TransactionalEditorSource(
-      document: target.document,
-      commitPolicy: target.commitPolicy,
-      resource: target.resource,
-      snapshot: target.snapshot,
-      workspace: this,
-    );
-    resource = EditorResource(target, source);
-    register(DocumentWorkDriver(key, resource));
-    return source;
+    owned.destination = destination;
+    _publish();
   }
 
   @override
@@ -380,42 +266,30 @@ final class ScopedWorkSession implements LocalWorkCommands {
   }
 
   @override
-  void retain(EditorResourceKey key) {
-    final owned = _drivers[WorkDriverId(domain: "document", scope: key)];
-    if (owned == null || _disposed) {
-      throw StateError("The document work is unavailable");
-    }
-    owned.leases++;
-  }
-
-  @override
-  void release(EditorResourceKey key) {
-    final id = WorkDriverId(domain: "document", scope: key);
-    final owned = _drivers[id];
-    if (owned == null || _disposed) return;
-    if (owned.leases <= 0) {
-      throw StateError("A document work lease must be retained before release");
-    }
-    owned.leases--;
-    _tryRelease(id);
-  }
-
-  @override
   Future<void> retrySubmission(Object id) async {
     final submission = _submissions[id];
     if (submission == null) return;
-    final owners = _resources.values.where(
-      (resource) =>
-          resource.source
-              .saveState(skir.ValuePath(segments: []))
-              .submissionId ==
-          id,
-    );
-    if (owners.isNotEmpty) {
-      await owners.first.source.flush();
-      return;
-    }
     await submission.run();
+  }
+
+  @override
+  WorkReviewLease? review(WorkEntryId entry) {
+    final owned = _drivers[entry.driver];
+    if (_disposed || owned == null || owned.driver is! WorkReviewProvider) {
+      return null;
+    }
+    final retained = lease(entry.driver);
+    try {
+      final content = (owned.driver as WorkReviewProvider).buildReview(entry);
+      if (content == null) {
+        retained.release();
+        return null;
+      }
+      return WorkReviewLease(content, retained);
+    } on Object {
+      retained.release();
+      rethrow;
+    }
   }
 
   WorkEntryState _entry(WorkEntryId entry) {
@@ -448,15 +322,8 @@ final class ScopedWorkSession implements LocalWorkCommands {
   @override
   Future<void> open(WorkEntryId entry) async {
     final owned = _drivers[entry.driver];
-    if (owned?.driver case final DocumentWorkDriver driver) {
-      await driver.resource.destination?.open();
-    } else {
-      await owned?.destination?.open();
-    }
+    await owned?.destination?.open();
   }
-
-  @override
-  EditorSource? source(EditorResourceKey key) => _resources[key]?.source;
 
   /// Ends this scope and releases every owned resource and submission.
   void dispose() {

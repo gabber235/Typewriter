@@ -14,7 +14,7 @@ final class AuthoredResourceInspection extends StatefulWidget {
   });
 
   final skir.ResourceId resource;
-  final AuthoringWorkspace workspace;
+  final RealmEditing workspace;
   final AuthoredResourceCommands commands;
   final skir.PresentationRole role;
   final EditorCommitPolicy commitPolicy;
@@ -27,7 +27,7 @@ final class AuthoredResourceInspection extends StatefulWidget {
 
 final class _AuthoredResourceInspectionState
     extends State<AuthoredResourceInspection> {
-  late AuthoringBinding _binding;
+  late RealmEditingBinding _binding;
 
   @override
   void initState() {
@@ -68,7 +68,6 @@ final class _AuthoredResourceInspectionState
 
   @override
   Widget build(BuildContext context) {
-    final dirty = _binding.dirty;
     final relatedWork = widget.workspace.hasWorkFor(widget.resource);
     final configuration = _binding.document
         .resource(widget.resource)
@@ -97,16 +96,16 @@ final class _AuthoredResourceInspectionState
                     edit: value.edit,
                   ),
                 skir.PreparedEditResult_needsInputWrapper() =>
-                  const AuthoringEditResult.rejected(
+                  const EditStageResult.rejected(
                     "The type change needs more input",
                     null,
                   ),
                 skir.PreparedEditResult_rejectedWrapper() =>
-                  const AuthoringEditResult.rejected(
+                  const EditStageResult.rejected(
                     "The Realm rejected the type change",
                     null,
                   ),
-                _ => const AuthoringEditResult.rejected(
+                _ => const EditStageResult.rejected(
                   "The type change result is unavailable",
                   null,
                 ),
@@ -124,53 +123,14 @@ final class _AuthoredResourceInspectionState
           Expanded(child: editor)
         else
           editor,
-        if (_binding.status case final status?)
-          Semantics(
-            liveRegion: true,
-            child: Row(
-              children: [
-                Expanded(child: Text(status)),
-                if (_binding.phase is AuthoringGroupCommittedAwaitingRefresh)
-                  TextButton(
-                    onPressed: widget.workspace.refreshConfirmed,
-                    child: const Text("Refresh"),
-                  ),
-                if (_binding.blocked && _binding.canDiscard)
-                  TextButton(
-                    onPressed: _discard,
-                    child: Text(
-                      _binding.hasSubmittedWork
-                          ? "Discard later edits"
-                          : "Discard",
-                    ),
-                  ),
-              ],
-            ),
-          ),
+        if (_binding.status case final message?) Text(message),
+        ApplyControls(control: _binding.control),
         for (final group in _binding.relatedGroups)
-          AuthoringGroupControls(workspace: widget.workspace, group: group),
-        if (dirty && widget.commitPolicy == EditorCommitPolicy.applyResource)
-          Align(
-            alignment: AlignmentDirectional.centerEnd,
-            child: Wrap(
-              spacing: context.spacing.space2,
-              children: [
-                TextButton(
-                  onPressed: _binding.canDiscard ? _discard : null,
-                  child: Text(
-                    _binding.hasSubmittedWork
-                        ? "Discard later edits"
-                        : "Cancel",
-                  ),
-                ),
-                LoadingButton.filled(
-                  onPressed: _binding.phase is AuthoringGroupDirty
-                      ? _save
-                      : null,
-                  child: Text(_binding.saving ? "Saving" : "Apply"),
-                ),
-              ],
-            ),
+          EditingGroupPanel(
+            workspace: widget.workspace.workspace,
+            id: group.id,
+            review: () =>
+                RealmEditingReview(workspace: widget.workspace, id: group.id),
           ),
       ],
     );
@@ -196,7 +156,6 @@ final class _AuthoredResourceInspectionState
     edit: _binding,
     role: role,
     budget: skir.EvaluationBudget(maxSteps: 10000, maxCollectionItems: 10000),
-    commit: _save,
     invokeCommand: _invokeCommand,
     watchSearch: widget.commands.watchSearch,
     reload: widget.commands.reload,
@@ -207,8 +166,6 @@ final class _AuthoredResourceInspectionState
     prepareValue: widget.commands.prepareValue,
     enabled: enabled,
   );
-
-  Future<void> _save() => _binding.save();
 
   Future<void> _invokeCommand(
     skir.CapabilityId capabilityId,
@@ -263,9 +220,5 @@ final class _AuthoredResourceInspectionState
       case skir.CommandResult_unknown():
         _binding.reportStatus("The command result is unavailable");
     }
-  }
-
-  void _discard() {
-    _binding.discard();
   }
 }

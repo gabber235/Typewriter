@@ -15,7 +15,7 @@ abstract final class _RuntimeInspectorFields {
 skir.ExpressionBindingId _topologyBinding(String value) =>
     skir.ExpressionBindingId(value: value);
 
-EditorSourcePresentationHost _topologyRuntimePortableHost({
+BoundPresentationHost _topologyRuntimePortableHost({
   required String rootId,
   required Map<String, skir.DataValue> values,
   required Color color,
@@ -24,13 +24,13 @@ EditorSourcePresentationHost _topologyRuntimePortableHost({
 }) {
   final bindings = [
     for (final entry in values.entries)
-      EditorSourcePresentationBinding(
+      BoundPresentationBinding(
         id: _topologyBinding("$rootId.${entry.key}"),
         use: _portableUse(entry.value),
         read: (_) => entry.value,
       ),
   ];
-  return EditorSourcePresentationHost(
+  return BoundPresentationHost(
     catalog: _servicePortableCatalog,
     root: () => _portableColumn(rootId, [
       title.portableExpression.resourceHeading(
@@ -90,7 +90,7 @@ EditorSourcePresentationHost _topologyRuntimePortableHost({
   );
 }
 
-EditorSourcePresentationHost topologyHostPortableHost({
+BoundPresentationHost topologyHostPortableHost({
   required TopologyHost host,
   required Service? service,
   required bool connected,
@@ -100,7 +100,6 @@ EditorSourcePresentationHost topologyHostPortableHost({
   required Map<String, List<String>> engineTargets,
   required List<TopologyRealm> realms,
   bool configurationOnly = false,
-  Future<void> Function()? commit,
 }) {
   final realmEnabled = _topologyBinding("host.configuration.realm.enabled");
   final realmTarget = _topologyBinding("host.configuration.realm.target");
@@ -142,15 +141,15 @@ EditorSourcePresentationHost topologyHostPortableHost({
     ),
     "host.updated_at": skir.DataValue.wrapTimestamp(host.state.updatedAt),
   };
-  final bindings = <EditorSourcePresentationBinding>[
+  final bindings = <BoundPresentationBinding>[
     if (!configurationOnly) ...[
       for (final entry in runtime.entries)
-        EditorSourcePresentationBinding(
+        BoundPresentationBinding(
           id: _topologyBinding(entry.key),
           use: _portableUse(entry.value),
           read: (_) => entry.value,
         ),
-      EditorSourcePresentationBinding(
+      BoundPresentationBinding(
         id: _serviceNameBinding,
         use: _portableTextType,
         owner: identityOwner,
@@ -213,7 +212,7 @@ EditorSourcePresentationHost topologyHostPortableHost({
     ),
   ];
 
-  return EditorSourcePresentationHost(
+  return BoundPresentationHost(
     catalog: _servicePortableCatalog,
     root: () => _portableColumn("serviceHost", [
       if (!configurationOnly)
@@ -400,22 +399,22 @@ EditorSourcePresentationHost topologyHostPortableHost({
     ], spacing: 16),
     bindings: bindings,
     budget: skir.EvaluationBudget(maxSteps: 1024, maxCollectionItems: 128),
-    capabilities: commit == null
-        ? configurationOwner.portablePresentationCapabilities
-        : PortablePresentationCapabilities(commit: commit),
   );
 }
 
-EditorSourcePresentationBinding _configurationToggle({
+BoundPresentationBinding _configurationToggle({
   required skir.ExpressionBindingId id,
   required EditOwner owner,
   required String field,
   required skir.DataValue enabled,
   required skir.TypeDefinitionId disabled,
-}) => EditorSourcePresentationBinding(
+}) => BoundPresentationBinding(
   id: id,
   use: _portableBooleanType,
   owner: owner,
+  control: owner is EditingControlOwner
+      ? (owner as EditingControlOwner).bindControl()
+      : null,
   read: (_) {
     final current = owner.value(editorRootPath.field(field)).valueOrNull;
     return skir.DataValue.wrapBoolean(
@@ -437,14 +436,17 @@ EditorSourcePresentationBinding _configurationToggle({
   },
 );
 
-EditorSourcePresentationBinding _configurationString({
+BoundPresentationBinding _configurationString({
   required skir.ExpressionBindingId id,
   required EditOwner owner,
   required skir.ValuePath path,
-}) => EditorSourcePresentationBinding(
+}) => BoundPresentationBinding(
   id: id,
   use: _portableTextType,
   owner: owner,
+  control: owner is EditingControlOwner
+      ? (owner as EditingControlOwner).bindControl()
+      : null,
   read: (_) => skir.DataValue.wrapStringValue(
     owner.value(path).valueOrNull?.authoredString ?? "",
   ),
@@ -546,7 +548,7 @@ skir.PresentationNode _portableSelect(
 
 /// Builds the observational inspector without introducing another mutation owner.
 extension RealmPortablePresentation on TopologyRealm {
-  EditorSourcePresentationHost portablePresentationHost() =>
+  BoundPresentationHost portablePresentationHost() =>
       _topologyRuntimePortableHost(
         rootId: "realmInstance",
         title: ownerHost.name.formatted,
@@ -575,7 +577,7 @@ extension RealmPortablePresentation on TopologyRealm {
 
 /// Builds the observational inspector without introducing another mutation owner.
 extension EnginePortablePresentation on TopologyEngine {
-  EditorSourcePresentationHost portablePresentationHost() =>
+  BoundPresentationHost portablePresentationHost() =>
       _topologyRuntimePortableHost(
         rootId: "engineInstance",
         title: "${target.engineId} engine",

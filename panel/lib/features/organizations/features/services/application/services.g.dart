@@ -433,6 +433,164 @@ abstract class _$OrganizationTopologyController
   }
 }
 
+/// Shares one deadline projection for a service list across its consumers.
+
+@ProviderFor(serviceConnections)
+final serviceConnectionsProvider = ServiceConnectionsProvider._();
+
+/// Shares one deadline projection for a service list across its consumers.
+
+final class ServiceConnectionsProvider
+    extends
+        $FunctionalProvider<
+          Map<skir.RecordId, bool>,
+          Map<skir.RecordId, bool>,
+          Map<skir.RecordId, bool>
+        >
+    with $Provider<Map<skir.RecordId, bool>> {
+  /// Shares one deadline projection for a service list across its consumers.
+  ServiceConnectionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'serviceConnectionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$serviceConnectionsHash();
+
+  @$internal
+  @override
+  $ProviderElement<Map<skir.RecordId, bool>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  Map<skir.RecordId, bool> create(Ref ref) {
+    return serviceConnections(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(Map<skir.RecordId, bool> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<Map<skir.RecordId, bool>>(value),
+    );
+  }
+}
+
+String _$serviceConnectionsHash() =>
+    r'81da9210c2a948b562f83b91902888be9edf7f2d';
+
+/// Resolves host connectivity through its linked service heartbeat.
+///
+/// Host runtime status describes reconciliation, not transport reachability.
+/// This provider therefore follows [TopologyHost.serviceId] into the shared
+/// service deadline projection and returns false when either record is absent.
+
+@ProviderFor(hostConnected)
+final hostConnectedProvider = HostConnectedFamily._();
+
+/// Resolves host connectivity through its linked service heartbeat.
+///
+/// Host runtime status describes reconciliation, not transport reachability.
+/// This provider therefore follows [TopologyHost.serviceId] into the shared
+/// service deadline projection and returns false when either record is absent.
+
+final class HostConnectedProvider extends $FunctionalProvider<bool, bool, bool>
+    with $Provider<bool> {
+  /// Resolves host connectivity through its linked service heartbeat.
+  ///
+  /// Host runtime status describes reconciliation, not transport reachability.
+  /// This provider therefore follows [TopologyHost.serviceId] into the shared
+  /// service deadline projection and returns false when either record is absent.
+  HostConnectedProvider._({
+    required HostConnectedFamily super.from,
+    required skir.RecordId super.argument,
+  }) : super(
+         retry: null,
+         name: r'hostConnectedProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$hostConnectedHash();
+
+  @override
+  String toString() {
+    return r'hostConnectedProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $ProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  bool create(Ref ref) {
+    final argument = this.argument as skir.RecordId;
+    return hostConnected(ref, argument);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is HostConnectedProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$hostConnectedHash() => r'0de38fbae6e101f0292ab3e1283be5a8fad89257';
+
+/// Resolves host connectivity through its linked service heartbeat.
+///
+/// Host runtime status describes reconciliation, not transport reachability.
+/// This provider therefore follows [TopologyHost.serviceId] into the shared
+/// service deadline projection and returns false when either record is absent.
+
+final class HostConnectedFamily extends $Family
+    with $FunctionalFamilyOverride<bool, skir.RecordId> {
+  HostConnectedFamily._()
+    : super(
+        retry: null,
+        name: r'hostConnectedProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Resolves host connectivity through its linked service heartbeat.
+  ///
+  /// Host runtime status describes reconciliation, not transport reachability.
+  /// This provider therefore follows [TopologyHost.serviceId] into the shared
+  /// service deadline projection and returns false when either record is absent.
+
+  HostConnectedProvider call(skir.RecordId hostId) =>
+      HostConnectedProvider._(argument: hostId, from: this);
+
+  @override
+  String toString() => r'hostConnectedProvider';
+}
+
 /// Adapts the organization scoped service projection to the current route.
 ///
 /// The route provider owns no service data. It follows the selected
@@ -703,161 +861,3 @@ final class OrganizationTopologyProvider
 
 String _$organizationTopologyHash() =>
     r'f6efcc8ca0e589ff6b81bd163be6e293718a5dc2';
-
-/// Shares one deadline projection for a service list across its consumers.
-
-@ProviderFor(serviceConnections)
-final serviceConnectionsProvider = ServiceConnectionsProvider._();
-
-/// Shares one deadline projection for a service list across its consumers.
-
-final class ServiceConnectionsProvider
-    extends
-        $FunctionalProvider<
-          Map<skir.RecordId, bool>,
-          Map<skir.RecordId, bool>,
-          Map<skir.RecordId, bool>
-        >
-    with $Provider<Map<skir.RecordId, bool>> {
-  /// Shares one deadline projection for a service list across its consumers.
-  ServiceConnectionsProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'serviceConnectionsProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$serviceConnectionsHash();
-
-  @$internal
-  @override
-  $ProviderElement<Map<skir.RecordId, bool>> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  Map<skir.RecordId, bool> create(Ref ref) {
-    return serviceConnections(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(Map<skir.RecordId, bool> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<Map<skir.RecordId, bool>>(value),
-    );
-  }
-}
-
-String _$serviceConnectionsHash() =>
-    r'81da9210c2a948b562f83b91902888be9edf7f2d';
-
-/// Resolves host connectivity through its linked service heartbeat.
-///
-/// Host runtime status describes reconciliation, not transport reachability.
-/// This provider therefore follows [TopologyHost.serviceId] into the shared
-/// service deadline projection and returns false when either record is absent.
-
-@ProviderFor(hostConnected)
-final hostConnectedProvider = HostConnectedFamily._();
-
-/// Resolves host connectivity through its linked service heartbeat.
-///
-/// Host runtime status describes reconciliation, not transport reachability.
-/// This provider therefore follows [TopologyHost.serviceId] into the shared
-/// service deadline projection and returns false when either record is absent.
-
-final class HostConnectedProvider extends $FunctionalProvider<bool, bool, bool>
-    with $Provider<bool> {
-  /// Resolves host connectivity through its linked service heartbeat.
-  ///
-  /// Host runtime status describes reconciliation, not transport reachability.
-  /// This provider therefore follows [TopologyHost.serviceId] into the shared
-  /// service deadline projection and returns false when either record is absent.
-  HostConnectedProvider._({
-    required HostConnectedFamily super.from,
-    required skir.RecordId super.argument,
-  }) : super(
-         retry: null,
-         name: r'hostConnectedProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
-
-  @override
-  String debugGetCreateSourceHash() => _$hostConnectedHash();
-
-  @override
-  String toString() {
-    return r'hostConnectedProvider'
-        ''
-        '($argument)';
-  }
-
-  @$internal
-  @override
-  $ProviderElement<bool> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  bool create(Ref ref) {
-    final argument = this.argument as skir.RecordId;
-    return hostConnected(ref, argument);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(bool value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<bool>(value),
-    );
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return other is HostConnectedProvider && other.argument == argument;
-  }
-
-  @override
-  int get hashCode {
-    return argument.hashCode;
-  }
-}
-
-String _$hostConnectedHash() => r'0de38fbae6e101f0292ab3e1283be5a8fad89257';
-
-/// Resolves host connectivity through its linked service heartbeat.
-///
-/// Host runtime status describes reconciliation, not transport reachability.
-/// This provider therefore follows [TopologyHost.serviceId] into the shared
-/// service deadline projection and returns false when either record is absent.
-
-final class HostConnectedFamily extends $Family
-    with $FunctionalFamilyOverride<bool, skir.RecordId> {
-  HostConnectedFamily._()
-    : super(
-        retry: null,
-        name: r'hostConnectedProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: true,
-      );
-
-  /// Resolves host connectivity through its linked service heartbeat.
-  ///
-  /// Host runtime status describes reconciliation, not transport reachability.
-  /// This provider therefore follows [TopologyHost.serviceId] into the shared
-  /// service deadline projection and returns false when either record is absent.
-
-  HostConnectedProvider call(skir.RecordId hostId) =>
-      HostConnectedProvider._(argument: hostId, from: this);
-
-  @override
-  String toString() => r'hostConnectedProvider';
-}

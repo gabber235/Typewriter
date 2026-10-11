@@ -104,9 +104,7 @@ class _TagNode extends HookConsumerWidget {
                         : child.parentIds
                               .where((id) => id != details.data.resourceId)
                               .toList();
-                    final workspace = ref.read(
-                      authoringWorkspaceProvider(scope),
-                    );
+                    final workspace = ref.read(realmEditingProvider(scope));
                     workspace
                         .edit(
                           label: "Change tag parents",

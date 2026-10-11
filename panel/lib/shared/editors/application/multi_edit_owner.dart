@@ -2,10 +2,6 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-typedef MultiInteractionCommitter = Future<void> Function(
-  List<EditorInteractionSession> interactions,
-);
-
 /// Presents several owners as one editor for multi selection editing.
 ///
 /// A read returns loading or invalid state if any owner has that state, mixed
@@ -14,12 +10,12 @@ typedef MultiInteractionCommitter = Future<void> Function(
 /// owners accept the same value. [commitInteractions] owns the persistence
 /// policy for the corresponding sessions, including whether their commits are
 /// atomic. This class observes owners but never disposes them.
-final class MultiEditOwner extends ChangeNotifier implements EditOwner {
+final class MultiEditOwner extends ChangeNotifier
+    implements EditOwner, EditingControlOwner {
   MultiEditOwner({
     required List<EditOwner> owners,
     required this.rootType,
     required this.catalog,
-    required this.commitInteractions,
   }) : owners = List.unmodifiable(owners) {
     if (this.owners.isEmpty) {
       throw ArgumentError.value(owners, "owners", "Must not be empty");
@@ -37,7 +33,11 @@ final class MultiEditOwner extends ChangeNotifier implements EditOwner {
     }
   }
   final List<EditOwner> owners;
-  final MultiInteractionCommitter commitInteractions;
+  @override
+  EditControl bindControl() => EditSelectionControl([
+    for (final owner in owners)
+      if (owner case final EditingControlOwner editing) editing.bindControl(),
+  ]);
   @override
   final skir.TypeUse rootType;
   @override
@@ -66,17 +66,12 @@ final class MultiEditOwner extends ChangeNotifier implements EditOwner {
     skir.DataValue value, {
     EditorStructuralMutation? structuralMutation,
   }) {
-    final validation = validate(path, value);
-    if (validation is! AppliedEditorMutation) return validation;
-    return owners
-        .map(
-          (owner) => owner.update(
-            path,
-            validation.value,
-            structuralMutation: structuralMutation,
-          ),
-        )
-        .aggregateEditorMutationsFor(path);
+    return const SelectionEditingCoordinator().update(
+      owners,
+      path,
+      value,
+      structuralMutation: structuralMutation,
+    );
   }
 
   @override
@@ -94,7 +89,6 @@ final class MultiEditOwner extends ChangeNotifier implements EditOwner {
         owners
             .map((owner) => owner.beginInteraction(path))
             .toList(growable: false),
-        commitInteractions,
       );
   @override
   void dispose() {
@@ -106,19 +100,18 @@ final class MultiEditOwner extends ChangeNotifier implements EditOwner {
 }
 
 final class _MultiInteraction implements EditorInteractionSession {
-  _MultiInteraction(this.path, this.sessions, this.commitAll);
+  _MultiInteraction(this.path, this.sessions);
 
   @override
   final skir.ValuePath path;
   final List<EditorInteractionSession> sessions;
-  final MultiInteractionCommitter commitAll;
 
   @override
   bool get active =>
       sessions.isNotEmpty && sessions.every((session) => session.active);
 
   @override
-  Future<void> commit() => commitAll(sessions);
+  Future<void> commit() => sessions.commitSelection();
 
   @override
   void cancel() {
@@ -131,8 +124,7 @@ final class _MultiInteraction implements EditorInteractionSession {
 extension IndependentInteractionCommit on Iterable<EditorInteractionSession> {
   /// Commits unrelated interactions without claiming atomic persistence.
   ///
-  /// Use only for local editors and isolated examples. Resource backed
-  /// selection editing must use [AtomicResourceInteractionCommit].
+  /// Use only for local editors and isolated examples. Resource selection editing uses [SelectionInteractionCommit].
   Future<void> commitIndependently() async {
     await Future.wait(map((session) => session.commit()));
   }

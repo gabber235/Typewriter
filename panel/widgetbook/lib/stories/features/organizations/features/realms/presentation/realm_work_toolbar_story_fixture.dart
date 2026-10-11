@@ -42,7 +42,11 @@ final class RealmWorkToolbarStoryFixture {
         scheduleMicrotask(() => transport.confirm(index, accepted));
       },
     );
-    workspace = AuthoringWorkspace(transport: transport, initial: document);
+    workspace = RealmEditing(
+      persistence: transport.persistence,
+      submissions: submissions,
+      initial: document,
+    );
     repository = RealmWorkToolbarStoryRepository(this);
     if (scenario == RealmWorkToolbarScenario.pendingDraft) {
       workspace.edit(
@@ -64,7 +68,8 @@ final class RealmWorkToolbarStoryFixture {
   final page = skir.ResourceId(value: "page:welcome");
   final otherPage = skir.ResourceId(value: "page:market");
   late final ScriptedAuthoringTransport transport;
-  late final AuthoringWorkspace workspace;
+  final submissions = ScopedWorkSession();
+  late final RealmEditing workspace;
   late final RealmWorkToolbarStoryRepository repository;
   skir.ValueLocation get nameLocation => skir.ValueLocation(
     resource: page,
@@ -81,6 +86,7 @@ final class RealmWorkToolbarStoryFixture {
 
   void dispose() {
     workspace.dispose();
+    submissions.dispose();
     transport.dispose();
     unawaited(repository.close());
   }

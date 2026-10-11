@@ -8,7 +8,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 abstract interface class PortableMultiInspectionSurface {
   Object get id;
 
-  EditorTarget get target;
+  ValueEditingRegistration get target;
 
   skir.TypeUse get rootType;
 
@@ -19,7 +19,6 @@ abstract interface class PortableMultiInspectionSurface {
   PortablePresentationHost buildHost(
     List<PortableMultiInspectionSurface> members,
     EditOwner combinedOwner,
-    Future<void> Function() commit,
   );
 }
 
@@ -36,7 +35,7 @@ abstract class InspectableSelectable<I extends SelectableIdentifier>
       const [];
 
   /// Builds the graph and optional resource header for this resource.
-  InspectionContent buildInspection(EditorOwnerScope owners);
+  InspectionContent buildInspection(InspectionBindingScope owners);
 }
 
 /// The presentation graph and optional header produced for one inspection.

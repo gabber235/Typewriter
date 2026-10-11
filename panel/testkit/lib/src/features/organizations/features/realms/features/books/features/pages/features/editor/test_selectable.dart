@@ -70,7 +70,7 @@ class TestSelectableIdentifier extends SelectableIdentifier {
       validation: _validateTestValue,
     );
     final commands = ref.read(testSelectableDataProvider.notifier);
-    final resource = FakeEditableResource(
+    final resource = ScriptedValuePersistence(
       key: EditorResourceKey(scope: null, identity: resourceId),
       current: snapshot,
       commit: (commit) async {
@@ -106,8 +106,7 @@ class TestSelectableIdentifier extends SelectableIdentifier {
   String toString() => "TestSelectableIdentifier(id: $id)";
 }
 
-class TestSelectable extends InspectableSelectable<TestSelectableIdentifier>
-    implements EditorTarget {
+class TestSelectable extends InspectableSelectable<TestSelectableIdentifier> {
   TestSelectable({
     required this.resource,
     required this.id,
@@ -116,8 +115,7 @@ class TestSelectable extends InspectableSelectable<TestSelectableIdentifier>
     required this.onDelete,
   });
 
-  @override
-  final EditableResource resource;
+  final ValueEditPersistence resource;
 
   @override
   final TestSelectableIdentifier id;
@@ -126,7 +124,6 @@ class TestSelectable extends InspectableSelectable<TestSelectableIdentifier>
   final Color color;
   final VoidCallback? onDelete;
 
-  @override
   late final EditorDocument document = EditorDocument(
     rootType: skir.TypeUse.wrapNamed(_testSelectableUse),
     catalog: _testSelectableCatalog,
@@ -139,13 +136,10 @@ class TestSelectable extends InspectableSelectable<TestSelectableIdentifier>
     if (onDelete != null) DeleteSelectionCapability(onDelete: onDelete!),
   ];
 
-  @override
   SelectableIdentifier get targetId => id;
 
-  @override
   String get label => name;
 
-  @override
   EditorCommitPolicy get commitPolicy => EditorCommitPolicy.autosaveChanges;
 
   @override
@@ -164,11 +158,18 @@ class TestSelectable extends InspectableSelectable<TestSelectableIdentifier>
       (data.authoredField("name")?.authoredString ?? id.id).formatted;
 
   @override
-  InspectionContent buildInspection(EditorOwnerScope owners) {
-    final owner = owners.editor(this);
+  InspectionContent buildInspection(InspectionBindingScope owners) {
+    final owner = owners.editor(
+      ValueEditingRegistration(
+        targetId: id,
+        label: name,
+        persistence: resource,
+        snapshot: snapshot,
+      ),
+    );
     final title = skir.ExpressionBindingId(value: "testSelectable.name");
     return InspectionContent(
-      host: EditorSourcePresentationHost(
+      host: BoundPresentationHost(
         catalog: _testSelectableCatalog,
         root: () => title.readExpression().resourceHeading(
           id: "testSelectable",
@@ -176,7 +177,7 @@ class TestSelectable extends InspectableSelectable<TestSelectableIdentifier>
           identifier: id.id.portableExpression,
         ),
         bindings: [
-          EditorSourcePresentationBinding(
+          BoundPresentationBinding(
             id: title,
             use: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
             owner: owner,
@@ -191,18 +192,14 @@ class TestSelectable extends InspectableSelectable<TestSelectableIdentifier>
     );
   }
 
-  @override
   EditorSnapshot get snapshot =>
       FakeEditorSnapshot(document, validation: validate);
 
-  @override
   List<EditorDiagnostic> validateDraft(skir.DataValue value) =>
       snapshot.validateDraft(value);
 
-  @override
   EditorValue value(skir.ValuePath path) => data.readEditorValue(path);
 
-  @override
   EditorMutationResult validate(skir.ValuePath path, skir.DataValue value) =>
       _validateTestValue(path, value);
 

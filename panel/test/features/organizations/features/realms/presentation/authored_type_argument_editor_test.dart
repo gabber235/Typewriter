@@ -214,7 +214,7 @@ void main() {
           },
           commit: (preview) async {
             committed = preview;
-            return const AuthoringEditResult.staged(AuthoringGroupId(1));
+            return const EditStageResult.staged(EditGroupId(1));
           },
           onStatus: (value) => status = value,
         ),
@@ -282,8 +282,7 @@ void main() {
               clearedLocations: const [],
             );
           },
-          commit: (_) async =>
-              const AuthoringEditResult.staged(AuthoringGroupId(1)),
+          commit: (_) async => const EditStageResult.staged(EditGroupId(1)),
         ),
       ),
     );

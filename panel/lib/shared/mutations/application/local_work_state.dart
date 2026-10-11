@@ -55,6 +55,7 @@ abstract class WorkEntryState with _$WorkEntryState {
     @Default(false) bool canSave,
     @Default(false) bool canDiscard,
     @Default(false) bool canRetry,
+    @Default(false) bool canReview,
     @Default(false) bool blocksNavigation,
     @Default(false) bool saving,
     @Default(false) bool needsAttention,
@@ -67,6 +68,7 @@ abstract class WorkEntryState with _$WorkEntryState {
 @freezed
 abstract class WorkDriverSnapshot with _$WorkDriverSnapshot {
   const factory WorkDriverSnapshot({
+    @Default({}) Map<EditorResourceKey, LocalEditorValue> editorValues,
     @Default([]) List<WorkEntryState> entries,
   }) = _WorkDriverSnapshot;
 }

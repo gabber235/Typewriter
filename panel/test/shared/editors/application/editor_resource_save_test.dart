@@ -26,20 +26,20 @@ EditorSnapshot _snapshot({String title = "Original", int revision = 1}) =>
       ),
       validation: acceptTestEditorMutation,
     );
-TransactionalEditorSource _draft(
+ValueEditing _draft(
   ScopedWorkSession workspace,
-  EditableResource resource,
+  ValueEditPersistence resource,
 ) {
-  final source = workspace.editor(
-    ResourceEditorTarget(
-      targetId: resource.key.identity,
-      label: "Resource",
-      resource: resource,
-      snapshot: _snapshot(),
-      commitPolicy: EditorCommitPolicy.applyResource,
-    ),
-  ) as TransactionalEditorSource;
-  workspace.retain(resource.key);
+  final source = ValueEditingRegistration(
+    targetId: resource.key.identity,
+    label: "Resource",
+    persistence: resource,
+    snapshot: _snapshot(),
+    commitPolicy: EditorCommitPolicy.applyResource,
+  ).acquire(workspace);
+  addTearDown(
+    workspace.lease(WorkDriverId(domain: "value", scope: resource.key)).release,
+  );
   source.update(_title, skir.DataValue.wrapStringValue("Draft"));
   return source;
 }
@@ -51,7 +51,7 @@ void main() {
       final workspace = ScopedWorkSession();
       addTearDown(workspace.dispose);
       var reads = 0;
-      final resource = FakeEditableResource(
+      final resource = ScriptedValuePersistence(
         key: _key,
         current: _snapshot(),
         load: () async {
@@ -69,11 +69,11 @@ void main() {
       );
       final source = _draft(workspace, resource);
 
-      workspace.release(_key);
+      workspace.lease(WorkDriverId(domain: "value", scope: _key)).release();
       final saving = source.flush();
       await pumpEventQueue();
       expect(reads, 0);
-      expect(workspace.resources, contains(_key));
+      expect(source.workspace.closed, isFalse);
       predecessor.release();
 
       expect(await saving, isA<MutationSuccess>());
@@ -85,7 +85,7 @@ void main() {
     final workspace = ScopedWorkSession();
     addTearDown(workspace.dispose);
     var sends = 0;
-    final resource = FakeEditableResource(
+    final resource = ScriptedValuePersistence(
       key: _key,
       current: _snapshot(title: "Remote", revision: 2),
       commit: (_) async {
@@ -110,7 +110,7 @@ void main() {
       final workspace = ScopedWorkSession();
       addTearDown(workspace.dispose);
       var reads = 0;
-      final resource = FakeEditableResource(
+      final resource = ScriptedValuePersistence(
         key: _key,
         current: _snapshot(),
         load: () async {
@@ -132,7 +132,7 @@ void main() {
   test("confirmed deletion blocks submission", () async {
     final workspace = ScopedWorkSession();
     addTearDown(workspace.dispose);
-    final resource = FakeEditableResource(
+    final resource = ScriptedValuePersistence(
       key: _key,
       current: null,
       commit: (_) async => throw StateError("Unexpected send"),
@@ -149,7 +149,7 @@ void main() {
     final workspace = ScopedWorkSession();
     final ready = Completer<EditorSnapshot?>();
     final started = Completer<void>();
-    final resource = FakeEditableResource(
+    final resource = ScriptedValuePersistence(
       key: _key,
       current: _snapshot(),
       load: () {
@@ -200,7 +200,7 @@ void main() {
     final ready = Completer<EditorSnapshot?>();
     var reads = 0;
     var sends = 0;
-    final resource = FakeEditableResource(
+    final resource = ScriptedValuePersistence(
       key: _key,
       current: _snapshot(),
       load: () {
@@ -225,7 +225,7 @@ void main() {
   });
 }
 
-final class _UncertainResource extends FakeEditableResource {
+final class _UncertainResource extends ScriptedValuePersistence {
   _UncertainResource()
     : super(
         key: _key,
@@ -237,41 +237,32 @@ final class _UncertainResource extends FakeEditableResource {
   final requests = <EditorCommit>[];
 
   @override
-  Future<EditorSnapshot?> refresh() async {
+  Future<EditorSnapshot?> refreshSnapshot() async {
     reads++;
     return current;
   }
 
   @override
-  MutationIntent prepare(
+  PreparedCommit<TypedMutationResult> prepareValue(
     EditorSnapshot snapshot,
     EditorCommit changes,
-    void Function(TypedMutationResult) accept,
-  ) => IndependentMutation(
-    PendingCommit(
-      resources: reservations,
-      prepare: () => PreparedCommit<EditorCommit>(
-        id: Object(),
-        label: "Uncertain resource",
-        resources: reservations,
-        replay: SubmissionReplay.identicalRequest,
-        send: () async {
-          requests.add(changes);
-          if (++sends == 1) {
-            return SubmissionResult.uncertain(
-              message: "Lost response",
-              cause: StateError("Lost response"),
-              stackTrace: StackTrace.current,
-            );
-          }
-          return SubmissionResult.confirmed(changes);
-        },
-        integrate: (result) async {
-          if (result case SubmissionConfirmed(:final value)) {
-            accept(MutationSuccess(revision: 2, value: value.rootValue));
-          }
-        },
-      ),
-    ),
+  ) => PreparedCommit(
+    id: Object(),
+    label: "Uncertain resource",
+    resources: reservations,
+    replay: SubmissionReplay.identicalRequest,
+    send: () async {
+      requests.add(changes);
+      if (++sends == 1) {
+        return SubmissionResult.uncertain(
+          message: "Lost response",
+          cause: StateError("Lost response"),
+          stackTrace: StackTrace.current,
+        );
+      }
+      return SubmissionResult.confirmed(
+        MutationSuccess(revision: 2, value: changes.rootValue),
+      );
+    },
   );
 }

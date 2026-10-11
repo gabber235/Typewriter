@@ -182,7 +182,7 @@ class _Harness {
 
 InspectionContent _buildInspection(
   _Harness harness,
-  EditorOwnerRegistry owners,
+  InspectionBindings owners,
 ) {
   final content = harness.selectable.buildInspection(owners);
   addTearDown(() {
@@ -194,25 +194,14 @@ InspectionContent _buildInspection(
   return content;
 }
 
-EditorSource _identitySource(EditorOwnerRegistry owners) => owners
-    .workspace
-    .resources
-    .values
-    .singleWhere(
-      (resource) =>
-          resource.source.commitPolicy == EditorCommitPolicy.autosaveChanges,
-    )
-    .source;
-
-EditorSource _configurationSource(EditorOwnerRegistry owners) => owners
-    .workspace
-    .resources
-    .values
-    .singleWhere(
-      (resource) =>
-          resource.source.commitPolicy == EditorCommitPolicy.applyResource,
-    )
-    .source;
+ValueEditing _identitySource(InspectionBindings owners) =>
+    owners.labels.keys.whereType<ValueEditing>().singleWhere(
+      (source) => source.commitPolicy == EditorCommitPolicy.autosaveChanges,
+    );
+ValueEditing _configurationSource(InspectionBindings owners) =>
+    owners.labels.keys.whereType<ValueEditing>().singleWhere(
+      (source) => source.commitPolicy == EditorCommitPolicy.applyResource,
+    );
 
 class _SeededServices extends CanonicalOrganizationServices {
   _SeededServices(this.services);

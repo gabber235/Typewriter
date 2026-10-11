@@ -107,7 +107,7 @@ class TagGraph extends HookConsumerWidget {
           onViewportCenterChanged: onViewportCenterChanged,
           onElementsMoved: (changes) {
             ref
-                .readAuthoringWorkspace()
+                .readRealmEditing()
                 .edit(
                   label: "Move tags",
                   from: from,
@@ -139,7 +139,7 @@ class TagGraph extends HookConsumerWidget {
           },
           onElementsResized: (changes) {
             ref
-                .readAuthoringWorkspace()
+                .readRealmEditing()
                 .edit(
                   label: "Resize tags",
                   from: from,

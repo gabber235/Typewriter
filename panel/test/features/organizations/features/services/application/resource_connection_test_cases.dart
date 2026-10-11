@@ -8,7 +8,7 @@ void _testResourceConnections() {
       addTearDown(harness.dispose);
       final workspace = harness.container.read(localWorkControllerProvider);
       final repositories = harness.container.read(resourceRepositoriesProvider);
-      final owners = EditorOwnerRegistry(workspace: workspace);
+      final owners = InspectionBindings(workspace: workspace);
       addTearDown(owners.dispose);
 
       _buildInspection(harness, owners);
@@ -44,9 +44,8 @@ void _testResourceConnections() {
             ),
           ),
         );
-      (harness.container.read(
-        natsProvider.notifier,
-      ) as FakeNats).connection = replacement;
+      (harness.container.read(natsProvider.notifier) as FakeNats).connection =
+          replacement;
       await harness.container.pump();
 
       expect(

@@ -15,7 +15,6 @@ final class AuthoredResourceEditor extends ConsumerStatefulWidget {
     this.watchSearch,
     this.reload,
     this.onStatus,
-    this.commit,
     this.enabled = true,
     this.fillAvailableSpace = false,
     super.key,
@@ -23,7 +22,7 @@ final class AuthoredResourceEditor extends ConsumerStatefulWidget {
 
   final skir.ResourceId resource;
   final AuthoringDocument document;
-  final AuthoringBinding? edit;
+  final RealmEditingBinding? edit;
   final skir.PresentationRole role;
   final skir.EvaluationBudget budget;
   final ValueChanged<skir.ResourceId>? openResource;
@@ -42,7 +41,6 @@ final class AuthoredResourceEditor extends ConsumerStatefulWidget {
   watchSearch;
   final Future<void> Function()? reload;
   final ValueChanged<String>? onStatus;
-  final Future<void> Function()? commit;
   final bool enabled;
   final bool fillAvailableSpace;
 
@@ -131,7 +129,6 @@ final class _AuthoredResourceEditorState
       invokeCommand: widget.invokeCommand,
       watchSearch: widget.watchSearch,
       reload: widget.reload,
-      commit: widget.commit,
       openResource: widget.openResource,
       prepareValue: widget.prepareValue,
     );
@@ -197,7 +194,6 @@ final class _AuthoredResourceEditorState
             enabled: host.enabled,
             readOnly: host.readOnly,
             watchSearch: capabilities.watchSearch,
-            commit: capabilities.commit,
             openResource: capabilities.openResource,
             reportStatus: reportStatus,
             catalog: document.catalog,

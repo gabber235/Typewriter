@@ -102,7 +102,7 @@ final class _SearchInputStoryState extends State<_SearchInputStory> {
 
   skir.DataValue _value = skir.DataValue.unfilled;
 
-  late final _host = EditorSourcePresentationHost(
+  late final _host = BoundPresentationHost(
     catalog: skir.EditorCatalogWireSnapshot.defaultInstance
         .asTrustedLocalCatalog(),
     root: () => skir.PresentationNode(
@@ -112,7 +112,7 @@ final class _SearchInputStoryState extends State<_SearchInputStory> {
       header: null,
     ),
     bindings: [
-      EditorSourcePresentationBinding(
+      BoundPresentationBinding(
         id: _target,
         use: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
         read: (_) => _value,

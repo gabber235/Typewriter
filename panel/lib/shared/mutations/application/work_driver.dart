@@ -63,3 +63,29 @@ final class OwnedWorkDriver {
     driver.dispose();
   }
 }
+
+/// Optional view factory supplied by a feature registration.
+abstract interface class WorkReviewProvider {
+  WorkReviewContent? buildReview(WorkEntryId entry);
+}
+
+/// A disposable view. Its driver remains owned by the session.
+final class WorkReviewContent {
+  WorkReviewContent({required this.body, this.dispose});
+  final Widget body;
+  final VoidCallback? dispose;
+}
+
+/// Keeps the same driver alive while a retained work view is open.
+final class WorkReviewLease {
+  WorkReviewLease(this.content, this.lease);
+  final WorkReviewContent content;
+  final WorkLease lease;
+  bool _closed = false;
+  void release() {
+    if (_closed) return;
+    _closed = true;
+    content.dispose?.call();
+    lease.release();
+  }
+}

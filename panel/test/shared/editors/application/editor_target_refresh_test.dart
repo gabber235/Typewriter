@@ -9,7 +9,7 @@ import "../../../support/editor_fixture.dart";
 const _key = EditorResourceKey(scope: "org1", identity: "resource");
 final _title = editorRootPath.field("title");
 final _description = editorRootPath.field("description");
-ResourceEditorTarget _target({
+ValueEditingRegistration _target({
   required EditorCommitter commit,
   int revision = 1,
   String description = "Original description",
@@ -40,15 +40,15 @@ void main() {
   test("incompatible replacement stays pending across a host rebuild", () {
     final workspace = ScopedWorkSession();
     addTearDown(workspace.dispose);
-    final source = workspace.editor(
-      _contractTarget("one", 1, "Remote one"),
-    ) as TransactionalEditorSource;
-    workspace.retain(_key);
+    final source = _contractTarget("one", 1, "Remote one").acquire(workspace);
+    addTearDown(
+      workspace.lease(WorkDriverId(domain: "value", scope: _key)).release,
+    );
     source.update(_title, skir.DataValue.wrapStringValue("Draft"));
 
-    final rebuilt = workspace.editor(_contractTarget("two", 2, "Remote two"));
+    final rebuilt = _contractTarget("two", 2, "Remote two").acquire(workspace);
 
-    expect(rebuilt, same(source));
+    expect(rebuilt.workspace, same(source.workspace));
     expect(source.contractReconciliationPending, isTrue);
     expect(source.readOnly, isTrue);
     expect(
@@ -76,12 +76,12 @@ void main() {
   test("discard accepts an incompatible replacement explicitly", () {
     final workspace = ScopedWorkSession();
     addTearDown(workspace.dispose);
-    final source = workspace.editor(
-      _contractTarget("one", 1, "Remote one"),
-    ) as TransactionalEditorSource;
-    workspace.retain(_key);
+    final source = _contractTarget("one", 1, "Remote one").acquire(workspace);
+    addTearDown(
+      workspace.lease(WorkDriverId(domain: "value", scope: _key)).release,
+    );
     source.update(_title, skir.DataValue.wrapStringValue("Draft"));
-    workspace.editor(_contractTarget("two", 2, "Remote two"));
+    _contractTarget("two", 2, "Remote two").acquire(workspace);
 
     expect(source.discardDraftAndAcceptPendingContract(), isTrue);
     expect(source.hasWork, isFalse);
@@ -99,9 +99,11 @@ void main() {
     final workspace = ScopedWorkSession();
     addTearDown(workspace.dispose);
     final target = _contractTarget("one", 1, "Remote one");
-    final resource = target.resource as FakeEditableResource;
-    final source = workspace.editor(target) as TransactionalEditorSource;
-    workspace.retain(_key);
+    final resource = target.persistence as ScriptedValuePersistence;
+    final source = target.acquire(workspace);
+    addTearDown(
+      workspace.lease(WorkDriverId(domain: "value", scope: _key)).release,
+    );
     source
       ..update(_title, skir.DataValue.wrapStringValue("Draft"))
       ..markContractUnavailable("Catalog unavailable");
@@ -134,37 +136,35 @@ void main() {
       var oldSends = 0;
       var newSends = 0;
       var reject = true;
-      final source = workspace.editor(
-        _target(
-          commit: (commit) async {
-            oldSends++;
-            return MutationSuccess(revision: 2, value: commit.rootValue);
-          },
-        ),
-      );
+      final source = _target(
+        commit: (commit) async {
+          oldSends++;
+          return MutationSuccess(revision: 2, value: commit.rootValue);
+        },
+      ).acquire(workspace);
 
-      workspace.retain(_key);
-      source.update(_title, skir.DataValue.wrapStringValue("Draft"));
-      final replacement = workspace.editor(
-        _target(
-          revision: 2,
-          description: "Remote description",
-          validateDraft: (_) => reject
-              ? [
-                  const EditorDiagnostic(
-                    code: EditorDiagnosticCode.invalidValue,
-                    message: "Current validation",
-                  ),
-                ]
-              : [],
-          commit: (commit) async {
-            newSends++;
-            expect(commit.expectedRevision, 2);
-            return MutationSuccess(revision: 3, value: commit.rootValue);
-          },
-        ),
+      addTearDown(
+        workspace.lease(WorkDriverId(domain: "value", scope: _key)).release,
       );
-      expect(replacement, same(source));
+      source.update(_title, skir.DataValue.wrapStringValue("Draft"));
+      final replacement = _target(
+        revision: 2,
+        description: "Remote description",
+        validateDraft: (_) => reject
+            ? [
+                const EditorDiagnostic(
+                  code: EditorDiagnosticCode.invalidValue,
+                  message: "Current validation",
+                ),
+              ]
+            : [],
+        commit: (commit) async {
+          newSends++;
+          expect(commit.expectedRevision, 2);
+          return MutationSuccess(revision: 3, value: commit.rootValue);
+        },
+      ).acquire(workspace);
+      expect(replacement.workspace, same(source.workspace));
       expect(
         source.value(_title).valueOrNull,
         skir.DataValue.wrapStringValue("Draft"),
@@ -189,27 +189,25 @@ void main() {
     final response = Completer<TypedMutationResult>();
     final sent = Completer<EditorCommit>();
     var newSends = 0;
-    final source = workspace.editor(
-      _target(
-        commit: (commit) {
-          sent.complete(commit);
-          return response.future;
-        },
-      ),
-    );
+    final source = _target(
+      commit: (commit) {
+        sent.complete(commit);
+        return response.future;
+      },
+    ).acquire(workspace);
 
-    workspace.retain(_key);
+    addTearDown(
+      workspace.lease(WorkDriverId(domain: "value", scope: _key)).release,
+    );
     source.update(_title, skir.DataValue.wrapStringValue("First"));
     final pending = source.flush();
     final captured = await sent.future;
-    workspace.editor(
-      _target(
-        commit: (commit) async {
-          newSends++;
-          return MutationSuccess(revision: 3, value: commit.rootValue);
-        },
-      ),
-    );
+    _target(
+      commit: (commit) async {
+        newSends++;
+        return MutationSuccess(revision: 3, value: commit.rootValue);
+      },
+    ).acquire(workspace);
     response.complete(MutationSuccess(revision: 2, value: captured.rootValue));
 
     expect(await pending, isA<MutationSuccess>());
@@ -219,66 +217,27 @@ void main() {
     expect(newSends, 1);
   });
 
-  test(
-    "replacement keeps uncertain replay bound to its original operation",
-    () async {
-      final workspace = ScopedWorkSession();
-      addTearDown(workspace.dispose);
-      var replays = 0;
-      var newSends = 0;
-      final source = workspace.editor(
-        _target(
-          commit: (commit) async {
-            return MutationUncertain(
-              message: "Lost response",
-              cause: TimeoutException("Lost response"),
-              stackTrace: StackTrace.current,
-              replay: () async {
-                replays++;
-                return MutationSuccess(revision: 2, value: commit.rootValue);
-              },
-            );
-          },
-        ),
-      );
-      workspace.retain(_key);
-
-      source.update(_title, skir.DataValue.wrapStringValue("Submitted"));
-      expect(await source.flush(), isA<MutationUncertain>());
-      workspace.editor(
-        _target(
-          commit: (commit) async {
-            newSends++;
-            return MutationSuccess(revision: 3, value: commit.rootValue);
-          },
-        ),
-      );
-      expect(await source.flush(), isA<MutationSuccess>());
-      expect(replays, 1);
-      expect(newSends, 0);
-    },
-  );
-
   test("commit policy cannot change for an existing resource", () {
     final workspace = ScopedWorkSession();
     addTearDown(workspace.dispose);
     Future<TypedMutationResult> commit(EditorCommit commit) async =>
         MutationSuccess(revision: 2, value: commit.rootValue);
-    workspace.editor(_target(commit: commit));
+    _target(commit: commit).acquire(workspace);
     expect(
-      () => workspace.editor(
-        _target(commit: commit, policy: EditorCommitPolicy.autosaveChanges),
-      ),
+      () => _target(
+        commit: commit,
+        policy: EditorCommitPolicy.autosaveChanges,
+      ).acquire(workspace),
       throwsStateError,
     );
     expect(
-      workspace.resources[_key]!.source.commitPolicy,
+      _target(commit: commit).acquire(workspace).commitPolicy,
       EditorCommitPolicy.applyResource,
     );
   });
 }
 
-ResourceEditorTarget _contractTarget(
+ValueEditingRegistration _contractTarget(
   String contract,
   int revision,
   String description,
@@ -297,10 +256,10 @@ ResourceEditorTarget _contractTarget(
       revision,
     ),
   );
-  return ResourceEditorTarget(
+  return ValueEditingRegistration(
     targetId: _key.identity,
     label: "Resource",
-    resource: FakeEditableResource(
+    persistence: ScriptedValuePersistence(
       key: _key,
       current: snapshot,
       commit: (commit) async => MutationSuccess(

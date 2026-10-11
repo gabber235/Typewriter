@@ -91,7 +91,7 @@ class _DeleteSelectable
   ];
 
   @override
-  InspectionContent buildInspection(EditorOwnerScope owners) =>
+  InspectionContent buildInspection(InspectionBindingScope owners) =>
       InspectionContent(body: const SizedBox.shrink());
 
   @override

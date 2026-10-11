@@ -40,10 +40,7 @@ void main() {
         organizationId: organization,
         realmId: realm,
       );
-      final route = container.listen(
-        authoringWorkspaceProvider(first),
-        (_, _) {},
-      );
+      final route = container.listen(realmEditingProvider(first), (_, _) {});
       final workspace = route.read();
       final staged = workspace.edit(
         label: "Pending rename",
@@ -56,7 +53,7 @@ void main() {
           ),
           skir.DataValue.wrapStringValue("Draft welcome"),
         ),
-      ) as AuthoringEditStaged;
+      ) as EditStaged;
       route.close();
       await tester.pump();
       expect(
@@ -79,7 +76,7 @@ void main() {
         realmId: realm,
       );
       final nextRoute = container.listen(
-        authoringWorkspaceProvider(second),
+        realmEditingProvider(second),
         (_, _) {},
       );
       final next = nextRoute.read();
@@ -91,7 +88,7 @@ void main() {
       expect(() => workspace.attach(page), throwsStateError);
       await workspace.save(staged.group);
       await workspace.refreshConfirmed();
-      await tester.pump(AuthoringWorkspace.debounce);
+      await tester.pump(const Duration(milliseconds: 250));
       expect(transport.requests, isEmpty);
       expect(transport.fetches, 0);
       expect(container.read(localWorkProvider).entries, isEmpty);

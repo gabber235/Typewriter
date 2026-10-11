@@ -104,7 +104,7 @@ void main() {
       )..triggerQuery();
       addTearDown(controller.dispose);
       await pumpEventQueue();
-      final workspace = container.read(authoringWorkspaceProvider(scope));
+      final workspace = container.read(realmEditingProvider(scope));
       final binding = workspace.attach(
         id,
         policy: EditorCommitPolicy.applyResource,
@@ -148,7 +148,7 @@ void main() {
 
 ({
   ProviderContainer container,
-  ProviderSubscription<AuthoringWorkspace> subscription,
+  ProviderSubscription<RealmEditing> subscription,
   List<skir.SearchAuthoringRequest> requests,
   SourceController controller,
 })
@@ -193,7 +193,7 @@ _fixture() {
     realmId: realm,
   );
   final subscription = container.listen(
-    authoringWorkspaceProvider(
+    realmEditingProvider(
       AuthoringScope(organizationId: organization, realmId: realm),
     ),
     (_, _) {},

@@ -31,8 +31,9 @@ void main() {
           ),
         },
       );
-      final workspace = AuthoringWorkspace(
-        transport: _Transport(document),
+      final workspace = RealmEditing(
+        persistence: _Transport(document).persistence,
+        submissions: _workSession(),
         initial: document,
       );
       addTearDown(workspace.dispose);
@@ -64,10 +65,10 @@ void main() {
         ),
       ];
       await tester.pumpTestApp(
-        child: Scaffold(
-          body: RealmWorkToolbar(workspace: workspace, scope: _workScope),
-        ),
+        child: Scaffold(body: RealmWorkToolbar(scope: _workScope)),
         overrides: [
+          confirmedAuthoringDocumentProvider(_workScope)
+              .overrideWith((ref) => AsyncData(document)),
           localWorkScopeProvider.overrideWithValue(
             LocalWorkScope(
               userId: "fixture",
@@ -174,20 +175,24 @@ void main() {
   });
 
   test("graph work survives route release and closes after discard", () async {
-    final workspace = AuthoringWorkspace(
-      transport: _Transport(_document()),
+    final workspace = RealmEditing(
+      persistence: _Transport(_document()).persistence,
+      submissions: _workSession(),
       initial: _document(),
     );
     final work = ScopedWorkSession();
     addTearDown(work.dispose);
-    final driver = AuthoringWorkDriver(_workScope, workspace);
+    final driver = EditingWorkDriver(
+      id: WorkDriverId(domain: "authoring", scope: _workScope),
+      workspace: workspace.workspace,
+    );
     work.register(driver);
     final lease = work.lease(driver.id);
     final staged = workspace.edit(
       label: "Rename",
       policy: EditorCommitPolicy.applyResource,
       apply: (edit) => edit.set(_name, _text("Retained")),
-    ) as AuthoringEditStaged;
+    ) as EditStaged;
     lease.release();
     await Future<void>.delayed(Duration.zero);
     expect(work.state.entries.values.single.label, "Rename");
@@ -200,13 +205,17 @@ void main() {
   });
 
   test("preparation is visible before any graph operation exists", () async {
-    final workspace = AuthoringWorkspace(
-      transport: _Transport(_document()),
+    final workspace = RealmEditing(
+      persistence: _Transport(_document()).persistence,
+      submissions: _workSession(),
       initial: _document(),
     );
     final work = ScopedWorkSession();
     addTearDown(work.dispose);
-    final driver = AuthoringWorkDriver(_workScope, workspace);
+    final driver = EditingWorkDriver(
+      id: WorkDriverId(domain: "authoring", scope: _workScope),
+      workspace: workspace.workspace,
+    );
     work.register(driver);
     final lease = work.lease(driver.id);
     final gate = Completer<void>();
@@ -224,7 +233,7 @@ void main() {
     lease.release();
     await Future<void>.delayed(Duration.zero);
     gate.complete();
-    expect(await preparing, isA<AuthoringEditStaged>());
+    expect(await preparing, isA<EditStaged>());
     expect(work.state.entries.values.single.label, "Prepare rename");
     expect(_read(workspace.document, _name), _text("Prepared"));
   });
@@ -232,13 +241,17 @@ void main() {
   test(
     "publishing saved content leaves a pending rename and its work intact",
     () async {
-      final workspace = AuthoringWorkspace(
-        transport: _Transport(_document()),
+      final workspace = RealmEditing(
+        persistence: _Transport(_document()).persistence,
+        submissions: _workSession(),
         initial: _document(),
       );
       final work = ScopedWorkSession();
       addTearDown(work.dispose);
-      final graph = AuthoringWorkDriver(_workScope, workspace);
+      final graph = EditingWorkDriver(
+        id: WorkDriverId(domain: "authoring", scope: _workScope),
+        workspace: workspace.workspace,
+      );
       work.register(graph);
       final repository = _WorkPublicationRepository(
         () => _read(workspace.state.confirmed!, _name),
@@ -297,8 +310,9 @@ void main() {
 
   test("two views share changes and detach retains their work", () {
     final transport = _Transport(_document());
-    final workspace = AuthoringWorkspace(
-      transport: transport,
+    final workspace = RealmEditing(
+      persistence: transport.persistence,
+      submissions: _workSession(),
       initial: transport.current,
     );
     addTearDown(workspace.dispose);
@@ -332,8 +346,9 @@ void main() {
     "independent placement save excludes pending name and survives discard",
     () async {
       final transport = _Transport(_document());
-      final workspace = AuthoringWorkspace(
-        transport: transport,
+      final workspace = RealmEditing(
+        persistence: transport.persistence,
+        submissions: _workSession(),
         initial: transport.current,
       );
       addTearDown(workspace.dispose);
@@ -350,7 +365,7 @@ void main() {
         label: "Move",
         policy: EditorCommitPolicy.applyResource,
         apply: (edit) => edit.set(_position, _text("50")),
-      ) as AuthoringEditStaged;
+      ) as EditStaged;
       final saving = workspace.save(moved.group);
       await Future<void>.delayed(Duration.zero);
       expect(transport.requests, hasLength(1));
@@ -382,8 +397,9 @@ void main() {
     "overlapping change waits without applying manual predecessor",
     () async {
       final transport = _Transport(_document());
-      final workspace = AuthoringWorkspace(
-        transport: transport,
+      final workspace = RealmEditing(
+        persistence: transport.persistence,
+        submissions: _workSession(),
         initial: transport.current,
       );
       addTearDown(workspace.dispose);
@@ -400,17 +416,17 @@ void main() {
         label: "Rename again",
         policy: EditorCommitPolicy.applyResource,
         apply: (edit) => edit.set(_name, _text("Next")),
-      ) as AuthoringEditStaged;
+      ) as EditStaged;
       expect(
         workspace.state.groups[second.group]!.phase,
-        isA<AuthoringGroupAwaitingDependency>(),
+        isA<EditGroupAwaitingDependency>(),
       );
       await workspace.save(second.group);
       expect(transport.requests, isEmpty);
       form.discard();
       expect(
         workspace.state.groups[second.group]!.phase,
-        isA<AuthoringGroupConflict>(),
+        isA<EditGroupConflict>(),
       );
       expect(_read(workspace.document, _name), _text("Next"));
     },
@@ -418,8 +434,9 @@ void main() {
 
   test("failed primitive rejects the whole operation", () {
     final transport = _Transport(_document());
-    final workspace = AuthoringWorkspace(
-      transport: transport,
+    final workspace = RealmEditing(
+      persistence: transport.persistence,
+      submissions: _workSession(),
       initial: transport.current,
     );
     addTearDown(workspace.dispose);
@@ -437,15 +454,16 @@ void main() {
           );
       },
     );
-    expect(result, isA<AuthoringEditRejected>());
+    expect(result, isA<EditStageRejected>());
     expect(workspace.state.groups, isEmpty);
     expect(_read(workspace.document, _name), _text("Original"));
   });
 
   test("editing while saving retains only the later operation", () async {
     final transport = _Transport(_document());
-    final workspace = AuthoringWorkspace(
-      transport: transport,
+    final workspace = RealmEditing(
+      persistence: transport.persistence,
+      submissions: _workSession(),
       initial: transport.current,
     );
     addTearDown(workspace.dispose);
@@ -477,8 +495,9 @@ void main() {
 
   test("uncertain sends retain their frozen work and never replay", () async {
     final transport = _Transport(_document());
-    final workspace = AuthoringWorkspace(
-      transport: transport,
+    final workspace = RealmEditing(
+      persistence: transport.persistence,
+      submissions: _workSession(),
       initial: transport.current,
     );
     addTearDown(workspace.dispose);
@@ -495,7 +514,7 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     transport.reply.completeError(StateError("Connection lost"));
     await saving;
-    expect(form.phase, isA<AuthoringGroupUncertain>());
+    expect(form.phase, isA<EditGroupUncertain>());
     expect(form.discard(), isFalse);
     await form.save();
     expect(transport.requests, hasLength(1));
@@ -506,8 +525,9 @@ void main() {
       () async {
         final transport = _Transport(_document())
           ..refreshFailure = StateError("Refresh unavailable");
-        final workspace = AuthoringWorkspace(
-          transport: transport,
+        final workspace = RealmEditing(
+          persistence: transport.persistence,
+          submissions: _workSession(),
           initial: transport.current,
         );
         addTearDown(workspace.dispose);
@@ -537,13 +557,13 @@ void main() {
         }
         await saving;
         final phase = binding.phase;
-        expect(binding.canDiscard, isTrue);
+        expect(binding.control.state.canDiscard, isTrue);
         expect(binding.discard(), isTrue);
         expect(binding.phase, phase);
         expect(binding.hasSubmittedWork, isTrue);
         expect(_read(binding.document, _name), _text("First"));
         expect(workspace.state.groups[binding.editingGroup]!.operationCount, 1);
-        expect(binding.canDiscard, isFalse);
+        expect(binding.control.state.canDiscard, isFalse);
         expect(binding.discard(), isFalse);
         await binding.save();
         expect(transport.requests, hasLength(1));
@@ -553,8 +573,9 @@ void main() {
 
   test("display reads do not enroll facts or mutate an immutable revision", () {
     final transport = _Transport(_document());
-    final workspace = AuthoringWorkspace(
-      transport: transport,
+    final workspace = RealmEditing(
+      persistence: transport.persistence,
+      submissions: _workSession(),
       initial: transport.current,
     );
     addTearDown(workspace.dispose);
@@ -584,8 +605,9 @@ void main() {
   });
 
   test("a failed operation with no intents is rejected", () {
-    final workspace = AuthoringWorkspace(
-      transport: _Transport(_document()),
+    final workspace = RealmEditing(
+      persistence: _Transport(_document()).persistence,
+      submissions: _workSession(),
       initial: _document(),
     );
     addTearDown(workspace.dispose);
@@ -596,7 +618,7 @@ void main() {
         _text("Next"),
       ),
     );
-    expect(result, isA<AuthoringEditRejected>());
+    expect(result, isA<EditStageRejected>());
     expect(workspace.state.groups, isEmpty);
   });
 
@@ -604,8 +626,9 @@ void main() {
     "catalog changes retain pending values and block every preparation",
     () async {
       final transport = _Transport(_document());
-      final workspace = AuthoringWorkspace(
-        transport: transport,
+      final workspace = RealmEditing(
+        persistence: transport.persistence,
+        submissions: _workSession(),
         initial: transport.current,
       );
       addTearDown(workspace.dispose);
@@ -624,14 +647,14 @@ void main() {
         ),
       );
       workspace.acceptConfirmed(changed);
-      expect(form.phase, isA<AuthoringGroupCatalogChanged>());
+      expect(form.phase, isA<EditGroupContractChanged>());
       expect(_read(form.document, _name), _text("Local"));
       expect(
         await workspace.prepare(
           label: "New",
           apply: (edit) async => edit.set(_position, _text("50")),
         ),
-        isA<AuthoringEditRejected>(),
+        isA<EditStageRejected>(),
       );
       form.discard();
       expect(workspace.document.generation, changed.generation);
@@ -641,8 +664,9 @@ void main() {
   test(
     "unrelated remote changes merge while guarded changes retain a conflict",
     () {
-      final workspace = AuthoringWorkspace(
-        transport: _Transport(_document()),
+      final workspace = RealmEditing(
+        persistence: _Transport(_document()).persistence,
+        submissions: _workSession(),
         initial: _document(),
       );
       addTearDown(workspace.dispose);
@@ -659,7 +683,7 @@ void main() {
       expect(form.blocked, isFalse);
       expect(_read(workspace.document, _position), _text("Remote"));
       workspace.acceptConfirmed(_document(name: "Remote", position: "Remote"));
-      expect(form.phase, isA<AuthoringGroupConflict>());
+      expect(form.phase, isA<EditGroupConflict>());
       expect(_read(workspace.document, _name), _text("Local"));
       form.discard();
       expect(_read(workspace.document, _name), _text("Remote"));
@@ -669,8 +693,9 @@ void main() {
   test(
     "delayed preparation rejects changed facts but accepts unrelated changes",
     () async {
-      final workspace = AuthoringWorkspace(
-        transport: _Transport(_document()),
+      final workspace = RealmEditing(
+        persistence: _Transport(_document()).persistence,
+        submissions: _workSession(),
         initial: _document(),
       );
       addTearDown(workspace.dispose);
@@ -695,18 +720,17 @@ void main() {
         final result = await pending;
         expect(
           result,
-          changedName
-              ? isA<AuthoringEditRejected>()
-              : isA<AuthoringEditStaged>(),
+          changedName ? isA<EditStageRejected>() : isA<EditStaged>(),
         );
-        if (result is AuthoringEditStaged) workspace.discard(result.group);
+        if (result is EditStaged) workspace.discard(result.group);
       }
     },
   );
 
   test("closing a binding cancels delayed publication without discarding prior work", () async {
-    final workspace = AuthoringWorkspace(
-      transport: _Transport(_document()),
+    final workspace = RealmEditing(
+      persistence: _Transport(_document()).persistence,
+      submissions: _workSession(),
       initial: _document(),
     );
     addTearDown(workspace.dispose);
@@ -727,7 +751,7 @@ void main() {
     );
     binding.detach();
     gate.complete();
-    expect(await pending, isA<AuthoringEditRejected>());
+    expect(await pending, isA<EditStageRejected>());
     expect(_read(workspace.document, _name), _text("Original"));
     expect(_read(workspace.document, _position), _text("Prior"));
   });
@@ -737,8 +761,9 @@ void main() {
     () async {
       final transport = _Transport(_document())
         ..refreshFailure = StateError("Refresh lost");
-      final workspace = AuthoringWorkspace(
-        transport: transport,
+      final workspace = RealmEditing(
+        persistence: transport.persistence,
+        submissions: _workSession(),
         initial: transport.current,
       );
       addTearDown(workspace.dispose);
@@ -758,8 +783,8 @@ void main() {
         skir.CommitPreparedEditResponse.wrapResult(skir.CommitResult.committed),
       );
       await saving;
-      expect(form.phase, isA<AuthoringGroupCommittedAwaitingRefresh>());
-      expect(form.canDiscard, isTrue);
+      expect(form.phase, isA<EditGroupCommittedAwaitingRefresh>());
+      expect(form.control.state.canDiscard, isTrue);
       transport
         ..refreshFailure = null
         ..current = _document(name: "First");
@@ -775,8 +800,9 @@ void main() {
     "the lane orders independent groups and excludes unrelated form work",
     () async {
       final transport = _Transport(_document());
-      final workspace = AuthoringWorkspace(
-        transport: transport,
+      final workspace = RealmEditing(
+        persistence: transport.persistence,
+        submissions: _workSession(),
         initial: transport.current,
       );
       addTearDown(workspace.dispose);
@@ -784,12 +810,12 @@ void main() {
         label: "Name",
         policy: EditorCommitPolicy.applyResource,
         apply: (edit) => edit.set(_name, _text("First")),
-      ) as AuthoringEditStaged;
+      ) as EditStaged;
       final second = workspace.edit(
         label: "Position",
         policy: EditorCommitPolicy.applyResource,
         apply: (edit) => edit.set(_position, _text("Second")),
-      ) as AuthoringEditStaged;
+      ) as EditStaged;
       final saving = workspace.save(first.group);
       await Future<void>.delayed(Duration.zero);
       unawaited(workspace.save(second.group));
@@ -820,8 +846,9 @@ void main() {
     "rejected saves retain their proposal without an automatic retry",
     () async {
       final transport = _Transport(_document());
-      final workspace = AuthoringWorkspace(
-        transport: transport,
+      final workspace = RealmEditing(
+        persistence: transport.persistence,
+        submissions: _workSession(),
         initial: transport.current,
       );
       addTearDown(workspace.dispose);
@@ -843,7 +870,7 @@ void main() {
       );
       await saving;
       await form.save();
-      expect(form.phase, isA<AuthoringGroupConflict>());
+      expect(form.phase, isA<EditGroupConflict>());
       expect(_read(form.document, _name), _text("Local"));
       expect(transport.requests, hasLength(1));
       expect(form.discard(), isTrue);
@@ -851,8 +878,9 @@ void main() {
   );
 
   test("missing resources retain their proposal for comparison", () {
-    final workspace = AuthoringWorkspace(
-      transport: _Transport(_document()),
+    final workspace = RealmEditing(
+      persistence: _Transport(_document()).persistence,
+      submissions: _workSession(),
       initial: _document(),
     );
     addTearDown(workspace.dispose);
@@ -866,7 +894,7 @@ void main() {
       apply: (edit) => edit.set(_name, _text("Retained")),
     );
     workspace.acceptConfirmed(_document().copyWith(entries: const {}));
-    final phase = form.phase! as AuthoringGroupResourceMissing;
+    final phase = form.phase! as EditGroupResourceMissing;
     expect(_read(phase.proposal, _name), _text("Retained"));
     expect(form.discard(), isTrue);
     expect(workspace.state.groups, isEmpty);
@@ -876,8 +904,9 @@ void main() {
     "record field order is irrelevant but collection item order is guarded",
     () {
       final document = _document();
-      final workspace = AuthoringWorkspace(
-        transport: _Transport(document),
+      final workspace = RealmEditing(
+        persistence: _Transport(document).persistence,
+        submissions: _workSession(),
         initial: document,
       );
       addTearDown(workspace.dispose);
@@ -938,7 +967,7 @@ void main() {
       final remote = AuthoringEdit.fromDocument(prepared.toDocument())
         ..set(itemsAt, items(["second", "first"]));
       workspace.acceptConfirmed(remote.toDocument());
-      expect(form.phase, isA<AuthoringGroupConflict>());
+      expect(form.phase, isA<EditGroupConflict>());
     },
   );
 
@@ -964,10 +993,7 @@ void main() {
         realmId: skir.recordId("realm:first"),
       );
       final other = scope.copyWith(realmId: skir.recordId("realm:second"));
-      final view = container.listen(
-        authoringWorkspaceProvider(scope),
-        (_, _) {},
-      );
+      final view = container.listen(realmEditingProvider(scope), (_, _) {});
       final workspace = view.read();
       workspace.attach(_resource, policy: EditorCommitPolicy.applyResource)
         ..edit(
@@ -978,8 +1004,8 @@ void main() {
       view.close();
       await container.pump();
       expect(
-        container.read(authoringWorkspaceProvider(scope)),
-        same(workspace),
+        container.read(realmEditingProvider(scope)).workspace,
+        same(workspace.workspace),
       );
       expect(
         _read(
@@ -1050,14 +1076,15 @@ AuthoringDocument _document({
   links: const [],
 );
 
-final class _Transport implements AuthoringWorkspaceTransport {
+final class _Transport {
   _Transport(this.current);
+  RealmEditPersistence get persistence =>
+      fixtureRealmPersistence(commit: commit, confirmed: fetchConfirmed);
   AuthoringDocument current;
   final requests = <skir.PreparedEdit>[];
   final replies = <Completer<skir.CommitPreparedEditResponse>>[];
   Completer<skir.CommitPreparedEditResponse> get reply => replies.last;
   Error? refreshFailure;
-  @override
   Future<skir.CommitPreparedEditResponse> commit(skir.PreparedEdit edit) {
     requests.add(edit);
     final next = Completer<skir.CommitPreparedEditResponse>();
@@ -1065,7 +1092,6 @@ final class _Transport implements AuthoringWorkspaceTransport {
     return next.future;
   }
 
-  @override
   Future<AuthoringDocument> fetchConfirmed() async {
     if (refreshFailure case final error?) throw error;
     return current;
@@ -1121,4 +1147,10 @@ final class _WorkPublicationRepository implements RealmPublicationRepository {
   @override
   Stream<skir.PublicationReport> watch() => reports.stream;
   Future<void> close() => reports.close();
+}
+
+ScopedWorkSession _workSession() {
+  final session = ScopedWorkSession();
+  addTearDown(session.dispose);
+  return session;
 }

@@ -27,14 +27,17 @@ final class _ResourceEditorStoryState extends State<_ResourceEditorStory> {
   late final _transport = ScriptedAuthoringTransport(
     AsyncData(widget.document),
   );
-  late final _workspace = AuthoringWorkspace(
-    transport: _transport,
+  final _submissions = ScopedWorkSession();
+  late final _workspace = RealmEditing(
+    persistence: _transport.persistence,
+    submissions: _submissions,
     initial: widget.document,
   );
   @override
   void dispose() {
     _workspace.dispose();
     _transport.dispose();
+    _submissions.dispose();
     super.dispose();
   }
 
@@ -68,8 +71,10 @@ final class _AuthoredNewDraftStoryState extends State<AuthoredNewDraftStory> {
   late final _transport = ScriptedAuthoringTransport(
     AsyncData(fixture.draft.toDocument()),
   );
-  late final _workspace = AuthoringWorkspace(
-    transport: _transport,
+  final _submissions = ScopedWorkSession();
+  late final _workspace = RealmEditing(
+    persistence: _transport.persistence,
+    submissions: _submissions,
     initial: fixture.draft.toDocument(),
   );
   late final _binding = _workspace.attach(
@@ -81,6 +86,7 @@ final class _AuthoredNewDraftStoryState extends State<AuthoredNewDraftStory> {
     _binding.detach();
     _workspace.dispose();
     _transport.dispose();
+    _submissions.dispose();
     super.dispose();
   }
 

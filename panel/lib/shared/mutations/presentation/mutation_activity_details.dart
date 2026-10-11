@@ -11,12 +11,8 @@ class _ActivityDetails extends StatelessWidget {
   final LocalWorkCommands controller;
 
   Future<void> _review(BuildContext context, WorkEntryState resource) async {
-    final source = controller.source(resource.id.identity as EditorResourceKey);
-    if (source == null) return;
-    final host = controller.resources[resource.id.identity as EditorResourceKey]
-        ?.buildPortablePresentationHost();
-    if (host == null) return;
-    controller.retain(resource.id.identity as EditorResourceKey);
+    final review = controller.review(resource.id);
+    if (review == null) return;
     try {
       await showAdvancedDialog<void>(
         context: context,
@@ -24,9 +20,7 @@ class _ActivityDetails extends StatelessWidget {
           title: Text(resource.label),
           content: SizedBox(
             width: 560,
-            child: SingleChildScrollView(
-              child: PortablePresentationRenderer(host: host),
-            ),
+            child: SingleChildScrollView(child: review.content.body),
           ),
           actions: [
             TextButton(
@@ -37,8 +31,7 @@ class _ActivityDetails extends StatelessWidget {
         ),
       );
     } finally {
-      host.dispose();
-      controller.release(resource.id.identity as EditorResourceKey);
+      review.release();
     }
   }
 
@@ -133,7 +126,7 @@ class _ActivityDetails extends StatelessWidget {
                             },
                             label: const Text("Open work"),
                           )
-                        else if (resource.id.identity is EditorResourceKey &&
+                        else if (resource.canReview &&
                             resource.destination ==
                                 LocalWorkDestinationState.unavailable)
                           TextButton.icon(

@@ -50,28 +50,24 @@ void main() {
       );
 
       final source =
-          container
-              .read(localWorkControllerProvider)
-              .editor(
-                fakeEditorTarget(
-                  targetId: "resource",
-                  label: "Draft",
-                  scope: EditorResourceScope(
-                    organizationId: skir.recordId("organization:one"),
-                  ),
-                  document: EditorDocument(
-                    rootType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
-                    catalog: CheckedEditorCatalog(
-                      skir.EditorCatalogWireSnapshot.defaultInstance,
-                    ),
-                    confirmedValue: skir.DataValue.wrapStringValue("Original"),
-                    revision: 1,
-                  ),
-                  validation: acceptTestEditorMutation,
-                  commitPolicy: EditorCommitPolicy.applyResource,
-                  commit: (_) async => throw StateError("No save expected"),
+          fakeEditorTarget(
+              targetId: "resource",
+              label: "Draft",
+              scope: EditorResourceScope(
+                organizationId: skir.recordId("organization:one"),
+              ),
+              document: EditorDocument(
+                rootType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+                catalog: CheckedEditorCatalog(
+                  skir.EditorCatalogWireSnapshot.defaultInstance,
                 ),
-              )
+                confirmedValue: skir.DataValue.wrapStringValue("Original"),
+                revision: 1,
+              ),
+              validation: acceptTestEditorMutation,
+              commitPolicy: EditorCommitPolicy.applyResource,
+              commit: (_) async => throw StateError("No save expected"),
+            ).acquire(container.read(localWorkControllerProvider))
             ..update(editorRootPath, skir.DataValue.wrapStringValue("Draft"));
       await container.pump();
       expect(container.read(localWorkProvider).blocksNavigation, isTrue);

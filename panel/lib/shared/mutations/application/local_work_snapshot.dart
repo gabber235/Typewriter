@@ -24,9 +24,7 @@ extension _LocalWorkSnapshot on ScopedWorkSession {
           for (final entry in owned.driver.snapshot.entries)
             if (entry.retained || entry.hasWork)
               entry.id: entry.copyWith(
-                destination: owned.driver is DocumentWorkDriver
-                    ? entry.destination
-                    : owned.destination == null
+                destination: owned.destination == null
                     ? LocalWorkDestinationState.unavailable
                     : owned.destination!.isCurrent
                     ? LocalWorkDestinationState.current
@@ -34,14 +32,8 @@ extension _LocalWorkSnapshot on ScopedWorkSession {
               ),
       },
       editorValues: {
-        for (final entry in _resources.entries)
-          if (entry.value.source.editedPaths case final paths
-              when paths.isNotEmpty)
-            if (entry.value.source
-                    .value(skir.ValuePath(segments: []))
-                    .valueOrNull
-                case final value?)
-              entry.key: LocalEditorValue(value: value, editedPaths: paths),
+        for (final owned in _drivers.values)
+          ...owned.driver.snapshot.editorValues,
       },
       submissions: _submissions.values.map(_submissionState).toList(),
     );

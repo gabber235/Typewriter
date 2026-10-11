@@ -22,20 +22,20 @@ EditorSnapshot _snapshot({String title = "Original", int revision = 1}) =>
       validation: acceptTestEditorMutation,
     );
 
-TransactionalEditorSource _draft(
+ValueEditing _draft(
   ScopedWorkSession workspace,
-  EditableResource resource,
+  ValueEditPersistence resource,
 ) {
-  final source = workspace.editor(
-    ResourceEditorTarget(
-      targetId: resource.key.identity,
-      label: "Resource",
-      resource: resource,
-      snapshot: _snapshot(),
-      commitPolicy: EditorCommitPolicy.applyResource,
-    ),
-  ) as TransactionalEditorSource;
-  workspace.retain(resource.key);
+  final source = ValueEditingRegistration(
+    targetId: resource.key.identity,
+    label: "Resource",
+    persistence: resource,
+    snapshot: _snapshot(),
+    commitPolicy: EditorCommitPolicy.applyResource,
+  ).acquire(workspace);
+  addTearDown(
+    workspace.lease(WorkDriverId(domain: "value", scope: resource.key)).release,
+  );
   source.update(_title, skir.DataValue.wrapStringValue("Draft"));
   return source;
 }
@@ -53,21 +53,21 @@ void main() {
       validation: acceptTestEditorMutation,
       draftValidation: (_) => const [diagnostic],
     );
-    final resource = FakeEditableResource(
+    final resource = ScriptedValuePersistence(
       key: _key,
       current: snapshot,
       commit: (_) async => throw StateError("Unexpected send"),
     );
-    final source = workspace.editor(
-      ResourceEditorTarget(
-        targetId: _key.identity,
-        label: "Resource",
-        resource: resource,
-        snapshot: snapshot,
-        commitPolicy: EditorCommitPolicy.applyResource,
-      ),
-    ) as TransactionalEditorSource;
-    workspace.retain(_key);
+    final source = ValueEditingRegistration(
+      targetId: _key.identity,
+      label: "Resource",
+      persistence: resource,
+      snapshot: snapshot,
+      commitPolicy: EditorCommitPolicy.applyResource,
+    ).acquire(workspace);
+    addTearDown(
+      workspace.lease(WorkDriverId(domain: "value", scope: _key)).release,
+    );
     source.update(_title, skir.DataValue.wrapStringValue("Draft"));
 
     final result = await source.flush();
@@ -86,7 +86,7 @@ void main() {
       final previousErrorHandler = FlutterError.onError;
       FlutterError.onError = reports.add;
       addTearDown(() => FlutterError.onError = previousErrorHandler);
-      final resource = FakeEditableResource(
+      final resource = ScriptedValuePersistence(
         key: _key,
         current: _snapshot(),
         load: () async => throw cause,
@@ -117,7 +117,7 @@ void main() {
     final previousErrorHandler = FlutterError.onError;
     FlutterError.onError = reports.add;
     addTearDown(() => FlutterError.onError = previousErrorHandler);
-    final resource = FakeEditableResource(
+    final resource = ScriptedValuePersistence(
       key: _key,
       current: _snapshot(title: "Remote", revision: 2),
       commit: (_) async => throw StateError("Unexpected send"),
@@ -139,7 +139,7 @@ void main() {
     final previousErrorHandler = FlutterError.onError;
     FlutterError.onError = reports.add;
     addTearDown(() => FlutterError.onError = previousErrorHandler);
-    final resource = FakeEditableResource(
+    final resource = ScriptedValuePersistence(
       key: _key,
       current: null,
       commit: (_) async => throw StateError("Unexpected send"),
@@ -162,7 +162,7 @@ void main() {
     addTearDown(() => FlutterError.onError = previousErrorHandler);
     final ready = Completer<EditorSnapshot?>();
     final started = Completer<void>();
-    final resource = FakeEditableResource(
+    final resource = ScriptedValuePersistence(
       key: _key,
       current: _snapshot(),
       load: () {

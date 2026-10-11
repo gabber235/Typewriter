@@ -2,6 +2,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "portable_presentation_renderer.freezed.dart";
 part "portable_renderer/actions.dart";
 part "portable_renderer/appearance.dart";
 part "portable_renderer/collection_inputs.dart";
@@ -22,7 +23,6 @@ part "portable_renderer/scope.dart";
 part "portable_renderer/structured_inputs.dart";
 part "portable_renderer/style.dart";
 part "portable_search_input.dart";
-part "portable_presentation_renderer.freezed.dart";
 
 final class PortablePresentationNodeRenderer extends StatelessWidget {
   const PortablePresentationNodeRenderer({
@@ -236,9 +236,8 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
     ),
     skir.PresentationElement_pageTimelineWrapper(:final value) =>
       _renderPageTimeline(context, value, childScope),
-    skir.PresentationElement_commitControlsWrapper() => _renderCommitControls(
-      childScope,
-    ),
+    skir.PresentationElement_commitControlsWrapper(:final value) =>
+      _renderCommitControls(value, childScope),
     skir.PresentationElement_buttonWrapper(:final value) => _renderButton(
       value,
       childScope,
@@ -450,7 +449,6 @@ final class _PortablePresentationRendererState
       enabled: widget.host.enabled,
       readOnly: widget.host.readOnly,
       watchSearch: capabilities.watchSearch,
-      commit: capabilities.commit,
       openResource: capabilities.openResource,
       reportStatus: _reportStatus,
       catalog: document.catalog,

@@ -24,7 +24,7 @@ class ServiceIdentifier extends SelectableIdentifier {
     final repository = ref
         .watch(resourceRepositoriesProvider)
         .services(organization);
-    final work = ref.watch(localWorkControllerProvider);
+    final work = ref.watch(localWorkProvider.notifier);
     final canonicalState = ref.watch(canonicalServiceProvider(serviceId));
     if (canonicalState.mapUnready<Selectable>() case final value?) return value;
     final canonical = canonicalState.requireValue;
@@ -46,6 +46,7 @@ class ServiceIdentifier extends SelectableIdentifier {
           service: canonical,
           connected: connections[serviceId] ?? false,
           repository: repository,
+          work: work,
         ),
         onUnbind: () async {
           final response = await work.execute(repository.unbind(serviceId));
@@ -90,7 +91,7 @@ class ServiceSelectable extends InspectableSelectable<ServiceIdentifier> {
   final Service service;
   final Service canonicalService;
   final bool connected;
-  final EditorTarget editTarget;
+  final ValueEditingRegistration editTarget;
   final Future<void> Function() onUnbind;
 
   @override
@@ -107,7 +108,7 @@ class ServiceSelectable extends InspectableSelectable<ServiceIdentifier> {
   ];
 
   @override
-  InspectionContent buildInspection(EditorOwnerScope owners) =>
+  InspectionContent buildInspection(InspectionBindingScope owners) =>
       InspectionContent(
         host: service.portablePresentationHost(
           connected: connected,
@@ -124,7 +125,7 @@ final class _ServiceIdentityPortableSurface
   Object get id => "service.identity";
 
   @override
-  final EditorTarget target;
+  final ValueEditingRegistration target;
 
   @override
   skir.TypeUse get rootType => _serviceIdentityType;
@@ -140,11 +141,7 @@ final class _ServiceIdentityPortableSurface
   PortablePresentationHost buildHost(
     List<PortableMultiInspectionSurface> members,
     EditOwner combinedOwner,
-    Future<void> Function() commit,
-  ) => serviceIdentityPortablePresentationHost(
-    identityOwner: combinedOwner,
-    commit: commit,
-  );
+  ) => serviceIdentityPortablePresentationHost(identityOwner: combinedOwner);
 }
 
 final _serviceIdentityDefinition = _draftType("ServiceIdentity");
@@ -182,16 +179,39 @@ final _serviceIdentityCatalog = skir.EditorCatalogWireSnapshot(
 ///
 /// The target snapshot is canonical even when the inspector displays a local
 /// draft, preserving optimistic revision checks at commit time.
-ResourceEditorTarget serviceIdentityTarget({
+ValueEditingRegistration serviceIdentityTarget({
   required ServiceIdentifier id,
   required Service service,
   required bool connected,
   required ServiceResourceRepository repository,
-}) => ResourceEditorTarget(
+  LocalWork? work,
+}) => ValueEditingRegistration(
   targetId: id,
   label: "${service.displayName}: identity",
-  resource: ServiceEditorResource(repository, service.serviceId),
+  persistence: ServiceEditPersistence(repository, service.serviceId),
   snapshot: service.editorSnapshot,
+  observe: work == null
+      ? null
+      : (workspace) => work.observe(
+          canonicalOrganizationServicesProvider(repository.organization),
+          (next) {
+            if (next.value case final values?) {
+              final current = values.firstWhereOrNull(
+                (value) => value.serviceId == service.serviceId,
+              );
+              workspace.acceptConfirmed(
+                current == null
+                    ? workspace.confirmed.copyWith(exists: false)
+                    : ValueEditDocument.fromSnapshot(
+                        current.editorSnapshot,
+                        identity: workspace.confirmed.identity,
+                      ),
+              );
+            } else if (next.error case final error?) {
+              workspace.acceptFailure(error);
+            }
+          },
+        ),
   portablePresentation: (source) => service.portablePresentationHost(
     connected: connected,
     identityOwner: source,

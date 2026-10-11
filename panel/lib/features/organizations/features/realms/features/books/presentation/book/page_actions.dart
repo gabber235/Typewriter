@@ -23,7 +23,7 @@ Future<void> _changePagesChapter(
       .toList();
   if (changed.isEmpty || !ref.context.mounted) return;
   ref
-      .readAuthoringWorkspace()
+      .readRealmEditing()
       .edit(
         label: "Change chapter",
         apply: (edit) {
@@ -208,7 +208,7 @@ Future<bool> showPageDeletionDialogue(
     onConfirm: () async {
       final router = ref.read(appRouterProvider);
       ref
-          .readAuthoringWorkspace()
+          .readRealmEditing()
           .edit(label: "Delete page", apply: (edit) => edit.delete(pageId))
           .requireAccepted();
       final context = ref.context;

@@ -103,8 +103,8 @@ EditorDocument _document(String field, String value) {
 }
 
 WorkEntryId _workEntryId(EditorResourceKey key) => WorkEntryId(
-  driver: WorkDriverId(domain: "document", scope: key),
-  identity: key,
+  driver: WorkDriverId(domain: "value", scope: key),
+  identity: const EditGroupId(1),
 );
 
 void _dismissSubmissions(ScopedWorkSession workspace) {
@@ -129,18 +129,18 @@ void main() {
         final document = _document("target", "paper@*");
         final workspace = ScopedWorkSession();
         addTearDown(workspace.dispose);
-        final source = workspace.editor(
-          fakeEditorTarget(
-            targetId: key.identity,
-            scope: key.scope,
-            label: "Paper Host configuration",
-            document: document,
-            validation: acceptTestEditorMutation,
-            commitPolicy: EditorCommitPolicy.applyResource,
-            commit: (_) async => MutationInvalid([diagnostic]),
-          ),
+        final source = fakeEditorTarget(
+          targetId: key.identity,
+          scope: key.scope,
+          label: "Paper Host configuration",
+          document: document,
+          validation: acceptTestEditorMutation,
+          commitPolicy: EditorCommitPolicy.applyResource,
+          commit: (_) async => MutationInvalid([diagnostic]),
+        ).acquire(workspace);
+        addTearDown(
+          workspace.lease(WorkDriverId(domain: "value", scope: key)).release,
         );
-        workspace.retain(key);
         source.update(
           editorRootPath.field("target"),
           skir.DataValue.wrapStringValue("unsupported"),
@@ -204,18 +204,18 @@ void main() {
       final document = _document("target", "paper@*");
       final workspace = ScopedWorkSession();
       addTearDown(workspace.dispose);
-      final source = workspace.editor(
-        fakeEditorTarget(
-          targetId: key.identity,
-          scope: key.scope,
-          label: "Paper Host configuration",
-          document: document,
-          validation: acceptTestEditorMutation,
-          commitPolicy: EditorCommitPolicy.applyResource,
-          commit: (_) async => MutationInvalid([diagnostic]),
-        ),
+      final source = fakeEditorTarget(
+        targetId: key.identity,
+        scope: key.scope,
+        label: "Paper Host configuration",
+        document: document,
+        validation: acceptTestEditorMutation,
+        commitPolicy: EditorCommitPolicy.applyResource,
+        commit: (_) async => MutationInvalid([diagnostic]),
+      ).acquire(workspace);
+      addTearDown(
+        workspace.lease(WorkDriverId(domain: "value", scope: key)).release,
       );
-      workspace.retain(key);
       source.update(
         editorRootPath.field("target"),
         skir.DataValue.wrapStringValue("unsupported"),
@@ -286,28 +286,28 @@ void main() {
     final document = _document("target", "canonical");
     final workspace = ScopedWorkSession();
     addTearDown(workspace.dispose);
-    final source = workspace.editor(
-      fakeEditorTarget(
-        targetId: key.identity,
-        scope: key.scope,
-        label: "Contended configuration",
-        document: document,
-        validation: acceptTestEditorMutation,
-        commit: (commit) async => MutationConflict(
-          expectedRevision: commit.expectedRevision,
-          actualRevision: commit.expectedRevision + 1,
-          actualValue: document.confirmedValue,
-        ),
+    final source = fakeEditorTarget(
+      targetId: key.identity,
+      scope: key.scope,
+      label: "Contended configuration",
+      document: document,
+      validation: acceptTestEditorMutation,
+      commit: (commit) async => MutationConflict(
+        expectedRevision: commit.expectedRevision,
+        actualRevision: commit.expectedRevision + 1,
+        actualValue: document.confirmedValue,
       ),
+    ).acquire(workspace);
+    addTearDown(
+      workspace.lease(WorkDriverId(domain: "value", scope: key)).release,
     );
-    workspace.retain(key);
     source.update(
       editorRootPath.field("target"),
       skir.DataValue.wrapStringValue("local value"),
     );
     final flush = source.flush();
     await tester.pump(const Duration(seconds: 10));
-    expect(await flush, isA<MutationConflict>());
+    expect(await flush, isA<MutationUnavailable>());
 
     await _openActivity(tester, workspace, mobile: false);
     expect(
@@ -315,11 +315,11 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.text("Changed repeatedly elsewhere. Retry when other edits stop."),
+      find.text("The resource changed repeatedly. Retry when other edits stop"),
       findsOneWidget,
     );
     await tester.tap(
-      find.text("Changed repeatedly elsewhere. Retry when other edits stop."),
+      find.text("The resource changed repeatedly. Retry when other edits stop"),
     );
     await tester.pumpAndSettle();
     expect(find.text("Contention"), findsOneWidget);
@@ -340,19 +340,19 @@ void main() {
     final document = _document("name", "canonical");
     final workspace = ScopedWorkSession();
     addTearDown(workspace.dispose);
-    final source = workspace.editor(
-      fakeEditorTarget(
-        targetId: key.identity,
-        scope: key.scope,
-        label: "Draft configuration",
-        document: document,
-        validation: acceptTestEditorMutation,
-        commitPolicy: EditorCommitPolicy.applyResource,
-        commit: (_) async =>
-            MutationSuccess(revision: 2, value: document.confirmedValue),
-      ),
+    final source = fakeEditorTarget(
+      targetId: key.identity,
+      scope: key.scope,
+      label: "Draft configuration",
+      document: document,
+      validation: acceptTestEditorMutation,
+      commitPolicy: EditorCommitPolicy.applyResource,
+      commit: (_) async =>
+          MutationSuccess(revision: 2, value: document.confirmedValue),
+    ).acquire(workspace);
+    addTearDown(
+      workspace.lease(WorkDriverId(domain: "value", scope: key)).release,
     );
-    workspace.retain(key);
     source.update(
       editorRootPath.field("name"),
       skir.DataValue.wrapStringValue("local draft"),
@@ -368,6 +368,6 @@ void main() {
     await tester.tap(find.text("1 draft"));
     await tester.pumpAndSettle();
 
-    expect(find.text("Configuration draft"), findsOneWidget);
+    expect(find.text("Changes await applying"), findsOneWidget);
   });
 }

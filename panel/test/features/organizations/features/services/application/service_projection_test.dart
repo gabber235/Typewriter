@@ -76,8 +76,8 @@ void main() {
         commitPolicy: EditorCommitPolicy.applyResource,
         commit: (_) async => throw StateError("No save expected"),
       );
-      workspace
-          .editor(target)
+      target
+          .acquire(workspace)
           .update(
             editorRootPath.field("name"),
             skir.DataValue.wrapStringValue("Edited first"),

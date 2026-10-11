@@ -276,6 +276,12 @@ final class _NamedTestHost extends ChangeNotifier
   final void Function(skir.BindingRef reference, skir.DataValue value) onWrite;
 
   @override
+  EditControl? commitControl(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => null;
+
+  @override
   PortablePresentationCapabilities get capabilities =>
       const PortablePresentationCapabilities();
 

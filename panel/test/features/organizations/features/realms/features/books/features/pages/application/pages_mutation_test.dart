@@ -165,7 +165,7 @@ void main() {
           fields: ["chapter"],
           payload: skir.DataValue.wrapStringValue("new"),
         ),
-      ) as AuthoringEditStaged;
+      ) as EditStaged;
       unawaited(harness.workspace.save(result.group));
       await tester.pump();
       final submitted = harness.transport.requests.single.edit;
@@ -206,7 +206,7 @@ void main() {
         }
       },
     );
-    expect(result, isA<AuthoringEditRejected>());
+    expect(result, isA<EditStageRejected>());
     expect(
       harness.workspace.document
           .resource(_page)!
@@ -236,7 +236,7 @@ void main() {
           );
         }
       },
-    ) as AuthoringEditStaged;
+    ) as EditStaged;
     expect(harness.workspace.state.groups[result.group]!.resources, {
       _page,
       _second,
@@ -269,7 +269,7 @@ Future<_Harness> _mount(
           ..watch(selectionProvider)
           ..watch(selectedProvider);
         harness.workspace = ref.watch(
-          authoringWorkspaceProvider(
+          realmEditingProvider(
             AuthoringScope(organizationId: _organization, realmId: _realm),
           ),
         );
@@ -284,7 +284,7 @@ final class _Harness {
   _Harness(this.transport);
   final ScriptedAuthoringTransport transport;
   late WidgetRef ref;
-  late AuthoringWorkspace workspace;
+  late RealmEditing workspace;
 }
 
 AuthoringSessionState _state({

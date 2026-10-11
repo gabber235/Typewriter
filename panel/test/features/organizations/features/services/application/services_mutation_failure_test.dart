@@ -70,40 +70,21 @@ extension _ServiceRepositoryCommands on ProviderContainer {
   ServiceResourceRepository get _services =>
       read(resourceRepositoriesProvider).services(_organizationId);
 
-  Future<TypedMutationResult> updateService(Service service) async {
-    final skir.UpdateOrganizationServiceResponse response;
-    try {
-      response = await read(localWorkControllerProvider).execute(
-        _services.rename(service.serviceId, service.revision, service.name),
-      );
-    } on SubmissionException<skir.UpdateOrganizationServiceResponse> catch (
-      error
-    ) {
-      return error.toMutation((_) async => throw StateError("Replay failed"));
-    }
-    return switch (response) {
-      skir.UpdateOrganizationServiceResponse_successWrapper(:final value) =>
-        TypedMutationResult.success(
-          revision: value.revision,
-          value: Service.fromSkir(value).identityValue,
+  Future<TypedMutationResult> updateService(Service service) {
+    final snapshot = service.editorSnapshot;
+    return read(localWorkControllerProvider).execute(
+      ServiceEditPersistence(_services, service.serviceId).prepareValue(
+        snapshot,
+        EditorCommit(
+          expectedRevision: service.revision,
+          localRevision: 1,
+          rootValue: service.identityValue,
+          baseValue: snapshot.document.confirmedValue,
+          changedPaths: {editorRootPath.field("name")},
+          mutations: const [],
         ),
-      skir.UpdateOrganizationServiceResponse_conflictErrorWrapper(
-        :final value,
-      ) =>
-        TypedMutationResult.conflict(
-          expectedRevision: value.expectedRevision,
-          actualRevision: value.actual.revision,
-          actualValue: Service.fromSkir(value.actual).identityValue,
-        ),
-      skir.UpdateOrganizationServiceResponse_validationErrorWrapper() =>
-        invalidMutation("The service contains invalid values"),
-      skir.UpdateOrganizationServiceResponse_serviceNotFoundErrorWrapper() =>
-        unavailableMutation(
-          "The service no longer exists",
-          targetDeleted: true,
-        ),
-      _ => unavailableMutation("The service update was unavailable"),
-    };
+      ),
+    );
   }
 
   Future<void> deleteService(skir.RecordId service) async {
@@ -231,15 +212,20 @@ void main() {
         throw StateError("transport failed");
       });
 
-      final result = await harness.container.updateService(
-        _service(name: "Requested"),
+      await expectLater(
+        harness.container.updateService(_service(name: "Requested")),
+        throwsA(
+          isA<SubmissionException<TypedMutationResult>>().having(
+            (error) => error.submission.result,
+            "retained outcome",
+            isA<SubmissionUncertain<TypedMutationResult>>().having(
+              (result) => result.cause,
+              "cause",
+              isA<StateError>(),
+            ),
+          ),
+        ),
       );
-
-      expect(result, isA<MutationUncertain>());
-      final uncertain = result as MutationUncertain;
-      expect(uncertain.cause, isA<StateError>());
-      expect(uncertain.replay, isNull);
-      expect(uncertain.submissionId, isNotNull);
       await harness.container.pump();
       expect(await harness.container.read(canonicalServicesProvider.future), [
         newest,

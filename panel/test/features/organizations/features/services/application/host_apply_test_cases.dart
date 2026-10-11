@@ -26,7 +26,7 @@ void _testHostApply() {
       final harness = await _Harness.create();
       addTearDown(harness.dispose);
 
-      final owners = EditorOwnerRegistry();
+      final owners = InspectionBindings();
       addTearDown(owners.dispose);
       _buildInspection(harness, owners);
       final owner = _configurationSource(owners);
@@ -126,7 +126,7 @@ void _testHostApply() {
     addTearDown(harness.dispose);
     await harness.container.read(userIdProvider.future);
     final workspace = harness.container.read(localWorkControllerProvider);
-    final view = EditorOwnerRegistry(workspace: workspace);
+    final view = InspectionBindings(workspace: workspace);
 
     _buildInspection(harness, view);
     final owner = _configurationSource(view)
@@ -158,7 +158,7 @@ void _testHostApply() {
       harness.container.read(localWorkControllerProvider),
       same(workspace),
     );
-    expect(workspace.resources, isEmpty);
+    expect(owner.workspace.closed, isTrue);
     expect(await owner.flush(), isA<MutationUnavailable>());
     expect(
       harness.nats.requests
@@ -173,7 +173,7 @@ void _testHostApply() {
     () async {
       final harness = await _Harness.create();
       addTearDown(harness.dispose);
-      final owners = EditorOwnerRegistry();
+      final owners = InspectionBindings();
       addTearDown(owners.dispose);
       _buildInspection(harness, owners);
       final owner = _configurationSource(owners);

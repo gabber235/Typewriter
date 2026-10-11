@@ -52,7 +52,7 @@ void _testHostTargetSelection() {
           ),
         ))!;
         addTearDown(harness.dispose);
-        final owners = EditorOwnerRegistry();
+        final owners = InspectionBindings();
         addTearDown(owners.dispose);
 
         final host = _buildInspection(harness, owners).host!;

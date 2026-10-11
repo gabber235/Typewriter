@@ -15,7 +15,6 @@ class RealmPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final organizationId = ref.watch(organizationIdProvider);
     final selectedRealmId = ref.watch(realmIdProvider);
-    AuthoringWorkspace? workspace;
     AuthoringScope? scope;
     if (organizationId != null &&
         selectedRealmId != null &&
@@ -24,19 +23,11 @@ class RealmPage extends HookConsumerWidget {
         organizationId: organizationId,
         realmId: selectedRealmId,
       );
-      workspace = ref.watch(
-        authoringWorkspaceProvider(
-          AuthoringScope(
-            organizationId: organizationId,
-            realmId: selectedRealmId,
-          ),
-        ),
-      );
+      ref.watch(confirmedAuthoringDocumentProvider(scope));
     }
     return Column(
       children: [
-        if (workspace != null && scope != null)
-          RealmWorkToolbar(workspace: workspace, scope: scope),
+        if (scope != null) RealmWorkToolbar(scope: scope),
         const Expanded(child: AutoRouter()),
       ],
     );

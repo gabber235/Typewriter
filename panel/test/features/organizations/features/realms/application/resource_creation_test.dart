@@ -19,7 +19,7 @@ void main() {
       addTearDown(transport.dispose);
       skir.ValuePreparationRequest? preparedRequest;
       CreatedAuthoringResource? created;
-      AuthoringWorkspace? workspace;
+      RealmEditing? workspace;
       var ambientOrganization = fixture.organization;
       var ambientRealm = fixture.realm;
       final preparation = Completer<skir.PreparedValue>();
@@ -51,7 +51,7 @@ void main() {
           builder: (context, ref, _) => Scaffold(
             body: FilledButton(
               onPressed: () async {
-                workspace = ref.readAuthoringWorkspace();
+                workspace = ref.readRealmEditing();
                 created = await ref
                     .read(
                       resourceCreationProvider(
@@ -98,7 +98,7 @@ void main() {
         "dependent_unfilled",
       );
       expect(transport.requests, isEmpty);
-      await tester.pump(AuthoringWorkspace.debounce);
+      await tester.pump(const Duration(milliseconds: 250));
       await tester.pump();
       expect(transport.requests, hasLength(1));
       final intent =

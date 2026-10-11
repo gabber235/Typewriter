@@ -19,9 +19,9 @@ class _ServiceHostSelectable
   final Service? service;
   final OrganizationTopology topology;
   final bool connected;
-  final EditorTarget configurationTarget;
+  final ValueEditingRegistration configurationTarget;
   final Future<void> Function()? onUnbind;
-  final EditorTarget? serviceIdentityTarget;
+  final ValueEditingRegistration? serviceIdentityTarget;
 
   @override
   List<PortableMultiInspectionSurface> get portableMultiInspectionSurfaces => [
@@ -48,7 +48,7 @@ class _ServiceHostSelectable
   ];
 
   @override
-  InspectionContent buildInspection(EditorOwnerScope owners) {
+  InspectionContent buildInspection(InspectionBindingScope owners) {
     final configurationOwner = owners.editor(configurationTarget);
     final identityOwner = serviceIdentityTarget == null
         ? null
@@ -83,7 +83,7 @@ final class _ServiceHostConfigurationPortableSurface
   Object get id => "service.host.configuration";
 
   @override
-  final EditorTarget target;
+  final ValueEditingRegistration target;
 
   @override
   skir.TypeUse get rootType => _hostConfigurationType;
@@ -99,7 +99,6 @@ final class _ServiceHostConfigurationPortableSurface
   PortablePresentationHost buildHost(
     List<PortableMultiInspectionSurface> members,
     EditOwner combinedOwner,
-    Future<void> Function() commit,
   ) {
     final hosts = members
         .cast<_ServiceHostConfigurationPortableSurface>()
@@ -119,7 +118,6 @@ final class _ServiceHostConfigurationPortableSurface
           .where((realm) => !selectedHostIds.contains(realm.ownerHost.id))
           .toList(),
       configurationOnly: true,
-      commit: commit,
     );
   }
 }

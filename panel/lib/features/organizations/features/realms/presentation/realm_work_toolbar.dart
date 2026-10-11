@@ -4,17 +4,11 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Publishes saved server content independently of retained local drafts.
 final class RealmWorkToolbar extends HookConsumerWidget {
-  const RealmWorkToolbar({
-    required this.workspace,
-    required this.scope,
-    super.key,
-  });
-  final AuthoringWorkspace workspace;
+  const RealmWorkToolbar({required this.scope, super.key});
   final AuthoringScope scope;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    useListenable(workspace);
     final publication = ref.watch(
       realmPublicationProvider(scope.organizationId, scope.realmId),
     );
@@ -22,7 +16,7 @@ final class RealmWorkToolbar extends HookConsumerWidget {
       realmPublicationProvider(scope.organizationId, scope.realmId).notifier,
     );
     final view = publication.value;
-    final saved = workspace.state.confirmed;
+    final saved = ref.watch(confirmedAuthoringDocumentProvider(scope)).value;
     final statuses = useFuture(
       useMemoized(
         () => controller.states(skir.CompilationStatusSelection.allRoots),

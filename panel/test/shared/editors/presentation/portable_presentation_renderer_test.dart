@@ -2088,6 +2088,12 @@ final class _BindingHost extends ChangeNotifier
   documentBindings;
 
   @override
+  EditControl? commitControl(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => null;
+
+  @override
   PortablePresentationCapabilities get capabilities =>
       const PortablePresentationCapabilities();
 
@@ -2174,6 +2180,12 @@ final class _TestPortableHost extends ChangeNotifier
   final List<(skir.BindingRef, skir.DataValue)> writes = [];
   final List<skir.EditorAction> actions = [];
   int expectedTypeReads = 0;
+
+  @override
+  EditControl? commitControl(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => null;
 
   @override
   PortablePresentationCapabilities get capabilities =>
@@ -2268,7 +2280,11 @@ final class _RendererWorkspace {
       links: links,
     );
     transport = ScriptedAuthoringTransport(AsyncData(document));
-    workspace = AuthoringWorkspace(transport: transport, initial: document);
+    workspace = RealmEditing(
+      persistence: transport.persistence,
+      submissions: _workSession(),
+      initial: document,
+    );
     binding = workspace.attach(
       _resource,
       policy: EditorCommitPolicy.applyResource,
@@ -2278,8 +2294,8 @@ final class _RendererWorkspace {
     addTearDown(transport.dispose);
   }
   late final ScriptedAuthoringTransport transport;
-  late final AuthoringWorkspace workspace;
-  late final AuthoringBinding binding;
+  late final RealmEditing workspace;
+  late final RealmEditingBinding binding;
 }
 
 Future<skir.PreparedEdit> _submit(
@@ -2733,3 +2749,9 @@ skir.PresentationNode _visualText(String id, String value) =>
             .toFrozen(),
       ),
     );
+
+ScopedWorkSession _workSession() {
+  final session = ScopedWorkSession();
+  addTearDown(session.dispose);
+  return session;
+}

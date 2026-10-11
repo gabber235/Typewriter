@@ -45,9 +45,7 @@ void main() {
     );
     final container = tester.container();
     final workspace = container.read(
-      authoringWorkspaceProvider(
-        container.read(selectedAuthoringScopeProvider)!,
-      ),
+      realmEditingProvider(container.read(selectedAuthoringScopeProvider)!),
     );
     final binding = workspace.attach(
       id,

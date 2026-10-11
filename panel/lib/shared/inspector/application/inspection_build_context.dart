@@ -11,7 +11,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 final class InspectionBuildContext {
   InspectionBuildContext(this.owners);
 
-  final EditorOwnerRefresh owners;
+  final InspectionBindingRefresh owners;
   final List<MultiEditOwner> _multiEditors = [];
   final Set<PortablePresentationHost> _hosts = {};
 
@@ -30,7 +30,7 @@ final class InspectionBuildContext {
   /// The returned owner is valid for this build context only. The individual
   /// target owners remain owned by the editor owner registry.
   MultiEditOwner multiEditorFor(
-    Iterable<EditorTarget> targets, {
+    Iterable<ValueEditingRegistration> targets, {
     required skir.TypeUse rootType,
     required CheckedEditorCatalog catalog,
   }) => multiEditorForOwners(
@@ -49,7 +49,6 @@ final class InspectionBuildContext {
       owners: owners.toList(growable: false),
       rootType: rootType,
       catalog: catalog,
-      commitInteractions: (interactions) => interactions.commitAtomically(),
     );
     _multiEditors.add(editor);
     return editor;

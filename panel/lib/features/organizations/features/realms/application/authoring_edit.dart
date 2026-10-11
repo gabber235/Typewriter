@@ -1,4 +1,4 @@
-part of "authoring_workspace.dart";
+part of "realm_edit_model.dart";
 
 /// A private operation branch. Only the workspace can publish its changes.
 final class AuthoringEdit implements PortableAuthoringEdit {

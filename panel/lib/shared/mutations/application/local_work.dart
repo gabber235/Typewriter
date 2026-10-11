@@ -107,16 +107,12 @@ class LocalWork extends _$LocalWork implements LocalWorkCommands {
   Stream<LocalWorkState> get changes => _activeSession.changes;
 
   @override
-  Map<EditorResourceKey, EditorResource> get resources =>
-      _activeSession.resources;
-
-  @override
   List<MutationSubmission<Object?>> get submissions =>
       _activeSession.submissions;
 
   @override
-  Future<MutationSubmission<T>> enqueue<T>(PendingCommit<T> pending) =>
-      _activeSession.enqueue(pending);
+  Future<MutationReservation> reserve(Set<Object> resources) =>
+      _activeSession.reserve(resources);
 
   @override
   MutationSubmission<T> start<T>(
@@ -136,13 +132,11 @@ class LocalWork extends _$LocalWork implements LocalWorkCommands {
   void dismiss(Object id) => _activeSession.dismiss(id);
 
   @override
-  EditorSource editor(EditorTarget target) => _activeSession.editor(target);
+  void setDestination(WorkDriverId driver, WorkDestination? destination) =>
+      _activeSession.setDestination(driver, destination);
 
   @override
-  void retain(EditorResourceKey key) => _activeSession.retain(key);
-
-  @override
-  void release(EditorResourceKey key) => _activeSession.release(key);
+  WorkReviewLease? review(WorkEntryId entry) => _activeSession.review(entry);
 
   @override
   Future<void> retrySubmission(Object id) => _activeSession.retrySubmission(id);
@@ -164,6 +158,19 @@ class LocalWork extends _$LocalWork implements LocalWorkCommands {
     WorkDestination? destination,
   }) => _activeSession.getOrRegister(id, create, destination: destination);
 
+  /// Gives confirmed subscriptions the same lifetime as a registered driver.
+  VoidCallback observe<T>(
+    ProviderListenable<T> provider,
+    void Function(T) accept,
+  ) {
+    final subscription = ref.listen(
+      provider,
+      (_, next) => accept(next),
+      fireImmediately: true,
+    );
+    return subscription.close;
+  }
+
   /// Creates domain adapters with the authenticated owner's provider lifetime.
   D getOrRegisterScoped<D extends WorkDriver>(
     WorkDriverId id,
@@ -180,9 +187,6 @@ class LocalWork extends _$LocalWork implements LocalWorkCommands {
 
   @override
   Future<void> open(WorkEntryId entry) => _activeSession.open(entry);
-
-  @override
-  EditorSource? source(EditorResourceKey key) => _activeSession.source(key);
 }
 
 /// Exposes the stable command owner without exposing its scoped session.

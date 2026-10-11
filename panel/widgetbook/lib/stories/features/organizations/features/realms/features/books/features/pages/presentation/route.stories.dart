@@ -21,7 +21,7 @@ final class PageWorkspaceStory extends StatefulWidget {
   });
 
   final bool timeline;
-  final AuthoringWorkspace? workspace;
+  final RealmEditing? workspace;
   final ValueChanged<skir.ResourceId>? onResourceSelected;
 
   @override
@@ -34,10 +34,12 @@ final class _PageWorkspaceStoryState extends State<PageWorkspaceStory> {
   late final _transport = ScriptedAuthoringTransport(
     AsyncData(_fixture.draft.toDocument()),
   );
+  final _submissions = ScopedWorkSession();
   late final _workspace =
       widget.workspace ??
-      AuthoringWorkspace(
-        transport: _transport,
+      RealmEditing(
+        persistence: _transport.persistence,
+        submissions: _submissions,
         initial: _fixture.draft.toDocument(),
       );
   late final _binding = _workspace.attach(_fixture.page);
@@ -50,7 +52,7 @@ final class _PageWorkspaceStoryState extends State<PageWorkspaceStory> {
     capabilities: const PortablePresentationCapabilities(),
     edit: _binding,
   );
-  AuthoringBinding? _inspector;
+  RealmEditingBinding? _inspector;
   void _updated() {
     if (mounted) setState(() {});
   }
@@ -69,6 +71,7 @@ final class _PageWorkspaceStoryState extends State<PageWorkspaceStory> {
     _inspector?.detach();
     if (widget.workspace == null) _workspace.dispose();
     _transport.dispose();
+    _submissions.dispose();
     super.dispose();
   }
 

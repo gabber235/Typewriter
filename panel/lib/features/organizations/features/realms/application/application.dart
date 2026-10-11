@@ -7,7 +7,7 @@
 /// those application contracts and the realm service wire protocols.
 ///
 /// Confirmed observations belong to [AuthoringSession]. Catalog snapshots
-/// belong to [RealmEditorCatalogCache]. [AuthoringWorkspace] owns working
+/// belong to [RealmEditorCatalogCache]. [RealmEditing] owns working
 /// values, grouped operations, and save lifecycle across all Realm views.
 /// The realm service remains authoritative for durable content.
 
@@ -25,13 +25,16 @@ export "authoring_selectable_resource.dart";
 export "authoring_session.dart";
 export "authoring_state_transfer_assembler.dart";
 export "authoring_subject_role.dart";
-export "authoring_work_driver.dart";
-export "authoring_workspace.dart";
 export "catalog_transfer_assembler.dart";
 export "core_resource_definitions.dart";
 export "nats_realm_editor_catalog_source.dart";
 export "nats_realm_presentation_search_transport.dart";
 export "nats_realm_publication_source.dart";
 export "realm.dart";
+export "realm_edit_model.dart";
+export "realm_edit_persistence.dart";
+export "realm_editing.dart";
+export "realm_editing_binding.dart";
+export "realm_editing_registration.dart";
 export "realm_publication.dart";
 export "resource_creation.dart";

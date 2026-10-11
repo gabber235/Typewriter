@@ -1,13 +1,10 @@
 library;
 
+export "bound_presentation_host.dart";
 export "checked_editor_catalog.dart";
 export "color_library.dart";
 export "edit_owner.dart";
-export "editor_changes.dart";
-export "editor_owner_registry.dart";
 export "editor_retry.dart";
-export "editor_source.dart";
-export "editor_source_presentation_host.dart";
 export "multi_edit_owner.dart";
 export "portable_authoring_document.dart";
 export "portable_expression.dart";
@@ -21,5 +18,4 @@ export "portable_value_admission.dart";
 export "portable_value_tree.dart";
 export "presentation_binding_ids.dart";
 export "reference_resources.dart";
-export "transactional_editor_source.dart";
 export "trusted_local_editor_catalog.dart";

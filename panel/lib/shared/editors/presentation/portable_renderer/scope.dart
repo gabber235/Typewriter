@@ -18,7 +18,6 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     )?
     watchSearch,
     ValueChanged<String>? reportStatus,
-    Future<void> Function()? commit,
     CheckedEditorCatalog? catalog,
     skir.ResourceId? resource,
     String? searchHistoryNamespace,
@@ -38,7 +37,6 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     enabled: enabled,
     watchSearch: watchSearch,
     reportStatus: reportStatus,
-    commit: commit,
     catalog: catalog,
     resource: resource,
     searchHistoryNamespace: searchHistoryNamespace,
@@ -62,7 +60,6 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     )?
     watchSearch,
     required ValueChanged<String>? reportStatus,
-    required Future<void> Function()? commit,
     required CheckedEditorCatalog? catalog,
     required skir.ResourceId? resource,
     required String? searchHistoryNamespace,

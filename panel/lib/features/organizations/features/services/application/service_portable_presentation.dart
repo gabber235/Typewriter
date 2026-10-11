@@ -25,28 +25,27 @@ final _servicePortableCatalog = skir.EditorCatalogWireSnapshot.defaultInstance
     .asTrustedLocalCatalog();
 
 extension ServicePortablePresentation on Service {
-  EditorSourcePresentationHost portablePresentationHost({
+  BoundPresentationHost portablePresentationHost({
     required bool connected,
     required EditOwner identityOwner,
-  }) => EditorSourcePresentationHost(
+  }) => BoundPresentationHost(
     catalog: _servicePortableCatalog,
     root: () => _servicePortablePresentation(color, serviceId.id),
     budget: skir.EvaluationBudget(maxSteps: 512, maxCollectionItems: 64),
-    capabilities: identityOwner.portablePresentationCapabilities,
     bindings: [
       _serviceNamePresentationBinding(identityOwner),
-      EditorSourcePresentationBinding(
+      BoundPresentationBinding(
         id: _serviceVersionBinding,
         use: _portableTextType,
         read: (_) => skir.DataValue.wrapStringValue(role.version),
       ),
-      EditorSourcePresentationBinding(
+      BoundPresentationBinding(
         id: _serviceStateBinding,
         use: _portableTextType,
         read: (_) =>
             skir.DataValue.wrapStringValue(connected ? "Connected" : "Offline"),
       ),
-      EditorSourcePresentationBinding(
+      BoundPresentationBinding(
         id: _serviceLastSeenBinding,
         use: _portableOptionalTimestampType,
         read: (_) => lastSeen == null
@@ -57,23 +56,24 @@ extension ServicePortablePresentation on Service {
   );
 }
 
-EditorSourcePresentationHost serviceIdentityPortablePresentationHost({
+BoundPresentationHost serviceIdentityPortablePresentationHost({
   required EditOwner identityOwner,
-  required Future<void> Function() commit,
-}) => EditorSourcePresentationHost(
+}) => BoundPresentationHost(
   catalog: _servicePortableCatalog,
   root: _serviceIdentityPortablePresentation,
   budget: skir.EvaluationBudget(maxSteps: 256, maxCollectionItems: 16),
-  capabilities: PortablePresentationCapabilities(commit: commit),
   bindings: [_serviceNamePresentationBinding(identityOwner)],
 );
 
-EditorSourcePresentationBinding _serviceNamePresentationBinding(
+BoundPresentationBinding _serviceNamePresentationBinding(
   EditOwner identityOwner,
-) => EditorSourcePresentationBinding(
+) => BoundPresentationBinding(
   id: _serviceNameBinding,
   use: _portableTextType,
   owner: identityOwner,
+  control: identityOwner is EditingControlOwner
+      ? (identityOwner as EditingControlOwner).bindControl()
+      : null,
   read: (_) {
     final value = identityOwner.value(editorRootPath.field("name")).valueOrNull;
     return value is skir.DataValue_stringValueWrapper
@@ -99,17 +99,6 @@ EditorSourcePresentationBinding _serviceNamePresentationBinding(
     );
   },
 );
-
-extension EditOwnerPortablePresentation on EditOwner {
-  PortablePresentationCapabilities get portablePresentationCapabilities =>
-      PortablePresentationCapabilities(
-        commit: this is EditorSource
-            ? () async {
-                await (this as EditorSource).flush();
-              }
-            : null,
-      );
-}
 
 extension EditorMutationPortablePresentation on EditorMutationResult {
   PortablePresentationWriteResult get portablePresentationResult =>

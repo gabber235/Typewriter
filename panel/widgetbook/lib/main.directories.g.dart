@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_import, prefer_relative_imports, directives_ordering
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 
 // **************************************************************************
 // AppGenerator
@@ -66,6 +66,8 @@ import 'package:widgetbook_workspace/stories/features/organizations/presentation
     as _widgetbook_workspace_stories_features_organizations_presentation_organization_selector_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/presentation/route.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_presentation_route_stories;
+import 'package:widgetbook_workspace/stories/shared/editing/apply_controls.stories.dart'
+    as _widgetbook_workspace_stories_shared_editing_apply_controls_stories;
 import 'package:widgetbook_workspace/stories/shared/editors/presentation/components/editor_text_field.stories.dart'
     as _widgetbook_workspace_stories_shared_editors_presentation_components_editor_text_field_stories;
 import 'package:widgetbook_workspace/stories/shared/editors/presentation/portable_presentation_renderer.stories.dart'
@@ -629,12 +631,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                                     .engineInspectorUseCase,
                           ),
                           _widgetbook.WidgetbookUseCase(
-                            name: 'Host inspector',
-                            builder:
-                                _widgetbook_workspace_stories_features_organizations_features_services_presentation_route_stories
-                                    .hostInspectorUseCase,
-                          ),
-                          _widgetbook.WidgetbookUseCase(
                             name: 'Realm inspector',
                             builder:
                                 _widgetbook_workspace_stories_features_organizations_features_services_presentation_route_stories
@@ -705,6 +701,33 @@ final directories = <_widgetbook.WidgetbookNode>[
   _widgetbook.WidgetbookFolder(
     name: 'shared',
     children: [
+      _widgetbook.WidgetbookFolder(
+        name: 'editing',
+        children: [
+          _widgetbook.WidgetbookComponent(
+            name: 'ApplyControls',
+            useCases: [
+              _widgetbook.WidgetbookUseCase(
+                name: 'Apply lifecycle',
+                builder:
+                    _widgetbook_workspace_stories_shared_editing_apply_controls_stories
+                        .applyControlsUseCase,
+              ),
+            ],
+          ),
+          _widgetbook.WidgetbookComponent(
+            name: 'EditingGroupPanel<dynamic, dynamic>',
+            useCases: [
+              _widgetbook.WidgetbookUseCase(
+                name: 'Retained group',
+                builder:
+                    _widgetbook_workspace_stories_shared_editing_apply_controls_stories
+                        .editingGroupPanelUseCase,
+              ),
+            ],
+          ),
+        ],
+      ),
       _widgetbook.WidgetbookFolder(
         name: 'editors',
         children: [

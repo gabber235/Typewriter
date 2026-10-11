@@ -52,7 +52,7 @@ abstract class AuthoringResourceIdentifier extends SelectableIdentifier
     final source = ref.watch(workingAuthoringDocumentProvider(scope));
     if (source.mapUnready<Selectable>() case final pending?) return pending;
     final document = source.requireValue;
-    final workspace = ref.watch(authoringWorkspaceProvider(scope));
+    final workspace = ref.watch(realmEditingProvider(scope));
     final commands = ref.watch(authoredResourceCommandsProvider(scope));
     final resource = document.entry(resourceId);
     if (resource == null) {
@@ -113,7 +113,7 @@ final class AuthoringSelectableResource
   @override
   final AuthoringResourceIdentifier id;
   final skir.AuthoringResource resource;
-  final AuthoringWorkspace workspace;
+  final RealmEditing workspace;
   final AuthoredResourceCommands commands;
   final VoidCallback? onOpen;
 
@@ -163,7 +163,7 @@ final class AuthoringSelectableResource
   ];
 
   @override
-  InspectionContent buildInspection(EditorOwnerScope owners) =>
+  InspectionContent buildInspection(InspectionBindingScope owners) =>
       InspectionContent(
         body: AuthoredResourceInspection(
           key: ValueKey((id.resourceId, skir.PresentationRole.inspector)),

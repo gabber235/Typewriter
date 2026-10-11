@@ -36,7 +36,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
   bool readOnly;
   Future<skir.PreparedValue> Function(skir.ValuePreparationRequest request)?
   prepareValue;
-  final AuthoringBinding? edit;
+  final RealmEditingBinding? edit;
   ValueChanged<String>? reportStatus;
   var _disposed = false;
 
@@ -56,6 +56,21 @@ final class AuthoredPresentationHost extends ChangeNotifier
     this.readOnly = readOnly;
     this.prepareValue = prepareValue;
     this.reportStatus = reportStatus;
+  }
+
+  @override
+  EditControl? commitControl(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) {
+    if (!enabled ||
+        readOnly ||
+        context.catalogGeneration != authored.generation ||
+        edit == null ||
+        location(reference, context: context) == null) {
+      return null;
+    }
+    return edit!.control;
   }
 
   @override
@@ -115,14 +130,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
     skir.BindingRef reference, {
     required PortableInvocationContext context,
   }) {
-    if (context.catalogGeneration != authored.generation) return null;
-    final exposed = context.bindings[reference.bindingId];
-    if (exposed == null) return null;
-    if (reference.path.segments.isEmpty) return exposed.value;
-    return switch (exposed.value.readAt(reference.path)) {
-      PortablePathValue(:final value) => value,
-      PortablePathUnavailable() => null,
-    };
+    return context.read(reference, authored.generation);
   }
 
   @override
@@ -130,15 +138,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
     skir.BindingRef reference, {
     required PortableInvocationContext context,
   }) {
-    if (context.catalogGeneration != authored.generation) return null;
-    final base = context.bindings[reference.bindingId]?.location;
-    if (base == null) return null;
-    return skir.ValueLocation(
-      resource: base.resource,
-      path: skir.ValuePath(
-        segments: [...base.path.segments, ...reference.path.segments],
-      ),
-    );
+    return context.location(reference, authored.generation);
   }
 
   @override
@@ -189,6 +189,18 @@ final class AuthoredPresentationHost extends ChangeNotifier
         "This presentation is read only",
       );
     }
+    final currentRecord = authored.resource(target.resource);
+    if (!context.isCurrent(
+      reference,
+      authored.generation,
+      currentRecord == null
+          ? null
+          : _recordValue(currentRecord).editorValueAt(target.path),
+    )) {
+      return const PortablePresentationWriteRejected(
+        "The presentation value changed before this write",
+      );
+    }
     final previousFindingCount = authored.initializationFindings.length;
     final result = await binding.prepare(
       label: "Edit value",
@@ -204,7 +216,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
         }
       },
     );
-    if (result case AuthoringEditRejected(:final message)) {
+    if (result case EditStageRejected(:final message)) {
       return PortablePresentationWriteRejected(message);
     }
     final findings = authored.initializationFindings.skip(previousFindingCount);
@@ -347,7 +359,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
         );
       },
     );
-    if (result case AuthoringEditRejected(:final message)) {
+    if (result case EditStageRejected(:final message)) {
       return PortablePresentationWriteRejected(message);
     }
     final findings = authored.initializationFindings.skip(previousFindingCount);
@@ -535,8 +547,9 @@ final class AuthoredPresentationHost extends ChangeNotifier
       },
     );
     return switch (result) {
-      AuthoringEditRejected(:final message) =>
-        PortablePresentationWriteRejected(message),
+      EditStageRejected(:final message) => PortablePresentationWriteRejected(
+        message,
+      ),
       _ => const PortablePresentationWriteApplied(),
     };
   }
@@ -1429,7 +1442,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
         }
       },
     );
-    if (result case AuthoringEditRejected(:final message)) {
+    if (result case EditStageRejected(:final message)) {
       return PortablePresentationWriteRejected(message);
     }
     final findings = authored.initializationFindings.skip(previousFindingCount);
@@ -1456,8 +1469,9 @@ final class AuthoredPresentationHost extends ChangeNotifier
         ? binding.workspace.edit(label: label, apply: apply, from: authored)
         : binding.edit(label: label, apply: apply, from: authored);
     return switch (result) {
-      AuthoringEditRejected(:final message) =>
-        PortablePresentationWriteRejected(message),
+      EditStageRejected(:final message) => PortablePresentationWriteRejected(
+        message,
+      ),
       _ => const PortablePresentationWriteApplied(),
     };
   }

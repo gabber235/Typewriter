@@ -7,7 +7,7 @@ part "authored_type_argument_editor.freezed.dart";
 typedef AuthoredTypePreview = Future<skir.TypePreviewResult> Function(
   skir.TypeSelection requested,
 );
-typedef AuthoredTypeCommit = Future<AuthoringEditResult> Function(
+typedef AuthoredTypeCommit = Future<EditStageResult> Function(
   skir.TypeArgumentChangePreview preview,
 );
 
@@ -579,11 +579,11 @@ final class _AuthoredTypeArgumentEditorState
     final response = await widget.commit(preview);
     if (!mounted) return;
     final message = switch (response) {
-      AuthoringEditStaged() => "Type arguments staged",
-      AuthoringEditUnchanged() => "Type arguments are unchanged",
-      AuthoringEditRejected(:final message) => message,
+      EditStaged() => "Type arguments staged",
+      EditUnchanged() => "Type arguments are unchanged",
+      EditStageRejected(:final message) => message,
     };
-    setState(() => _error = response is AuthoringEditRejected ? message : null);
+    setState(() => _error = response is EditStageRejected ? message : null);
     widget.onStatus?.call(message);
   }
 }

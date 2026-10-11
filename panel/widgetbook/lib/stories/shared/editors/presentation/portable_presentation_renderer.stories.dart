@@ -55,6 +55,11 @@ final class _PortablePresentationGalleryState
 
 final class _PortableGalleryHost extends ChangeNotifier
     implements PortablePresentationHost {
+  @override
+  EditControl? commitControl(
+    skir.BindingRef reference, {
+    required PortableInvocationContext context,
+  }) => null;
   final Map<skir.ExpressionBindingId, skir.DataValue> _values = {
     _title: skir.DataValue.wrapStringValue("Quest objective"),
     _count: skir.DataValue.wrapInteger("3"),

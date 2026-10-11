@@ -16,9 +16,7 @@ AuthoredResourceCommands authoredResourceCommands(
   return AuthoredResourceCommands(
     previewTypeArguments: session.previewTypeArguments,
     prepareTypeArguments: (preview) {
-      if (ref
-          .read(authoringWorkspaceProvider(scope))
-          .hasWorkFor(preview.resource)) {
+      if (ref.read(realmEditingProvider(scope)).hasWorkFor(preview.resource)) {
         throw StateError(
           "Save or discard pending work before changing type arguments",
         );
@@ -29,8 +27,7 @@ AuthoredResourceCommands authoredResourceCommands(
     invokeCommand: session.invokeCommand,
     watchSearch: session.watchPresentationSearch,
     search: session.search,
-    reload: () =>
-        ref.read(authoringWorkspaceProvider(scope)).refreshConfirmed(),
+    reload: () => ref.read(realmEditingProvider(scope)).refreshConfirmed(),
   );
 }
 

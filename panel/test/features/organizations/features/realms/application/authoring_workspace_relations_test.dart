@@ -14,23 +14,21 @@ void main() {
       );
       addTearDown(container.dispose);
       final workspace = container.read(
-        authoringWorkspaceProvider(
-          container.read(selectedAuthoringScopeProvider)!,
-        ),
+        realmEditingProvider(container.read(selectedAuthoringScopeProvider)!),
       );
       final result = workspace.edit(
         label: "Delete book",
         policy: EditorCommitPolicy.applyResource,
         apply: (edit) => edit.delete(_book),
       );
-      expect(result, isA<AuthoringEditStaged>());
+      expect(result, isA<EditStaged>());
       expect(workspace.document.entry(_book), isNull);
       expect(workspace.document.entry(_page), isNull);
       expect(container.read(workingBooksProvider).requireValue, isEmpty);
       expect(container.read(workingPagesProvider).requireValue, isEmpty);
       expect(container.read(workingTagsProvider).requireValue, hasLength(2));
       expect(workspace.state.groups.values.single.resources, {_book, _page});
-      workspace.discard((result as AuthoringEditStaged).group);
+      workspace.discard((result as EditStaged).group);
       expect(container.read(workingPagesProvider).requireValue, hasLength(1));
     },
   );
@@ -97,8 +95,9 @@ void main() {
         catalog: CheckedEditorCatalog(changed.toFrozen()),
       );
       final transport = ScriptedAuthoringTransport(AsyncData(document));
-      final workspace = AuthoringWorkspace(
-        transport: transport,
+      final workspace = RealmEditing(
+        persistence: transport.persistence,
+        submissions: _workSession(),
         initial: document,
       );
       addTearDown(workspace.dispose);
@@ -115,7 +114,7 @@ void main() {
             ..delete(_parent);
         },
       );
-      expect(result, isA<AuthoringEditRejected>());
+      expect(result, isA<EditStageRejected>());
       expect(workspace.document, before);
       expect(workspace.state.groups, isEmpty);
     },
@@ -124,8 +123,9 @@ void main() {
   test("invalid relation locations reject their whole operation", () {
     final document = _document();
     final transport = ScriptedAuthoringTransport(AsyncData(document));
-    final workspace = AuthoringWorkspace(
-      transport: transport,
+    final workspace = RealmEditing(
+      persistence: transport.persistence,
+      submissions: _workSession(),
       initial: document,
     );
     addTearDown(workspace.dispose);
@@ -152,14 +152,15 @@ void main() {
           );
       },
     );
-    expect(result, isA<AuthoringEditRejected>());
+    expect(result, isA<EditStageRejected>());
     expect(workspace.document, before);
   });
   test("missing relation targets reject a prepared batch", () {
     final document = _document();
     final transport = ScriptedAuthoringTransport(AsyncData(document));
-    final workspace = AuthoringWorkspace(
-      transport: transport,
+    final workspace = RealmEditing(
+      persistence: transport.persistence,
+      submissions: _workSession(),
       initial: document,
     );
     addTearDown(workspace.dispose);
@@ -197,7 +198,7 @@ void main() {
           );
       },
     );
-    expect(result, isA<AuthoringEditRejected>());
+    expect(result, isA<EditStageRejected>());
     expect(workspace.document, before);
     expect(workspace.state.groups, isEmpty);
   });
@@ -244,3 +245,9 @@ AuthoringDocument _document() => fixtureAuthoringDocument(
     ),
   ],
 );
+
+ScopedWorkSession _workSession() {
+  final session = ScopedWorkSession();
+  addTearDown(session.dispose);
+  return session;
+}
