@@ -72,7 +72,6 @@ Glossary terms are never linked automatically. Mark the first meaningful occurre
 | Syntax | Renders |
 |---|---|
 | `:::details[Label]{open}` … `:::` | Native collapsible with an animated chevron. `{id=anchor}` sets an id. |
-| `:::tldr` or `:::tldr[Custom label]` … `:::` | Compact summary box for the top of long pages. |
 | `:::spoiler[Title]{reason="…" button="…" hide="…" variant=warning}` … `:::` | Gated section: content is blurred behind a card explaining why it is hidden, with a reveal button. Variants `warning`, `danger`, `info`, `neutral`; `{open}` starts revealed. Links to headings inside a closed spoiler open it automatically. Use `::::spoiler` when it contains asides or code fences with directives. |
 | `:::wizard[Title]{persist}` + nested list … `:::` | Click-through decision tree. A single top-level item is the root question, its nested items are answers; `Answer → Follow-up question` items nest further, leaf items are results. `{persist}` remembers the path per session. |
 | `:::hotspots[Caption]` + `![alt](./image.png)` + ordered list … `:::` | Annotated screenshot. Each list item starts with `[x%, y%]` and becomes a numbered pin; pins open a popover with the item's text. The legend list is screen-reader-only and only shows visibly when the image fails to load, scripting is off, or the image is too narrow. `{numbers=false}` for dot pins, `{legend=visible}` to always show the legend. |

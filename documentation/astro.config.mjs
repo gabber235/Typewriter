@@ -18,7 +18,6 @@ import { remarkHotspots } from "./src/components/hotspots/remark-hotspots";
 import { remarkKbd } from "./src/components/kbd/remark-kbd";
 import { ecLog } from "./src/components/log/ec-log";
 import { remarkSpoiler } from "./src/components/spoiler/remark-spoiler";
-import { remarkTldr } from "./src/components/tldr/remark-tldr";
 import { remarkVariables } from "./src/components/variables/remark-variables";
 import { remarkWizard } from "./src/components/wizard/remark-wizard";
 import { BASE_PATH } from "./src/lib/base-path";
@@ -138,7 +137,6 @@ export default defineConfig({
 				remarkCmd,
 				remarkHighlight,
 				remarkDetails,
-				remarkTldr,
 				remarkSpoiler,
 				remarkWizard,
 				remarkHotspots,
