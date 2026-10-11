@@ -27,6 +27,18 @@ final class AuthoringResourceNavigationRegistry {
     final matches = _adapters.where((adapter) => adapter.supports(handler));
     if (matches.length != 1) return false;
     await matches.single.open(ref, effect);
+    if (effect.location case final location?) {
+      ref
+          .read(
+            realmLocationRevealProvider(
+              AuthoringScope(
+                organizationId: effect.organizationId,
+                realmId: effect.realmId,
+              ),
+            ),
+          )
+          .request(location);
+    }
     return true;
   }
 }

@@ -16,6 +16,7 @@ import com.typewritermc.checking.Diagnostic
 import com.typewritermc.checking.DiagnosticSeverity
 import com.typewritermc.checking.InputToken
 import com.typewritermc.configuration.RuleOrigin
+import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.checking.CheckAdmissionTarget
@@ -81,27 +82,69 @@ class StagedEngineImplementationSource(
         }
 }
 
-data class AcceptedAuthoring(
+@ConsistentCopyVisibility
+data class AcceptedAuthoring internal constructor(
     val catalog: CatalogGeneration,
     val coverage: CheckCoverage,
     val evidence: List<EditExpectation>,
     val bindingRequirements: List<NativeBindingRequirement>,
-)
+) {
+    init { require(coverage.complete) { "Accepted authoring requires complete check coverage." } }
+}
 
-sealed interface AcceptanceResult {
+/** Classifies diagnostics once at the saved candidate evaluation boundary. */
+sealed interface PublicationNotice {
+    val diagnostic: Diagnostic
+
+    @ConsistentCopyVisibility
+    data class Information internal constructor(override val diagnostic: Diagnostic) : PublicationNotice {
+        init { require(diagnostic.severity == DiagnosticSeverity.Info) }
+    }
+
+    @ConsistentCopyVisibility
+    data class Warning internal constructor(override val diagnostic: Diagnostic) : PublicationNotice {
+        init { require(diagnostic.severity == DiagnosticSeverity.Warning) }
+    }
+}
+
+@ConsistentCopyVisibility
+data class PublicationBlocker internal constructor(val diagnostic: Diagnostic) {
+    init { require(diagnostic.severity == DiagnosticSeverity.Error) }
+}
+
+/** A blocking assessment always has at least one reason. */
+data class PublicationBlockers(val first: PublicationBlocker, val additional: List<PublicationBlocker> = emptyList()) {
+    val all: List<PublicationBlocker> get() = listOf(first) + additional
+
+    companion object {
+        fun from(findings: List<Diagnostic>): PublicationBlockers {
+            val blockers = findings.map(::PublicationBlocker)
+            return PublicationBlockers(blockers.first(), blockers.drop(1))
+        }
+    }
+}
+
+sealed interface AuthoringAssessment {
     data class Accepted(
         val proof: AcceptedAuthoring,
-    ) : AcceptanceResult
+        val notices: List<PublicationNotice> = emptyList(),
+    ) : AuthoringAssessment
 
     data class Blocked(
-        val findings: List<Diagnostic>,
-    ) : AcceptanceResult
+        val blockers: PublicationBlockers,
+        val notices: List<PublicationNotice>,
+        val coverage: CheckCoverage,
+        val evidence: List<EditExpectation>,
+        val availableBindings: List<NativeBindingRequirement>,
+    ) : AuthoringAssessment
 }
 
 internal interface PublicationAcceptance {
     fun capture(): AuthoringLease
 
-    suspend fun evaluate(capture: AuthoringLease): AcceptanceResult
+    fun <T> withCurrent(block: (AuthoringView) -> T): T
+
+    suspend fun evaluate(capture: AuthoringLease): AuthoringAssessment
 }
 
 internal class AuthoringAcceptance(
@@ -110,7 +153,9 @@ internal class AuthoringAcceptance(
 ) : PublicationAcceptance {
     override fun capture(): AuthoringLease = snapshots.capture()
 
-    override suspend fun evaluate(capture: AuthoringLease): AcceptanceResult {
+    override fun <T> withCurrent(block: (AuthoringView) -> T): T = snapshots.read(block)
+
+    override suspend fun evaluate(capture: AuthoringLease): AuthoringAssessment {
         val snapshot = capture
         return run {
             val target = CheckAdmissionTarget.CapturedAcceptance(snapshot.root)
@@ -210,16 +255,29 @@ internal class AuthoringAcceptance(
             if (!coverage.complete) {
                 findings += diagnostic("check_coverage_incomplete", "Required captured checks did not complete.", null)
             }
-            if (findings.any { it.severity == DiagnosticSeverity.Error }) {
-                AcceptanceResult.Blocked(findings.distinctBy { it.id })
+            val distinct = findings.distinctBy { it.id }
+            val blockers = distinct.filter { it.severity == DiagnosticSeverity.Error }
+            val notices = distinct.mapNotNull { finding ->
+                when (finding.severity) {
+                    DiagnosticSeverity.Info -> PublicationNotice.Information(finding)
+                    DiagnosticSeverity.Warning -> PublicationNotice.Warning(finding)
+                    DiagnosticSeverity.Error -> null
+                }
+            }
+            val evidence = report.results.flatMap { it.expectations }.distinct()
+            if (blockers.isNotEmpty()) {
+                AuthoringAssessment.Blocked(
+                    PublicationBlockers.from(blockers), notices, coverage, evidence, requirements.distinct(),
+                )
             } else {
-                AcceptanceResult.Accepted(
+                AuthoringAssessment.Accepted(
                     AcceptedAuthoring(
                         catalog = snapshot.root.catalog.generation,
                         coverage = coverage,
-                        evidence = report.results.flatMap { it.expectations }.distinct(),
+                        evidence = evidence,
                         bindingRequirements = requirements.distinct(),
                     ),
+                    notices,
                 )
             }
         }

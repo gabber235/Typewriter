@@ -36,5 +36,7 @@ export "realm_edit_persistence.dart";
 export "realm_editing.dart";
 export "realm_editing_binding.dart";
 export "realm_editing_registration.dart";
+export "realm_inbox.dart";
 export "realm_publication.dart";
+export "realm_publication_view.dart";
 export "resource_creation.dart";

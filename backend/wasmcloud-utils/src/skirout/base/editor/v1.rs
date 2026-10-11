@@ -20,6 +20,7 @@ pub mod capability;
 pub mod catalog;
 pub mod catalog_presentation;
 pub mod checking;
+pub mod compilation_root;
 pub mod compiled_content;
 pub mod conversion;
 pub mod diagnostic;

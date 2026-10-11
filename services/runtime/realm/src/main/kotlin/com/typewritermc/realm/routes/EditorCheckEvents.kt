@@ -15,6 +15,7 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import skirout.editor.v1.authoring.AuthoringChanged
 import skirout.editor.v1.type_catalog.CatalogGeneration
@@ -25,6 +26,19 @@ internal class EditorCheckEvents(
     scope: CoroutineScope,
 ) {
     private val publisher = MutableStateFlow<Publisher?>(null)
+    private val publication = MutableStateFlow<com.typewritermc.realm.compiler.RealmPublicationCoordinator?>(null)
+    private val publicationTask = scope.launch {
+        combine(publisher, publication) { connection, source -> connection to source }.collectLatest { (connection, source) ->
+            if (connection == null || source == null) return@collectLatest
+            source.views.collectLatest { view ->
+                try {
+                    connection.communicator.publishUpdate(connection.contracts.watchPublication, connection.address, view.changed()).requirePublished()
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (_: Exception) { }
+            }
+        }
+    }
     private var findings: () -> List<FindingSet> = { emptyList() }
     private val wakeups = Channel<Unit>(Channel.CONFLATED)
     private val task =
@@ -48,6 +62,10 @@ internal class EditorCheckEvents(
             }
         }
 
+    fun bindPublication(source: com.typewritermc.realm.compiler.RealmPublicationCoordinator) {
+        publication.value = source
+    }
+
     fun bindFindings(provider: () -> List<FindingSet>) {
         findings = provider
     }
@@ -69,6 +87,8 @@ internal class EditorCheckEvents(
         unconfigure()
         wakeups.close()
         task.cancelAndJoin()
+        publicationTask.cancelAndJoin()
+        publication.value = null
     }
 
     suspend fun capture(root: AuthoringView): CapturedFindings = captureFindings(root, findings())
@@ -78,6 +98,7 @@ internal class EditorCheckEvents(
     }
 
     suspend fun publishChanged(ticket: CheckTicket) {
+        publication.value?.invalidate()
         committed()
     }
 

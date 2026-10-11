@@ -16,8 +16,9 @@ class ElasticSwitcher extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final disableAnimation = MediaQuery.disableAnimationsOf(context);
-    final sizeDuraiton = disableAnimation ? Duration.zero : 1000.ms;
-    final scaleDuration = disableAnimation ? Duration.zero : 800.ms;
+    if (disableAnimation) return child ?? const SizedBox.shrink();
+    final sizeDuraiton = 1000.ms;
+    final scaleDuration = 800.ms;
 
     return AnimatedSize(
       duration: sizeDuraiton,

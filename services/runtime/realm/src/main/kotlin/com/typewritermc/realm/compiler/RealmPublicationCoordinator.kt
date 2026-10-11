@@ -18,6 +18,13 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.sync.withLock
+import com.typewritermc.realm.repository.conflicts
 import kotlinx.serialization.builtins.ListSerializer
 
 data class PublicationAttempt(
@@ -51,9 +58,11 @@ sealed interface PublicationResult {
         val content: PublishedContent,
     ) : PublicationResult
 
-    data class Blocked(
-        val findings: List<Diagnostic>,
-    ) : PublicationResult
+    data class Blocked(val blockers: PublicationBlockers) : PublicationResult
+
+    data object NoChanges : PublicationResult
+
+    data class CandidateChanged(val view: PublicationViewId) : PublicationResult
 
     data class Interrupted(
         val publication: PublicationId,
@@ -82,120 +91,288 @@ interface PublicationAttemptStore {
     suspend fun interruptUnfinished()
 }
 
-/** A local gate serializes publication while one retained view supplies every check and compiled output. */
+/** Prepares saved candidates without publication effects and releases only a reviewed candidate. */
 internal class RealmPublicationCoordinator(
     private val acceptance: PublicationAcceptance,
     private val attempts: PublicationAttemptStore,
     private val artifacts: RegisteredCompiledArtifactStore,
     private val engine: EngineImplementationSource,
     private val compilation: CompiledArtifactProducerRegistry,
+    private val results: PublicationResults,
+    private val findings: () -> List<com.typewritermc.realm.checking.FindingSet> = { emptyList() },
 ) {
     private val gate = Mutex()
+    private val evaluation = Mutex()
+    private val lock = Any()
+    private val wakeups = kotlinx.coroutines.channels.Channel<Unit>(kotlinx.coroutines.channels.Channel.CONFLATED)
+    private var observer: kotlinx.coroutines.Job? = null
+    private var prepared: Prepared? = null
+    private var releasing: Release? = null
+    private var closed = false
+    private var invalidationRevision = 0L
+    private val mutableView = kotlinx.coroutines.flow.MutableStateFlow(
+        PublicationView(nextViewId(), PublicationStatus.Checking(PublicationBaseline.Initial, emptyList())),
+    )
+    val views: kotlinx.coroutines.flow.StateFlow<PublicationView> = mutableView
 
     @Volatile private var latest: PublicationAttempt? = null
-
     fun currentAttempt(): PublicationAttempt? = latest
-
     suspend fun recoverInterrupted() = attempts.interruptUnfinished()
 
-    suspend fun publish(onTransition: suspend (PublicationAttempt) -> Unit = {}): PublicationResult {
+    fun start(scope: kotlinx.coroutines.CoroutineScope, changes: kotlinx.coroutines.flow.Flow<Long>) {
+        check(observer == null)
+        observer = scope.launch {
+            kotlinx.coroutines.flow.merge(changes.map { Unit }, wakeups.receiveAsFlow()).collectLatest { refresh() }
+        }
+    }
+
+    /** Coalesces publication completion with saved input invalidations. */
+    fun invalidate() {
+        synchronized(lock) { invalidationRevision++ }
+        wakeups.trySend(Unit)
+    }
+
+    suspend fun close() {
+        synchronized(lock) { closed = true }
+        observer?.cancelAndJoin()
+        observer = null
+        wakeups.close()
+        gate.withLock {
+            synchronized(lock) {
+                prepared?.lease?.close()
+                prepared = null
+            }
+        }
+    }
+
+    suspend fun refresh() = evaluation.withLock {
+        val revision = synchronized(lock) { invalidationRevision }
+        var capture: com.typewritermc.realm.authoring.AuthoringLease? = null
+        var retained = false
+        var baseline: PublicationBaseline = PublicationBaseline.Initial
+        try {
+            val captured = acceptance.capture()
+            capture = captured
+            val selected = results.selected()
+            baseline = selected.baseline()
+            val inputs = engine.capture()
+            val alreadyPrepared = synchronized(lock) {
+                val current = prepared
+                current != null && current.lease.root === captured.root && current.baseline == baseline && current.engine == inputs && current.revision == revision
+            }
+            if (alreadyPrepared) return@withLock
+            synchronized(lock) {
+                if (closed) return@withLock
+                if (releasing == null) update(PublicationStatus.Checking(baseline, capturedFindings(captured.root)))
+            }
+            val assessment = acceptance.evaluate(captured)
+            val bindings = when (assessment) {
+                is AuthoringAssessment.Accepted -> assessment.proof.bindingRequirements
+                is AuthoringAssessment.Blocked -> assessment.availableBindings
+            }
+            val compilationInputs = CompilationInputs(captured.root, bindings)
+            val compiled = with(compilationInputs) { compilation.compile() }
+            val successful = compiled.filterIsInstance<com.typewritermc.engine.CompilationResult.Success>().map { it.artifact }
+            val failed = compiled.filterIsInstance<com.typewritermc.engine.CompilationResult.Blocked>()
+            val blockers = buildList {
+                if (assessment is AuthoringAssessment.Blocked) addAll(assessment.blockers.all)
+                failed.flatMap { it.diagnostics }.forEach { finding ->
+                    if (finding.severity == com.typewritermc.engine.CompileDiagnosticSeverity.ERROR) {
+                        add(PublicationBlocker(finding.toPublicationDiagnostic()))
+                    }
+                }
+            }.distinctBy { it.diagnostic.id }
+            val notices = when (assessment) {
+                is AuthoringAssessment.Accepted -> assessment.notices
+                is AuthoringAssessment.Blocked -> assessment.notices
+            } + failed.flatMap { it.diagnostics }.filter { it.severity == com.typewritermc.engine.CompileDiagnosticSeverity.WARNING }
+                .map { PublicationNotice.Warning(it.toPublicationDiagnostic()) }
+            val status = if (blockers.isNotEmpty()) {
+                PublicationStatus.Blocked(
+                    baseline,
+                    PublicationBlockers(blockers.first(), blockers.drop(1)),
+                    notices,
+                    PublicationComparison.confirmedChanges(selected, successful, compiled.mapTo(linkedSetOf()) { it.root }, inputs),
+                    failed.map { it.root },
+                )
+            } else {
+                when (val comparison = PublicationComparison.between(selected, successful, inputs)) {
+                    PublicationComparison.Unchanged -> selected?.let { PublicationStatus.Current(it.publication, notices) }
+                        ?: PublicationStatus.Empty(notices)
+                    is PublicationComparison.Changed -> PublicationStatus.Ready(
+                        PublicationCandidateId(java.util.UUID.randomUUID().toString()), baseline, comparison.delta, notices,
+                    )
+                }
+            }
+            val next = Prepared(captured, inputs, baseline, successful, status, revision)
+            acceptance.withCurrent { current ->
+                synchronized(lock) {
+                    if (!closed && current === captured.root && engine.compatible(inputs) && invalidationRevision == revision) {
+                        val old = prepared
+                        prepared = next
+                        retained = true
+                        if (old !== releasing?.candidate) old?.lease?.close()
+                        updateForPrepared(next)
+                    }
+                }
+            }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (fatal: VirtualMachineError) {
+            throw fatal
+        } catch (failure: Exception) {
+            synchronized(lock) {
+                if (!closed && releasing == null) {
+                    update(PublicationStatus.Unavailable(
+                        baseline,
+                        PublicationFailure.EvaluationInterrupted(failure.message ?: "Saved content could not be checked"),
+                        capture?.let { capturedFindings(it.root) }.orEmpty(),
+                    ))
+                }
+            }
+        } finally {
+            if (!retained) capture?.close()
+        }
+    }
+
+    suspend fun publish(candidate: PublicationCandidateId, onTransition: suspend (PublicationAttempt) -> Unit = {}): PublicationResult {
         if (!gate.tryLock()) return PublicationResult.Publishing
-        var attempt: PublicationAttempt? = null
+        var release: Release? = null
         var installed = false
         try {
-            acceptance.capture().use { captured ->
-                val id =
-                    PublicationId(
-                        java.util.UUID
-                            .randomUUID()
-                            .toString(),
-                    )
-                val inputs = engine.capture()
-                attempts.start(id, captured.root.catalog.generation, inputs)
-                attempt = PublicationAttempt(id, captured.root.catalog.generation, inputs, PublicationState.Checking)
-
-                suspend fun announce(state: PublicationState) {
-                    val next = requireNotNull(attempt).copy(state = state)
-                    attempt = next
-                    latest = next
-                    notifyTransition(next, onTransition)
+            val selected = results.selected()
+            val frozen = acceptance.withCurrent { current ->
+                synchronized(lock) {
+                    val prepared = prepared
+                    val status = prepared?.status
+                    if (!closed && mutableView.value.status is PublicationStatus.Ready &&
+                        prepared != null && status is PublicationStatus.Ready && status.candidate == candidate &&
+                        prepared.revision == invalidationRevision &&
+                        prepared.lease.root === current && prepared.baseline == selected.baseline() && engine.compatible(prepared.engine)
+                    ) {
+                        Release(prepared, PublicationId(java.util.UUID.randomUUID().toString()), PublicationActivationPhase.Storing).also {
+                            releasing = it
+                            updateForPrepared(prepared)
+                        }
+                    } else null
                 }
-
-                suspend fun phase(state: PublicationState) {
-                    attempts.phase(id, state)
-                    announce(state)
-                }
-
-                suspend fun blocked(findings: List<Diagnostic>): PublicationResult {
-                    attempts.blocked(id, findings)
-                    announce(PublicationState.Blocked(findings))
-                    return PublicationResult.Blocked(findings)
-                }
-                announce(PublicationState.Checking)
-                val accepted = acceptance.evaluate(captured)
-                if (accepted is AcceptanceResult.Blocked) return blocked(accepted.findings)
-                accepted as AcceptanceResult.Accepted
-                phase(PublicationState.Compiling)
-                val compilationInputs = CompilationInputs(captured.root, accepted.proof.bindingRequirements)
-                val compiled = with(compilationInputs) { compilation.compile() }
-                if (compiled is CompilationOutcome.Blocked) return blocked(compiled.findings)
-                compiled as CompilationOutcome.Ready
-                val result =
-                    artifacts.store(
-                        id,
-                        captured.root.catalog.generation,
-                        inputs.token.value,
-                        inputs.signatures,
-                        compiled.artifacts,
-                    )
-                phase(PublicationState.Activating)
-                installed =
-                    engine.activate(inputs) {
-                        attempts.install(result)
-                        true
-                    }
-                if (!installed) {
-                    return blocked(
-                        listOf(publicationDiagnostic("engine_inputs_changed", "Engine implementation inputs changed before installation.")),
-                    )
-                }
-                announce(PublicationState.Complete)
-                return PublicationResult.Activated(id, result)
+            } ?: return when (mutableView.value.status) {
+                is PublicationStatus.Empty, is PublicationStatus.Current -> PublicationResult.NoChanges
+                else -> PublicationResult.CandidateChanged(mutableView.value.id)
             }
-        } catch (failure: Throwable) {
+            release = frozen
+            val inputs = frozen.candidate.engine
+            val catalog = frozen.candidate.lease.root.catalog.generation
+            val id = frozen.id
+            attempts.start(id, catalog, inputs)
+            suspend fun announce(state: PublicationState) {
+                val attempt = PublicationAttempt(id, catalog, inputs, state)
+                latest = attempt
+                notifyTransition(attempt, onTransition)
+            }
+            announce(PublicationState.Compiling)
+            val content = artifacts.store(id, catalog, inputs.token.value, inputs.signatures, frozen.candidate.artifacts)
+            attempts.phase(id, PublicationState.Activating)
+            synchronized(lock) {
+                releasing = frozen.copy(phase = PublicationActivationPhase.Activating)
+                prepared?.let(::updateForPrepared)
+            }
+            announce(PublicationState.Activating)
+            installed = engine.activate(inputs) { attempts.install(content); true }
             if (!installed) {
-                attempt?.let { current ->
-                    withContext(NonCancellable) {
-                        runCatching {
-                            attempts.phase(
-                                current.id,
-                                PublicationState.Interrupted,
-                            )
-                        }.exceptionOrNull()?.let(failure::addSuppressed)
-                    }
+                val blockers = PublicationBlockers.from(listOf(publicationDiagnostic("engine_inputs_changed", "Engine requirements changed. Review saved content again.")))
+                attempts.blocked(id, blockers.all.map { it.diagnostic })
+                announce(PublicationState.Blocked(blockers.all.map { it.diagnostic }))
+                return PublicationResult.Blocked(blockers)
+            }
+            announce(PublicationState.Complete)
+            return PublicationResult.Activated(id, content)
+        } catch (failure: Throwable) {
+            release?.let { current ->
+                if (!installed) withContext(NonCancellable) { attempts.phase(current.id, PublicationState.Interrupted) }
+                synchronized(lock) {
+                    update(PublicationStatus.Unavailable(current.candidate.baseline, PublicationFailure.PublicationInterrupted(current.id), emptyList()))
                 }
             }
             throw failure
         } finally {
+            synchronized(lock) {
+                releasing = null
+                release?.candidate?.let { frozen ->
+                    if (prepared === frozen) prepared = null
+                    frozen.lease.close()
+                }
+                if (release != null && installed) update(PublicationStatus.Checking(PublicationBaseline.Selected(release.id), emptyList()))
+            }
             gate.unlock()
+            invalidate()
         }
     }
 
-    private suspend fun notifyTransition(
-        attempt: PublicationAttempt,
-        callback: suspend (PublicationAttempt) -> Unit,
-    ) {
-        try {
-            callback(attempt)
-        } catch (
-            cancelled: CancellationException,
-        ) {
-            throw cancelled
-        } catch (fatal: VirtualMachineError) {
-            throw fatal
-        } catch (_: Exception) {
-        }
+    private fun capturedFindings(root: com.typewritermc.realm.authoring.AuthoringView) = findings().map { set ->
+        val current = set.ticket.catalog == root.catalog.generation && root.values.conflicts(set.expectations).isEmpty()
+        set.copy(status = if (current) com.typewritermc.checking.FindingStatus.Current else com.typewritermc.checking.FindingStatus.Outdated)
     }
+
+    private fun updateForPrepared(next: Prepared) {
+        val active = releasing
+        if (active == null) { update(next.status); return }
+        val status = active.candidate.status as PublicationStatus.Ready
+        val pending = next.status
+        val pendingRoots = (pending as? PublicationStatus.Blocked)?.pendingRoots.orEmpty()
+        val later = if (next === active.candidate) PublicationPendingReview() else PublicationPendingReview(
+            findings = capturedFindings(next.lease.root),
+            confirmedChanges = PublicationComparison.confirmedChanges(
+                PublicationRuntimeContent.prepared(active.candidate.artifacts, active.candidate.engine),
+                next.artifacts, next.artifacts.mapTo(linkedSetOf()) { it.root } + pendingRoots, next.engine,
+            ),
+            pendingRoots = pendingRoots,
+            blockers = (pending as? PublicationStatus.Blocked)?.blockers?.all.orEmpty(),
+            notices = when (pending) {
+                is PublicationStatus.Ready -> pending.notices
+                is PublicationStatus.Blocked -> pending.notices
+                is PublicationStatus.Empty -> pending.notices
+                is PublicationStatus.Current -> pending.notices
+                else -> emptyList()
+            },
+        )
+        update(PublicationStatus.Publishing(active.id, active.phase, status.changes, later))
+    }
+
+    private fun update(status: PublicationStatus) {
+        mutableView.value = PublicationView(nextViewId(), status)
+    }
+
+    private suspend fun notifyTransition(attempt: PublicationAttempt, callback: suspend (PublicationAttempt) -> Unit) {
+        try { callback(attempt) }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (fatal: VirtualMachineError) { throw fatal }
+        catch (_: Exception) { }
+    }
+
+    private data class Prepared(
+        val lease: com.typewritermc.realm.authoring.AuthoringLease,
+        val engine: EngineImplementationInputs,
+        val baseline: PublicationBaseline,
+        val artifacts: List<com.typewritermc.engine.CompiledArtifact>,
+        val status: PublicationStatus,
+        val revision: Long,
+    )
+    private data class Release(val candidate: Prepared, val id: PublicationId, val phase: PublicationActivationPhase)
+}
+
+private fun PublishedContent?.baseline(): PublicationBaseline = this?.let { PublicationBaseline.Selected(it.publication) } ?: PublicationBaseline.Initial
+private fun nextViewId() = PublicationViewId(java.util.UUID.randomUUID().toString())
+
+private fun com.typewritermc.engine.CompileDiagnostic.toPublicationDiagnostic(): Diagnostic {
+    val primary = source?.let { com.typewritermc.authoring.ValueLocation(it, com.typewritermc.authoring.ValuePath()) }
+    val related = target?.let { listOf(com.typewritermc.authoring.ValueLocation(it, com.typewritermc.authoring.ValuePath())) }.orEmpty()
+    return Diagnostic(
+        DiagnosticId("publication:compiler:${source?.value}:${target?.value}:$code"),
+        RuleOrigin(PUBLICATION_TYPE, 0), code, message,
+        if (severity == com.typewritermc.engine.CompileDiagnosticSeverity.ERROR) DiagnosticSeverity.Error else DiagnosticSeverity.Warning,
+        primary, related,
+    )
 }
 
 internal class SurrealPublicationAttemptStore(

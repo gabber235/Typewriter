@@ -15,16 +15,18 @@ RealmPublicationRepository realmPublicationRepository(
   realmId: realmId,
 );
 
-/// Observes server publication independently of the lifetime of a toolbar.
+/// One leased observer owns publication state across popup lifetimes.
 final class PublicationWorkDriver extends ChangeNotifier implements WorkDriver {
   PublicationWorkDriver(this.scope, this.repository, this.work);
   final AuthoringScope scope;
   final RealmPublicationRepository repository;
   final LocalWorkCommands work;
-  skir.PublicationReport? _report;
-  skir.PublicationReport? get report => _report;
-  StreamSubscription<skir.PublicationReport>? _subscription;
-  Object? _failure;
+  PublicationObservation _observation = PublicationObservation.fetching(
+    skir.PublicationViewId(value: "initial"),
+  );
+  skir.PublicationView? _last;
+  String? _awaitingView;
+  StreamSubscription<PublicationObservation>? _subscription;
   StreamSubscription<LocalWorkState>? _workObservation;
   bool _closed = false;
   @override
@@ -38,16 +40,23 @@ final class PublicationWorkDriver extends ChangeNotifier implements WorkDriver {
     _workObservation = work.changes.listen((_) {
       if (!_closed) notifyListeners();
     });
+    _observe();
+  }
+
+  void _observe() {
     _subscription = repository.watch().listen(
-      (report) {
+      (observation) {
         if (_closed) return;
-        _report = report.id.value.isEmpty ? null : report;
-        _failure = null;
+        _observation = observation;
+        if (observation case AvailablePublicationObservation(:final view)) {
+          _last = view;
+          if (view.id.value != _awaitingView) _awaitingView = null;
+        }
         notifyListeners();
       },
       onError: (Object error) {
         if (_closed) return;
-        _failure = error;
+        _observation = PublicationObservation.unavailable(error.toString());
         notifyListeners();
       },
     );
@@ -55,83 +64,110 @@ final class PublicationWorkDriver extends ChangeNotifier implements WorkDriver {
 
   Iterable<MutationSubmission<Object?>> get _requests =>
       work.submissions.where((submission) => submission.resources.contains(id));
-  bool get _requestSending => _requests.any((submission) => submission.sending);
-  bool get _requestUncertain =>
-      _requests.any((submission) => submission.result is SubmissionUncertain);
-  bool get _requestPending => _requests.any(
-    (submission) => !submission.sending && submission.result == null,
-  );
-  bool get canPublish =>
-      !_closed &&
-      !(_report?.state).isActive &&
-      !_requestSending &&
-      !_requestUncertain &&
-      !_requestPending;
-
-  Future<skir.PublicationResult> publish() async {
-    if (_closed) throw StateError("Publication work is closed");
-    if (!canPublish) return skir.PublicationResult.publishing;
-    final response = await work.execute(repository.preparePublish());
-    return switch (response) {
-      skir.PublishAuthoringResponse_resultWrapper(:final value) => value,
-      _ => throw ApiException.internalServerError(),
+  RealmPublicationView get view {
+    final display = _last?.status;
+    final uncertain = _requests
+        .where((request) => request.result is SubmissionUncertain)
+        .firstOrNull;
+    if (uncertain != null) {
+      return RealmPublicationView.uncertain(
+        "The publication request outcome is unknown. Review the activity journal.",
+        display: display,
+      );
+    }
+    if (_requests.any((request) => request.sending || request.result == null) ||
+        _awaitingView != null) {
+      return RealmPublicationView.requestActive(display: display);
+    }
+    if (_observation case UnavailablePublicationObservation(:final message)) {
+      return RealmPublicationView.unavailable(message, display: display);
+    }
+    if (_observation is FetchingPublicationObservation) {
+      return RealmPublicationView.checking(display: display);
+    }
+    final observed = (_observation as AvailablePublicationObservation).view;
+    if (observed.id.value.isEmpty || !validPublicationStatus(observed.status)) {
+      return RealmPublicationView.unavailable(
+        "The publication view has no identity",
+        display: display,
+      );
+    }
+    return switch (observed.status) {
+      skir.PublicationStatus_emptyWrapper(:final value) =>
+        RealmPublicationView.empty(value),
+      skir.PublicationStatus_currentWrapper(:final value)
+          when value.selected.value.isNotEmpty =>
+        RealmPublicationView.current(value),
+      skir.PublicationStatus_readyWrapper(:final value)
+          when value.candidate.value.isNotEmpty &&
+              value.changes.first is! skir.PublicationChange_unknown =>
+        RealmPublicationView.ready(
+          value,
+          RealmPublishCommand(
+            value.candidate,
+            () => _publish(value.candidate, observed.id),
+          ),
+        ),
+      skir.PublicationStatus_blockedWrapper(:final value) =>
+        RealmPublicationView.blocked(value),
+      skir.PublicationStatus_checkingWrapper() => RealmPublicationView.checking(
+        display: observed.status,
+      ),
+      skir.PublicationStatus_publishingWrapper(:final value) =>
+        RealmPublicationView.publishing(value),
+      skir.PublicationStatus_unavailableWrapper(:final value) =>
+        RealmPublicationView.unavailable(
+          value.failure.toString(),
+          display: observed.status,
+        ),
+      _ => RealmPublicationView.unavailable(
+        "The publication review could not be interpreted",
+        display: display,
+      ),
     };
   }
 
-  @override
-  WorkDriverSnapshot get snapshot {
-    final result = publicationWorkSnapshot(entryId: entry, report: _report);
-    final state = result.entries.single;
-    return WorkDriverSnapshot(
-      entries: [
-        state.copyWith(
-          retained:
-              state.retained ||
-              _requestSending ||
-              _requestUncertain ||
-              _requestPending,
-          hasWork:
-              state.hasWork ||
-              _requestSending ||
-              _requestUncertain ||
-              _requestPending ||
-              _failure != null,
-          saving: state.saving || _requestSending,
-          needsAttention:
-              state.needsAttention || _failure != null || _requestUncertain,
-          details: [
-            ...state.details,
-            if (_requestSending)
-              const WorkFact(
-                label: "Request",
-                value: "Sending publication request",
-              ),
-            if (_requestPending)
-              const WorkFact(
-                label: "Request",
-                value: "Publication request is queued",
-              ),
-            if (_requestUncertain)
-              const WorkFact(
-                label: "Request",
-                value: "The delivery outcome is unknown. Check the activity journal.",
-              ),
-            if (_failure != null)
-              WorkFact(label: "Observation", value: _failure.toString()),
-          ],
-        ),
-      ],
-    );
+  Future<skir.PublicationResult> _publish(
+    skir.PublicationCandidateId candidate,
+    skir.PublicationViewId reviewed,
+  ) async {
+    if (_closed) throw StateError("Publication work is closed");
+    if (view is! ReadyRealmPublication || _last?.id != reviewed) {
+      return skir.PublicationResult.wrapCandidateChanged(
+        skir.PublicationViewChanged(current: _last?.id ?? reviewed),
+      );
+    }
+    _awaitingView = reviewed.value;
+    notifyListeners();
+    try {
+      final response = await work.execute(repository.preparePublish(candidate));
+      return switch (response) {
+        skir.PublishAuthoringResponse_resultWrapper(:final value) => value,
+        _ => throw ApiException.internalServerError(),
+      };
+    } finally {
+      await _subscription?.cancel();
+      if (!_closed) {
+        _observation = PublicationObservation.fetching(_last?.id ?? reviewed);
+        _awaitingView = null;
+        _observe();
+        notifyListeners();
+      }
+    }
   }
 
+  @override
+  WorkDriverSnapshot get snapshot =>
+      publicationWorkSnapshot(entryId: entry, view: view);
   @override
   Future<void> save(WorkEntryId entry) =>
       Future.error(StateError("Publication has no draft to save"));
   @override
   bool discard(WorkEntryId entry) => false;
   @override
-  Future<void> retry(WorkEntryId entry) =>
-      Future.error(StateError("Observe the result before publishing again"));
+  Future<void> retry(WorkEntryId entry) => Future.error(
+    StateError("Review current saved content before publishing"),
+  );
   @override
   void dispose() {
     if (_closed) return;
@@ -142,44 +178,36 @@ final class PublicationWorkDriver extends ChangeNotifier implements WorkDriver {
   }
 }
 
-extension PublicationActivity on skir.PublicationState? {
-  bool get isActive =>
-      this == skir.PublicationState.checking ||
-      this == skir.PublicationState.compiling ||
-      this == skir.PublicationState.activating;
-}
-
 WorkDriverSnapshot publicationWorkSnapshot({
   required WorkEntryId entryId,
-  required skir.PublicationReport? report,
+  required RealmPublicationView view,
 }) {
-  final phase = switch (report?.state) {
-    skir.PublicationState.checking => "Checking saved content",
-    skir.PublicationState.compiling => "Compiling saved content",
-    skir.PublicationState.activating => "Selecting compiled content",
-    skir.PublicationState.complete => "Published",
-    skir.PublicationState_blockedWrapper() => "Blocked",
-    skir.PublicationState.interrupted => "Interrupted",
-    _ => "Waiting for publication status",
-  };
-  final active = (report?.state).isActive;
+  final active =
+      view is CheckingRealmPublication ||
+      view is PublishingRealmPublication ||
+      view is RequestActiveRealmPublication;
   final attention =
-      report?.state is skir.PublicationState_blockedWrapper ||
-      report?.state == skir.PublicationState.interrupted;
+      view is BlockedRealmPublication ||
+      view is UnavailableRealmPublication ||
+      view is UncertainRealmPublication;
+  final phase = switch (view) {
+    EmptyRealmPublication() => "No saved content to publish",
+    CurrentRealmPublication() => "Everything is published",
+    ReadyRealmPublication() => "Saved changes ready",
+    BlockedRealmPublication() => "Publish blocked",
+    CheckingRealmPublication() => "Checking saved content",
+    PublishingRealmPublication() => "Publishing saved content",
+    RequestActiveRealmPublication() => "Awaiting publication status",
+    UnavailableRealmPublication() => "Publication review unavailable",
+    UncertainRealmPublication() => "Publication outcome unknown",
+  };
   return WorkDriverSnapshot(
     entries: [
       WorkEntryState(
         id: entryId,
         label: "Publish saved content",
         phase: phase,
-        details: [
-          if (report != null) ...[
-            WorkFact(label: "Publication", value: report.id.value),
-            for (final finding in report.findings)
-              WorkFact(label: "Finding", value: finding.message),
-          ],
-        ],
-        retained: active,
+        retained: active || attention,
         hasWork: active || attention,
         saving: active,
         needsAttention: attention,
@@ -207,18 +235,6 @@ extension PublicationWorkRegistration on LocalWork {
       );
 }
 
-/// Immutable publication facts derived from the leased domain driver.
-final class RealmPublicationView {
-  const RealmPublicationView({
-    required this.report,
-    required this.entry,
-    required this.canPublish,
-  });
-  final skir.PublicationReport? report;
-  final WorkEntryState entry;
-  final bool canPublish;
-}
-
 @riverpod
 class RealmPublication extends _$RealmPublication {
   late PublicationWorkDriver _driver;
@@ -238,20 +254,12 @@ class RealmPublication extends _$RealmPublication {
     ref.onDispose(lease.release);
     final driver = _driver;
     return Stream.multi((controller) {
-      void changed() => controller.add(
-        RealmPublicationView(
-          report: driver.report,
-          entry: driver.snapshot.entries.single,
-          canPublish: driver.canPublish,
-        ),
-      );
+      void changed() => controller.add(driver.view);
       driver.addListener(changed);
       changed();
       controller.onCancel = () => driver.removeListener(changed);
     });
   }
-
-  Future<skir.PublicationResult> publish() => _driver.publish();
 
   Future<List<skir.CompiledResourceStatus>> states(
     skir.CompilationStatusSelection selection,

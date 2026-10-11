@@ -635,6 +635,18 @@ routes:
       failure_slug: editor-authoring-publish-failed
       requests: { panel: "service.to.{realm}.organization.{organization}.realm.editor.authoring.publish", service: "service.to.{realm}.organization.{organization}.realm.editor.authoring.publish" }
 
+  - name: authoring_publication_query
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: organization_member, side: panel, direction: subscribe, channel: updates }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }, { role: realm_coordinator, side: service, direction: publish, channel: updates }]
+    flow:
+      kind: bounded_watch
+      method: "editor/v1/publication.skir:QueryPublicationView"
+      transfer_field: transfer_id
+      operation: editor.authoring.publication.query
+      failure_slug: editor-authoring-publication-query-failed
+      requests: { panel: "service.to.{realm}.organization.{organization}.realm.editor.authoring.publication.query", service: "service.to.{realm}.organization.{organization}.realm.editor.authoring.publication.query" }
+      updates: { panel: "service.from.{realm}.organization.{organization}.realm.editor.authoring.publication.query.{transfer_id}", service: "service.from.{realm}.organization.{organization}.realm.editor.authoring.publication.query.{transfer_id}" }
+
   - name: authoring_publication_watch
     scope: realm
     grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: organization_member, side: panel, direction: subscribe, channel: updates }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }, { role: realm_coordinator, side: service, direction: publish, channel: updates }]
@@ -645,7 +657,7 @@ routes:
       failure_slug: editor-authoring-publication-watch-failed
       requests: { panel: "service.to.{realm}.organization.{organization}.realm.editor.authoring.publication.watch", service: "service.to.{realm}.organization.{organization}.realm.editor.authoring.publication.watch" }
       updates:
-        payload: "editor/v1/publication.skir:PublicationReport"
+        payload: "editor/v1/publication.skir:PublicationViewChanged"
         addresses: { panel: "service.from.{realm}.organization.{organization}.realm.editor.authoring.publication.watch", service: "service.from.{realm}.organization.{organization}.realm.editor.authoring.publication.watch" }
         delivery: { kind: transient }
 

@@ -52,5 +52,6 @@ abstract class OpenAuthoringResourceEffect
     required skir.ResourceDefinitionId definition,
     required skir.TypeSelection configuration,
     required String? navigationHandler,
+    skir.ValueLocation? location,
   }) = _OpenAuthoringResourceEffect;
 }

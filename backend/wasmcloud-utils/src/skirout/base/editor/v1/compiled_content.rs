@@ -14,89 +14,6 @@
 //   cargo add skir-client
 
 // ==============================================================================
-// struct CompilationProjectionId
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct CompilationProjectionId {
-    pub value: String,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CompilationProjectionId>>,
-}
-
-impl CompilationProjectionId {
-    pub fn default_ref() -> &'static CompilationProjectionId {
-        static D: std::sync::LazyLock<CompilationProjectionId> =
-            std::sync::LazyLock::new(CompilationProjectionId::default);
-        &D
-    }
-}
-
-impl CompilationProjectionId {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CompilationProjectionId> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<CompilationProjectionId>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/compiled_content.skir",
-                "CompilationProjectionId",
-                "",
-                |x: &CompilationProjectionId| &x._unrecognized,
-                |x: &mut CompilationProjectionId, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<CompilationProjectionId> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            CompilationProjectionId::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// struct CompilationRoot
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct CompilationRoot {
-    pub projection: CompilationProjectionId,
-    pub resource: crate::skirout::base::editor::v1::type_catalog::ResourceId,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CompilationRoot>>,
-}
-
-impl CompilationRoot {
-    pub fn default_ref() -> &'static CompilationRoot {
-        static D: std::sync::LazyLock<CompilationRoot> =
-            std::sync::LazyLock::new(CompilationRoot::default);
-        &D
-    }
-}
-
-impl CompilationRoot {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CompilationRoot> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<CompilationRoot>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/compiled_content.skir",
-                "CompilationRoot",
-                "",
-                |x: &CompilationRoot| &x._unrecognized,
-                |x: &mut CompilationRoot, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<CompilationRoot> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(CompilationRoot::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct CompiledBlobPointer
 // ==============================================================================
 
@@ -143,7 +60,7 @@ impl CompiledBlobPointer {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CompiledArtifactReference {
-    pub root: CompilationRoot,
+    pub root: crate::skirout::base::editor::v1::compilation_root::CompilationRoot,
     pub format_revision: i32,
     pub media_type: String,
     pub semantic_digest: String,
@@ -364,7 +281,7 @@ impl CompiledResourceState {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CompiledResourceStatus {
-    pub root: CompilationRoot,
+    pub root: crate::skirout::base::editor::v1::compilation_root::CompilationRoot,
     pub state: CompiledResourceState,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CompiledResourceStatus>>,
@@ -451,7 +368,7 @@ impl CompiledContentChanged {
 pub enum CompilationStatusSelection {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<CompilationStatusSelection>>),
     AllRoots,
-    SuppliedRoots(Vec<CompilationRoot>),
+    SuppliedRoots(Vec<crate::skirout::base::editor::v1::compilation_root::CompilationRoot>),
 }
 
 impl Default for CompilationStatusSelection {
@@ -826,42 +743,6 @@ impl QueryCompiledResourceStatusResponse {
 fn initialize_module_serializers() {
     static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| {
         unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<CompilationProjectionId> =
-                CompilationProjectionId::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "value",
-                0,
-                crate::skir_client::Serializer::string(),
-                "",
-                |x: &CompilationProjectionId| &x.value,
-                |x: &mut CompilationProjectionId, v| x.value = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<CompilationRoot> =
-                CompilationRoot::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "projection",
-                0,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    CompilationProjectionId::_adapter(),
-                ),
-                "",
-                |x: &CompilationRoot| &x.projection,
-                |x: &mut CompilationRoot, v| x.projection = v,
-            );
-            (*a).add_field(
-                "resource",
-                1,
-                crate::skirout::base::editor::v1::type_catalog::ResourceId::serializer(),
-                "",
-                |x: &CompilationRoot| &x.resource,
-                |x: &mut CompilationRoot, v| x.resource = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
             let a: *mut crate::skir_client::internal::StructAdapter<CompiledBlobPointer> =
                 CompiledBlobPointer::_adapter() as *const _ as *mut _;
             (*a).add_field(
@@ -888,9 +769,7 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "root",
                 0,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    CompilationRoot::_adapter(),
-                ),
+                crate::skirout::base::editor::v1::compilation_root::CompilationRoot::serializer(),
                 "",
                 |x: &CompiledArtifactReference| &x.root,
                 |x: &mut CompiledArtifactReference, v| x.root = v,
@@ -1026,9 +905,7 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "root",
                 0,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    CompilationRoot::_adapter(),
-                ),
+                crate::skirout::base::editor::v1::compilation_root::CompilationRoot::serializer(),
                 "",
                 |x: &CompiledResourceStatus| &x.root,
                 |x: &mut CompiledResourceStatus, v| x.root = v,
@@ -1067,8 +944,7 @@ fn initialize_module_serializers() {
                 2,
                 2,
                 crate::skir_client::Serializer::array(
-                    crate::skir_client::internal::struct_serializer_from_static(
-                        CompilationRoot::_adapter(),
+                    crate::skirout::base::editor::v1::compilation_root::CompilationRoot::serializer(
                     ),
                 ),
                 "",

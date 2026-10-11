@@ -56,7 +56,7 @@ private fun registry(root: CompilationRoot) =
                 override fun roots(view: AuthoringView) = setOf(root)
 
                 context(inputs: CompilationInputs)
-                override fun compile(roots: Set<CompilationRoot>) = CompilationOutcome.Ready(emptyList())
+                override fun compile(roots: Set<CompilationRoot>) = emptyList<com.typewritermc.engine.CompilationResult>()
             },
         ),
     )

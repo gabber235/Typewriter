@@ -4,9 +4,16 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/src/infrastructure/messaging/nats.dart";
 
+import "../../../../../support/publication.dart";
+
 void main() {
   for (final result in [
-    skir.PublicationResult.wrapBlocked([]),
+    skir.PublicationResult.wrapBlocked(
+      skir.PublicationBlockers(
+        first: skir.PublicationBlocker(details: publicationProblem()),
+        additional: const [],
+      ),
+    ),
     skir.PublicationResult.wrapInterrupted(_publication),
     skir.PublicationResult.unknown,
   ]) {
@@ -32,7 +39,9 @@ void main() {
           realmPublicationRepositoryProvider(_organization, _realm),
         );
         final work = ScopedWorkSession();
-        final commit = source.preparePublish();
+        final commit = source.preparePublish(
+          skir.PublicationCandidateId(value: "reviewed"),
+        );
         expect(commit.replay, SubmissionReplay.unsupported);
         expect(commit.resources, {
           WorkDriverId(
@@ -133,75 +142,92 @@ void main() {
     },
   );
 
-  test(
-    "publication transport uses the Realm route and streams transitions",
-    () async {
-      final nats = FakeNatsClient();
-      skir.PublishAuthoringRequest? published;
-      nats
-        ..registerHandler(_watchSubject, (_) {
-          return skir.PublicationReport.serializer.toBytes(
-            _attempt(skir.PublicationState.checking),
-          );
-        })
-        ..registerHandler(_publishSubject, (bytes) {
-          published = skir.PublishAuthoringRequest.serializer.fromBytes(bytes);
-          return skir.PublishAuthoringResponse.serializer.toBytes(
-            skir.PublishAuthoringResponse.wrapResult(
-              skir.PublicationResult.publishing,
-            ),
-          );
-        });
-      final container = ProviderContainer.test(
-        overrides: [
-          natsProvider.overrideWith(() => FakeNats(nats)),
-          panelTelemetryProvider.overrideWithValue(
-            const AsyncData(NoopPanelTelemetry()),
+  test("publication transport fetches a coherent bounded view for each identity hint", () async {
+    final nats = FakeNatsClient();
+    var view = skir.PublicationView(
+      id: skir.PublicationViewId(value: "first"),
+      status: readyPublicationStatus(),
+    );
+    nats.registerHandler(
+      _watchSubject,
+      (_) => skir.PublicationViewChanged.serializer.toBytes(
+        skir.PublicationViewChanged(current: view.id),
+      ),
+    );
+    nats.registerHandler(_querySubject, (bytes) {
+      final request = skir.QueryPublicationViewRequest.serializer.fromBytes(
+        bytes,
+      );
+      if (request.expected != view.id) {
+        return skir.QueryPublicationViewResponse.serializer.toBytes(
+          skir.QueryPublicationViewResponse.wrapChanged(
+            skir.PublicationViewChanged(current: view.id),
           ),
-        ],
-      );
-      final source = container.read(
-        realmPublicationRepositoryProvider(_organization, _realm),
-      );
-      final transitions = <skir.PublicationReport>[];
-      final subscription = source.watch().listen(transitions.add);
-      await _waitUntil(() => transitions.isNotEmpty);
-
-      final work = ScopedWorkSession();
-      final response = await work.execute(source.preparePublish());
-      final result =
-          (response as skir.PublishAuthoringResponse_resultWrapper).value;
-      work.dispose();
-      expect(result, skir.PublicationResult.publishing);
-      expect(published, skir.PublishAuthoringRequest.defaultInstance);
-
-      for (final state in [
-        skir.PublicationState.compiling,
-        skir.PublicationState.activating,
-        skir.PublicationState.complete,
-      ]) {
-        nats.emitMessageOnSubject(
-          _watchUpdateSubject,
-          skir.PublicationReport.serializer.toBytes(_attempt(state)),
         );
       }
-      await _waitUntil(() => transitions.length == 4);
-      expect(transitions.map((attempt) => attempt.state), [
-        skir.PublicationState.checking,
-        skir.PublicationState.compiling,
-        skir.PublicationState.activating,
-        skir.PublicationState.complete,
-      ]);
-      expect(nats.requests.map((request) => request.subject), [
-        _watchSubject,
-        _publishSubject,
-      ]);
-
-      await subscription.cancel();
-      container.dispose();
-      await nats.dispose();
-    },
-  );
+      final encoded = skir.PublicationView.serializer.toBytes(view);
+      return skir.QueryPublicationViewResponse.serializer.toBytes(
+        skir.QueryPublicationViewResponse.wrapChunk(
+          skir.PublicationViewChunk(
+            view: view.id,
+            transfer: skir.BoundedTransferChunk(
+              transferId: request.transferId,
+              index: 0,
+              chunkCount: 1,
+              encodedSize: encoded.length,
+              sha256: sha256.convert(encoded).toString(),
+              payload: skir.ByteString.copy(encoded),
+            ),
+          ),
+        ),
+      );
+    });
+    final container = ProviderContainer.test(
+      overrides: [
+        natsProvider.overrideWith(() => FakeNats(nats)),
+        panelTelemetryProvider.overrideWithValue(
+          const AsyncData(NoopPanelTelemetry()),
+        ),
+      ],
+    );
+    final source = container.read(
+      realmPublicationRepositoryProvider(_organization, _realm),
+    );
+    final observed = <PublicationObservation>[];
+    final subscription = source.watch().listen(observed.add);
+    await waitForPublication(
+      () => observed.lastOrNull is AvailablePublicationObservation,
+    );
+    expect(observed.first, isA<FetchingPublicationObservation>());
+    expect((observed.last as AvailablePublicationObservation).view.id, view.id);
+    view = skir.PublicationView(
+      id: skir.PublicationViewId(value: "second"),
+      status: blockedPublicationStatus(),
+    );
+    nats.emitMessageOnSubject(
+      _watchUpdateSubject,
+      skir.PublicationViewChanged.serializer.toBytes(
+        skir.PublicationViewChanged(current: view.id),
+      ),
+    );
+    await waitForPublication(
+      () =>
+          observed.whereType<AvailablePublicationObservation>().last.view.id ==
+          view.id,
+    );
+    expect(
+      (observed.last as AvailablePublicationObservation).view.status,
+      isA<skir.PublicationStatus_blockedWrapper>(),
+    );
+    expect(observed.whereType<FetchingPublicationObservation>(), hasLength(2));
+    expect(
+      nats.requests.where((request) => request.subject == _querySubject),
+      hasLength(2),
+    );
+    await subscription.cancel();
+    container.dispose();
+    await nats.dispose();
+  });
 }
 
 final _organization = skir.recordId("organization:org1");
@@ -216,12 +242,5 @@ const _watchSubject =
 const _watchUpdateSubject =
     "service.from.realm1.organization.org1.realm.editor.authoring.publication.watch";
 
-skir.PublicationReport _attempt(skir.PublicationState state) =>
-    skir.PublicationReport(id: _publication, findings: const [], state: state);
-
-Future<void> _waitUntil(bool Function() predicate) async {
-  for (var index = 0; index < 100 && !predicate(); index++) {
-    await Future<void>.delayed(Duration.zero);
-  }
-  expect(predicate(), isTrue);
-}
+const _querySubject =
+    "service.to.realm1.organization.org1.realm.editor.authoring.publication.query";

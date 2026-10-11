@@ -42,7 +42,7 @@ internal class EditorCompiledResourceStatusRoutes(
         }
 }
 
-private fun skirout.editor.v1.compiled_content.CompilationRoot.toDomain() =
+private fun skirout.editor.v1.compilation_root.CompilationRoot.toDomain() =
     CompilationRoot(
         projection = com.typewritermc.engine.CompilationProjectionId(projection.value),
         resource = com.typewritermc.types.ResourceId(resource.value),
@@ -51,9 +51,9 @@ private fun skirout.editor.v1.compiled_content.CompilationRoot.toDomain() =
 private fun RegisteredCompiledState.toWire(root: CompilationRoot) =
     skirout.editor.v1.compiled_content.CompiledResourceStatus(
         root =
-            skirout.editor.v1.compiled_content.CompilationRoot(
+            skirout.editor.v1.compilation_root.CompilationRoot(
                 projection =
-                    skirout.editor.v1.compiled_content
+                    skirout.editor.v1.compilation_root
                         .CompilationProjectionId(value = root.projection.value),
                 resource =
                     skirout.editor.v1.type_catalog

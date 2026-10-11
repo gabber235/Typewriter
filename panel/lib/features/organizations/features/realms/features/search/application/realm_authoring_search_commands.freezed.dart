@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,15 +9,15 @@ part of 'realm_authoring_search_commands.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$OpenAuthoringResourceEffect {
 
- skir.RecordId get organizationId; skir.RecordId get realmId; skir.ResourceId get resourceId; skir.ResourceDefinitionId get definition; skir.TypeSelection get configuration; String? get navigationHandler;
+ skir.RecordId get organizationId; skir.RecordId get realmId; skir.ResourceId get resourceId; skir.ResourceDefinitionId get definition; skir.TypeSelection get configuration; String? get navigationHandler; skir.ValueLocation? get location;
 /// Create a copy of OpenAuthoringResourceEffect
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $OpenAuthoringResourceEffectCopyWith<OpenAuthoringResourceEffect> get copyWith => _$OpenAuthoringResourceEffectCopyWithImpl<OpenAuthoringResourceEffect>(this as OpenAuthoringResourceEffect, _$identity);
@@ -27,20 +27,20 @@ $OpenAuthoringResourceEffectCopyWith<OpenAuthoringResourceEffect> get copyWith =
 @override
 bool operator ==(Object other) {
   final _this = this as OpenAuthoringResourceEffect;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is OpenAuthoringResourceEffect&&(identical(other.organizationId, _this.organizationId) || other.organizationId == _this.organizationId)&&(identical(other.realmId, _this.realmId) || other.realmId == _this.realmId)&&(identical(other.resourceId, _this.resourceId) || other.resourceId == _this.resourceId)&&(identical(other.definition, _this.definition) || other.definition == _this.definition)&&(identical(other.configuration, _this.configuration) || other.configuration == _this.configuration)&&(identical(other.navigationHandler, _this.navigationHandler) || other.navigationHandler == _this.navigationHandler));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OpenAuthoringResourceEffect&&(identical(other.organizationId, _this.organizationId) || other.organizationId == _this.organizationId)&&(identical(other.realmId, _this.realmId) || other.realmId == _this.realmId)&&(identical(other.resourceId, _this.resourceId) || other.resourceId == _this.resourceId)&&(identical(other.definition, _this.definition) || other.definition == _this.definition)&&(identical(other.configuration, _this.configuration) || other.configuration == _this.configuration)&&(identical(other.navigationHandler, _this.navigationHandler) || other.navigationHandler == _this.navigationHandler)&&(identical(other.location, _this.location) || other.location == _this.location));
 }
 
 
 @override
 int get hashCode {
   final _this = this as OpenAuthoringResourceEffect;
-  return Object.hash(runtimeType,_this.organizationId,_this.realmId,_this.resourceId,_this.definition,_this.configuration,_this.navigationHandler);
+  return Object.hash(runtimeType,_this.organizationId,_this.realmId,_this.resourceId,_this.definition,_this.configuration,_this.navigationHandler,_this.location);
 }
 
 @override
 String toString() {
   final _this = this as OpenAuthoringResourceEffect;
-  return 'OpenAuthoringResourceEffect(organizationId: ${_this.organizationId}, realmId: ${_this.realmId}, resourceId: ${_this.resourceId}, definition: ${_this.definition}, configuration: ${_this.configuration}, navigationHandler: ${_this.navigationHandler})';
+  return 'OpenAuthoringResourceEffect(organizationId: ${_this.organizationId}, realmId: ${_this.realmId}, resourceId: ${_this.resourceId}, definition: ${_this.definition}, configuration: ${_this.configuration}, navigationHandler: ${_this.navigationHandler}, location: ${_this.location})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $OpenAuthoringResourceEffectCopyWith<$Res>  {
   factory $OpenAuthoringResourceEffectCopyWith(OpenAuthoringResourceEffect value, $Res Function(OpenAuthoringResourceEffect) _then) = _$OpenAuthoringResourceEffectCopyWithImpl;
 @useResult
 $Res call({
- skir.RecordId organizationId, skir.RecordId realmId, skir.ResourceId resourceId, skir.ResourceDefinitionId definition, skir.TypeSelection configuration, String? navigationHandler
+ skir.RecordId organizationId, skir.RecordId realmId, skir.ResourceId resourceId, skir.ResourceDefinitionId definition, skir.TypeSelection configuration, String? navigationHandler, skir.ValueLocation? location
 });
 
 
@@ -67,8 +67,8 @@ class _$OpenAuthoringResourceEffectCopyWithImpl<$Res>
   final $Res Function(OpenAuthoringResourceEffect) _then;
 
 /// Create a copy of OpenAuthoringResourceEffect
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? organizationId = null,Object? realmId = null,Object? resourceId = null,Object? definition = null,Object? configuration = null,Object? navigationHandler = freezed,}) {
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? organizationId = null,Object? realmId = null,Object? resourceId = null,Object? definition = null,Object? configuration = null,Object? navigationHandler = freezed,Object? location = freezed,}) {
   return _then(OpenAuthoringResourceEffect(
 organizationId: null == organizationId ? _self.organizationId : organizationId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,realmId: null == realmId ? _self.realmId : realmId // ignore: cast_nullable_to_non_nullable
@@ -76,14 +76,15 @@ as skir.RecordId,resourceId: null == resourceId ? _self.resourceId : resourceId 
 as skir.ResourceId,definition: null == definition ? _self.definition : definition // ignore: cast_nullable_to_non_nullable
 as skir.ResourceDefinitionId,configuration: null == configuration ? _self.configuration : configuration // ignore: cast_nullable_to_non_nullable
 as skir.TypeSelection,navigationHandler: freezed == navigationHandler ? _self.navigationHandler : navigationHandler // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,location: freezed == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
+as skir.ValueLocation?,
   ));
 }
 
 }
 
 
-/// Adds pattern-matching-related methods to [OpenAuthoringResourceEffect].
+/// Adds pattern matching related methods to [OpenAuthoringResourceEffect].
 extension OpenAuthoringResourceEffectPatterns on OpenAuthoringResourceEffect {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -106,7 +107,7 @@ return $default(_that);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -161,15 +162,15 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.ResourceId resourceId,  skir.ResourceDefinitionId definition,  skir.TypeSelection configuration,  String? navigationHandler)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.ResourceId resourceId,  skir.ResourceDefinitionId definition,  skir.TypeSelection configuration,  String? navigationHandler,  skir.ValueLocation? location)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _OpenAuthoringResourceEffect() when $default != null:
-return $default(_that.organizationId,_that.realmId,_that.resourceId,_that.definition,_that.configuration,_that.navigationHandler);case _:
+return $default(_that.organizationId,_that.realmId,_that.resourceId,_that.definition,_that.configuration,_that.navigationHandler,_that.location);case _:
   return orElse();
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -182,10 +183,10 @@ return $default(_that.organizationId,_that.realmId,_that.resourceId,_that.defini
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.ResourceId resourceId,  skir.ResourceDefinitionId definition,  skir.TypeSelection configuration,  String? navigationHandler)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.ResourceId resourceId,  skir.ResourceDefinitionId definition,  skir.TypeSelection configuration,  String? navigationHandler,  skir.ValueLocation? location)  $default,) {final _that = this;
 switch (_that) {
 case _OpenAuthoringResourceEffect():
-return $default(_that.organizationId,_that.realmId,_that.resourceId,_that.definition,_that.configuration,_that.navigationHandler);case _:
+return $default(_that.organizationId,_that.realmId,_that.resourceId,_that.definition,_that.configuration,_that.navigationHandler,_that.location);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -202,10 +203,10 @@ return $default(_that.organizationId,_that.realmId,_that.resourceId,_that.defini
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.ResourceId resourceId,  skir.ResourceDefinitionId definition,  skir.TypeSelection configuration,  String? navigationHandler)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.RecordId organizationId,  skir.RecordId realmId,  skir.ResourceId resourceId,  skir.ResourceDefinitionId definition,  skir.TypeSelection configuration,  String? navigationHandler,  skir.ValueLocation? location)?  $default,) {final _that = this;
 switch (_that) {
 case _OpenAuthoringResourceEffect() when $default != null:
-return $default(_that.organizationId,_that.realmId,_that.resourceId,_that.definition,_that.configuration,_that.navigationHandler);case _:
+return $default(_that.organizationId,_that.realmId,_that.resourceId,_that.definition,_that.configuration,_that.navigationHandler,_that.location);case _:
   return null;
 
 }
@@ -217,8 +218,8 @@ return $default(_that.organizationId,_that.realmId,_that.resourceId,_that.defini
 
 
 class _OpenAuthoringResourceEffect implements OpenAuthoringResourceEffect {
-  const _OpenAuthoringResourceEffect({required this.organizationId, required this.realmId, required this.resourceId, required this.definition, required this.configuration, required this.navigationHandler});
-  
+  const _OpenAuthoringResourceEffect({required this.organizationId, required this.realmId, required this.resourceId, required this.definition, required this.configuration, required this.navigationHandler, this.location});
+
 
 @override final  skir.RecordId organizationId;
 @override final  skir.RecordId realmId;
@@ -226,9 +227,10 @@ class _OpenAuthoringResourceEffect implements OpenAuthoringResourceEffect {
 @override final  skir.ResourceDefinitionId definition;
 @override final  skir.TypeSelection configuration;
 @override final  String? navigationHandler;
+@override final  skir.ValueLocation? location;
 
 /// Create a copy of OpenAuthoringResourceEffect
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$OpenAuthoringResourceEffectCopyWith<_OpenAuthoringResourceEffect> get copyWith => __$OpenAuthoringResourceEffectCopyWithImpl<_OpenAuthoringResourceEffect>(this, _$identity);
@@ -237,18 +239,18 @@ _$OpenAuthoringResourceEffectCopyWith<_OpenAuthoringResourceEffect> get copyWith
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _OpenAuthoringResourceEffect&&(identical(other.organizationId, organizationId) || other.organizationId == organizationId)&&(identical(other.realmId, realmId) || other.realmId == realmId)&&(identical(other.resourceId, resourceId) || other.resourceId == resourceId)&&(identical(other.definition, definition) || other.definition == definition)&&(identical(other.configuration, configuration) || other.configuration == configuration)&&(identical(other.navigationHandler, navigationHandler) || other.navigationHandler == navigationHandler));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _OpenAuthoringResourceEffect&&(identical(other.organizationId, organizationId) || other.organizationId == organizationId)&&(identical(other.realmId, realmId) || other.realmId == realmId)&&(identical(other.resourceId, resourceId) || other.resourceId == resourceId)&&(identical(other.definition, definition) || other.definition == definition)&&(identical(other.configuration, configuration) || other.configuration == configuration)&&(identical(other.navigationHandler, navigationHandler) || other.navigationHandler == navigationHandler)&&(identical(other.location, location) || other.location == location));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,organizationId,realmId,resourceId,definition,configuration,navigationHandler);
+    return Object.hash(runtimeType,organizationId,realmId,resourceId,definition,configuration,navigationHandler,location);
 }
 
 @override
 String toString() {
-    return 'OpenAuthoringResourceEffect(organizationId: $organizationId, realmId: $realmId, resourceId: $resourceId, definition: $definition, configuration: $configuration, navigationHandler: $navigationHandler)';
+    return 'OpenAuthoringResourceEffect(organizationId: $organizationId, realmId: $realmId, resourceId: $resourceId, definition: $definition, configuration: $configuration, navigationHandler: $navigationHandler, location: $location)';
 }
 
 
@@ -259,7 +261,7 @@ abstract mixin class _$OpenAuthoringResourceEffectCopyWith<$Res> implements $Ope
   factory _$OpenAuthoringResourceEffectCopyWith(_OpenAuthoringResourceEffect value, $Res Function(_OpenAuthoringResourceEffect) _then) = __$OpenAuthoringResourceEffectCopyWithImpl;
 @override @useResult
 $Res call({
- skir.RecordId organizationId, skir.RecordId realmId, skir.ResourceId resourceId, skir.ResourceDefinitionId definition, skir.TypeSelection configuration, String? navigationHandler
+ skir.RecordId organizationId, skir.RecordId realmId, skir.ResourceId resourceId, skir.ResourceDefinitionId definition, skir.TypeSelection configuration, String? navigationHandler, skir.ValueLocation? location
 });
 
 
@@ -275,8 +277,8 @@ class __$OpenAuthoringResourceEffectCopyWithImpl<$Res>
   final $Res Function(_OpenAuthoringResourceEffect) _then;
 
 /// Create a copy of OpenAuthoringResourceEffect
-/// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? organizationId = null,Object? realmId = null,Object? resourceId = null,Object? definition = null,Object? configuration = null,Object? navigationHandler = freezed,}) {
+/// with the given fields replaced by the non null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? organizationId = null,Object? realmId = null,Object? resourceId = null,Object? definition = null,Object? configuration = null,Object? navigationHandler = freezed,Object? location = freezed,}) {
   return _then(_OpenAuthoringResourceEffect(
 organizationId: null == organizationId ? _self.organizationId : organizationId // ignore: cast_nullable_to_non_nullable
 as skir.RecordId,realmId: null == realmId ? _self.realmId : realmId // ignore: cast_nullable_to_non_nullable
@@ -284,7 +286,8 @@ as skir.RecordId,resourceId: null == resourceId ? _self.resourceId : resourceId 
 as skir.ResourceId,definition: null == definition ? _self.definition : definition // ignore: cast_nullable_to_non_nullable
 as skir.ResourceDefinitionId,configuration: null == configuration ? _self.configuration : configuration // ignore: cast_nullable_to_non_nullable
 as skir.TypeSelection,navigationHandler: freezed == navigationHandler ? _self.navigationHandler : navigationHandler // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,location: freezed == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
+as skir.ValueLocation?,
   ));
 }
 

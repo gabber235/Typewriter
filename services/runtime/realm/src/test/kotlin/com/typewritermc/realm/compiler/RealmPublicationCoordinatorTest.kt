@@ -3,294 +3,242 @@ package com.typewritermc.realm.compiler
 import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.PublicationId
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.engine.CompilationProjectionId
-import com.typewritermc.engine.CompilationRoot
-import com.typewritermc.engine.PageCompileResult
-import com.typewritermc.engine.PublishedContent
-import com.typewritermc.engine.encodeShard
+import com.typewritermc.engine.*
 import com.typewritermc.library.PAGE_CONTRACT_TYPE
-import com.typewritermc.realm.authoring.AuthoringLease
-import com.typewritermc.realm.authoring.AuthoringSeed
-import com.typewritermc.realm.authoring.AuthoringViewDelta
-import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
+import com.typewritermc.realm.authoring.*
 import com.typewritermc.realm.checking.TestCatalogLease
-import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
-import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
-import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
-import com.typewritermc.services.libs.filetransfer.blob.BlobResult
-import com.typewritermc.types.DataValue
-import com.typewritermc.types.FieldDeclaration
-import com.typewritermc.types.FieldOwner
-import com.typewritermc.types.RepresentationTemplate
-import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeDefinition
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
-import com.typewritermc.types.TypeTemplate
-import com.typewritermc.types.TypeUse
+import com.typewritermc.services.libs.filetransfer.blob.*
+import com.typewritermc.types.*
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.runCurrent
 
 val RealmPublicationCoordinatorTest by testSuite {
-    test("the local publication gate captures once and rejects overlapping publication") {
+    test("preparing and unchanged content create no attempt or blob write") {
+        val fixture = PublicationFixture()
+        fixture.publisher.refresh()
+        fixture.publisher.views.value.status.shouldBeInstanceOf<PublicationStatus.Ready>()
+        fixture.attempts.started shouldBe 0
+        fixture.blobRequests shouldBe 0
+        fixture.release()
+        fixture.publisher.refresh()
+        fixture.publisher.views.value.status.shouldBeInstanceOf<PublicationStatus.Current>()
+        fixture.publisher.publish(PublicationCandidateId("obsolete")) shouldBe PublicationResult.NoChanges
+        fixture.attempts.started shouldBe 1
+        fixture.close()
+    }
+    test("initial empty content stays empty while removing the last root is a release") {
+        val fixture = PublicationFixture(initial = emptyMap())
+        fixture.publisher.refresh()
+        fixture.publisher.views.value.status.shouldBeInstanceOf<PublicationStatus.Empty>()
+        fixture.attempts.started shouldBe 0
+        fixture.update("Quest")
+        fixture.release()
+        fixture.views.install(fixture.views.prepare(AuthoringViewDelta(emptyMap(), removedResources = setOf(ResourceId("page")))))
+        fixture.publisher.refresh()
+        val ready = fixture.publisher.views.value.status.shouldBeInstanceOf<PublicationStatus.Ready>()
+        ready.changes.allChanges shouldBe listOf(PublicationChange.RootRemoved(fixture.root))
+        fixture.publisher.publish(ready.candidate).shouldBeInstanceOf<PublicationResult.Activated>().content.outputs shouldBe emptyList()
+        fixture.close()
+    }
+    test("an old candidate cannot start an attempt after another save or baseline change") {
+        val fixture = PublicationFixture()
+        fixture.publisher.refresh()
+        val old = fixture.ready()
+        fixture.update("Story")
+        fixture.publisher.publish(old.candidate).shouldBeInstanceOf<PublicationResult.CandidateChanged>()
+        fixture.attempts.started shouldBe 0
+        fixture.blobRequests shouldBe 0
+        fixture.publisher.refresh()
+        (fixture.ready().candidate == old.candidate) shouldBe false
+        fixture.attempts.installed = PublishedContent(PublicationId("other"), 2, CatalogGeneration("other"), "implementation", emptySet(), emptyList())
+        fixture.publisher.publish(fixture.ready().candidate).shouldBeInstanceOf<PublicationResult.CandidateChanged>()
+        fixture.attempts.started shouldBe 0
+        fixture.close()
+    }
+    test("reverted edits and catalog metadata do not create another release") {
+        val fixture = PublicationFixture()
+        fixture.release()
+        fixture.update("Story")
+        fixture.publisher.refresh()
+        fixture.ready()
+        fixture.update("Quest")
+        fixture.publisher.refresh()
+        fixture.publisher.views.value.status.shouldBeInstanceOf<PublicationStatus.Current>()
+        fixture.attempts.started shouldBe 1
+        fixture.close()
+    }
+    test("background findings revoke a candidate without a saved content change") {
+        val fixture = PublicationFixture()
+        fixture.publisher.refresh()
+        val old = fixture.ready().candidate
+        fixture.publisher.invalidate()
+        fixture.publisher.publish(old).shouldBeInstanceOf<PublicationResult.CandidateChanged>()
+        fixture.attempts.started shouldBe 0
+        fixture.blobRequests shouldBe 0
+        fixture.publisher.refresh()
+        (fixture.ready().candidate == old) shouldBe false
+        fixture.close()
+    }
+    test("missing saved content reports unavailable and can recover on the next refresh") {
+        val fixture = PublicationFixture()
+        fixture.captureFailure = true
+        fixture.publisher.refresh()
+        fixture.publisher.views.value.status.shouldBeInstanceOf<PublicationStatus.Unavailable>()
+        fixture.attempts.started shouldBe 0
+        fixture.captureFailure = false
+        fixture.publisher.refresh()
+        fixture.ready()
+        fixture.close()
+    }
+    test("publication freezes reviewed bytes and later edits are compared with that release") {
         runTest {
-            val id = ResourceId("page")
-            val catalog = TestCatalogLease(definitions = PUBLICATION_DEFINITIONS, resourceRoot = PUBLICATION_PAGE)
-            val views = InMemoryAuthoringViewStore(catalog, AuthoringSeed(mapOf(id to publicationPageRecord("Quest"))))
-            val checking = CompletableDeferred<Unit>()
+            val fixture = PublicationFixture()
+            fixture.publisher.refresh()
+            val candidate = fixture.ready()
+            val storing = CompletableDeferred<Unit>()
             val proceed = CompletableDeferred<Unit>()
-            val attempts = RecordingAttempts()
-            val acceptance =
-                object : PublicationAcceptance {
-                    override fun capture() = views.capture()
-
-                    override suspend fun evaluate(capture: AuthoringLease): AcceptanceResult {
-                        checking.complete(Unit)
-                        proceed.await()
-                        capture.root.resources[id] shouldBe publicationPageRecord("Quest")
-                        return accepted(
-                            capture,
-                            listOf(NativeBindingRequirement(PUBLICATION_PAGE_USE, NativeBindingId("publication_page"), "page:v1")),
-                        )
-                    }
-                }
-            val engine = StagedEngineImplementationSource(testEngineInputs())
-            val publisher =
-                RealmPublicationCoordinator(
-                    acceptance,
-                    attempts,
-                    RegisteredCompiledArtifactStore(InMemoryBlobEndpoint()),
-                    engine,
-                    pageCompilation(),
-                )
-            val first = async { publisher.publish() }
-            checking.await()
-            publisher.publish() shouldBe PublicationResult.Publishing
-            views.install(views.prepare(AuthoringViewDelta(mapOf(id to publicationPageRecord("Story")))))
+            fixture.attempts.beforeStart = { storing.complete(Unit); proceed.await() }
+            val first = async { fixture.publisher.publish(candidate.candidate) }
+            storing.await()
+            fixture.publisher.publish(candidate.candidate) shouldBe PublicationResult.Publishing
+            fixture.update("Story")
+            fixture.publisher.refresh()
+            val active = fixture.publisher.views.value.status.shouldBeInstanceOf<PublicationStatus.Publishing>()
+            active.next.confirmedChanges shouldBe listOf(PublicationChange.RootUpdated(fixture.root))
             proceed.complete(Unit)
-            val result = first.await().shouldBeInstanceOf<PublicationResult.Activated>()
-            result.content.outputs
-                .single()
-                .reference.root.resource shouldBe id
-            attempts.installed shouldBe result.content
-            attempts.started shouldBe 1
-            attempts.phases shouldBe listOf(PublicationState.Compiling, PublicationState.Activating)
-            publisher.currentAttempt()?.state shouldBe PublicationState.Complete
-            views.capture().use { it.root.resources[id] shouldBe publicationPageRecord("Story") }
-            views.close()
+            val published = first.await().shouldBeInstanceOf<PublicationResult.Activated>()
+            val expected = fixture.compiled("Quest")
+            published.content.outputs.single().reference.semanticDigest shouldBe expected.semanticDigest
+            fixture.publisher.refresh()
+            fixture.ready().changes.allChanges shouldBe listOf(PublicationChange.RootUpdated(fixture.root))
+            fixture.attempts.started shouldBe 1
+            fixture.close()
         }
     }
-    test("blocked acceptance does not compile or install and the gate permits another publication") {
-        val views = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(emptyMap()))
-        val attempts = RecordingAttempts()
-        val acceptance =
-            object : PublicationAcceptance {
-                override fun capture() = views.capture()
-
-                override suspend fun evaluate(capture: AuthoringLease) = AcceptanceResult.Blocked(emptyList())
-            }
-        val publisher =
-            RealmPublicationCoordinator(
-                acceptance,
-                attempts,
-                RegisteredCompiledArtifactStore(InMemoryBlobEndpoint()),
-                StagedEngineImplementationSource(testEngineInputs()),
-                pageCompilation(),
-            )
-        publisher.publish().shouldBeInstanceOf<PublicationResult.Blocked>()
-        publisher.publish().shouldBeInstanceOf<PublicationResult.Blocked>()
-        attempts.started shouldBe 2
-        attempts.phases shouldBe emptyList()
-        attempts.installed shouldBe null
-        views.close()
+    test("blocked compilation retains successful roots and source and target locations without effects") {
+        val fixture = PublicationFixture(producers = listOf(PageCompiledArtifactProducer(), blockedProducer()))
+        fixture.publisher.refresh()
+        val blocked = fixture.publisher.views.value.status.shouldBeInstanceOf<PublicationStatus.Blocked>()
+        blocked.confirmedChanges shouldBe listOf(PublicationChange.RootAdded(fixture.root))
+        blocked.pendingRoots.single().resource shouldBe ResourceId("broken")
+        blocked.blockers.first.diagnostic.primary?.resource shouldBe ResourceId("broken")
+        blocked.blockers.first.diagnostic.related.single().resource shouldBe ResourceId("target")
+        fixture.attempts.started shouldBe 0
+        fixture.blobRequests shouldBe 0
+        fixture.publisher.publish(PublicationCandidateId("forged")).shouldBeInstanceOf<PublicationResult.CandidateChanged>()
+        fixture.close()
     }
-    test("engine incompatibility before installation preserves the previous selected content") {
-        val views = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(emptyMap()))
-        val attempts = RecordingAttempts()
-        val engine =
-            object : EngineImplementationSource {
-                override fun capture() = testEngineInputs()
-
-                override suspend fun activate(
-                    captured: EngineImplementationInputs,
-                    publish: suspend () -> Boolean,
-                ) = false
-            }
-        val acceptance =
-            object : PublicationAcceptance {
-                override fun capture() = views.capture()
-
-                override suspend fun evaluate(capture: AuthoringLease) = accepted(capture)
-            }
-        val publisher =
-            RealmPublicationCoordinator(
-                acceptance,
-                attempts,
-                RegisteredCompiledArtifactStore(InMemoryBlobEndpoint()),
-                engine,
-                pageCompilation(),
-            )
-        val result = publisher.publish().shouldBeInstanceOf<PublicationResult.Blocked>()
-        result.findings.single().code shouldBe "engine_inputs_changed"
-        attempts.installed shouldBe null
-        views.close()
+    test("engine requirements revoke a candidate before effects") {
+        val fixture = PublicationFixture()
+        fixture.publisher.refresh()
+        val candidate = fixture.ready()
+        fixture.engineInputs = EngineImplementationInputs(emptySet(), com.typewritermc.checking.InputToken("new"))
+        fixture.publisher.publish(candidate.candidate).shouldBeInstanceOf<PublicationResult.CandidateChanged>()
+        fixture.attempts.started shouldBe 0
+        fixture.blobRequests shouldBe 0
+        fixture.close()
     }
-    test("startup interrupts unfinished work and an empty successful publication installs a complete empty set") {
-        val views = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(emptyMap()))
-        val attempts = RecordingAttempts()
-        val acceptance =
-            object : PublicationAcceptance {
-                override fun capture() = views.capture()
-
-                override suspend fun evaluate(capture: AuthoringLease) = accepted(capture)
-            }
-        val publisher =
-            RealmPublicationCoordinator(
-                acceptance,
-                attempts,
-                RegisteredCompiledArtifactStore(InMemoryBlobEndpoint()),
-                StagedEngineImplementationSource(testEngineInputs()),
-                pageCompilation(),
-            )
-        publisher.recoverInterrupted()
-        attempts.recovered shouldBe true
-        publisher
-            .publish()
-            .shouldBeInstanceOf<PublicationResult.Activated>()
-            .content.outputs shouldBe emptyList()
-        views.close()
+    test("saved invalidation automatically replaces the immutable view and close stops observation") {
+        runTest {
+            val fixture = PublicationFixture()
+            fixture.publisher.start(backgroundScope, fixture.views.changes)
+            runCurrent()
+            val first = fixture.publisher.views.value
+            fixture.update("Story")
+            runCurrent()
+            (fixture.publisher.views.value.id == first.id) shouldBe false
+            fixture.ready()
+            fixture.publisher.close()
+            val closed = fixture.publisher.views.value
+            fixture.update("Later")
+            runCurrent()
+            fixture.publisher.views.value shouldBe closed
+            fixture.views.close()
+        }
     }
-    test("Page producer preserves the exact shard bytes and metadata") {
-        val page = ResourceId("page")
-        val views =
-            InMemoryAuthoringViewStore(
-                TestCatalogLease(definitions = PUBLICATION_DEFINITIONS, resourceRoot = PUBLICATION_PAGE),
-                AuthoringSeed(mapOf(page to publicationPageRecord("Quest"))),
-            )
-        views.capture().use { capture ->
-            val bindings = listOf(NativeBindingRequirement(PUBLICATION_PAGE_USE, NativeBindingId("publication_page"), "page:v1"))
-            val expected =
-                with(capture.root) {
-                    PageCompiler(emptySet(), bindings.associateBy(NativeBindingRequirement::actual)).compile(page)
-                }.shouldBeInstanceOf<PageCompileResult.Success>()
-            val producer = PageCompiledArtifactProducer()
-            val inputs = CompilationInputs(capture.root, bindings)
-            val artifact =
-                with(inputs) { producer.compile(producer.roots(capture.root)) }
-                    .shouldBeInstanceOf<CompilationOutcome.Ready>()
-                    .artifacts
-                    .single()
-
-            artifact.root.projection shouldBe producer.projection
-            artifact.root.resource shouldBe page
-            artifact.mediaType shouldBe "application/vnd.typewriter.page+json"
+    test("Page compilation preserves shard bytes and format metadata") {
+        val fixture = PublicationFixture()
+        fixture.views.capture().use { capture ->
+            val expected = with(capture.root) { PageCompiler(emptySet(), fixture.bindings.associateBy(NativeBindingRequirement::actual)).compile(ResourceId("page")) }.shouldBeInstanceOf<PageCompileResult.Success>()
+            val inputs = CompilationInputs(capture.root, fixture.bindings)
+            val artifact = with(inputs) { pageCompilation().compile().single() }.shouldBeInstanceOf<CompilationResult.Success>().artifact
             artifact.formatRevision shouldBe 2
+            artifact.mediaType shouldBe "application/vnd.typewriter.page+json"
             artifact.inputFingerprint shouldBe expected.inputFingerprint
             artifact.semanticDigest shouldBe expected.shard.digest
-            artifact.payload.toList() shouldBe
-                expected.shard.facts
-                    .encodeShard()
-                    .toList()
+            artifact.payload.toList() shouldBe expected.shard.facts.encodeShard().toList()
         }
-        views.close()
-    }
-
-    test("a blocked producer prevents storage and installation of otherwise ready Page output") {
-        val page = ResourceId("page")
-        val views =
-            InMemoryAuthoringViewStore(
-                TestCatalogLease(definitions = PUBLICATION_DEFINITIONS, resourceRoot = PUBLICATION_PAGE),
-                AuthoringSeed(mapOf(page to publicationPageRecord("Quest"))),
-            )
-        val attempts = RecordingAttempts()
-        var storageRequests = 0
-        val backing = InMemoryBlobEndpoint()
-        val blobs =
-            object : BlobEndpoint by backing {
-                override suspend fun metadata(digest: ArtifactDigest): BlobResult<BlobMetadata> {
-                    storageRequests++
-                    return backing.metadata(digest)
-                }
-            }
-        val bindings = listOf(NativeBindingRequirement(PUBLICATION_PAGE_USE, NativeBindingId("publication_page"), "page:v1"))
-        val acceptance =
-            object : PublicationAcceptance {
-                override fun capture() = views.capture()
-
-                override suspend fun evaluate(capture: AuthoringLease) = accepted(capture, bindings)
-            }
-        val blocked =
-            object : CompiledArtifactProducer {
-                override val projection = CompilationProjectionId("fixture.blocked")
-                override val mediaType = "application/blocked"
-
-                override fun roots(view: com.typewritermc.realm.authoring.AuthoringView) = emptySet<CompilationRoot>()
-
-                context(inputs: CompilationInputs)
-                override fun compile(roots: Set<CompilationRoot>) = CompilationOutcome.Blocked(emptyList())
-            }
-        val publisher =
-            RealmPublicationCoordinator(
-                acceptance,
-                attempts,
-                RegisteredCompiledArtifactStore(blobs),
-                StagedEngineImplementationSource(testEngineInputs()),
-                CompiledArtifactProducerRegistry(listOf(PageCompiledArtifactProducer(), blocked)),
-            )
-
-        publisher.publish().shouldBeInstanceOf<PublicationResult.Blocked>()
-        storageRequests shouldBe 0
-        attempts.installed shouldBe null
-        attempts.phases shouldBe listOf(PublicationState.Compiling)
-        views.close()
+        fixture.close()
     }
 }
 
-private fun accepted(
-    capture: AuthoringLease,
-    bindings: List<NativeBindingRequirement> = emptyList(),
-) = AcceptanceResult.Accepted(
-    AcceptedAuthoring(capture.root.catalog.generation, CheckCoverage(emptySet(), emptySet()), emptyList(), bindings),
-)
+internal class PublicationFixture(
+    initial: Map<ResourceId, com.typewritermc.authoring.AuthoringRecord> = mapOf(ResourceId("page") to publicationPageRecord("Quest")),
+    producers: List<CompiledArtifactProducer> = listOf(PageCompiledArtifactProducer()),
+) {
+    val views = InMemoryAuthoringViewStore(TestCatalogLease(definitions = PUBLICATION_DEFINITIONS, resourceRoot = PUBLICATION_PAGE), AuthoringSeed(initial))
+    val attempts = RecordingAttempts()
+    val bindings = listOf(NativeBindingRequirement(PUBLICATION_PAGE_USE, NativeBindingId("publication_page"), "page:v1"))
+    val root = CompilationRoot(CompilationProjectionId("typewriter.page"), ResourceId("page"))
+    var engineInputs = testEngineInputs()
+    var blobRequests = 0
+    var captureFailure = false
+    private val blobs = InMemoryBlobEndpoint()
+    val publisher = RealmPublicationCoordinator(
+        object : PublicationAcceptance {
+            override fun capture(): AuthoringLease {
+                check(!captureFailure) { "Saved content is unavailable" }
+                return views.capture()
+            }
+            override fun <T> withCurrent(block: (AuthoringView) -> T): T = views.read(block)
+            override suspend fun evaluate(capture: AuthoringLease) = AuthoringAssessment.Accepted(
+                AcceptedAuthoring(capture.root.catalog.generation, CheckCoverage(emptySet(), emptySet()), emptyList(), bindings),
+            )
+        }, attempts,
+        RegisteredCompiledArtifactStore(object : BlobEndpoint by blobs {
+            override suspend fun metadata(digest: ArtifactDigest): BlobResult<BlobMetadata> { blobRequests++; return blobs.metadata(digest) }
+        }),
+        object : EngineImplementationSource { override fun capture() = engineInputs },
+        CompiledArtifactProducerRegistry(producers), attempts,
+    )
+    fun ready() = publisher.views.value.status.shouldBeInstanceOf<PublicationStatus.Ready>()
+    fun update(value: String) = views.install(views.prepare(AuthoringViewDelta(mapOf(ResourceId("page") to publicationPageRecord(value)))))
+    suspend fun release(): PublicationResult.Activated { publisher.refresh(); return publisher.publish(ready().candidate).shouldBeInstanceOf<PublicationResult.Activated>() }
+    fun compiled(value: String): CompiledArtifact {
+        val store = InMemoryAuthoringViewStore(TestCatalogLease(definitions = PUBLICATION_DEFINITIONS, resourceRoot = PUBLICATION_PAGE), AuthoringSeed(mapOf(ResourceId("page") to publicationPageRecord(value))))
+        try { return store.capture().use { capture -> with(CompilationInputs(capture.root, bindings)) { pageCompilation().compile().single() }.shouldBeInstanceOf<CompilationResult.Success>().artifact } }
+        finally { store.close() }
+    }
+    suspend fun close() { publisher.close(); views.close() }
+}
 
-private class RecordingAttempts : PublicationAttemptStore {
+internal class RecordingAttempts : PublicationAttemptStore, PublicationResults {
     var started = 0
-    var recovered = false
     var installed: PublishedContent? = null
+    var beforeStart: suspend () -> Unit = {}
     val phases = mutableListOf<PublicationState>()
+    override suspend fun start(id: PublicationId, catalog: CatalogGeneration, engineInputs: EngineImplementationInputs) { started++; beforeStart() }
+    override suspend fun phase(id: PublicationId, phase: PublicationState) { phases += phase }
+    override suspend fun blocked(id: PublicationId, findings: List<com.typewritermc.checking.Diagnostic>) {}
+    override suspend fun install(result: PublishedContent) { installed = result }
+    override suspend fun interruptUnfinished() {}
+    override suspend fun selected() = installed
+    override suspend fun latestReport(): PublicationReport? = null
+}
 
-    override suspend fun start(
-        id: PublicationId,
-        catalog: CatalogGeneration,
-        engineInputs: EngineImplementationInputs,
-    ) {
-        started++
-    }
-
-    override suspend fun phase(
-        id: PublicationId,
-        phase: PublicationState,
-    ) {
-        phases += phase
-    }
-
-    override suspend fun blocked(
-        id: PublicationId,
-        findings: List<com.typewritermc.checking.Diagnostic>,
-    ) { }
-
-    override suspend fun install(result: PublishedContent) {
-        installed = result
-    }
-
-    override suspend fun interruptUnfinished() {
-        recovered = true
-    }
+private fun blockedProducer() = object : CompiledArtifactProducer {
+    override val projection = CompilationProjectionId("fixture.blocked")
+    override val mediaType = "application/blocked"
+    override fun roots(view: AuthoringView) = setOf(CompilationRoot(projection, ResourceId("broken")))
+    context(inputs: CompilationInputs)
+    override fun compile(roots: Set<CompilationRoot>): List<CompilationResult> = listOf(
+        CompilationResult.Blocked(roots.single(), ContentDigest("a".repeat(64)), listOf(CompileDiagnostic("broken_link", "The target is missing", CompileDiagnosticSeverity.ERROR, ResourceId("broken"), ResourceId("target")))),
+    )
 }
 
 private fun publicationPageRecord(value: String) =

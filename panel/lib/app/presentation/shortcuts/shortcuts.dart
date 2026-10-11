@@ -29,6 +29,9 @@ final typewriterShortcuts = <ShortcutActivator, Intent>{
   AdaptiveSingleActivator(LogicalKeyboardKey.escape, control: true):
       CancelIntent(),
 
+  SingleActivator(LogicalKeyboardKey.keyP, shift: true, includeRepeats: false):
+      OpenRealmInboxIntent(),
+
   SingleActivator(LogicalKeyboardKey.keyN, control: true): NextFocusIntent(),
   SingleActivator(LogicalKeyboardKey.keyP, control: true):
       PreviousFocusIntent(),
@@ -127,6 +130,11 @@ class PrimaryActionIntent extends Intent {
 /// Opens the application primary search surface.
 class OpenSearchIntent extends Intent {
   const OpenSearchIntent();
+}
+
+/// Opens and focuses the selected realm inbox from Normal mode.
+class OpenRealmInboxIntent extends Intent {
+  const OpenRealmInboxIntent();
 }
 
 /// Returns activators whose mapped intent has exactly [intent].

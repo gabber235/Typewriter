@@ -8,8 +8,8 @@ import com.typewritermc.scripting.ScriptCapabilityId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
-import skirout.editor.v1.compiled_content.CompilationProjectionId as WireProjectionId
-import skirout.editor.v1.compiled_content.CompilationRoot as WireCompilationRoot
+import skirout.editor.v1.compilation_root.CompilationProjectionId as WireProjectionId
+import skirout.editor.v1.compilation_root.CompilationRoot as WireCompilationRoot
 import skirout.editor.v1.compiled_content.CompiledArtifactReference as WireArtifactReference
 import skirout.editor.v1.compiled_content.CompiledBlobPointer as WireBlobPointer
 import skirout.editor.v1.compiled_content.PublishedContent as WirePublishedContent

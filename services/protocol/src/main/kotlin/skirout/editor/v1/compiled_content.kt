@@ -20,271 +20,6 @@ import build.skir.internal.MustNameArguments as _MustNameArguments;
 import build.skir.internal.UnrecognizedFields as _UnrecognizedFields;
 import build.skir.internal.UnrecognizedVariant as _UnrecognizedVariant;
 
-sealed interface CompilationProjectionId_OrMutable {
-    val value: kotlin.String;
-
-    fun toFrozen(): skirout.editor.v1.compiled_content.CompilationProjectionId;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class CompilationProjectionId private constructor(
-    override val value: kotlin.String,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompilationProjectionId>? =
-        null,
-): skirout.editor.v1.compiled_content.CompilationProjectionId_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        value: kotlin.String,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompilationProjectionId>? =
-            null,
-    ): this(
-        value,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        value = this.value,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        value: kotlin.String =
-            this.value,
-    ) = skirout.editor.v1.compiled_content.CompilationProjectionId(
-        value,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.compiled_content.CompilationProjectionId && this.value == other.value);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.value).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.CompilationProjectionIdSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [CompilationProjectionId]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var value: kotlin.String =
-            "",
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompilationProjectionId>? =
-            null,
-    ): skirout.editor.v1.compiled_content.CompilationProjectionId_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.compiled_content.CompilationProjectionId(
-            value = this.value,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.compiled_content.CompilationProjectionId(
-                "",
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [CompilationProjectionId].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            value: kotlin.String =
-                "",
-        ) = skirout.editor.v1.compiled_content.CompilationProjectionId(
-            value = value,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [CompilationProjectionId] instances. */
-        val serializer get() = _SerializerRegistry.CompilationProjectionIdSerializer;
-
-        /** Describes the [CompilationProjectionId] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.CompilationProjectionIdSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface CompilationRoot_OrMutable {
-    val projection: skirout.editor.v1.compiled_content.CompilationProjectionId_OrMutable;
-    val resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable;
-
-    fun toFrozen(): skirout.editor.v1.compiled_content.CompilationRoot;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class CompilationRoot private constructor(
-    override val projection: skirout.editor.v1.compiled_content.CompilationProjectionId,
-    override val resource: skirout.editor.v1.type_catalog.ResourceId,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompilationRoot>? =
-        null,
-): skirout.editor.v1.compiled_content.CompilationRoot_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        projection: skirout.editor.v1.compiled_content.CompilationProjectionId_OrMutable,
-        resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompilationRoot>? =
-            null,
-    ): this(
-        projection.toFrozen(),
-        resource.toFrozen(),
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        projection = this.projection,
-        resource = this.resource,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        projection: skirout.editor.v1.compiled_content.CompilationProjectionId_OrMutable =
-            this.projection,
-        resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-            this.resource,
-    ) = skirout.editor.v1.compiled_content.CompilationRoot(
-        projection.toFrozen(),
-        resource.toFrozen(),
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.compiled_content.CompilationRoot && this.projection == other.projection && this.resource == other.resource);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.projection, this.resource).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.CompilationRootSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [CompilationRoot]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var projection: skirout.editor.v1.compiled_content.CompilationProjectionId_OrMutable =
-            skirout.editor.v1.compiled_content.CompilationProjectionId.partial(),
-        override var resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-            skirout.editor.v1.type_catalog.ResourceId.partial(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompilationRoot>? =
-            null,
-    ): skirout.editor.v1.compiled_content.CompilationRoot_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.compiled_content.CompilationRoot(
-            projection = this.projection,
-            resource = this.resource,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [projection] is already mutable, returns it as is.
-         * Otherwise, makes a mutable copy, assigns it back to [projection] and returns it.
-         */
-        val mutableProjection: skirout.editor.v1.compiled_content.CompilationProjectionId.Mutable get() {
-            var value = this.projection;
-            return when (value) {
-                is skirout.editor.v1.compiled_content.CompilationProjectionId -> {
-                    value = value.toMutable();
-                    this.projection = value;
-                    return value;
-                }
-                is skirout.editor.v1.compiled_content.CompilationProjectionId.Mutable -> value;
-            }
-        }
-
-        /**
-         * If the value of [resource] is already mutable, returns it as is.
-         * Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
-         */
-        val mutableResource: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
-            var value = this.resource;
-            return when (value) {
-                is skirout.editor.v1.type_catalog.ResourceId -> {
-                    value = value.toMutable();
-                    this.resource = value;
-                    return value;
-                }
-                is skirout.editor.v1.type_catalog.ResourceId.Mutable -> value;
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.compiled_content.CompilationRoot(
-                skirout.editor.v1.compiled_content.CompilationProjectionId.partial(),
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [CompilationRoot].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            projection: skirout.editor.v1.compiled_content.CompilationProjectionId_OrMutable =
-                skirout.editor.v1.compiled_content.CompilationProjectionId.partial(),
-            resource: skirout.editor.v1.type_catalog.ResourceId_OrMutable =
-                skirout.editor.v1.type_catalog.ResourceId.partial(),
-        ) = skirout.editor.v1.compiled_content.CompilationRoot(
-            projection = projection,
-            resource = resource,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [CompilationRoot] instances. */
-        val serializer get() = _SerializerRegistry.CompilationRootSerializer;
-
-        /** Describes the [CompilationRoot] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.CompilationRootSerializerImpl.typeDescriptor;
-    }
-}
-
 sealed interface CompiledBlobPointer_OrMutable {
     val digest: kotlin.String;
     val size: kotlin.Long;
@@ -410,7 +145,7 @@ class CompiledBlobPointer private constructor(
 }
 
 sealed interface CompiledArtifactReference_OrMutable {
-    val root: skirout.editor.v1.compiled_content.CompilationRoot_OrMutable;
+    val root: skirout.editor.v1.compilation_root.CompilationRoot_OrMutable;
     val formatRevision: kotlin.Int;
     val mediaType: kotlin.String;
     val semanticDigest: kotlin.String;
@@ -421,7 +156,7 @@ sealed interface CompiledArtifactReference_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class CompiledArtifactReference private constructor(
-    override val root: skirout.editor.v1.compiled_content.CompilationRoot,
+    override val root: skirout.editor.v1.compilation_root.CompilationRoot,
     override val formatRevision: kotlin.Int,
     override val mediaType: kotlin.String,
     override val semanticDigest: kotlin.String,
@@ -431,7 +166,7 @@ class CompiledArtifactReference private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        root: skirout.editor.v1.compiled_content.CompilationRoot_OrMutable,
+        root: skirout.editor.v1.compilation_root.CompilationRoot_OrMutable,
         formatRevision: kotlin.Int,
         mediaType: kotlin.String,
         semanticDigest: kotlin.String,
@@ -460,7 +195,7 @@ class CompiledArtifactReference private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        root: skirout.editor.v1.compiled_content.CompilationRoot_OrMutable =
+        root: skirout.editor.v1.compilation_root.CompilationRoot_OrMutable =
             this.root,
         formatRevision: kotlin.Int =
             this.formatRevision,
@@ -498,8 +233,8 @@ class CompiledArtifactReference private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var root: skirout.editor.v1.compiled_content.CompilationRoot_OrMutable =
-            skirout.editor.v1.compiled_content.CompilationRoot.partial(),
+        override var root: skirout.editor.v1.compilation_root.CompilationRoot_OrMutable =
+            skirout.editor.v1.compilation_root.CompilationRoot.partial(),
         override var formatRevision: kotlin.Int =
             0,
         override var mediaType: kotlin.String =
@@ -522,15 +257,15 @@ class CompiledArtifactReference private constructor(
          * If the value of [root] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [root] and returns it.
          */
-        val mutableRoot: skirout.editor.v1.compiled_content.CompilationRoot.Mutable get() {
+        val mutableRoot: skirout.editor.v1.compilation_root.CompilationRoot.Mutable get() {
             var value = this.root;
             return when (value) {
-                is skirout.editor.v1.compiled_content.CompilationRoot -> {
+                is skirout.editor.v1.compilation_root.CompilationRoot -> {
                     value = value.toMutable();
                     this.root = value;
                     return value;
                 }
-                is skirout.editor.v1.compiled_content.CompilationRoot.Mutable -> value;
+                is skirout.editor.v1.compilation_root.CompilationRoot.Mutable -> value;
             }
         }
     }
@@ -538,7 +273,7 @@ class CompiledArtifactReference private constructor(
     companion object {
         private val default =
             skirout.editor.v1.compiled_content.CompiledArtifactReference(
-                skirout.editor.v1.compiled_content.CompilationRoot.partial(),
+                skirout.editor.v1.compilation_root.CompilationRoot.partial(),
                 0,
                 "",
                 "",
@@ -555,8 +290,8 @@ class CompiledArtifactReference private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            root: skirout.editor.v1.compiled_content.CompilationRoot_OrMutable =
-                skirout.editor.v1.compiled_content.CompilationRoot.partial(),
+            root: skirout.editor.v1.compilation_root.CompilationRoot_OrMutable =
+                skirout.editor.v1.compilation_root.CompilationRoot.partial(),
             formatRevision: kotlin.Int =
                 0,
             mediaType: kotlin.String =
@@ -1201,7 +936,7 @@ sealed class CompiledResourceState private constructor() {
 }
 
 sealed interface CompiledResourceStatus_OrMutable {
-    val root: skirout.editor.v1.compiled_content.CompilationRoot_OrMutable;
+    val root: skirout.editor.v1.compilation_root.CompilationRoot_OrMutable;
     val state: skirout.editor.v1.compiled_content.CompiledResourceState;
 
     fun toFrozen(): skirout.editor.v1.compiled_content.CompiledResourceStatus;
@@ -1210,7 +945,7 @@ sealed interface CompiledResourceStatus_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class CompiledResourceStatus private constructor(
-    override val root: skirout.editor.v1.compiled_content.CompilationRoot,
+    override val root: skirout.editor.v1.compilation_root.CompilationRoot,
     override val state: skirout.editor.v1.compiled_content.CompiledResourceState,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledResourceStatus>? =
         null,
@@ -1218,7 +953,7 @@ class CompiledResourceStatus private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        root: skirout.editor.v1.compiled_content.CompilationRoot_OrMutable,
+        root: skirout.editor.v1.compilation_root.CompilationRoot_OrMutable,
         state: skirout.editor.v1.compiled_content.CompiledResourceState,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledResourceStatus>? =
             null,
@@ -1241,7 +976,7 @@ class CompiledResourceStatus private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        root: skirout.editor.v1.compiled_content.CompilationRoot_OrMutable =
+        root: skirout.editor.v1.compilation_root.CompilationRoot_OrMutable =
             this.root,
         state: skirout.editor.v1.compiled_content.CompiledResourceState =
             this.state,
@@ -1273,8 +1008,8 @@ class CompiledResourceStatus private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var root: skirout.editor.v1.compiled_content.CompilationRoot_OrMutable =
-            skirout.editor.v1.compiled_content.CompilationRoot.partial(),
+        override var root: skirout.editor.v1.compilation_root.CompilationRoot_OrMutable =
+            skirout.editor.v1.compilation_root.CompilationRoot.partial(),
         override var state: skirout.editor.v1.compiled_content.CompiledResourceState =
             skirout.editor.v1.compiled_content.CompiledResourceState.UNKNOWN,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.CompiledResourceStatus>? =
@@ -1291,15 +1026,15 @@ class CompiledResourceStatus private constructor(
          * If the value of [root] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [root] and returns it.
          */
-        val mutableRoot: skirout.editor.v1.compiled_content.CompilationRoot.Mutable get() {
+        val mutableRoot: skirout.editor.v1.compilation_root.CompilationRoot.Mutable get() {
             var value = this.root;
             return when (value) {
-                is skirout.editor.v1.compiled_content.CompilationRoot -> {
+                is skirout.editor.v1.compilation_root.CompilationRoot -> {
                     value = value.toMutable();
                     this.root = value;
                     return value;
                 }
-                is skirout.editor.v1.compiled_content.CompilationRoot.Mutable -> value;
+                is skirout.editor.v1.compilation_root.CompilationRoot.Mutable -> value;
             }
         }
     }
@@ -1307,7 +1042,7 @@ class CompiledResourceStatus private constructor(
     companion object {
         private val default =
             skirout.editor.v1.compiled_content.CompiledResourceStatus(
-                skirout.editor.v1.compiled_content.CompilationRoot.partial(),
+                skirout.editor.v1.compilation_root.CompilationRoot.partial(),
                 skirout.editor.v1.compiled_content.CompiledResourceState.UNKNOWN,
             );
 
@@ -1322,8 +1057,8 @@ class CompiledResourceStatus private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            root: skirout.editor.v1.compiled_content.CompilationRoot_OrMutable =
-                skirout.editor.v1.compiled_content.CompilationRoot.partial(),
+            root: skirout.editor.v1.compilation_root.CompilationRoot_OrMutable =
+                skirout.editor.v1.compilation_root.CompilationRoot.partial(),
             state: skirout.editor.v1.compiled_content.CompiledResourceState =
                 skirout.editor.v1.compiled_content.CompiledResourceState.UNKNOWN,
         ) = skirout.editor.v1.compiled_content.CompiledResourceStatus(
@@ -1502,10 +1237,10 @@ sealed class CompilationStatusSelection private constructor() {
     }
 
     class SuppliedRootsWrapper private constructor (
-        val value: kotlin.collections.List<skirout.editor.v1.compiled_content.CompilationRoot>,
+        val value: kotlin.collections.List<skirout.editor.v1.compilation_root.CompilationRoot>,
     ) : skirout.editor.v1.compiled_content.CompilationStatusSelection() {
         constructor(
-            value: kotlin.collections.Iterable<skirout.editor.v1.compiled_content.CompilationRoot_OrMutable>,
+            value: kotlin.collections.Iterable<skirout.editor.v1.compilation_root.CompilationRoot_OrMutable>,
         ): this(build.skir.internal.toFrozenList(value, { it.toFrozen() })) {}
 
         override val kind get() = Kind.SUPPLIED_ROOTS_WRAPPER;
@@ -2345,30 +2080,6 @@ val QueryCompiledResourceStatus: build.skir.service.Method<
 }
 
 private object _SerializerRegistry {
-    val CompilationProjectionIdSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/compiled_content.skir:CompilationProjectionId",
-        doc = "",
-        defaultInstance = skirout.editor.v1.compiled_content.CompilationProjectionId.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.CompilationProjectionId.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val CompilationProjectionIdSerializer = build.skir.internal.makeSerializer(CompilationProjectionIdSerializerImpl);
-
-    val CompilationRootSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/compiled_content.skir:CompilationRoot",
-        doc = "",
-        defaultInstance = skirout.editor.v1.compiled_content.CompilationRoot.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.CompilationRoot.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val CompilationRootSerializer = build.skir.internal.makeSerializer(CompilationRootSerializerImpl);
-
     val CompilationStatusSelectionSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.compiled_content.CompilationStatusSelection, skirout.editor.v1.compiled_content.CompilationStatusSelection.Unknown>(
             recordId = "editor/v1/compiled_content.skir:CompilationStatusSelection",
@@ -2566,37 +2277,6 @@ private object _SerializerRegistry {
     val QueryPublishedContentResponse_UnavailableSerializer = build.skir.internal.makeSerializer(QueryPublishedContentResponse_UnavailableSerializerImpl);
 
     init {
-        CompilationProjectionIdSerializerImpl.addField(
-            "value",
-            "value",
-            0,
-            build.skir.Serializers.string,
-            "",
-            { it.value },
-            { mut, v -> mut.value = v },
-        );
-        CompilationProjectionIdSerializerImpl.finalizeStruct();
-
-        CompilationRootSerializerImpl.addField(
-            "projection",
-            "projection",
-            0,
-            _SerializerRegistry.CompilationProjectionIdSerializer,
-            "",
-            { it.projection },
-            { mut, v -> mut.projection = v },
-        );
-        CompilationRootSerializerImpl.addField(
-            "resource",
-            "resource",
-            1,
-            skirout.editor.v1.type_catalog.ResourceId.serializer,
-            "",
-            { it.resource },
-            { mut, v -> mut.resource = v },
-        );
-        CompilationRootSerializerImpl.finalizeStruct();
-
         CompilationStatusSelectionSerializerImpl.addConstantVariant(
             1,
             "all_roots",
@@ -2609,7 +2289,7 @@ private object _SerializerRegistry {
             "supplied_roots",
             skirout.editor.v1.compiled_content.CompilationStatusSelection.Kind.SUPPLIED_ROOTS_WRAPPER.ordinal,
             build.skir.Serializers.list(
-                _SerializerRegistry.CompilationRootSerializer,
+                skirout.editor.v1.compilation_root.CompilationRoot.serializer,
             ),
             "",
             { skirout.editor.v1.compiled_content.CompilationStatusSelection.SuppliedRootsWrapper(it) },
@@ -2621,7 +2301,7 @@ private object _SerializerRegistry {
             "root",
             "root",
             0,
-            _SerializerRegistry.CompilationRootSerializer,
+            skirout.editor.v1.compilation_root.CompilationRoot.serializer,
             "",
             { it.root },
             { mut, v -> mut.root = v },
@@ -2708,7 +2388,7 @@ private object _SerializerRegistry {
             "root",
             "root",
             0,
-            _SerializerRegistry.CompilationRootSerializer,
+            skirout.editor.v1.compilation_root.CompilationRoot.serializer,
             "",
             { it.root },
             { mut, v -> mut.root = v },

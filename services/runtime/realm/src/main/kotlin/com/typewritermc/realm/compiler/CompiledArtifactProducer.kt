@@ -1,8 +1,7 @@
 package com.typewritermc.realm.compiler
 
-import com.typewritermc.checking.Diagnostic
 import com.typewritermc.engine.CompilationProjectionId
-import com.typewritermc.engine.CompiledArtifact
+import com.typewritermc.engine.CompilationResult
 import com.typewritermc.realm.authoring.AuthoringView
 
 /** Pins every producer to one retained publication view and the native requirements accepted for that view. */
@@ -18,15 +17,5 @@ internal interface CompiledArtifactProducer {
     fun roots(view: AuthoringView): Set<com.typewritermc.engine.CompilationRoot>
 
     context(inputs: CompilationInputs)
-    fun compile(roots: Set<com.typewritermc.engine.CompilationRoot>): CompilationOutcome
-}
-
-internal sealed interface CompilationOutcome {
-    data class Ready(
-        val artifacts: List<CompiledArtifact>,
-    ) : CompilationOutcome
-
-    data class Blocked(
-        val findings: List<Diagnostic>,
-    ) : CompilationOutcome
+    fun compile(roots: Set<com.typewritermc.engine.CompilationRoot>): List<CompilationResult>
 }

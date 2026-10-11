@@ -16,25 +16,28 @@ Widget _controlFrame(
       : MergeSemantics(
           child: Semantics(label: semanticLabel, child: child),
         );
-  return Builder(
-    builder: (context) {
-      final enclosingTitle = _PortableHeaderTitle.maybeOf(context);
-      final label = resolvedLabel?.trim() == enclosingTitle?.trim()
-          ? null
-          : resolvedLabel;
-      final hasMessage =
-          (label != null && label.isNotEmpty) ||
-          (description != null && description.isNotEmpty);
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          LabeledMessage(label: label, message: description),
-          if (hasMessage) const SizedBox(height: 6),
-          semanticChild,
-        ],
-      );
-    },
+  return PortableLocationTarget(
+    location: childScope.location(control.binding),
+    child: Builder(
+      builder: (context) {
+        final enclosingTitle = _PortableHeaderTitle.maybeOf(context);
+        final label = resolvedLabel?.trim() == enclosingTitle?.trim()
+            ? null
+            : resolvedLabel;
+        final hasMessage =
+            (label != null && label.isNotEmpty) ||
+            (description != null && description.isNotEmpty);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            LabeledMessage(label: label, message: description),
+            if (hasMessage) const SizedBox(height: 6),
+            semanticChild,
+          ],
+        );
+      },
+    ),
   );
 }
 

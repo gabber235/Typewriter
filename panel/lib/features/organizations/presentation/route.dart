@@ -89,8 +89,7 @@ class _IndexPageContent extends StatelessWidget {
   final List<OrganizationData> organizations;
   final List<UserJoinRequest> joinRequests;
 
-  Widget spacer(BuildContext context) =>
-      SliverToBoxAdapter(child: SizedBox(height: context.spacing.space6));
+  Widget spacer(BuildContext context) => SliverGap(context.spacing.space6);
 
   @override
   Widget build(BuildContext context) {

@@ -1,19 +1,12 @@
+import { CompilationRoot } from "editor/v1/compilation_root.skir";
 import { RuntimeMemberSignature } from "editor/v1/publication.skir";
 import {
   CatalogGeneration,
   PublicationId,
-  ResourceId,
 } from "editor/v1/type_catalog.skir";
 import { BoundedTransferChunk } from "kernel/v1/bounded_transfer.skir";
 import { InternalError } from "kernel/v1/errors.skir";
 
-struct CompilationProjectionId(810900100) {
-  value: string = 0;
-}
-struct CompilationRoot(810900101) {
-  projection: CompilationProjectionId = 0;
-  resource: ResourceId = 1;
-}
 struct CompiledBlobPointer(810900102) {
   digest: string = 0;
   size: int64 = 1;

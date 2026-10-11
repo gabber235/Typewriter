@@ -78,6 +78,7 @@ internal class Realm(
     private var database: Surreal? = null
     private var snapshots: AuthoringViewStore? = null
     private var checks: RealmCheckRuntime? = null
+    private var publication: RealmPublicationCoordinator? = null
     private var checkEvents: EditorCheckEvents? = null
     private var registrarScope: RealmRuntimeScope? = null
     private var routeFactory: RealmRouteFactory? = null
@@ -115,8 +116,13 @@ internal class Realm(
                     artifacts = RegisteredCompiledArtifactStore(host.sharedArtifacts),
                     engine = engine,
                     compilation = compilation,
+                    results = compiledContent,
+                    findings = checkRuntime::findings,
                 )
+            this.publication = publisher
             publisher.recoverInterrupted()
+            publisher.start(scope, snapshotStore.changes)
+            checkEvents.bindPublication(publisher)
             val preparation =
                 PreparationCoordinator(
                     catalog = catalogs::captureCurrent,
@@ -195,6 +201,8 @@ internal class Realm(
             }
         }.exceptionOrNull()?.let(failures::add)
         routeFactory = null
+        runCatching { publication?.close() }.exceptionOrNull()?.let(failures::add)
+        publication = null
         runCatching { checks?.close() }.exceptionOrNull()?.let(failures::add)
         checks = null
         runCatching { checkEvents?.close() }.exceptionOrNull()?.let(failures::add)

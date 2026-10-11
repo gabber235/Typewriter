@@ -56,14 +56,16 @@ class EmptyState extends HookConsumerWidget {
               textAlign: TextAlign.center,
               style: theme.textTheme.titleLarge?.copyWith(color: textColor),
             ),
-            SizedBox(height: context.spacing.space2),
-            Text(
-              description,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: textColor.withValues(alpha: 0.7),
+            if (description.isNotEmpty) ...[
+              SizedBox(height: context.spacing.space2),
+              Text(
+                description,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: textColor.withValues(alpha: 0.7),
+                ),
               ),
-            ),
+            ],
             if (buttonText != null) ...[
               SizedBox(height: context.spacing.space4),
               FilledButton.icon(

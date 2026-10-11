@@ -2135,9 +2135,70 @@ extension AuthoringPublishRouteNats
   }
 }
 
+extension AuthoringPublicationQueryRouteNats
+    on _lib_editor_v1_publication.QueryPublicationViewRequest {
+  Stream<_lib_editor_v1_publication.QueryPublicationViewResponse> watch(
+    SkirMutationClient transport, {
+    required _skir.RecordId organizationId,
+
+    required _skir.RecordId realmId,
+  }) {
+    final organization = organizationId.id._transportIdentity;
+
+    final realm = realmId.id._transportIdentity;
+
+    final method = _lib_editor_v1_publication.queryPublicationViewMethod;
+    return transport.watchRequest(
+      "service" +
+          "." +
+          "to" +
+          "." +
+          realm +
+          "." +
+          "organization" +
+          "." +
+          organization +
+          "." +
+          "realm" +
+          "." +
+          "editor" +
+          "." +
+          "authoring" +
+          "." +
+          "publication" +
+          "." +
+          "query",
+      "service" +
+          "." +
+          "from" +
+          "." +
+          realm +
+          "." +
+          "organization" +
+          "." +
+          organization +
+          "." +
+          "realm" +
+          "." +
+          "editor" +
+          "." +
+          "authoring" +
+          "." +
+          "publication" +
+          "." +
+          "query" +
+          "." +
+          this.transferId._transportTransfer,
+      method.requestSerializer.toBytes(this),
+      method.responseSerializer,
+    );
+  }
+}
+
 extension AuthoringPublicationWatchRouteNats
     on _lib_editor_v1_publication.WatchPublicationRequest {
-  SkirRouteOperation<_lib_editor_v1_publication.PublicationReport> operation({
+  SkirRouteOperation<_lib_editor_v1_publication.PublicationViewChanged>
+  operation({
     required _skir.RecordId organizationId,
 
     required _skir.RecordId realmId,
@@ -2179,18 +2240,21 @@ extension AuthoringPublicationWatchRouteNats
 
     required _skir.RecordId realmId,
 
-    required TData Function(_lib_editor_v1_publication.PublicationReport)
+    required TData Function(_lib_editor_v1_publication.PublicationViewChanged)
     snapshot,
-    required TData Function(TData, _lib_editor_v1_publication.PublicationReport)
+    required TData Function(
+      TData,
+      _lib_editor_v1_publication.PublicationViewChanged,
+    )
     reduce,
     required ProjectionReconciliation<
       TData,
-      _lib_editor_v1_publication.PublicationReport,
-      _lib_editor_v1_publication.PublicationReport
+      _lib_editor_v1_publication.PublicationViewChanged,
+      _lib_editor_v1_publication.PublicationViewChanged
     >
     reconciliation,
-    Stream<_lib_editor_v1_publication.PublicationReport>? confirmedEvents,
-    TData Function(TData, _lib_editor_v1_publication.PublicationReport)?
+    Stream<_lib_editor_v1_publication.PublicationViewChanged>? confirmedEvents,
+    TData Function(TData, _lib_editor_v1_publication.PublicationViewChanged)?
     reduceConfirmed,
     TData Function(TData, TData)? reconcileSnapshot,
     TData? initialValue,
@@ -2206,8 +2270,8 @@ extension AuthoringPublicationWatchRouteNats
     );
     return ref.watchProjection<
       TData,
-      _lib_editor_v1_publication.PublicationReport,
-      _lib_editor_v1_publication.PublicationReport
+      _lib_editor_v1_publication.PublicationViewChanged,
+      _lib_editor_v1_publication.PublicationViewChanged
     >(
       subject: operation.subject,
       eventSubject:
@@ -2232,7 +2296,8 @@ extension AuthoringPublicationWatchRouteNats
           "watch",
       requestBytes: operation.requestBytes,
       responseSerializer: operation.responseSerializer,
-      eventSerializer: _lib_editor_v1_publication.PublicationReport.serializer,
+      eventSerializer:
+          _lib_editor_v1_publication.PublicationViewChanged.serializer,
       snapshot: snapshot,
       reduce: reduce,
       delivery: const ProjectionDelivery.ephemeral(),
@@ -3685,6 +3750,52 @@ TransportPermissionGrant panelTransportPermissions({
             "authoring" +
             "." +
             "publish",
+      );
+
+      publish.add(
+        "service" +
+            "." +
+            "to" +
+            "." +
+            realm +
+            "." +
+            "organization" +
+            "." +
+            organization +
+            "." +
+            "realm" +
+            "." +
+            "editor" +
+            "." +
+            "authoring" +
+            "." +
+            "publication" +
+            "." +
+            "query",
+      );
+
+      subscribe.add(
+        "service" +
+            "." +
+            "from" +
+            "." +
+            realm +
+            "." +
+            "organization" +
+            "." +
+            organization +
+            "." +
+            "realm" +
+            "." +
+            "editor" +
+            "." +
+            "authoring" +
+            "." +
+            "publication" +
+            "." +
+            "query" +
+            "." +
+            "*",
       );
 
       publish.add(

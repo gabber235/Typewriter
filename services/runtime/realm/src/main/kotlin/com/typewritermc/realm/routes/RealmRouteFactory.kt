@@ -42,7 +42,7 @@ internal class RealmRouteFactory(
         val authoringSearchRoutes = AuthoringSearchRoutes(authoringSearch, snapshots, contracts)
         val compiledContentRoutes = EditorCompiledContentRoutes(compiledContent, contracts)
         val compiledResourceStatusRoutes = EditorCompiledResourceStatusRoutes(snapshots, compiledRootStatuses, contracts)
-        val publicationRoutes = PublicationRoutes(publisher, compiledContent, contracts, address)
+        val publicationRoutes = PublicationRoutes(publisher, contracts, address)
         val editorCatalogRoutes = EditorCatalogRoutes(editorCatalog, preparation, contracts)
         val presentationSearchRoutes = RealmPresentationSearchRoutes(presentationSearch, contracts, address)
         val capabilityInvocationRoutes = capabilityInvocations?.let { RealmCapabilityInvocationRoutes(it, contracts) }

@@ -15,6 +15,9 @@ import "dart:core" as _core;
 
 import "package:skir_client/skir_client.dart" as _skir;
 
+import "./compilation_root.dart" as _lib_editor_v1_compilation_root;
+import "../../kernel/v1/bounded_transfer.dart"
+    as _lib_kernel_v1_bounded_transfer;
 import "./authoring_facts.dart" as _lib_editor_v1_authoring_facts;
 import "./checking.dart" as _lib_editor_v1_checking;
 import "./diagnostic.dart" as _lib_editor_v1_diagnostic;
@@ -2152,9 +2155,11 @@ final class PublicationResult_Activated_mutable
 ///   switch (e) {
 ///     case PublicationResult_unknown(): { ... }
 ///     case PublicationResult.publishing: { ... }
+///     case PublicationResult.noChanges: { ... }
 ///     case PublicationResult_activated(:var value): { ... }
 ///     case PublicationResult_blocked(:var value): { ... }
 ///     case PublicationResult_interrupted(:var value): { ... }
+///     case PublicationResult_candidateChanged(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -2165,6 +2170,7 @@ sealed class PublicationResult {
   static const PublicationResult unknown = PublicationResult_unknown._instance;
 
   static const publishing = _PublicationResult_consts.publishingConst;
+  static const noChanges = _PublicationResult_consts.noChangesConst;
 
   /// Create a 'activated' variant wrapping around the given value.
   factory PublicationResult.wrapActivated(PublicationResult_Activated value) =>
@@ -2178,9 +2184,16 @@ sealed class PublicationResult {
   );
 
   /// Create a 'blocked' variant wrapping around the given value.
-  factory PublicationResult.wrapBlocked(
-    _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic> value,
-  ) => PublicationResult_blockedWrapper._(value);
+  factory PublicationResult.wrapBlocked(PublicationBlockers value) =>
+      PublicationResult_blockedWrapper._(value);
+
+  /// Same as `wrapBlocked(PublicationBlockers(...))`.
+  factory PublicationResult.createBlocked({
+    required PublicationBlocker_orMutable first,
+    required _core.Iterable<PublicationBlocker_orMutable> additional,
+  }) => PublicationResult.wrapBlocked(
+    PublicationBlockers(first: first, additional: additional),
+  );
 
   /// Create a 'interrupted' variant wrapping around the given value.
   factory PublicationResult.wrapInterrupted(
@@ -2192,6 +2205,18 @@ sealed class PublicationResult {
       PublicationResult.wrapInterrupted(
         _lib_editor_v1_type_catalog.PublicationId(value: value),
       );
+
+  /// Create a 'candidate_changed' variant wrapping around the given value.
+  factory PublicationResult.wrapCandidateChanged(
+    PublicationViewChanged value,
+  ) => PublicationResult_candidateChangedWrapper._(value);
+
+  /// Same as `wrapCandidateChanged(PublicationViewChanged(...))`.
+  factory PublicationResult.createCandidateChanged({
+    required PublicationViewId_orMutable current,
+  }) => PublicationResult.wrapCandidateChanged(
+    PublicationViewChanged(current: current),
+  );
 
   /// Returns the kind of variant held by this PublicationResult.
   PublicationResult_kind get kind;
@@ -2205,6 +2230,13 @@ sealed class PublicationResult {
         "publishing",
         "",
         publishing,
+      );
+      _serializerBuilder.addConstantVariant(
+        5,
+        "no_changes",
+        "noChanges",
+        "",
+        noChanges,
       );
       _serializerBuilder.addWrapperVariant(
         2,
@@ -2220,9 +2252,7 @@ sealed class PublicationResult {
         3,
         "blocked",
         "wrapBlocked",
-        _skir.Serializers.iterable(
-          _lib_editor_v1_diagnostic.Diagnostic.serializer,
-        ),
+        PublicationBlockers.serializer,
         "",
         PublicationResult_blockedWrapper._,
         (it) => it.value,
@@ -2237,6 +2267,16 @@ sealed class PublicationResult {
         PublicationResult_interruptedWrapper._,
         (it) => it.value,
         ordinal: PublicationResult_kind.interruptedWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        6,
+        "candidate_changed",
+        "wrapCandidateChanged",
+        PublicationViewChanged.serializer,
+        "",
+        PublicationResult_candidateChangedWrapper._,
+        (it) => it.value,
+        ordinal: PublicationResult_kind.candidateChangedWrapper._ordinal,
       );
       _serializerBuilder.finalize();
     }
@@ -2259,9 +2299,11 @@ sealed class PublicationResult {
 enum PublicationResult_kind {
   unknown(0),
   publishingConst(1),
-  activatedWrapper(2),
-  blockedWrapper(3),
-  interruptedWrapper(4);
+  noChangesConst(2),
+  activatedWrapper(3),
+  blockedWrapper(4),
+  interruptedWrapper(5),
+  candidateChangedWrapper(6);
 
   final _core.int _ordinal;
 
@@ -2288,7 +2330,8 @@ final class PublicationResult_unknown implements PublicationResult {
 }
 
 enum _PublicationResult_consts implements PublicationResult {
-  publishingConst(PublicationResult_kind.publishingConst);
+  publishingConst(PublicationResult_kind.publishingConst),
+  noChangesConst(PublicationResult_kind.noChangesConst);
 
   @_core.override
   final PublicationResult_kind kind;
@@ -2329,7 +2372,7 @@ final class PublicationResult_activatedWrapper
 
 final class PublicationResult_blockedWrapper
     extends _PublicationResult_wrapper {
-  final _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic> value;
+  final PublicationBlockers value;
 
   PublicationResult_blockedWrapper._(this.value);
 
@@ -2347,237 +2390,15 @@ final class PublicationResult_interruptedWrapper
   PublicationResult_kind get kind => PublicationResult_kind.interruptedWrapper;
 }
 
-// struct PublishAuthoringRequest
+final class PublicationResult_candidateChangedWrapper
+    extends _PublicationResult_wrapper {
+  final PublicationViewChanged value;
 
-sealed class PublishAuthoringRequest_orMutable {
-  PublishAuthoringRequest toFrozen();
-}
-
-/// Deeply immutable.
-final class PublishAuthoringRequest
-    implements PublishAuthoringRequest_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory PublishAuthoringRequest() => PublishAuthoringRequest._();
-
-  PublishAuthoringRequest._();
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = PublishAuthoringRequest._();
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static PublishAuthoringRequest_mutable mutable() =>
-      PublishAuthoringRequest_mutable._();
-
-  /// Returns this instance (no operation).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  PublishAuthoringRequest toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  PublishAuthoringRequest_mutable toMutable() =>
-      PublishAuthoringRequest_mutable._();
+  PublicationResult_candidateChangedWrapper._(this.value);
 
   @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! PublishAuthoringRequest) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `PublishAuthoringRequest` instances.
-  static _skir.StructSerializer<
-    PublishAuthoringRequest,
-    PublishAuthoringRequest_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/publication.skir:PublishAuthoringRequest",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (PublishAuthoringRequest_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [PublishAuthoringRequest].
-final class PublishAuthoringRequest_mutable
-    implements PublishAuthoringRequest_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  PublishAuthoringRequest_mutable._();
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  PublishAuthoringRequest toFrozen() => PublishAuthoringRequest().._u = this._u;
-}
-
-// enum PublishAuthoringResponse
-
-/// To switch on the variants:
-///   ```
-///   switch (e) {
-///     case PublishAuthoringResponse_unknown(): { ... }
-///     case PublishAuthoringResponse_result(:var value): { ... }
-///     case PublishAuthoringResponse_internalError(:var value): { ... }
-///   }
-///   ```
-///
-/// Deeply immutable.
-sealed class PublishAuthoringResponse {
-  /// Constant indicating an unknown `PublishAuthoringResponse`.
-  /// Default value for fields of type `PublishAuthoringResponse`.
-  static const PublishAuthoringResponse unknown =
-      PublishAuthoringResponse_unknown._instance;
-
-  /// Create a 'result' variant wrapping around the given value.
-  factory PublishAuthoringResponse.wrapResult(PublicationResult value) =>
-      PublishAuthoringResponse_resultWrapper._(value);
-
-  /// Create a 'internal_error' variant wrapping around the given value.
-  factory PublishAuthoringResponse.wrapInternalError(
-    _lib_kernel_v1_errors.InternalError value,
-  ) => PublishAuthoringResponse_internalErrorWrapper._(value);
-
-  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
-  factory PublishAuthoringResponse.createInternalError() =>
-      PublishAuthoringResponse.wrapInternalError(
-        _lib_kernel_v1_errors.InternalError(),
-      );
-
-  /// Returns the kind of variant held by this PublishAuthoringResponse.
-  PublishAuthoringResponse_kind get kind;
-
-  /// Serializer for `PublishAuthoringResponse` instances.
-  static _skir.EnumSerializer<PublishAuthoringResponse> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addWrapperVariant(
-        1,
-        "result",
-        "wrapResult",
-        PublicationResult.serializer,
-        "",
-        PublishAuthoringResponse_resultWrapper._,
-        (it) => it.value,
-        ordinal: PublishAuthoringResponse_kind.resultWrapper._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        2,
-        "internal_error",
-        "wrapInternalError",
-        _lib_kernel_v1_errors.InternalError.serializer,
-        "",
-        PublishAuthoringResponse_internalErrorWrapper._,
-        (it) => it.value,
-        ordinal: PublishAuthoringResponse_kind.internalErrorWrapper._ordinal,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/publication.skir:PublishAuthoringResponse",
-        doc: "",
-        unknownInstance: PublishAuthoringResponse_unknown._instance,
-        enumInstance: PublishAuthoringResponse.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: PublishAuthoringResponse_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
-}
-
-/// The kind of variant held by a `PublishAuthoringResponse`.
-enum PublishAuthoringResponse_kind {
-  unknown(0),
-  resultWrapper(1),
-  internalErrorWrapper(2);
-
-  final _core.int _ordinal;
-
-  const PublishAuthoringResponse_kind(this._ordinal);
-}
-
-final class PublishAuthoringResponse_unknown
-    implements PublishAuthoringResponse {
-  static const _instance = PublishAuthoringResponse_unknown._();
-
-  final _skir.internal__UnrecognizedVariant? _u;
-
-  const PublishAuthoringResponse_unknown._() : _u = null;
-  PublishAuthoringResponse_unknown._unrecognized(this._u);
-
-  @_core.override
-  PublishAuthoringResponse_kind get kind =>
-      PublishAuthoringResponse_kind.unknown;
-  @_core.override
-  _core.bool operator ==(other) => other is PublishAuthoringResponse_unknown;
-  @_core.override
-  _core.int get hashCode => 8118964;
-  @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, PublishAuthoringResponse.serializer);
-}
-
-sealed class _PublishAuthoringResponse_wrapper
-    implements PublishAuthoringResponse {
-  _core.dynamic get value;
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (other is! _PublishAuthoringResponse_wrapper) return false;
-    return kind == other.kind && value == other.value;
-  }
-
-  @_core.override
-  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
-
-  @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, PublishAuthoringResponse.serializer);
-}
-
-final class PublishAuthoringResponse_resultWrapper
-    extends _PublishAuthoringResponse_wrapper {
-  final PublicationResult value;
-
-  PublishAuthoringResponse_resultWrapper._(this.value);
-
-  @_core.override
-  PublishAuthoringResponse_kind get kind =>
-      PublishAuthoringResponse_kind.resultWrapper;
-}
-
-final class PublishAuthoringResponse_internalErrorWrapper
-    extends _PublishAuthoringResponse_wrapper {
-  final _lib_kernel_v1_errors.InternalError value;
-
-  PublishAuthoringResponse_internalErrorWrapper._(this.value);
-
-  @_core.override
-  PublishAuthoringResponse_kind get kind =>
-      PublishAuthoringResponse_kind.internalErrorWrapper;
+  PublicationResult_kind get kind =>
+      PublicationResult_kind.candidateChangedWrapper;
 }
 
 // struct PublicationReport
@@ -2747,6 +2568,4408 @@ final class PublicationReport_mutable implements PublicationReport_orMutable {
         .._u = this._u;
 }
 
+// struct PublicationCandidateId
+
+sealed class PublicationCandidateId_orMutable {
+  _core.String get value;
+
+  PublicationCandidateId toFrozen();
+}
+
+/// Deeply immutable.
+final class PublicationCandidateId implements PublicationCandidateId_orMutable {
+  @_core.override
+  final _core.String value;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PublicationCandidateId({required _core.String value}) =>
+      PublicationCandidateId._(value);
+
+  PublicationCandidateId._(this.value);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PublicationCandidateId._("");
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PublicationCandidateId_mutable mutable() =>
+      PublicationCandidateId_mutable._("");
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PublicationCandidateId toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PublicationCandidateId_mutable toMutable() =>
+      PublicationCandidateId_mutable._(this.value);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PublicationCandidateId) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.value];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PublicationCandidateId` instances.
+  static _skir.StructSerializer<
+    PublicationCandidateId,
+    PublicationCandidateId_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "value",
+        "value",
+        0,
+        _skir.Serializers.string,
+        "",
+        (it) => it.value,
+        (it, v) => it.value = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/publication.skir:PublicationCandidateId",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PublicationCandidateId_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PublicationCandidateId].
+final class PublicationCandidateId_mutable
+    implements PublicationCandidateId_orMutable {
+  _core.String value;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PublicationCandidateId_mutable._(this.value);
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PublicationCandidateId toFrozen() =>
+      PublicationCandidateId(value: this.value).._u = this._u;
+}
+
+// struct PublicationViewId
+
+sealed class PublicationViewId_orMutable {
+  _core.String get value;
+
+  PublicationViewId toFrozen();
+}
+
+/// Deeply immutable.
+final class PublicationViewId implements PublicationViewId_orMutable {
+  @_core.override
+  final _core.String value;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PublicationViewId({required _core.String value}) =>
+      PublicationViewId._(value);
+
+  PublicationViewId._(this.value);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PublicationViewId._("");
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PublicationViewId_mutable mutable() => PublicationViewId_mutable._("");
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PublicationViewId toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PublicationViewId_mutable toMutable() =>
+      PublicationViewId_mutable._(this.value);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PublicationViewId) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.value];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PublicationViewId` instances.
+  static _skir.StructSerializer<PublicationViewId, PublicationViewId_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "value",
+        "value",
+        0,
+        _skir.Serializers.string,
+        "",
+        (it) => it.value,
+        (it, v) => it.value = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/publication.skir:PublicationViewId",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PublicationViewId_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PublicationViewId].
+final class PublicationViewId_mutable implements PublicationViewId_orMutable {
+  _core.String value;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PublicationViewId_mutable._(this.value);
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PublicationViewId toFrozen() =>
+      PublicationViewId(value: this.value).._u = this._u;
+}
+
+// enum PublicationBaseline
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case PublicationBaseline_unknown(): { ... }
+///     case PublicationBaseline.initial: { ... }
+///     case PublicationBaseline_selected(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class PublicationBaseline {
+  /// Constant indicating an unknown `PublicationBaseline`.
+  /// Default value for fields of type `PublicationBaseline`.
+  static const PublicationBaseline unknown =
+      PublicationBaseline_unknown._instance;
+
+  static const initial = _PublicationBaseline_consts.initialConst;
+
+  /// Create a 'selected' variant wrapping around the given value.
+  factory PublicationBaseline.wrapSelected(
+    _lib_editor_v1_type_catalog.PublicationId value,
+  ) => PublicationBaseline_selectedWrapper._(value);
+
+  /// Same as `wrapSelected(_lib_editor_v1_type_catalog.PublicationId(...))`.
+  factory PublicationBaseline.createSelected({required _core.String value}) =>
+      PublicationBaseline.wrapSelected(
+        _lib_editor_v1_type_catalog.PublicationId(value: value),
+      );
+
+  /// Returns the kind of variant held by this PublicationBaseline.
+  PublicationBaseline_kind get kind;
+
+  /// Serializer for `PublicationBaseline` instances.
+  static _skir.EnumSerializer<PublicationBaseline> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(
+        1,
+        "initial",
+        "initial",
+        "",
+        initial,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "selected",
+        "wrapSelected",
+        _lib_editor_v1_type_catalog.PublicationId.serializer,
+        "",
+        PublicationBaseline_selectedWrapper._,
+        (it) => it.value,
+        ordinal: PublicationBaseline_kind.selectedWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/publication.skir:PublicationBaseline",
+        doc: "",
+        unknownInstance: PublicationBaseline_unknown._instance,
+        enumInstance: PublicationBaseline.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PublicationBaseline_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `PublicationBaseline`.
+enum PublicationBaseline_kind {
+  unknown(0),
+  initialConst(1),
+  selectedWrapper(2);
+
+  final _core.int _ordinal;
+
+  const PublicationBaseline_kind(this._ordinal);
+}
+
+final class PublicationBaseline_unknown implements PublicationBaseline {
+  static const _instance = PublicationBaseline_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const PublicationBaseline_unknown._() : _u = null;
+  PublicationBaseline_unknown._unrecognized(this._u);
+
+  @_core.override
+  PublicationBaseline_kind get kind => PublicationBaseline_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is PublicationBaseline_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PublicationBaseline.serializer);
+}
+
+enum _PublicationBaseline_consts implements PublicationBaseline {
+  initialConst(PublicationBaseline_kind.initialConst);
+
+  @_core.override
+  final PublicationBaseline_kind kind;
+
+  const _PublicationBaseline_consts(this.kind);
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PublicationBaseline.serializer);
+}
+
+sealed class _PublicationBaseline_wrapper implements PublicationBaseline {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _PublicationBaseline_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PublicationBaseline.serializer);
+}
+
+final class PublicationBaseline_selectedWrapper
+    extends _PublicationBaseline_wrapper {
+  final _lib_editor_v1_type_catalog.PublicationId value;
+
+  PublicationBaseline_selectedWrapper._(this.value);
+
+  @_core.override
+  PublicationBaseline_kind get kind => PublicationBaseline_kind.selectedWrapper;
+}
+
+// struct PublicationDiagnosticDetails
+
+sealed class PublicationDiagnosticDetails_orMutable {
+  _lib_editor_v1_type_catalog.DiagnosticId_orMutable get id;
+  _lib_editor_v1_type_catalog.RuleOrigin_orMutable get origin;
+  _core.String get code;
+  _core.String get message;
+  _lib_editor_v1_type_catalog.ValueLocation_orMutable? get primary;
+  _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable>
+  get related;
+
+  PublicationDiagnosticDetails toFrozen();
+}
+
+/// Deeply immutable.
+final class PublicationDiagnosticDetails
+    implements PublicationDiagnosticDetails_orMutable {
+  @_core.override
+  final _lib_editor_v1_type_catalog.DiagnosticId id;
+  @_core.override
+  final _lib_editor_v1_type_catalog.RuleOrigin origin;
+  @_core.override
+  final _core.String code;
+  @_core.override
+  final _core.String message;
+  @_core.override
+  final _lib_editor_v1_type_catalog.ValueLocation? primary;
+  @_core.override
+  final _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation> related;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PublicationDiagnosticDetails({
+    required _lib_editor_v1_type_catalog.DiagnosticId_orMutable id,
+    required _lib_editor_v1_type_catalog.RuleOrigin_orMutable origin,
+    required _core.String code,
+    required _core.String message,
+    required _lib_editor_v1_type_catalog.ValueLocation_orMutable? primary,
+    required _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable>
+    related,
+  }) => PublicationDiagnosticDetails._(
+    id.toFrozen(),
+    origin.toFrozen(),
+    code,
+    message,
+    (primary != null) ? primary.toFrozen() : null,
+    _skir.internal__frozenMappedCopy(related, (it) => it.toFrozen()),
+  );
+
+  PublicationDiagnosticDetails._(
+    this.id,
+    this.origin,
+    this.code,
+    this.message,
+    this.primary,
+    this.related,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PublicationDiagnosticDetails._(
+    _lib_editor_v1_type_catalog.DiagnosticId.defaultInstance,
+    _lib_editor_v1_type_catalog.RuleOrigin.defaultInstance,
+    "",
+    "",
+    null,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PublicationDiagnosticDetails_mutable mutable() =>
+      PublicationDiagnosticDetails_mutable._(
+        _lib_editor_v1_type_catalog.DiagnosticId.defaultInstance,
+        _lib_editor_v1_type_catalog.RuleOrigin.defaultInstance,
+        "",
+        "",
+        null,
+        _skir.KeyedIterable.empty,
+      );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PublicationDiagnosticDetails toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PublicationDiagnosticDetails_mutable toMutable() =>
+      PublicationDiagnosticDetails_mutable._(
+        this.id,
+        this.origin,
+        this.code,
+        this.message,
+        this.primary,
+        this.related,
+      );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PublicationDiagnosticDetails) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.id,
+    this.origin,
+    this.code,
+    this.message,
+    this.primary,
+    this.related,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PublicationDiagnosticDetails` instances.
+  static _skir.StructSerializer<
+    PublicationDiagnosticDetails,
+    PublicationDiagnosticDetails_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "id",
+        "id",
+        0,
+        _lib_editor_v1_type_catalog.DiagnosticId.serializer,
+        "",
+        (it) => it.id,
+        (it, v) => it.id = v,
+      );
+      _serializerBuilder.addField(
+        "origin",
+        "origin",
+        1,
+        _lib_editor_v1_type_catalog.RuleOrigin.serializer,
+        "",
+        (it) => it.origin,
+        (it, v) => it.origin = v,
+      );
+      _serializerBuilder.addField(
+        "code",
+        "code",
+        2,
+        _skir.Serializers.string,
+        "",
+        (it) => it.code,
+        (it, v) => it.code = v,
+      );
+      _serializerBuilder.addField(
+        "message",
+        "message",
+        3,
+        _skir.Serializers.string,
+        "",
+        (it) => it.message,
+        (it, v) => it.message = v,
+      );
+      _serializerBuilder.addField(
+        "primary",
+        "primary",
+        4,
+        _skir.Serializers.optional(
+          _lib_editor_v1_type_catalog.ValueLocation.serializer,
+        ),
+        "",
+        (it) => it.primary,
+        (it, v) => it.primary = v,
+      );
+      _serializerBuilder.addField(
+        "related",
+        "related",
+        5,
+        _skir.Serializers.iterable(
+          _lib_editor_v1_type_catalog.ValueLocation.serializer,
+        ),
+        "",
+        (it) => it.related,
+        (it, v) => it.related = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/publication.skir:PublicationDiagnosticDetails",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PublicationDiagnosticDetails_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PublicationDiagnosticDetails].
+final class PublicationDiagnosticDetails_mutable
+    implements PublicationDiagnosticDetails_orMutable {
+  _lib_editor_v1_type_catalog.DiagnosticId_orMutable id;
+  _lib_editor_v1_type_catalog.RuleOrigin_orMutable origin;
+  _core.String code;
+  _core.String message;
+  _lib_editor_v1_type_catalog.ValueLocation_orMutable? primary;
+  _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable> related;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PublicationDiagnosticDetails_mutable._(
+    this.id,
+    this.origin,
+    this.code,
+    this.message,
+    this.primary,
+    this.related,
+  );
+
+  /// If the value of [id] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
+  _lib_editor_v1_type_catalog.DiagnosticId_mutable get mutableId {
+    final value = this.id;
+    if (value is _lib_editor_v1_type_catalog.DiagnosticId_mutable) {
+      return value;
+    } else {
+      return this.id = (value as _lib_editor_v1_type_catalog.DiagnosticId)
+          .toMutable();
+    }
+  }
+
+  /// If the value of [origin] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [origin] and returns it.
+  _lib_editor_v1_type_catalog.RuleOrigin_mutable get mutableOrigin {
+    final value = this.origin;
+    if (value is _lib_editor_v1_type_catalog.RuleOrigin_mutable) {
+      return value;
+    } else {
+      return this.origin = (value as _lib_editor_v1_type_catalog.RuleOrigin)
+          .toMutable();
+    }
+  }
+
+  /// If the value of [related] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [related] and returns it.
+  _core.List<_lib_editor_v1_type_catalog.ValueLocation_orMutable>
+  get mutableRelated {
+    final value = this.related;
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_type_catalog.ValueLocation_orMutable
+        >) {
+      return value;
+    } else {
+      return this.related = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PublicationDiagnosticDetails toFrozen() => PublicationDiagnosticDetails(
+    id: this.id,
+    origin: this.origin,
+    code: this.code,
+    message: this.message,
+    primary: this.primary,
+    related: this.related,
+  ).._u = this._u;
+}
+
+// enum PublicationNotice
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case PublicationNotice_unknown(): { ... }
+///     case PublicationNotice_information(:var value): { ... }
+///     case PublicationNotice_warning(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class PublicationNotice {
+  /// Constant indicating an unknown `PublicationNotice`.
+  /// Default value for fields of type `PublicationNotice`.
+  static const PublicationNotice unknown = PublicationNotice_unknown._instance;
+
+  /// Create a 'information' variant wrapping around the given value.
+  factory PublicationNotice.wrapInformation(
+    PublicationDiagnosticDetails value,
+  ) => PublicationNotice_informationWrapper._(value);
+
+  /// Same as `wrapInformation(PublicationDiagnosticDetails(...))`.
+  factory PublicationNotice.createInformation({
+    required _lib_editor_v1_type_catalog.DiagnosticId_orMutable id,
+    required _lib_editor_v1_type_catalog.RuleOrigin_orMutable origin,
+    required _core.String code,
+    required _core.String message,
+    required _lib_editor_v1_type_catalog.ValueLocation_orMutable? primary,
+    required _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable>
+    related,
+  }) => PublicationNotice.wrapInformation(
+    PublicationDiagnosticDetails(
+      id: id,
+      origin: origin,
+      code: code,
+      message: message,
+      primary: primary,
+      related: related,
+    ),
+  );
+
+  /// Create a 'warning' variant wrapping around the given value.
+  factory PublicationNotice.wrapWarning(PublicationDiagnosticDetails value) =>
+      PublicationNotice_warningWrapper._(value);
+
+  /// Same as `wrapWarning(PublicationDiagnosticDetails(...))`.
+  factory PublicationNotice.createWarning({
+    required _lib_editor_v1_type_catalog.DiagnosticId_orMutable id,
+    required _lib_editor_v1_type_catalog.RuleOrigin_orMutable origin,
+    required _core.String code,
+    required _core.String message,
+    required _lib_editor_v1_type_catalog.ValueLocation_orMutable? primary,
+    required _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable>
+    related,
+  }) => PublicationNotice.wrapWarning(
+    PublicationDiagnosticDetails(
+      id: id,
+      origin: origin,
+      code: code,
+      message: message,
+      primary: primary,
+      related: related,
+    ),
+  );
+
+  /// Returns the kind of variant held by this PublicationNotice.
+  PublicationNotice_kind get kind;
+
+  /// Serializer for `PublicationNotice` instances.
+  static _skir.EnumSerializer<PublicationNotice> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "information",
+        "wrapInformation",
+        PublicationDiagnosticDetails.serializer,
+        "",
+        PublicationNotice_informationWrapper._,
+        (it) => it.value,
+        ordinal: PublicationNotice_kind.informationWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "warning",
+        "wrapWarning",
+        PublicationDiagnosticDetails.serializer,
+        "",
+        PublicationNotice_warningWrapper._,
+        (it) => it.value,
+        ordinal: PublicationNotice_kind.warningWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/publication.skir:PublicationNotice",
+        doc: "",
+        unknownInstance: PublicationNotice_unknown._instance,
+        enumInstance: PublicationNotice.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PublicationNotice_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `PublicationNotice`.
+enum PublicationNotice_kind {
+  unknown(0),
+  informationWrapper(1),
+  warningWrapper(2);
+
+  final _core.int _ordinal;
+
+  const PublicationNotice_kind(this._ordinal);
+}
+
+final class PublicationNotice_unknown implements PublicationNotice {
+  static const _instance = PublicationNotice_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const PublicationNotice_unknown._() : _u = null;
+  PublicationNotice_unknown._unrecognized(this._u);
+
+  @_core.override
+  PublicationNotice_kind get kind => PublicationNotice_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is PublicationNotice_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PublicationNotice.serializer);
+}
+
+sealed class _PublicationNotice_wrapper implements PublicationNotice {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _PublicationNotice_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PublicationNotice.serializer);
+}
+
+final class PublicationNotice_informationWrapper
+    extends _PublicationNotice_wrapper {
+  final PublicationDiagnosticDetails value;
+
+  PublicationNotice_informationWrapper._(this.value);
+
+  @_core.override
+  PublicationNotice_kind get kind => PublicationNotice_kind.informationWrapper;
+}
+
+final class PublicationNotice_warningWrapper
+    extends _PublicationNotice_wrapper {
+  final PublicationDiagnosticDetails value;
+
+  PublicationNotice_warningWrapper._(this.value);
+
+  @_core.override
+  PublicationNotice_kind get kind => PublicationNotice_kind.warningWrapper;
+}
+
+// struct PublicationBlocker
+
+sealed class PublicationBlocker_orMutable {
+  PublicationDiagnosticDetails_orMutable get details;
+
+  PublicationBlocker toFrozen();
+}
+
+/// Deeply immutable.
+final class PublicationBlocker implements PublicationBlocker_orMutable {
+  @_core.override
+  final PublicationDiagnosticDetails details;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PublicationBlocker({
+    required PublicationDiagnosticDetails_orMutable details,
+  }) => PublicationBlocker._(details.toFrozen());
+
+  PublicationBlocker._(this.details);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PublicationBlocker._(
+    PublicationDiagnosticDetails.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PublicationBlocker_mutable mutable() => PublicationBlocker_mutable._(
+    PublicationDiagnosticDetails.defaultInstance,
+  );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PublicationBlocker toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PublicationBlocker_mutable toMutable() =>
+      PublicationBlocker_mutable._(this.details);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PublicationBlocker) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.details];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PublicationBlocker` instances.
+  static _skir.StructSerializer<PublicationBlocker, PublicationBlocker_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "details",
+        "details",
+        0,
+        PublicationDiagnosticDetails.serializer,
+        "",
+        (it) => it.details,
+        (it, v) => it.details = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/publication.skir:PublicationBlocker",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PublicationBlocker_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PublicationBlocker].
+final class PublicationBlocker_mutable implements PublicationBlocker_orMutable {
+  PublicationDiagnosticDetails_orMutable details;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PublicationBlocker_mutable._(this.details);
+
+  /// If the value of [details] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [details] and returns it.
+  PublicationDiagnosticDetails_mutable get mutableDetails {
+    final value = this.details;
+    if (value is PublicationDiagnosticDetails_mutable) {
+      return value;
+    } else {
+      return this.details = (value as PublicationDiagnosticDetails).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PublicationBlocker toFrozen() =>
+      PublicationBlocker(details: this.details).._u = this._u;
+}
+
+// enum PublicationChange
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case PublicationChange_unknown(): { ... }
+///     case PublicationChange.requirementsChanged: { ... }
+///     case PublicationChange_rootAdded(:var value): { ... }
+///     case PublicationChange_rootUpdated(:var value): { ... }
+///     case PublicationChange_rootRemoved(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class PublicationChange {
+  /// Constant indicating an unknown `PublicationChange`.
+  /// Default value for fields of type `PublicationChange`.
+  static const PublicationChange unknown = PublicationChange_unknown._instance;
+
+  static const requirementsChanged =
+      _PublicationChange_consts.requirementsChangedConst;
+
+  /// Create a 'root_added' variant wrapping around the given value.
+  factory PublicationChange.wrapRootAdded(
+    _lib_editor_v1_compilation_root.CompilationRoot value,
+  ) => PublicationChange_rootAddedWrapper._(value);
+
+  /// Same as `wrapRootAdded(_lib_editor_v1_compilation_root.CompilationRoot(...))`.
+  factory PublicationChange.createRootAdded({
+    required _lib_editor_v1_compilation_root.CompilationProjectionId_orMutable
+    projection,
+    required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
+  }) => PublicationChange.wrapRootAdded(
+    _lib_editor_v1_compilation_root.CompilationRoot(
+      projection: projection,
+      resource: resource,
+    ),
+  );
+
+  /// Create a 'root_updated' variant wrapping around the given value.
+  factory PublicationChange.wrapRootUpdated(
+    _lib_editor_v1_compilation_root.CompilationRoot value,
+  ) => PublicationChange_rootUpdatedWrapper._(value);
+
+  /// Same as `wrapRootUpdated(_lib_editor_v1_compilation_root.CompilationRoot(...))`.
+  factory PublicationChange.createRootUpdated({
+    required _lib_editor_v1_compilation_root.CompilationProjectionId_orMutable
+    projection,
+    required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
+  }) => PublicationChange.wrapRootUpdated(
+    _lib_editor_v1_compilation_root.CompilationRoot(
+      projection: projection,
+      resource: resource,
+    ),
+  );
+
+  /// Create a 'root_removed' variant wrapping around the given value.
+  factory PublicationChange.wrapRootRemoved(
+    _lib_editor_v1_compilation_root.CompilationRoot value,
+  ) => PublicationChange_rootRemovedWrapper._(value);
+
+  /// Same as `wrapRootRemoved(_lib_editor_v1_compilation_root.CompilationRoot(...))`.
+  factory PublicationChange.createRootRemoved({
+    required _lib_editor_v1_compilation_root.CompilationProjectionId_orMutable
+    projection,
+    required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
+  }) => PublicationChange.wrapRootRemoved(
+    _lib_editor_v1_compilation_root.CompilationRoot(
+      projection: projection,
+      resource: resource,
+    ),
+  );
+
+  /// Returns the kind of variant held by this PublicationChange.
+  PublicationChange_kind get kind;
+
+  /// Serializer for `PublicationChange` instances.
+  static _skir.EnumSerializer<PublicationChange> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(
+        4,
+        "requirements_changed",
+        "requirementsChanged",
+        "",
+        requirementsChanged,
+      );
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "root_added",
+        "wrapRootAdded",
+        _lib_editor_v1_compilation_root.CompilationRoot.serializer,
+        "",
+        PublicationChange_rootAddedWrapper._,
+        (it) => it.value,
+        ordinal: PublicationChange_kind.rootAddedWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "root_updated",
+        "wrapRootUpdated",
+        _lib_editor_v1_compilation_root.CompilationRoot.serializer,
+        "",
+        PublicationChange_rootUpdatedWrapper._,
+        (it) => it.value,
+        ordinal: PublicationChange_kind.rootUpdatedWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        3,
+        "root_removed",
+        "wrapRootRemoved",
+        _lib_editor_v1_compilation_root.CompilationRoot.serializer,
+        "",
+        PublicationChange_rootRemovedWrapper._,
+        (it) => it.value,
+        ordinal: PublicationChange_kind.rootRemovedWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/publication.skir:PublicationChange",
+        doc: "",
+        unknownInstance: PublicationChange_unknown._instance,
+        enumInstance: PublicationChange.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PublicationChange_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `PublicationChange`.
+enum PublicationChange_kind {
+  unknown(0),
+  requirementsChangedConst(1),
+  rootAddedWrapper(2),
+  rootUpdatedWrapper(3),
+  rootRemovedWrapper(4);
+
+  final _core.int _ordinal;
+
+  const PublicationChange_kind(this._ordinal);
+}
+
+final class PublicationChange_unknown implements PublicationChange {
+  static const _instance = PublicationChange_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const PublicationChange_unknown._() : _u = null;
+  PublicationChange_unknown._unrecognized(this._u);
+
+  @_core.override
+  PublicationChange_kind get kind => PublicationChange_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is PublicationChange_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PublicationChange.serializer);
+}
+
+enum _PublicationChange_consts implements PublicationChange {
+  requirementsChangedConst(PublicationChange_kind.requirementsChangedConst);
+
+  @_core.override
+  final PublicationChange_kind kind;
+
+  const _PublicationChange_consts(this.kind);
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PublicationChange.serializer);
+}
+
+sealed class _PublicationChange_wrapper implements PublicationChange {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _PublicationChange_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PublicationChange.serializer);
+}
+
+final class PublicationChange_rootAddedWrapper
+    extends _PublicationChange_wrapper {
+  final _lib_editor_v1_compilation_root.CompilationRoot value;
+
+  PublicationChange_rootAddedWrapper._(this.value);
+
+  @_core.override
+  PublicationChange_kind get kind => PublicationChange_kind.rootAddedWrapper;
+}
+
+final class PublicationChange_rootUpdatedWrapper
+    extends _PublicationChange_wrapper {
+  final _lib_editor_v1_compilation_root.CompilationRoot value;
+
+  PublicationChange_rootUpdatedWrapper._(this.value);
+
+  @_core.override
+  PublicationChange_kind get kind => PublicationChange_kind.rootUpdatedWrapper;
+}
+
+final class PublicationChange_rootRemovedWrapper
+    extends _PublicationChange_wrapper {
+  final _lib_editor_v1_compilation_root.CompilationRoot value;
+
+  PublicationChange_rootRemovedWrapper._(this.value);
+
+  @_core.override
+  PublicationChange_kind get kind => PublicationChange_kind.rootRemovedWrapper;
+}
+
+// struct PublicationDelta
+
+sealed class PublicationDelta_orMutable {
+  PublicationChange get first;
+  _core.Iterable<PublicationChange> get additional;
+
+  PublicationDelta toFrozen();
+}
+
+/// Deeply immutable.
+final class PublicationDelta implements PublicationDelta_orMutable {
+  @_core.override
+  final PublicationChange first;
+  @_core.override
+  final _core.Iterable<PublicationChange> additional;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PublicationDelta({
+    required PublicationChange first,
+    required _core.Iterable<PublicationChange> additional,
+  }) => PublicationDelta._(first, _skir.internal__frozenCopy(additional));
+
+  PublicationDelta._(this.first, this.additional);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PublicationDelta._(
+    PublicationChange.unknown,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PublicationDelta_mutable mutable() => PublicationDelta_mutable._(
+    PublicationChange.unknown,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PublicationDelta toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PublicationDelta_mutable toMutable() =>
+      PublicationDelta_mutable._(this.first, this.additional);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PublicationDelta) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.first, this.additional];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PublicationDelta` instances.
+  static _skir.StructSerializer<PublicationDelta, PublicationDelta_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "first",
+        "first",
+        0,
+        PublicationChange.serializer,
+        "",
+        (it) => it.first,
+        (it, v) => it.first = v,
+      );
+      _serializerBuilder.addField(
+        "additional",
+        "additional",
+        1,
+        _skir.Serializers.iterable(PublicationChange.serializer),
+        "",
+        (it) => it.additional,
+        (it, v) => it.additional = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/publication.skir:PublicationDelta",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PublicationDelta_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PublicationDelta].
+final class PublicationDelta_mutable implements PublicationDelta_orMutable {
+  PublicationChange first;
+  _core.Iterable<PublicationChange> additional;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PublicationDelta_mutable._(this.first, this.additional);
+
+  /// If the value of [additional] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [additional] and returns it.
+  _core.List<PublicationChange> get mutableAdditional {
+    final value = this.additional;
+    if (value is _skir.internal__MutableList<PublicationChange>) {
+      return value;
+    } else {
+      return this.additional = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PublicationDelta toFrozen() =>
+      PublicationDelta(first: this.first, additional: this.additional)
+        .._u = this._u;
+}
+
+// struct PublicationBlockers
+
+sealed class PublicationBlockers_orMutable {
+  PublicationBlocker_orMutable get first;
+  _core.Iterable<PublicationBlocker_orMutable> get additional;
+
+  PublicationBlockers toFrozen();
+}
+
+/// Deeply immutable.
+final class PublicationBlockers implements PublicationBlockers_orMutable {
+  @_core.override
+  final PublicationBlocker first;
+  @_core.override
+  final _core.Iterable<PublicationBlocker> additional;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PublicationBlockers({
+    required PublicationBlocker_orMutable first,
+    required _core.Iterable<PublicationBlocker_orMutable> additional,
+  }) => PublicationBlockers._(
+    first.toFrozen(),
+    _skir.internal__frozenMappedCopy(additional, (it) => it.toFrozen()),
+  );
+
+  PublicationBlockers._(this.first, this.additional);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PublicationBlockers._(
+    PublicationBlocker.defaultInstance,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PublicationBlockers_mutable mutable() => PublicationBlockers_mutable._(
+    PublicationBlocker.defaultInstance,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PublicationBlockers toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PublicationBlockers_mutable toMutable() =>
+      PublicationBlockers_mutable._(this.first, this.additional);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PublicationBlockers) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.first, this.additional];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PublicationBlockers` instances.
+  static _skir.StructSerializer<
+    PublicationBlockers,
+    PublicationBlockers_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "first",
+        "first",
+        0,
+        PublicationBlocker.serializer,
+        "",
+        (it) => it.first,
+        (it, v) => it.first = v,
+      );
+      _serializerBuilder.addField(
+        "additional",
+        "additional",
+        1,
+        _skir.Serializers.iterable(PublicationBlocker.serializer),
+        "",
+        (it) => it.additional,
+        (it, v) => it.additional = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/publication.skir:PublicationBlockers",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PublicationBlockers_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PublicationBlockers].
+final class PublicationBlockers_mutable
+    implements PublicationBlockers_orMutable {
+  PublicationBlocker_orMutable first;
+  _core.Iterable<PublicationBlocker_orMutable> additional;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PublicationBlockers_mutable._(this.first, this.additional);
+
+  /// If the value of [first] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [first] and returns it.
+  PublicationBlocker_mutable get mutableFirst {
+    final value = this.first;
+    if (value is PublicationBlocker_mutable) {
+      return value;
+    } else {
+      return this.first = (value as PublicationBlocker).toMutable();
+    }
+  }
+
+  /// If the value of [additional] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [additional] and returns it.
+  _core.List<PublicationBlocker_orMutable> get mutableAdditional {
+    final value = this.additional;
+    if (value is _skir.internal__MutableList<PublicationBlocker_orMutable>) {
+      return value;
+    } else {
+      return this.additional = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PublicationBlockers toFrozen() =>
+      PublicationBlockers(first: this.first, additional: this.additional)
+        .._u = this._u;
+}
+
+// enum PublicationActivationPhase
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case PublicationActivationPhase_unknown(): { ... }
+///     case PublicationActivationPhase.storing: { ... }
+///     case PublicationActivationPhase.activating: { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class PublicationActivationPhase {
+  /// Constant indicating an unknown `PublicationActivationPhase`.
+  /// Default value for fields of type `PublicationActivationPhase`.
+  static const PublicationActivationPhase unknown =
+      PublicationActivationPhase_unknown._instance;
+
+  static const storing = _PublicationActivationPhase_consts.storingConst;
+  static const activating = _PublicationActivationPhase_consts.activatingConst;
+
+  /// Returns the kind of variant held by this PublicationActivationPhase.
+  PublicationActivationPhase_kind get kind;
+
+  /// Serializer for `PublicationActivationPhase` instances.
+  static _skir.EnumSerializer<PublicationActivationPhase> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(
+        1,
+        "storing",
+        "storing",
+        "",
+        storing,
+      );
+      _serializerBuilder.addConstantVariant(
+        2,
+        "activating",
+        "activating",
+        "",
+        activating,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/publication.skir:PublicationActivationPhase",
+        doc: "",
+        unknownInstance: PublicationActivationPhase_unknown._instance,
+        enumInstance: PublicationActivationPhase.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PublicationActivationPhase_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `PublicationActivationPhase`.
+enum PublicationActivationPhase_kind {
+  unknown(0),
+  storingConst(1),
+  activatingConst(2);
+
+  final _core.int _ordinal;
+
+  const PublicationActivationPhase_kind(this._ordinal);
+}
+
+final class PublicationActivationPhase_unknown
+    implements PublicationActivationPhase {
+  static const _instance = PublicationActivationPhase_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const PublicationActivationPhase_unknown._() : _u = null;
+  PublicationActivationPhase_unknown._unrecognized(this._u);
+
+  @_core.override
+  PublicationActivationPhase_kind get kind =>
+      PublicationActivationPhase_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is PublicationActivationPhase_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PublicationActivationPhase.serializer);
+}
+
+enum _PublicationActivationPhase_consts implements PublicationActivationPhase {
+  storingConst(PublicationActivationPhase_kind.storingConst),
+  activatingConst(PublicationActivationPhase_kind.activatingConst);
+
+  @_core.override
+  final PublicationActivationPhase_kind kind;
+
+  const _PublicationActivationPhase_consts(this.kind);
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PublicationActivationPhase.serializer);
+}
+
+// struct PublicationPendingReview
+
+sealed class PublicationPendingReview_orMutable {
+  _core.Iterable<_lib_editor_v1_checking.FindingSet_orMutable> get findings;
+  _core.Iterable<PublicationChange> get confirmedChanges;
+  _core.Iterable<_lib_editor_v1_compilation_root.CompilationRoot_orMutable>
+  get pendingRoots;
+  _core.Iterable<PublicationBlocker_orMutable> get blockers;
+  _core.Iterable<PublicationNotice> get notices;
+
+  PublicationPendingReview toFrozen();
+}
+
+/// Deeply immutable.
+final class PublicationPendingReview
+    implements PublicationPendingReview_orMutable {
+  @_core.override
+  final _core.Iterable<_lib_editor_v1_checking.FindingSet> findings;
+  @_core.override
+  final _core.Iterable<PublicationChange> confirmedChanges;
+  @_core.override
+  final _core.Iterable<_lib_editor_v1_compilation_root.CompilationRoot>
+  pendingRoots;
+  @_core.override
+  final _core.Iterable<PublicationBlocker> blockers;
+  @_core.override
+  final _core.Iterable<PublicationNotice> notices;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PublicationPendingReview({
+    required _core.Iterable<_lib_editor_v1_checking.FindingSet_orMutable>
+    findings,
+    required _core.Iterable<PublicationChange> confirmedChanges,
+    required _core.Iterable<
+      _lib_editor_v1_compilation_root.CompilationRoot_orMutable
+    >
+    pendingRoots,
+    required _core.Iterable<PublicationBlocker_orMutable> blockers,
+    required _core.Iterable<PublicationNotice> notices,
+  }) => PublicationPendingReview._(
+    _skir.internal__frozenMappedCopy(findings, (it) => it.toFrozen()),
+    _skir.internal__frozenCopy(confirmedChanges),
+    _skir.internal__frozenMappedCopy(pendingRoots, (it) => it.toFrozen()),
+    _skir.internal__frozenMappedCopy(blockers, (it) => it.toFrozen()),
+    _skir.internal__frozenCopy(notices),
+  );
+
+  PublicationPendingReview._(
+    this.findings,
+    this.confirmedChanges,
+    this.pendingRoots,
+    this.blockers,
+    this.notices,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PublicationPendingReview._(
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PublicationPendingReview_mutable mutable() =>
+      PublicationPendingReview_mutable._(
+        _skir.KeyedIterable.empty,
+        _skir.KeyedIterable.empty,
+        _skir.KeyedIterable.empty,
+        _skir.KeyedIterable.empty,
+        _skir.KeyedIterable.empty,
+      );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PublicationPendingReview toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PublicationPendingReview_mutable toMutable() =>
+      PublicationPendingReview_mutable._(
+        this.findings,
+        this.confirmedChanges,
+        this.pendingRoots,
+        this.blockers,
+        this.notices,
+      );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PublicationPendingReview) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.findings,
+    this.confirmedChanges,
+    this.pendingRoots,
+    this.blockers,
+    this.notices,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PublicationPendingReview` instances.
+  static _skir.StructSerializer<
+    PublicationPendingReview,
+    PublicationPendingReview_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "findings",
+        "findings",
+        0,
+        _skir.Serializers.iterable(
+          _lib_editor_v1_checking.FindingSet.serializer,
+        ),
+        "",
+        (it) => it.findings,
+        (it, v) => it.findings = v,
+      );
+      _serializerBuilder.addField(
+        "confirmed_changes",
+        "confirmedChanges",
+        1,
+        _skir.Serializers.iterable(PublicationChange.serializer),
+        "",
+        (it) => it.confirmedChanges,
+        (it, v) => it.confirmedChanges = v,
+      );
+      _serializerBuilder.addField(
+        "pending_roots",
+        "pendingRoots",
+        2,
+        _skir.Serializers.iterable(
+          _lib_editor_v1_compilation_root.CompilationRoot.serializer,
+        ),
+        "",
+        (it) => it.pendingRoots,
+        (it, v) => it.pendingRoots = v,
+      );
+      _serializerBuilder.addField(
+        "blockers",
+        "blockers",
+        3,
+        _skir.Serializers.iterable(PublicationBlocker.serializer),
+        "",
+        (it) => it.blockers,
+        (it, v) => it.blockers = v,
+      );
+      _serializerBuilder.addField(
+        "notices",
+        "notices",
+        4,
+        _skir.Serializers.iterable(PublicationNotice.serializer),
+        "",
+        (it) => it.notices,
+        (it, v) => it.notices = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/publication.skir:PublicationPendingReview",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PublicationPendingReview_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PublicationPendingReview].
+final class PublicationPendingReview_mutable
+    implements PublicationPendingReview_orMutable {
+  _core.Iterable<_lib_editor_v1_checking.FindingSet_orMutable> findings;
+  _core.Iterable<PublicationChange> confirmedChanges;
+  _core.Iterable<_lib_editor_v1_compilation_root.CompilationRoot_orMutable>
+  pendingRoots;
+  _core.Iterable<PublicationBlocker_orMutable> blockers;
+  _core.Iterable<PublicationNotice> notices;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PublicationPendingReview_mutable._(
+    this.findings,
+    this.confirmedChanges,
+    this.pendingRoots,
+    this.blockers,
+    this.notices,
+  );
+
+  /// If the value of [findings] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [findings] and returns it.
+  _core.List<_lib_editor_v1_checking.FindingSet_orMutable> get mutableFindings {
+    final value = this.findings;
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_checking.FindingSet_orMutable
+        >) {
+      return value;
+    } else {
+      return this.findings = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// If the value of [confirmedChanges] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [confirmedChanges] and returns it.
+  _core.List<PublicationChange> get mutableConfirmedChanges {
+    final value = this.confirmedChanges;
+    if (value is _skir.internal__MutableList<PublicationChange>) {
+      return value;
+    } else {
+      return this.confirmedChanges = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// If the value of [pendingRoots] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [pendingRoots] and returns it.
+  _core.List<_lib_editor_v1_compilation_root.CompilationRoot_orMutable>
+  get mutablePendingRoots {
+    final value = this.pendingRoots;
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_compilation_root.CompilationRoot_orMutable
+        >) {
+      return value;
+    } else {
+      return this.pendingRoots = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// If the value of [blockers] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [blockers] and returns it.
+  _core.List<PublicationBlocker_orMutable> get mutableBlockers {
+    final value = this.blockers;
+    if (value is _skir.internal__MutableList<PublicationBlocker_orMutable>) {
+      return value;
+    } else {
+      return this.blockers = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// If the value of [notices] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [notices] and returns it.
+  _core.List<PublicationNotice> get mutableNotices {
+    final value = this.notices;
+    if (value is _skir.internal__MutableList<PublicationNotice>) {
+      return value;
+    } else {
+      return this.notices = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PublicationPendingReview toFrozen() => PublicationPendingReview(
+    findings: this.findings,
+    confirmedChanges: this.confirmedChanges,
+    pendingRoots: this.pendingRoots,
+    blockers: this.blockers,
+    notices: this.notices,
+  ).._u = this._u;
+}
+
+// enum PublicationFailure
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case PublicationFailure_unknown(): { ... }
+///     case PublicationFailure_evaluationInterrupted(:var value): { ... }
+///     case PublicationFailure_implementationUnavailable(:var value): { ... }
+///     case PublicationFailure_publicationInterrupted(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class PublicationFailure {
+  /// Constant indicating an unknown `PublicationFailure`.
+  /// Default value for fields of type `PublicationFailure`.
+  static const PublicationFailure unknown =
+      PublicationFailure_unknown._instance;
+
+  /// Create a 'evaluation_interrupted' variant wrapping around the given value.
+  factory PublicationFailure.wrapEvaluationInterrupted(_core.String value) =>
+      PublicationFailure_evaluationInterruptedWrapper._(value);
+
+  /// Create a 'implementation_unavailable' variant wrapping around the given value.
+  factory PublicationFailure.wrapImplementationUnavailable(
+    _core.String value,
+  ) => PublicationFailure_implementationUnavailableWrapper._(value);
+
+  /// Create a 'publication_interrupted' variant wrapping around the given value.
+  factory PublicationFailure.wrapPublicationInterrupted(
+    _lib_editor_v1_type_catalog.PublicationId value,
+  ) => PublicationFailure_publicationInterruptedWrapper._(value);
+
+  /// Same as `wrapPublicationInterrupted(_lib_editor_v1_type_catalog.PublicationId(...))`.
+  factory PublicationFailure.createPublicationInterrupted({
+    required _core.String value,
+  }) => PublicationFailure.wrapPublicationInterrupted(
+    _lib_editor_v1_type_catalog.PublicationId(value: value),
+  );
+
+  /// Returns the kind of variant held by this PublicationFailure.
+  PublicationFailure_kind get kind;
+
+  /// Serializer for `PublicationFailure` instances.
+  static _skir.EnumSerializer<PublicationFailure> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "evaluation_interrupted",
+        "wrapEvaluationInterrupted",
+        _skir.Serializers.string,
+        "",
+        PublicationFailure_evaluationInterruptedWrapper._,
+        (it) => it.value,
+        ordinal: PublicationFailure_kind.evaluationInterruptedWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "implementation_unavailable",
+        "wrapImplementationUnavailable",
+        _skir.Serializers.string,
+        "",
+        PublicationFailure_implementationUnavailableWrapper._,
+        (it) => it.value,
+        ordinal:
+            PublicationFailure_kind.implementationUnavailableWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        3,
+        "publication_interrupted",
+        "wrapPublicationInterrupted",
+        _lib_editor_v1_type_catalog.PublicationId.serializer,
+        "",
+        PublicationFailure_publicationInterruptedWrapper._,
+        (it) => it.value,
+        ordinal: PublicationFailure_kind.publicationInterruptedWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/publication.skir:PublicationFailure",
+        doc: "",
+        unknownInstance: PublicationFailure_unknown._instance,
+        enumInstance: PublicationFailure.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PublicationFailure_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `PublicationFailure`.
+enum PublicationFailure_kind {
+  unknown(0),
+  evaluationInterruptedWrapper(1),
+  implementationUnavailableWrapper(2),
+  publicationInterruptedWrapper(3);
+
+  final _core.int _ordinal;
+
+  const PublicationFailure_kind(this._ordinal);
+}
+
+final class PublicationFailure_unknown implements PublicationFailure {
+  static const _instance = PublicationFailure_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const PublicationFailure_unknown._() : _u = null;
+  PublicationFailure_unknown._unrecognized(this._u);
+
+  @_core.override
+  PublicationFailure_kind get kind => PublicationFailure_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is PublicationFailure_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PublicationFailure.serializer);
+}
+
+sealed class _PublicationFailure_wrapper implements PublicationFailure {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _PublicationFailure_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PublicationFailure.serializer);
+}
+
+final class PublicationFailure_evaluationInterruptedWrapper
+    extends _PublicationFailure_wrapper {
+  final _core.String value;
+
+  PublicationFailure_evaluationInterruptedWrapper._(this.value);
+
+  @_core.override
+  PublicationFailure_kind get kind =>
+      PublicationFailure_kind.evaluationInterruptedWrapper;
+}
+
+final class PublicationFailure_implementationUnavailableWrapper
+    extends _PublicationFailure_wrapper {
+  final _core.String value;
+
+  PublicationFailure_implementationUnavailableWrapper._(this.value);
+
+  @_core.override
+  PublicationFailure_kind get kind =>
+      PublicationFailure_kind.implementationUnavailableWrapper;
+}
+
+final class PublicationFailure_publicationInterruptedWrapper
+    extends _PublicationFailure_wrapper {
+  final _lib_editor_v1_type_catalog.PublicationId value;
+
+  PublicationFailure_publicationInterruptedWrapper._(this.value);
+
+  @_core.override
+  PublicationFailure_kind get kind =>
+      PublicationFailure_kind.publicationInterruptedWrapper;
+}
+
+// struct PublicationStatus.Empty
+
+sealed class PublicationStatus_Empty_orMutable {
+  _core.Iterable<PublicationNotice> get notices;
+
+  PublicationStatus_Empty toFrozen();
+}
+
+/// Deeply immutable.
+final class PublicationStatus_Empty
+    implements PublicationStatus_Empty_orMutable {
+  @_core.override
+  final _core.Iterable<PublicationNotice> notices;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PublicationStatus_Empty({
+    required _core.Iterable<PublicationNotice> notices,
+  }) => PublicationStatus_Empty._(_skir.internal__frozenCopy(notices));
+
+  PublicationStatus_Empty._(this.notices);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PublicationStatus_Empty._(
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PublicationStatus_Empty_mutable mutable() =>
+      PublicationStatus_Empty_mutable._(_skir.KeyedIterable.empty);
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PublicationStatus_Empty toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PublicationStatus_Empty_mutable toMutable() =>
+      PublicationStatus_Empty_mutable._(this.notices);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PublicationStatus_Empty) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.notices];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PublicationStatus_Empty` instances.
+  static _skir.StructSerializer<
+    PublicationStatus_Empty,
+    PublicationStatus_Empty_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "notices",
+        "notices",
+        0,
+        _skir.Serializers.iterable(PublicationNotice.serializer),
+        "",
+        (it) => it.notices,
+        (it, v) => it.notices = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/publication.skir:PublicationStatus.Empty",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PublicationStatus_Empty_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PublicationStatus_Empty].
+final class PublicationStatus_Empty_mutable
+    implements PublicationStatus_Empty_orMutable {
+  _core.Iterable<PublicationNotice> notices;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PublicationStatus_Empty_mutable._(this.notices);
+
+  /// If the value of [notices] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [notices] and returns it.
+  _core.List<PublicationNotice> get mutableNotices {
+    final value = this.notices;
+    if (value is _skir.internal__MutableList<PublicationNotice>) {
+      return value;
+    } else {
+      return this.notices = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PublicationStatus_Empty toFrozen() =>
+      PublicationStatus_Empty(notices: this.notices).._u = this._u;
+}
+
+// struct PublicationStatus.Current
+
+sealed class PublicationStatus_Current_orMutable {
+  _lib_editor_v1_type_catalog.PublicationId_orMutable get selected;
+  _core.Iterable<PublicationNotice> get notices;
+
+  PublicationStatus_Current toFrozen();
+}
+
+/// Deeply immutable.
+final class PublicationStatus_Current
+    implements PublicationStatus_Current_orMutable {
+  @_core.override
+  final _lib_editor_v1_type_catalog.PublicationId selected;
+  @_core.override
+  final _core.Iterable<PublicationNotice> notices;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PublicationStatus_Current({
+    required _lib_editor_v1_type_catalog.PublicationId_orMutable selected,
+    required _core.Iterable<PublicationNotice> notices,
+  }) => PublicationStatus_Current._(
+    selected.toFrozen(),
+    _skir.internal__frozenCopy(notices),
+  );
+
+  PublicationStatus_Current._(this.selected, this.notices);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PublicationStatus_Current._(
+    _lib_editor_v1_type_catalog.PublicationId.defaultInstance,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PublicationStatus_Current_mutable mutable() =>
+      PublicationStatus_Current_mutable._(
+        _lib_editor_v1_type_catalog.PublicationId.defaultInstance,
+        _skir.KeyedIterable.empty,
+      );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PublicationStatus_Current toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PublicationStatus_Current_mutable toMutable() =>
+      PublicationStatus_Current_mutable._(this.selected, this.notices);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PublicationStatus_Current) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.selected, this.notices];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PublicationStatus_Current` instances.
+  static _skir.StructSerializer<
+    PublicationStatus_Current,
+    PublicationStatus_Current_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "selected",
+        "selected",
+        0,
+        _lib_editor_v1_type_catalog.PublicationId.serializer,
+        "",
+        (it) => it.selected,
+        (it, v) => it.selected = v,
+      );
+      _serializerBuilder.addField(
+        "notices",
+        "notices",
+        1,
+        _skir.Serializers.iterable(PublicationNotice.serializer),
+        "",
+        (it) => it.notices,
+        (it, v) => it.notices = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/publication.skir:PublicationStatus.Current",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PublicationStatus_Current_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PublicationStatus_Current].
+final class PublicationStatus_Current_mutable
+    implements PublicationStatus_Current_orMutable {
+  _lib_editor_v1_type_catalog.PublicationId_orMutable selected;
+  _core.Iterable<PublicationNotice> notices;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PublicationStatus_Current_mutable._(this.selected, this.notices);
+
+  /// If the value of [selected] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [selected] and returns it.
+  _lib_editor_v1_type_catalog.PublicationId_mutable get mutableSelected {
+    final value = this.selected;
+    if (value is _lib_editor_v1_type_catalog.PublicationId_mutable) {
+      return value;
+    } else {
+      return this.selected =
+          (value as _lib_editor_v1_type_catalog.PublicationId).toMutable();
+    }
+  }
+
+  /// If the value of [notices] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [notices] and returns it.
+  _core.List<PublicationNotice> get mutableNotices {
+    final value = this.notices;
+    if (value is _skir.internal__MutableList<PublicationNotice>) {
+      return value;
+    } else {
+      return this.notices = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PublicationStatus_Current toFrozen() =>
+      PublicationStatus_Current(selected: this.selected, notices: this.notices)
+        .._u = this._u;
+}
+
+// struct PublicationStatus.Ready
+
+sealed class PublicationStatus_Ready_orMutable {
+  PublicationCandidateId_orMutable get candidate;
+  PublicationBaseline get baseline;
+  PublicationDelta_orMutable get changes;
+  _core.Iterable<PublicationNotice> get notices;
+
+  PublicationStatus_Ready toFrozen();
+}
+
+/// Deeply immutable.
+final class PublicationStatus_Ready
+    implements PublicationStatus_Ready_orMutable {
+  @_core.override
+  final PublicationCandidateId candidate;
+  @_core.override
+  final PublicationBaseline baseline;
+  @_core.override
+  final PublicationDelta changes;
+  @_core.override
+  final _core.Iterable<PublicationNotice> notices;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PublicationStatus_Ready({
+    required PublicationCandidateId_orMutable candidate,
+    required PublicationBaseline baseline,
+    required PublicationDelta_orMutable changes,
+    required _core.Iterable<PublicationNotice> notices,
+  }) => PublicationStatus_Ready._(
+    candidate.toFrozen(),
+    baseline,
+    changes.toFrozen(),
+    _skir.internal__frozenCopy(notices),
+  );
+
+  PublicationStatus_Ready._(
+    this.candidate,
+    this.baseline,
+    this.changes,
+    this.notices,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PublicationStatus_Ready._(
+    PublicationCandidateId.defaultInstance,
+    PublicationBaseline.unknown,
+    PublicationDelta.defaultInstance,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PublicationStatus_Ready_mutable mutable() =>
+      PublicationStatus_Ready_mutable._(
+        PublicationCandidateId.defaultInstance,
+        PublicationBaseline.unknown,
+        PublicationDelta.defaultInstance,
+        _skir.KeyedIterable.empty,
+      );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PublicationStatus_Ready toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PublicationStatus_Ready_mutable toMutable() =>
+      PublicationStatus_Ready_mutable._(
+        this.candidate,
+        this.baseline,
+        this.changes,
+        this.notices,
+      );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PublicationStatus_Ready) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.candidate,
+    this.baseline,
+    this.changes,
+    this.notices,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PublicationStatus_Ready` instances.
+  static _skir.StructSerializer<
+    PublicationStatus_Ready,
+    PublicationStatus_Ready_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "candidate",
+        "candidate",
+        0,
+        PublicationCandidateId.serializer,
+        "",
+        (it) => it.candidate,
+        (it, v) => it.candidate = v,
+      );
+      _serializerBuilder.addField(
+        "baseline",
+        "baseline",
+        1,
+        PublicationBaseline.serializer,
+        "",
+        (it) => it.baseline,
+        (it, v) => it.baseline = v,
+      );
+      _serializerBuilder.addField(
+        "changes",
+        "changes",
+        2,
+        PublicationDelta.serializer,
+        "",
+        (it) => it.changes,
+        (it, v) => it.changes = v,
+      );
+      _serializerBuilder.addField(
+        "notices",
+        "notices",
+        3,
+        _skir.Serializers.iterable(PublicationNotice.serializer),
+        "",
+        (it) => it.notices,
+        (it, v) => it.notices = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/publication.skir:PublicationStatus.Ready",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PublicationStatus_Ready_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PublicationStatus_Ready].
+final class PublicationStatus_Ready_mutable
+    implements PublicationStatus_Ready_orMutable {
+  PublicationCandidateId_orMutable candidate;
+  PublicationBaseline baseline;
+  PublicationDelta_orMutable changes;
+  _core.Iterable<PublicationNotice> notices;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PublicationStatus_Ready_mutable._(
+    this.candidate,
+    this.baseline,
+    this.changes,
+    this.notices,
+  );
+
+  /// If the value of [candidate] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [candidate] and returns it.
+  PublicationCandidateId_mutable get mutableCandidate {
+    final value = this.candidate;
+    if (value is PublicationCandidateId_mutable) {
+      return value;
+    } else {
+      return this.candidate = (value as PublicationCandidateId).toMutable();
+    }
+  }
+
+  /// If the value of [changes] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [changes] and returns it.
+  PublicationDelta_mutable get mutableChanges {
+    final value = this.changes;
+    if (value is PublicationDelta_mutable) {
+      return value;
+    } else {
+      return this.changes = (value as PublicationDelta).toMutable();
+    }
+  }
+
+  /// If the value of [notices] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [notices] and returns it.
+  _core.List<PublicationNotice> get mutableNotices {
+    final value = this.notices;
+    if (value is _skir.internal__MutableList<PublicationNotice>) {
+      return value;
+    } else {
+      return this.notices = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PublicationStatus_Ready toFrozen() => PublicationStatus_Ready(
+    candidate: this.candidate,
+    baseline: this.baseline,
+    changes: this.changes,
+    notices: this.notices,
+  ).._u = this._u;
+}
+
+// struct PublicationStatus.Blocked
+
+sealed class PublicationStatus_Blocked_orMutable {
+  PublicationBaseline get baseline;
+  PublicationBlockers_orMutable get blockers;
+  _core.Iterable<PublicationNotice> get notices;
+  _core.Iterable<PublicationChange> get confirmedChanges;
+  _core.Iterable<_lib_editor_v1_compilation_root.CompilationRoot_orMutable>
+  get pendingRoots;
+
+  PublicationStatus_Blocked toFrozen();
+}
+
+/// Deeply immutable.
+final class PublicationStatus_Blocked
+    implements PublicationStatus_Blocked_orMutable {
+  @_core.override
+  final PublicationBaseline baseline;
+  @_core.override
+  final PublicationBlockers blockers;
+  @_core.override
+  final _core.Iterable<PublicationNotice> notices;
+  @_core.override
+  final _core.Iterable<PublicationChange> confirmedChanges;
+  @_core.override
+  final _core.Iterable<_lib_editor_v1_compilation_root.CompilationRoot>
+  pendingRoots;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PublicationStatus_Blocked({
+    required PublicationBaseline baseline,
+    required PublicationBlockers_orMutable blockers,
+    required _core.Iterable<PublicationNotice> notices,
+    required _core.Iterable<PublicationChange> confirmedChanges,
+    required _core.Iterable<
+      _lib_editor_v1_compilation_root.CompilationRoot_orMutable
+    >
+    pendingRoots,
+  }) => PublicationStatus_Blocked._(
+    baseline,
+    blockers.toFrozen(),
+    _skir.internal__frozenCopy(notices),
+    _skir.internal__frozenCopy(confirmedChanges),
+    _skir.internal__frozenMappedCopy(pendingRoots, (it) => it.toFrozen()),
+  );
+
+  PublicationStatus_Blocked._(
+    this.baseline,
+    this.blockers,
+    this.notices,
+    this.confirmedChanges,
+    this.pendingRoots,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PublicationStatus_Blocked._(
+    PublicationBaseline.unknown,
+    PublicationBlockers.defaultInstance,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PublicationStatus_Blocked_mutable mutable() =>
+      PublicationStatus_Blocked_mutable._(
+        PublicationBaseline.unknown,
+        PublicationBlockers.defaultInstance,
+        _skir.KeyedIterable.empty,
+        _skir.KeyedIterable.empty,
+        _skir.KeyedIterable.empty,
+      );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PublicationStatus_Blocked toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PublicationStatus_Blocked_mutable toMutable() =>
+      PublicationStatus_Blocked_mutable._(
+        this.baseline,
+        this.blockers,
+        this.notices,
+        this.confirmedChanges,
+        this.pendingRoots,
+      );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PublicationStatus_Blocked) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.baseline,
+    this.blockers,
+    this.notices,
+    this.confirmedChanges,
+    this.pendingRoots,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PublicationStatus_Blocked` instances.
+  static _skir.StructSerializer<
+    PublicationStatus_Blocked,
+    PublicationStatus_Blocked_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "baseline",
+        "baseline",
+        0,
+        PublicationBaseline.serializer,
+        "",
+        (it) => it.baseline,
+        (it, v) => it.baseline = v,
+      );
+      _serializerBuilder.addField(
+        "blockers",
+        "blockers",
+        1,
+        PublicationBlockers.serializer,
+        "",
+        (it) => it.blockers,
+        (it, v) => it.blockers = v,
+      );
+      _serializerBuilder.addField(
+        "notices",
+        "notices",
+        2,
+        _skir.Serializers.iterable(PublicationNotice.serializer),
+        "",
+        (it) => it.notices,
+        (it, v) => it.notices = v,
+      );
+      _serializerBuilder.addField(
+        "confirmed_changes",
+        "confirmedChanges",
+        3,
+        _skir.Serializers.iterable(PublicationChange.serializer),
+        "",
+        (it) => it.confirmedChanges,
+        (it, v) => it.confirmedChanges = v,
+      );
+      _serializerBuilder.addField(
+        "pending_roots",
+        "pendingRoots",
+        4,
+        _skir.Serializers.iterable(
+          _lib_editor_v1_compilation_root.CompilationRoot.serializer,
+        ),
+        "",
+        (it) => it.pendingRoots,
+        (it, v) => it.pendingRoots = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/publication.skir:PublicationStatus.Blocked",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PublicationStatus_Blocked_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PublicationStatus_Blocked].
+final class PublicationStatus_Blocked_mutable
+    implements PublicationStatus_Blocked_orMutable {
+  PublicationBaseline baseline;
+  PublicationBlockers_orMutable blockers;
+  _core.Iterable<PublicationNotice> notices;
+  _core.Iterable<PublicationChange> confirmedChanges;
+  _core.Iterable<_lib_editor_v1_compilation_root.CompilationRoot_orMutable>
+  pendingRoots;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PublicationStatus_Blocked_mutable._(
+    this.baseline,
+    this.blockers,
+    this.notices,
+    this.confirmedChanges,
+    this.pendingRoots,
+  );
+
+  /// If the value of [blockers] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [blockers] and returns it.
+  PublicationBlockers_mutable get mutableBlockers {
+    final value = this.blockers;
+    if (value is PublicationBlockers_mutable) {
+      return value;
+    } else {
+      return this.blockers = (value as PublicationBlockers).toMutable();
+    }
+  }
+
+  /// If the value of [notices] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [notices] and returns it.
+  _core.List<PublicationNotice> get mutableNotices {
+    final value = this.notices;
+    if (value is _skir.internal__MutableList<PublicationNotice>) {
+      return value;
+    } else {
+      return this.notices = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// If the value of [confirmedChanges] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [confirmedChanges] and returns it.
+  _core.List<PublicationChange> get mutableConfirmedChanges {
+    final value = this.confirmedChanges;
+    if (value is _skir.internal__MutableList<PublicationChange>) {
+      return value;
+    } else {
+      return this.confirmedChanges = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// If the value of [pendingRoots] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [pendingRoots] and returns it.
+  _core.List<_lib_editor_v1_compilation_root.CompilationRoot_orMutable>
+  get mutablePendingRoots {
+    final value = this.pendingRoots;
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_compilation_root.CompilationRoot_orMutable
+        >) {
+      return value;
+    } else {
+      return this.pendingRoots = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PublicationStatus_Blocked toFrozen() => PublicationStatus_Blocked(
+    baseline: this.baseline,
+    blockers: this.blockers,
+    notices: this.notices,
+    confirmedChanges: this.confirmedChanges,
+    pendingRoots: this.pendingRoots,
+  ).._u = this._u;
+}
+
+// struct PublicationStatus.Checking
+
+sealed class PublicationStatus_Checking_orMutable {
+  PublicationBaseline get baseline;
+  _core.Iterable<_lib_editor_v1_checking.FindingSet_orMutable> get findings;
+
+  PublicationStatus_Checking toFrozen();
+}
+
+/// Deeply immutable.
+final class PublicationStatus_Checking
+    implements PublicationStatus_Checking_orMutable {
+  @_core.override
+  final PublicationBaseline baseline;
+  @_core.override
+  final _core.Iterable<_lib_editor_v1_checking.FindingSet> findings;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PublicationStatus_Checking({
+    required PublicationBaseline baseline,
+    required _core.Iterable<_lib_editor_v1_checking.FindingSet_orMutable>
+    findings,
+  }) => PublicationStatus_Checking._(
+    baseline,
+    _skir.internal__frozenMappedCopy(findings, (it) => it.toFrozen()),
+  );
+
+  PublicationStatus_Checking._(this.baseline, this.findings);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PublicationStatus_Checking._(
+    PublicationBaseline.unknown,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PublicationStatus_Checking_mutable mutable() =>
+      PublicationStatus_Checking_mutable._(
+        PublicationBaseline.unknown,
+        _skir.KeyedIterable.empty,
+      );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PublicationStatus_Checking toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PublicationStatus_Checking_mutable toMutable() =>
+      PublicationStatus_Checking_mutable._(this.baseline, this.findings);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PublicationStatus_Checking) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.baseline, this.findings];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PublicationStatus_Checking` instances.
+  static _skir.StructSerializer<
+    PublicationStatus_Checking,
+    PublicationStatus_Checking_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "baseline",
+        "baseline",
+        0,
+        PublicationBaseline.serializer,
+        "",
+        (it) => it.baseline,
+        (it, v) => it.baseline = v,
+      );
+      _serializerBuilder.addField(
+        "findings",
+        "findings",
+        1,
+        _skir.Serializers.iterable(
+          _lib_editor_v1_checking.FindingSet.serializer,
+        ),
+        "",
+        (it) => it.findings,
+        (it, v) => it.findings = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/publication.skir:PublicationStatus.Checking",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PublicationStatus_Checking_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PublicationStatus_Checking].
+final class PublicationStatus_Checking_mutable
+    implements PublicationStatus_Checking_orMutable {
+  PublicationBaseline baseline;
+  _core.Iterable<_lib_editor_v1_checking.FindingSet_orMutable> findings;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PublicationStatus_Checking_mutable._(this.baseline, this.findings);
+
+  /// If the value of [findings] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [findings] and returns it.
+  _core.List<_lib_editor_v1_checking.FindingSet_orMutable> get mutableFindings {
+    final value = this.findings;
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_checking.FindingSet_orMutable
+        >) {
+      return value;
+    } else {
+      return this.findings = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PublicationStatus_Checking toFrozen() => PublicationStatus_Checking(
+    baseline: this.baseline,
+    findings: this.findings,
+  ).._u = this._u;
+}
+
+// struct PublicationStatus.Publishing
+
+sealed class PublicationStatus_Publishing_orMutable {
+  _lib_editor_v1_type_catalog.PublicationId_orMutable get publication;
+  PublicationActivationPhase get phase;
+  PublicationDelta_orMutable get releasing;
+  PublicationPendingReview_orMutable get next;
+
+  PublicationStatus_Publishing toFrozen();
+}
+
+/// Deeply immutable.
+final class PublicationStatus_Publishing
+    implements PublicationStatus_Publishing_orMutable {
+  @_core.override
+  final _lib_editor_v1_type_catalog.PublicationId publication;
+  @_core.override
+  final PublicationActivationPhase phase;
+  @_core.override
+  final PublicationDelta releasing;
+  @_core.override
+  final PublicationPendingReview next;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PublicationStatus_Publishing({
+    required _lib_editor_v1_type_catalog.PublicationId_orMutable publication,
+    required PublicationActivationPhase phase,
+    required PublicationDelta_orMutable releasing,
+    required PublicationPendingReview_orMutable next,
+  }) => PublicationStatus_Publishing._(
+    publication.toFrozen(),
+    phase,
+    releasing.toFrozen(),
+    next.toFrozen(),
+  );
+
+  PublicationStatus_Publishing._(
+    this.publication,
+    this.phase,
+    this.releasing,
+    this.next,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PublicationStatus_Publishing._(
+    _lib_editor_v1_type_catalog.PublicationId.defaultInstance,
+    PublicationActivationPhase.unknown,
+    PublicationDelta.defaultInstance,
+    PublicationPendingReview.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PublicationStatus_Publishing_mutable mutable() =>
+      PublicationStatus_Publishing_mutable._(
+        _lib_editor_v1_type_catalog.PublicationId.defaultInstance,
+        PublicationActivationPhase.unknown,
+        PublicationDelta.defaultInstance,
+        PublicationPendingReview.defaultInstance,
+      );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PublicationStatus_Publishing toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PublicationStatus_Publishing_mutable toMutable() =>
+      PublicationStatus_Publishing_mutable._(
+        this.publication,
+        this.phase,
+        this.releasing,
+        this.next,
+      );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PublicationStatus_Publishing) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.publication,
+    this.phase,
+    this.releasing,
+    this.next,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PublicationStatus_Publishing` instances.
+  static _skir.StructSerializer<
+    PublicationStatus_Publishing,
+    PublicationStatus_Publishing_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "publication",
+        "publication",
+        0,
+        _lib_editor_v1_type_catalog.PublicationId.serializer,
+        "",
+        (it) => it.publication,
+        (it, v) => it.publication = v,
+      );
+      _serializerBuilder.addField(
+        "phase",
+        "phase",
+        1,
+        PublicationActivationPhase.serializer,
+        "",
+        (it) => it.phase,
+        (it, v) => it.phase = v,
+      );
+      _serializerBuilder.addField(
+        "releasing",
+        "releasing",
+        2,
+        PublicationDelta.serializer,
+        "",
+        (it) => it.releasing,
+        (it, v) => it.releasing = v,
+      );
+      _serializerBuilder.addField(
+        "next",
+        "next",
+        3,
+        PublicationPendingReview.serializer,
+        "",
+        (it) => it.next,
+        (it, v) => it.next = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/publication.skir:PublicationStatus.Publishing",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PublicationStatus_Publishing_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PublicationStatus_Publishing].
+final class PublicationStatus_Publishing_mutable
+    implements PublicationStatus_Publishing_orMutable {
+  _lib_editor_v1_type_catalog.PublicationId_orMutable publication;
+  PublicationActivationPhase phase;
+  PublicationDelta_orMutable releasing;
+  PublicationPendingReview_orMutable next;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PublicationStatus_Publishing_mutable._(
+    this.publication,
+    this.phase,
+    this.releasing,
+    this.next,
+  );
+
+  /// If the value of [publication] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [publication] and returns it.
+  _lib_editor_v1_type_catalog.PublicationId_mutable get mutablePublication {
+    final value = this.publication;
+    if (value is _lib_editor_v1_type_catalog.PublicationId_mutable) {
+      return value;
+    } else {
+      return this.publication =
+          (value as _lib_editor_v1_type_catalog.PublicationId).toMutable();
+    }
+  }
+
+  /// If the value of [releasing] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [releasing] and returns it.
+  PublicationDelta_mutable get mutableReleasing {
+    final value = this.releasing;
+    if (value is PublicationDelta_mutable) {
+      return value;
+    } else {
+      return this.releasing = (value as PublicationDelta).toMutable();
+    }
+  }
+
+  /// If the value of [next] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [next] and returns it.
+  PublicationPendingReview_mutable get mutableNext {
+    final value = this.next;
+    if (value is PublicationPendingReview_mutable) {
+      return value;
+    } else {
+      return this.next = (value as PublicationPendingReview).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PublicationStatus_Publishing toFrozen() => PublicationStatus_Publishing(
+    publication: this.publication,
+    phase: this.phase,
+    releasing: this.releasing,
+    next: this.next,
+  ).._u = this._u;
+}
+
+// struct PublicationStatus.Unavailable
+
+sealed class PublicationStatus_Unavailable_orMutable {
+  PublicationBaseline get baseline;
+  PublicationFailure get failure;
+  _core.Iterable<_lib_editor_v1_checking.FindingSet_orMutable> get findings;
+
+  PublicationStatus_Unavailable toFrozen();
+}
+
+/// Deeply immutable.
+final class PublicationStatus_Unavailable
+    implements PublicationStatus_Unavailable_orMutable {
+  @_core.override
+  final PublicationBaseline baseline;
+  @_core.override
+  final PublicationFailure failure;
+  @_core.override
+  final _core.Iterable<_lib_editor_v1_checking.FindingSet> findings;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PublicationStatus_Unavailable({
+    required PublicationBaseline baseline,
+    required PublicationFailure failure,
+    required _core.Iterable<_lib_editor_v1_checking.FindingSet_orMutable>
+    findings,
+  }) => PublicationStatus_Unavailable._(
+    baseline,
+    failure,
+    _skir.internal__frozenMappedCopy(findings, (it) => it.toFrozen()),
+  );
+
+  PublicationStatus_Unavailable._(this.baseline, this.failure, this.findings);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PublicationStatus_Unavailable._(
+    PublicationBaseline.unknown,
+    PublicationFailure.unknown,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PublicationStatus_Unavailable_mutable mutable() =>
+      PublicationStatus_Unavailable_mutable._(
+        PublicationBaseline.unknown,
+        PublicationFailure.unknown,
+        _skir.KeyedIterable.empty,
+      );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PublicationStatus_Unavailable toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PublicationStatus_Unavailable_mutable toMutable() =>
+      PublicationStatus_Unavailable_mutable._(
+        this.baseline,
+        this.failure,
+        this.findings,
+      );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PublicationStatus_Unavailable) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.baseline,
+    this.failure,
+    this.findings,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PublicationStatus_Unavailable` instances.
+  static _skir.StructSerializer<
+    PublicationStatus_Unavailable,
+    PublicationStatus_Unavailable_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "baseline",
+        "baseline",
+        0,
+        PublicationBaseline.serializer,
+        "",
+        (it) => it.baseline,
+        (it, v) => it.baseline = v,
+      );
+      _serializerBuilder.addField(
+        "failure",
+        "failure",
+        1,
+        PublicationFailure.serializer,
+        "",
+        (it) => it.failure,
+        (it, v) => it.failure = v,
+      );
+      _serializerBuilder.addField(
+        "findings",
+        "findings",
+        2,
+        _skir.Serializers.iterable(
+          _lib_editor_v1_checking.FindingSet.serializer,
+        ),
+        "",
+        (it) => it.findings,
+        (it, v) => it.findings = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/publication.skir:PublicationStatus.Unavailable",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PublicationStatus_Unavailable_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PublicationStatus_Unavailable].
+final class PublicationStatus_Unavailable_mutable
+    implements PublicationStatus_Unavailable_orMutable {
+  PublicationBaseline baseline;
+  PublicationFailure failure;
+  _core.Iterable<_lib_editor_v1_checking.FindingSet_orMutable> findings;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PublicationStatus_Unavailable_mutable._(
+    this.baseline,
+    this.failure,
+    this.findings,
+  );
+
+  /// If the value of [findings] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [findings] and returns it.
+  _core.List<_lib_editor_v1_checking.FindingSet_orMutable> get mutableFindings {
+    final value = this.findings;
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_checking.FindingSet_orMutable
+        >) {
+      return value;
+    } else {
+      return this.findings = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PublicationStatus_Unavailable toFrozen() => PublicationStatus_Unavailable(
+    baseline: this.baseline,
+    failure: this.failure,
+    findings: this.findings,
+  ).._u = this._u;
+}
+
+// enum PublicationStatus
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case PublicationStatus_unknown(): { ... }
+///     case PublicationStatus_empty(:var value): { ... }
+///     case PublicationStatus_current(:var value): { ... }
+///     case PublicationStatus_ready(:var value): { ... }
+///     case PublicationStatus_blocked(:var value): { ... }
+///     case PublicationStatus_checking(:var value): { ... }
+///     case PublicationStatus_publishing(:var value): { ... }
+///     case PublicationStatus_unavailable(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class PublicationStatus {
+  /// Constant indicating an unknown `PublicationStatus`.
+  /// Default value for fields of type `PublicationStatus`.
+  static const PublicationStatus unknown = PublicationStatus_unknown._instance;
+
+  /// Create a 'empty' variant wrapping around the given value.
+  factory PublicationStatus.wrapEmpty(PublicationStatus_Empty value) =>
+      PublicationStatus_emptyWrapper._(value);
+
+  /// Same as `wrapEmpty(PublicationStatus_Empty(...))`.
+  factory PublicationStatus.createEmpty({
+    required _core.Iterable<PublicationNotice> notices,
+  }) => PublicationStatus.wrapEmpty(PublicationStatus_Empty(notices: notices));
+
+  /// Create a 'current' variant wrapping around the given value.
+  factory PublicationStatus.wrapCurrent(PublicationStatus_Current value) =>
+      PublicationStatus_currentWrapper._(value);
+
+  /// Same as `wrapCurrent(PublicationStatus_Current(...))`.
+  factory PublicationStatus.createCurrent({
+    required _lib_editor_v1_type_catalog.PublicationId_orMutable selected,
+    required _core.Iterable<PublicationNotice> notices,
+  }) => PublicationStatus.wrapCurrent(
+    PublicationStatus_Current(selected: selected, notices: notices),
+  );
+
+  /// Create a 'ready' variant wrapping around the given value.
+  factory PublicationStatus.wrapReady(PublicationStatus_Ready value) =>
+      PublicationStatus_readyWrapper._(value);
+
+  /// Same as `wrapReady(PublicationStatus_Ready(...))`.
+  factory PublicationStatus.createReady({
+    required PublicationCandidateId_orMutable candidate,
+    required PublicationBaseline baseline,
+    required PublicationDelta_orMutable changes,
+    required _core.Iterable<PublicationNotice> notices,
+  }) => PublicationStatus.wrapReady(
+    PublicationStatus_Ready(
+      candidate: candidate,
+      baseline: baseline,
+      changes: changes,
+      notices: notices,
+    ),
+  );
+
+  /// Create a 'blocked' variant wrapping around the given value.
+  factory PublicationStatus.wrapBlocked(PublicationStatus_Blocked value) =>
+      PublicationStatus_blockedWrapper._(value);
+
+  /// Same as `wrapBlocked(PublicationStatus_Blocked(...))`.
+  factory PublicationStatus.createBlocked({
+    required PublicationBaseline baseline,
+    required PublicationBlockers_orMutable blockers,
+    required _core.Iterable<PublicationNotice> notices,
+    required _core.Iterable<PublicationChange> confirmedChanges,
+    required _core.Iterable<
+      _lib_editor_v1_compilation_root.CompilationRoot_orMutable
+    >
+    pendingRoots,
+  }) => PublicationStatus.wrapBlocked(
+    PublicationStatus_Blocked(
+      baseline: baseline,
+      blockers: blockers,
+      notices: notices,
+      confirmedChanges: confirmedChanges,
+      pendingRoots: pendingRoots,
+    ),
+  );
+
+  /// Create a 'checking' variant wrapping around the given value.
+  factory PublicationStatus.wrapChecking(PublicationStatus_Checking value) =>
+      PublicationStatus_checkingWrapper._(value);
+
+  /// Same as `wrapChecking(PublicationStatus_Checking(...))`.
+  factory PublicationStatus.createChecking({
+    required PublicationBaseline baseline,
+    required _core.Iterable<_lib_editor_v1_checking.FindingSet_orMutable>
+    findings,
+  }) => PublicationStatus.wrapChecking(
+    PublicationStatus_Checking(baseline: baseline, findings: findings),
+  );
+
+  /// Create a 'publishing' variant wrapping around the given value.
+  factory PublicationStatus.wrapPublishing(
+    PublicationStatus_Publishing value,
+  ) => PublicationStatus_publishingWrapper._(value);
+
+  /// Same as `wrapPublishing(PublicationStatus_Publishing(...))`.
+  factory PublicationStatus.createPublishing({
+    required _lib_editor_v1_type_catalog.PublicationId_orMutable publication,
+    required PublicationActivationPhase phase,
+    required PublicationDelta_orMutable releasing,
+    required PublicationPendingReview_orMutable next,
+  }) => PublicationStatus.wrapPublishing(
+    PublicationStatus_Publishing(
+      publication: publication,
+      phase: phase,
+      releasing: releasing,
+      next: next,
+    ),
+  );
+
+  /// Create a 'unavailable' variant wrapping around the given value.
+  factory PublicationStatus.wrapUnavailable(
+    PublicationStatus_Unavailable value,
+  ) => PublicationStatus_unavailableWrapper._(value);
+
+  /// Same as `wrapUnavailable(PublicationStatus_Unavailable(...))`.
+  factory PublicationStatus.createUnavailable({
+    required PublicationBaseline baseline,
+    required PublicationFailure failure,
+    required _core.Iterable<_lib_editor_v1_checking.FindingSet_orMutable>
+    findings,
+  }) => PublicationStatus.wrapUnavailable(
+    PublicationStatus_Unavailable(
+      baseline: baseline,
+      failure: failure,
+      findings: findings,
+    ),
+  );
+
+  /// Returns the kind of variant held by this PublicationStatus.
+  PublicationStatus_kind get kind;
+
+  /// Serializer for `PublicationStatus` instances.
+  static _skir.EnumSerializer<PublicationStatus> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "empty",
+        "wrapEmpty",
+        PublicationStatus_Empty.serializer,
+        "",
+        PublicationStatus_emptyWrapper._,
+        (it) => it.value,
+        ordinal: PublicationStatus_kind.emptyWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "current",
+        "wrapCurrent",
+        PublicationStatus_Current.serializer,
+        "",
+        PublicationStatus_currentWrapper._,
+        (it) => it.value,
+        ordinal: PublicationStatus_kind.currentWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        3,
+        "ready",
+        "wrapReady",
+        PublicationStatus_Ready.serializer,
+        "",
+        PublicationStatus_readyWrapper._,
+        (it) => it.value,
+        ordinal: PublicationStatus_kind.readyWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        4,
+        "blocked",
+        "wrapBlocked",
+        PublicationStatus_Blocked.serializer,
+        "",
+        PublicationStatus_blockedWrapper._,
+        (it) => it.value,
+        ordinal: PublicationStatus_kind.blockedWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        5,
+        "checking",
+        "wrapChecking",
+        PublicationStatus_Checking.serializer,
+        "",
+        PublicationStatus_checkingWrapper._,
+        (it) => it.value,
+        ordinal: PublicationStatus_kind.checkingWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        6,
+        "publishing",
+        "wrapPublishing",
+        PublicationStatus_Publishing.serializer,
+        "",
+        PublicationStatus_publishingWrapper._,
+        (it) => it.value,
+        ordinal: PublicationStatus_kind.publishingWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        7,
+        "unavailable",
+        "wrapUnavailable",
+        PublicationStatus_Unavailable.serializer,
+        "",
+        PublicationStatus_unavailableWrapper._,
+        (it) => it.value,
+        ordinal: PublicationStatus_kind.unavailableWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/publication.skir:PublicationStatus",
+        doc: "",
+        unknownInstance: PublicationStatus_unknown._instance,
+        enumInstance: PublicationStatus.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PublicationStatus_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `PublicationStatus`.
+enum PublicationStatus_kind {
+  unknown(0),
+  emptyWrapper(1),
+  currentWrapper(2),
+  readyWrapper(3),
+  blockedWrapper(4),
+  checkingWrapper(5),
+  publishingWrapper(6),
+  unavailableWrapper(7);
+
+  final _core.int _ordinal;
+
+  const PublicationStatus_kind(this._ordinal);
+}
+
+final class PublicationStatus_unknown implements PublicationStatus {
+  static const _instance = PublicationStatus_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const PublicationStatus_unknown._() : _u = null;
+  PublicationStatus_unknown._unrecognized(this._u);
+
+  @_core.override
+  PublicationStatus_kind get kind => PublicationStatus_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is PublicationStatus_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PublicationStatus.serializer);
+}
+
+sealed class _PublicationStatus_wrapper implements PublicationStatus {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _PublicationStatus_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PublicationStatus.serializer);
+}
+
+final class PublicationStatus_emptyWrapper extends _PublicationStatus_wrapper {
+  final PublicationStatus_Empty value;
+
+  PublicationStatus_emptyWrapper._(this.value);
+
+  @_core.override
+  PublicationStatus_kind get kind => PublicationStatus_kind.emptyWrapper;
+}
+
+final class PublicationStatus_currentWrapper
+    extends _PublicationStatus_wrapper {
+  final PublicationStatus_Current value;
+
+  PublicationStatus_currentWrapper._(this.value);
+
+  @_core.override
+  PublicationStatus_kind get kind => PublicationStatus_kind.currentWrapper;
+}
+
+final class PublicationStatus_readyWrapper extends _PublicationStatus_wrapper {
+  final PublicationStatus_Ready value;
+
+  PublicationStatus_readyWrapper._(this.value);
+
+  @_core.override
+  PublicationStatus_kind get kind => PublicationStatus_kind.readyWrapper;
+}
+
+final class PublicationStatus_blockedWrapper
+    extends _PublicationStatus_wrapper {
+  final PublicationStatus_Blocked value;
+
+  PublicationStatus_blockedWrapper._(this.value);
+
+  @_core.override
+  PublicationStatus_kind get kind => PublicationStatus_kind.blockedWrapper;
+}
+
+final class PublicationStatus_checkingWrapper
+    extends _PublicationStatus_wrapper {
+  final PublicationStatus_Checking value;
+
+  PublicationStatus_checkingWrapper._(this.value);
+
+  @_core.override
+  PublicationStatus_kind get kind => PublicationStatus_kind.checkingWrapper;
+}
+
+final class PublicationStatus_publishingWrapper
+    extends _PublicationStatus_wrapper {
+  final PublicationStatus_Publishing value;
+
+  PublicationStatus_publishingWrapper._(this.value);
+
+  @_core.override
+  PublicationStatus_kind get kind => PublicationStatus_kind.publishingWrapper;
+}
+
+final class PublicationStatus_unavailableWrapper
+    extends _PublicationStatus_wrapper {
+  final PublicationStatus_Unavailable value;
+
+  PublicationStatus_unavailableWrapper._(this.value);
+
+  @_core.override
+  PublicationStatus_kind get kind => PublicationStatus_kind.unavailableWrapper;
+}
+
+// struct PublicationView
+
+sealed class PublicationView_orMutable {
+  PublicationViewId_orMutable get id;
+  PublicationStatus get status;
+
+  PublicationView toFrozen();
+}
+
+/// Deeply immutable.
+final class PublicationView implements PublicationView_orMutable {
+  @_core.override
+  final PublicationViewId id;
+  @_core.override
+  final PublicationStatus status;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PublicationView({
+    required PublicationViewId_orMutable id,
+    required PublicationStatus status,
+  }) => PublicationView._(id.toFrozen(), status);
+
+  PublicationView._(this.id, this.status);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PublicationView._(
+    PublicationViewId.defaultInstance,
+    PublicationStatus.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PublicationView_mutable mutable() => PublicationView_mutable._(
+    PublicationViewId.defaultInstance,
+    PublicationStatus.unknown,
+  );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PublicationView toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PublicationView_mutable toMutable() =>
+      PublicationView_mutable._(this.id, this.status);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PublicationView) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.id, this.status];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PublicationView` instances.
+  static _skir.StructSerializer<PublicationView, PublicationView_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "id",
+        "id",
+        0,
+        PublicationViewId.serializer,
+        "",
+        (it) => it.id,
+        (it, v) => it.id = v,
+      );
+      _serializerBuilder.addField(
+        "status",
+        "status",
+        1,
+        PublicationStatus.serializer,
+        "",
+        (it) => it.status,
+        (it, v) => it.status = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/publication.skir:PublicationView",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PublicationView_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PublicationView].
+final class PublicationView_mutable implements PublicationView_orMutable {
+  PublicationViewId_orMutable id;
+  PublicationStatus status;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PublicationView_mutable._(this.id, this.status);
+
+  /// If the value of [id] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
+  PublicationViewId_mutable get mutableId {
+    final value = this.id;
+    if (value is PublicationViewId_mutable) {
+      return value;
+    } else {
+      return this.id = (value as PublicationViewId).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PublicationView toFrozen() =>
+      PublicationView(id: this.id, status: this.status).._u = this._u;
+}
+
+// struct PublicationViewChanged
+
+sealed class PublicationViewChanged_orMutable {
+  PublicationViewId_orMutable get current;
+
+  PublicationViewChanged toFrozen();
+}
+
+/// Deeply immutable.
+final class PublicationViewChanged implements PublicationViewChanged_orMutable {
+  @_core.override
+  final PublicationViewId current;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PublicationViewChanged({
+    required PublicationViewId_orMutable current,
+  }) => PublicationViewChanged._(current.toFrozen());
+
+  PublicationViewChanged._(this.current);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PublicationViewChanged._(
+    PublicationViewId.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PublicationViewChanged_mutable mutable() =>
+      PublicationViewChanged_mutable._(PublicationViewId.defaultInstance);
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PublicationViewChanged toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PublicationViewChanged_mutable toMutable() =>
+      PublicationViewChanged_mutable._(this.current);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PublicationViewChanged) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.current];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PublicationViewChanged` instances.
+  static _skir.StructSerializer<
+    PublicationViewChanged,
+    PublicationViewChanged_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "current",
+        "current",
+        0,
+        PublicationViewId.serializer,
+        "",
+        (it) => it.current,
+        (it, v) => it.current = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/publication.skir:PublicationViewChanged",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PublicationViewChanged_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PublicationViewChanged].
+final class PublicationViewChanged_mutable
+    implements PublicationViewChanged_orMutable {
+  PublicationViewId_orMutable current;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PublicationViewChanged_mutable._(this.current);
+
+  /// If the value of [current] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [current] and returns it.
+  PublicationViewId_mutable get mutableCurrent {
+    final value = this.current;
+    if (value is PublicationViewId_mutable) {
+      return value;
+    } else {
+      return this.current = (value as PublicationViewId).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PublicationViewChanged toFrozen() =>
+      PublicationViewChanged(current: this.current).._u = this._u;
+}
+
+// struct PublicationViewChunk
+
+sealed class PublicationViewChunk_orMutable {
+  PublicationViewId_orMutable get view;
+  _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable get transfer;
+
+  PublicationViewChunk toFrozen();
+}
+
+/// Deeply immutable.
+final class PublicationViewChunk implements PublicationViewChunk_orMutable {
+  @_core.override
+  final PublicationViewId view;
+  @_core.override
+  final _lib_kernel_v1_bounded_transfer.BoundedTransferChunk transfer;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PublicationViewChunk({
+    required PublicationViewId_orMutable view,
+    required _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable
+    transfer,
+  }) => PublicationViewChunk._(view.toFrozen(), transfer.toFrozen());
+
+  PublicationViewChunk._(this.view, this.transfer);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PublicationViewChunk._(
+    PublicationViewId.defaultInstance,
+    _lib_kernel_v1_bounded_transfer.BoundedTransferChunk.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PublicationViewChunk_mutable mutable() =>
+      PublicationViewChunk_mutable._(
+        PublicationViewId.defaultInstance,
+        _lib_kernel_v1_bounded_transfer.BoundedTransferChunk.defaultInstance,
+      );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PublicationViewChunk toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PublicationViewChunk_mutable toMutable() =>
+      PublicationViewChunk_mutable._(this.view, this.transfer);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PublicationViewChunk) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.view, this.transfer];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PublicationViewChunk` instances.
+  static _skir.StructSerializer<
+    PublicationViewChunk,
+    PublicationViewChunk_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "view",
+        "view",
+        0,
+        PublicationViewId.serializer,
+        "",
+        (it) => it.view,
+        (it, v) => it.view = v,
+      );
+      _serializerBuilder.addField(
+        "transfer",
+        "transfer",
+        1,
+        _lib_kernel_v1_bounded_transfer.BoundedTransferChunk.serializer,
+        "",
+        (it) => it.transfer,
+        (it, v) => it.transfer = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/publication.skir:PublicationViewChunk",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PublicationViewChunk_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PublicationViewChunk].
+final class PublicationViewChunk_mutable
+    implements PublicationViewChunk_orMutable {
+  PublicationViewId_orMutable view;
+  _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable transfer;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PublicationViewChunk_mutable._(this.view, this.transfer);
+
+  /// If the value of [view] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [view] and returns it.
+  PublicationViewId_mutable get mutableView {
+    final value = this.view;
+    if (value is PublicationViewId_mutable) {
+      return value;
+    } else {
+      return this.view = (value as PublicationViewId).toMutable();
+    }
+  }
+
+  /// If the value of [transfer] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [transfer] and returns it.
+  _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_mutable
+  get mutableTransfer {
+    final value = this.transfer;
+    if (value is _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_mutable) {
+      return value;
+    } else {
+      return this.transfer =
+          (value as _lib_kernel_v1_bounded_transfer.BoundedTransferChunk)
+              .toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PublicationViewChunk toFrozen() =>
+      PublicationViewChunk(view: this.view, transfer: this.transfer)
+        .._u = this._u;
+}
+
+// struct PublicationTransferUnavailable
+
+sealed class PublicationTransferUnavailable_orMutable {
+  PublicationViewId_orMutable get view;
+  _core.int get encodedSize;
+  _core.int get maxEncodedSize;
+
+  PublicationTransferUnavailable toFrozen();
+}
+
+/// Deeply immutable.
+final class PublicationTransferUnavailable
+    implements PublicationTransferUnavailable_orMutable {
+  @_core.override
+  final PublicationViewId view;
+  @_core.override
+  final _core.int encodedSize;
+  @_core.override
+  final _core.int maxEncodedSize;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PublicationTransferUnavailable({
+    required PublicationViewId_orMutable view,
+    required _core.int encodedSize,
+    required _core.int maxEncodedSize,
+  }) => PublicationTransferUnavailable._(
+    view.toFrozen(),
+    encodedSize,
+    maxEncodedSize,
+  );
+
+  PublicationTransferUnavailable._(
+    this.view,
+    this.encodedSize,
+    this.maxEncodedSize,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PublicationTransferUnavailable._(
+    PublicationViewId.defaultInstance,
+    0,
+    0,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PublicationTransferUnavailable_mutable mutable() =>
+      PublicationTransferUnavailable_mutable._(
+        PublicationViewId.defaultInstance,
+        0,
+        0,
+      );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PublicationTransferUnavailable toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PublicationTransferUnavailable_mutable toMutable() =>
+      PublicationTransferUnavailable_mutable._(
+        this.view,
+        this.encodedSize,
+        this.maxEncodedSize,
+      );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PublicationTransferUnavailable) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.view,
+    this.encodedSize,
+    this.maxEncodedSize,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PublicationTransferUnavailable` instances.
+  static _skir.StructSerializer<
+    PublicationTransferUnavailable,
+    PublicationTransferUnavailable_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "view",
+        "view",
+        0,
+        PublicationViewId.serializer,
+        "",
+        (it) => it.view,
+        (it, v) => it.view = v,
+      );
+      _serializerBuilder.addField(
+        "encoded_size",
+        "encodedSize",
+        1,
+        _skir.Serializers.int64,
+        "",
+        (it) => it.encodedSize,
+        (it, v) => it.encodedSize = v,
+      );
+      _serializerBuilder.addField(
+        "max_encoded_size",
+        "maxEncodedSize",
+        2,
+        _skir.Serializers.int64,
+        "",
+        (it) => it.maxEncodedSize,
+        (it, v) => it.maxEncodedSize = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/publication.skir:PublicationTransferUnavailable",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PublicationTransferUnavailable_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PublicationTransferUnavailable].
+final class PublicationTransferUnavailable_mutable
+    implements PublicationTransferUnavailable_orMutable {
+  PublicationViewId_orMutable view;
+  _core.int encodedSize;
+  _core.int maxEncodedSize;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PublicationTransferUnavailable_mutable._(
+    this.view,
+    this.encodedSize,
+    this.maxEncodedSize,
+  );
+
+  /// If the value of [view] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [view] and returns it.
+  PublicationViewId_mutable get mutableView {
+    final value = this.view;
+    if (value is PublicationViewId_mutable) {
+      return value;
+    } else {
+      return this.view = (value as PublicationViewId).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PublicationTransferUnavailable toFrozen() => PublicationTransferUnavailable(
+    view: this.view,
+    encodedSize: this.encodedSize,
+    maxEncodedSize: this.maxEncodedSize,
+  ).._u = this._u;
+}
+
+// struct PublishAuthoringRequest
+
+sealed class PublishAuthoringRequest_orMutable {
+  PublicationCandidateId_orMutable get candidate;
+
+  PublishAuthoringRequest toFrozen();
+}
+
+/// Deeply immutable.
+final class PublishAuthoringRequest
+    implements PublishAuthoringRequest_orMutable {
+  @_core.override
+  final PublicationCandidateId candidate;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PublishAuthoringRequest({
+    required PublicationCandidateId_orMutable candidate,
+  }) => PublishAuthoringRequest._(candidate.toFrozen());
+
+  PublishAuthoringRequest._(this.candidate);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PublishAuthoringRequest._(
+    PublicationCandidateId.defaultInstance,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PublishAuthoringRequest_mutable mutable() =>
+      PublishAuthoringRequest_mutable._(PublicationCandidateId.defaultInstance);
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PublishAuthoringRequest toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PublishAuthoringRequest_mutable toMutable() =>
+      PublishAuthoringRequest_mutable._(this.candidate);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PublishAuthoringRequest) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.candidate];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PublishAuthoringRequest` instances.
+  static _skir.StructSerializer<
+    PublishAuthoringRequest,
+    PublishAuthoringRequest_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "candidate",
+        "candidate",
+        0,
+        PublicationCandidateId.serializer,
+        "",
+        (it) => it.candidate,
+        (it, v) => it.candidate = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/publication.skir:PublishAuthoringRequest",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PublishAuthoringRequest_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PublishAuthoringRequest].
+final class PublishAuthoringRequest_mutable
+    implements PublishAuthoringRequest_orMutable {
+  PublicationCandidateId_orMutable candidate;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PublishAuthoringRequest_mutable._(this.candidate);
+
+  /// If the value of [candidate] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [candidate] and returns it.
+  PublicationCandidateId_mutable get mutableCandidate {
+    final value = this.candidate;
+    if (value is PublicationCandidateId_mutable) {
+      return value;
+    } else {
+      return this.candidate = (value as PublicationCandidateId).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PublishAuthoringRequest toFrozen() =>
+      PublishAuthoringRequest(candidate: this.candidate).._u = this._u;
+}
+
+// enum PublishAuthoringResponse
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case PublishAuthoringResponse_unknown(): { ... }
+///     case PublishAuthoringResponse_result(:var value): { ... }
+///     case PublishAuthoringResponse_internalError(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class PublishAuthoringResponse {
+  /// Constant indicating an unknown `PublishAuthoringResponse`.
+  /// Default value for fields of type `PublishAuthoringResponse`.
+  static const PublishAuthoringResponse unknown =
+      PublishAuthoringResponse_unknown._instance;
+
+  /// Create a 'result' variant wrapping around the given value.
+  factory PublishAuthoringResponse.wrapResult(PublicationResult value) =>
+      PublishAuthoringResponse_resultWrapper._(value);
+
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory PublishAuthoringResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError value,
+  ) => PublishAuthoringResponse_internalErrorWrapper._(value);
+
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
+  factory PublishAuthoringResponse.createInternalError() =>
+      PublishAuthoringResponse.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
+      );
+
+  /// Returns the kind of variant held by this PublishAuthoringResponse.
+  PublishAuthoringResponse_kind get kind;
+
+  /// Serializer for `PublishAuthoringResponse` instances.
+  static _skir.EnumSerializer<PublishAuthoringResponse> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "result",
+        "wrapResult",
+        PublicationResult.serializer,
+        "",
+        PublishAuthoringResponse_resultWrapper._,
+        (it) => it.value,
+        ordinal: PublishAuthoringResponse_kind.resultWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "internal_error",
+        "wrapInternalError",
+        _lib_kernel_v1_errors.InternalError.serializer,
+        "",
+        PublishAuthoringResponse_internalErrorWrapper._,
+        (it) => it.value,
+        ordinal: PublishAuthoringResponse_kind.internalErrorWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/publication.skir:PublishAuthoringResponse",
+        doc: "",
+        unknownInstance: PublishAuthoringResponse_unknown._instance,
+        enumInstance: PublishAuthoringResponse.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PublishAuthoringResponse_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `PublishAuthoringResponse`.
+enum PublishAuthoringResponse_kind {
+  unknown(0),
+  resultWrapper(1),
+  internalErrorWrapper(2);
+
+  final _core.int _ordinal;
+
+  const PublishAuthoringResponse_kind(this._ordinal);
+}
+
+final class PublishAuthoringResponse_unknown
+    implements PublishAuthoringResponse {
+  static const _instance = PublishAuthoringResponse_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const PublishAuthoringResponse_unknown._() : _u = null;
+  PublishAuthoringResponse_unknown._unrecognized(this._u);
+
+  @_core.override
+  PublishAuthoringResponse_kind get kind =>
+      PublishAuthoringResponse_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is PublishAuthoringResponse_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PublishAuthoringResponse.serializer);
+}
+
+sealed class _PublishAuthoringResponse_wrapper
+    implements PublishAuthoringResponse {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _PublishAuthoringResponse_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PublishAuthoringResponse.serializer);
+}
+
+final class PublishAuthoringResponse_resultWrapper
+    extends _PublishAuthoringResponse_wrapper {
+  final PublicationResult value;
+
+  PublishAuthoringResponse_resultWrapper._(this.value);
+
+  @_core.override
+  PublishAuthoringResponse_kind get kind =>
+      PublishAuthoringResponse_kind.resultWrapper;
+}
+
+final class PublishAuthoringResponse_internalErrorWrapper
+    extends _PublishAuthoringResponse_wrapper {
+  final _lib_kernel_v1_errors.InternalError value;
+
+  PublishAuthoringResponse_internalErrorWrapper._(this.value);
+
+  @_core.override
+  PublishAuthoringResponse_kind get kind =>
+      PublishAuthoringResponse_kind.internalErrorWrapper;
+}
+
 // struct WatchPublicationRequest
 
 sealed class WatchPublicationRequest_orMutable {
@@ -2832,6 +7055,376 @@ final class WatchPublicationRequest_mutable
   WatchPublicationRequest toFrozen() => WatchPublicationRequest().._u = this._u;
 }
 
+// struct QueryPublicationViewRequest
+
+sealed class QueryPublicationViewRequest_orMutable {
+  PublicationViewId_orMutable get expected;
+  _core.String get transferId;
+
+  QueryPublicationViewRequest toFrozen();
+}
+
+/// Deeply immutable.
+final class QueryPublicationViewRequest
+    implements QueryPublicationViewRequest_orMutable {
+  @_core.override
+  final PublicationViewId expected;
+  @_core.override
+  final _core.String transferId;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory QueryPublicationViewRequest({
+    required PublicationViewId_orMutable expected,
+    required _core.String transferId,
+  }) => QueryPublicationViewRequest._(expected.toFrozen(), transferId);
+
+  QueryPublicationViewRequest._(this.expected, this.transferId);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = QueryPublicationViewRequest._(
+    PublicationViewId.defaultInstance,
+    "",
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static QueryPublicationViewRequest_mutable mutable() =>
+      QueryPublicationViewRequest_mutable._(
+        PublicationViewId.defaultInstance,
+        "",
+      );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  QueryPublicationViewRequest toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  QueryPublicationViewRequest_mutable toMutable() =>
+      QueryPublicationViewRequest_mutable._(this.expected, this.transferId);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! QueryPublicationViewRequest) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.expected, this.transferId];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `QueryPublicationViewRequest` instances.
+  static _skir.StructSerializer<
+    QueryPublicationViewRequest,
+    QueryPublicationViewRequest_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "expected",
+        "expected",
+        0,
+        PublicationViewId.serializer,
+        "",
+        (it) => it.expected,
+        (it, v) => it.expected = v,
+      );
+      _serializerBuilder.addField(
+        "transfer_id",
+        "transferId",
+        1,
+        _skir.Serializers.string,
+        "",
+        (it) => it.transferId,
+        (it, v) => it.transferId = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/publication.skir:QueryPublicationViewRequest",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (QueryPublicationViewRequest_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [QueryPublicationViewRequest].
+final class QueryPublicationViewRequest_mutable
+    implements QueryPublicationViewRequest_orMutable {
+  PublicationViewId_orMutable expected;
+  _core.String transferId;
+  _skir.internal__UnrecognizedFields? _u;
+
+  QueryPublicationViewRequest_mutable._(this.expected, this.transferId);
+
+  /// If the value of [expected] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [expected] and returns it.
+  PublicationViewId_mutable get mutableExpected {
+    final value = this.expected;
+    if (value is PublicationViewId_mutable) {
+      return value;
+    } else {
+      return this.expected = (value as PublicationViewId).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  QueryPublicationViewRequest toFrozen() => QueryPublicationViewRequest(
+    expected: this.expected,
+    transferId: this.transferId,
+  ).._u = this._u;
+}
+
+// enum QueryPublicationViewResponse
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case QueryPublicationViewResponse_unknown(): { ... }
+///     case QueryPublicationViewResponse_chunk(:var value): { ... }
+///     case QueryPublicationViewResponse_changed(:var value): { ... }
+///     case QueryPublicationViewResponse_unavailable(:var value): { ... }
+///     case QueryPublicationViewResponse_internalError(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class QueryPublicationViewResponse {
+  /// Constant indicating an unknown `QueryPublicationViewResponse`.
+  /// Default value for fields of type `QueryPublicationViewResponse`.
+  static const QueryPublicationViewResponse unknown =
+      QueryPublicationViewResponse_unknown._instance;
+
+  /// Create a 'chunk' variant wrapping around the given value.
+  factory QueryPublicationViewResponse.wrapChunk(PublicationViewChunk value) =>
+      QueryPublicationViewResponse_chunkWrapper._(value);
+
+  /// Same as `wrapChunk(PublicationViewChunk(...))`.
+  factory QueryPublicationViewResponse.createChunk({
+    required PublicationViewId_orMutable view,
+    required _lib_kernel_v1_bounded_transfer.BoundedTransferChunk_orMutable
+    transfer,
+  }) => QueryPublicationViewResponse.wrapChunk(
+    PublicationViewChunk(view: view, transfer: transfer),
+  );
+
+  /// Create a 'changed' variant wrapping around the given value.
+  factory QueryPublicationViewResponse.wrapChanged(
+    PublicationViewChanged value,
+  ) => QueryPublicationViewResponse_changedWrapper._(value);
+
+  /// Same as `wrapChanged(PublicationViewChanged(...))`.
+  factory QueryPublicationViewResponse.createChanged({
+    required PublicationViewId_orMutable current,
+  }) => QueryPublicationViewResponse.wrapChanged(
+    PublicationViewChanged(current: current),
+  );
+
+  /// Create a 'unavailable' variant wrapping around the given value.
+  factory QueryPublicationViewResponse.wrapUnavailable(
+    PublicationTransferUnavailable value,
+  ) => QueryPublicationViewResponse_unavailableWrapper._(value);
+
+  /// Same as `wrapUnavailable(PublicationTransferUnavailable(...))`.
+  factory QueryPublicationViewResponse.createUnavailable({
+    required PublicationViewId_orMutable view,
+    required _core.int encodedSize,
+    required _core.int maxEncodedSize,
+  }) => QueryPublicationViewResponse.wrapUnavailable(
+    PublicationTransferUnavailable(
+      view: view,
+      encodedSize: encodedSize,
+      maxEncodedSize: maxEncodedSize,
+    ),
+  );
+
+  /// Create a 'internal_error' variant wrapping around the given value.
+  factory QueryPublicationViewResponse.wrapInternalError(
+    _lib_kernel_v1_errors.InternalError value,
+  ) => QueryPublicationViewResponse_internalErrorWrapper._(value);
+
+  /// Same as `wrapInternalError(_lib_kernel_v1_errors.InternalError(...))`.
+  factory QueryPublicationViewResponse.createInternalError() =>
+      QueryPublicationViewResponse.wrapInternalError(
+        _lib_kernel_v1_errors.InternalError(),
+      );
+
+  /// Returns the kind of variant held by this QueryPublicationViewResponse.
+  QueryPublicationViewResponse_kind get kind;
+
+  /// Serializer for `QueryPublicationViewResponse` instances.
+  static _skir.EnumSerializer<QueryPublicationViewResponse> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "chunk",
+        "wrapChunk",
+        PublicationViewChunk.serializer,
+        "",
+        QueryPublicationViewResponse_chunkWrapper._,
+        (it) => it.value,
+        ordinal: QueryPublicationViewResponse_kind.chunkWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "changed",
+        "wrapChanged",
+        PublicationViewChanged.serializer,
+        "",
+        QueryPublicationViewResponse_changedWrapper._,
+        (it) => it.value,
+        ordinal: QueryPublicationViewResponse_kind.changedWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        3,
+        "unavailable",
+        "wrapUnavailable",
+        PublicationTransferUnavailable.serializer,
+        "",
+        QueryPublicationViewResponse_unavailableWrapper._,
+        (it) => it.value,
+        ordinal: QueryPublicationViewResponse_kind.unavailableWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        4,
+        "internal_error",
+        "wrapInternalError",
+        _lib_kernel_v1_errors.InternalError.serializer,
+        "",
+        QueryPublicationViewResponse_internalErrorWrapper._,
+        (it) => it.value,
+        ordinal:
+            QueryPublicationViewResponse_kind.internalErrorWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/publication.skir:QueryPublicationViewResponse",
+        doc: "",
+        unknownInstance: QueryPublicationViewResponse_unknown._instance,
+        enumInstance: QueryPublicationViewResponse.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: QueryPublicationViewResponse_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `QueryPublicationViewResponse`.
+enum QueryPublicationViewResponse_kind {
+  unknown(0),
+  chunkWrapper(1),
+  changedWrapper(2),
+  unavailableWrapper(3),
+  internalErrorWrapper(4);
+
+  final _core.int _ordinal;
+
+  const QueryPublicationViewResponse_kind(this._ordinal);
+}
+
+final class QueryPublicationViewResponse_unknown
+    implements QueryPublicationViewResponse {
+  static const _instance = QueryPublicationViewResponse_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const QueryPublicationViewResponse_unknown._() : _u = null;
+  QueryPublicationViewResponse_unknown._unrecognized(this._u);
+
+  @_core.override
+  QueryPublicationViewResponse_kind get kind =>
+      QueryPublicationViewResponse_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) =>
+      other is QueryPublicationViewResponse_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, QueryPublicationViewResponse.serializer);
+}
+
+sealed class _QueryPublicationViewResponse_wrapper
+    implements QueryPublicationViewResponse {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _QueryPublicationViewResponse_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, QueryPublicationViewResponse.serializer);
+}
+
+final class QueryPublicationViewResponse_chunkWrapper
+    extends _QueryPublicationViewResponse_wrapper {
+  final PublicationViewChunk value;
+
+  QueryPublicationViewResponse_chunkWrapper._(this.value);
+
+  @_core.override
+  QueryPublicationViewResponse_kind get kind =>
+      QueryPublicationViewResponse_kind.chunkWrapper;
+}
+
+final class QueryPublicationViewResponse_changedWrapper
+    extends _QueryPublicationViewResponse_wrapper {
+  final PublicationViewChanged value;
+
+  QueryPublicationViewResponse_changedWrapper._(this.value);
+
+  @_core.override
+  QueryPublicationViewResponse_kind get kind =>
+      QueryPublicationViewResponse_kind.changedWrapper;
+}
+
+final class QueryPublicationViewResponse_unavailableWrapper
+    extends _QueryPublicationViewResponse_wrapper {
+  final PublicationTransferUnavailable value;
+
+  QueryPublicationViewResponse_unavailableWrapper._(this.value);
+
+  @_core.override
+  QueryPublicationViewResponse_kind get kind =>
+      QueryPublicationViewResponse_kind.unavailableWrapper;
+}
+
+final class QueryPublicationViewResponse_internalErrorWrapper
+    extends _QueryPublicationViewResponse_wrapper {
+  final _lib_kernel_v1_errors.InternalError value;
+
+  QueryPublicationViewResponse_internalErrorWrapper._(this.value);
+
+  @_core.override
+  QueryPublicationViewResponse_kind get kind =>
+      QueryPublicationViewResponse_kind.internalErrorWrapper;
+}
+
 final _skir.Method<PublishAuthoringRequest, PublishAuthoringResponse>
 publishAuthoringMethod = _skir.Method(
   "PublishAuthoring",
@@ -2841,11 +7434,20 @@ publishAuthoringMethod = _skir.Method(
   "",
 );
 
-final _skir.Method<WatchPublicationRequest, PublicationReport>
+final _skir.Method<WatchPublicationRequest, PublicationViewChanged>
 watchPublicationMethod = _skir.Method(
   "WatchPublication",
   920021,
   WatchPublicationRequest.serializer,
-  PublicationReport.serializer,
+  PublicationViewChanged.serializer,
+  "",
+);
+
+final _skir.Method<QueryPublicationViewRequest, QueryPublicationViewResponse>
+queryPublicationViewMethod = _skir.Method(
+  "QueryPublicationView",
+  920022,
+  QueryPublicationViewRequest.serializer,
+  QueryPublicationViewResponse.serializer,
   "",
 );

@@ -54,63 +54,80 @@ class BookScaffold extends HookConsumerWidget {
           .refresh();
     }
 
-    return PrimarySearchShortcut(
-      child: SimpleScaffold(
-        appBar: CustomAppBar(
-          leading: [
-            if (organizationId != null) ...[
-              const OrganizationSelector(),
-              if (realmId != null) ...[
-                Icones(
-                  MaterialSymbols.chevron_right,
-                  size: 16,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                const RealmSelector(),
-                Icones(
-                  MaterialSymbols.chevron_right,
-                  size: 16,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                const BookSelector(),
-              ],
-            ],
-          ],
-          trailing: RealmSuspensionInline(
-            suspended: interaction.suspended,
-            child: const ModeDisplayWidget(),
-          ),
-          sidebar: RealmSuspensionBarrier(
-            interaction: interaction,
-            realm: selectedRealm,
-            onRetry: retryConnection,
-            child: const BookSidebarContent(),
-          ),
-        ),
-        child: RealmSuspensionBarrier(
-          interaction: interaction,
-          realm: selectedRealm,
-          onRetry: retryConnection,
-          child: Row(
-            children: [
-              if (!context.isMobile) const Sidebar(child: BookSidebarContent()),
-              Expanded(
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: InspectorScaffold(
-                        margin: EdgeInsets.only(
-                          top: context.spacing.space2,
-                          right: context.spacing.space2,
-                        ),
-                        child: child,
-                      ),
-                    ),
-                    ActionRow(),
+    return RealmInboxShortcut(
+      child: PrimarySearchShortcut(
+        child: SimpleScaffold(
+          appBar: CustomAppBar(
+            navigation: AppBarBreadcrumbs(
+              children: [
+                if (organizationId != null) ...[
+                  const OrganizationSelector(),
+                  if (realmId != null) ...[
+                    const RealmSelector(),
+                    const BookSelector(),
                   ],
+                ],
+              ],
+            ),
+            primary: AppBarItem.adaptive(
+              key: const ValueKey("search"),
+              collapseOrder: 0,
+              child: const PrimarySearchButton(),
+            ),
+            actions: [
+              AppBarItem.adaptive(
+                key: const ValueKey("activity"),
+                collapseOrder: 1,
+                child: const WorkspaceActivityButton(),
+              ),
+              AppBarItem.expandedOnly(
+                key: const ValueKey("mode"),
+                collapseOrder: 2,
+                child: RealmSuspensionInline(
+                  suspended: interaction.suspended,
+                  child: const ModeDisplayWidget(),
+                ),
+              ),
+              AppBarItem.compactOnly(
+                key: const ValueKey("sidebar"),
+                collapseOrder: 2,
+                child: SidebarMenuButton(
+                  sidebar: RealmSuspensionBarrier(
+                    interaction: interaction,
+                    realm: selectedRealm,
+                    onRetry: retryConnection,
+                    child: const BookSidebarContent(),
+                  ),
                 ),
               ),
             ],
+          ),
+          child: RealmSuspensionBarrier(
+            interaction: interaction,
+            realm: selectedRealm,
+            onRetry: retryConnection,
+            child: Row(
+              children: [
+                if (!context.isMobile)
+                  const Sidebar(child: BookSidebarContent()),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: InspectorScaffold(
+                          margin: EdgeInsets.only(
+                            top: context.spacing.space2,
+                            right: context.spacing.space2,
+                          ),
+                          child: child,
+                        ),
+                      ),
+                      ActionRow(),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

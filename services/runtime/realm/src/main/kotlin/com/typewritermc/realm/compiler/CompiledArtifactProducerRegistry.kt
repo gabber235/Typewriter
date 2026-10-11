@@ -1,11 +1,10 @@
 package com.typewritermc.realm.compiler
 
-import com.typewritermc.checking.Diagnostic
+import com.typewritermc.engine.CompilationResult
 import com.typewritermc.engine.CompilationRoot
-import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.realm.authoring.AuthoringView
 
-/** Compiles one complete batch and rejects ambiguous output ownership before anything is stored. */
+/** Preserves every root result and validates output ownership before storage. */
 internal class CompiledArtifactProducerRegistry(
     producers: Collection<CompiledArtifactProducer>,
 ) {
@@ -26,39 +25,34 @@ internal class CompiledArtifactProducerRegistry(
         }
 
     context(inputs: CompilationInputs)
-    fun compile(): CompilationOutcome {
-        val artifacts = mutableListOf<CompiledArtifact>()
-        val findings = mutableListOf<Diagnostic>()
-        var blocked = false
-        ordered.forEach { producer ->
+    fun compile(): List<CompilationResult> {
+        val results = ordered.flatMap { producer ->
             val roots = producer.roots(inputs.view)
             require(roots.all { root -> root.projection == producer.projection }) {
                 "Compilation roots must match their producer projection."
             }
-            when (val result = producer.compile(roots)) {
-                is CompilationOutcome.Blocked -> {
-                    blocked = true
-                    findings += result.findings
+            producer.compile(roots).also { results ->
+                require(results.map { it.root }.toSet() == roots && results.size == roots.size) {
+                    "Compilation must report every supplied root exactly once."
                 }
-
-                is CompilationOutcome.Ready -> {
-                    require(result.artifacts.all { it.root.projection == producer.projection && it.mediaType == producer.mediaType }) {
-                        "Compiled output must match its producer projection and media type."
+                require(results.none { it is CompilationResult.Removed }) {
+                    "A supplied root cannot be reported as removed."
+                }
+                results.filterIsInstance<CompilationResult.Success>().forEach { result ->
+                    require(result.artifact.mediaType == producer.mediaType) {
+                        "Compiled output must match its producer media type."
                     }
-                    require(result.artifacts.map { artifact -> artifact.root }.toSet() == roots) {
-                        "Compiled output must contain every producer root exactly once."
+                }
+                results.filterIsInstance<CompilationResult.Blocked>().forEach { result ->
+                    require(result.diagnostics.any { it.severity == com.typewritermc.engine.CompileDiagnosticSeverity.ERROR }) {
+                        "A blocked root must contain a blocking diagnostic."
                     }
-                    require(result.artifacts.size == roots.size) {
-                        "Compiled output roots must be unique within one producer."
-                    }
-                    artifacts += result.artifacts
                 }
             }
         }
-        if (blocked) return CompilationOutcome.Blocked(findings)
-        require(artifacts.map { it.root }.distinct().size == artifacts.size) {
-            "Compiled output roots must be unique within one publication."
+        require(results.map { it.root }.distinct().size == results.size) {
+            "Compiled roots must be unique within one publication."
         }
-        return CompilationOutcome.Ready(artifacts)
+        return results
     }
 }

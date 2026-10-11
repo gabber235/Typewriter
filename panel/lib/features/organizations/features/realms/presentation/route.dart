@@ -25,11 +25,6 @@ class RealmPage extends HookConsumerWidget {
       );
       ref.watch(confirmedAuthoringDocumentProvider(scope));
     }
-    return Column(
-      children: [
-        if (scope != null) RealmWorkToolbar(scope: scope),
-        const Expanded(child: AutoRouter()),
-      ],
-    );
+    return const AutoRouter();
   }
 }

@@ -1,196 +1,424 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Child roles supported by [CustomAppBarLayout].
-enum CustomAppBarSlot {
-  leading,
-  search,
-  trailing,
-  compactSearch,
-  compactTrailing,
+part "custom_appbar_layout.freezed.dart";
+
+/// The natural width of one mounted item, independent of its previous fit.
+@freezed
+abstract class AppBarItemMeasurement with _$AppBarItemMeasurement {
+  const factory AppBarItemMeasurement({
+    required AppBarItemPolicy policy,
+    required double width,
+  }) = _AppBarItemMeasurement;
+  const AppBarItemMeasurement._();
+
+  AppBarItemAllocation allocate(
+    Set<int> collapsed,
+    double compactExtent,
+  ) => switch (policy) {
+    FixedAppBarItem() => AppBarItemAllocation.visible(width),
+    AdaptiveAppBarItem(:final collapseOrder) => AppBarItemAllocation.visible(
+      collapsed.contains(collapseOrder) ? min(width, compactExtent) : width,
+    ),
+    ExpandedOnlyAppBarItem(:final collapseOrder) =>
+      collapsed.contains(collapseOrder)
+          ? const AppBarItemAllocation.hidden()
+          : AppBarItemAllocation.visible(width),
+    CompactOnlyAppBarItem(:final collapseOrder) =>
+      collapsed.contains(collapseOrder)
+          ? AppBarItemAllocation.visible(width)
+          : const AppBarItemAllocation.hidden(),
+  };
 }
 
-/// Selects and positions full or compact app bar content from measured sizes.
+/// Hidden allocation has no interactive or visual extent.
+@freezed
+sealed class AppBarItemAllocation with _$AppBarItemAllocation {
+  const factory AppBarItemAllocation.hidden() = HiddenAppBarAllocation;
+  const factory AppBarItemAllocation.visible(double extent) =
+      VisibleAppBarAllocation;
+  const AppBarItemAllocation._();
+  double get width => switch (this) {
+    HiddenAppBarAllocation() => 0,
+    VisibleAppBarAllocation(:final extent) => extent,
+  };
+}
+
+/// A complete final fit shared by painting, input, semantics, and focus gating.
+@freezed
+abstract class AppBarFit with _$AppBarFit {
+  const factory AppBarFit({
+    required double contentWidth,
+    required double navigationWidth,
+    required AppBarItemAllocation primary,
+    required List<AppBarItemAllocation> actions,
+  }) = _AppBarFit;
+  const AppBarFit._();
+}
+
+/// Fits the canonical controls by collapsing ordered groups once each.
+@freezed
+abstract class AppBarMeasurements with _$AppBarMeasurements {
+  const factory AppBarMeasurements({
+    required double navigationWidth,
+    required AppBarItemMeasurement primary,
+    required List<AppBarItemMeasurement> actions,
+  }) = _AppBarMeasurements;
+  const AppBarMeasurements._();
+
+  AppBarFit fit({
+    required double availableWidth,
+    required double compactExtent,
+    required double spacing,
+    double minimumNavigationExtent = 48,
+    double debugReservation = 0,
+  }) {
+    final items = [primary, ...actions];
+    final collapsed = <int>{};
+    final orders =
+        items.map((item) => item.policy.order).nonNulls.toSet().toList()
+          ..sort();
+    final navigationMinimum = min(navigationWidth, minimumNavigationExtent);
+    List<AppBarItemAllocation> resolve() => [
+      for (final item in items) item.allocate(collapsed, compactExtent),
+    ];
+    double widthWithGaps(List<AppBarItemAllocation> allocation) {
+      final count =
+          allocation.where((item) => item.width > 0).length +
+          (navigationMinimum > 0 ? 1 : 0);
+      return allocation.fold(0.0, (sum, item) => sum + item.width) +
+          max(0, count - 1) * spacing;
+    }
+
+    for (final order in orders) {
+      if (widthWithGaps(resolve()) + navigationMinimum + debugReservation <=
+          availableWidth) {
+        break;
+      }
+      collapsed.add(order);
+    }
+    final allocation = resolve();
+    final controlsWidth = widthWithGaps(allocation);
+    final contentWidth = max(
+      availableWidth,
+      controlsWidth + navigationMinimum + debugReservation,
+    );
+    return AppBarFit(
+      contentWidth: contentWidth,
+      navigationWidth: min(
+        navigationWidth,
+        max(navigationMinimum, contentWidth - controlsWidth - debugReservation),
+      ),
+      primary: allocation.first,
+      actions: allocation.skip(1).toList(),
+    );
+  }
+}
+
+/// Positions one navigation region, primary control, and keyed action list.
 ///
-/// The full search stays centered while space permits. Asymmetric leading or
-/// trailing content moves it only far enough to preserve [spacing]. When the
-/// full slots do not fit, the compact slots replace them and [leading] receives
-/// the remaining width.
-class CustomAppBarLayout
-    extends SlottedMultiChildRenderObjectWidget<CustomAppBarSlot, RenderBox> {
-  const CustomAppBarLayout({
-    required this.leading,
-    required this.search,
-    required this.trailing,
-    required this.compactSearch,
-    required this.compactTrailing,
+/// One persistent viewport keeps essential compact controls reachable even
+/// below their combined minimum width. Natural measurement uses the same
+/// mounted children; only the final allocation changes interaction eligibility.
+class CustomAppBarLayout extends StatelessWidget {
+  CustomAppBarLayout({
+    required this.navigation,
+    required this.primary,
+    required this.actions,
     required this.spacing,
+    this.minimumNavigationExtent = 48,
+    this.debugReservation = 0,
     super.key,
-  });
-
-  final Widget leading;
-  final Widget search;
-  final Widget trailing;
-  final Widget compactSearch;
-  final Widget compactTrailing;
+  }) {
+    final keys = <Key>{};
+    for (final item in [primary, ...actions]) {
+      if (item.key == null || !keys.add(item.key!)) {
+        throw ArgumentError("App bar controls require unique keys");
+      }
+      if (item.policy.order case final order? when order < 0) {
+        throw ArgumentError("Collapse order cannot be negative");
+      }
+    }
+    for (final extent in [spacing, minimumNavigationExtent, debugReservation]) {
+      if (!extent.isFinite || extent < 0) {
+        throw ArgumentError("App bar extents must be finite and nonnegative");
+      }
+    }
+  }
+  final Widget navigation;
+  final AppBarItem primary;
+  final List<AppBarItem> actions;
   final double spacing;
+  final double minimumNavigationExtent;
+  final double debugReservation;
 
   @override
-  Iterable<CustomAppBarSlot> get slots => CustomAppBarSlot.values;
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) => SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: _AppBarRenderLayout(
+        availableWidth: constraints.maxWidth,
+        height: constraints.maxHeight,
+        spacing: spacing,
+        minimumNavigationExtent: minimumNavigationExtent,
+        debugReservation: debugReservation,
+        children: [
+          _AppBarPlaced(
+            key: const ValueKey("navigation"),
+            policy: const AppBarItemPolicy.fixed(),
+            child: AppBarItemGate(child: navigation),
+          ),
+          _AppBarPlaced(
+            key: primary.key,
+            policy: primary.policy,
+            child: primary,
+          ),
+          for (final item in actions)
+            _AppBarPlaced(key: item.key, policy: item.policy, child: item),
+        ],
+      ),
+    ),
+  );
+}
 
+class _AppBarParentData extends ContainerBoxParentData<RenderBox> {
+  AppBarItemPolicy policy = const AppBarItemPolicy.fixed();
+  AppBarItemAllocation allocation = const AppBarItemAllocation.hidden();
+}
+
+class _AppBarPlaced extends ParentDataWidget<_AppBarParentData> {
+  const _AppBarPlaced({required this.policy, required super.child, super.key});
+  final AppBarItemPolicy policy;
   @override
-  Widget childForSlot(CustomAppBarSlot slot) {
-    return switch (slot) {
-      CustomAppBarSlot.leading => leading,
-      CustomAppBarSlot.search => search,
-      CustomAppBarSlot.trailing => trailing,
-      CustomAppBarSlot.compactSearch => compactSearch,
-      CustomAppBarSlot.compactTrailing => compactTrailing,
-    };
+  void applyParentData(RenderObject renderObject) {
+    final data = renderObject.parentData! as _AppBarParentData;
+    if (data.policy == policy) return;
+    data.policy = policy;
+    renderObject.parent?.markNeedsLayout();
   }
 
   @override
-  RenderCustomAppBarLayout createRenderObject(BuildContext context) {
-    return RenderCustomAppBarLayout(spacing: spacing);
-  }
+  Type get debugTypicalAncestorWidgetClass => _AppBarRenderLayout;
+}
 
+class _AppBarRenderLayout extends MultiChildRenderObjectWidget {
+  const _AppBarRenderLayout({
+    required this.availableWidth,
+    required this.height,
+    required this.spacing,
+    required this.minimumNavigationExtent,
+    required this.debugReservation,
+    required super.children,
+  });
+  final double availableWidth;
+  final double height;
+  final double spacing;
+  final double minimumNavigationExtent;
+  final double debugReservation;
+  @override
+  RenderCustomAppBarLayout createRenderObject(BuildContext context) =>
+      RenderCustomAppBarLayout(
+        availableWidth: availableWidth,
+        height: height,
+        spacing: spacing,
+        minimumNavigationExtent: minimumNavigationExtent,
+        debugReservation: debugReservation,
+      );
   @override
   void updateRenderObject(
     BuildContext context,
     RenderCustomAppBarLayout renderObject,
   ) {
-    renderObject.spacing = spacing;
+    renderObject.configure(
+      availableWidth: availableWidth,
+      height: height,
+      spacing: spacing,
+      minimumNavigationExtent: minimumNavigationExtent,
+      debugReservation: debugReservation,
+    );
   }
 }
 
-/// Measures and positions the slots owned by [CustomAppBarLayout].
+/// Owns geometry for the canonical children, without feature or popup policy.
 class RenderCustomAppBarLayout extends RenderBox
-    with SlottedContainerRenderObjectMixin<CustomAppBarSlot, RenderBox> {
-  RenderCustomAppBarLayout({required this._spacing});
-
-  double _spacing;
-  double get spacing => _spacing;
-  set spacing(double value) {
-    if (_spacing == value) return;
-    _spacing = value;
+    with
+        ContainerRenderObjectMixin<RenderBox, _AppBarParentData>,
+        RenderBoxContainerDefaultsMixin<RenderBox, _AppBarParentData> {
+  RenderCustomAppBarLayout({
+    required double availableWidth,
+    required double height,
+    required double spacing,
+    required double minimumNavigationExtent,
+    required double debugReservation,
+  }) {
+    configure(
+      availableWidth: availableWidth,
+      height: height,
+      spacing: spacing,
+      minimumNavigationExtent: minimumNavigationExtent,
+      debugReservation: debugReservation,
+    );
+  }
+  late double _availableWidth;
+  late double _height;
+  late double _spacing;
+  late double _minimumNavigationExtent;
+  late double _debugReservation;
+  void configure({
+    required double availableWidth,
+    required double height,
+    required double spacing,
+    required double minimumNavigationExtent,
+    required double debugReservation,
+  }) {
+    if (!availableWidth.isFinite || !height.isFinite || height <= 0) {
+      throw ArgumentError(
+        "The app bar needs bounded width and positive height",
+      );
+    }
+    _availableWidth = availableWidth;
+    _height = height;
+    _spacing = spacing;
+    _minimumNavigationExtent = minimumNavigationExtent;
+    _debugReservation = debugReservation;
     markNeedsLayout();
   }
 
-  bool _useCompactSlots = false;
+  @override
+  void setupParentData(RenderBox child) {
+    if (child.parentData is! _AppBarParentData) {
+      child.parentData = _AppBarParentData();
+    }
+  }
 
-  RenderBox get _leading => childForSlot(CustomAppBarSlot.leading)!;
-  RenderBox get _search => childForSlot(CustomAppBarSlot.search)!;
-  RenderBox get _trailing => childForSlot(CustomAppBarSlot.trailing)!;
-  RenderBox get _compactSearch => childForSlot(CustomAppBarSlot.compactSearch)!;
-  RenderBox get _compactTrailing =>
-      childForSlot(CustomAppBarSlot.compactTrailing)!;
-
-  RenderBox get _activeSearch => _useCompactSlots ? _compactSearch : _search;
-  RenderBox get _activeTrailing =>
-      _useCompactSlots ? _compactTrailing : _trailing;
+  List<RenderBox> get _children {
+    final result = <RenderBox>[];
+    for (
+      var child = firstChild;
+      child != null;
+      child = (child.parentData! as _AppBarParentData).nextSibling
+    ) {
+      result.add(child);
+    }
+    return result;
+  }
 
   @override
   void performLayout() {
-    size = constraints.biggest;
-    final looseConstraints = BoxConstraints.loose(size);
-
+    final children = _children;
     for (final child in children) {
-      child.layout(looseConstraints, parentUsesSize: true);
-      (child.parentData! as BoxParentData).offset = Offset.zero;
+      child.layout(
+        AppBarItemConstraints(
+          phase: AppBarAllocationPhase.measuring,
+          maxHeight: _height,
+        ),
+        parentUsesSize: true,
+      );
+    }
+    AppBarItemMeasurement measure(RenderBox child) => AppBarItemMeasurement(
+      policy: (child.parentData! as _AppBarParentData).policy,
+      width: child.size.width,
+    );
+    final fit =
+        AppBarMeasurements(
+          navigationWidth: children[0].size.width,
+          primary: measure(children[1]),
+          actions: children.skip(2).map(measure).toList(),
+        ).fit(
+          availableWidth: _availableWidth,
+          compactExtent: _height,
+          spacing: _spacing,
+          minimumNavigationExtent: _minimumNavigationExtent,
+          debugReservation: _debugReservation,
+        );
+    size = constraints.constrain(Size(fit.contentWidth, _height));
+    final allocations = [
+      AppBarItemAllocation.visible(fit.navigationWidth),
+      fit.primary,
+      ...fit.actions,
+    ];
+    for (var index = 0; index < children.length; index++) {
+      final child = children[index];
+      final allocation = allocations[index];
+      (child.parentData! as _AppBarParentData).allocation = allocation;
+      final visible =
+          allocation is VisibleAppBarAllocation && allocation.width > 0;
+      child.layout(
+        AppBarItemConstraints(
+          phase: visible
+              ? AppBarAllocationPhase.visible
+              : AppBarAllocationPhase.hidden,
+          minWidth: visible ? allocation.width : child.size.width,
+          maxWidth: visible ? allocation.width : child.size.width,
+          maxHeight: _height,
+        ),
+        parentUsesSize: true,
+      );
+    }
+    void position(RenderBox child, double x) {
+      (child.parentData! as _AppBarParentData).offset = Offset(
+        x,
+        (_height - child.size.height) / 2,
+      );
     }
 
-    _useCompactSlots =
-        _requiredWidth(_leading, _search, _trailing) > size.width;
-
-    final activeSearch = _activeSearch;
-    final activeTrailing = _activeTrailing;
-    final fixedWidth =
-        activeSearch.size.width + activeTrailing.size.width + spacing * 2;
-    final leadingWidth = (size.width - fixedWidth).clamp(0.0, size.width);
-    _leading.layout(
-      BoxConstraints(maxWidth: leadingWidth, maxHeight: size.height),
-      parentUsesSize: true,
-    );
-
-    final leadingRight = _leading.size.width;
-    final trailingX = size.width - activeTrailing.size.width;
-    final minimumSearchX = leadingRight + spacing;
-    final maximumSearchX = trailingX - spacing - activeSearch.size.width;
-    final centeredSearchX = (size.width - activeSearch.size.width) / 2;
-    final searchX = _useCompactSlots
-        ? maximumSearchX
-        : maximumSearchX < minimumSearchX
-        ? minimumSearchX
-        : centeredSearchX.clamp(minimumSearchX, maximumSearchX);
-
-    _position(_leading, 0);
-    _position(activeSearch, searchX);
-    _position(activeTrailing, trailingX);
-  }
-
-  double _requiredWidth(
-    RenderBox leading,
-    RenderBox search,
-    RenderBox trailing,
-  ) {
-    return leading.size.width +
-        search.size.width +
-        trailing.size.width +
-        spacing * 2;
-  }
-
-  void _position(RenderBox child, double x) {
-    (child.parentData! as BoxParentData).offset = Offset(
-      x,
-      (size.height - child.size.height) / 2,
+    position(children.first, 0);
+    var right = size.width - _debugReservation;
+    var hasAction = false;
+    for (var index = children.length - 1; index >= 2; index--) {
+      if (allocations[index].width == 0) continue;
+      if (hasAction) right -= _spacing;
+      right -= allocations[index].width;
+      position(children[index], right);
+      hasAction = true;
+    }
+    final minimumX =
+        fit.navigationWidth + (fit.navigationWidth > 0 ? _spacing : 0);
+    final maximumX = right - (hasAction ? _spacing : 0) - fit.primary.width;
+    position(
+      children[1],
+      ((size.width - fit.primary.width) / 2).clamp(
+        minimumX,
+        max(minimumX, maximumX),
+      ),
     );
   }
 
   @override
-  bool paintsChild(RenderBox child) {
-    return child == _leading ||
-        child == _activeSearch ||
-        child == _activeTrailing;
-  }
-
+  bool paintsChild(RenderBox child) =>
+      (child.parentData! as _AppBarParentData).allocation.width > 0;
   @override
   void paint(PaintingContext context, Offset offset) {
-    for (final child in [_leading, _activeSearch, _activeTrailing]) {
-      final parentData = child.parentData! as BoxParentData;
-      context.paintChild(child, offset + parentData.offset);
+    for (final child in _children.where(paintsChild)) {
+      context.paintChild(
+        child,
+        offset + (child.parentData! as _AppBarParentData).offset,
+      );
     }
   }
 
   @override
   bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
-    for (final child in [_activeTrailing, _activeSearch, _leading]) {
-      final parentData = child.parentData! as BoxParentData;
-      final hit = result.addWithPaintOffset(
-        offset: parentData.offset,
+    for (final child in _children.reversed.where(paintsChild)) {
+      final data = child.parentData! as _AppBarParentData;
+      if (result.addWithPaintOffset(
+        offset: data.offset,
         position: position,
-        hitTest: (result, transformed) {
-          return child.hitTest(result, position: transformed);
-        },
-      );
-      if (hit) return true;
+        hitTest: (result, point) => child.hitTest(result, position: point),
+      )) {
+        return true;
+      }
     }
     return false;
   }
 
   @override
   void applyPaintTransform(RenderBox child, Matrix4 transform) {
-    final parentData = child.parentData! as BoxParentData;
-    transform.translateByDouble(
-      parentData.offset.dx,
-      parentData.offset.dy,
-      0,
-      1,
-    );
+    final offset = (child.parentData! as _AppBarParentData).offset;
+    transform.translateByDouble(offset.dx, offset.dy, 0, 1);
   }
 
   @override
   void visitChildrenForSemantics(RenderObjectVisitor visitor) {
-    visitor(_leading);
-    visitor(_activeSearch);
-    visitor(_activeTrailing);
+    _children.where(paintsChild).forEach(visitor);
   }
 }

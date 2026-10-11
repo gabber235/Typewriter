@@ -488,6 +488,7 @@ private class RecordingTypeArgumentOperations : TypeArgumentOperations {
 }
 
 private data object MissingSnapshotStore : AuthoringViewStore {
+    override val changes = kotlinx.coroutines.flow.MutableStateFlow(0L)
     override fun <T> read(block: (com.typewritermc.realm.authoring.AuthoringView) -> T): T = error("Not used")
 
     override fun capture(): AuthoringLease = error("No current view")

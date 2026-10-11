@@ -15,252 +15,12 @@ import "dart:core" as _core;
 
 import "package:skir_client/skir_client.dart" as _skir;
 
+import "./compilation_root.dart" as _lib_editor_v1_compilation_root;
 import "./publication.dart" as _lib_editor_v1_publication;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 import "../../kernel/v1/bounded_transfer.dart"
     as _lib_kernel_v1_bounded_transfer;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
-
-// struct CompilationProjectionId
-
-sealed class CompilationProjectionId_orMutable {
-  _core.String get value;
-
-  CompilationProjectionId toFrozen();
-}
-
-/// Deeply immutable.
-final class CompilationProjectionId
-    implements CompilationProjectionId_orMutable {
-  @_core.override
-  final _core.String value;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory CompilationProjectionId({required _core.String value}) =>
-      CompilationProjectionId._(value);
-
-  CompilationProjectionId._(this.value);
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = CompilationProjectionId._("");
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static CompilationProjectionId_mutable mutable() =>
-      CompilationProjectionId_mutable._("");
-
-  /// Returns this instance (no operation).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  CompilationProjectionId toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  CompilationProjectionId_mutable toMutable() =>
-      CompilationProjectionId_mutable._(this.value);
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! CompilationProjectionId) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [this.value];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `CompilationProjectionId` instances.
-  static _skir.StructSerializer<
-    CompilationProjectionId,
-    CompilationProjectionId_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "value",
-        "value",
-        0,
-        _skir.Serializers.string,
-        "",
-        (it) => it.value,
-        (it, v) => it.value = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/compiled_content.skir:CompilationProjectionId",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (CompilationProjectionId_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [CompilationProjectionId].
-final class CompilationProjectionId_mutable
-    implements CompilationProjectionId_orMutable {
-  _core.String value;
-  _skir.internal__UnrecognizedFields? _u;
-
-  CompilationProjectionId_mutable._(this.value);
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  CompilationProjectionId toFrozen() =>
-      CompilationProjectionId(value: this.value).._u = this._u;
-}
-
-// struct CompilationRoot
-
-sealed class CompilationRoot_orMutable {
-  CompilationProjectionId_orMutable get projection;
-  _lib_editor_v1_type_catalog.ResourceId_orMutable get resource;
-
-  CompilationRoot toFrozen();
-}
-
-/// Deeply immutable.
-final class CompilationRoot implements CompilationRoot_orMutable {
-  @_core.override
-  final CompilationProjectionId projection;
-  @_core.override
-  final _lib_editor_v1_type_catalog.ResourceId resource;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory CompilationRoot({
-    required CompilationProjectionId_orMutable projection,
-    required _lib_editor_v1_type_catalog.ResourceId_orMutable resource,
-  }) => CompilationRoot._(projection.toFrozen(), resource.toFrozen());
-
-  CompilationRoot._(this.projection, this.resource);
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = CompilationRoot._(
-    CompilationProjectionId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static CompilationRoot_mutable mutable() => CompilationRoot_mutable._(
-    CompilationProjectionId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResourceId.defaultInstance,
-  );
-
-  /// Returns this instance (no operation).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  CompilationRoot toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  CompilationRoot_mutable toMutable() =>
-      CompilationRoot_mutable._(this.projection, this.resource);
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! CompilationRoot) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [this.projection, this.resource];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `CompilationRoot` instances.
-  static _skir.StructSerializer<CompilationRoot, CompilationRoot_mutable>
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "projection",
-        "projection",
-        0,
-        CompilationProjectionId.serializer,
-        "",
-        (it) => it.projection,
-        (it, v) => it.projection = v,
-      );
-      _serializerBuilder.addField(
-        "resource",
-        "resource",
-        1,
-        _lib_editor_v1_type_catalog.ResourceId.serializer,
-        "",
-        (it) => it.resource,
-        (it, v) => it.resource = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/compiled_content.skir:CompilationRoot",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (CompilationRoot_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [CompilationRoot].
-final class CompilationRoot_mutable implements CompilationRoot_orMutable {
-  CompilationProjectionId_orMutable projection;
-  _lib_editor_v1_type_catalog.ResourceId_orMutable resource;
-  _skir.internal__UnrecognizedFields? _u;
-
-  CompilationRoot_mutable._(this.projection, this.resource);
-
-  /// If the value of [projection] is already mutable, returns it as is.
-  /// Otherwise, makes a mutable copy, assigns it back to [projection] and returns it.
-  CompilationProjectionId_mutable get mutableProjection {
-    final value = this.projection;
-    if (value is CompilationProjectionId_mutable) {
-      return value;
-    } else {
-      return this.projection = (value as CompilationProjectionId).toMutable();
-    }
-  }
-
-  /// If the value of [resource] is already mutable, returns it as is.
-  /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
-  _lib_editor_v1_type_catalog.ResourceId_mutable get mutableResource {
-    final value = this.resource;
-    if (value is _lib_editor_v1_type_catalog.ResourceId_mutable) {
-      return value;
-    } else {
-      return this.resource = (value as _lib_editor_v1_type_catalog.ResourceId)
-          .toMutable();
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  CompilationRoot toFrozen() =>
-      CompilationRoot(projection: this.projection, resource: this.resource)
-        .._u = this._u;
-}
 
 // struct CompiledBlobPointer
 
@@ -380,7 +140,7 @@ final class CompiledBlobPointer_mutable
 // struct CompiledArtifactReference
 
 sealed class CompiledArtifactReference_orMutable {
-  CompilationRoot_orMutable get root;
+  _lib_editor_v1_compilation_root.CompilationRoot_orMutable get root;
   _core.int get formatRevision;
   _core.String get mediaType;
   _core.String get semanticDigest;
@@ -392,7 +152,7 @@ sealed class CompiledArtifactReference_orMutable {
 final class CompiledArtifactReference
     implements CompiledArtifactReference_orMutable {
   @_core.override
-  final CompilationRoot root;
+  final _lib_editor_v1_compilation_root.CompilationRoot root;
   @_core.override
   final _core.int formatRevision;
   @_core.override
@@ -402,7 +162,7 @@ final class CompiledArtifactReference
   _skir.internal__UnrecognizedFields? _u;
 
   factory CompiledArtifactReference({
-    required CompilationRoot_orMutable root,
+    required _lib_editor_v1_compilation_root.CompilationRoot_orMutable root,
     required _core.int formatRevision,
     required _core.String mediaType,
     required _core.String semanticDigest,
@@ -422,7 +182,7 @@ final class CompiledArtifactReference
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CompiledArtifactReference._(
-    CompilationRoot.defaultInstance,
+    _lib_editor_v1_compilation_root.CompilationRoot.defaultInstance,
     0,
     "",
     "",
@@ -432,7 +192,7 @@ final class CompiledArtifactReference
   /// Fields are initialized to their default values.
   static CompiledArtifactReference_mutable mutable() =>
       CompiledArtifactReference_mutable._(
-        CompilationRoot.defaultInstance,
+        _lib_editor_v1_compilation_root.CompilationRoot.defaultInstance,
         0,
         "",
         "",
@@ -486,7 +246,7 @@ final class CompiledArtifactReference
         "root",
         "root",
         0,
-        CompilationRoot.serializer,
+        _lib_editor_v1_compilation_root.CompilationRoot.serializer,
         "",
         (it) => it.root,
         (it, v) => it.root = v,
@@ -537,7 +297,7 @@ final class CompiledArtifactReference
 /// Mutable version of [CompiledArtifactReference].
 final class CompiledArtifactReference_mutable
     implements CompiledArtifactReference_orMutable {
-  CompilationRoot_orMutable root;
+  _lib_editor_v1_compilation_root.CompilationRoot_orMutable root;
   _core.int formatRevision;
   _core.String mediaType;
   _core.String semanticDigest;
@@ -552,12 +312,14 @@ final class CompiledArtifactReference_mutable
 
   /// If the value of [root] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [root] and returns it.
-  CompilationRoot_mutable get mutableRoot {
+  _lib_editor_v1_compilation_root.CompilationRoot_mutable get mutableRoot {
     final value = this.root;
-    if (value is CompilationRoot_mutable) {
+    if (value is _lib_editor_v1_compilation_root.CompilationRoot_mutable) {
       return value;
     } else {
-      return this.root = (value as CompilationRoot).toMutable();
+      return this.root =
+          (value as _lib_editor_v1_compilation_root.CompilationRoot)
+              .toMutable();
     }
   }
 
@@ -1252,7 +1014,7 @@ final class CompiledResourceState_activeWrapper
 // struct CompiledResourceStatus
 
 sealed class CompiledResourceStatus_orMutable {
-  CompilationRoot_orMutable get root;
+  _lib_editor_v1_compilation_root.CompilationRoot_orMutable get root;
   CompiledResourceState get state;
 
   CompiledResourceStatus toFrozen();
@@ -1261,13 +1023,13 @@ sealed class CompiledResourceStatus_orMutable {
 /// Deeply immutable.
 final class CompiledResourceStatus implements CompiledResourceStatus_orMutable {
   @_core.override
-  final CompilationRoot root;
+  final _lib_editor_v1_compilation_root.CompilationRoot root;
   @_core.override
   final CompiledResourceState state;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CompiledResourceStatus({
-    required CompilationRoot_orMutable root,
+    required _lib_editor_v1_compilation_root.CompilationRoot_orMutable root,
     required CompiledResourceState state,
   }) => CompiledResourceStatus._(root.toFrozen(), state);
 
@@ -1275,7 +1037,7 @@ final class CompiledResourceStatus implements CompiledResourceStatus_orMutable {
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CompiledResourceStatus._(
-    CompilationRoot.defaultInstance,
+    _lib_editor_v1_compilation_root.CompilationRoot.defaultInstance,
     CompiledResourceState.unknown,
   );
 
@@ -1283,7 +1045,7 @@ final class CompiledResourceStatus implements CompiledResourceStatus_orMutable {
   /// Fields are initialized to their default values.
   static CompiledResourceStatus_mutable mutable() =>
       CompiledResourceStatus_mutable._(
-        CompilationRoot.defaultInstance,
+        _lib_editor_v1_compilation_root.CompilationRoot.defaultInstance,
         CompiledResourceState.unknown,
       );
 
@@ -1325,7 +1087,7 @@ final class CompiledResourceStatus implements CompiledResourceStatus_orMutable {
         "root",
         "root",
         0,
-        CompilationRoot.serializer,
+        _lib_editor_v1_compilation_root.CompilationRoot.serializer,
         "",
         (it) => it.root,
         (it, v) => it.root = v,
@@ -1358,7 +1120,7 @@ final class CompiledResourceStatus implements CompiledResourceStatus_orMutable {
 /// Mutable version of [CompiledResourceStatus].
 final class CompiledResourceStatus_mutable
     implements CompiledResourceStatus_orMutable {
-  CompilationRoot_orMutable root;
+  _lib_editor_v1_compilation_root.CompilationRoot_orMutable root;
   CompiledResourceState state;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -1366,12 +1128,14 @@ final class CompiledResourceStatus_mutable
 
   /// If the value of [root] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [root] and returns it.
-  CompilationRoot_mutable get mutableRoot {
+  _lib_editor_v1_compilation_root.CompilationRoot_mutable get mutableRoot {
     final value = this.root;
-    if (value is CompilationRoot_mutable) {
+    if (value is _lib_editor_v1_compilation_root.CompilationRoot_mutable) {
       return value;
     } else {
-      return this.root = (value as CompilationRoot).toMutable();
+      return this.root =
+          (value as _lib_editor_v1_compilation_root.CompilationRoot)
+              .toMutable();
     }
   }
 
@@ -1520,7 +1284,7 @@ sealed class CompilationStatusSelection {
 
   /// Create a 'supplied_roots' variant wrapping around the given value.
   factory CompilationStatusSelection.wrapSuppliedRoots(
-    _core.Iterable<CompilationRoot> value,
+    _core.Iterable<_lib_editor_v1_compilation_root.CompilationRoot> value,
   ) => CompilationStatusSelection_suppliedRootsWrapper._(value);
 
   /// Returns the kind of variant held by this CompilationStatusSelection.
@@ -1540,7 +1304,9 @@ sealed class CompilationStatusSelection {
         2,
         "supplied_roots",
         "wrapSuppliedRoots",
-        _skir.Serializers.iterable(CompilationRoot.serializer),
+        _skir.Serializers.iterable(
+          _lib_editor_v1_compilation_root.CompilationRoot.serializer,
+        ),
         "",
         CompilationStatusSelection_suppliedRootsWrapper._,
         (it) => it.value,
@@ -1628,7 +1394,7 @@ sealed class _CompilationStatusSelection_wrapper
 
 final class CompilationStatusSelection_suppliedRootsWrapper
     extends _CompilationStatusSelection_wrapper {
-  final _core.Iterable<CompilationRoot> value;
+  final _core.Iterable<_lib_editor_v1_compilation_root.CompilationRoot> value;
 
   CompilationStatusSelection_suppliedRootsWrapper._(this.value);
 

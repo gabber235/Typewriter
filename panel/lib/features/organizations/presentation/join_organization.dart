@@ -24,13 +24,6 @@ class _JoinOrganization extends HookConsumerWidget {
     final hasActiveRequests = activeRequests.isNotEmpty;
     final hasReachedLimit = activeRequests.length >= _maxPendingRequests;
 
-    final animation = useSliverAnimatedList(
-      items: activeRequests,
-      identity: (item) => item.requestId,
-      removedItemBuilder: (context, item, animation) =>
-          _child(context, item, ref, animation, ignorePointer: true),
-    );
-
     Future<void> submitJoinRequest() => _submitJoinRequest(
       context: context,
       ref: ref,
@@ -89,65 +82,37 @@ class _JoinOrganization extends HookConsumerWidget {
             ),
           ),
         ),
-        SliverToBoxAdapter(
-          child: ElasticMessageSwitcher(
-            child: hasReachedLimit
-                ? StaggerEntrance(
-                    child: Padding(
-                      padding: EdgeInsets.only(top: context.spacing.space2),
-                      child: Text(
-                        "You have reached the maximum of $_maxPendingRequests pending requests. Please wait for approval or cancel an existing request.",
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.error,
-                        ),
+        SliverAnimatedContent(
+          child: hasReachedLimit
+              ? StaggerEntrance(
+                  child: Padding(
+                    padding: EdgeInsets.only(top: context.spacing.space2),
+                    child: Text(
+                      "You have reached the maximum of $_maxPendingRequests pending requests. Please wait for approval or cancel an existing request.",
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.error,
                       ),
                     ),
+                  ),
+                )
+              : null,
+        ),
+        spacer(hasActiveRequests ? 24 : 0),
+        SliverStaggerEntrance(
+          sliver: SliverAnimatedContent(
+            child: hasActiveRequests
+                ? Align(
+                    alignment: .centerLeft,
+                    child: SectionTitle(title: "Pending requests"),
                   )
                 : null,
           ),
         ),
-        spacer(hasActiveRequests ? 24 : 0),
-        SliverStaggerEntrance(
-          sliver: SliverToBoxAdapter(
-            child: Align(
-              alignment: .centerLeft,
-              child: ElasticMessageSwitcher(
-                child: hasActiveRequests
-                    ? SectionTitle(title: "Pending requests")
-                    : const SizedBox.shrink(),
-              ),
-            ),
-          ),
-        ),
         spacer(hasActiveRequests ? 8 : 0),
-        SliverAnimatedList(
-          key: animation.key,
-          initialItemCount: animation.items.length,
-          itemBuilder: (context, index, animation) =>
-              _child(context, activeRequests[index], ref, animation),
-        ),
-      ],
-    );
-  }
-
-  Widget spacer(double height) => SliverToBoxAdapter(
-    child: AnimatedContainer(height: height, duration: 300.ms),
-  );
-
-  Widget _child(
-    BuildContext context,
-    UserJoinRequest item,
-    WidgetRef ref,
-    Animation<double> animation, {
-    bool ignorePointer = false,
-  }) {
-    return IgnorePointer(
-      key: ValueKey(item.organizationId),
-      ignoring: ignorePointer,
-      child: ElasticTransition(
-        animation: animation,
-        child: StaggerEntrance(
-          child: _PendingJoinRequestTile(
+        AnimatedSliverList<UserJoinRequest>(
+          items: activeRequests,
+          identity: (item) => item.requestId,
+          itemBuilder: (context, item) => _PendingJoinRequestTile(
             request: item,
             onCancel: () =>
                 _cancelJoinRequest(context: context, ref: ref, request: item),
@@ -156,9 +121,11 @@ class _JoinOrganization extends HookConsumerWidget {
                 .cleanupExpiredRequests(),
           ),
         ),
-      ),
+      ],
     );
   }
+
+  Widget spacer(double height) => SliverAnimatedGap(extent: height);
 
   String _extractCode(String input) {
     final trimmedInput = input.trim();

@@ -2,14 +2,13 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Provides the shared route app bar for desktop and mobile layouts.
 ///
-/// [leading] stays horizontally scrollable when space is constrained. Measured
-/// child widths select the full search and trailing content or compact search
-/// and sidebar controls. The bar also reserves space for mutation activity.
-class CustomAppBar extends HookConsumerWidget implements PreferredSizeWidget {
+/// Route shells compose navigation and controls once. Measured widths shorten
+/// ordered groups while each control retains its popup and focus identity.
+class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({
-    required this.leading,
-    required this.sidebar,
-    this.trailing,
+    required this.navigation,
+    required this.primary,
+    required this.actions,
     this.backgroundColor,
     this.height = 48.0,
     super.key,
@@ -21,20 +20,20 @@ class CustomAppBar extends HookConsumerWidget implements PreferredSizeWidget {
   /// Bar height in logical pixels.
   final double height;
 
-  /// Leading controls and route context.
-  final List<Widget> leading;
+  /// Route owned workspace navigation.
+  final Widget navigation;
 
-  /// Optional desktop content shown when the bar has sufficient width.
-  final Widget? trailing;
+  /// One persistent primary control.
+  final AppBarItem primary;
 
-  /// Sidebar content presented by the mobile menu action.
-  final Widget sidebar;
+  /// Keyed controls using ordered fitting groups.
+  final List<AppBarItem> actions;
 
   @override
   Size get preferredSize => Size.fromHeight(height);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final color =
         backgroundColor ??
         Theme.of(context).appBarTheme.backgroundColor ??
@@ -65,36 +64,10 @@ class CustomAppBar extends HookConsumerWidget implements PreferredSizeWidget {
                 ),
                 child: CustomAppBarLayout(
                   spacing: context.spacing.space2,
-                  leading: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      spacing: context.spacing.space2,
-                      children: leading,
-                    ),
-                  ),
-                  search: const PrimarySearchButton(),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    spacing: context.spacing.space2,
-                    children: [
-                      const MutationActivityButton(),
-                      ?trailing,
-                      if (context.debugShowCheckedModeBanner)
-                        const SizedBox(width: 40),
-                    ],
-                  ),
-                  compactSearch: const PrimarySearchButton(compact: true),
-                  compactTrailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    spacing: context.spacing.space2,
-                    children: [
-                      const MutationActivityButton(),
-                      _MobileSidebarButton(sidebar: sidebar),
-                      if (context.debugShowCheckedModeBanner)
-                        const SizedBox(width: 40),
-                    ],
-                  ),
+                  navigation: navigation,
+                  primary: primary,
+                  actions: actions,
+                  debugReservation: context.debugShowCheckedModeBanner ? 40 : 0,
                 ),
               ),
             ),
@@ -105,14 +78,16 @@ class CustomAppBar extends HookConsumerWidget implements PreferredSizeWidget {
   }
 }
 
-class _MobileSidebarButton extends StatelessWidget {
-  const _MobileSidebarButton({required this.sidebar});
+/// Opens the route supplied navigation surface with its provider scope intact.
+class SidebarMenuButton extends StatelessWidget {
+  const SidebarMenuButton({required this.sidebar, super.key});
 
   final Widget sidebar;
 
   @override
   Widget build(BuildContext context) {
     return IconButton(
+      tooltip: "Open navigation",
       icon: const Icon(Icons.menu),
       onPressed: () {
         showModalBottomSheet(
@@ -164,4 +139,31 @@ class _MobileSidebarMenu extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Composes workspace selectors with shared spacing and horizontal scrolling.
+///
+/// Route selection and selector popup ownership remain with each child.
+class AppBarBreadcrumbs extends StatelessWidget {
+  const AppBarBreadcrumbs({required this.children, super.key});
+  final List<Widget> children;
+  @override
+  Widget build(BuildContext context) => SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      spacing: context.spacing.space2,
+      children: [
+        for (var index = 0; index < children.length; index++) ...[
+          if (index > 0)
+            Icones(
+              MaterialSymbols.chevron_right,
+              size: 16,
+              color: context.colors.contentSecondary,
+            ),
+          children[index],
+        ],
+      ],
+    ),
+  );
 }

@@ -96,6 +96,11 @@ class ActionShortcuts extends _$ActionShortcuts {
     state = updated;
   }
 
+  /// Retires an owner after unmount, including when its provider scope closes.
+  void unregister(GlobalKey key) {
+    if (ref.mounted) register(key, const []);
+  }
+
   /// Removes registered actions whose owning widget has unmounted.
   void sweep() {
     if (state.isEmpty) return;
@@ -239,6 +244,8 @@ final _intentActionFactories =
           CallbackAction<LastItemIntent>(onInvoke: (_) => onInvoke(ref)),
       PrimaryActionIntent: (onInvoke, ref) =>
           CallbackAction<PrimaryActionIntent>(onInvoke: (_) => onInvoke(ref)),
+      OpenRealmInboxIntent: (onInvoke, ref) =>
+          CallbackAction<OpenRealmInboxIntent>(onInvoke: (_) => onInvoke(ref)),
       OpenSearchIntent: (onInvoke, ref) =>
           CallbackAction<OpenSearchIntent>(onInvoke: (_) => onInvoke(ref)),
     };
@@ -265,6 +272,15 @@ class ActionSet extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final regKey = useGlobalKey(debugLabel: "ActionSet");
+    final registry = ref.read(actionShortcutsProvider.notifier);
+    useEffect(
+      () => () {
+        scheduleMicrotask(() {
+          registry.unregister(regKey);
+        });
+      },
+      [registry, regKey],
+    );
     useDelayedExecution(() {
       if (!context.mounted) return;
       ref.read(actionShortcutsProvider.notifier).register(regKey, shortcuts);

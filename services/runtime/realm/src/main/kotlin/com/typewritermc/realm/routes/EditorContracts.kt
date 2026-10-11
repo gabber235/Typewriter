@@ -6,6 +6,7 @@ import com.typewritermc.protocol.transport.generated.authoringCompiledChanged
 import com.typewritermc.protocol.transport.generated.authoringCompiledQuery
 import com.typewritermc.protocol.transport.generated.authoringCompiledStatusQuery
 import com.typewritermc.protocol.transport.generated.authoringEditCommit
+import com.typewritermc.protocol.transport.generated.authoringPublicationQuery
 import com.typewritermc.protocol.transport.generated.authoringPublicationWatch
 import com.typewritermc.protocol.transport.generated.authoringPublish
 import com.typewritermc.protocol.transport.generated.authoringSearch
@@ -36,7 +37,8 @@ import skirout.editor.v1.catalog.CatalogInvalidated
 import skirout.editor.v1.catalog.PrepareValueResult
 import skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse
 import skirout.editor.v1.compiled_content.QueryPublishedContentResponse
-import skirout.editor.v1.publication.PublicationReport
+import skirout.editor.v1.publication.PublicationViewChanged
+import skirout.editor.v1.publication.QueryPublicationViewResponse
 import skirout.editor.v1.publication.PublishAuthoringResponse
 import skirout.editor.v1.search.CancelRealmPresentationSearchResult
 import skirout.editor.v1.search.RealmPresentationSearchStatus
@@ -102,9 +104,10 @@ internal class EditorContracts(
     val queryCompiledResourceStatus =
         address.authoringCompiledStatusQuery(policy(QueryCompiledResourceStatusResponse.createInternalError()))
     val publishAuthoring = address.authoringPublish(policy(PublishAuthoringResponse.createInternalError()))
+    val queryPublicationView = address.authoringPublicationQuery(policy(QueryPublicationViewResponse.createInternalError()), responseClassifier())
     val watchPublication =
         address.authoringPublicationWatch(
-            policy(PublicationReport.partial(), responseClassifier(ResponseOutcome.INTERNAL_ERROR)),
+            policy(PublicationViewChanged.partial(), responseClassifier(ResponseOutcome.INTERNAL_ERROR)),
             responseClassifier(ResponseOutcome.SUCCESS),
         )
 }

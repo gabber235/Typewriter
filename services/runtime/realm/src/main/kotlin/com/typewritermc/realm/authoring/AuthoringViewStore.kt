@@ -30,6 +30,9 @@ import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.immutableMapCopy
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -135,6 +138,9 @@ internal fun AuthoredReadView.graphIndex(selection: RelationSelection): Captured
 
 /** Serializes current view installation and admission while leases preserve original read values. */
 interface AuthoringViewStore : AutoCloseable {
+    /** Signals installed or invalidated saved input. Readers still capture a retained view. */
+    val changes: StateFlow<Long>
+
     fun <T> read(block: (AuthoringView) -> T): T
 
     fun capture(): AuthoringLease
@@ -153,6 +159,8 @@ class InMemoryAuthoringViewStore(
     seed: AuthoringSeed,
 ) : AuthoringViewStore {
     private val lock = Any()
+    private val changed = MutableStateFlow(0L)
+    override val changes: StateFlow<Long> = changed.asStateFlow()
     private val roots = java.util.IdentityHashMap<ReadContext, RootRetention>()
     private var closed = false
     private var reload: (() -> AuthoringSeed)? = null
@@ -200,6 +208,7 @@ class InMemoryAuthoringViewStore(
             roots[view.readContext] = current
             before.current = false
             prune(before)
+            changed.value += 1
         }
 
     override fun close() {
@@ -217,6 +226,7 @@ class InMemoryAuthoringViewStore(
         synchronized(lock) {
             ensureOpen()
             this.reload = reload
+            changed.value += 1
         }
 
     private fun ensureCurrent() {

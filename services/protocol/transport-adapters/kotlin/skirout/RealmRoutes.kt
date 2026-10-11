@@ -24,6 +24,7 @@ import skirout.editor.v1.catalog.WatchEditorCatalog
 import skirout.editor.v1.compiled_content.QueryCompiledResourceStatus
 import skirout.editor.v1.compiled_content.QueryPublishedContent
 import skirout.editor.v1.publication.PublishAuthoring
+import skirout.editor.v1.publication.QueryPublicationView
 import skirout.editor.v1.publication.WatchPublication
 import skirout.editor.v1.search.CancelRealmPresentationSearch
 import skirout.editor.v1.search.WatchRealmPresentationSearch
@@ -171,10 +172,20 @@ fun RealmRouteScope.authoringPublish(policy: ResponsePolicy<skirout.editor.v1.pu
     failureSlug = ErrorSlug.of("editor-authoring-publish-failed"),
 )
 
+private val authoringPublicationQueryRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.authoring.publication.query".realmTemplate()
+private val authoringPublicationQueryUpdateAddress = "service.from.{realm}.organization.{organization}.realm.editor.authoring.publication.query".realmTemplate()
+fun RealmRouteScope.authoringPublicationQuery(policy: ResponsePolicy<skirout.editor.v1.publication.QueryPublicationViewResponse>, updates: ResponseClassifier<skirout.editor.v1.publication.QueryPublicationViewResponse>) = skirWatchContract(
+    method = QueryPublicationView, updateSerializer = skirout.editor.v1.publication.QueryPublicationViewResponse.serializer,
+    name = OperationName.of("editor.authoring.publication.query"), requestAddress = authoringPublicationQueryRequestAddress.subscribedAt(this),
+    updateAddress = authoringPublicationQueryUpdateAddress, initialPolicy = policy, updateClassifier = updates,
+    failureSlug = ErrorSlug.of("editor-authoring-publication-query-failed"),
+    updateAddressResolver = { routeScope, request: skirout.editor.v1.publication.QueryPublicationViewRequest -> MessageAddress.of("${authoringPublicationQueryUpdateAddress.render(routeScope).value}.${request.transferId}") },
+)
+
 private val authoringPublicationWatchRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.authoring.publication.watch".realmTemplate()
 private val authoringPublicationWatchUpdateAddress = "service.from.{realm}.organization.{organization}.realm.editor.authoring.publication.watch".realmTemplate()
-fun RealmRouteScope.authoringPublicationWatch(policy: ResponsePolicy<skirout.editor.v1.publication.PublicationReport>, updates: ResponseClassifier<skirout.editor.v1.publication.PublicationReport>) = skirWatchContract(
-    method = WatchPublication, updateSerializer = skirout.editor.v1.publication.PublicationReport.serializer,
+fun RealmRouteScope.authoringPublicationWatch(policy: ResponsePolicy<skirout.editor.v1.publication.PublicationViewChanged>, updates: ResponseClassifier<skirout.editor.v1.publication.PublicationViewChanged>) = skirWatchContract(
+    method = WatchPublication, updateSerializer = skirout.editor.v1.publication.PublicationViewChanged.serializer,
     name = OperationName.of("editor.authoring.publication.watch"), requestAddress = authoringPublicationWatchRequestAddress.subscribedAt(this),
     updateAddress = authoringPublicationWatchUpdateAddress, initialPolicy = policy, updateClassifier = updates,
     failureSlug = ErrorSlug.of("editor-authoring-publication-watch-failed"),

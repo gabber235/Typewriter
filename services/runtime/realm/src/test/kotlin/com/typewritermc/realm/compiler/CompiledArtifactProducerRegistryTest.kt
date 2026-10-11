@@ -4,6 +4,9 @@ import com.typewritermc.engine.CompilationProjectionId
 import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.ContentDigest
+import com.typewritermc.engine.CompilationResult
+import com.typewritermc.engine.CompileDiagnostic
+import com.typewritermc.engine.CompileDiagnosticSeverity
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.checking.TestCatalogLease
@@ -14,7 +17,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 
 val CompiledArtifactProducerRegistryTest by testSuite {
-    test("one blocked producer prevents a partial ready batch and every producer receives the retained inputs") {
+    test("one blocked producer retains a partial ready batch and every producer receives the retained inputs") {
         val views = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(emptyMap()))
         views.capture().use { capture ->
             val inputs = CompilationInputs(capture.root, emptyList())
@@ -22,17 +25,19 @@ val CompiledArtifactProducerRegistryTest by testSuite {
             val ready =
                 producer("fixture.ready", "application/ready") { incoming ->
                     received += incoming
-                    CompilationOutcome.Ready(listOf(artifact("fixture.ready", "application/ready")))
+                    listOf(CompilationResult.Success(artifact("fixture.ready", "application/ready")))
                 }
             val blocked =
                 producer("fixture.blocked", "application/blocked") { incoming ->
                     received += incoming
-                    CompilationOutcome.Blocked(emptyList())
+                    listOf(CompilationResult.Blocked(CompilationRoot(CompilationProjectionId("fixture.blocked"), ResourceId("root")), ContentDigest("a".repeat(64)), listOf(CompileDiagnostic("blocked", "Blocked", CompileDiagnosticSeverity.ERROR))))
                 }
 
             val result = with(inputs) { CompiledArtifactProducerRegistry(listOf(ready, blocked)).compile() }
 
-            result.shouldBeInstanceOf<CompilationOutcome.Blocked>().findings shouldBe emptyList()
+            result.size shouldBe 2
+            result.filterIsInstance<CompilationResult.Success>().size shouldBe 1
+            result.filterIsInstance<CompilationResult.Blocked>().single().diagnostics.single().code shouldBe "blocked"
             received.size shouldBe 2
             received.all { it === inputs && it.view === capture.root } shouldBe true
         }
@@ -40,7 +45,7 @@ val CompiledArtifactProducerRegistryTest by testSuite {
     }
 
     test("rejects duplicate producer identity before compilation") {
-        val first = producer("fixture", "application/fixture") { CompilationOutcome.Ready(emptyList()) }
+        val first = producer("fixture", "application/fixture") { emptyList() }
         val second = producer("fixture", "application/fixture") { error("Duplicate registration must fail before compilation.") }
 
         shouldThrow<IllegalArgumentException> { CompiledArtifactProducerRegistry(listOf(first, second)) }
@@ -51,11 +56,11 @@ val CompiledArtifactProducerRegistryTest by testSuite {
         views.capture().use { capture ->
             val wrongMedia =
                 producer("fixture", "application/fixture") {
-                    CompilationOutcome.Ready(listOf(artifact("fixture", "application/other")))
+                    listOf(CompilationResult.Success(artifact("fixture", "application/other")))
                 }
             val wrongProjection =
                 producer("fixture", "application/fixture") {
-                    CompilationOutcome.Ready(listOf(artifact("other", "application/fixture")))
+                    listOf(CompilationResult.Success(artifact("other", "application/fixture")))
                 }
             listOf(wrongMedia, wrongProjection).forEach { producer ->
                 shouldThrow<IllegalArgumentException> {
@@ -72,11 +77,11 @@ val CompiledArtifactProducerRegistryTest by testSuite {
         views.capture().use { capture ->
             val first =
                 producer("fixture", "application/first") {
-                    CompilationOutcome.Ready(listOf(artifact("fixture", "application/first")))
+                    listOf(CompilationResult.Success(artifact("fixture", "application/first")))
                 }
             val second =
                 producer("fixture", "application/second") {
-                    CompilationOutcome.Ready(listOf(artifact("fixture", "application/second")))
+                    listOf(CompilationResult.Success(artifact("fixture", "application/second")))
                 }
 
             shouldThrow<IllegalArgumentException> {
@@ -91,7 +96,7 @@ val CompiledArtifactProducerRegistryTest by testSuite {
 private fun producer(
     projection: String,
     mediaType: String,
-    compile: (CompilationInputs) -> CompilationOutcome,
+    compile: (CompilationInputs) -> List<CompilationResult>,
 ): CompiledArtifactProducer =
     object : CompiledArtifactProducer {
         override val projection = CompilationProjectionId(projection)
@@ -101,7 +106,7 @@ private fun producer(
             setOf(CompilationRoot(this.projection, ResourceId("root")))
 
         context(inputs: CompilationInputs)
-        override fun compile(roots: Set<CompilationRoot>): CompilationOutcome = compile.invoke(inputs)
+        override fun compile(roots: Set<CompilationRoot>): List<CompilationResult> = compile.invoke(inputs)
     }
 
 private fun artifact(

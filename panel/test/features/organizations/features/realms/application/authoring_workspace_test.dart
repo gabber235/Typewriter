@@ -4,175 +4,59 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
-import "../../../../../support/test_utils.dart";
+import "../../../../../support/publication.dart";
 
 void main() {
-  testWidgets(
-    "publication toolbar shows saved Page status and blocked findings while a rename stays local",
-    (tester) async {
-      final source = _document();
-      final second = skir.ResourceId(value: "second");
-      final document = source.copyWith(
-        entries: {
-          _resource: skir.AuthoringResource(
-            id: _resource,
-            definition: corePageResourceDefinition,
-            content: source.resource(_resource)!,
-          ),
-          second: skir.AuthoringResource(
-            id: second,
-            definition: corePageResourceDefinition,
-            content: skir.AuthoringRecord(
-              configuration: skir.TypeSelection.unknown,
-              fields: [
-                skir.FieldValue(name: "name", value: _text("Other saved Page")),
-              ],
-            ),
-          ),
-        },
-      );
-      final workspace = RealmEditing(
-        persistence: _Transport(document).persistence,
-        submissions: _workSession(),
-        initial: document,
-      );
-      addTearDown(workspace.dispose);
-      workspace.edit(
-        label: "Rename",
-        policy: EditorCommitPolicy.applyResource,
-        apply: (edit) => edit.set(_name, _text("Pending rename")),
-      );
-      final repository = _WorkPublicationRepository(
-        () => _read(workspace.state.confirmed!, _name),
-      );
+  test(
+    "publication journal observation survives view release while sending",
+    () async {
+      final work = ScopedWorkSession();
+      addTearDown(work.dispose);
+      final repository = _WorkPublicationRepository(() => _text("Saved"));
       addTearDown(repository.close);
-      repository.statuses = [
-        skir.CompiledResourceStatus(
-          root: skir.CompilationRoot(
-            projection: skir.CompilationProjectionId(value: "typewriter.page"),
-            resource: _resource,
-          ),
-          state: skir.CompiledResourceState.wrapActive(
-            skir.PublicationId(value: "selected"),
-          ),
-        ),
-        skir.CompiledResourceStatus(
-          root: skir.CompilationRoot(
-            projection: skir.CompilationProjectionId(value: "typewriter.page"),
-            resource: second,
-          ),
-          state: skir.CompiledResourceState.notCompiled,
-        ),
-      ];
-      await tester.pumpTestApp(
-        child: Scaffold(body: RealmWorkToolbar(scope: _workScope)),
-        overrides: [
-          confirmedAuthoringDocumentProvider(_workScope)
-              .overrideWith((ref) => AsyncData(document)),
-          localWorkScopeProvider.overrideWithValue(
-            LocalWorkScope(
-              userId: "fixture",
-              organizationId: _workScope.organizationId,
+      final gate = Completer<void>();
+      repository.sendGate = gate;
+      final driver = PublicationWorkDriver(_workScope, repository, work)
+        ..start();
+      work.register(driver);
+      final lease = work.lease(driver.id);
+      await waitForPublication(() => driver.view is ReadyRealmPublication);
+      final publishing = (driver.view as ReadyRealmPublication).command
+          .invoke();
+      await waitForPublication(() => repository.publishedValues.isNotEmpty);
+      expect(work.state.entries.values.single.saving, isTrue);
+      expect(work.state.entries.values.single.needsAttention, isFalse);
+      lease.release();
+      repository.emit(
+        skir.PublicationStatus.createPublishing(
+          publication: skir.PublicationId(value: "active"),
+          phase: skir.PublicationActivationPhase.activating,
+          releasing: skir.PublicationDelta(
+            first: skir.PublicationChange.wrapRootAdded(
+              publicationRoot("page"),
             ),
+            additional: const [],
           ),
-          realmPublicationRepositoryProvider(
-            _workScope.organizationId,
-            _workScope.realmId,
-          ).overrideWithValue(repository),
-        ],
-      );
-      final selection = repository.queriedSelections.single;
-      expect(selection, skir.CompilationStatusSelection.allRoots);
-      await tester.tap(find.text("Saved compilation roots (2)"));
-      await tester.pumpAndSettle();
-      expect(
-        find.text("Original (typewriter.page): Last published in selected"),
-        findsOneWidget,
-      );
-      expect(
-        find.text(
-          "Other saved Page (typewriter.page): Not in the selected publication",
-        ),
-        findsOneWidget,
-      );
-      expect(find.textContaining("Pending rename:"), findsNothing);
-      final diagnostic = skir.Diagnostic(
-        id: skir.DiagnosticId(value: "missing"),
-        origin: skir.RuleOrigin.defaultInstance,
-        code: "required",
-        message: "A required Page value is missing",
-        severity: skir.DiagnosticSeverity.error,
-        primary: null,
-        related: [],
-      );
-      repository.reports.add(
-        skir.PublicationReport(
-          id: skir.PublicationId(value: "blocked"),
-          findings: [diagnostic],
-          state: skir.PublicationState.wrapBlocked([diagnostic]),
+          next: skir.PublicationPendingReview(
+            findings: const [],
+            confirmedChanges: const [],
+            pendingRoots: const [],
+            blockers: const [],
+            notices: const [],
+          ),
         ),
       );
-      await tester.pumpAndSettle();
-      await tester.tap(find.text("Publication findings (1)"));
-      await tester.pumpAndSettle();
-      expect(find.text("A required Page value is missing"), findsOneWidget);
-      await tester.tap(find.text("Publish saved content"));
-      await tester.pumpAndSettle();
-      expect(repository.publishedValues, [_text("Original")]);
-      expect(_read(workspace.document, _name), _text("Pending rename"));
-      await tester.pumpWidget(const SizedBox.shrink());
+      gate.complete();
+      expect(await publishing, skir.PublicationResult.publishing);
+      await waitForPublication(() => driver.view is PublishingRealmPublication);
+      expect(
+        work.state.entries.values.single.phase,
+        "Publishing saved content",
+      );
+      expect(repository.publishedValues, hasLength(1));
+      expect(work.state.blocksNavigation, isFalse);
     },
   );
-
-  test("publication journal observation survives view release and distinguishes sending from uncertainty", () async {
-    final work = ScopedWorkSession();
-    addTearDown(work.dispose);
-    final repository = _WorkPublicationRepository(() => _text("Saved"));
-    addTearDown(repository.close);
-    final gate = Completer<void>();
-    repository.sendGate = gate;
-    final driver = PublicationWorkDriver(_workScope, repository, work)..start();
-    work.register(driver);
-    final lease = work.lease(driver.id);
-    var changes = 0;
-    driver.addListener(() => changes++);
-    final publishing = driver.publish();
-    await Future<void>.delayed(Duration.zero);
-    final sending = work.state.entries.values.single;
-    expect(sending.saving, isTrue);
-    expect(sending.needsAttention, isFalse);
-    expect(
-      sending.details.any(
-        (fact) => fact.value == "Sending publication request",
-      ),
-      isTrue,
-    );
-    lease.release();
-    repository.reports.add(
-      skir.PublicationReport(
-        id: skir.PublicationId(value: "active"),
-        findings: [],
-        state: skir.PublicationState.checking,
-      ),
-    );
-    await Future<void>.delayed(Duration.zero);
-    gate.complete();
-    expect(await publishing, skir.PublicationResult.publishing);
-    await Future<void>.delayed(Duration.zero);
-    expect(work.state.entries.values.single.phase, "Checking saved content");
-    repository.reports.add(
-      skir.PublicationReport(
-        id: skir.PublicationId(value: "active"),
-        findings: [],
-        state: skir.PublicationState.compiling,
-      ),
-    );
-    await Future<void>.delayed(Duration.zero);
-    expect(work.state.entries.values.single.phase, "Compiling saved content");
-    expect(changes, lessThan(10));
-    expect(repository.publishedValues, hasLength(1));
-    expect(work.state.blocksNavigation, isFalse);
-  });
 
   test("graph work survives route release and closes after discard", () async {
     final workspace = RealmEditing(
@@ -259,6 +143,8 @@ void main() {
       final publication = PublicationWorkDriver(_workScope, repository, work)
         ..start();
       work.register(publication);
+      final publicationLease = work.lease(publication.id);
+      addTearDown(publicationLease.release);
       addTearDown(repository.close);
       workspace.edit(
         label: "Pending rename",
@@ -266,7 +152,11 @@ void main() {
         apply: (edit) => edit.set(_name, _text("Draft name")),
       );
       final before = workspace.state;
-      expect(await publication.publish(), skir.PublicationResult.publishing);
+      await waitForPublication(() => publication.view is ReadyRealmPublication);
+      expect(
+        await (publication.view as ReadyRealmPublication).command.invoke(),
+        skir.PublicationResult.publishing,
+      );
       expect(repository.publishedValues, [_text("Original")]);
       expect(workspace.state, same(before));
       expect(_read(workspace.document, _name), _text("Draft name"));
@@ -290,8 +180,10 @@ void main() {
     final driver = PublicationWorkDriver(_workScope, repository, work)..start();
     work.register(driver);
     final lease = work.lease(driver.id);
+    await waitForPublication(() => driver.view is ReadyRealmPublication);
+    final command = (driver.view as ReadyRealmPublication).command;
     await expectLater(
-      driver.publish(),
+      command.invoke(),
       throwsA(isA<SubmissionException<skir.PublishAuthoringResponse>>()),
     );
     lease.release();
@@ -302,8 +194,11 @@ void main() {
     expect(entry.blocksNavigation, isFalse);
     expect(entry.canRetry || entry.canSave || entry.canDiscard, isFalse);
     expect(work.submissions.single.canReplay, isFalse);
-    expect(driver.canPublish, isFalse);
-    expect(await driver.publish(), skir.PublicationResult.publishing);
+    expect(driver.view, isA<UncertainRealmPublication>());
+    expect(
+      await command.invoke(),
+      isA<skir.PublicationResult_candidateChangedWrapper>(),
+    );
     expect(repository.publishedValues, hasLength(1));
     expect(work.state.blocksNavigation, isFalse);
   });
@@ -1103,39 +998,39 @@ final _workScope = AuthoringScope(
   realmId: skir.recordId("service:fixture"),
 );
 
-final class _WorkPublicationRepository implements RealmPublicationRepository {
-  _WorkPublicationRepository(this.saved);
+final class _WorkPublicationRepository extends TestPublicationRepository {
+  _WorkPublicationRepository(this.saved) : super(_workScope);
   final skir.DataValue Function() saved;
   final publishedValues = <skir.DataValue>[];
-  final reports = StreamController<skir.PublicationReport>.broadcast();
   final queriedSelections = <skir.CompilationStatusSelection>[];
   List<skir.CompiledResourceStatus> statuses = [];
   bool uncertain = false;
   Completer<void>? sendGate;
   @override
-  PreparedCommit<skir.PublishAuthoringResponse> preparePublish() =>
-      PreparedCommit(
-        id: Object(),
-        label: "Publish saved content",
-        resources: {WorkDriverId(domain: "publication", scope: _workScope)},
-        replay: SubmissionReplay.unsupported,
-        send: () async {
-          publishedValues.add(saved());
-          if (sendGate case final gate?) await gate.future;
-          if (uncertain) {
-            return SubmissionUncertain(
-              message: "Unknown delivery outcome",
-              cause: StateError("Missing reply"),
-              stackTrace: StackTrace.current,
-            );
-          }
-          return SubmissionConfirmed(
-            skir.PublishAuthoringResponse.wrapResult(
-              skir.PublicationResult.publishing,
-            ),
-          );
-        },
+  PreparedCommit<skir.PublishAuthoringResponse> preparePublish(
+    skir.PublicationCandidateId candidate,
+  ) => PreparedCommit(
+    id: Object(),
+    label: "Publish saved content",
+    resources: {WorkDriverId(domain: "publication", scope: _workScope)},
+    replay: SubmissionReplay.unsupported,
+    send: () async {
+      publishedValues.add(saved());
+      if (sendGate case final gate?) await gate.future;
+      if (uncertain) {
+        return SubmissionUncertain(
+          message: "Unknown delivery outcome",
+          cause: StateError("Missing reply"),
+          stackTrace: StackTrace.current,
+        );
+      }
+      return SubmissionConfirmed(
+        skir.PublishAuthoringResponse.wrapResult(
+          skir.PublicationResult.publishing,
+        ),
       );
+    },
+  );
   @override
   Future<List<skir.CompiledResourceStatus>> states(
     skir.CompilationStatusSelection selection,
@@ -1143,10 +1038,6 @@ final class _WorkPublicationRepository implements RealmPublicationRepository {
     queriedSelections.add(selection);
     return statuses;
   }
-
-  @override
-  Stream<skir.PublicationReport> watch() => reports.stream;
-  Future<void> close() => reports.close();
 }
 
 ScopedWorkSession _workSession() {

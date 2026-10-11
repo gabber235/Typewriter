@@ -46,7 +46,7 @@ import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
-import com.typewritermc.realm.compiler.AcceptanceResult
+import com.typewritermc.realm.compiler.AuthoringAssessment
 import com.typewritermc.realm.compiler.AuthoringAcceptance
 import com.typewritermc.realm.repository.conflicts
 import com.typewritermc.types.CollectionKind
@@ -428,12 +428,12 @@ val RealmCheckRuntimeTest by testSuite {
             val runtime = RealmCheckRuntime(store, StandardTestDispatcher(testScheduler))
 
             val blocked =
-                assertIs<AcceptanceResult.Blocked>(
+                assertIs<AuthoringAssessment.Blocked>(
                     capturedAcceptance(store, runtime, catalog.generation),
                 )
 
-            assertEquals(listOf("check_needs_input"), blocked.findings.map { it.code })
-            assertEquals(listOf(unavailable), blocked.findings.map { it.primary })
+            assertEquals(listOf("check_needs_input"), blocked.blockers.all.map { it.diagnostic }.map { it.code })
+            assertEquals(listOf(unavailable), blocked.blockers.all.map { it.diagnostic }.map { it.primary })
 
             runtime.close()
             store.close()
@@ -498,10 +498,10 @@ val RealmCheckRuntimeTest by testSuite {
             val runtime = RealmCheckRuntime(store, StandardTestDispatcher(testScheduler))
 
             val blocked =
-                assertIs<AcceptanceResult.Blocked>(
+                assertIs<AuthoringAssessment.Blocked>(
                     capturedAcceptance(store, runtime, catalog.generation),
                 )
-            val intrinsic = blocked.findings.filter { it.code in setOf("duplicate_set_value", "duplicate_map_key") }
+            val intrinsic = blocked.blockers.all.map { it.diagnostic }.filter { it.code in setOf("duplicate_set_value", "duplicate_map_key") }
 
             assertEquals(listOf("duplicate_set_value", "duplicate_map_key"), intrinsic.map { it.code })
             assertEquals(
@@ -545,12 +545,12 @@ val RealmCheckRuntimeTest by testSuite {
             val runtime = RealmCheckRuntime(store, StandardTestDispatcher(testScheduler))
 
             val blocked =
-                assertIs<AcceptanceResult.Blocked>(
+                assertIs<AuthoringAssessment.Blocked>(
                     capturedAcceptance(store, runtime, catalog.generation),
                 )
 
-            assertEquals(listOf("pending_type"), blocked.findings.map { it.code })
-            assertEquals(listOf(ValueLocation(resource, ValuePath())), blocked.findings.map { it.primary })
+            assertEquals(listOf("pending_type"), blocked.blockers.all.map { it.diagnostic }.map { it.code })
+            assertEquals(listOf(ValueLocation(resource, ValuePath())), blocked.blockers.all.map { it.diagnostic }.map { it.primary })
 
             runtime.close()
             store.close()
@@ -977,7 +977,7 @@ private suspend fun capturedAcceptance(
     store: com.typewritermc.realm.authoring.AuthoringViewStore,
     runtime: RealmCheckRuntime,
     generation: CatalogGeneration,
-): AcceptanceResult {
+): AuthoringAssessment {
     val acceptance = AuthoringAcceptance(store, runtime)
     val capture = acceptance.capture()
     return try {

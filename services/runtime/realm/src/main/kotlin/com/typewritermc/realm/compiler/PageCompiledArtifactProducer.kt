@@ -1,6 +1,7 @@
 package com.typewritermc.realm.compiler
 
 import com.typewritermc.engine.CompilationProjectionId
+import com.typewritermc.engine.CompilationResult
 import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.PageCompileResult
@@ -27,7 +28,7 @@ internal class PageCompiledArtifactProducer : CompiledArtifactProducer {
             .toCollection(linkedSetOf())
 
     context(inputs: CompilationInputs)
-    override fun compile(roots: Set<CompilationRoot>): CompilationOutcome {
+    override fun compile(roots: Set<CompilationRoot>): List<CompilationResult> {
         require(roots.all { root -> root.projection == projection })
         val ownership =
             inputs.view.catalog.relations
@@ -35,25 +36,20 @@ internal class PageCompiledArtifactProducer : CompiledArtifactProducer {
                     RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID) in relation.families
                 }.mapTo(linkedSetOf(), RelationContract::id)
         val compiler = PageCompiler(ownership, inputs.bindingRequirements.associateBy(NativeBindingRequirement::actual))
-        val results =
-            roots.sortedBy { root -> root.resource.value }.map { root ->
-                root to with(inputs.view) { compiler.compile(root.resource) }
-            }
-        val blocked = results.mapNotNull { (_, result) -> (result as? PageCompileResult.Blocked)?.diagnostics }.flatten()
-        if (blocked.isNotEmpty()) return CompilationOutcome.Blocked(blocked.map { publicationDiagnostic(it.code, it.message) })
-        val compiled =
-            results.map { (root, result) ->
-                result as PageCompileResult.Success
-                val shard = result.shard
-                CompiledArtifact(
-                    root = root,
-                    formatRevision = shard.facts.formatRevision,
-                    mediaType = mediaType,
-                    inputFingerprint = result.inputFingerprint,
-                    semanticDigest = shard.digest,
-                    payload = shard.facts.encodeShard(),
+        return roots.sortedBy { root -> root.resource.value }.map { root ->
+            when (val result = with(inputs.view) { compiler.compile(root.resource) }) {
+                is PageCompileResult.Blocked -> CompilationResult.Blocked(root, result.inputFingerprint, result.diagnostics)
+                is PageCompileResult.Success -> CompilationResult.Success(
+                    CompiledArtifact(
+                        root = root,
+                        formatRevision = result.shard.facts.formatRevision,
+                        mediaType = mediaType,
+                        inputFingerprint = result.inputFingerprint,
+                        semanticDigest = result.shard.digest,
+                        payload = result.shard.facts.encodeShard(),
+                    ),
                 )
             }
-        return CompilationOutcome.Ready(compiled)
+        }
     }
 }

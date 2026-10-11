@@ -91,25 +91,19 @@ class MutationActivityView extends StatelessWidget {
                 child: Semantics(
                   liveRegion: true,
                   label: label,
-                  child: context.isMobile
-                      ? IconButton(
-                          tooltip: label,
-                          style: IconButton.styleFrom(
-                            foregroundColor: color,
-                            backgroundColor: color.withValues(alpha: .12),
-                          ),
-                          onPressed: () => _showMobileActivity(context),
-                          icon: icon,
-                        )
-                      : TextButton.icon(
-                          style: TextButton.styleFrom(
-                            foregroundColor: color,
-                            backgroundColor: color.withValues(alpha: .12),
-                          ),
-                          onPressed: show,
-                          icon: icon,
-                          label: Text(label),
-                        ),
+                  child: AppBarControl.text(
+                    tooltip: label,
+                    semanticLabel: label,
+                    icon: icon,
+                    label: label,
+                    style: TextButton.styleFrom(
+                      foregroundColor: color,
+                      backgroundColor: color.withValues(alpha: .12),
+                    ),
+                    onPressed: () => context.isMobile
+                        ? _showMobileActivity(context)
+                        : show(),
+                  ),
                 ),
               ),
       ),

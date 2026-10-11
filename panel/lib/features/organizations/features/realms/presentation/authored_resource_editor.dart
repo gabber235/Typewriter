@@ -97,7 +97,7 @@ final class _AuthoredResourceEditorState
       record.configuration,
       widget.role,
     );
-    return switch (selected) {
+    final rendered = switch (selected) {
       SelectedEditorPresentation(:final material) => _renderSelected(
         selected,
         material,
@@ -117,6 +117,18 @@ final class _AuthoredResourceEditorState
         "Presentation ${presentation.namespace}:${presentation.name} is unavailable",
       ),
     };
+    final scope = ref.watch(selectedAuthoringScopeProvider);
+    if (scope == null) return rendered;
+    return PortableLocationRevealScope(
+      controller: ref.watch(realmLocationRevealProvider(scope)),
+      child: PortableLocationTarget(
+        location: skir.ValueLocation(
+          resource: widget.resource,
+          path: skir.ValuePath(segments: const []),
+        ),
+        child: rendered,
+      ),
+    );
   }
 
   Widget _renderSelected(

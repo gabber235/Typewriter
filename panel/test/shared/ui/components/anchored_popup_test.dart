@@ -68,6 +68,114 @@ void main() {
     });
   }
 
+  testWidgets("preview preserves typing and promotion retains content", (
+    tester,
+  ) async {
+    final popup = AnchoredPopupController();
+    final editor = FocusNode();
+    final controller = TextEditingController();
+    addTearDown(popup.dispose);
+    addTearDown(editor.dispose);
+    addTearDown(controller.dispose);
+    await tester.pumpTestApp(
+      child: Scaffold(
+        body: Column(
+          children: [
+            TextField(focusNode: editor, controller: controller),
+            AnchoredPopup(
+              controller: popup,
+              previewOnHover: true,
+              builder: (context, show) =>
+                  TextButton(onPressed: show, child: const Text("Inbox")),
+              popupBuilder: (context, close) =>
+                  const SizedBox(width: 300, child: TextField(autofocus: true)),
+            ),
+          ],
+        ),
+      ),
+    );
+    editor.requestFocus();
+    await tester.pump();
+    popup.preview();
+    await tester.pumpAndSettle();
+    expect(editor.hasFocus, isTrue);
+    expect(find.byKey(const ValueKey("popup barrier")), findsNothing);
+    final field = find.byType(TextField).last;
+    final element = tester.element(field);
+    await tester.enterText(find.byType(TextField).first, "still editing");
+    popup.openFocused();
+    await tester.pumpAndSettle();
+    expect(tester.element(field), same(element));
+    expect(editor.hasFocus, isFalse);
+    expect(find.byKey(const ValueKey("popup barrier")), findsOneWidget);
+    await tester.enterText(field, "persistent filter");
+    expect(controller.text, "still editing");
+    popup.close();
+    await tester.pumpAndSettle();
+    expect(editor.hasFocus, isTrue);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets("the first preview click focuses before invoking its action", (
+    tester,
+  ) async {
+    final popup = AnchoredPopupController();
+    addTearDown(popup.dispose);
+    PopupPresentation? invoked;
+    await tester.pumpTestApp(
+      child: Scaffold(
+        body: AnchoredPopup(
+          controller: popup,
+          builder: (context, show) =>
+              TextButton(onPressed: show, child: const Text("Inbox")),
+          popupBuilder: (context, close) => TextButton(
+            onPressed: () => invoked = popup.presentation,
+            child: const Text("Navigate to issue"),
+          ),
+        ),
+      ),
+    );
+    popup.preview();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Navigate to issue"));
+    await tester.pumpAndSettle();
+    expect(invoked, PopupPresentation.focused);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets("scope dismissal does not restore prior editor focus", (
+    tester,
+  ) async {
+    final popup = AnchoredPopupController();
+    final editor = FocusNode();
+    addTearDown(popup.dispose);
+    addTearDown(editor.dispose);
+    await tester.pumpTestApp(
+      child: Scaffold(
+        body: Column(
+          children: [
+            TextField(focusNode: editor),
+            AnchoredPopup(
+              controller: popup,
+              builder: (context, show) =>
+                  TextButton(onPressed: show, child: const Text("Inbox")),
+              popupBuilder: (context, close) =>
+                  const TextField(autofocus: true),
+            ),
+          ],
+        ),
+      ),
+    );
+    editor.requestFocus();
+    await tester.pump();
+    popup.openFocused();
+    await tester.pumpAndSettle();
+    popup.close(reason: PopupCloseReason.scopeChanged);
+    await tester.pumpAndSettle();
+    expect(editor.hasFocus, isFalse);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets("removing an open anchor removes the popup and its history", (
     tester,
   ) async {
